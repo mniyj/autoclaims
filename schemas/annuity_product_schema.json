@@ -1,0 +1,163 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "年金险产品数据结构 (Annuity Insurance Product Schema)",
+  "description": "用于定义年金险产品的完整数据结构，覆盖基础信息、缴费与领取规则、以及核心的年金给付/身故等保障责任。",
+  "type": "object",
+
+  "properties": {
+    "coveragePlans": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "planType": { "type": "string" },
+          "coverageDetails": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "mandatory": { "type": "boolean", "description": "是否为必选责任（true=必选，false=可选）。" },
+                "name": { "type": "string" },
+                "amount": { "type": "string" },
+                "details": { "type": "string" }
+              },
+              "required": ["name"]
+            }
+          }
+        },
+        "required": ["planType", "coverageDetails"]
+      }
+    },
+    "productCode": { "type": "string", "description": "产品的唯一标识码，不可编辑。" },
+    "regulatoryName": { "type": "string", "description": "监管机构备案的正式名称。" },
+    "marketingName": { "type": "string", "description": "市场推广时使用的名称。" },
+    "productSummery": { "type": "string", "description": "产品摘要，突出卖点。" },
+    "onlineClaimFlag": { "type": "boolean", "description": "是否支持在线理赔。" },
+    "insurerName": { "type": "string", "description": "所属保险公司名称。" },
+    "version": { "type": "string", "description": "产品版本号。" },
+    "salesRegions": { "type": "string", "description": "产品的销售区域。" },
+    "effectiveDate": { "type": "string", "format": "date", "description": "产品生效日期 (格式: YYYY-MM-DD)。" },
+    "expiryDate": { "type": ["string", "null"], "format": "date", "description": "产品停售日期 (格式: YYYY-MM-DD)，如果未停售则为 null。" },
+    "status": { "type": "string", "enum": ["生效", "失效", "草稿"], "description": "产品状态。" },
+    "primaryCategory": { "type": "string", "description": "产品一级分类名称（如：养老金、储蓄型）。" },
+    "primaryCategoryCode": { "type": "string", "description": "产品一级分类代码（如：D, E）。" },
+    "secondaryCategory": { "type": "string", "description": "产品二级分类名称（如：养老年金、中期年金）。" },
+    "secondaryCategoryCode": { "type": "string", "description": "产品二级分类代码（如：D01, E01）。" },
+    "racewayId": { "type": "string", "description": "三级赛道编码（如：D0102, E0103）。" },
+    "racewayName": { "type": "string", "description": "三级赛道名称（如：养老年金、教育金）。" },
+    "salesUrl": { "type": "string", "format": "uri", "description": "销售落地页的 URL 地址。" },
+    "underwritingAge": { "type": "string", "description": "投保年龄范围描述。" },
+    "coveragePeriod": { "type": "string", "description": "保障期限描述（如：保至100岁、终身）。" },
+    "waitingPeriod": { "type": "string", "description": "等待期描述（年金险身故责任可能有等待期）。" },
+    "productHeroImage": { "type": "string", "format": "uri", "description": "产品卡片和详情页的头图 URL。" },
+    "productLongImage": { 
+      "type": "array",
+      "description": "产品介绍长图，用于详情页。",
+      "items": { "type": "string" }
+    },
+    "productAttachment": { "type": "array", "items": { "type": "string" }, "description": "产品相关附件的文件名列表。" },
+    "clausesCode": { "type": "array", "items": { "type": "string" }, "description": "产品条款代码列表。" },
+    "productIntroduction": { "type": "string", "description": "产品的详细介绍文案。" },
+    "productAdvantages": { "type": "string", "description": "产品优势的文本描述。" },
+    "precautions": { "type": "string", "description": "产品注意事项的文本描述。" },
+    "crowd": { "type": "string", "description": "产品适用人群的文本描述。" },
+    "generalComment": { "type": "string", "description": "产品的总评或专家点评。" },
+    "tags": { "type": "string", "description": "产品的标签，如“收益稳健”。" },
+    
+    "paymentMethod": {
+      "type": "string",
+      "description": "缴纳保费的方式，如：趸交（一次性交清）、期交。"
+    },
+    "paymentPeriod": {
+      "type": "string",
+      "description": "缴纳保费的年限或方式描述，如：'3年/5年/10年'。"
+    },
+    "payoutStartAge": {
+      "type": "string",
+      "description": "开始领取年金的年龄描述，如：'可选60/65/70周岁'。"
+    },
+    "payoutFrequency": {
+      "type": "string",
+      "description": "年金领取的频率描述，如：'年领/月领'。"
+    },
+    "underwritingOccupation": {
+      "type": "string",
+      "description": "承保的职业范围描述（年金险通常较宽松）。"
+    },
+
+    "coverageDetails": {
+      "type": "array",
+      "description": "保障责任详情列表，是年金险产品的核心。",
+      "items": { "$ref": "#/$defs/CoverageDetailItem" }
+    },
+     "valueAddedServices": {
+      "type": "array",
+      "description": "增值服务列表（如养老社区入住权等）。",
+      "items": { "$ref": "#/$defs/ValueAddedServiceItem" }
+    }
+  },
+  "required": [
+    "productCode", "regulatoryName", "marketingName", "insurerName", "underwritingAge", "coveragePeriod", "paymentMethod", "paymentPeriod", "payoutStartAge", "payoutFrequency", "coveragePlans"
+  ],
+
+  "$defs": {
+    "CoverageDetailItem": {
+      "type": "object",
+      "description": "单个保障责任项目，如年金给付、生存金、满期金、身故等。",
+      "properties": {
+        "item_code": {
+          "type": "string",
+          "description": "保障项目的内部代码，用于系统识别。",
+          "enum": [
+            "ANNUITY_PAYMENT",
+            "DEATH_BENEFIT",
+            "SURVIVAL_BENEFIT",
+            "MATURITY_BENEFIT"
+          ]
+        },
+        "item_name": { "type": "string", "description": "保障项目的名称。" },
+        "description": { "type": "string", "description": "保障项目的简要描述。" },
+        "details": {
+          "type": "object",
+          "description": "保障项目的详细参数。结构根据 item_code 不同而变化。",
+          "properties": {
+            "start_age_options": {
+              "type": "array",
+              "items": { "type": "integer" },
+              "description": "可选的年金开始领取年龄列表，如[60, 65, 70]。"
+            },
+            "frequency_options": {
+              "type": "array",
+              "items": { "type": "string", "enum": ["ANNUALLY", "MONTHLY"] },
+              "description": "可选的领取频率列表。"
+            },
+            "guaranteed_period_years": {
+              "type": "integer",
+              "description": "保证领取的年限（如20年）。在此期间若身故，受益人可继续领取。"
+            },
+            "amount_logic": {
+              "type": "string",
+              "description": "年金/生存金/满期金的金额计算逻辑，如“每年领取100%基本保额”。"
+            },
+            "payout_logic": {
+              "type": "string",
+              "description": "身故保险金的赔付逻辑文本描述，如“返还已交保费与现金价值的较大者”。"
+            }
+          }
+        }
+      },
+      "required": ["item_code", "item_name", "description", "details"]
+    },
+
+    "ValueAddedServiceItem": {
+      "type": "object",
+      "description": "单个增值服务项目。",
+      "properties": {
+        "id": { "type": "string", "description": "服务的唯一标识符。" },
+        "name": { "type": "string", "description": "服务名称。" },
+        "description": { "type": "string", "description": "服务的详细描述。" }
+      },
+      "required": ["id", "name", "description"]
+    }
+  }
+}

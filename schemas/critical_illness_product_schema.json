@@ -1,0 +1,243 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "重疾险产品数据结构 (Critical Illness Insurance Product Schema)",
+  "description": "用于定义重疾险产品的完整数据结构，覆盖基础信息、专属字段、以及复杂多变的保障责任（如单次/多次、分组/不分组、额外赔付等）。",
+  "type": "object",
+
+  "properties": {
+    "coveragePlans": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "planType": { "type": "string" },
+          "coverageDetails": {
+            "type": "array",
+            "items": { "$ref": "#/definitions/CoverageDetailItem" }
+          }
+        },
+        "required": ["planType", "coverageDetails"]
+      }
+    },
+    "productCode": {
+      "type": "string",
+      "description": "产品的唯一标识码，不可编辑。"
+    },
+    "regulatoryName": {
+      "type": "string",
+      "description": "监管机构备案的正式名称。"
+    },
+    "marketingName": {
+      "type": "string",
+      "description": "市场推广时使用的名称。"
+    },
+    "productSummery": {
+      "type": "string",
+      "description": "产品摘要，突出卖点。"
+    },
+    "onlineClaimFlag": {
+      "type": "boolean",
+      "description": "是否支持在线理赔。"
+    },
+    "insurerName": {
+      "type": "string",
+      "description": "所属保险公司名称。"
+    },
+    "version": {
+      "type": "string",
+      "description": "产品版本号。"
+    },
+    "salesRegions": {
+      "type": "string",
+      "description": "产品的销售区域。"
+    },
+    "effectiveDate": {
+      "type": "string",
+      "format": "date",
+      "description": "产品生效日期 (格式: YYYY-MM-DD)。"
+    },
+    "expiryDate": {
+      "type": ["string", "null"],
+      "format": "date",
+      "description": "产品停售日期 (格式: YYYY-MM-DD)，如果未停售则为 null。"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["生效", "失效", "草稿"],
+      "description": "产品状态。"
+    },
+    "primaryCategory": {
+      "type": "string",
+      "description": "产品一级分类名称（如：健康保险）。"
+    },
+    "primaryCategoryCode": {
+      "type": "string",
+      "description": "产品一级分类代码（如：B）。"
+    },
+    "secondaryCategory": {
+      "type": "string",
+      "description": "产品二级分类名称（如：重大疾病保险）。"
+    },
+    "secondaryCategoryCode": {
+      "type": "string",
+      "description": "产品二级分类代码（如：B03）。"
+    },
+    "racewayId": {
+      "type": "string",
+      "description": "三级赛道编码（如：B0301）。"
+    },
+    "racewayName": {
+      "type": "string",
+      "description": "三级赛道名称（如：终身重疾）。"
+    },
+    "salesUrl": {
+      "type": "string",
+      "format": "uri",
+      "description": "销售落地页的 URL 地址。"
+    },
+    "underwritingAge": {
+      "type": "string",
+      "description": "投保年龄范围描述。"
+    },
+    "coveragePeriod": {
+      "type": "string",
+      "description": "保障期限描述（如：终身、至70周岁）。"
+    },
+    "waitingPeriod": {
+      "type": "string",
+      "description": "等待期描述（如：90天、180天）。"
+    },
+    "deductible": {
+      "type": "string",
+      "description": "免赔额描述（重疾险通常为0或不适用）。"
+    },
+    "productHeroImage": {
+      "type": "string",
+      "format": "uri",
+      "description": "产品卡片和详情页的头图 URL。"
+    },
+    "productLongImage": {
+      "type": "array",
+      "description": "产品介绍长图，用于详情页。",
+      "items": { "type": "string" }
+    },
+    "productAttachment": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "产品相关附件的文件名列表。"
+    },
+    "clausesCode": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "产品条款代码列表。"
+    },
+    "productIntroduction": { "type": "string", "description": "产品的详细介绍文案。" },
+    "productAdvantages": { "type": "string", "description": "产品优势的文本描述。" },
+    "precautions": { "type": "string", "description": "产品注意事项的文本描述。" },
+    "crowd": { "type": "string", "description": "产品适用人群的文本描述。" },
+    "generalComment": { "type": "string", "description": "产品的总评或专家点评。" },
+    "tags": { "type": "string", "description": "产品的标签，如“金选”。" },
+    "coverageArea": { "type": "string", "description": "保障覆盖的地理区域。" },
+    "hospitalScope": { "type": "string", "description": "认可的医院范围。" },
+    "claimScope": { "type": "string", "description": "赔付范围描述。" },
+    "occupationScope": { "type": "string", "description": "承保的职业类别范围。" },
+    "hesitationPeriod": { "type": "string", "description": "投保后可无条件退保的期限。" },
+    "policyEffectiveDate": { "type": "string", "description": "保单正式生效的日期规则。" },
+    "purchaseLimit": { "type": "integer", "description": "允许购买的最大份数。" },
+    "annualPremium": { "type": "number", "description": "每年的保费（起）。" },
+    "renewalWarranty": { "type": "string", "description": "续保描述（重疾险通常为长期或终身，不存在续保概念）。" },
+    "healthConditionNotice": { "type": "string", "description": "健康告知要求的描述。" },
+    "coverageDetails": {
+      "type": "array",
+      "description": "保障责任详情列表，是重疾险产品的核心。",
+      "items": { "$ref": "#/$defs/CoverageDetailItem" }
+    },
+    "valueAddedServices": {
+      "type": "array",
+      "description": "增值服务列表。",
+      "items": { "$ref": "#/$defs/ValueAddedServiceItem" }
+    }
+  },
+  "required": [
+    "productCode", "regulatoryName", "marketingName", "insurerName", "underwritingAge", "coveragePeriod", "waitingPeriod", "coverageDetails"
+  ],
+
+    "$defs": {
+      "CoverageDetailItem": {
+        "type": "object",
+        "description": "单个保障责任项目，如重疾、中症、轻症、身故、豁免等。",
+        "properties": {
+          "mandatory": { "type": "boolean", "description": "是否为必选责任（true=必选，false=可选）。" },
+          "item_code": {
+            "type": "string",
+            "description": "保障项目的内部代码，用于系统识别。",
+            "enum": [
+              "CRITICAL_ILLNESS",
+            "MODERATE_ILLNESS",
+            "MILD_ILLNESS",
+            "CRITICAL_ILLNESS_EXTRA",
+            "MALIGNANT_TUMOR_MULTIPLE",
+            "CARDIOVASCULAR_DISEASE_MULTIPLE",
+            "CHILD_SPECIFIC_ILLNESS",
+            "DEATH_OR_TOTAL_DISABILITY",
+            "INSURED_PREMIUM_WAIVER",
+            "POLICYHOLDER_PREMIUM_WAIVER",
+            "OTHERS"
+          ]
+        },
+        "item_name": { "type": "string", "description": "保障项目的名称。" },
+        "description": { "type": "string", "description": "保障项目的简要描述。" },
+        "details": {
+          "type": "object",
+          "description": "保障项目的详细参数。结构根据 item_code 不同而变化。",
+          "properties": {
+            "illness_count": { "type": "integer", "description": "覆盖的疾病种类数量。" },
+            "payout_type": { "type": "string", "enum": ["SINGLE", "MULTIPLE_GROUPED", "MULTIPLE_UNGROUPED"], "description": "赔付类型：单次、多次分组、多次不分组。" },
+            "max_payouts": { "type": "integer", "description": "最多赔付次数。" },
+            "payouts": { "type": "integer", "description": "赔付次数（用于简单的轻/中症）。" },
+            "payout_ratio": { "type": "number", "description": "单次赔付比例（如0.3代表30%）。" },
+            "payout_ratios": { "type": "array", "items": { "type": "number" }, "description": "多次赔付的比例数组，按顺序对应（如[1.0, 1.2, 1.5]）。" },
+            "interval_days": { "type": "integer", "description": "多次赔付的间隔期（天）。" },
+            "interval_years": { "type": "integer", "description": "多次赔付的间隔期（年）。" },
+            "group_details": {
+              "type": "object",
+              "description": "疾病分组详情，仅当payout_type为MULTIPLE_GROUPED时存在。",
+              "properties": {
+                "group_count": { "type": "integer", "description": "分组的总数量。" },
+                "groups": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "group_name": { "type": "string", "description": "分组的名称。" },
+                      "disease_list": { "type": "array", "items": { "type": "string" }, "description": "该分组下包含的疾病名称列表。" }
+                    },
+                    "required": ["group_name", "disease_list"]
+                  }
+                }
+              },
+              "required": ["group_count", "groups"]
+            },
+            "age_limit_before": { "type": "integer", "description": "额外赔付的年龄上限（如60岁前）。" },
+            "extra_payout_ratio": { "type": "number", "description": "额外赔付的比例。" },
+            "condition": { "type": "string", "description": "多次赔付的条件，如“新发、复发、转移、持续”。" },
+            "payout_logic": { "type": "string", "description": "身故/全残的赔付逻辑文本描述。" },
+            "trigger_events": { "type": "array", "items": { "type": "string" }, "description": "豁免责任的触发事件列表。" }
+          }
+        }
+      },
+      "required": ["item_code", "item_name", "description", "details"]
+    },
+
+    "ValueAddedServiceItem": {
+      "type": "object",
+      "description": "单个增值服务项目。",
+      "properties": {
+        "id": { "type": "string", "description": "服务的唯一标识符。" },
+        "name": { "type": "string", "description": "服务名称。" },
+        "description": { "type": "string", "description": "服务的详细描述。" }
+      },
+      "required": ["id", "name", "description"]
+    }
+  }
+}

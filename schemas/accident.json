@@ -1,0 +1,135 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "意外险产品数据结构 (Accident Insurance Product Schema)",
+  "description": "用于定义意外险产品的完整数据结构，覆盖基础信息、专属字段、以及核心的意外身故/伤残、意外医疗、猝死、特定意外等保障责任。",
+  "type": "object",
+
+  "properties": {
+    "productCode": { "type": "string", "description": "产品的唯一标识码，不可编辑。" },
+    "regulatoryName": { "type": "string", "description": "监管机构备案的正式名称。" },
+    "marketingName": { "type": "string", "description": "市场推广时使用的名称。" },
+    "productSummery": { "type": "string", "description": "产品摘要，突出卖点。" },
+    "onlineClaimFlag": { "type": "boolean", "description": "是否支持在线理赔。" },
+    "insurerName": { "type": "string", "description": "所属保险公司名称。" },
+    "version": { "type": "string", "description": "产品版本号。" },
+    "salesRegions": { "type": "string", "description": "产品的销售区域。" },
+    "effectiveDate": { "type": "string", "format": "date", "description": "产品生效日期 (格式: YYYY-MM-DD)。" },
+    "expiryDate": { "type": ["string", "null"], "format": "date", "description": "产品停售日期 (格式: YYYY-MM-DD)，如果未停售则为 null。" },
+    "status": { "type": "string", "enum": ["生效", "失效", "草稿"], "description": "产品状态。" },
+    "primaryCategory": { "type": "string", "description": "产品一级分类名称（如：意外保险）。" },
+    "primaryCategoryCode": { "type": "string", "description": "产品一级分类代码（如：C）。" },
+    "secondaryCategory": { "type": "string", "description": "产品二级分类名称（如：综合意外）。" },
+    "secondaryCategoryCode": { "type": "string", "description": "产品二级分类代码（如：C01）。" },
+    "racewayId": { "type": "string", "description": "三级赛道编码（如：C0101）。" },
+    "racewayName": { "type": "string", "description": "三级赛道名称（如：成人综合意外）。" },
+    "salesUrl": { "type": "string", "format": "uri", "description": "销售落地页的 URL 地址。" },
+    "underwritingAge": { "type": "string", "description": "投保年龄范围描述。" },
+    "coveragePeriod": { "type": "string", "description": "保障期限描述（意外险通常为1年）。" },
+    "waitingPeriod": { "type": "string", "description": "等待期描述（意外伤害通常无等待期，猝死责任可能有）。" },
+    "deductible": { "type": "string", "description": "免赔额的综合描述（通常指意外医疗免赔额）。" },
+    "productHeroImage": { "type": "string", "format": "uri", "description": "产品卡片和详情页的头图 URL。" },
+    "productLongImage": { "type": "array", "description": "产品介绍长图，用于详情页。", "items": { "type": "string" } },
+    "productAttachment": { "type": "array", "items": { "type": "string" }, "description": "产品相关附件的文件名列表。" },
+    "clausesCode": { "type": "array", "items": { "type": "string" }, "description": "产品条款代码列表。" },
+    "productIntroduction": { "type": "string", "description": "产品的详细介绍文案。" },
+    "productAdvantages": { "type": "string", "description": "产品优势的文本描述。" },
+    "precautions": { "type": "string", "description": "产品注意事项的文本描述（通常包含免责条款）。" },
+    "crowd": { "type": "string", "description": "产品适用人群的文本描述。" },
+    "generalComment": { "type": "string", "description": "产品的总评或专家点评。" },
+    "tags": { "type": "string", "description": "产品的标签，如“爆款”、“高性价比”。" },
+    
+    "coverageArea": { "type": "string", "description": "保障覆盖的地理区域。" },
+    "hospitalScope": { "type": "string", "description": "认可的医院范围（主要针对意外医疗）。" },
+    "claimScope": { "type": "string", "description": "医疗费用赔付范围（如：不限社保）。" },
+    "occupationScope": { "type": "string", "description": "承保的职业类别范围，意外险的核心风控字段。" },
+    "hesitationPeriod": { "type": "string", "description": "投保后可无条件退保的期限（一年期产品通常较短或无）。" },
+    "policyEffectiveDate": { "type": "string", "description": "保单正式生效的日期规则。" },
+    "purchaseLimit": { "type": "integer", "description": "允许购买的最大份数。" },
+    "annualPremium": { "type": "number", "description": "每年的保费（起）。" },
+    "renewalWarranty": { "type": "string", "description": "续保描述（意外险通常为不保证续保）。" },
+    "healthConditionNotice": { "type": "string", "description": "健康告知要求（意外险通常为无需健康告知或告知非常简单）。" },
+
+    "coverageDetails": {
+      "type": "array",
+      "description": "保障责任详情列表，是意外险产品的核心。",
+      "items": { "$ref": "#/$defs/CoverageDetailItem" }
+    },
+    "coveragePlans": {
+      "type": "array",
+      "description": "多方案配置，每个方案下包含一组责任详情。",
+      "items": {
+        "type": "object",
+        "properties": {
+          "planType": { "type": "string", "description": "方案名称，如经典版/尊享版" },
+          "annualLimit": { "type": ["number", "null"], "description": "年度总保额（可选）" },
+          "guaranteedRenewalYears": { "type": ["integer", "null"], "description": "保证续保年限（可选）" },
+          "coverageDetails": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/CoverageDetailItem" }
+          }
+        },
+        "required": ["planType", "coverageDetails"]
+      }
+    },
+    "valueAddedServices": {
+      "type": "array",
+      "description": "增值服务列表（如紧急救援等）。",
+      "items": { "$ref": "#/$defs/ValueAddedServiceItem" }
+    }
+  },
+  "required": [
+    "productCode", "regulatoryName", "marketingName", "insurerName", "underwritingAge", "coveragePeriod", "waitingPeriod", "occupationScope"
+  ],
+
+    "$defs": {
+      "CoverageDetailItem": {
+        "type": "object",
+        "description": "单个保障责任项目，如意外身故/伤残、意外医疗、猝死、住院津贴、特定意外等。",
+        "properties": {
+          "mandatory": { "type": "boolean", "description": "是否为必选责任（true=必选，false=可选）。" },
+          "item_code": {
+            "type": "string",
+            "description": "保障项目的内部代码，用于系统识别。",
+            "enum": [
+              "ACCIDENTAL_DEATH_DISABILITY",
+            "ACCIDENTAL_MEDICAL",
+            "SUDDEN_DEATH",
+            "HOSPITAL_INCOME",
+            "SPECIFIC_ACCIDENT"
+          ]
+        },
+        "item_name": { "type": "string", "description": "保障项目的名称。" },
+        "description": { "type": "string", "description": "保障项目的简要描述。" },
+        "details": {
+          "type": "object",
+          "description": "保障项目的详细参数。结构根据 item_code 不同而变化。",
+          "properties": {
+            "limit": { "type": "integer", "description": "保额上限（元）。" },
+            "deductible": { "type": "number", "description": "免赔额（元），主要用于意外医疗。" },
+            "reimbursement_ratio": { "type": "number", "description": "赔付比例，如1.0代表100%。主要用于意外医疗。" },
+            "hospital_requirements": { "type": "string", "description": "对就医医院的要求。" },
+            "coverage_scope": { "type": "string", "description": "医疗费用的保障范围，如“不限社保”。" },
+            "payout_multiplier": { "type": "number", "description": "额外赔付的倍数，用于猝死或特定意外。" },
+            "additional_limit": { "type": "integer", "description": "额外赔付的最高限额（元）。" },
+            "amount_per_day": { "type": "number", "description": "每日津贴金额（元），用于住院津贴。" },
+            "deductible_days": { "type": "integer", "description": "免赔天数，用于住院津贴。" },
+            "max_days": { "type": "integer", "description": "单次或累计最高赔付天数，用于住院津贴。" },
+            "scenario": { "type": "string", "description": "特定意外的场景描述，如“公共交通意外”、“节假日意外”。" }
+          }
+        }
+      },
+      "required": ["item_code", "item_name", "description", "details"]
+    },
+
+    "ValueAddedServiceItem": {
+      "type": "object",
+      "description": "单个增值服务项目。",
+      "properties": {
+        "id": { "type": "string", "description": "服务的唯一标识符。" },
+        "name": { "type": "string", "description": "服务名称。" },
+        "description": { "type": "string", "description": "服务的详细描述。" }
+      },
+      "required": ["id", "name", "description"]
+    }
+  }
+}

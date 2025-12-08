@@ -1,0 +1,421 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "医疗险、重疾险、意外险产品数据结构",
+  "description": "用于定义互联网医疗险的完整产品数据结构，适用于统一产品库、后台管理、投保页渲染、对比功能等场景。",
+  "type": "object",
+
+  "properties": {
+    // ================================
+    // 基础信息（产品级）
+    // ================================
+
+    "productCode": {
+      "type": "string",
+      "description": "产品唯一编码。系统内部使用，不展示给用户。通常由产品线统一分配，例如 MED-2025-001。"
+    },
+
+    "regulatoryName": {
+      "type": "string",
+      "description": "监管备案名称。必须与银保监会/保险公司备案一致，用于合规展示。"
+    },
+
+    "marketingName": {
+      "type": "string",
+      "description": "对用户展示的营销名称。用于 App / H5 产品列表、详情页标题等。"
+    },
+
+    "productSummery": {
+      "type": "string",
+      "description": "1～2 句话的产品卖点摘要，用于首页卡片、列表页卡片、首页运营位。"
+    },
+
+    "onlineSurrenderFlag": {
+      "type": "boolean",
+      "description": "是否支持在线退保（保全）。用于投保后服务流程。"
+    },
+
+    "onlineClaimFlag": {
+      "type": "boolean",
+      "description": "是否支持在线理赔。用于配置产品展示的理赔入口。"
+    },
+
+    "insurerName": {
+      "type": "string",
+      "description": "承保公司名称。如：中国人民健康、中意人寿、泰康在线等。"
+    },
+
+    "version": {
+      "type": "string",
+      "description": "产品版本，如：2024版、5.0版，用于产品同名更新区分。"
+    },
+
+    "salesRegions": {
+      "type": "string",
+      "description": "产品可销售地区。格式随保险公司，通常为“全国（不含港澳台）”。"
+    },
+
+    "effectiveDate": {
+      "type": "string",
+      "format": "date",
+      "description": "产品开始销售日期或上线日期。"
+    },
+
+    "expiryDate": {
+      "type": ["string", "null"],
+      "format": "date",
+      "description": "产品停售日期。未停售为 null。后台用于停售控制。"
+    },
+
+    "status": {
+      "type": "string",
+      "enum": ["生效", "失效", "草稿"],
+      "description": "产品状态：生效（可投保）、失效（停售）、草稿（未发布）。后台管理使用。"
+    },
+
+    // ================================
+    // 产品分类（用于导航、搜索、运营）
+    // ================================
+
+    "primaryCategory": {
+      "type": "string",
+      "description": "一级类目，如：健康保险、意外保险、人寿保险。"
+    },
+
+    "primaryCategoryCode": {
+      "type": "string",
+      "description": "一级类目编码，如：A=健康险。用于内部归类体系。"
+    },
+
+    "secondaryCategory": {
+      "type": "string",
+      "description": "二级类目，如：医疗险、意外险、重疾险。"
+    },
+
+    "secondaryCategoryCode": {
+      "type": "string",
+      "description": "二级类目编码，如：A01=医疗险。"
+    },
+
+    "racewayId": {
+      "type": "string",
+      "description": "三级赛道编码。例如百万医疗=A0102、短期医疗=A0101。用于精准筛选、首页运营分组。"
+    },
+
+    "racewayName": {
+      "type": "string",
+      "description": "三级赛道名称，如：百万医疗、长期医疗、普惠医疗等。"
+    },
+
+    // ================================
+    // 展示与投保页信息
+    // ================================
+
+    "salesUrl": {
+      "type": "string",
+      "format": "uri",
+      "description": "投保落地页 URL（App 或 H5）。用于前端跳转。"
+    },
+
+    "underwritingAge": {
+      "type": "string",
+      "description": "投保年龄范围展示，如“28天-80周岁”。投保前端用于校验。"
+    },
+
+    "coveragePeriod": {
+      "type": "string",
+      "description": "保障期限，如：1年、20年、至100岁。"
+    },
+
+    "waitingPeriod": {
+      "type": "string",
+      "description": "等待期规则，如：30天、90天、无等待期（意外）。"
+    },
+
+    "deductible": {
+      "type": "string",
+      "description": "整体免赔额说明，如“1万元年免赔额”。覆盖医疗险最重要字段。"
+    },
+
+    "productHeroImage": {
+      "type": "string",
+      "format": "uri",
+      "description": "产品头图（App/H5 Banner）。建议尺寸 750×420。"
+    },
+
+    "productLongImage": {
+      "type": "string",
+      "format": "uri",
+      "description": "产品介绍长图，用于详情页。"
+    },
+
+    "productAttachment": {
+      "type": "array",
+      "description": "产品附件（条款、费率表、说明书等），展示在详情页下载区域。",
+      "items": { "type": "string" }
+    },
+
+    "clausesCode": {
+      "type": "array",
+      "description": "条款代码。多数公司发布的正式条款编码，如 PICC-2024-XXX。",
+      "items": { "type": "string" }
+    },
+
+    // ================================
+    // 文案类
+    // ================================
+
+    "productIntroduction": {
+      "type": "string",
+      "description": "产品详细介绍文案。可用于详情页与运营文案。"
+    },
+
+    "productAdvantages": {
+      "type": "string",
+      "description": "产品亮点（多条，用换行分隔）。用于前端 Bullet 列表展示。"
+    },
+
+    "precautions": {
+      "type": "string",
+      "description": "投保须知、注意事项、保险责任免除等重要提示。"
+    },
+
+    "crowd": {
+      "type": "string",
+      "description": "适用人群：如少儿/老人/打工人/高风险人群。用于决策引导。"
+    },
+
+    "generalComment": {
+      "type": "string",
+      "description": "产品点评，通常由运营或智能系统生成。"
+    },
+
+    "tags": {
+      "type": "string",
+      "description": "标签，如“金选”“热门”“医药外保障强”。用于卡片展示与筛选。"
+    },
+
+    // ================================
+    // 卡片展示核心指标（首页/列表用）
+    // ================================
+
+    "cardMetric1Label": { "type": "string", "description": "卡片左侧指标名称。例如：年度保额/免赔额/续保期" },
+    "cardMetric1Value": { "type": "string", "description": "卡片左侧指标数值" },
+
+    "cardMetric2Label": { "type": "string", "description": "卡片中部指标名称" },
+    "cardMetric2Value": { "type": "string", "description": "卡片中部指标值" },
+
+    "cardMetric3Label": { "type": "string", "description": "卡片右侧指标名称" },
+    "cardMetric3Value": { "type": "string", "description": "卡片右侧指标值" },
+
+    // ================================
+    // 承保限定
+    // ================================
+
+    "coverageArea": {
+      "type": "string",
+      "description": "保障地域范围。例如：中国大陆、不含港澳台、全球、亚洲等。"
+    },
+
+    "hospitalScope": {
+      "type": "string",
+      "description": "认可的医院范围，如：二级及以上公立医院普通部。"
+    },
+
+    "claimScope": {
+      "type": "string",
+      "description": "可报销的费用范围，如：经社保结算后100% 等。"
+    },
+
+    "occupationScope": {
+      "type": "string",
+      "description": "职业类别限制（1-4 类、1-6 类）。对高危职业非常关键。"
+    },
+
+    "hesitationPeriod": {
+      "type": "string",
+      "description": "犹豫期"
+    },
+
+    "policyEffectiveDate": {
+      "type": "string",
+      "description": "保单效力起算规则，如：投保成功次日零时。"
+    },
+
+    "purchaseLimit": {
+      "type": "integer",
+      "description": "最大购买份数（医疗险通常为 1）。"
+    },
+
+    "annualPremium": {
+      "type": "number",
+      "description": "最低保费（起始价）。用于前端展示。"
+    },
+
+    "renewalWarranty": {
+      "type": "string",
+      "description": "保证续保描述，如：保证续保3年、保证续保6年、不可保证续保等。"
+    },
+
+    "outHospitalMedicine": {
+      "type": "string",
+      "description": "院外特药保障描述。某些产品为100种特药/200万额度。"
+    },
+
+    "healthConditionNotice": {
+      "type": "string",
+      "description": "健康告知宽松程度（含是否支持智能核保）。"
+    },
+
+    // ================================
+    // 保险责任 coveragePlans（新增）
+    // 多保障计划支持（经典版 / 升级版 等）
+    // ================================
+
+    "coveragePlans": {
+      "type": "array",
+      "description": "多个保障计划（如经典版、升级版）构成一个产品。",
+      "items": {
+        "type": "object",
+        "properties": {
+          "planType": {
+            "type": "string",
+            "description": "保障计划名称，如：经典版、升级版、旗舰版。"
+          },
+
+          "annualLimit": {
+            "type": "number",
+            "description": "年度总保额（例如800万）。用于产品对比页。"
+          },
+
+          "guaranteedRenewalYears": {
+            "type": "integer",
+            "description": "保证续保期（单位：年）。如：3年、6年、20年。"
+          },
+
+          "coverageDetails": {
+            "type": "array",
+            "description": "此保障计划下的每项保险责任详情。",
+            "items": {
+              "$ref": "#/$defs/CoverageDetailItem"
+            }
+          }
+        },
+        "required": ["planType", "coverageDetails"]
+      }
+    },
+
+    // ================================
+    // 增值服务
+    // ================================
+
+    "valueAddedServices": {
+      "type": "array",
+      "description": "增值服务列表，如垫付、绿通、特药服务。",
+      "items": {
+        "$ref": "#/$defs/ValueAddedServiceItem"
+      }
+    }
+  },
+
+  // 字段要求 —— 用于系统校验
+  "required": [
+    "productCode",
+    "regulatoryName",
+    "marketingName",
+    "productSummery",
+    "onlineClaimFlag",
+    "insurerName",
+    "version",
+    "salesRegions",
+    "effectiveDate",
+    "status",
+    "primaryCategory",
+    "primaryCategoryCode",
+    "secondaryCategory",
+    "secondaryCategoryCode",
+    "racewayId",
+    "racewayName",
+    "underwritingAge",
+    "coveragePeriod",
+    "waitingPeriod",
+    "deductible",
+    "clausesCode",
+    "productIntroduction",
+    "coverageArea",
+    "hospitalScope",
+    "claimScope",
+    "occupationScope",
+    "hesitationPeriod",
+    "policyEffectiveDate",
+    "purchaseLimit",
+    "annualPremium",
+    "renewalWarranty",
+    "outHospitalMedicine",
+    "healthConditionNotice",
+    "coveragePlans",
+    "valueAddedServices"
+  ],
+
+  // ================================
+  // 子结构（保险责任 / 增值服务）
+  // ================================
+  "$defs": {
+    "CoverageDetailItem": {
+      "type": "object",
+      "description": "单个保障责任项目（如门急诊、住院、特药等）",
+      "properties": {
+        "item_code": {
+          "type": "string",
+          "description": "内部责任编码，用于系统识别，如 GENERAL_HOSPITALIZATION"
+        },
+        "item_name": {
+          "type": "string",
+          "description": "保障责任名称，如“医保内住院医疗保险金”。"
+        },
+        "description": {
+          "type": "string",
+          "description": "对此项责任的简要说明。"
+        },
+        "details": {
+          "type": "object",
+          "description": "保障责任详细内容（展示 & 计算用）。",
+          "properties": {
+            "limit": {
+              "type": "integer",
+              "description": "保额上限（单位：元）。如 2,000,000。"
+            },
+            "deductible": {
+              "type": "integer",
+              "description": "此责任的免赔额。为 0 表示无免赔。"
+            },
+            "reimbursement_ratio": {
+              "type": "number",
+              "description": "赔付比例，如 1.0=100%，0.8=80%。"
+            },
+            "hospital_requirements": {
+              "type": "string",
+              "description": "对就医医院的要求，如：二级及以上公立医院。"
+            },
+            "coverage_scope": {
+              "type": "string",
+              "description": "保障的费用范围，如：住院费用 / 特药费用 / 康复费用。"
+            }
+          },
+          "required": ["limit", "deductible", "reimbursement_ratio", "hospital_requirements", "coverage_scope"]
+        }
+      },
+      "required": ["item_code", "item_name", "description", "details"]
+    },
+
+    "ValueAddedServiceItem": {
+      "type": "object",
+      "description": "增值服务项目，如垫付、绿通、在线客服等。",
+      "properties": {
+        "id": { "type": "string", "description": "服务唯一 ID。" },
+        "name": { "type": "string", "description": "服务名称。" },
+        "description": { "type": "string", "description": "服务说明。" }
+      },
+      "required": ["id", "name", "description"]
+    }
+  }
+}

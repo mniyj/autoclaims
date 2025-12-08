@@ -1,0 +1,5 @@
+{
+  "name": "保险产品配置页面",
+  "description": "A web application for insurance company staff to configure market-facing insurance products based on regulatory clauses. Features include clause search, auto-population of forms, and a live preview of the customer-facing product card and details page.",
+  "requestFramePermissions": []
+}

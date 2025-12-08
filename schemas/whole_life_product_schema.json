@@ -1,0 +1,149 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "增额终身寿险产品数据结构 (Increasing Whole Life Insurance Product Schema)",
+  "description": "用于定义增额终身寿险产品的完整数据结构，核心在于描述其保额增长机制、现金价值积累方式以及灵活的减保规则。",
+  "type": "object",
+
+  "properties": {
+    "productCode": { "type": "string", "description": "产品的唯一标识码，不可编辑。" },
+    "regulatoryName": { "type": "string", "description": "监管机构备案的正式名称。" },
+    "marketingName": { "type": "string", "description": "市场推广时使用的名称。" },
+    "productSummery": { "type": "string", "description": "产品摘要，突出卖点，通常会强调预定利率或增长率。" },
+    "onlineClaimFlag": { "type": "boolean", "description": "是否支持在线理赔/减保申请。" },
+    "insurerName": { "type": "string", "description": "所属保险公司名称。" },
+    "version": { "type": "string", "description": "产品版本号。" },
+    "salesRegions": { "type": "string", "description": "产品的销售区域。" },
+    "effectiveDate": { "type": "string", "format": "date", "description": "产品生效日期 (格式: YYYY-MM-DD)。" },
+    "expiryDate": { "type": ["string", "null"], "format": "date", "description": "产品停售日期 (格式: YYYY-MM-DD)，如果未停售则为 null。" },
+    "status": { "type": "string", "enum": ["生效", "失效", "草稿"], "description": "产品状态。" },
+    "primaryCategory": { "type": "string", "description": "产品一级分类名称（如：储蓄型）。" },
+    "primaryCategoryCode": { "type": "string", "description": "产品一级分类代码（如：E）。" },
+    "secondaryCategory": { "type": "string", "description": "产品二级分类名称（如：增额终身寿）。" },
+    "secondaryCategoryCode": { "type": "string", "description": "产品二级分类代码（如：E02）。" },
+    "racewayId": { "type": "string", "description": "三级赛道编码（如：E0202）。" },
+    "racewayName": { "type": "string", "description": "三级赛道名称（如：增额终身寿）。" },
+    "salesUrl": { "type": "string", "format": "uri", "description": "销售落地页的 URL 地址。" },
+    "underwritingAge": { "type": "string", "description": "投保年龄范围描述。" },
+    "coveragePeriod": { "type": "string", "description": "保障期限描述（固定为'终身'）。", "const": "终身" },
+    "waitingPeriod": { "type": "string", "description": "身故责任的等待期描述（如：180天）。" },
+    "productHeroImage": { "type": "string", "format": "uri", "description": "产品卡片和详情页的头图 URL。" },
+    "productLongImage": {  "type": "array", "description": "产品介绍长图，用于详情页。", "items": { "type": "string" }},
+    "productAttachment": { "type": "array", "items": { "type": "string" }, "description": "产品相关附件的文件名列表。" },
+    "clausesCode": { "type": "array", "items": { "type": "string" }, "description": "产品条款代码列表。" },
+    "productIntroduction": { "type": "string", "description": "产品的详细介绍文案。" },
+    "productAdvantages": { "type": "string", "description": "产品优势的文本描述。" },
+    "precautions": { "type": "string", "description": "产品注意事项的文本描述（如前期退保有损失）。" },
+    "crowd": { "type": "string", "description": "产品适用人群的文本描述。" },
+    "generalComment": { "type": "string", "description": "产品的总评或专家点评。" },
+    "tags": { "type": "string", "description": "产品的标签，如“收益稳健”、“领取灵活”。" },
+    
+    "effectiveAmountGrowthRate": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "年度有效保额的增长率（0-1之间的小数）。例如 0.0175 代表 1.75%。",
+      "examples": [0.0175, 0.035]
+    },
+    "paymentFrequency": {
+      "type": "string",
+      "description": "缴纳保费的频率描述，如：'年交/月交'。"
+    },
+    "paymentPeriod": {
+      "type": "string",
+      "description": "缴纳保费的年限或方式描述，如：'趸交/3年/5年/10年'。"
+    },
+
+    "partialSurrenderRules": {
+      "type": ["object", "null"],
+      "description": "减保规则对象。描述了如何从保单中领取现金价值，这是产品灵活性的关键。如果产品不支持减保，此字段可为 null。",
+      "properties": {
+        "is_available": {
+          "type": "boolean",
+          "description": "是否支持减保功能。"
+        },
+        "start_policy_year": {
+          "type": "integer",
+          "description": "最早可以开始申请减保的保单年度。"
+        },
+        "frequency_per_year": {
+          "type": "integer",
+          "description": "每年最多允许申请减保的次数。"
+        },
+        "min_amount_per_request": {
+          "type": "number",
+          "description": "每次申请减保的最低金额（元）。"
+        },
+        "max_ratio_per_request": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "每次申请减保金额占当时现金价值的最高比例（0-1之间的小数，0.2代表20%）。",
+          "examples": [0.2, 0.5]
+        },
+        "min_remaining_premium": {
+          "type": "number",
+          "description": "减保后，保单的累计已交保费不得低于的金额（元）。"
+        },
+        "description": {
+          "type": "string",
+          "description": "对减保规则的综合文本描述，用于前端展示。"
+        }
+      },
+      "required": ["is_available"]
+    },
+
+    "coverageDetails": {
+      "type": "array",
+      "description": "保障责任详情列表，通常只包含身故/全残责任。",
+      "items": { "$ref": "#/$defs/CoverageDetailItem" }
+    },
+     "valueAddedServices": {
+      "type": "array",
+      "description": "增值服务列表（如信托服务、对接养老社区等）。",
+      "items": { "$ref": "#/$defs/ValueAddedServiceItem" }
+    }
+  },
+  "required": [
+    "productCode", "regulatoryName", "marketingName", "insurerName", "underwritingAge", "coveragePeriod", "effectiveAmountGrowthRate", "paymentPeriod", "partialSurrenderRules", "coverageDetails"
+  ],
+
+  "$defs": {
+    "CoverageDetailItem": {
+      "type": "object",
+      "description": "保障责任项目，核心是身故或全残保险金。",
+      "properties": {
+        "mandatory": { "type": "boolean", "description": "是否为必选责任（true=必选，false=可选）。" },
+        "item_code": {
+          "type": "string",
+          "description": "保障项目的内部代码。",
+          "enum": ["DEATH_OR_TOTAL_DISABILITY"]
+        },
+        "item_name": { "type": "string", "description": "保障项目的名称，如“身故或全残保险金”。" },
+        "description": { "type": "string", "description": "保障项目的简要描述。" },
+        "details": {
+          "type": "object",
+          "description": "保障项目的详细参数。",
+          "properties": {
+            "payout_logic": {
+              "type": "string",
+              "description": "身故/全残保险金的赔付逻辑文本描述，通常是（已交保费*系数, 现金价值, 年度有效保额）三者取大。"
+            }
+          },
+          "required": ["payout_logic"]
+        }
+      },
+      "required": ["item_code", "item_name", "description", "details"]
+    },
+
+    "ValueAddedServiceItem": {
+      "type": "object",
+      "description": "单个增值服务项目。",
+      "properties": {
+        "id": { "type": "string", "description": "服务的唯一标识符。" },
+        "name": { "type": "string", "description": "服务名称。" },
+        "description": { "type": "string", "description": "服务的详细描述。" }
+      },
+      "required": ["id", "name", "description"]
+    }
+  }
+}
