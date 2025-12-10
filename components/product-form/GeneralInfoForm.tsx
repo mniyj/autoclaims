@@ -17,7 +17,9 @@ interface FormProps {
 const GeneralInfoForm: React.FC<FormProps> = ({ product, onFormChange }) => {
     
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    onFormChange(e.target.name as keyof InsuranceProduct, e.target.value);
+    const { name, value } = e.target as any;
+    const isNumber = (e.target as HTMLInputElement).type === 'number';
+    onFormChange(name as keyof InsuranceProduct, isNumber ? (parseFloat(value) || 0) : value);
   };
 
   
@@ -115,12 +117,13 @@ const GeneralInfoForm: React.FC<FormProps> = ({ product, onFormChange }) => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Input label="版本号" id="version" name="version" value={product.version} onChange={handleChange} required />
-                    <Select label="状态" id="status" name="status" value={product.status} onChange={handleChange} required>
-                        {PRODUCT_STATUSES.map(stat => <option key={stat} value={stat}>{stat}</option>)}
-                    </Select>
-                    <Input label="生效日" id="effectiveDate" name="effectiveDate" type="date" value={product.effectiveDate} onChange={handleChange} required />
-                    <Input label="停售日" id="discontinuationDate" name="discontinuationDate" type="date" value={product.discontinuationDate} onChange={handleChange} />
+                <Input label="版本号" id="version" name="version" value={product.version} onChange={handleChange} required />
+                <Select label="状态" id="status" name="status" value={product.status} onChange={handleChange} required>
+                    {PRODUCT_STATUSES.map(stat => <option key={stat} value={stat}>{stat}</option>)}
+                </Select>
+                <Input label="生效日" id="effectiveDate" name="effectiveDate" type="date" value={product.effectiveDate} onChange={handleChange} required />
+                <Input label="停售日" id="discontinuationDate" name="discontinuationDate" type="date" value={product.discontinuationDate} onChange={handleChange} />
+                <Input label="年保费(起)" id="annualPremium" name="annualPremium" type="number" value={(product as any).annualPremium ?? 0} onChange={handleChange} />
             </div>
             <Input label="销售落地页URL" id="salesUrl" name="salesUrl" type="url" value={product.salesUrl || ''} onChange={handleChange} placeholder="https://example.com/product-page" />
             <Input label="销售区域" id="salesRegions" name="salesRegions" value={product.salesRegions} onChange={handleChange} required />

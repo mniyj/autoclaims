@@ -53,6 +53,8 @@
       "description": "缴纳保费的年限或方式描述，如：'趸交/3年/5年/10年'。"
     },
 
+    "annualPremium": { "type": "number", "description": "每年的保费（起）。" },
+
     "partialSurrenderRules": {
       "type": ["object", "null"],
       "description": "减保规则对象。描述了如何从保单中领取现金价值，这是产品灵活性的关键。如果产品不支持减保，此字段可为 null。",

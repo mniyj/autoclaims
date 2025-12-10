@@ -85,6 +85,8 @@
       "description": "承保的职业范围描述（年金险通常较宽松）。"
     },
 
+    "annualPremium": { "type": "number", "description": "每年的保费（起）。" },
+
     "coverageDetails": {
       "type": "array",
       "description": "保障责任详情列表，是年金险产品的核心。",

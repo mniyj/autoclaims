@@ -107,6 +107,10 @@
       "type": "string",
       "description": "等待期描述（如：90天、180天）。"
     },
+    "annualPremium": {
+      "type": "number",
+      "description": "每年的保费（起）。"
+    },
     "deductible": {
       "type": "string",
       "description": "免赔额描述（定期寿险通常为0或不适用）。"

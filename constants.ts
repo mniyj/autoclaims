@@ -2153,7 +2153,7 @@ export const MOCK_COMPANY_PROFILES: Record<string, InsuranceCompanyProfile> = {
 };
 
 export const MOCK_INDUSTRY_DATA: IndustryData[] = [
-  { id: '1', code: 'ID_INS001', name: '城市平均工资及月度护理成本', deployed: true, operator: 'antsure1', operationTime: '2024-05-20 14:30:00' },
+  { id: '1', code: 'ID_INS001', name: '城市平均工资、月度护理成本、生活类支出数据', deployed: true, operator: 'antsure1', operationTime: '2024-05-20 14:30:00' },
   { id: '2', code: 'ID_INS002', name: '重疾发生率', deployed: true, operator: 'antsure1', operationTime: '2024-05-20 14:35:00' },
   { id: '3', code: 'ID_INS003', name: '意外发生率', deployed: true, operator: 'antsure1', operationTime: '2024-05-20 15:00:00' },
   { id: '4', code: 'ID_INS004', name: '因病身故发生率', deployed: true, operator: 'antsure1', operationTime: '2024-05-20 15:10:00' },
@@ -2162,24 +2162,24 @@ export const MOCK_INDUSTRY_DATA: IndustryData[] = [
 ];
 
 export const MOCK_CITY_SALARY_DATA: CitySalaryData[] = [
-  { provinceName: '北京市', cityName: '北京市', provinceGbCode: '110000', cityGbCode: '110100', avgAnnualSalary: '218,312', avgMonthlySalary: '18,192.66667', monthlyNursingCost: '6502' },
-  { provinceName: '天津市', cityName: '天津市', provinceGbCode: '120000', cityGbCode: '120100', avgAnnualSalary: '138,007', avgMonthlySalary: '11,500.58333', monthlyNursingCost: '4300' },
-  { provinceName: '河北省', cityName: '石家庄市', provinceGbCode: '130000', cityGbCode: '130100', avgAnnualSalary: '94,818', avgMonthlySalary: '7,901.5', monthlyNursingCost: '3300' },
-  { provinceName: '河北省', cityName: '唐山市', provinceGbCode: '130000', cityGbCode: '130200', avgAnnualSalary: '94,818', avgMonthlySalary: '7,901.5', monthlyNursingCost: '3100' },
-  { provinceName: '河北省', cityName: '秦皇岛市', provinceGbCode: '130000', cityGbCode: '130300', avgAnnualSalary: '94,818', avgMonthlySalary: '7,901.5', monthlyNursingCost: '3000' },
-  { provinceName: '河北省', cityName: '邯郸市', provinceGbCode: '130000', cityGbCode: '130400', avgAnnualSalary: '94,818', avgMonthlySalary: '7,901.5', monthlyNursingCost: '2850' },
-  { provinceName: '河北省', cityName: '邢台市', provinceGbCode: '130000', cityGbCode: '130500', avgAnnualSalary: '94,818', avgMonthlySalary: '7,901.5', monthlyNursingCost: '2800' },
-  { provinceName: '河北省', cityName: '保定市', provinceGbCode: '130000', cityGbCode: '130600', avgAnnualSalary: '94,818', avgMonthlySalary: '7,901.5', monthlyNursingCost: '2950' },
-  { provinceName: '河北省', cityName: '张家口市', provinceGbCode: '130000', cityGbCode: '130700', avgAnnualSalary: '94,818', avgMonthlySalary: '7,901.5', monthlyNursingCost: '2750' },
-  { provinceName: '河北省', cityName: '承德市', provinceGbCode: '130000', cityGbCode: '130800', avgAnnualSalary: '94,818', avgMonthlySalary: '7,901.5', monthlyNursingCost: '2800' },
-  { provinceName: '河北省', cityName: '沧州市', provinceGbCode: '130000', cityGbCode: '130900', avgAnnualSalary: '94,818', avgMonthlySalary: '7,901.5', monthlyNursingCost: '2900' },
-  { provinceName: '河北省', cityName: '廊坊市', provinceGbCode: '130000', cityGbCode: '131000', avgAnnualSalary: '94,818', avgMonthlySalary: '7,901.5', monthlyNursingCost: '3150' },
-  { provinceName: '河北省', cityName: '衡水市', provinceGbCode: '130000', cityGbCode: '131100', avgAnnualSalary: '94,818', avgMonthlySalary: '7,901.5', monthlyNursingCost: '2750' },
-  { provinceName: '山西省', cityName: '太原市', provinceGbCode: '140000', cityGbCode: '140100', avgAnnualSalary: '95,025', avgMonthlySalary: '7,918.75', monthlyNursingCost: '3100' },
-  { provinceName: '山西省', cityName: '大同市', provinceGbCode: '140000', cityGbCode: '140200', avgAnnualSalary: '95,025', avgMonthlySalary: '7,918.75', monthlyNursingCost: '2800' },
-  { provinceName: '山西省', cityName: '阳泉市', provinceGbCode: '140000', cityGbCode: '140300', avgAnnualSalary: '95,025', avgMonthlySalary: '7,918.75', monthlyNursingCost: '2650' },
-  { provinceName: '山西省', cityName: '长治市', provinceGbCode: '140000', cityGbCode: '140400', avgAnnualSalary: '95,025', avgMonthlySalary: '7,918.75', monthlyNursingCost: '2750' },
-  { provinceName: '山西省', cityName: '晋城市', provinceGbCode: '140000', cityGbCode: '140500', avgAnnualSalary: '95,025', avgMonthlySalary: '7,918.75', monthlyNursingCost: '2800' },
+  { provinceName: '北京市', cityName: '北京市', provinceGbCode: '110000', cityGbCode: '110100', avgAnnualSalary: '218,312', avgMonthlySalary: '18,192.66667', monthlyNursingCost: '6502', monthly_living_expense: 1451 },
+  { provinceName: '天津市', cityName: '天津市', provinceGbCode: '120000', cityGbCode: '120100', avgAnnualSalary: '138,007', avgMonthlySalary: '11,500.58333', monthlyNursingCost: '4300', monthly_living_expense: 1300 },
+  { provinceName: '河北省', cityName: '石家庄市', provinceGbCode: '130000', cityGbCode: '130100', avgAnnualSalary: '94,818', avgMonthlySalary: '7,901.5', monthlyNursingCost: '3300', monthly_living_expense: 1065 },
+  { provinceName: '河北省', cityName: '唐山市', provinceGbCode: '130000', cityGbCode: '130200', avgAnnualSalary: '94,818', avgMonthlySalary: '7,901.5', monthlyNursingCost: '3100', monthly_living_expense: 1065 },
+  { provinceName: '河北省', cityName: '秦皇岛市', provinceGbCode: '130000', cityGbCode: '130300', avgAnnualSalary: '94,818', avgMonthlySalary: '7,901.5', monthlyNursingCost: '3000', monthly_living_expense: 1065 },
+  { provinceName: '河北省', cityName: '邯郸市', provinceGbCode: '130000', cityGbCode: '130400', avgAnnualSalary: '94,818', avgMonthlySalary: '7,901.5', monthlyNursingCost: '2850', monthly_living_expense: 1065 },
+  { provinceName: '河北省', cityName: '邢台市', provinceGbCode: '130000', cityGbCode: '130500', avgAnnualSalary: '94,818', avgMonthlySalary: '7,901.5', monthlyNursingCost: '2800', monthly_living_expense: 1065 },
+  { provinceName: '河北省', cityName: '保定市', provinceGbCode: '130000', cityGbCode: '130600', avgAnnualSalary: '94,818', avgMonthlySalary: '7,901.5', monthlyNursingCost: '2950', monthly_living_expense: 1065 },
+  { provinceName: '河北省', cityName: '张家口市', provinceGbCode: '130000', cityGbCode: '130700', avgAnnualSalary: '94,818', avgMonthlySalary: '7,901.5', monthlyNursingCost: '2750', monthly_living_expense: 1065 },
+  { provinceName: '河北省', cityName: '承德市', provinceGbCode: '130000', cityGbCode: '130800', avgAnnualSalary: '94,818', avgMonthlySalary: '7,901.5', monthlyNursingCost: '2800', monthly_living_expense: 1065 },
+  { provinceName: '河北省', cityName: '沧州市', provinceGbCode: '130000', cityGbCode: '130900', avgAnnualSalary: '94,818', avgMonthlySalary: '7,901.5', monthlyNursingCost: '2900', monthly_living_expense: 1065 },
+  { provinceName: '河北省', cityName: '廊坊市', provinceGbCode: '130000', cityGbCode: '131000', avgAnnualSalary: '94,818', avgMonthlySalary: '7,901.5', monthlyNursingCost: '3150', monthly_living_expense: 1065 },
+  { provinceName: '河北省', cityName: '衡水市', provinceGbCode: '130000', cityGbCode: '131100', avgAnnualSalary: '94,818', avgMonthlySalary: '7,901.5', monthlyNursingCost: '2750', monthly_living_expense: 1065 },
+  { provinceName: '山西省', cityName: '太原市', provinceGbCode: '140000', cityGbCode: '140100', avgAnnualSalary: '95,025', avgMonthlySalary: '7,918.75', monthlyNursingCost: '3100', monthly_living_expense: 1065 },
+  { provinceName: '山西省', cityName: '大同市', provinceGbCode: '140000', cityGbCode: '140200', avgAnnualSalary: '95,025', avgMonthlySalary: '7,918.75', monthlyNursingCost: '2800', monthly_living_expense: 1065 },
+  { provinceName: '山西省', cityName: '阳泉市', provinceGbCode: '140000', cityGbCode: '140300', avgAnnualSalary: '95,025', avgMonthlySalary: '7,918.75', monthlyNursingCost: '2650', monthly_living_expense: 1065 },
+  { provinceName: '山西省', cityName: '长治市', provinceGbCode: '140000', cityGbCode: '140400', avgAnnualSalary: '95,025', avgMonthlySalary: '7,918.75', monthlyNursingCost: '2750', monthly_living_expense: 1065 },
+  { provinceName: '山西省', cityName: '晋城市', provinceGbCode: '140000', cityGbCode: '140500', avgAnnualSalary: '95,025', avgMonthlySalary: '7,918.75', monthlyNursingCost: '2800', monthly_living_expense: 1065 },
 ];
 
 export const MOCK_CRITICAL_ILLNESS_DATA: CriticalIllnessRateData[] = [

@@ -22,7 +22,6 @@ const CriticalIllnessForm: React.FC<FormProps> = ({ product, onFormChange }) => 
         <Input label="保障区域" id="coverageArea" name="coverageArea" value={product.coverageArea} onChange={handleChange} required />
         <Input label="职业范围" id="occupationScope" name="occupationScope" value={product.occupationScope} onChange={handleChange} required />
         <Input label="健康告知" id="healthConditionNotice" name="healthConditionNotice" value={(product as any).healthConditionNotice || ''} onChange={handleChange} />
-        <Input label="年保费(起)" id="annualPremium" name="annualPremium" type="number" value={product.annualPremium} onChange={handleChange} required />
       </div>
 
       <div className="pt-4 border-t border-gray-200">

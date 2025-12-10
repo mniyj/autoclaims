@@ -8,7 +8,7 @@ SERVER_IP=${1:-"121.43.159.216"}
 SERVER_USER=${2:-"root"}
 SSH_KEY_PATH=${3:-"/Users/pegasus/Downloads/aliyun.pem"}
 REMOTE_DIR="/var/www/insurance-config"
-REMOTE_PORT=3008
+REMOTE_PORT=3005
 
 # 检查是否提供了 IP
 if [ -z "$SERVER_IP" ]; then

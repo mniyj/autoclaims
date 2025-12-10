@@ -116,6 +116,7 @@ export interface BaseProduct {
   cardMetric3Value?: string;
   supportsOnlineClaim: boolean;
   isOnline?: boolean;
+  annualPremium?: number;
 
   // New file upload fields
   clauseTextFile?: string;
@@ -133,7 +134,6 @@ export interface HealthAccidentCriticalIllnessProduct extends BaseProduct {
   hesitationPeriod: string;
   policyEffectiveDate: string;
   purchaseLimit: number;
-  annualPremium: number;
   valueAddedServices: ValueAddedServiceItem[];
   deductible?: string;
   renewalWarranty?: string;
@@ -316,6 +316,7 @@ export interface CitySalaryData {
   avgAnnualSalary: string;
   avgMonthlySalary: string;
   monthlyNursingCost: string;
+  monthly_living_expense?: number;
 }
 
 export interface CriticalIllnessRateData {

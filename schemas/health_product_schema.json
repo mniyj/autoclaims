@@ -143,9 +143,9 @@
     },
 
     "productLongImage": {
-      "type": "string",
-      "format": "uri",
-      "description": "产品介绍长图，用于详情页。"
+      "type": "array",
+      "description": "产品介绍长图，用于详情页。",
+      "items": { "type": "string" }
     },
 
     "productAttachment": {

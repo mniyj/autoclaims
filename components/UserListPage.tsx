@@ -2,10 +2,25 @@
 import React, { useState, useMemo } from 'react';
 import { MOCK_END_USERS } from '../constants';
 import { type EndUser } from '../types';
+import { calculatePensionGap } from '../utils/calculations';
 import Pagination from './ui/Pagination';
 
 const UserListPage: React.FC = () => {
-    const [users, setUsers] = useState<EndUser[]>(MOCK_END_USERS);
+    const [users, setUsers] = useState<EndUser[]>(() => {
+        return MOCK_END_USERS.map(user => {
+            const { totalGap } = calculatePensionGap({
+                currentAge: user.age,
+                monthlyIncome: user.monthlyIncome
+            });
+            return {
+                ...user,
+                gaps: {
+                    ...user.gaps,
+                    annuity: totalGap
+                }
+            };
+        });
+    });
     const [currentPage, setCurrentPage] = useState(1);
     const ITEMS_PER_PAGE = 10;
 

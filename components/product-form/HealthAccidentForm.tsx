@@ -34,7 +34,6 @@ const HealthAccidentForm: React.FC<FormProps> = ({ product, onFormChange, allowe
             <Input label="免赔额" id="deductible" name="deductible" value={(product as any).deductible || ''} onChange={handleChange} />
             <Input label="续保描述" id="renewalWarranty" name="renewalWarranty" value={(product as any).renewalWarranty || ''} onChange={handleChange} />
             <Input label="购买份数" id="purchaseLimit" name="purchaseLimit" type="number" value={product.purchaseLimit} onChange={handleChange} required />
-            <Input label="年保费" id="annualPremium" name="annualPremium" type="number" value={product.annualPremium} onChange={handleChange} required />
             <Input label="院外特药保障" id="outHospitalMedicine" name="outHospitalMedicine" value={(product as any).outHospitalMedicine || ''} onChange={handleChange} />
             <Input label="健康告知" id="healthConditionNotice" name="healthConditionNotice" value={(product as any).healthConditionNotice || ''} onChange={handleChange} />
         </div>
