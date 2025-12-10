@@ -488,7 +488,6 @@ export const MOCK_CLAUSES: Clause[] = [
     cardMetric3Value: '28天-80岁',
     supportsOnlineClaim: true,
     isOnline: true,
-    salesUrl: 'https://ecomm.generalichina.com/nebx/#/productDetail?product=b4400c40907ddf17953576b3e2fefc33&channel=EC&agentCode=43000001&esig=a56ba52310e79d888c8106c823c1cbd3b75431d5de92b7d2440ccd9edcf7bf5d&et=1764264283335&clientSource=APP&userIdentity=user',
     deductible: '共享1万元免赔额',
     renewalWarranty: '3年保证续保',
     outHospitalMedicine: '特定院外药品，按责任限额报销',
@@ -819,11 +818,11 @@ export const MOCK_CLAUSES: Clause[] = [
     clauseType: ClauseType.MAIN,
     operator: '系统管理员',
     coverageDetails: [
-      { mandatory: true, item_code: 'DEATH_OR_TOTAL_DISABILITY', item_name: '身故或全残保险金', description: '核心责任', details: { payout_logic: '赔付100%基本保额' } }
+      { mandatory: true, id: 'DEATH_OR_TOTAL_DISABILITY', name: '身故或全残保险金', amount: '100%基本保额', details: '核心责任' }
     ],
     coveragePlans: [
       { planType: '标准版', coverageDetails: [
-        { mandatory: true, item_code: 'DEATH_OR_TOTAL_DISABILITY', item_name: '身故或全残保险金', description: '核心责任', details: { payout_logic: '赔付100%基本保额' } }
+        { mandatory: true, id: 'DEATH_OR_TOTAL_DISABILITY', name: '身故或全残保险金', amount: '100%基本保额', details: '核心责任' }
       ]}
     ],
     underwritingAge: '20 - 55周岁',
@@ -857,11 +856,11 @@ export const MOCK_CLAUSES: Clause[] = [
     clauseType: ClauseType.MAIN,
     operator: '系统管理员',
     coverageDetails: [
-      { mandatory: true, item_code: 'DEATH_OR_TOTAL_DISABILITY', item_name: '身故或全残保险金', description: '核心责任', details: { payout_logic: '赔付100%基本保额' } }
+      { mandatory: true, id: 'DEATH_OR_TOTAL_DISABILITY', name: '身故或全残保险金', amount: '100%基本保额', details: '核心责任' }
     ],
     coveragePlans: [
       { planType: '标准版', coverageDetails: [
-        { mandatory: true, item_code: 'DEATH_OR_TOTAL_DISABILITY', item_name: '身故或全残保险金', description: '核心责任', details: { payout_logic: '赔付100%基本保额' } }
+        { mandatory: true, id: 'DEATH_OR_TOTAL_DISABILITY', name: '身故或全残保险金', amount: '100%基本保额', details: '核心责任' }
       ]}
     ],
     underwritingAge: '25 - 60周岁',
@@ -895,13 +894,13 @@ export const MOCK_CLAUSES: Clause[] = [
     clauseType: ClauseType.MAIN,
     operator: '系统管理员',
     coverageDetails: [
-      { mandatory: true, item_code: 'DEATH_OR_TOTAL_DISABILITY', item_name: '身故或全残保险金', description: '等额给付', details: { payout_logic: '赔付100%基本保额' } },
-      { mandatory: false, item_code: 'DEATH_OR_TOTAL_DISABILITY', item_name: '收入保障金', description: '保障期内按月给付', details: { scenario: '按月收入保障给付', additional_limit: 5000 } }
+      { mandatory: true, id: 'DEATH_OR_TOTAL_DISABILITY', name: '身故或全残保险金', amount: '100%基本保额', details: '等额给付' },
+      { mandatory: false, id: 'INCOME_PROTECTION', name: '收入保障金', amount: '5000元/月', details: '保障期内按月给付' }
     ],
     coveragePlans: [
       { planType: '标准版', coverageDetails: [
-        { mandatory: true, item_code: 'DEATH_OR_TOTAL_DISABILITY', item_name: '身故或全残保险金', description: '等额给付', details: { payout_logic: '赔付100%基本保额' } },
-        { mandatory: false, item_code: 'DEATH_OR_TOTAL_DISABILITY', item_name: '收入保障金', description: '保障期内按月给付', details: { scenario: '按月收入保障给付', additional_limit: 5000 } }
+        { mandatory: true, id: 'DEATH_OR_TOTAL_DISABILITY', name: '身故或全残保险金', amount: '100%基本保额', details: '等额给付' },
+        { mandatory: false, id: 'INCOME_PROTECTION', name: '收入保障金', amount: '5000元/月', details: '保障期内按月给付' }
       ]}
     ],
     underwritingAge: '25 - 55周岁',

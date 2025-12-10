@@ -22,6 +22,7 @@ interface GroupItem {
 }
 
 interface CoverageDetail {
+  mandatory?: boolean
   item_code: string
   item_name: string
   description: string

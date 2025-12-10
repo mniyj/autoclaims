@@ -34,11 +34,14 @@ export interface ValueAddedServiceItem {
 }
 
 export interface HealthCoverageDetailSpec {
-  limit: number;
-  deductible: number;
-  reimbursement_ratio: number;
-  hospital_requirements: string;
-  coverage_scope: string;
+  limit?: number;
+  deductible?: number;
+  reimbursement_ratio?: number;
+  hospital_requirements?: string;
+  coverage_scope?: string;
+  additional_limit?: number;
+  scenario?: string;
+  payout_logic?: string;
 }
 
 export interface HealthCoverageDetailItem {
