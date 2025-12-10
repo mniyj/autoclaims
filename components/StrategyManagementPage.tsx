@@ -53,7 +53,7 @@ const StrategyManagementPage: React.FC<StrategyManagementPageProps> = () => {
       
       <div className="bg-white rounded-md shadow-sm">
         <div className="p-6 flex justify-between items-center">
-            <h2 className="text-base font-semibold text-gray-900">保险产品推荐规则表</h2>
+          
             <button
                 onClick={() => setIsExcelModalOpen(true)}
                 className="h-9 px-4 bg-blue-500 text-white text-sm font-medium rounded-md shadow-sm hover:bg-blue-600 transition flex items-center"

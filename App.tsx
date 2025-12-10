@@ -61,10 +61,10 @@ const navItems: NavItemData[] = [
     ] 
   },
   { 
-    name: '策略管理', 
+    name: '保险产品推荐规则表', 
     icon: <StrategyIcon />, 
     children: [
-        { name: '策略列表', id: 'strategy_management' },
+        { name: '保险产品推荐规则表', id: 'strategy_management' },
         { name: '智能保顾计算元素配置', id: 'smart_advisor_config' },
     ]
   },
@@ -82,7 +82,7 @@ const navItems: NavItemData[] = [
 
 const activeParentViews: Record<string, AppView[]> = {
     '产品管理': ['product_list', 'product_config', 'add_product', 'clause_management', 'add_clause', 'view_clause', 'edit_clause', 'company_management', 'add_company', 'view_company', 'edit_company', 'industry_data_list', 'edit_industry_data', 'insurance_type_management', 'responsibility_management'],
-    '策略管理': ['strategy_management', 'edit_strategy', 'smart_advisor_config'],
+    '保险产品推荐规则表': ['strategy_management', 'edit_strategy', 'smart_advisor_config'],
     '系统管理': ['system_settings', 'user_list', 'data_dashboard']
 };
 
