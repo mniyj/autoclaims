@@ -8,18 +8,19 @@ interface SectionProps {
   action?: React.ReactNode;
   className?: string;
   icon?: React.ReactNode;
+  headerClassName?: string;
 }
 
-const Section: React.FC<SectionProps> = ({ title, children, action, className = '', icon }) => (
-    <div className={`bg-white rounded-xl shadow-sm mb-3 overflow-hidden ${className}`}>
-      <div className="px-4 py-3.5 flex justify-between items-center border-b border-gray-50">
+const Section: React.FC<SectionProps> = ({ title, children, action, className = '', icon, headerClassName = '' }) => (
+    <div className={`bg-white rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] mb-3 overflow-hidden ${className}`}>
+      <div className={`px-4 py-3 flex justify-between items-center ${headerClassName}`}>
         <div className="flex items-center gap-2">
-            {icon && <span className="text-blue-500">{icon}</span>}
-            <h3 className="text-base font-bold text-gray-800">{title}</h3>
+            {icon}
+            <h3 className="text-[15px] font-bold text-gray-800">{title}</h3>
         </div>
         {action}
       </div>
-      <div className="p-4">
+      <div className="px-4 pb-4 pt-1">
         {children}
       </div>
     </div>
@@ -27,9 +28,9 @@ const Section: React.FC<SectionProps> = ({ title, children, action, className = 
 
 const DetailItem: React.FC<{ label: string; value?: string | number }> = ({ label, value }) => (
     value ? (
-    <div className="py-2 flex justify-between items-start text-sm">
-        <dt className="text-gray-500 flex-shrink-0 mr-4">{label}</dt>
-        <dd className="text-gray-800 font-medium text-right break-all">{value}</dd>
+    <div className="py-2.5 flex justify-between items-start text-[13px]">
+        <dt className="text-gray-500 flex-shrink-0 mr-4 min-w-[4em]">{label}</dt>
+        <dd className="text-gray-900 font-bold text-right break-all">{value}</dd>
     </div>
     ) : null
 );
@@ -40,112 +41,177 @@ const ProductDetail: React.FC<{ product: InsuranceProduct }> = ({ product }) => 
   
   const hasValueAddedServices = (product.primaryCategory === PrimaryCategory.HEALTH || product.primaryCategory === PrimaryCategory.ACCIDENT || product.primaryCategory === PrimaryCategory.CRITICAL_ILLNESS) && product.valueAddedServices && product.valueAddedServices.length > 0;
   
+  const getNoticeItems = () => {
+    const common = [
+      { label: '投保年龄', value: product.underwritingAge },
+      { label: '保障期间', value: product.coveragePeriod },
+    ];
+
+    switch (product.primaryCategory) {
+      case PrimaryCategory.ACCIDENT:
+        return [
+          ...common,
+          { label: '保障区域', value: (product as any).coverageArea },
+          { label: '医院范围', value: (product as any).hospitalScope },
+          { label: '赔付范围', value: (product as any).claimScope },
+          { label: '投保职业', value: (product as any).occupationScope },
+          { label: '犹豫期', value: (product as any).hesitationPeriod },
+          { label: '等待期', value: product.waitingPeriod },
+          { label: '保单生效日', value: (product as any).policyEffectiveDate },
+          { label: '购买份数', value: (product as any).purchaseLimit },
+        ];
+      case PrimaryCategory.HEALTH:
+        return [
+          ...common,
+          { label: '保障区域', value: (product as any).coverageArea },
+          { label: '医院范围', value: (product as any).hospitalScope },
+          { label: '赔付范围', value: (product as any).claimScope },
+          { label: '投保职业', value: (product as any).occupationScope },
+          { label: '犹豫期', value: (product as any).hesitationPeriod },
+          { label: '等待期', value: product.waitingPeriod },
+          { label: '保单生效日', value: (product as any).policyEffectiveDate },
+          { label: '健康告知', value: (product as any).healthConditionNotice },
+          { label: '购买份数', value: (product as any).purchaseLimit },
+        ];
+      case PrimaryCategory.CRITICAL_ILLNESS:
+        return [
+          ...common,
+          { label: '交费方式', value: (product as any).paymentMethod || (product as any).paymentFrequency },
+          { label: '交费期间', value: (product as any).paymentPeriod },
+          { label: '等待期', value: product.waitingPeriod },
+          { label: '投保职业', value: (product as any).occupationScope },
+        ];
+      case PrimaryCategory.ANNUITY:
+        return [
+          ...common,
+          { label: '交费方式', value: (product as any).paymentMethod },
+          { label: '交费期间', value: (product as any).paymentPeriod },
+          { label: '领取年龄', value: (product as any).payoutStartAge },
+          { label: '投保职业', value: (product as any).underwritingOccupation },
+        ];
+      case PrimaryCategory.WHOLE_LIFE:
+        const items = [
+          ...common,
+          { label: '交费频率', value: (product as any).paymentFrequency },
+          { label: '交费期间', value: (product as any).paymentPeriod },
+        ];
+        if ((product as any).partialSurrenderRules) {
+             items.push(
+                { label: '减保支持', value: (product as any).partialSurrenderRules.is_available ? '支持' : '不支持' },
+                { label: '起始保单年度', value: (product as any).partialSurrenderRules.start_policy_year },
+                { label: '每年次数上限', value: (product as any).partialSurrenderRules.frequency_per_year },
+                { label: '单次最低金额(元)', value: (product as any).partialSurrenderRules.min_amount_per_request },
+                { label: '单次最高比例', value: (product as any).partialSurrenderRules.max_ratio_per_request !== undefined ? `${Math.round(((product as any).partialSurrenderRules.max_ratio_per_request || 0) * 100)}%` : undefined },
+                { label: '最低剩余保费(元)', value: (product as any).partialSurrenderRules.min_remaining_premium }
+             );
+        }
+        return items;
+      case PrimaryCategory.TERM_LIFE:
+          return [
+              ...common,
+              { label: '等待期', value: product.waitingPeriod },
+              { label: '基本保额', value: (product as any).basicSumAssured ? `最高 ${(product as any).basicSumAssured / 10000}万` : undefined },
+              { label: '交费期间', value: (product as any).paymentPeriod },
+              { label: '投保职业', value: (product as any).underwritingOccupation },
+          ];
+      default:
+        return [
+          ...common,
+          { label: '等待期', value: product.waitingPeriod },
+          { label: '免赔额', value: (product as any).deductible },
+          { label: '交费频率', value: (product as any).paymentFrequency },
+          { label: '交费期间', value: (product as any).paymentPeriod },
+        ];
+    }
+  };
+
+  const noticeItems = getNoticeItems();
+
   // Helper to generate tags
   const tags = [];
-  if (product.supportsOnlineClaim) tags.push('在线理赔');
-  if (product.waitingPeriod) tags.push(`等待期${product.waitingPeriod}`);
+  if (product.supportsOnlineClaim) tags.push({ text: '在线理赔', type: 'green' });
+  if (product.waitingPeriod) tags.push({ text: `等待期${product.waitingPeriod}`, type: 'blue' });
 
   return (
-    <div className="relative bg-[#f5f7fa] h-full flex flex-col overflow-hidden">
-      <div className="flex-1 overflow-y-auto pb-24">
+    <div className="relative bg-[#f0f4f8] h-full flex flex-col overflow-hidden font-sans">
+      <div className="flex-1 overflow-y-auto pb-24 no-scrollbar">
         {/* Header with Gradient */}
-        <div className={`relative px-5 pt-6 pb-12 text-white rounded-b-[2rem] shadow-sm overflow-hidden ${!product.productHeroImage ? 'bg-gradient-to-br from-blue-600 to-blue-500' : ''}`}>
+        <div className={`relative px-5 pt-6 pb-8 bg-gradient-to-b from-white to-[#f0f4f8] z-10`}>
              {product.productHeroImage && (
                  <>
                     <img 
                         src={product.productHeroImage} 
                         alt={product.marketingName} 
-                        className="absolute inset-0 w-full h-full object-cover z-0"
+                        className="absolute inset-0 w-full h-48 object-cover z-0 opacity-20 mask-image-gradient"
                         referrerPolicy="no-referrer"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-black/70 z-0" />
                  </>
              )}
 
-             {!product.productHeroImage && (
-                 <div className="absolute top-0 right-0 opacity-10 transform translate-x-1/4 -translate-y-1/4 z-0">
-                    <svg width="200" height="200" viewBox="0 0 200 200" fill="currentColor">
-                        <circle cx="100" cy="100" r="100" />
-                    </svg>
-                 </div>
-             )}
-             
              <div className="relative z-10">
-                <h1 className="text-xl font-bold leading-tight mb-2">{product.marketingName}</h1>
-                {product.productSummary && <p className="text-white/90 text-xs leading-relaxed">{product.productSummary}</p>}
+                <h1 className="text-xl font-bold leading-tight mb-2 text-gray-900">{product.marketingName}</h1>
+                {product.productSummary && <p className="text-gray-500 text-xs leading-relaxed mb-3">{product.productSummary}</p>}
                 
-                <div className="flex flex-wrap gap-2 mt-3">
+                <div className="flex flex-wrap gap-2">
                     {tags.map((tag, i) => (
-                        <span key={i} className="px-2 py-0.5 bg-white/20 backdrop-blur-sm rounded text-[10px] font-medium border border-white/30">
-                            {tag}
+                        <span key={i} className={`px-2 py-0.5 rounded-[4px] text-[11px] font-medium ${tag.type === 'green' ? 'bg-[#e6f7f4] text-[#00b69b]' : 'bg-[#eef6ff] text-[#3b82f6]'}`}>
+                            {tag.text}
                         </span>
                     ))}
                 </div>
              </div>
         </div>
 
-        <div className="px-3 -mt-6 relative z-20 space-y-3">
+        <div className="px-3 relative z-20 space-y-3">
           {(product as any).coveragePlans && (product as any).coveragePlans.length > 0 && (
-            <Section title="保障计划">
+            <Section 
+                title="保障计划"
+                icon={
+                    <div className="w-5 h-5 rounded-full bg-blue-50 flex items-center justify-center text-blue-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                    </div>
+                }
+                headerClassName="bg-gradient-to-r from-blue-50/50 to-transparent"
+            >
               <div className="space-y-3">
-                <div className="flex items-center gap-2 overflow-x-auto">
+                {(product as any).coveragePlans.length > 1 && (
+                <div className="flex items-center gap-6 border-b border-gray-100 pb-2 mb-2">
                   {(product as any).coveragePlans.map((p: any, i: number) => (
-                    <button key={i} onClick={() => setActivePlanIdx(i)} className={`px-3 py-1.5 text-xs font-semibold rounded-md border ${activePlanIdx === i ? 'bg-brand-blue-600 text-white border-brand-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}>
+                    <button 
+                        key={i} 
+                        onClick={() => setActivePlanIdx(i)} 
+                        className={`text-[13px] font-medium transition-colors relative pb-1 ${activePlanIdx === i ? 'text-blue-600' : 'text-gray-500'}`}
+                    >
                       {p.planType || `方案${i + 1}`}
+                      {activePlanIdx === i && <span className="absolute bottom-[-9px] left-0 right-0 h-[2px] bg-blue-600 rounded-t-full"></span>}
                     </button>
                   ))}
                 </div>
+                )}
                 {(() => {
                   const p = (product as any).coveragePlans[activePlanIdx] || {};
                   return (
-                    <div className="border border-gray-200 rounded-md p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="text-sm font-bold text-gray-800">{p.planType}</div>
-                        <div className="text-xs text-gray-600">{p?.guaranteedRenewalYears ? `保证续保${p.guaranteedRenewalYears}年` : ''}</div>
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">{p?.annualLimit ? `年度总保额：${p.annualLimit}` : ''}</div>
+                    <div className="rounded-md">
                       {p?.coverageDetails && p.coverageDetails.length > 0 && (
-                        <div className="mt-3 space-y-2">
+                        <div className="space-y-3">
                           {p.coverageDetails.map((d: any, di: number) => (
                             d.item_name ? (
-                              <div key={di} className="grid grid-cols-1 md:grid-cols-3 gap-2 items-start text-sm">
-                                <div className="flex items-center gap-2">
+                              <div key={di} className="flex items-start justify-between gap-2 text-[13px]">
+                                <div className="flex items-center gap-2 flex-shrink-0">
                                   <span className="text-gray-800 font-medium">{d.item_name}</span>
-                                  <span className={`px-1.5 py-0.5 text-[10px] rounded ${d.mandatory ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-gray-100 text-gray-600 border border-gray-200'}`}>{d.mandatory ? '必选' : '可选'}</span>
+                                  <span className={`px-1 text-[10px] rounded border ${d.mandatory ? 'border-blue-300 text-blue-500' : 'border-gray-300 text-gray-500'}`}>{d.mandatory ? '必选' : '可选'}</span>
                                 </div>
-                                <div className="md:col-span-2 text-right text-gray-800">
-                                  {typeof d.details?.limit === 'number' && (<div>{`限额${d.details.limit}元`}</div>)}
-                                  {typeof d.details?.reimbursement_ratio === 'number' && (<div>{`赔付比例${Math.round(d.details.reimbursement_ratio * 100)}%`}</div>)}
-                                  {typeof d.details?.deductible === 'number' && (<div>{`免赔${d.details.deductible}元`}</div>)}
-                                  {typeof d.details?.payout_ratio === 'number' && (<div>{`单次赔付${Math.round(d.details.payout_ratio * 100)}%`}</div>)}
-                                  {Array.isArray(d.details?.payout_ratios) && d.details.payout_ratios.length > 0 && (
-                                    <div className="text-xs text-gray-600">多次赔付：{d.details.payout_ratios.map((x: number) => `${Math.round(x * 100)}%`).join(' / ')}</div>
-                                  )}
-                                  {typeof d.details?.max_payouts === 'number' && d.details.max_payouts > 0 && (<div className="text-xs text-gray-600">最多次：{d.details.max_payouts}</div>)}
-                                  {typeof d.details?.interval_years === 'number' && d.details.interval_years > 0 && (<div className="text-xs text-gray-600">间隔期：{d.details.interval_years}年</div>)}
-                                  {typeof d.details?.payout_multiplier === 'number' && (<div className="text-xs text-gray-600">额外赔付倍数：{d.details.payout_multiplier}x</div>)}
-                                  {typeof d.details?.additional_limit === 'number' && (<div className="text-xs text-gray-600">额外限额：{d.details.additional_limit}元</div>)}
-                                  {typeof d.details?.amount_per_day === 'number' && (<div className="text-xs text-gray-600">日额：{d.details.amount_per_day}元</div>)}
-                                  {typeof d.details?.deductible_days === 'number' && (<div className="text-xs text-gray-600">免赔天数：{d.details.deductible_days}天</div>)}
-                                  {typeof d.details?.max_days === 'number' && (<div className="text-xs text-gray-600">最高天数：{d.details.max_days}天</div>)}
-                                  {d.details?.scenario && (<div className="text-xs text-gray-600">场景：{d.details.scenario}</div>)}
-                                  {Array.isArray(d.details?.start_age_options) && d.details.start_age_options.length > 0 && (<div className="text-xs text-gray-600">起领年龄：{d.details.start_age_options.join(' / ')}</div>)}
-                                  {Array.isArray(d.details?.frequency_options) && d.details.frequency_options.length > 0 && (
-                                    <div className="text-xs text-gray-600">领取频率：{d.details.frequency_options.map((f: string) => f === 'ANNUALLY' ? '年领' : '月领').join(' / ')}</div>
-                                  )}
-                                  {typeof d.details?.guaranteed_period_years === 'number' && d.details.guaranteed_period_years > 0 && (<div className="text-xs text-gray-600">保证领取：{d.details.guaranteed_period_years}年</div>)}
-                                </div>
+                                {d.description && <span className="text-xs text-gray-400 text-right flex-1 ml-4 leading-tight">{d.description}</span>}
                               </div>
                             ) : (
-                              <div key={di} className="grid grid-cols-1 md:grid-cols-3 gap-2 items-start text-sm">
-                                <div className="flex items-center gap-2">
+                              <div key={di} className="flex items-start justify-between gap-2 text-[13px]">
+                                <div className="flex items-center gap-2 flex-shrink-0">
                                   <span className="text-gray-800 font-medium">{d.name}</span>
-                                  <span className={`px-1.5 py-0.5 text-[10px] rounded ${(d as any).mandatory ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-gray-100 text-gray-600 border border-gray-200'}`}>{(d as any).mandatory ? '必选' : '可选'}</span>
+                                  <span className={`px-1 text-[10px] rounded border ${(d as any).mandatory ? 'border-blue-300 text-blue-500' : 'border-gray-300 text-gray-500'}`}>{(d as any).mandatory ? '必选' : '可选'}</span>
                                 </div>
-                                <div className="md:col-span-2 text-right text-gray-800">
-                                  <div>{d.amount}</div>
-                                  <div className="text-xs text-gray-600">{d.details}</div>
-                                </div>
+                                {d.details && <span className="text-xs text-gray-400 text-right flex-1 ml-4 leading-tight">{d.details}</span>}
                               </div>
                             )
                           ))}
@@ -164,46 +230,19 @@ const ProductDetail: React.FC<{ product: InsuranceProduct }> = ({ product }) => 
           <Section 
             title="投保须知"
             icon={
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+                <div className="w-5 h-5 flex items-center justify-center text-orange-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                </div>
             }
           >
-              <div className="divide-y divide-gray-50">
-                  <DetailItem label="投保年龄" value={product.underwritingAge} />
-                  <DetailItem label="保障期限" value={product.coveragePeriod} />
-                  <DetailItem label="等待期" value={product.waitingPeriod} />
-                  <DetailItem label="免赔额" value={(product as any).deductible} />
-                  <DetailItem label="有效保额增长率" value={(product as any).effectiveAmountGrowthRate !== undefined ? `${Math.round(((product as any).effectiveAmountGrowthRate || 0) * 10000) / 100}%` : undefined} />
-                  <DetailItem label="交费频率" value={(product as any).paymentFrequency} />
-                  <DetailItem label="交费期间" value={(product as any).paymentPeriod} />
-                  
-                  { (product.primaryCategory === PrimaryCategory.HEALTH || product.primaryCategory === PrimaryCategory.ACCIDENT || product.primaryCategory === PrimaryCategory.CRITICAL_ILLNESS) &&
-                      <>
-                          <DetailItem label="保障区域" value={product.coverageArea} />
-                          <DetailItem label="医院范围" value={product.hospitalScope} />
-                          <DetailItem label="职业范围" value={product.occupationScope} />
-                          <DetailItem label="续保描述" value={(product as any).renewalWarranty} />
-                          <DetailItem label="院外特药保障" value={(product as any).outHospitalMedicine} />
-                          <DetailItem label="健康告知" value={(product as any).healthConditionNotice} />
-                      </>
-                  }
-                  { product.primaryCategory === PrimaryCategory.TERM_LIFE &&
-                      <>
-                          <DetailItem label="基本保额" value={`最高 ${product.basicSumAssured / 10000}万`} />
-                          <DetailItem label="交费期间" value={product.paymentPeriod} />
-                      </>
-                  }
-                  { product.primaryCategory === PrimaryCategory.WHOLE_LIFE && (product as any).partialSurrenderRules &&
-                      <>
-                        <DetailItem label="减保支持" value={(product as any).partialSurrenderRules.is_available ? '支持' : '不支持'} />
-                        <DetailItem label="起始保单年度" value={(product as any).partialSurrenderRules.start_policy_year} />
-                        <DetailItem label="每年次数上限" value={(product as any).partialSurrenderRules.frequency_per_year} />
-                        <DetailItem label="单次最低金额(元)" value={(product as any).partialSurrenderRules.min_amount_per_request} />
-                        <DetailItem label="单次最高比例" value={(product as any).partialSurrenderRules.max_ratio_per_request !== undefined ? `${Math.round(((product as any).partialSurrenderRules.max_ratio_per_request || 0) * 100)}%` : undefined} />
-                        <DetailItem label="最低剩余保费(元)" value={(product as any).partialSurrenderRules.min_remaining_premium} />
-                        {(product as any).partialSurrenderRules.description && <div className="py-2 text-xs text-gray-600">{(product as any).partialSurrenderRules.description}</div>}
-                      </>
+              <div className="divide-y divide-gray-50/50">
+                  {noticeItems.map((item, i) => (
+                      <DetailItem key={i} label={item.label} value={item.value} />
+                  ))}
+                  { product.primaryCategory === PrimaryCategory.WHOLE_LIFE && (product as any).partialSurrenderRules && (product as any).partialSurrenderRules.description &&
+                      <div className="py-2 text-xs text-gray-600">{(product as any).partialSurrenderRules.description}</div>
                   }
               </div>
           </Section>
@@ -227,6 +266,39 @@ const ProductDetail: React.FC<{ product: InsuranceProduct }> = ({ product }) => 
               </div>
             </Section>
           )}
+          
+          {/* Value-added Services Section */}
+          {hasValueAddedServices && (
+              <Section 
+                title="增值服务" 
+                icon={
+                    <div className="w-5 h-5 flex items-center justify-center text-blue-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                }
+                action={
+                  <button onClick={() => setIsVasModalOpen(true)} className="flex items-center text-xs text-gray-400 hover:text-blue-600 transition-colors">
+                    全部服务
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-0.5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                }
+              >
+                  <div className="grid grid-cols-2 gap-3">
+                      {product.valueAddedServices.map(service => (
+                          <div key={service.id} className="flex items-center justify-center p-2 bg-gray-50 rounded-lg text-center">
+                              <span className="text-xs font-medium text-gray-700 line-clamp-1">{service.name}</span>
+                          </div>
+                      ))}
+                  </div>
+              </Section>
+          )}
+          
+
+
           {(product as any).productIntroduction && (
             <Section title="产品介绍">
               <div className="text-sm text-gray-800 whitespace-pre-line">{(product as any).productIntroduction}</div>
@@ -251,38 +323,6 @@ const ProductDetail: React.FC<{ product: InsuranceProduct }> = ({ product }) => 
             </Section>
           )}
           
-          {/* Value-added Services Section */}
-          {hasValueAddedServices && (
-              <Section 
-                title="增值服务" 
-                icon={
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
-                    </svg>
-                }
-                action={
-                  <button onClick={() => setIsVasModalOpen(true)} className="flex items-center text-xs text-gray-400 hover:text-blue-600 transition-colors">
-                    全部服务
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-0.5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                    </svg>
-                  </button>
-                }
-              >
-                  <div className="grid grid-cols-2 gap-3">
-                      {product.valueAddedServices.map(service => (
-                          <div key={service.id} className="flex items-center p-2 bg-gray-50 rounded-lg border border-gray-100">
-                              <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0 mr-2 text-orange-500">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-                                </svg>
-                              </div>
-                              <span className="text-xs font-medium text-gray-700 line-clamp-2">{service.name}</span>
-                          </div>
-                      ))}
-                  </div>
-              </Section>
-          )}
           
           {((product.productLongImage && product.productLongImage.length > 0) || (product.productAttachments && product.productAttachments.length > 0) || ((product as any).clausesCode && (product as any).clausesCode.length > 0)) && (
               <Section 
@@ -303,69 +343,37 @@ const ProductDetail: React.FC<{ product: InsuranceProduct }> = ({ product }) => 
                                 ))}
                               </div>
                           </div>
-                      )}
-                      {product.productAttachments && product.productAttachments.length > 0 && (
-                          <div>
-                              <h4 className="text-xs font-bold text-gray-400 mb-2 uppercase tracking-wide">相关条款</h4>
-                              <div className="space-y-2">
-                                {product.productAttachments.map((attachment, index) => (
-                                    <div key={index} className="border border-gray-200 rounded-lg p-3 flex items-center justify-between bg-gray-50 hover:bg-white hover:shadow-sm transition-all">
-                                        <div className='flex items-center min-w-0 gap-3'>
-                                            <div className="w-8 h-8 bg-red-100 rounded flex items-center justify-center text-red-500 flex-shrink-0">
-                                                <span className="text-[10px] font-bold">PDF</span>
-                                            </div>
-                                            <span className="text-sm text-gray-700 truncate font-medium">{attachment}</span>
-                                        </div>
-                                        <a href="#" className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors">
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                            </svg>
-                                        </a>
-                                    </div>
-                                ))}
-                              </div>
-                          </div>
-                      )}
-                      {(product as any).clausesCode && (product as any).clausesCode.length > 0 && (
-                        <div>
-                          <h4 className="text-xs font-bold text-gray-400 mb-2 uppercase tracking-wide">条款代码</h4>
-                          <div className="flex flex-wrap gap-2">
-                            {(product as any).clausesCode.map((code: string, idx: number) => (
-                              <span key={idx} className="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded border border-gray-200">{code}</span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
+                      )} 
                   </div>
               </Section>
           )}
+                    <div className="px-1 py-4 text-xs text-gray-400">
+            <span className="mr-1 text-gray-500 font-medium">请阅读</span>
+            <span className="text-blue-600">服务协议</span>
+            <span className="mx-1">|</span>
+            <span className="text-blue-600">客户告知书</span>
+            <span className="mx-1">|</span>
+            <span className="text-blue-600">投保须知</span>
+            <span className="mx-1">|</span>
+            <span className="text-blue-600">保险条款</span>
+          </div>
         </div>
+        
       </div>
 
       {/* Sticky Footer Button */}
-      <div className="absolute bottom-0 left-0 right-0 bg-white px-4 py-3 border-t border-gray-100 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] flex items-center justify-between gap-4 z-30">
+      <div className="absolute bottom-0 left-0 right-0 bg-white px-4 py-3 border-t border-gray-100 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] flex items-center justify-between gap-4 z-30 safe-area-bottom">
           <div className="flex flex-col">
               <span className="text-xs text-gray-500">首年保费</span>
-              <span className="text-xl font-bold text-red-500 font-mono">
+              <span className="text-xl font-bold text-red-500 font-mono leading-none">
                   ¥{product.annualPremium || '--'}
                   <span className="text-xs font-normal text-gray-500 ml-1">起</span>
               </span>
           </div>
-          <a
-            href={product.salesUrl || '#'}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`flex-1 block text-center font-bold py-2.5 px-4 rounded-full transition-all shadow-lg shadow-blue-200 ${
-                product.salesUrl 
-                ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:shadow-blue-300 transform hover:-translate-y-0.5' 
-                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-            }`}
-          >
-            立即投保
-          </a>
+          <button className="flex-1 bg-gradient-to-r from-cyan-400 to-blue-500 text-white font-bold py-2.5 px-4 rounded-full shadow-lg shadow-blue-200 transform active:scale-95 transition-all text-sm">
+            我要投保
+          </button>
       </div>
-
-      
 
       {hasValueAddedServices && (
         <ValueAddedServiceModal 
