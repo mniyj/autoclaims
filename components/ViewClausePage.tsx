@@ -16,6 +16,12 @@ const ViewClausePage: React.FC<{ clause: Clause; onBack: () => void; }> = ({ cla
 
     const showCashValueTable = clause.primaryCategory && CASH_VALUE_CATEGORIES.includes(clause.primaryCategory);
 
+    const BASIC_SUM_INSURED_CATEGORIES: PrimaryCategory[] = [
+        PrimaryCategory.ANNUITY,
+        PrimaryCategory.WHOLE_LIFE,
+    ];
+    const showBasicSumInsuredTable = clause.primaryCategory && BASIC_SUM_INSURED_CATEGORIES.includes(clause.primaryCategory);
+
     return (
         <div className="max-w-4xl mx-auto">
              <div className="flex items-center mb-6">
@@ -51,6 +57,9 @@ const ViewClausePage: React.FC<{ clause: Clause; onBack: () => void; }> = ({ cla
                             <FileDisplay label="产品说明" fileName={clause.productDescriptionFile} />
                             {showCashValueTable && (
                                  <FileDisplay label="现金价值表" fileName={clause.cashValueTableFile} />
+                            )}
+                            {showBasicSumInsuredTable && (
+                                 <FileDisplay label="基本保险金额表" fileName={clause.basicSumInsuredTableFile} />
                             )}
                             {clause.productAttachments && clause.productAttachments.length > 0 && (
                                 <div className="md:col-span-2">

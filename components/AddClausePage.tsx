@@ -17,6 +17,7 @@ type NewClauseState = Partial<Clause> & {
     rateTableFile?: string;
     productDescriptionFile?: string;
     cashValueTableFile?: string;
+    basicSumInsuredTableFile?: string;
   selectedResponsibilities?: ResponsibilityItem[];
 };
 
@@ -152,6 +153,7 @@ const AddClausePage: React.FC<{ onBack: () => void; initialClause?: Clause; comp
                 rateTableFile: initialClause?.rateTableFile || '',
                 productDescriptionFile: initialClause?.productDescriptionFile || '',
                 cashValueTableFile: initialClause?.cashValueTableFile || '',
+                basicSumInsuredTableFile: initialClause?.basicSumInsuredTableFile || '',
             });
         } else {
             setNewClause(null);
@@ -184,6 +186,12 @@ const AddClausePage: React.FC<{ onBack: () => void; initialClause?: Clause; comp
     ];
 
     const showCashValueUpload = newClause?.primaryCategory && CASH_VALUE_CATEGORIES.includes(newClause.primaryCategory);
+
+    const BASIC_SUM_INSURED_CATEGORIES: PrimaryCategory[] = [
+        PrimaryCategory.ANNUITY,
+        PrimaryCategory.WHOLE_LIFE,
+    ];
+    const showBasicSumInsuredUpload = newClause?.primaryCategory && BASIC_SUM_INSURED_CATEGORIES.includes(newClause.primaryCategory);
 
     return (
         <div className="max-w-4xl mx-auto">
@@ -305,6 +313,16 @@ const AddClausePage: React.FC<{ onBack: () => void; initialClause?: Clause; comp
                                         value={newClause?.cashValueTableFile}
                                         onChange={(value) => handleFileChange('cashValueTableFile', value)}
                                         helpText="上传现金价值表Excel文件"
+                                        accept=".xls,.xlsx"
+                                    />
+                                )}
+                                {showBasicSumInsuredUpload && (
+                                     <FileUpload 
+                                        label="基本保险金额表"
+                                        id="basicSumInsuredTableFile"
+                                        value={newClause?.basicSumInsuredTableFile}
+                                        onChange={(value) => handleFileChange('basicSumInsuredTableFile', value)}
+                                        helpText="上传基本保险金额表Excel文件"
                                         accept=".xls,.xlsx"
                                     />
                                 )}

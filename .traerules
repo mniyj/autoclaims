@@ -1,0 +1,4 @@
+# Project Rules
+
+## Frontend
+- **Favicon**: Always use `https://gw.alipayobjects.com/zos/bmw-prod/d7490aea-bbd4-4031-97c4-497ee4d19be3.ico` as the browser tab icon (favicon) in index.html or equivalent.

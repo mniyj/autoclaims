@@ -126,6 +126,7 @@ export interface BaseProduct {
   rateTableFile?: string;
   productDescriptionFile?: string;
   cashValueTableFile?: string;
+  basicSumInsuredTableFile?: string;
   }
 
 export interface HealthAccidentCriticalIllnessProduct extends BaseProduct {
