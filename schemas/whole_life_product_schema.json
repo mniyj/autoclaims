@@ -53,8 +53,6 @@
       "description": "缴纳保费的年限或方式描述，如：'趸交/3年/5年/10年'。"
     },
 
-    "annualPremium": { "type": "number", "description": "每年的保费（起）。" },
-
     "partialSurrenderRules": {
       "type": ["object", "null"],
       "description": "减保规则对象。描述了如何从保单中领取现金价值，这是产品灵活性的关键。如果产品不支持减保，此字段可为 null。",
@@ -77,10 +75,7 @@
         },
         "max_ratio_per_request": {
           "type": "number",
-          "minimum": 0,
-          "maximum": 1,
-          "description": "每次申请减保金额占当时现金价值的最高比例（0-1之间的小数，0.2代表20%）。",
-          "examples": [0.2, 0.5]
+          "description": "每次申请减保金额占当时现金价值的最高比例（如0.2代表20%）。"
         },
         "min_remaining_premium": {
           "type": "number",
@@ -114,7 +109,6 @@
       "type": "object",
       "description": "保障责任项目，核心是身故或全残保险金。",
       "properties": {
-        "mandatory": { "type": "boolean", "description": "是否为必选责任（true=必选，false=可选）。" },
         "item_code": {
           "type": "string",
           "description": "保障项目的内部代码。",

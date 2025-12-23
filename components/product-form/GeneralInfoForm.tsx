@@ -1,9 +1,10 @@
 
 import React from 'react';
-import { type InsuranceProduct, PrimaryCategory } from '../../types';
-import { PRODUCT_STATUSES, PRIMARY_CATEGORIES, MAPPING_DATA, REGULATORY_OPTIONS, LEVEL_1_DATA } from '../../constants';
+import { type InsuranceProduct, type CoverageItem } from '../../types';
+import { PRODUCT_STATUSES, PRIMARY_CATEGORIES, MAPPING_DATA, REGULATORY_OPTIONS } from '../../constants';
 import Input from '../ui/Input';
 import Select from '../ui/Select';
+import CoverageDetailEditor from './CoverageDetailEditor';
 import FileUpload from '../ui/FileUpload';
 import MultiImageUpload from '../ui/MultiImageUpload';
 import TagEditor from './TagEditor';
@@ -17,12 +18,12 @@ interface FormProps {
 const GeneralInfoForm: React.FC<FormProps> = ({ product, onFormChange }) => {
     
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target as any;
-    const isNumber = (e.target as HTMLInputElement).type === 'number';
-    onFormChange(name as keyof InsuranceProduct, isNumber ? (parseFloat(value) || 0) : value);
+    onFormChange(e.target.name as keyof InsuranceProduct, e.target.value);
   };
 
-  
+  const handleCoverageChange = (items: CoverageItem[]) => {
+    onFormChange('coverageDetails', items);
+  }
 
   const handleFileChange = (field: keyof InsuranceProduct, value: string | string[]) => {
     onFormChange(field, value);
@@ -48,17 +49,15 @@ const GeneralInfoForm: React.FC<FormProps> = ({ product, onFormChange }) => {
     onFormChange('productAttachments', currentAttachments.filter((_, index) => index !== indexToRemove));
   };
 
-  
-
   // Derive Classification Information
   const mapping = MAPPING_DATA.find(m => 
-    (product.racewayId && m.antLevel3Code === product.racewayId) ||
-    (product.secondaryCategory && m.antLevel2Name === product.secondaryCategory)
+    (product.categoryLevel3Code && m.antLevel3Code === product.categoryLevel3Code) ||
+    (product.categoryLevel2Name && m.antLevel2Name === product.categoryLevel2Name) 
   );
 
-  const antL1 = mapping?.antLevel1Name || (product.primaryCategoryCode ? (LEVEL_1_DATA.find(l => l.code === product.primaryCategoryCode)?.name || '-') : '-');
-  const antL2 = product.secondaryCategory || mapping?.antLevel2Name || '-';
-  const antL3 = product.racewayName || mapping?.antLevel3Name || '-';
+  const antL1 = product.categoryLevel1Name || mapping?.antLevel1Name || '-';
+  const antL2 = product.categoryLevel2Name || mapping?.antLevel2Name || '-';
+  const antL3 = product.categoryLevel3Name || mapping?.antLevel3Name || '-';
 
   const regL2Name = mapping?.regLevel2Name || '-';
   let regL1Name = '-';
@@ -80,14 +79,7 @@ const GeneralInfoForm: React.FC<FormProps> = ({ product, onFormChange }) => {
                     <Input label="监管备案名称" id="regulatoryName" name="regulatoryName" value={product.regulatoryName} onChange={handleChange} disabled />
                     <Input label="市场宣传名称" id="marketingName" name="marketingName" value={product.marketingName} onChange={handleChange} required />
             </div>
-            <Textarea label="产品摘要" id="productSummary" name="productSummary" value={product.productSummary || ''} onChange={handleChange} placeholder="在产品详情页顶部显示的简短介绍，可分点说明。" rows={3} required />
-            <Textarea label="产品介绍" id="productIntroduction" name="productIntroduction" value={(product as any).productIntroduction || ''} onChange={handleChange} placeholder="详细产品介绍文案" rows={4} />
-            <Textarea label="产品亮点" id="productAdvantages" name="productAdvantages" value={(product as any).productAdvantages || ''} onChange={handleChange} placeholder="多条亮点可用换行分隔" rows={3} />
-            <Textarea label="注意事项" id="precautions" name="precautions" value={(product as any).precautions || ''} onChange={handleChange} placeholder="投保须知、责任免除等" rows={3} />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Textarea label="适用人群" id="crowd" name="crowd" value={(product as any).crowd || ''} onChange={handleChange} placeholder="例如：少儿/老人/上班族" rows={3} />
-              <Textarea label="产品点评" id="generalComment" name="generalComment" value={(product as any).generalComment || ''} onChange={handleChange} placeholder="专家或运营点评" rows={3} />
-            </div>
+             <Textarea label="产品摘要" id="productSummary" name="productSummary" value={product.productSummary || ''} onChange={handleChange} placeholder="在产品详情页顶部显示的简短介绍，可分点说明。" rows={3} required />
             
             {/* Classification Section */}
             <div className="bg-blue-50 border border-blue-100 rounded-md p-4">
@@ -117,13 +109,12 @@ const GeneralInfoForm: React.FC<FormProps> = ({ product, onFormChange }) => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input label="版本号" id="version" name="version" value={product.version} onChange={handleChange} required />
-                <Select label="状态" id="status" name="status" value={product.status} onChange={handleChange} required>
-                    {PRODUCT_STATUSES.map(stat => <option key={stat} value={stat}>{stat}</option>)}
-                </Select>
-                <Input label="生效日" id="effectiveDate" name="effectiveDate" type="date" value={product.effectiveDate} onChange={handleChange} required />
-                <Input label="停售日" id="discontinuationDate" name="discontinuationDate" type="date" value={product.discontinuationDate} onChange={handleChange} />
-                <Input label="年保费(起)" id="annualPremium" name="annualPremium" type="number" value={(product as any).annualPremium ?? 0} onChange={handleChange} />
+                    <Input label="版本号" id="version" name="version" value={product.version} onChange={handleChange} required />
+                    <Select label="状态" id="status" name="status" value={product.status} onChange={handleChange} required>
+                        {PRODUCT_STATUSES.map(stat => <option key={stat} value={stat}>{stat}</option>)}
+                    </Select>
+                    <Input label="生效日" id="effectiveDate" name="effectiveDate" type="date" value={product.effectiveDate} onChange={handleChange} required />
+                    <Input label="停售日" id="discontinuationDate" name="discontinuationDate" type="date" value={product.discontinuationDate} onChange={handleChange} />
             </div>
             <Input label="销售落地页URL" id="salesUrl" name="salesUrl" type="url" value={product.salesUrl || ''} onChange={handleChange} placeholder="https://example.com/product-page" />
             <Input label="销售区域" id="salesRegions" name="salesRegions" value={product.salesRegions} onChange={handleChange} required />
@@ -195,18 +186,18 @@ const GeneralInfoForm: React.FC<FormProps> = ({ product, onFormChange }) => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-200">
-                    <FileUpload 
-                        label="产品卡片配图" 
-                        id="productCardImage" 
-                        value={product.productCardImage} 
-                        onChange={(value) => handleFileChange('productCardImage', value)}
-                        helpText="限定方形尺寸，如 400x400（用于产品卡片展示）"
-                        accept="image/png, image/jpeg, image/webp"
-                        required
-                    />
-                    <FileUpload 
-                        label="产品头图" 
-                        id="productHeroImage" 
+                <FileUpload 
+                    label="产品卡片配图" 
+                    id="productCardImage" 
+                    value={product.productCardImage} 
+                    onChange={(value) => handleFileChange('productCardImage', value)}
+                    helpText="限定方形尺寸，如 400x400（用于产品卡片展示）"
+                    accept="image/png, image/jpeg, image/webp"
+                    required
+                />
+                <FileUpload 
+                    label="产品头图" 
+                    id="productHeroImage" 
                         value={product.productHeroImage} 
                         onChange={(value) => handleFileChange('productHeroImage', value)}
                         helpText="建议上传方形图片，支持 PNG, JPG, WebP 格式"
@@ -267,9 +258,9 @@ const GeneralInfoForm: React.FC<FormProps> = ({ product, onFormChange }) => {
               </div>
             </div>
 
-            
-
-            
+            <div className="pt-4 border-t border-gray-200">
+                    <CoverageDetailEditor items={product.coverageDetails} onChange={handleCoverageChange} />
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <Input label="投保年龄" id="underwritingAge" name="underwritingAge" value={product.underwritingAge} onChange={handleChange} required />

@@ -5,20 +5,6 @@
   "type": "object",
 
   "properties": {
-    "coveragePlans": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "planType": { "type": "string" },
-          "coverageDetails": {
-            "type": "array",
-            "items": { "$ref": "#/$defs/CoverageDetailItem" }
-          }
-        },
-        "required": ["planType", "coverageDetails"]
-      }
-    },
     "productCode": {
       "type": "string",
       "description": "产品的唯一标识码，不可编辑。"
@@ -107,10 +93,6 @@
       "type": "string",
       "description": "等待期描述（如：90天、180天）。"
     },
-    "annualPremium": {
-      "type": "number",
-      "description": "每年的保费（起）。"
-    },
     "deductible": {
       "type": "string",
       "description": "免赔额描述（定期寿险通常为0或不适用）。"
@@ -162,7 +144,7 @@
     }
   },
   "required": [
-    "productCode", "regulatoryName", "marketingName", "insurerName", "underwritingAge", "coveragePeriod", "waitingPeriod", "basicSumAssured", "paymentPeriod", "underwritingOccupation", "coveragePlans"
+    "productCode", "regulatoryName", "marketingName", "insurerName", "underwritingAge", "coveragePeriod", "waitingPeriod", "basicSumAssured", "paymentPeriod", "underwritingOccupation", "coverageDetails"
   ],
 
   "$defs": {
@@ -170,7 +152,6 @@
       "type": "object",
       "description": "单个保障责任项目，如身故/全残、特定意外额外赔、猝死、豁免等。",
       "properties": {
-        "mandatory": { "type": "boolean", "description": "是否为必选责任（true=必选，false=可选）。" },
         "item_code": {
           "type": "string",
           "description": "保障项目的内部代码，用于系统识别。",

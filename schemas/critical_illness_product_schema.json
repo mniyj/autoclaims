@@ -5,20 +5,6 @@
   "type": "object",
 
   "properties": {
-    "coveragePlans": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "planType": { "type": "string" },
-          "coverageDetails": {
-            "type": "array",
-            "items": { "$ref": "#/definitions/CoverageDetailItem" }
-          }
-        },
-        "required": ["planType", "coverageDetails"]
-      }
-    },
     "productCode": {
       "type": "string",
       "description": "产品的唯一标识码，不可编辑。"

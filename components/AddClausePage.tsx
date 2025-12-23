@@ -1,10 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
-import { type Clause, ProductStatus, PrimaryCategory, ClauseType, ResponsibilityItem } from '../types';
+import { type Clause, ProductStatus, PrimaryCategory, ClauseType } from '../types';
 import Input from './ui/Input';
 import Select from './ui/Select';
 import FileUpload from './ui/FileUpload';
-import { PRODUCT_STATUSES, MOCK_COMPANY_LIST, CLAUSE_TYPES, LEVEL_1_DATA, LEVEL_2_DATA, LEVEL_3_DATA, MOCK_CLAUSES, MOCK_RESPONSIBILITIES } from '../constants';
+import { PRODUCT_STATUSES, MOCK_COMPANY_LIST, CLAUSE_TYPES, LEVEL_1_DATA, LEVEL_2_DATA, LEVEL_3_DATA, MOCK_CLAUSES } from '../constants';
 
 type NewClauseState = Partial<Clause> & {
     regulatoryName: string;
@@ -18,7 +18,6 @@ type NewClauseState = Partial<Clause> & {
     productDescriptionFile?: string;
     cashValueTableFile?: string;
     basicSumInsuredTableFile?: string;
-  selectedResponsibilities?: ResponsibilityItem[];
 };
 
 // Map the new L1/L2 names to the legacy PrimaryCategory enum for form logic
@@ -66,12 +65,10 @@ const generateClauseCode = (companyCode: string | undefined, cat: PrimaryCategor
 
 const AddClausePage: React.FC<{ onBack: () => void; initialClause?: Clause; companyCode?: string }> = ({ onBack, initialClause, companyCode }) => {
     // State for 3-level category selection
-    const initL1Code = initialClause?.primaryCategoryCode || '';
-    const initL1Name = initL1Code ? (LEVEL_1_DATA.find(l => l.code === initL1Code)?.name || '') : '';
-    const [selectedLevel1Name, setSelectedLevel1Name] = useState<string>(initL1Name);
-    const [selectedLevel1Code, setSelectedLevel1Code] = useState<string>(initL1Code);
-    const [selectedLevel2Code, setSelectedLevel2Code] = useState<string>(initialClause?.secondaryCategoryCode || '');
-    const [selectedLevel3, setSelectedLevel3] = useState<string>(initialClause?.racewayId || '');
+    const [selectedLevel1Name, setSelectedLevel1Name] = useState<string>(initialClause?.categoryLevel1Name || '');
+    const [selectedLevel1Code, setSelectedLevel1Code] = useState<string>(initialClause?.categoryLevel1Code || '');
+    const [selectedLevel2Code, setSelectedLevel2Code] = useState<string>(initialClause?.categoryLevel2Code || '');
+    const [selectedLevel3, setSelectedLevel3] = useState<string>(initialClause?.categoryLevel3Code || '');
 
     const [newClause, setNewClause] = useState<NewClauseState | null>(initialClause ? { ...initialClause } as NewClauseState : null);
 
@@ -138,16 +135,17 @@ const AddClausePage: React.FC<{ onBack: () => void; initialClause?: Clause; comp
                 effectiveDate: initialClause?.effectiveDate || new Date().toISOString().split('T')[0],
                 discontinuationDate: initialClause?.discontinuationDate || new Date(new Date().setFullYear(new Date().getFullYear() + 5)).toISOString().split('T')[0],
                 
-                // New Classification Fields (renamed)
-                primaryCategoryCode: l1Data?.code,
-                secondaryCategoryCode: l2Data?.code,
-                racewayId: l3Data?.code,
-                racewayName: l3Data?.name,
+                // New Classification Fields
+                categoryLevel1Code: l1Data?.code,
+                categoryLevel1Name: l1Data?.name,
+                categoryLevel2Code: l2Data?.code,
+                categoryLevel2Name: l2Data?.name,
+                categoryLevel3Code: l3Data?.code,
+                categoryLevel3Name: l3Data?.name,
 
                 // Legacy Fields
                 primaryCategory: legacyCategory,
                 secondaryCategory: l2Data?.name || '',
-                selectedResponsibilities: [],
 
                 clauseTextFile: initialClause?.clauseTextFile || '',
                 rateTableFile: initialClause?.rateTableFile || '',
@@ -230,7 +228,7 @@ const AddClausePage: React.FC<{ onBack: () => void; initialClause?: Clause; comp
                             <h2 className="text-xl font-bold text-gray-800">
                                 {initialClause ? '修改条款' : '新增条款'}
                                 <span className="ml-2 text-base font-normal text-gray-500">
-                                    ({selectedLevel1Name} &gt; {LEVEL_2_DATA.find(l => l.code === selectedLevel2Code)?.name || ''} &gt; {newClause.racewayName})
+                                    ({selectedLevel1Name} &gt; {LEVEL_2_DATA.find(l => l.code === selectedLevel2Code)?.name || ''} &gt; {newClause.categoryLevel3Name})
                                 </span>
                             </h2>
                         </div>
@@ -253,32 +251,8 @@ const AddClausePage: React.FC<{ onBack: () => void; initialClause?: Clause; comp
                             <Input label="失效日期" id="discontinuationDate" name="discontinuationDate" type="date" value={newClause?.discontinuationDate || ''} onChange={handleChange} required />
                         </div>
 
-                        {/* Responsibilities selection */}
-                        <div className="space-y-3 pt-6 border-t border-gray-200">
-                          <h3 className="text-lg font-medium text-gray-900">选择责任（可多选）</h3>
-                          <p className="text-sm text-gray-500">从该条款所属一级分类已创建的责任中选取。</p>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {(LEVEL_1_DATA.find(l => l.code === selectedLevel1Code) ? MOCK_RESPONSIBILITIES.filter(r => r.category === LEVEL_1_DATA.find(l => l.code === selectedLevel1Code)!.name) : []).map(item => {
-                              const checked = !!newClause?.selectedResponsibilities?.some(r => r.code === item.code);
-                              return (
-                                <label key={item.code} className="flex items-start space-x-2 p-3 border border-gray-200 rounded-md">
-                                  <input type="checkbox" checked={checked} onChange={e => {
-                                    const sel = newClause?.selectedResponsibilities || [];
-                                    const next = e.target.checked ? [...sel, item] : sel.filter(r => r.code !== item.code);
-                                    setNewClause(prev => prev ? { ...prev, selectedResponsibilities: next } : null);
-                                  }} />
-                                  <div className="text-sm">
-                                    <div className="font-medium text-gray-800">{item.name} <span className="ml-2 font-mono text-gray-500">{item.code}</span></div>
-                                    <div className="text-gray-600">{item.description}</div>
-                                  </div>
-                                </label>
-                              );
-                            })}
-                          </div>
-                        </div>
-
                         <div className="space-y-6 pt-6 border-t border-gray-200">
-                             <h3 className="text-lg font_medium text-gray-900">条款文件上传</h3>
+                             <h3 className="text-lg font-medium text-gray-900">条款文件上传</h3>
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <FileUpload 
                                     label="条款原文"
@@ -317,14 +291,14 @@ const AddClausePage: React.FC<{ onBack: () => void; initialClause?: Clause; comp
                                     />
                                 )}
                                 {showBasicSumInsuredUpload && (
-                                     <FileUpload 
-                                        label="基本保险金额表"
-                                        id="basicSumInsuredTableFile"
-                                        value={newClause?.basicSumInsuredTableFile}
-                                        onChange={(value) => handleFileChange('basicSumInsuredTableFile', value)}
-                                        helpText="上传基本保险金额表Excel文件"
-                                        accept=".xls,.xlsx"
-                                    />
+                                  <FileUpload 
+                                    label="基本保险金额表"
+                                    id="basicSumInsuredTableFile"
+                                    value={newClause?.basicSumInsuredTableFile}
+                                    onChange={(value) => handleFileChange('basicSumInsuredTableFile', value)}
+                                    helpText="上传基本保险金额表Excel文件"
+                                    accept=".xls,.xlsx"
+                                  />
                                 )}
                              </div>
                         </div>

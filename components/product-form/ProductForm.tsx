@@ -2,7 +2,6 @@ import React, { useRef } from 'react';
 import { type InsuranceProduct, PrimaryCategory, ProductStatus } from '../../types';
 import GeneralInfoForm from './GeneralInfoForm';
 import HealthAccidentForm from './HealthAccidentForm';
-import CriticalIllnessForm from './CriticalIllnessForm';
 import TermLifeForm from './TermLifeForm';
 import WholeLifeForm from './WholeLifeForm';
 import AnnuityForm from './AnnuityForm';
@@ -11,19 +10,17 @@ interface ProductFormProps {
   product: InsuranceProduct;
   onFormChange: (field: keyof InsuranceProduct, value: any) => void;
   onActivate: () => void;
-  allowedResponsibilities?: { code: string; name: string }[];
 }
 
-const ProductForm: React.FC<ProductFormProps> = ({ product, onFormChange, onActivate, allowedResponsibilities }) => {
+const ProductForm: React.FC<ProductFormProps> = ({ product, onFormChange, onActivate }) => {
   const formRef = useRef<HTMLFormElement>(null);
 
   const renderSpecificForm = () => {
     switch (product.primaryCategory) {
       case PrimaryCategory.HEALTH:
       case PrimaryCategory.ACCIDENT:
-        return <HealthAccidentForm product={product} onFormChange={onFormChange} allowedResponsibilities={allowedResponsibilities} />;
       case PrimaryCategory.CRITICAL_ILLNESS:
-        return <CriticalIllnessForm product={product as any} onFormChange={onFormChange as any} />;
+        return <HealthAccidentForm product={product} onFormChange={onFormChange} />;
       case PrimaryCategory.TERM_LIFE:
         return <TermLifeForm product={product} onFormChange={onFormChange} />;
       case PrimaryCategory.WHOLE_LIFE:

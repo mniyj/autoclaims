@@ -1,16 +1,16 @@
 
 
 import React, { useState } from 'react';
-import { type InsuranceProduct, type Clause, ProductStatus, PrimaryCategory } from '../types';
+import { type InsuranceProduct, type Clause, ProductStatus } from '../types';
 import ProductForm from './product-form/ProductForm';
 import ProductPreview from './product-preview/ProductPreview';
-import { SANITIZED_MOCK_CLAUSES as MOCK_CLAUSES, MOCK_COMPANY_LIST, MOCK_RESPONSIBILITIES } from '../constants';
+import { MOCK_CLAUSES, MOCK_COMPANY_LIST } from '../constants';
 import Select from './ui/Select';
 
 
 const getCategoryAbbr = (cat: InsuranceProduct['primaryCategory']): string => {
   const map: Record<string, string> = {
-    '医疗保险': 'HL',
+    '健康保险': 'HL',
     '意外保险': 'AC',
     '重大疾病保险': 'CI',
     '定期寿险': 'TL',
@@ -46,42 +46,7 @@ const clauseToNewProductConfig = (clause: Clause): InsuranceProduct => {
     clause.productAttachments.forEach(att => attachments.add(att));
   }
 
-  const existingPlans = (clause as any).coveragePlans as any[] | undefined;
-  const isStructuredCategory = clause.primaryCategory === PrimaryCategory.HEALTH || clause.primaryCategory === PrimaryCategory.ACCIDENT;
-  const baseDetails = clause.coverageDetails || [];
-
-  const toNumberFromAmount = (amt?: string): number => {
-    if (!amt) return 0;
-    const m = amt.match(/([0-9]+)(万|元)?/);
-    if (!m) return 0;
-    const n = parseInt(m[1], 10);
-    return m[2] === '万' ? n * 10000 : n;
-  };
-
-  const healthPlanFromDetails = () => [{
-    planType: '标准版',
-    annualLimit: baseDetails.reduce((sum, d) => sum + toNumberFromAmount((d as any).amount), 0) || undefined,
-    guaranteedRenewalYears: 0,
-    coverageDetails: baseDetails.map((d: any) => {
-      if (d.item_code) return d; // 已是结构化
-      return {
-        item_code: (d.name || '').toUpperCase().replace(/\s+/g, '_'),
-        item_name: d.name,
-        description: d.details,
-        details: {
-          limit: toNumberFromAmount(d.amount),
-          deductible: /一般/.test(d.name || '') ? 10000 : 0,
-          reimbursement_ratio: 1,
-          hospital_requirements: (clause as any).hospitalScope || '',
-          coverage_scope: /一般/.test(d.name || '') ? '住院费用/特殊门诊/外购药' : '重疾相关治疗费用',
-        }
-      };
-    })
-  }];
-
-  const simplePlanFromDetails = () => [{ planType: '标准版', coverageDetails: baseDetails }];
-
-  const base: InsuranceProduct = {
+  return {
     ...clause,
     // Generate a new, unique product code for the market-facing product
     productCode: generateProductCodeFromClause(clause),
@@ -89,43 +54,26 @@ const clauseToNewProductConfig = (clause: Clause): InsuranceProduct => {
     marketingName: `${clause.regulatoryName} - 市场版`,
     salesUrl: '',
     productAttachments: Array.from(attachments),
-    clausesCode: [clause.productCode as string],
-    coveragePlans: existingPlans || (isStructuredCategory ? healthPlanFromDetails() : simplePlanFromDetails()),
-    coverageDetails: [],
-    selectedResponsibilities: (clause as any).selectedResponsibilities || [],
+    // This spread is necessary to satisfy the union type.
+    ...(clause as any),
     productHeroImage: clause.productHeroImage || 'https://pic1.imgdb.cn/item/69311d3fa11464095f88537e.webp',
     productCardImage: clause.productCardImage || 'https://pic1.imgdb.cn/item/692dd43cc2ca2fe15cf17332.webp',
     productLongImage: (clause.productLongImage && clause.productLongImage.length > 0) ? clause.productLongImage : ['https://pic1.imgdb.cn/item/69313be6a11464095f8a12dd.jpg', 'https://pic1.imgdb.cn/item/69313be5a11464095f8a12d8.jpg', 'https://pic1.imgdb.cn/item/69313be5a11464095f8a12d7.jpg'],
-  } as InsuranceProduct;
-
-  if (base.primaryCategory === PrimaryCategory.HEALTH || base.primaryCategory === PrimaryCategory.ACCIDENT || base.primaryCategory === PrimaryCategory.CRITICAL_ILLNESS) {
-    return {
-      ...base,
-      coverageArea: (base as any).coverageArea || (clause as any).coverageArea || '',
-      hospitalScope: (base as any).hospitalScope || (clause as any).hospitalScope || '',
-      claimScope: (base as any).claimScope || (clause as any).claimScope || '',
-      occupationScope: (base as any).occupationScope || (clause as any).occupationScope || '',
-      hesitationPeriod: (base as any).hesitationPeriod || (clause as any).hesitationPeriod || '',
-      policyEffectiveDate: (base as any).policyEffectiveDate || (clause as any).policyEffectiveDate || '',
-      purchaseLimit: (base as any).purchaseLimit ?? (clause as any).purchaseLimit ?? 0,
-      annualPremium: (base as any).annualPremium ?? (clause as any).annualPremium ?? 0,
-      valueAddedServices: (base as any).valueAddedServices || (clause as any).valueAddedServices || [],
-      deductible: (base as any).deductible || (clause as any).deductible || '',
-      renewalWarranty: (base as any).renewalWarranty || (clause as any).renewalWarranty || '',
-      outHospitalMedicine: (base as any).outHospitalMedicine || (clause as any).outHospitalMedicine || '',
-      healthConditionNotice: (base as any).healthConditionNotice || (clause as any).healthConditionNotice || '',
-    } as InsuranceProduct;
-  }
-  return base;
+  };
 };
 
- 
+// This is needed for the preview sorter on the right panel
+const productListForPreview: InsuranceProduct[] = MOCK_CLAUSES.map(clause => ({
+    ...clause,
+    marketingName: `${clause.regulatoryName} - 市场版`,
+    salesUrl: '',
+    ...(clause as any),
+}));
 
 
-const AddProductPage: React.FC<{ onBack: () => void; onSave: (product: InsuranceProduct) => void; companyCode?: string }> = ({ onBack, onSave, companyCode }) => {
+const AddProductPage: React.FC<{ onBack: () => void; onSave: (product: InsuranceProduct) => void; }> = ({ onBack, onSave }) => {
   const [selectedClauseCode, setSelectedClauseCode] = useState<string>('');
   const [productConfig, setProductConfig] = useState<InsuranceProduct | null>(null);
-  const [previewCollapsed, setPreviewCollapsed] = useState<boolean>(false);
 
   const handleClauseSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const clauseCode = e.target.value;
@@ -154,20 +102,11 @@ const AddProductPage: React.FC<{ onBack: () => void; onSave: (product: Insurance
                 <div className="max-w-lg mx-auto">
                     <Select label="选择条款" id="clause" name="clause" value={selectedClauseCode} onChange={handleClauseSelect}>
                         <option value="">-- 请选择条款 --</option>
-                        {(() => {
-                          const filtered = (() => {
-                            if (!companyCode) return MOCK_CLAUSES;
-                            const company = MOCK_COMPANY_LIST.find(c => c.code === companyCode);
-                            if (!company) return [] as typeof MOCK_CLAUSES;
-                            const names = new Set([company.shortName, company.fullName]);
-                            return MOCK_CLAUSES.filter(clause => names.has(clause.companyName));
-                          })();
-                          return filtered.map(clause => (
+                        {MOCK_CLAUSES.map(clause => (
                           <option key={clause.productCode} value={clause.productCode}>
                             {`${clause.regulatoryName} (${clause.productCode}) - ${clause.companyName}`}
                           </option>
-                          ));
-                        })()}
+                        ))}
                     </Select>
                 </div>
                 <div className="pt-4">
@@ -184,21 +123,6 @@ const AddProductPage: React.FC<{ onBack: () => void; onSave: (product: Insurance
 
   return (
     <div className="max-w-7xl mx-auto">
-      <div className="fixed top-4 right-4 z-50">
-        <button onClick={() => setPreviewCollapsed(v => !v)} className="flex items-center text-sm font-semibold px-3 py-2 rounded-md border border-gray-300 bg-white text-gray-700 shadow hover:bg-gray-50">
-          {previewCollapsed ? (
-            <>
-              <span className="mr-1">展开预览</span>
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd"/></svg>
-            </>
-          ) : (
-            <>
-              <span className="mr-1">折叠预览</span>
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
-            </>
-          )}
-        </button>
-      </div>
       <div className="flex items-center mb-6">
         <button onClick={() => { setSelectedClauseCode(''); setProductConfig(null); }} className="flex items-center text-sm font-medium text-gray-600 hover:text-gray-900 p-2 -ml-2 rounded-md transition-colors">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
@@ -208,26 +132,11 @@ const AddProductPage: React.FC<{ onBack: () => void; onSave: (product: Insurance
         </button>
       </div>
 
-      <div className={`grid grid-cols-1 ${previewCollapsed ? '' : 'xl:grid-cols-2'} gap-8 items-start`}>
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 items-start">
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
            <h2 className="text-xl font-bold text-gray-800 mb-1">新建配置: {productConfig.regulatoryName}</h2>
            <p className="text-sm text-gray-500 mb-6">基于所选条款进行配置，右侧将实时预览产品效果。</p>
-          <ProductForm 
-            product={productConfig} 
-            onFormChange={handleFormChange} 
-            onActivate={() => productConfig && onSave({ ...productConfig, status: ProductStatus.ACTIVE })}
-            allowedResponsibilities={(() => {
-              const selected = (productConfig as any).selectedResponsibilities as any[] | undefined
-              if (selected && selected.length > 0) return selected.map(r => ({ code: r.code, name: r.name, description: r.description }))
-              if (productConfig.primaryCategory === PrimaryCategory.HEALTH) {
-                return MOCK_RESPONSIBILITIES.filter(r => r.category === '医疗险').map(r => ({ code: r.code, name: r.name, description: r.description }))
-              }
-              if (productConfig.primaryCategory === PrimaryCategory.ACCIDENT) {
-                return MOCK_RESPONSIBILITIES.filter(r => r.category === '意外险').map(r => ({ code: r.code, name: r.name, description: r.description }))
-              }
-              return undefined
-            })()}
-          />
+           <ProductForm product={productConfig} onFormChange={handleFormChange} onActivate={() => productConfig && onSave({ ...productConfig, status: ProductStatus.ACTIVE })} />
            <div className="flex justify-end pt-4">
              <button 
                type="button"
@@ -238,11 +147,14 @@ const AddProductPage: React.FC<{ onBack: () => void; onSave: (product: Insurance
              </button>
            </div>
         </div>
-        {!previewCollapsed && (
-          <div className="sticky top-8 transition-transform">
-            <ProductPreview product={productConfig} />
-          </div>
-        )}
+        
+        <div className="sticky top-8">
+          <ProductPreview 
+            product={productConfig} 
+            productList={productListForPreview} 
+            onSaveSort={(sortedList) => console.log('Sorted list saved:', sortedList)} 
+          />
+        </div>
       </div>
     </div>
   );

@@ -20,11 +20,11 @@ export enum ClauseType {
 }
 
 export interface CoverageItem {
-  mandatory?: boolean;
   id: string;
   name: string;
   amount: string;
   details: string;
+  mandatory?: boolean;
 }
 
 export interface ValueAddedServiceItem {
@@ -34,22 +34,19 @@ export interface ValueAddedServiceItem {
 }
 
 export interface HealthCoverageDetailSpec {
-  limit?: number;
-  deductible?: number;
-  reimbursement_ratio?: number;
-  hospital_requirements?: string;
-  coverage_scope?: string;
-  additional_limit?: number;
-  scenario?: string;
-  payout_logic?: string;
+  limit: number;
+  deductible: number;
+  reimbursement_ratio: number;
+  hospital_requirements: string;
+  coverage_scope: string;
 }
 
 export interface HealthCoverageDetailItem {
-  mandatory?: boolean;
   item_code: string;
   item_name: string;
   description: string;
   details: HealthCoverageDetailSpec;
+  mandatory?: boolean;
 }
 
 export interface CoveragePlanHealth {
@@ -105,7 +102,6 @@ export interface BaseProduct {
   clausesCode?: string[];
   operator?: string;
   clauseType: ClauseType;
-  selectedResponsibilities?: ResponsibilityItem[];
 
   // New fields for enhanced product card display
   tags?: string[];
@@ -119,7 +115,6 @@ export interface BaseProduct {
   cardMetric3Value?: string;
   supportsOnlineClaim: boolean;
   isOnline?: boolean;
-  annualPremium?: number;
 
   // New file upload fields
   clauseTextFile?: string;
@@ -138,6 +133,7 @@ export interface HealthAccidentCriticalIllnessProduct extends BaseProduct {
   hesitationPeriod: string;
   policyEffectiveDate: string;
   purchaseLimit: number;
+  annualPremium: number;
   valueAddedServices: ValueAddedServiceItem[];
   deductible?: string;
   renewalWarranty?: string;
@@ -302,6 +298,14 @@ export interface CompanyListItem {
 }
 // --- END: Types for Company Management ---
 
+export interface ResponsibilityItem {
+  id: string;
+  code: string;
+  name: string;
+  category: string;
+  description: string;
+}
+
 // --- START: Types for Industry Data Management ---
 export interface IndustryData {
   id: string;
@@ -320,7 +324,6 @@ export interface CitySalaryData {
   avgAnnualSalary: string;
   avgMonthlySalary: string;
   monthlyNursingCost: string;
-  monthly_living_expense?: number;
 }
 
 export interface CriticalIllnessRateData {
@@ -372,6 +375,12 @@ export interface InsuranceCategoryMapping {
   functionCategory: string;
 }
 
+export interface FAQItem {
+  question: string;
+  answer: string;
+  isFocus: boolean;
+}
+
 export interface CategoryDefinition {
   code: string;
   name: string;
@@ -388,6 +397,7 @@ export interface CategoryDefinition {
   regLevel2Code?: string;
   regLevel2Name?: string;
   functionCategory?: string;
+  faqList?: FAQItem[];
 }
 
 export interface TreeNode {
@@ -421,13 +431,3 @@ export interface EndUser {
   channel: string;
 }
 // --- END: Types for End User Data ---
-
-// --- START: Types for Responsibility Management ---
-export interface ResponsibilityItem {
-  id: string;
-  code: string;
-  name: string;
-  category: string;
-  description: string;
-}
-// --- END: Types for Responsibility Management ---

@@ -462,6 +462,116 @@ const InsuranceTypeManagementPage: React.FC<{ tool?: '智能体' | '省心配' }
                                     </div>
                                 </div>
                                 )}
+
+                                {/* FAQ Configuration Module (Level 2 Only) */}
+                                {selectedNode.level === 2 && (
+                                    <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 mt-6">
+                                        <div className="flex justify-between items-center mb-4 border-l-4 border-purple-500 pl-3">
+                                            <div className="flex items-center">
+                                            <h3 className="text-base font-bold text-gray-800 mr-2">FAQ（常见问题）配置</h3>
+                                            <div className="relative group">
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 hover:text-gray-600 cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-80 p-3 bg-gray-800 text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 leading-relaxed font-normal text-left">
+                                                    配置后，智能体端将展示此预设的常见问题，方便用户点击操作。系统会直接将对应的详细问题发到聊天框，大模型将根据问题检索。请同时配置好 FAQ 问答库。
+                                                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const currentList = formData.faqList || [];
+                                                    if (currentList.length >= 10) {
+                                                        alert('最多只能添加 10 个常见问题');
+                                                        return;
+                                                    }
+                                                    setFormData(prev => ({
+                                                        ...prev,
+                                                        faqList: [...currentList, { question: '', answer: '', isFocus: false }]
+                                                    }));
+                                                }}
+                                                className="text-sm px-3 py-1 bg-blue-50 text-brand-blue-600 rounded hover:bg-blue-100 transition"
+                                            >
+                                                + 添加问题
+                                            </button>
+                                        </div>
+                                        
+                                        <div className="space-y-4">
+                                            {(formData.faqList || []).map((faq, index) => (
+                                                <div key={index} className="p-4 bg-gray-50 rounded-lg border border-gray-200 relative group">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            const newList = [...(formData.faqList || [])];
+                                                            newList.splice(index, 1);
+                                                            setFormData(prev => ({ ...prev, faqList: newList }));
+                                                        }}
+                                                        className="absolute top-2 right-2 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"
+                                                        title="删除"
+                                                    >
+                                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                        </svg>
+                                                    </button>
+                                                    
+                                                    <div className="flex gap-4 items-start">
+                                                        <div className="w-1/3 min-w-[200px]">
+                                                            <div className="flex items-center justify-between mb-1">
+                                                                <label className="block text-xs font-medium text-gray-500">问题简称</label>
+                                                                <label className="flex items-center space-x-1 cursor-pointer">
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={faq.isFocus}
+                                                                        onChange={e => {
+                                                                            const newList = [...(formData.faqList || [])];
+                                                                            newList[index] = { ...newList[index], isFocus: e.target.checked };
+                                                                            setFormData(prev => ({ ...prev, faqList: newList }));
+                                                                        }}
+                                                                        className="rounded text-brand-blue-600 focus:ring-brand-blue-500"
+                                                                    />
+                                                                    <span className="text-xs text-gray-600">重点关注</span>
+                                                                </label>
+                                                            </div>
+                                                            <input
+                                                                type="text"
+                                                                value={faq.question}
+                                                                onChange={e => {
+                                                                    const newList = [...(formData.faqList || [])];
+                                                                    newList[index] = { ...newList[index], question: e.target.value };
+                                                                    setFormData(prev => ({ ...prev, faqList: newList }));
+                                                                }}
+                                                                placeholder="例如：保什么"
+                                                                className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-brand-blue-500 focus:outline-none"
+                                                            />
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <label className="block text-xs font-medium text-gray-500 mb-1">问题详细</label>
+                                                            <textarea
+                                                                rows={1}
+                                                                value={faq.answer}
+                                                                onChange={e => {
+                                                                    const newList = [...(formData.faqList || [])];
+                                                                    newList[index] = { ...newList[index], answer: e.target.value };
+                                                                    setFormData(prev => ({ ...prev, faqList: newList }));
+                                                                }}
+                                                                placeholder="例如：给我讲下这款产品的保障范围和保障特色"
+                                                                className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-brand-blue-500 focus:outline-none resize-none"
+                                                                style={{ minHeight: '38px' }}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            {(!formData.faqList || formData.faqList.length === 0) && (
+                                                <div className="text-center py-6 text-gray-400 text-sm border-2 border-dashed border-gray-200 rounded-lg">
+                                                    暂无常见问题配置
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         ) : (
                             <div className="flex flex-col items-center justify-center h-full text-gray-400">

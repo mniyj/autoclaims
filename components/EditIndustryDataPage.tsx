@@ -62,7 +62,6 @@ const EditIndustryDataPage: React.FC<EditIndustryDataPageProps> = ({ industryDat
                   <th className={commonHeaderClass}>2024 年社会平均工资（年）</th>
                   <th className={commonHeaderClass}>2024 年社会平均工资（月）</th>
                   <th className={commonHeaderClass}>每月护理费用</th>
-                  <th className={commonHeaderClass}>每月生活支出</th>
               </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -75,7 +74,6 @@ const EditIndustryDataPage: React.FC<EditIndustryDataPageProps> = ({ industryDat
                       <td className={commonCellSecondaryClass}>{item.avgAnnualSalary}</td>
                       <td className={commonCellSecondaryClass}>{item.avgMonthlySalary}</td>
                       <td className={commonCellSecondaryClass}>{item.monthlyNursingCost}</td>
-                      <td className={commonCellSecondaryClass}>{item.monthly_living_expense}</td>
                   </tr>
               ))}
           </tbody>

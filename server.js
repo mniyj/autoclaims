@@ -7,9 +7,9 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// 从环境变量获取端口，默认 3008
+// 从环境变量获取端口，默认 3000
 // 在阿里云部署时，可以通过 PORT=8080 node server.js 来指定端口
-const PORT = process.env.PORT || 3008;
+const PORT = process.env.PORT || 3000;
 
 // 从环境变量获取子路径，默认为空（即根路径）
 // 如果 BASE_PATH 设置为 /insurance-config，则应用将挂载在该路径下

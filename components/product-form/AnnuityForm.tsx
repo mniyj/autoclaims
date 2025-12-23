@@ -1,7 +1,6 @@
 import React from 'react';
 import { type AnnuityProduct } from '../../types';
 import Input from '../ui/Input';
-import AnnuityPlansEditor from './AnnuityPlansEditor';
 
 interface FormProps {
   product: AnnuityProduct;
@@ -24,9 +23,6 @@ const AnnuityForm: React.FC<FormProps> = ({ product, onFormChange }) => {
       <Input label="领取年龄" id="payoutStartAge" name="payoutStartAge" type="number" value={product.payoutStartAge} onChange={handleChange} required />
       <div className="md:col-span-2">
         <Input label="投保职业" id="underwritingOccupation" name="underwritingOccupation" value={product.underwritingOccupation} onChange={handleChange} required />
-      </div>
-      <div className="md:col-span-2 pt-4 border-t border-gray-200">
-        <AnnuityPlansEditor plans={(product as any).coveragePlans || []} onChange={(plans) => onFormChange('coveragePlans', plans)} />
       </div>
     </div>
   );

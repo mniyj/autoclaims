@@ -52,14 +52,14 @@ const navItems: NavItemData[] = [
     name: '智能保顾配置', 
     icon: <StrategyIcon />, 
     children: [
-        { name: '产品列表', id: 'product_list' },
-        { name: '条款管理', id: 'clause_management' },
-        { name: '险种管理', id: 'insurance_type_management' },
-        { name: '责任管理', id: 'responsibility_management' },
-        { name: '保险公司管理', id: 'company_management' },
-        { name: '行业基础数据', id: 'industry_data_list' },
-        { name: '保险产品推荐配置', id: 'strategy_management' },
-        { name: '智能保顾计算元素配置', id: 'smart_advisor_config' },
+      { name: '产品列表', id: 'product_list' },
+      { name: '条款管理', id: 'clause_management' },
+      { name: '险种管理', id: 'insurance_type_management' },
+      { name: '责任管理', id: 'responsibility_management' },
+      { name: '保险公司管理', id: 'company_management' },
+      { name: '行业基础数据', id: 'industry_data_list' },
+      { name: '保险产品推荐配置', id: 'strategy_management' },
+      { name: '智能保顾计算元素配置', id: 'smart_advisor_config' },
     ]
   },
   { 
@@ -79,7 +79,7 @@ const activeParentViews: Record<string, AppView[]> = {
     '系统管理': ['system_settings', 'user_list', 'data_dashboard']
 };
 
-const Sidebar: React.FC<{ currentView: AppView; onViewChange: (view: AppView) => void; currentUser: { username: string; companyCode?: string; tool?: '智能体' | '省心配' } | null }> = ({ currentView, onViewChange, currentUser }) => {
+const Sidebar: React.FC<{ currentView: AppView; onViewChange: (view: AppView) => void; }> = ({ currentView, onViewChange }) => {
     const [openGroup, setOpenGroup] = useState<string>('智能保顾配置');
 
     const toggleGroup = (name: string) => {
@@ -94,9 +94,6 @@ const Sidebar: React.FC<{ currentView: AppView; onViewChange: (view: AppView) =>
             </div>
             <nav className="flex-1 space-y-1 mt-2">
                 {navItems.map(item => {
-                    if (currentUser?.username === 'gclife' && item.name === '系统管理') {
-                        return null;
-                    }
                     const isParentActive = activeParentViews[item.name]?.includes(currentView);
                     const isOpen = openGroup === item.name;
 
@@ -328,7 +325,7 @@ const App: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-[#f0f2f5] font-sans text-slate-800">
-      <Sidebar currentView={view} onViewChange={handleViewChange} currentUser={currentUser} />
+      <Sidebar currentView={view} onViewChange={handleViewChange} />
       <div className="flex-1 flex flex-col overflow-hidden relative">
         <div className="absolute top-0 left-0 w-full h-[200px] bg-gradient-to-b from-[#e6f4ff] to-[#f0f2f5] pointer-events-none" />
         <Header onLogout={handleLogout} />

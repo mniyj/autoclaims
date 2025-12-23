@@ -14,12 +14,12 @@ const ViewClausePage: React.FC<{ clause: Clause; onBack: () => void; }> = ({ cla
         PrimaryCategory.CRITICAL_ILLNESS
     ];
 
-    const showCashValueTable = clause.primaryCategory && CASH_VALUE_CATEGORIES.includes(clause.primaryCategory);
-
     const BASIC_SUM_INSURED_CATEGORIES: PrimaryCategory[] = [
         PrimaryCategory.ANNUITY,
         PrimaryCategory.WHOLE_LIFE,
     ];
+
+    const showCashValueTable = clause.primaryCategory && CASH_VALUE_CATEGORIES.includes(clause.primaryCategory);
     const showBasicSumInsuredTable = clause.primaryCategory && BASIC_SUM_INSURED_CATEGORIES.includes(clause.primaryCategory);
 
     return (
@@ -32,7 +32,7 @@ const ViewClausePage: React.FC<{ clause: Clause; onBack: () => void; }> = ({ cla
                     返回条款列表
                 </button>
             </div>
-            <div className="bg_white p-8 rounded-lg shadow-sm border border-gray-200">
+            <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-200">
                 <div className="space-y-8">
                     <div>
                         <h2 className="text-xl font-bold text-gray-800">查看条款详情: {clause.regulatoryName}</h2>
@@ -50,7 +50,7 @@ const ViewClausePage: React.FC<{ clause: Clause; onBack: () => void; }> = ({ cla
                     </div>
 
                     <div className="space-y-6 pt-6 border-t border-gray-200">
-                         <h3 className="text-lg font_medium text-gray-900">已上传文件</h3>
+                         <h3 className="text-lg font-medium text-gray-900">已上传文件</h3>
                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <FileDisplay label="条款原文" fileName={clause.clauseTextFile} />
                             <FileDisplay label="费率表" fileName={clause.rateTableFile} />
@@ -71,7 +71,9 @@ const ViewClausePage: React.FC<{ clause: Clause; onBack: () => void; }> = ({ cla
                                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                                 </svg>
                                                 <span className="text-gray-800 truncate flex-grow">{file}</span>
-                                                <a href="#" className="ml-4 text-sm font-medium text-brand-blue-600 hover:text-brand-blue-800 flex-shrink-0">下载</a>
+                                                <a href="#" className="ml-4 text-sm font-medium text-brand-blue-600 hover:text-brand-blue-800 flex-shrink-0">
+                                                  下载
+                                                </a>
                                             </div>
                                          ))}
                                      </div>
@@ -79,23 +81,6 @@ const ViewClausePage: React.FC<{ clause: Clause; onBack: () => void; }> = ({ cla
                             )}
                          </div>
                     </div>
-
-                    {Array.isArray((clause as any).selectedResponsibilities) && (clause as any).selectedResponsibilities.length > 0 && (
-                      <div className="space-y-3 pt-6 border-t border-gray-200">
-                        <h3 className="text-lg font-medium text-gray-900">已选择责任</h3>
-                        <div className="space-y-2">
-                          {(clause as any).selectedResponsibilities.map((r: any) => (
-                            <div key={r.code} className="flex items-start p-3 border border-gray-200 rounded-md">
-                              <div className="flex-1 text-sm">
-                                <div className="font-medium text-gray-800">{r.name} <span className="ml-2 font-mono text-gray-500">{r.code}</span></div>
-                                <div className="text-xs text-gray-500">分类：{r.category}</div>
-                                <div className="text-gray-600 mt-1">{r.description}</div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
 
                      <div className="pt-6 border-t border-gray-200 flex justify-end">
                         <button

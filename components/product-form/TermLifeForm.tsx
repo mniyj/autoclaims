@@ -1,7 +1,6 @@
 import React from 'react';
 import { type TermLifeProduct } from '../../types';
 import Input from '../ui/Input';
-import TermLifePlansEditor from './TermLifePlansEditor';
 
 interface FormProps {
   product: TermLifeProduct;
@@ -22,9 +21,6 @@ const TermLifeForm: React.FC<FormProps> = ({ product, onFormChange }) => {
       <Input label="交费期间" id="paymentPeriod" name="paymentPeriod" value={product.paymentPeriod} onChange={handleChange} required />
       <div className="md:col-span-2">
         <Input label="承保职业" id="underwritingOccupation" name="underwritingOccupation" value={product.underwritingOccupation} onChange={handleChange} required />
-      </div>
-      <div className="md:col-span-2 pt-4 border-t border-gray-200">
-        <TermLifePlansEditor plans={(product as any).coveragePlans || []} onChange={(plans) => onFormChange('coveragePlans', plans)} />
       </div>
     </div>
   );

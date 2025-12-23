@@ -54,23 +54,6 @@
       "description": "保障责任详情列表，是意外险产品的核心。",
       "items": { "$ref": "#/$defs/CoverageDetailItem" }
     },
-    "coveragePlans": {
-      "type": "array",
-      "description": "多方案配置，每个方案下包含一组责任详情。",
-      "items": {
-        "type": "object",
-        "properties": {
-          "planType": { "type": "string", "description": "方案名称，如经典版/尊享版" },
-          "annualLimit": { "type": ["number", "null"], "description": "年度总保额（可选）" },
-          "guaranteedRenewalYears": { "type": ["integer", "null"], "description": "保证续保年限（可选）" },
-          "coverageDetails": {
-            "type": "array",
-            "items": { "$ref": "#/$defs/CoverageDetailItem" }
-          }
-        },
-        "required": ["planType", "coverageDetails"]
-      }
-    },
     "valueAddedServices": {
       "type": "array",
       "description": "增值服务列表（如紧急救援等）。",
@@ -78,20 +61,19 @@
     }
   },
   "required": [
-    "productCode", "regulatoryName", "marketingName", "insurerName", "underwritingAge", "coveragePeriod", "waitingPeriod", "occupationScope"
+    "productCode", "regulatoryName", "marketingName", "insurerName", "underwritingAge", "coveragePeriod", "waitingPeriod", "occupationScope", "coverageDetails"
   ],
 
-    "$defs": {
-      "CoverageDetailItem": {
-        "type": "object",
-        "description": "单个保障责任项目，如意外身故/伤残、意外医疗、猝死、住院津贴、特定意外等。",
-        "properties": {
-          "mandatory": { "type": "boolean", "description": "是否为必选责任（true=必选，false=可选）。" },
-          "item_code": {
-            "type": "string",
-            "description": "保障项目的内部代码，用于系统识别。",
-            "enum": [
-              "ACCIDENTAL_DEATH_DISABILITY",
+  "$defs": {
+    "CoverageDetailItem": {
+      "type": "object",
+      "description": "单个保障责任项目，如意外身故/伤残、意外医疗、猝死、住院津贴、特定意外等。",
+      "properties": {
+        "item_code": {
+          "type": "string",
+          "description": "保障项目的内部代码，用于系统识别。",
+          "enum": [
+            "ACCIDENTAL_DEATH_DISABILITY",
             "ACCIDENTAL_MEDICAL",
             "SUDDEN_DEATH",
             "HOSPITAL_INCOME",

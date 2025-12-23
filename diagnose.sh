@@ -23,17 +23,17 @@ ssh $SSH_OPTS "$SERVER_USER@$SERVER_IP" << EOF
   echo "=== 1. PM2 进程状态 ==="
   pm2 list
   
-  echo -e "\n=== 2. 端口监听状态 (3008) ==="
+  echo -e "\n=== 2. 端口监听状态 (3005) ==="
   if command -v netstat &> /dev/null; then
-      netstat -tulpn | grep 3008
+      netstat -tulpn | grep 3005
   elif command -v ss &> /dev/null; then
-      ss -tulpn | grep 3008
+      ss -tulpn | grep 3005
   else
       echo "❌ 未找到 netstat 或 ss 命令"
   fi
   
   echo -e "\n=== 3. 本地访问测试 ==="
-  curl -v http://localhost:3008 2>&1 | head -n 10
+  curl -v http://localhost:3005 2>&1 | head -n 10
   
   echo -e "\n=== 4. 系统防火墙状态 ==="
   if command -v systemctl &> /dev/null; then

@@ -5,29 +5,6 @@
   "type": "object",
 
   "properties": {
-    "coveragePlans": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "planType": { "type": "string" },
-          "coverageDetails": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "mandatory": { "type": "boolean", "description": "是否为必选责任（true=必选，false=可选）。" },
-                "name": { "type": "string" },
-                "amount": { "type": "string" },
-                "details": { "type": "string" }
-              },
-              "required": ["name"]
-            }
-          }
-        },
-        "required": ["planType", "coverageDetails"]
-      }
-    },
     "productCode": { "type": "string", "description": "产品的唯一标识码，不可编辑。" },
     "regulatoryName": { "type": "string", "description": "监管机构备案的正式名称。" },
     "marketingName": { "type": "string", "description": "市场推广时使用的名称。" },
@@ -85,8 +62,6 @@
       "description": "承保的职业范围描述（年金险通常较宽松）。"
     },
 
-    "annualPremium": { "type": "number", "description": "每年的保费（起）。" },
-
     "coverageDetails": {
       "type": "array",
       "description": "保障责任详情列表，是年金险产品的核心。",
@@ -99,7 +74,7 @@
     }
   },
   "required": [
-    "productCode", "regulatoryName", "marketingName", "insurerName", "underwritingAge", "coveragePeriod", "paymentMethod", "paymentPeriod", "payoutStartAge", "payoutFrequency", "coveragePlans"
+    "productCode", "regulatoryName", "marketingName", "insurerName", "underwritingAge", "coveragePeriod", "paymentMethod", "paymentPeriod", "payoutStartAge", "payoutFrequency", "coverageDetails"
   ],
 
   "$defs": {

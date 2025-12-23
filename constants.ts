@@ -2380,13 +2380,143 @@ export const LEVEL_3_DATA: CategoryDefinition[] = [
 ];
 
 export const LEVEL_2_DATA: CategoryDefinition[] = [
-    { code: 'A01', name: '住院医疗', definition: '主要报销因疾病或意外导致的住院治疗费用，包括床位费、手术费、药品费等，是社保的重要补充。', features: '通常保额高（如百万级别），保费相对较低，杠杆效应显著，能有效应对大额医疗支出。', function: '防止家庭因病返贫，覆盖社保目录内外的医疗开销，提供更优质的医疗资源和服务（如绿通）。', audience: '所有希望规避大病医疗风险的个人和家庭，尤其是年轻人和家庭支柱。', selectionPoints: '续保条件（是否保证续保）、免赔额、报销范围（含外购药）、增值服务。', coreMetrics: '保证续保年限、免赔额、报销比例、外购药目录、保费' },
-    { code: 'A02', name: '门诊医疗', definition: '用于报销日常看病产生的门诊或急诊费用，如挂号费、检查费、药费等，通常有年度限额。', features: '解决小额但高频的医疗支出，降低日常看病负担。常作为中高端医疗险或企业团险的福利。', function: '提升就医体验，减少小病带来的经济压力，鼓励及时就医，管理日常健康。', audience: '有小孩的家庭、体质较弱者、或追求全面医疗保障的高净值人群。', selectionPoints: '年度限额、单次限额、免赔额/次数、医院网络（是否含私立）、报销比例。', coreMetrics: '年度限额、免赔额、报销比例、就医医院范围、保费' },
-    { code: 'B01', name: '短期重疾', definition: '保障期限为一年，确诊合同约定的重大疾病后一次性给付保险金，属于消费型保险。', features: '保费极低，保障杠杆非常高，适合在特定时期内用低预算快速补充高额重疾保障。', function: '确诊后提供一笔现金，用于弥补短期收入损失和支付康复费用，解决燃眉之急。', audience: '预算有限的年轻人、或需要临时加保的家庭支柱。', selectionPoints: '续保稳定性、等待期、疾病定义、是否含轻/中症保障。', coreMetrics: '保额、保费、续保条件、等待期、疾病种类' },
-    { code: 'B02', name: '定期重疾', definition: '在约定保障期限内（如20年、30年或至70岁）提供重疾保障，期满后合同终止。', features: '在家庭责任最重的阶段提供高性价比保障，保费比终身重疾便宜，保障聚焦。', function: '转移家庭支柱在工作年龄段的核心风险，确保即使患病，家庭财务也不会崩溃。', audience: '事业上升期、承担家庭主要经济责任的成年人（上有老下有小）。', selectionPoints: '保障期限选择、轻中症赔付比例、是否含身故责任、多次赔付设计。', coreMetrics: '保额、保障期限、轻/中症赔付比例、保费、保费豁免' },
-    { code: 'B03', name: '终身重疾', definition: '提供终身重大疾病保障，确诊后给付保险金，通常含有身故责任，保障至生命终点。', features: '保障期限长，锁定终身风险，后期现金价值较高，兼具保障和一定的储蓄功能。', function: '终极的健康风险转移工具，既可用于疾病治疗，也可在身后作为资产传承。', audience: '预算充足，追求终身保障和财富传承的人群。', selectionPoints: '多次赔付设计、疾病分组、现金价值增长率、身故责任形态。', coreMetrics: '保额、现金价值增长率、多次赔付条件、疾病分组、身故责任' },
-    { code: 'C01', name: '综合意外', definition: '提供因意外导致的身故、伤残和医疗费用报销的综合性保障，覆盖日常生活中的各种意外。', features: '保费低、杠杆高，投保门槛低（通常无健康告知），保障范围广，是人手必备的基础保障。', function: '应对突发意外带来的经济冲击，提供伤残补偿、医疗费用报销和身故抚恤。', audience: '所有人群，尤其是经常外出、从事有一定风险工作或家庭经济支柱。', selectionPoints: '意外身故/伤残保额、意外医疗报销范围（是否含社保外）、猝死责任。', coreMetrics: '意外身故/伤残保额、意外医疗保额、猝死责任、职业类别限制' },
-    { code: 'C02', name: '出行意外', definition: '专为出行场景设计，保障乘坐交通工具或在旅行途中发生的意外风险，通常保额很高。', features: '场景聚焦，杠杆极高，用很低的保费就能获得上百万的特定场景保障，保障期限灵活。', function: '针对性转移航空、铁路、自驾等高风险出行场景的巨灾风险，提供超高额保障。', audience: '经常出差、旅游的商务人士和旅行爱好者。', selectionPoints: '覆盖的交通工具种类、保障期限、是否含紧急救援、高风险运动责任。', coreMetrics: '特定交通工具保额、保障期限、紧急救援服务、保费' },
+    { 
+        code: 'A01', 
+        name: '住院医疗', 
+        definition: '主要报销因疾病或意外导致的住院治疗费用，包括床位费、手术费、药品费等，是社保的重要补充。', 
+        features: '通常保额高（如百万级别），保费相对较低，杠杆效应显著，能有效应对大额医疗支出。', 
+        function: '防止家庭因病返贫，覆盖社保目录内外的医疗开销，提供更优质的医疗资源和服务（如绿通）。', 
+        audience: '所有希望规避大病医疗风险的个人和家庭，尤其是年轻人和家庭支柱。', 
+        selectionPoints: '续保条件（是否保证续保）、免赔额、报销范围（含外购药）、增值服务。', 
+        coreMetrics: '保证续保年限、免赔额、报销比例、外购药目录、保费',
+        faqList: [
+            { question: '保什么', isFocus: true, answer: '给我讲下这款产品的保障范围和保障特色' },
+            { question: '投保规则', isFocus: false, answer: '给我讲下这款产品的投保规则' },
+            { question: '续保规则', isFocus: false, answer: '给我讲下这款产品的续保规则' },
+            { question: '健康要求', isFocus: true, answer: '给我讲下这款产品的健康要求' },
+            { question: '价格及缴费方式', isFocus: false, answer: '给我讲下这款产品的价格及缴费方式' },
+            { question: '适合人群', isFocus: false, answer: '给我讲下这款产品的适合人群' },
+            { question: '保险公司', isFocus: false, answer: '给我讲下这款产品的保险公司' },
+            { question: '理赔流程', isFocus: true, answer: '给我讲下这款产品的理赔流程' },
+            { question: '医疗服务', isFocus: false, answer: '给我讲下这款产品的医疗服务' }
+        ]
+    },
+    { 
+        code: 'A02', 
+        name: '门诊医疗', 
+        definition: '用于报销日常看病产生的门诊或急诊费用，如挂号费、检查费、药费等，通常有年度限额。', 
+        features: '解决小额但高频的医疗支出，降低日常看病负担。常作为中高端医疗险或企业团险的福利。', 
+        function: '提升就医体验，减少小病带来的经济压力，鼓励及时就医，管理日常健康。', 
+        audience: '有小孩的家庭、体质较弱者、或追求全面医疗保障的高净值人群。', 
+        selectionPoints: '年度限额、单次限额、免赔额/次数、医院网络（是否含私立）、报销比例。', 
+        coreMetrics: '年度限额、免赔额、报销比例、就医医院范围、保费',
+        faqList: [
+            { question: '保什么', isFocus: true, answer: '给我讲下这款产品的保障范围和保障特色' },
+            { question: '投保规则', isFocus: false, answer: '给我讲下这款产品的投保规则' },
+            { question: '续保规则', isFocus: false, answer: '给我讲下这款产品的续保规则' },
+            { question: '健康要求', isFocus: true, answer: '给我讲下这款产品的健康要求' },
+            { question: '价格及缴费方式', isFocus: false, answer: '给我讲下这款产品的价格及缴费方式' },
+            { question: '适合人群', isFocus: false, answer: '给我讲下这款产品的适合人群' },
+            { question: '保险公司', isFocus: false, answer: '给我讲下这款产品的保险公司' },
+            { question: '理赔流程', isFocus: true, answer: '给我讲下这款产品的理赔流程' },
+            { question: '医疗服务', isFocus: false, answer: '给我讲下这款产品的医疗服务' }
+        ]
+    },
+    { 
+        code: 'B01', 
+        name: '短期重疾', 
+        definition: '保障期限为一年，确诊合同约定的重大疾病后一次性给付保险金，属于消费型保险。', 
+        features: '保费极低，保障杠杆非常高，适合在特定时期内用低预算快速补充高额重疾保障。', 
+        function: '确诊后提供一笔现金，用于弥补短期收入损失和支付康复费用，解决燃眉之急。', 
+        audience: '预算有限的年轻人、或需要临时加保的家庭支柱。', 
+        selectionPoints: '续保稳定性、等待期、疾病定义、是否含轻/中症保障。', 
+        coreMetrics: '保额、保费、续保条件、等待期、疾病种类',
+        faqList: [
+            { question: '保什么', isFocus: true, answer: '给我讲下这款产品的保障范围和保障特色' },
+            { question: '保障场景', isFocus: true, answer: '给我讲下这款产品的赔付规则' },
+            { question: '投保规则', isFocus: false, answer: '给我讲下这款产品的投保规则' },
+            { question: '价格及缴费方式', isFocus: false, answer: '给我讲下这款产品的价格及缴费方式' },
+            { question: '适合人群', isFocus: false, answer: '给我讲下这款产品的适合人群' },
+            { question: '保险公司', isFocus: false, answer: '给我讲下这款产品的保险公司' },
+            { question: '理赔流程', isFocus: true, answer: '给我讲下这款产品的理赔流程' }
+        ]
+    },
+    { 
+        code: 'B02', 
+        name: '定期重疾', 
+        definition: '在约定保障期限内（如20年、30年或至70岁）提供重疾保障，期满后合同终止。', 
+        features: '在家庭责任最重的阶段提供高性价比保障，保费比终身重疾便宜，保障聚焦。', 
+        function: '转移家庭支柱在工作年龄段的核心风险，确保即使患病，家庭财务也不会崩溃。', 
+        audience: '事业上升期、承担家庭主要经济责任的成年人（上有老下有小）。', 
+        selectionPoints: '保障期限选择、轻中症赔付比例、是否含身故责任、多次赔付设计。', 
+        coreMetrics: '保额、保障期限、轻/中症赔付比例、保费、保费豁免',
+        faqList: [
+            { question: '保什么', isFocus: true, answer: '给我讲下这款产品的保障范围和保障特色' },
+            { question: '保障场景', isFocus: true, answer: '给我讲下这款产品的赔付规则' },
+            { question: '投保规则', isFocus: false, answer: '给我讲下这款产品的投保规则' },
+            { question: '价格及缴费方式', isFocus: false, answer: '给我讲下这款产品的价格及缴费方式' },
+            { question: '适合人群', isFocus: false, answer: '给我讲下这款产品的适合人群' },
+            { question: '保险公司', isFocus: false, answer: '给我讲下这款产品的保险公司' },
+            { question: '理赔流程', isFocus: true, answer: '给我讲下这款产品的理赔流程' }
+        ]
+    },
+    { 
+        code: 'B03', 
+        name: '终身重疾', 
+        definition: '提供终身重大疾病保障，确诊后给付保险金，通常含有身故责任，保障至生命终点。', 
+        features: '保障期限长，锁定终身风险，后期现金价值较高，兼具保障和一定的储蓄功能。', 
+        function: '终极的健康风险转移工具，既可用于疾病治疗，也可在身后作为资产传承。', 
+        audience: '预算充足，追求终身保障和财富传承的人群。', 
+        selectionPoints: '多次赔付设计、疾病分组、现金价值增长率、身故责任形态。', 
+        coreMetrics: '保额、现金价值增长率、多次赔付条件、疾病分组、身故责任',
+        faqList: [
+            { question: '保什么', isFocus: true, answer: '给我讲下这款产品的保障范围和保障特色' },
+            { question: '保障场景', isFocus: true, answer: '给我讲下这款产品的赔付规则' },
+            { question: '投保规则', isFocus: false, answer: '给我讲下这款产品的投保规则' },
+            { question: '价格及缴费方式', isFocus: false, answer: '给我讲下这款产品的价格及缴费方式' },
+            { question: '适合人群', isFocus: false, answer: '给我讲下这款产品的适合人群' },
+            { question: '保险公司', isFocus: false, answer: '给我讲下这款产品的保险公司' },
+            { question: '理赔流程', isFocus: true, answer: '给我讲下这款产品的理赔流程' }
+        ]
+    },
+    {
+        code: 'C01',
+        name: '综合意外',
+        definition: '提供因意外导致的身故、伤残和医疗费用报销的综合性保障，覆盖日常生活中的各种意外。',
+        features: '保费低、杠杆高，投保门槛低（通常无健康告知），保障范围广，是人手必备的基础保障。',
+        function: '应对突发意外带来的经济冲击，提供伤残补偿、医疗费用报销和身故抚恤。',
+        audience: '所有人群，尤其是经常外出、从事有一定风险工作或家庭经济支柱。',
+        selectionPoints: '意外身故/伤残保额、意外医疗报销范围（是否含社保外）、猝死责任。',
+        coreMetrics: '意外身故/伤残保额、意外医疗保额、猝死责任、职业类别限制',
+        faqList: [
+            { question: '保什么', isFocus: true, answer: '给我讲下这款产品的保障范围和保障特色' },
+            { question: '保障场景', isFocus: true, answer: '给我讲下这款产品的赔付规则' },
+            { question: '投保规则', isFocus: false, answer: '给我讲下这款产品的投保规则' },
+            { question: '价格及缴费方式', isFocus: false, answer: '给我讲下这款产品的价格及缴费方式' },
+            { question: '适合人群', isFocus: false, answer: '给我讲下这款产品的适合人群' },
+            { question: '保险公司', isFocus: false, answer: '给我讲下这款产品的保险公司' },
+            { question: '理赔流程', isFocus: true, answer: '给我讲下这款产品的理赔流程' }
+        ]
+    },
+    {
+        code: 'C02',
+        name: '出行意外',
+        definition: '专为出行场景设计，保障乘坐交通工具或在旅行途中发生的意外风险，通常保额很高。',
+        features: '场景聚焦，杠杆极高，用很低的保费就能获得上百万的特定场景保障，保障期限灵活。',
+        function: '针对性转移航空、铁路、自驾等高风险出行场景的巨灾风险，提供超高额保障。',
+        audience: '经常出差、旅游的商务人士和旅行爱好者。',
+        selectionPoints: '覆盖的交通工具种类、保障期限、是否含紧急救援、高风险运动责任。',
+        coreMetrics: '特定交通工具保额、保障期限、紧急救援服务、保费',
+        faqList: [
+            { question: '保什么', isFocus: true, answer: '给我讲下这款产品的保障范围和保障特色' },
+            { question: '保障场景', isFocus: true, answer: '给我讲下这款产品的赔付规则' },
+            { question: '投保规则', isFocus: false, answer: '给我讲下这款产品的投保规则' },
+            { question: '价格及缴费方式', isFocus: false, answer: '给我讲下这款产品的价格及缴费方式' },
+            { question: '适合人群', isFocus: false, answer: '给我讲下这款产品的适合人群' },
+            { question: '保险公司', isFocus: false, answer: '给我讲下这款产品的保险公司' },
+            { question: '理赔流程', isFocus: true, answer: '给我讲下这款产品的理赔流程' }
+        ]
+    },
     { code: 'D01', name: '年金', definition: '投保人按期缴费，到约定年龄后（如60岁），保险公司开始按年或月给付养老金。', features: '收益安全、稳定，提供与生命等长的现金流，专款专用，有效对抗长寿风险。', function: '强制储蓄，提前规划退休生活，确保老年有稳定、体面的收入来源，实现品质养老。', audience: '有稳定收入，希望提前锁定未来养老收入，追求安全稳健的个人或家庭。', selectionPoints: '保证领取期限、领取年龄和方式、内部收益率（IRR）、附加万能账户。', coreMetrics: '保证领取年限、内部收益率(IRR)、领取金额、起领年龄' },
     { code: 'E01', name: '年金', definition: '缴费和领取周期相对较短的年金险，通常用于实现5-15年内的中期财务目标。', features: '期限灵活，流动性相对较好，用于特定时间点的资金规划，收益写入合同，安全确定。', function: '作为子女教育金、婚嫁金、创业金的储备工具，实现专款专用和强制储蓄。', audience: '有明确中期（5-15年）财务规划需求的家庭。', selectionPoints: '缴费和领取期限、现金价值回本速度、内部收益率（IRR）。', coreMetrics: '领取时间、内部收益率(IRR)、现金价值、缴费期限' },
     { code: 'E02', name: '增额终身寿', definition: '保额和现金价值按固定复利逐年增长的终身寿险，兼具保障和长期储蓄功能。', features: '收益明确写入合同，安全稳定；现金价值增长快，可通过减保灵活取用资金。', function: '长期财富增值、资产传承、养老补充和子女教育金规划，是灵活的家庭蓄水池。', audience: '追求资产安全稳健增值，有长期储蓄或财富传承需求的高净值人群。', selectionPoints: '有效保额增长率、现金价值回本速度、减保/保单贷款规则的灵活性。', coreMetrics: '有效保额增长率、现金价值、内部收益率(IRR)、减保灵活性' },
