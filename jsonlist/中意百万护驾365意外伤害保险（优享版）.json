@@ -1,0 +1,61 @@
+{
+  "productCode": "GEN-ACC-009",
+  "regulatoryName": "中意百万护驾365意外伤害保险（优享版）",
+  "marketingName": "百万护驾365意外险",
+  "productSummery": "驾驶意外险，驾乘意外身故/伤残100万保额",
+  "onlineClaimFlag": true,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2024版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2024-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "意外保险",
+  "primaryCategoryCode": "C",
+  "secondaryCategory": "交通意外",
+  "secondaryCategoryCode": "C02",
+  "racewayId": "C0204",
+  "racewayName": "驾乘意外",
+  "salesUrl": "https://www.generalichina.com/products/baiwanhujia",
+  "underwritingAge": "18周岁-70周岁",
+  "coveragePeriod": "1年",
+  "waitingPeriod": "无等待期",
+  "deductible": "无免赔额",
+  "productHeroImage": "https://example.com/images/accident_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意百万护驾365意外伤害保险（优享版）-条款.pdf",
+    "中意百万护驾365意外伤害保险（优享版）-产品说明书.pdf",
+    "中意百万护驾365意外伤害保险（优享版）-费率表.pdf"
+  ],
+  "clausesCode": ["GEN-ACC-2024-009"],
+  "productIntroduction": "中意百万护驾365意外伤害保险是一款驾驶意外险产品，提供驾乘意外身故/伤残保障。",
+  "productAdvantages": "1. 高保额：驾乘意外身故/伤残最高100万保额\n2. 保费低廉：一年保费百元起\n3. 全年保障：365天全天候保障",
+  "precautions": "1. 仅保障驾驶或乘坐私家车意外\n2. 需持有有效驾驶证",
+  "crowd": "经常驾驶私家车的人群",
+  "generalComment": "作为驾驶意外险产品，保费低廉，保障高额。",
+  "tags": "驾乘意外",
+  "coverageArea": "中国大陆",
+  "hospitalScope": "不限",
+  "claimScope": "驾乘意外身故/伤残",
+  "occupationScope": "不限职业",
+  "hesitationPeriod": "无犹豫期",
+  "policyEffectiveDate": "投保成功次日零时",
+  "purchaseLimit": 5,
+  "annualPremium": 168,
+  "renewalWarranty": "不保证续保",
+  "healthConditionNotice": "无需健康告知",
+  "coverageDetails": [
+    {
+      "item_code": "SPECIFIC_ACCIDENT",
+      "item_name": "驾乘意外身故、伤残保险金",
+      "description": "驾驶或乘坐私家车发生意外，导致身故或伤残",
+      "details": {
+        "scenario": "驾乘私家车意外",
+        "limit": 1000000,
+        "payout_multiplier": 1.0
+      }
+    }
+  ],
+  "valueAddedServices": []
+}

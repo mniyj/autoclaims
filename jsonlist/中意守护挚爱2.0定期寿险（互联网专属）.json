@@ -1,0 +1,51 @@
+{
+  "productCode": "GEN-TERM-003",
+  "regulatoryName": "中意守护挚爱2.0定期寿险（互联网专属）",
+  "marketingName": "守护挚爱2.0定期寿险",
+  "productSummery": "互联网专属定期寿险，身故/全残保障，可选保20/30年或保至60/70岁",
+  "onlineClaimFlag": true,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2024版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2024-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "人寿保险",
+  "primaryCategoryCode": "F",
+  "secondaryCategory": "定期寿险",
+  "secondaryCategoryCode": "F01",
+  "racewayId": "F0101",
+  "racewayName": "定期寿险",
+  "salesUrl": "https://www.generalichina.com/products/shouhouzhiai",
+  "underwritingAge": "18周岁-60周岁",
+  "coveragePeriod": "保20年/30年/保至60岁/保至70岁",
+  "waitingPeriod": "90天",
+  "deductible": "无免赔额",
+  "productHeroImage": "https://example.com/images/termlife_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意守护挚爱2.0定期寿险（互联网专属）- 条款.pdf",
+    "中意守护挚爱2.0定期寿险（互联网专属）- 产品说明书.pdf",
+    "中意守护挚爱2.0定期寿险（互联网专属）- 费率表.pdf"
+  ],
+  "clausesCode": ["GEN-TERM-2024-003"],
+  "productIntroduction": "中意守护挚爱2.0定期寿险是一款互联网专属定期寿险产品，提供身故/全残保障，帮助家庭经济支柱承担家庭责任。",
+  "productAdvantages": "1. 保费低廉：相比终身寿险，保费更低，杠杆更高\n2. 保障灵活：可选保20年、30年或保至60岁、70岁\n3. 责任简单：仅承担身故/全残责任\n4. 免体检额度高：符合条件可免体检投保",
+  "precautions": "1. 定期寿险保障期有限，到期后保障终止\n2. 等待期内发生保险事故不承担保险责任",
+  "crowd": "家庭经济支柱，有房贷、车贷等负债，需要高额身故保障的人群",
+  "generalComment": "产品责任简单清晰，保费低廉，是家庭经济支柱配置寿险的首选。",
+  "tags": "高性价比,互联网专属",
+  "basicSumAssured": "10万-350万",
+  "paymentPeriod": "10年/20年/30年/交至60岁",
+  "underwritingOccupation": "1-6类职业，高危职业除外",
+  "coverageDetails": [
+    {
+      "item_code": "DEATH_OR_TOTAL_DISABILITY",
+      "item_name": "身故或全残保险金",
+      "description": "被保险人身故或全残，按基本保额给付保险金",
+      "details": {
+        "payout_logic": "若被保险人身故或全残，赔付100%基本保额"
+      }
+    }
+  ]
+}

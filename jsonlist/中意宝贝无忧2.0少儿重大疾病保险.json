@@ -1,0 +1,142 @@
+{
+  "productCode": "GEN-CI-CHILD-001",
+  "regulatoryName": "中意宝贝无忧2.0少儿重大疾病保险",
+  "marketingName": "宝贝无忧2.0少儿重疾险",
+  "productSummery": "专属少儿重疾险，覆盖160种疾病含20种少儿特疾，少儿特疾双倍赔付",
+  "onlineClaimFlag": true,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2024版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2024-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "健康保险",
+  "primaryCategoryCode": "B",
+  "secondaryCategory": "重大疾病保险",
+  "secondaryCategoryCode": "B03",
+  "racewayId": "B0303",
+  "racewayName": "少儿重疾",
+  "salesUrl": "https://www.generalichina.com/products/baibeiwuyou",
+  "underwritingAge": "出生满28日-17周岁",
+  "coveragePeriod": "终身",
+  "waitingPeriod": "90天",
+  "deductible": "无免赔额",
+  "productHeroImage": "https://example.com/images/child_ci_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意宝贝无忧2.0少儿重大疾病保险-条款.pdf",
+    "中意宝贝无忧2.0少儿重大疾病保险-产品说明书.pdf",
+    "中意宝贝无忧2.0少儿重大疾病保险-费率表.pdf",
+    "中意宝贝无忧2.0少儿重大疾病保险-现金价值表.xls"
+  ],
+  "clausesCode": ["GEN-CI-CHILD-2024-001"],
+  "productIntroduction": "中意宝贝无忧2.0少儿重大疾病保险是专为儿童设计的重疾险产品，覆盖160种疾病，包括20种少儿特疾，少儿特疾可双倍赔付，可选身故责任。",
+  "productAdvantages": "1. 少儿专属：专为0-17岁儿童设计\n2. 特疾双倍：20种少儿特疾22岁前双倍赔付\n3. 保障全面：160种疾病，含重疾、中症、轻症\n4. 多次赔付：重疾、中症、轻症可多次赔付\n5. 豁免保费：首次重疾/中症/轻症后豁免后续保费",
+  "precautions": "1. 等待期内确诊疾病不承担保险责任\n2. 少儿特疾双倍赔付仅限于22岁前\n3. 需如实告知健康状况，隐瞒可能影响理赔\n4. 投保人与被保险人关系需符合规定",
+  "crowd": "0-17岁儿童，父母希望为孩子配置全面重疾保障",
+  "generalComment": "作为少儿专属重疾险，特疾双倍赔付是最大亮点，22岁前提供加倍保障，非常适合儿童。",
+  "tags": "金选,少儿专属",
+  "coverageArea": "中国大陆（不含港澳台）",
+  "hospitalScope": "二级及以上公立医院",
+  "claimScope": "经社保结算后100%赔付（未经社保结算赔付60%）",
+  "occupationScope": "不限职业（儿童/学生）",
+  "hesitationPeriod": "15天",
+  "policyEffectiveDate": "投保成功次日零时",
+  "purchaseLimit": 1,
+  "annualPremium": 2000,
+  "renewalWarranty": "长期险，无需续保",
+  "healthConditionNotice": "支持智能核保",
+  "coverageDetails": [
+    {
+      "mandatory": true,
+      "item_code": "CRITICAL_ILLNESS",
+      "item_name": "重大疾病保险金",
+      "description": "110种重大疾病，赔付100%基本保额",
+      "details": {
+        "illness_count": 110,
+        "payout_type": "MULTIPLE_GROUPED",
+        "max_payouts": 3,
+        "payout_ratios": [1.0, 1.2, 1.4],
+        "interval_days": 365,
+        "group_details": {
+          "group_count": 3,
+          "groups": [
+            {
+              "group_name": "恶性肿瘤组",
+              "disease_list": ["恶性肿瘤"]
+            },
+            {
+              "group_name": "重大器官组",
+              "disease_list": ["重大器官移植术", "造血干细胞移植术", "双耳失聪", "双目失明"]
+            },
+            {
+              "group_name": "其他重大疾病组",
+              "disease_list": ["其他重大疾病"]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "mandatory": true,
+      "item_code": "CHILD_SPECIFIC_ILLNESS",
+      "item_name": "少儿特定疾病保险金",
+      "description": "20种少儿特定疾病，22岁前双倍赔付",
+      "details": {
+        "illness_count": 20,
+        "age_limit_before": 22,
+        "extra_payout_ratio": 1.0,
+        "payout_logic": "22岁前确诊少儿特疾，额外赔付100%基本保额"
+      }
+    },
+    {
+      "mandatory": true,
+      "item_code": "MODERATE_ILLNESS",
+      "item_name": "中症疾病保险金",
+      "description": "25种中症疾病，赔付60%基本保额，最多赔付2次",
+      "details": {
+        "illness_count": 25,
+        "payouts": 2,
+        "payout_ratio": 0.6,
+        "interval_days": 90
+      }
+    },
+    {
+      "mandatory": true,
+      "item_code": "MILD_ILLNESS",
+      "item_name": "轻症疾病保险金",
+      "description": "50种轻症疾病，赔付30%基本保额，最多赔付3次",
+      "details": {
+        "illness_count": 50,
+        "payouts": 3,
+        "payout_ratio": 0.3,
+        "interval_days": 90
+      }
+    },
+    {
+      "mandatory": false,
+      "item_code": "DEATH_OR_TOTAL_DISABILITY",
+      "item_name": "身故或全残保险金",
+      "description": "身故或全残返还已交保费",
+      "details": {
+        "payout_logic": "若被保险人身故或全残，返还已交保费"
+      }
+    },
+    {
+      "mandatory": true,
+      "item_code": "INSURED_PREMIUM_WAIVER",
+      "item_name": "被保险人豁免保险费",
+      "description": "首次重疾/中症/轻症后豁免后续保费",
+      "details": {
+        "trigger_events": ["首次重疾确诊", "首次中症确诊", "首次轻症确诊"]
+      }
+    }
+  ],
+  "valueAddedServices": [
+    {
+      "id": "CHILD_HEALTH_GUIDANCE",
+      "name": "少儿健康指导",
+      "description": "提供儿童健康咨询、疫苗接种提醒等服务"
+    }
+  ]
+}

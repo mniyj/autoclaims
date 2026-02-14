@@ -1,0 +1,93 @@
+{
+  "productCode": "GEN-MED-091",
+  "regulatoryName": "中意童享未来医疗保险",
+  "marketingName": "童享未来医疗险",
+  "productSummery": "专属儿童医疗险，涵盖住院医疗、门诊医疗",
+  "onlineClaimFlag": true,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2024版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2024-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "健康险",
+  "primaryCategoryCode": "A",
+  "secondaryCategory": "医疗保险",
+  "secondaryCategoryCode": "A02",
+  "racewayId": "A0205",
+  "racewayName": "少儿医疗",
+  "salesUrl": "https://www.generalichina.com/products/tongxiangweilai",
+  "underwritingAge": "出生满28日-17周岁",
+  "coveragePeriod": "1年",
+  "waitingPeriod": "30天",
+  "productHeroImage": "https://example.com/images/child_medical_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意童享未来医疗保险-条款.pdf"
+  ],
+  "clausesCode": ["GEN-MED-2024-091"],
+  "productIntroduction": "中意童享未来医疗保险是一款专为儿童设计的医疗险产品，提供住院医疗、门诊医疗等全方位保障。",
+  "productAdvantages": "1. 专属儿童：专为儿童设计\n2. 保障全面：涵盖住院医疗、门诊医疗\n3. 投保灵活：可选不同保额",
+  "precautions": "1. 有30天等待期\n2. 免赔额适用\n3. 有年度赔付限额",
+  "crowd": "需要医疗保障的儿童",
+  "generalComment": "作为儿童专属医疗险产品，保障全面是主要亮点。",
+  "tags": "少儿医疗",
+  "coveragePlans": [
+    {
+      "planType": "基础版",
+      "annualLimit": 100000,
+      "guaranteedRenewalYears": 1,
+      "coverageDetails": [
+        {
+          "item_code": "HOSPITALIZATION_MEDICAL",
+          "item_name": "住院医疗保险金",
+          "details": {
+            "limit": 80000,
+            "deductible": 100,
+            "reimbursement_ratio": 0.8
+          }
+        },
+        {
+          "item_code": "OUTPATIENT_MEDICAL",
+          "item_name": "门诊医疗保险金",
+          "details": {
+            "limit": 20000,
+            "deductible": 0,
+            "reimbursement_ratio": 0.6
+          }
+        }
+      ]
+    },
+    {
+      "planType": "升级版",
+      "annualLimit": 200000,
+      "guaranteedRenewalYears": 1,
+      "coverageDetails": [
+        {
+          "item_code": "HOSPITALIZATION_MEDICAL",
+          "item_name": "住院医疗保险金",
+          "details": {
+            "limit": 150000,
+            "deductible": 100,
+            "reimbursement_ratio": 0.85
+          }
+        },
+        {
+          "item_code": "OUTPATIENT_MEDICAL",
+          "item_name": "门诊医疗保险金",
+          "details": {
+            "limit": 50000,
+            "deductible": 0,
+            "reimbursement_ratio": 0.7
+          }
+        }
+      ]
+    }
+  ],
+  "valueAddedServices": [
+    {
+      "service_name": "儿科咨询",
+      "service_description": "提供在线儿科咨询服务"
+    }
+  ]
+}

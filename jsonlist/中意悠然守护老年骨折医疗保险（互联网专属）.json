@@ -1,0 +1,69 @@
+{
+  "productCode": "GEN-MED-ELDERLY-002",
+  "regulatoryName": "中意悠然守护老年骨折医疗保险（互联网专属）",
+  "marketingName": "悠然守护老年骨折医疗险（互联网专属）",
+  "productSummery": "老年骨折医疗保险，覆盖意外骨折医疗费用",
+  "onlineClaimFlag": true,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2024版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2024-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "健康保险",
+  "primaryCategoryCode": "A",
+  "secondaryCategory": "医疗险",
+  "secondaryCategoryCode": "A02",
+  "racewayId": "A0201",
+  "racewayName": "老年医疗",
+  "salesUrl": "https://www.generalichina.com/products/youranshouhu",
+  "underwritingAge": "50周岁-80周岁",
+  "coveragePeriod": "1年",
+  "waitingPeriod": "30天",
+  "deductible": "100元免赔",
+  "productHeroImage": "https://example.com/images/elderly_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意悠然守护老年骨折医疗保险（互联网专属）- 条款.pdf",
+    "中意悠然守护老年骨折医疗保险（互联网专属）- 产品说明书.pdf",
+    "中意悠然守护老年骨折医疗保险（互联网专属）- 费率表.pdf"
+  ],
+  "clausesCode": ["GEN-MED-ELDERLY-2024-002"],
+  "productIntroduction": "中意悠然守护老年骨折医疗保险是一款互联网专属老年医疗保险产品，覆盖意外骨折医疗费用。",
+  "productAdvantages": "1. 老年专属：专为老年人设计\n2. 骨折保障：覆盖意外骨折医疗费用\n3. 核保宽松：健康告知宽松",
+  "precautions": "1. 仅保障意外导致的骨折",
+  "crowd": "50-80周岁老年人",
+  "generalComment": "作为老年骨折医疗保险，年龄上限高是最大优势。",
+  "tags": "老年专属,骨折保障,互联网专属",
+  "coverageArea": "中国大陆（不含港澳台）",
+  "hospitalScope": "二级及以上公立医院",
+  "claimScope": "意外骨折医疗费用",
+  "occupationScope": "不限职业",
+  "hesitationPeriod": "无犹豫期",
+  "policyEffectiveDate": "投保成功次日零时",
+  "purchaseLimit": 1,
+  "annualPremium": 200,
+  "renewalWarranty": "不保证续保",
+  "healthConditionNotice": "健康告知宽松",
+  "coveragePlans": [
+    {
+      "planType": "经典版",
+      "annualLimit": 100000,
+      "guaranteedRenewalYears": 1,
+      "coverageDetails": [
+        {
+          "item_code": "ACCIDENT_FRACTURE_MEDICAL",
+          "item_name": "意外骨折医疗保险金",
+          "details": {
+            "limit": 100000,
+            "deductible": 100,
+            "reimbursement_ratio": 0.9,
+            "hospital_requirements": "二级及以上公立医院",
+            "coverage_scope": "意外骨折医疗费用"
+          }
+        }
+      ]
+    }
+  ],
+  "valueAddedServices": []
+}

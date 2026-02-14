@@ -1,0 +1,131 @@
+{
+  "productCode": "GEN-CI-002",
+  "regulatoryName": "中意悦享一生（焕新版）重大疾病保险",
+  "marketingName": "悦享一生焕新版重疾险",
+  "productSummery": "终身重疾险，覆盖120种重疾+20种中症+40种轻症，前10年重疾额外赔50%",
+  "onlineClaimFlag": true,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2024版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2024-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "健康保险",
+  "primaryCategoryCode": "B",
+  "secondaryCategory": "重大疾病保险",
+  "secondaryCategoryCode": "B03",
+  "racewayId": "B0301",
+  "racewayName": "终身重疾",
+  "salesUrl": "https://www.generalichina.com/products/yuexiangyisheng",
+  "underwritingAge": "出生满28日-55周岁",
+  "coveragePeriod": "终身",
+  "waitingPeriod": "90天",
+  "deductible": "无免赔额",
+  "productHeroImage": "https://example.com/images/ci_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意悦享一生（焕新版）重大疾病保险-条款.pdf",
+    "中意悦享一生（焕新版）重大疾病保险-产品说明书.pdf",
+    "中意悦享一生（焕新版）重大疾病保险-费率表.pdf",
+    "中意悦享一生（焕新版）重大疾病保险-现金价值表.xls"
+  ],
+  "clausesCode": ["GEN-CI-2024-002"],
+  "productIntroduction": "中意悦享一生（焕新版）重大疾病保险提供全面的重疾保障，覆盖120种重疾、20种中症、40种轻症，前10年重疾额外赔付50%，可选身故责任。",
+  "productAdvantages": "1. 保障全面：120种重疾+20种中症+40种轻症\n2. 额外赔付：前10年重疾额外赔50%\n3. 多次赔付：重疾、中症、轻症可多次赔付\n4. 灵活可选：身故责任可选，满足不同需求\n5. 豁免保费：首次重疾/中症/轻症后豁免后续保费",
+  "precautions": "1. 等待期内确诊疾病不承担保险责任\n2. 前10年额外赔付仅限首次重疾\n3. 重疾赔付后保单可能继续有效也可能终止\n4. 需如实告知健康状况，隐瞒可能影响理赔",
+  "crowd": "需要全面重疾保障的人群，尤其是年轻人",
+  "generalComment": "产品保障全面，前10年额外赔付提供了更好的黄金期保障，是一款优秀的重疾险产品。",
+  "tags": "金选",
+  "coverageArea": "中国大陆（不含港澳台）",
+  "hospitalScope": "二级及以上公立医院",
+  "claimScope": "经社保结算后100%赔付（未经社保结算赔付60%）",
+  "occupationScope": "1-6类职业",
+  "hesitationPeriod": "15天",
+  "policyEffectiveDate": "投保成功次日零时",
+  "purchaseLimit": 1,
+  "annualPremium": 3500,
+  "renewalWarranty": "长期险，无需续保",
+  "healthConditionNotice": "支持智能核保",
+  "coverageDetails": [
+    {
+      "mandatory": true,
+      "item_code": "CRITICAL_ILLNESS",
+      "item_name": "重大疾病保险金",
+      "description": "120种重大疾病，赔付100%基本保额，前10年首次重疾额外赔50%",
+      "details": {
+        "illness_count": 120,
+        "payout_type": "MULTIPLE_UNGROUPED",
+        "max_payouts": 2,
+        "payout_ratios": [1.0, 1.0],
+        "interval_days": 365,
+        "age_limit_before": 10,
+        "extra_payout_ratio": 0.5,
+        "condition": "新发、复发"
+      }
+    },
+    {
+      "mandatory": true,
+      "item_code": "CRITICAL_ILLNESS_EXTRA",
+      "item_name": "重大疾病额外保险金",
+      "description": "前10年首次重疾额外赔付50%基本保额",
+      "details": {
+        "age_limit_before": 10,
+        "extra_payout_ratio": 0.5
+      }
+    },
+    {
+      "mandatory": true,
+      "item_code": "MODERATE_ILLNESS",
+      "item_name": "中症疾病保险金",
+      "description": "20种中症疾病，赔付60%基本保额，最多赔付2次",
+      "details": {
+        "illness_count": 20,
+        "payouts": 2,
+        "payout_ratio": 0.6,
+        "interval_days": 90
+      }
+    },
+    {
+      "mandatory": true,
+      "item_code": "MILD_ILLNESS",
+      "item_name": "轻症疾病保险金",
+      "description": "40种轻症疾病，赔付30%基本保额，最多赔付3次",
+      "details": {
+        "illness_count": 40,
+        "payouts": 3,
+        "payout_ratio": 0.3,
+        "interval_days": 90
+      }
+    },
+    {
+      "mandatory": false,
+      "item_code": "DEATH_OR_TOTAL_DISABILITY",
+      "item_name": "身故或全残保险金",
+      "description": "18岁后身故或全残，赔付100%基本保额",
+      "details": {
+        "payout_logic": "若18周岁保单周年日前身故或全残，赔付已交保费；若18周岁保单周年日后（含）身故或全残，赔付100%基本保额"
+      }
+    },
+    {
+      "mandatory": true,
+      "item_code": "INSURED_PREMIUM_WAIVER",
+      "item_name": "被保险人豁免保险费",
+      "description": "首次重疾/中症/轻症后豁免后续保费",
+      "details": {
+        "trigger_events": ["首次重疾确诊", "首次中症确诊", "首次轻症确诊"]
+      }
+    }
+  ],
+  "valueAddedServices": [
+    {
+      "id": "SECOND_OPINION",
+      "name": "第二诊疗意见服务",
+      "description": "提供国内三甲医院专家第二诊疗意见"
+    },
+    {
+      "id": "GREEN_CHANNEL",
+      "name": "重疾就医绿通",
+      "description": "提供知名医院专家门诊预约、住院安排、手术安排服务"
+    }
+  ]
+}

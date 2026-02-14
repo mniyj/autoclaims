@@ -1,0 +1,84 @@
+{
+  "productCode": "GEN-MED-087",
+  "regulatoryName": "中意爱佳倍（防癌版）医疗保险",
+  "marketingName": "爱佳倍防癌医疗险",
+  "productSummery": "专门针对恶性肿瘤的医疗险，涵盖癌症治疗费用",
+  "onlineClaimFlag": true,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2024版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2024-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "健康险",
+  "primaryCategoryCode": "A",
+  "secondaryCategory": "医疗保险",
+  "secondaryCategoryCode": "A02",
+  "racewayId": "A0204",
+  "racewayName": "防癌医疗",
+  "salesUrl": "https://www.generalichina.com/products/aijiabei-cancer",
+  "underwritingAge": "出生满28日-70周岁",
+  "coveragePeriod": "1年",
+  "waitingPeriod": "90天",
+  "productHeroImage": "https://example.com/images/cancer_medical_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意爱佳倍（防癌版）医疗保险-条款.pdf"
+  ],
+  "clausesCode": ["GEN-MED-2024-087"],
+  "productIntroduction": "中意爱佳倍（防癌版）医疗保险是一款专门针对恶性肿瘤的医疗险产品，提供癌症治疗费用保障。",
+  "productAdvantages": "1. 专注防癌：专门针对恶性肿瘤\n2. 核保宽松：三高人群可投保\n3. 保额高：最高可投保400万",
+  "precautions": "1. 有90天等待期\n2. 只赔付恶性肿瘤治疗费用\n3. 续保需经保险公司审核",
+  "crowd": "关注癌症风险，或三高等慢病人群",
+  "generalComment": "作为防癌医疗险产品，专注防癌、核保宽松是主要亮点。",
+  "tags": "防癌医疗",
+  "coveragePlans": [
+    {
+      "planType": "标准版",
+      "annualLimit": 2000000,
+      "guaranteedRenewalYears": 1,
+      "coverageDetails": [
+        {
+          "item_code": "CANCER_MEDICAL",
+          "item_name": "恶性肿瘤医疗保险金",
+          "details": {
+            "limit": 2000000,
+            "deductible": 0,
+            "reimbursement_ratio": 1.0
+          }
+        }
+      ]
+    },
+    {
+      "planType": "升级版",
+      "annualLimit": 4000000,
+      "guaranteedRenewalYears": 1,
+      "coverageDetails": [
+        {
+          "item_code": "CANCER_MEDICAL",
+          "item_name": "恶性肿瘤医疗保险金",
+          "details": {
+            "limit": 3000000,
+            "deductible": 0,
+            "reimbursement_ratio": 1.0
+          }
+        },
+        {
+          "item_code": "PROTON_ION_THERAPY",
+          "item_name": "质子重离子医疗保险金",
+          "details": {
+            "limit": 1000000,
+            "deductible": 0,
+            "reimbursement_ratio": 1.0
+          }
+        }
+      ]
+    }
+  ],
+  "valueAddedServices": [
+    {
+      "service_name": "癌症门诊绿通",
+      "service_description": "提供癌症就医绿色通道服务"
+    }
+  ]
+}

@@ -1,0 +1,154 @@
+{
+  "productCode": "GEN-MED-001",
+  "regulatoryName": "中意e药无忧医疗保险（互联网专属）",
+  "marketingName": "e药无忧百万医疗险",
+  "productSummery": "百万医疗险，400万保额，院外特药100种，保证续保20年",
+  "onlineClaimFlag": true,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2024版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2024-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "健康保险",
+  "primaryCategoryCode": "A",
+  "secondaryCategory": "医疗险",
+  "secondaryCategoryCode": "A01",
+  "racewayId": "A0102",
+  "racewayName": "百万医疗",
+  "salesUrl": "https://www.generalichina.com/products/eyiaowuyou",
+  "underwritingAge": "出生满28日-60周岁",
+  "coveragePeriod": "1年",
+  "waitingPeriod": "30天",
+  "deductible": "1万元年免赔额",
+  "productHeroImage": "https://example.com/images/medical_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意e药无忧医疗保险（互联网专属）- 条款.pdf",
+    "中意e药无忧医疗保险（互联网专属）- 产品说明书.pdf",
+    "中意e药无忧医疗保险（互联网专属）- 费率表.pdf"
+  ],
+  "clausesCode": ["GEN-MED-2024-001"],
+  "productIntroduction": "中意e药无忧医疗保险是一款互联网专属百万医疗险产品，提供高额医疗保障，覆盖住院医疗、门诊手术、特殊门诊医疗，并包含100种院外特药保障，保证续保20年。",
+  "productAdvantages": "1. 高保额：年度最高保额400万，终身最高保额800万\n2. 特药保障：覆盖100种院外特药，最高200万保额\n3. 保证续保：保证续保20年，续保无需审核\n4. 垫付服务：提供住院押金垫付服务，减轻就医压力\n5. 绿通服务：提供重疾就医绿通服务",
+  "precautions": "1. 等待期内就医不承担保险责任\n2. 1万元年免赔额，医保个人账户支付可抵扣\n3. 需在二级及以上公立医院普通部就医\n4. 保证续保期内停售不影响续保，但产品整体停售后无法续保\n5. 费率可调，续保时费率可能调整",
+  "crowd": "需要高额医疗保障，关注院外特药保障的人群",
+  "generalComment": "作为百万医疗险产品，保障全面，特药保障是一大亮点，保证续保20年提供了长期保障的确定性。",
+  "tags": "爆款,高性价比,特药保障",
+  "coverageArea": "中国大陆（不含港澳台）",
+  "hospitalScope": "二级及以上公立医院普通部",
+  "claimScope": "经社保结算后100%赔付，未经社保结算赔付60%",
+  "occupationScope": "1-4类职业",
+  "hesitationPeriod": "无犹豫期（一年期产品）",
+  "policyEffectiveDate": "投保成功次日零时",
+  "purchaseLimit": 1,
+  "annualPremium": 365,
+  "renewalWarranty": "保证续保20年",
+  "outHospitalMedicine": "覆盖100种院外特药，最高200万保额",
+  "healthConditionNotice": "支持智能核保，健康告知宽松",
+  "coveragePlans": [
+    {
+      "planType": "经典版",
+      "annualLimit": 2000000,
+      "guaranteedRenewalYears": 20,
+      "coverageDetails": [
+        {
+          "item_code": "GENERAL_HOSPITALIZATION",
+          "item_name": "一般医疗保险金",
+          "description": "住院医疗费用、住院前后门急诊费用、特殊门诊医疗费用、门诊手术医疗费用",
+          "details": {
+            "limit": 2000000,
+            "deductible": 10000,
+            "reimbursement_ratio": 1.0,
+            "hospital_requirements": "二级及以上公立医院普通部",
+            "coverage_scope": "住院费用、住院前后30天门急诊、特殊门诊、门诊手术"
+          }
+        },
+        {
+          "item_code": "CRITICAL_ILLNESS_HOSPITALIZATION",
+          "item_name": "重大疾病医疗保险金",
+          "description": "100种重大疾病住院医疗费用",
+          "details": {
+            "limit": 2000000,
+            "deductible": 0,
+            "reimbursement_ratio": 1.0,
+            "hospital_requirements": "二级及以上公立医院普通部",
+            "coverage_scope": "重大疾病住院医疗费用"
+          }
+        },
+        {
+          "item_code": "SPECIAL_MEDICINE",
+          "item_name": "院外特药医疗保险金",
+          "description": "100种院外特药费用",
+          "details": {
+            "limit": 2000000,
+            "deductible": 0,
+            "reimbursement_ratio": 1.0,
+            "hospital_requirements": "二级及以上公立医院或指定药店",
+            "coverage_scope": "院外特药费用"
+          }
+        }
+      ]
+    },
+    {
+      "planType": "升级版",
+      "annualLimit": 4000000,
+      "guaranteedRenewalYears": 20,
+      "coverageDetails": [
+        {
+          "item_code": "GENERAL_HOSPITALIZATION",
+          "item_name": "一般医疗保险金",
+          "description": "住院医疗费用、住院前后门急诊费用、特殊门诊医疗费用、门诊手术医疗费用",
+          "details": {
+            "limit": 2000000,
+            "deductible": 10000,
+            "reimbursement_ratio": 1.0,
+            "hospital_requirements": "二级及以上公立医院普通部",
+            "coverage_scope": "住院费用、住院前后30天门急诊、特殊门诊、门诊手术"
+          }
+        },
+        {
+          "item_code": "CRITICAL_ILLNESS_HOSPITALIZATION",
+          "item_name": "重大疾病医疗保险金",
+          "description": "100种重大疾病住院医疗费用",
+          "details": {
+            "limit": 4000000,
+            "deductible": 0,
+            "reimbursement_ratio": 1.0,
+            "hospital_requirements": "二级及以上公立医院普通部",
+            "coverage_scope": "重大疾病住院医疗费用"
+          }
+        },
+        {
+          "item_code": "SPECIAL_MEDICINE",
+          "item_name": "院外特药医疗保险金",
+          "description": "100种院外特药费用",
+          "details": {
+            "limit": 2000000,
+            "deductible": 0,
+            "reimbursement_ratio": 1.0,
+            "hospital_requirements": "二级及以上公立医院或指定药店",
+            "coverage_scope": "院外特药费用"
+          }
+        }
+      ]
+    }
+  ],
+  "valueAddedServices": [
+    {
+      "id": "ADVANCE_PAYMENT",
+      "name": "住院押金垫付",
+      "description": "全国二级及以上公立医院住院押金垫付服务"
+    },
+    {
+      "id": "GREEN_CHANNEL",
+      "name": "重疾就医绿通",
+      "description": "提供知名医院专家门诊预约、住院安排、手术安排服务"
+    },
+    {
+      "id": "SECOND_OPINION",
+      "name": "第二诊疗意见",
+      "description": "提供国内三甲医院专家第二诊疗意见"
+    }
+  ]
+}

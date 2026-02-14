@@ -1,0 +1,48 @@
+{
+  "productCode": "GEN-RIDER-102",
+  "regulatoryName": "中意附加儿童意外医药补偿医疗保险",
+  "marketingName": "附加儿童意外医药补偿医疗险",
+  "productSummery": "附加儿童意外医药补偿医疗保险，专为儿童设计",
+  "onlineClaimFlag": false,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2024版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2024-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "意外险",
+  "primaryCategoryCode": "C",
+  "secondaryCategory": "意外医疗",
+  "secondaryCategoryCode": "C02",
+  "racewayId": "C0202",
+  "racewayName": "儿童意外医疗",
+  "salesUrl": "https://www.generalichina.com/products/riders/child-accident-medical",
+  "underwritingAge": "出生满28日-17周岁",
+  "coveragePeriod": "1年",
+  "waitingPeriod": "无",
+  "productHeroImage": "https://example.com/images/child_accident_medical_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意附加儿童意外医药补偿医疗保险-条款.pdf"
+  ],
+  "clausesCode": ["GEN-RIDER-2024-102"],
+  "productIntroduction": "中意附加儿童意外医药补偿医疗保险是一款专为儿童设计的附加意外医药补偿医疗保险产品，提供儿童意外医疗费用保障。",
+  "productAdvantages": "1. 专属儿童：专为儿童设计\n2. 补充保障：可附加到主险\n3. 报销便捷：报销意外医药费用",
+  "precautions": "1. 需附加到主险\n2. 免赔额适用\n3. 有年度赔付限额",
+  "crowd": "需要儿童意外医疗保障的家长",
+  "generalComment": "作为儿童专属意外医疗险产品，报销便捷是主要亮点。",
+  "tags": "附加险",
+  "coverageDetails": [
+    {
+      "item_code": "CHILD_ACCIDENTAL_MEDICAL",
+      "item_name": "儿童意外医药补偿医疗保险金",
+      "details": {
+        "payout_type": "REIMBURSEMENT",
+        "limit": 10000,
+        "deductible": 50,
+        "reimbursement_ratio": 0.85
+      }
+    }
+  ],
+  "valueAddedServices": []
+}

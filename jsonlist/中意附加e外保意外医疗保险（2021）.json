@@ -1,0 +1,48 @@
+{
+  "productCode": "GEN-RIDER-094",
+  "regulatoryName": "中意附加e外保意外医疗保险（2021）",
+  "marketingName": "附加e外保意外医疗2021",
+  "productSummery": "附加意外医疗保险，涵盖意外医疗费用",
+  "onlineClaimFlag": false,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2021版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2021-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "意外险",
+  "primaryCategoryCode": "C",
+  "secondaryCategory": "意外医疗",
+  "secondaryCategoryCode": "C02",
+  "racewayId": "C0201",
+  "racewayName": "意外医疗费用",
+  "salesUrl": "https://www.generalichina.com/products/riders/ewaibao-medical-2021",
+  "underwritingAge": "出生满7日-65周岁",
+  "coveragePeriod": "1年",
+  "waitingPeriod": "无",
+  "productHeroImage": "https://example.com/images/accident_medical_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意附加e外保意外医疗保险（2021）-条款.pdf"
+  ],
+  "clausesCode": ["GEN-RIDER-2021-094"],
+  "productIntroduction": "中意附加e外保意外医疗保险（2021）是一款附加意外医疗保险产品，提供意外医疗费用保障。",
+  "productAdvantages": "1. 补充保障：可附加到主险\n2. 报销便捷：报销意外医疗费用\n3. 保额灵活：可选不同保额",
+  "precautions": "1. 需附加到主险\n2. 免赔额适用\n3. 有年度赔付限额",
+  "crowd": "需要意外医疗保障的人群",
+  "generalComment": "作为附加意外医疗险产品，报销便捷是主要亮点。",
+  "tags": "附加险",
+  "coverageDetails": [
+    {
+      "item_code": "ACCIDENTAL_MEDICAL",
+      "item_name": "意外医疗保险金",
+      "details": {
+        "payout_type": "REIMBURSEMENT",
+        "limit": 20000,
+        "deductible": 100,
+        "reimbursement_ratio": 0.8
+      }
+    }
+  ],
+  "valueAddedServices": []
+}

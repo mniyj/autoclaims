@@ -1,0 +1,69 @@
+{
+  "productCode": "GEN-ACC-LONG-001",
+  "regulatoryName": "中意畅行天下长期意外伤害保险",
+  "marketingName": "畅行天下长期意外险",
+  "productSummery": "长期意外险，意外身故/伤残100万保额，保至80岁",
+  "onlineClaimFlag": true,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2024版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2024-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "意外保险",
+  "primaryCategoryCode": "C",
+  "secondaryCategory": "长期意外",
+  "secondaryCategoryCode": "C05",
+  "racewayId": "C0501",
+  "racewayName": "长期意外",
+  "salesUrl": "https://www.generalichina.com/products/changxingtianxia",
+  "underwritingAge": "18周岁-60周岁",
+  "coveragePeriod": "保至80岁",
+  "waitingPeriod": "无等待期",
+  "deductible": "无免赔额",
+  "productHeroImage": "https://example.com/images/accident_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意畅行天下长期意外伤害保险-条款.pdf",
+    "中意畅行天下长期意外伤害保险-产品说明书.pdf",
+    "中意畅行天下长期意外伤害保险-费率表.pdf"
+  ],
+  "clausesCode": ["GEN-ACC-LONG-2024-001"],
+  "productIntroduction": "中意畅行天下长期意外伤害保险是一款长期意外险产品，提供意外身故/伤残保障，保至80岁。",
+  "productAdvantages": "1. 长期保障：保障至80岁\n2. 高保额：意外身故/伤残最高100万保额\n3. 不需要续保：长期保障，无需担心续保问题\n4. 现金价值：保单具有现金价值",
+  "precautions": "1. 提前退保可能有损失\n2. 仅保障意外身故/伤残",
+  "crowd": "希望获得长期意外保障的人群",
+  "generalComment": "作为长期意外险产品，保障期长，无需续保。",
+  "tags": "长期意外",
+  "coverageArea": "中国大陆（不含港澳台）",
+  "hospitalScope": "不限",
+  "claimScope": "意外身故/伤残",
+  "occupationScope": "1-6类职业",
+  "hesitationPeriod": "15天",
+  "policyEffectiveDate": "投保成功次日零时",
+  "purchaseLimit": 1,
+  "annualPremium": 500,
+  "renewalWarranty": "长期险，无需续保",
+  "healthConditionNotice": "支持智能核保",
+  "coverageDetails": [
+    {
+      "item_code": "ACCIDENTAL_DEATH_DISABILITY",
+      "item_name": "意外身故、伤残保险金",
+      "description": "因意外伤害导致身故或伤残，按约定给付保险金",
+      "details": {
+        "limit": 1000000,
+        "payout_multiplier": 1.0
+      }
+    },
+    {
+      "item_code": "SUDDEN_DEATH",
+      "item_name": "猝死保险金",
+      "description": "因突发急性病导致身故",
+      "details": {
+        "limit": 300000,
+        "payout_multiplier": 0.3
+      }
+    }
+  ],
+  "valueAddedServices": []
+}

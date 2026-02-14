@@ -1,0 +1,58 @@
+{
+  "productCode": "GEN-WL-019",
+  "regulatoryName": "中意金耀锁终身寿险（万能型）",
+  "marketingName": "金耀锁万能型终身寿险",
+  "productSummery": "万能型终身寿险，灵活追加保费，结算利率可观",
+  "onlineClaimFlag": true,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2024版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2024-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "人寿保险",
+  "primaryCategoryCode": "E",
+  "secondaryCategory": "万能型终身寿险",
+  "secondaryCategoryCode": "E03",
+  "racewayId": "E0301",
+  "racewayName": "万能型终身寿险",
+  "salesUrl": "https://www.generalichina.com/products/jinyaosaosuo",
+  "underwritingAge": "出生满7日-70周岁",
+  "coveragePeriod": "终身",
+  "waitingPeriod": "90天",
+  "productHeroImage": "https://example.com/images/wholelife_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意金耀锁终身寿险（万能型）- 条款.pdf",
+    "中意金耀锁终身寿险（万能型）- 产品说明书.pdf"
+  ],
+  "clausesCode": ["GEN-WL-2024-019"],
+  "productIntroduction": "中意金耀锁终身寿险是一款万能型终身寿险产品，提供灵活的保费追加方式和可观的结算利率。",
+  "productAdvantages": "1. 灵活追加：支持灵活追加保费\n2. 结算利率：每月公布结算利率\n3. 保单价值：保单价值持续增长",
+  "precautions": "1. 结算利率是不确定的\n2. 前期退保可能有损失\n3. 万能账户有费用扣除",
+  "crowd": "希望灵活规划，追求较高收益的人群",
+  "generalComment": "作为万能型终身寿险，灵活追加是最大亮点。",
+  "tags": "万能型",
+  "effectiveAmountGrowthRate": 0.02,
+  "paymentFrequency": "年交/月交",
+  "paymentPeriod": "趸交/3年/5年/10年",
+  "partialSurrenderRules": {
+    "is_available": true,
+    "start_policy_year": 5,
+    "frequency_per_year": 10,
+    "min_amount_per_request": 500,
+    "max_ratio_per_request": 0.2,
+    "min_remaining_premium": 0,
+    "description": "第5个保单年度起可申请减保"
+  },
+  "coverageDetails": [
+    {
+      "item_code": "DEATH_OR_TOTAL_DISABILITY",
+      "item_name": "身故或全残保险金",
+      "details": {
+        "payout_logic": "若于18周岁保单周年日前身故或全残，给付已交保费与保单账户价值的较大者；若于18周岁保单周年日后（含）身故或全残，给付保单账户价值与已交保费的较大者"
+      }
+    }
+  ],
+  "valueAddedServices": []
+}

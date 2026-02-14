@@ -1,0 +1,57 @@
+{
+  "productCode": "GEN-ENDOW-007",
+  "regulatoryName": "中意惠享富（尊享版）两全保险（万能型）",
+  "marketingName": "惠享富尊享版万能险",
+  "productSummery": "万能型两全保险，灵活追加保费，结算利率可观",
+  "onlineClaimFlag": true,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2024版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2024-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "人寿保险",
+  "primaryCategoryCode": "G",
+  "secondaryCategory": "万能型两全",
+  "secondaryCategoryCode": "G02",
+  "racewayId": "G0201",
+  "racewayName": "万能型两全",
+  "salesUrl": "https://www.generalichina.com/products/huiixangfu",
+  "underwritingAge": "出生满7日-65周岁",
+  "coveragePeriod": "保20年/30年",
+  "waitingPeriod": "90天",
+  "productHeroImage": "https://example.com/images/endowment_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意惠享富（尊享版）两全保险（万能型）- 条款.pdf",
+    "中意惠享富（尊享版）两全保险（万能型）- 产品说明书.pdf"
+  ],
+  "clausesCode": ["GEN-ENDOW-2024-007"],
+  "productIntroduction": "中意惠享富（尊享版）两全保险是一款万能型两全保险产品，提供灵活的保费追加方式和可观的结算利率。",
+  "productAdvantages": "1. 灵活追加：支持灵活追加保费\n2. 结算利率：每月公布结算利率\n3. 满期给付：满期给付生存金\n4. 身故保障：提供身故保障",
+  "precautions": "1. 结算利率是不确定的，以实际结算为准\n2. 前期退保可能有损失\n3. 万能账户有费用扣除",
+  "crowd": "希望灵活规划，追求较高收益的人群",
+  "generalComment": "作为万能型两全保险，灵活追加是最大亮点。",
+  "tags": "万能型,灵活追加",
+  "paymentMethod": "趸交/期交",
+  "paymentPeriod": "趸交/3年/5年/10年",
+  "coverageDetails": [
+    {
+      "item_code": "MATURITY_BENEFIT",
+      "item_name": "满期保险金",
+      "description": "被保险人生存至保险期满，给付满期保险金",
+      "details": {
+        "amount_logic": "给付保单账户价值与已交保费的较大者"
+      }
+    },
+    {
+      "item_code": "DEATH_BENEFIT",
+      "item_name": "身故保险金",
+      "description": "被保险人身故，给付身故保险金",
+      "details": {
+        "payout_logic": "给付保单账户价值与已交保费的较大者"
+      }
+    }
+  ],
+  "valueAddedServices": []
+}

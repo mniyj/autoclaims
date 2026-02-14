@@ -1,0 +1,101 @@
+{
+  "productCode": "GEN-MED-002",
+  "regulatoryName": "中意e药保医疗保险（互联网专属）",
+  "marketingName": "e药保特药医疗险",
+  "productSummery": "院外特药医疗险，覆盖100种抗癌特药，最高200万保额",
+  "onlineClaimFlag": true,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2024版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2024-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "健康保险",
+  "primaryCategoryCode": "A",
+  "secondaryCategory": "医疗险",
+  "secondaryCategoryCode": "A01",
+  "racewayId": "A0103",
+  "racewayName": "特药医疗",
+  "salesUrl": "https://www.generalichina.com/products/eyiaobao",
+  "underwritingAge": "出生满28日-70周岁",
+  "coveragePeriod": "1年",
+  "waitingPeriod": "90天",
+  "deductible": "0免赔",
+  "productHeroImage": "https://example.com/images/medicine_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意e药保医疗保险（互联网专属）- 条款.pdf",
+    "中意e药保医疗保险（互联网专属）- 产品说明书.pdf",
+    "中意e药保医疗保险（互联网专属）- 费率表.pdf"
+  ],
+  "clausesCode": ["GEN-MED-2024-002"],
+  "productIntroduction": "中意e药保医疗保险是一款专注于院外特药保障的医疗保险产品，覆盖100种抗癌特药，最高200万保额，可与百万医疗险互补，提供全面的特药保障。",
+  "productAdvantages": "1. 特药覆盖：覆盖100种抗癌特药\n2. 高保额：最高200万特药保额\n3. 零免赔：无免赔额，用药即可报销\n4. 直付服务：提供药店直付服务，无需垫付\n5. 用药指导：提供专业用药指导服务",
+  "precautions": "1. 等待期内用药不承担保险责任\n2. 特药需在指定药店购买\n3. 特药需符合适应症要求\n4. 需持有二级及以上医院确诊证明",
+  "crowd": "关注抗癌特药保障，希望获得全面特药保障的人群",
+  "generalComment": "作为特药医疗险产品，专注于抗癌特药保障，可与百万医疗险形成互补，提供更全面的医疗保障。",
+  "tags": "特药保障",
+  "coverageArea": "中国大陆（不含港澳台）",
+  "hospitalScope": "二级及以上公立医院",
+  "claimScope": "指定药店购买特药",
+  "occupationScope": "1-4类职业",
+  "hesitationPeriod": "无犹豫期（一年期产品）",
+  "policyEffectiveDate": "投保成功次日零时",
+  "purchaseLimit": 1,
+  "annualPremium": 100,
+  "renewalWarranty": "不保证续保",
+  "outHospitalMedicine": "覆盖100种抗癌特药",
+  "healthConditionNotice": "健康告知宽松",
+  "coveragePlans": [
+    {
+      "planType": "基础版",
+      "annualLimit": 1000000,
+      "guaranteedRenewalYears": 1,
+      "coverageDetails": [
+        {
+          "item_code": "SPECIAL_MEDICINE",
+          "item_name": "院外特药医疗保险金",
+          "description": "100种抗癌特药费用",
+          "details": {
+            "limit": 1000000,
+            "deductible": 0,
+            "reimbursement_ratio": 1.0,
+            "hospital_requirements": "二级及以上公立医院",
+            "coverage_scope": "院外特药费用"
+          }
+        }
+      ]
+    },
+    {
+      "planType": "升级版",
+      "annualLimit": 2000000,
+      "guaranteedRenewalYears": 1,
+      "coverageDetails": [
+        {
+          "item_code": "SPECIAL_MEDICINE",
+          "item_name": "院外特药医疗保险金",
+          "description": "100种抗癌特药费用",
+          "details": {
+            "limit": 2000000,
+            "deductible": 0,
+            "reimbursement_ratio": 1.0,
+            "hospital_requirements": "二级及以上公立医院",
+            "coverage_scope": "院外特药费用"
+          }
+        }
+      ]
+    }
+  ],
+  "valueAddedServices": [
+    {
+      "id": "MEDICINE_DELIVERY",
+      "name": "特药配送服务",
+      "description": "提供特药配送到家服务"
+    },
+    {
+      "id": "MEDICINE_GUIDANCE",
+      "name": "用药指导服务",
+      "description": "提供专业用药指导和咨询服务"
+    }
+  ]
+}

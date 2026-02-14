@@ -1,0 +1,46 @@
+module.exports = {
+  apps: [
+    {
+      name: "{{APP_NAME}}",
+      script: "{{SCRIPT_FILE}}",
+      instances: {{INSTANCES}},
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '{{MEMORY_LIMIT}}',
+      env: {
+        NODE_ENV: "production",
+        PORT: {{PORT}},
+        BASE_PATH: "{{BASE_PATH}}"{{#each ENV_VARS}}
+        {{{key}}}: "{{{value}}}"{{/each}}
+      },
+      error_file: "./logs/{{APP_NAME}}-error.log",
+      out_file: "./logs/{{APP_NAME}}-out.log",
+      log_date_format: "YYYY-MM-DD HH:mm:ss Z",
+      merge_logs: true,
+      min_uptime: "10s",
+      max_restarts: 10,
+      autorestart: true
+    }
+  ]
+};
+
+/*
+ * 配置说明:
+ *
+ * name:          应用名称（PM2 中显示的名称）
+ * script:        启动脚本路径（如 server.js 或 npm start）
+ * instances:     实例数量（1 表示单实例，'max' 表示 CPU 核心数）
+ * autorestart:   自动重启（true/false）
+ * watch:         文件监控（生产环境建议 false）
+ * max_memory_restart: 内存超限自动重启（如 '1G'）
+ * env:           环境变量
+ *   - NODE_ENV: 运行环境（production/development）
+ *   - PORT:      监听端口
+ *   - BASE_PATH: 应用子路径（如 /my-app）
+ * error_file:    错误日志路径
+ * out_file:      输出日志路径
+ * log_date_format: 日志时间格式
+ * merge_logs:    合并实例日志
+ * min_uptime:    最小运行时间（启动后多久才算稳定）
+ * max_restarts:  最大重启次数（超过后停止重启）
+ */

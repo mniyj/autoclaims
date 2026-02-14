@@ -93,8 +93,8 @@ ssh $SSH_OPTS "$SERVER_USER@$SERVER_IP" << EOF
   fi
 
   # 安装生产依赖
-  echo "   安装依赖..."
-  npm install --production --registry=https://registry.npmmirror.com
+  # echo "   安装依赖..."
+  # npm install --production --registry=https://registry.npmmirror.com
 
   # 检查并配置防火墙
   if command -v firewall-cmd &> /dev/null && systemctl is-active firewalld &> /dev/null; then
@@ -112,8 +112,8 @@ ssh $SSH_OPTS "$SERVER_USER@$SERVER_IP" << EOF
   echo "   启动服务 ($APP_NAME, 端口: $REMOTE_PORT)..."
   
   # 确保 PM2 守护进程正常
-  pm2 kill
-  pm2 resurrect || true
+  # pm2 kill
+  # pm2 resurrect || true
   
   # 删除旧进程并重新启动特定应用
   pm2 delete $APP_NAME 2>/dev/null || true

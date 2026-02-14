@@ -1,0 +1,54 @@
+{
+  "productCode": "GEN-RIDER-096",
+  "regulatoryName": "中意附加个人意外伤害保险",
+  "marketingName": "附加个人意外伤害保险",
+  "productSummery": "附加意外伤害保险，涵盖意外身故、伤残",
+  "onlineClaimFlag": false,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2024版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2024-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "意外险",
+  "primaryCategoryCode": "C",
+  "secondaryCategory": "意外伤害",
+  "secondaryCategoryCode": "C01",
+  "racewayId": "C0102",
+  "racewayName": "综合意外伤害保险",
+  "salesUrl": "https://www.generalichina.com/products/riders/personal-accident",
+  "underwritingAge": "出生满7日-65周岁",
+  "coveragePeriod": "1年",
+  "waitingPeriod": "无",
+  "productHeroImage": "https://example.com/images/accident_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意附加个人意外伤害保险-条款.pdf"
+  ],
+  "clausesCode": ["GEN-RIDER-2024-096"],
+  "productIntroduction": "中意附加个人意外伤害保险是一款附加意外伤害保险产品，提供意外身故、伤残保障。",
+  "productAdvantages": "1. 补充保障：可附加到主险\n2. 保障全面：涵盖意外身故、伤残\n3. 保额灵活：可选不同保额",
+  "precautions": "1. 需附加到主险\n2. 职业类别有限制",
+  "crowd": "需要意外保障的人群",
+  "generalComment": "作为附加意外伤害保险产品，保障全面是主要亮点。",
+  "tags": "附加险",
+  "coverageDetails": [
+    {
+      "item_code": "ACCIDENTAL_DEATH_DISABILITY",
+      "item_name": "意外身故、伤残保险金",
+      "details": {
+        "payout_type": "FIXED_AMOUNT",
+        "death_benefit": {
+          "amount": 100000,
+          "description": "被保险人因意外伤害导致身故，按基本保额给付"
+        },
+        "disability_benefit": {
+          "amount": 100000,
+          "description": "被保险人因意外伤害导致伤残，按伤残比例给付"
+        },
+        "disability_standard": "中国保险行业协会颁布的《人身保险伤残评定标准及代码》"
+      }
+    }
+  ],
+  "valueAddedServices": []
+}

@@ -1,0 +1,147 @@
+{
+  "productCode": "GEN-CI-003",
+  "regulatoryName": "中意意心守护（悠享版）重大疾病保险",
+  "marketingName": "意心守护悠享版重疾险",
+  "productSummery": "终身重疾险，覆盖110种重疾+25种中症+50种轻症，可选癌症二次赔付",
+  "onlineClaimFlag": true,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2024版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2024-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "健康保险",
+  "primaryCategoryCode": "B",
+  "secondaryCategory": "重大疾病保险",
+  "secondaryCategoryCode": "B03",
+  "racewayId": "B0301",
+  "racewayName": "终身重疾",
+  "salesUrl": "https://www.generalichina.com/products/yixinshouhu",
+  "underwritingAge": "出生满28日-55周岁",
+  "coveragePeriod": "终身",
+  "waitingPeriod": "90天",
+  "deductible": "无免赔额",
+  "productHeroImage": "https://example.com/images/ci_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意意心守护（悠享版）重大疾病保险-条款.pdf",
+    "中意意心守护（悠享版）重大疾病保险-产品说明书.pdf",
+    "中意意心守护（悠享版）重大疾病保险-费率表.xlsx",
+    "中意意心守护（悠享版）重大疾病保险-现金价值表.xls"
+  ],
+  "clausesCode": ["GEN-CI-2024-003"],
+  "productIntroduction": "中意意心守护（悠享版）重大疾病保险提供全面的重疾保障，覆盖110种重疾、25种中症、50种轻症，可选癌症二次赔付、心血管二次赔付等附加保障。",
+  "productAdvantages": "1. 保障全面：110种重疾+25种中症+50种轻症\n2. 可选癌症二次：首次癌症3年后复发/转移/新发可再赔\n3. 可选心血管二次：首次心血管疾病3年后可再赔\n4. 多次赔付：重疾、中症、轻症可多次赔付\n5. 豁免保费：首次重疾/中症/轻症后豁免后续保费",
+  "precautions": "1. 等待期内确诊疾病不承担保险责任\n2. 癌症二次赔付需间隔3年\n3. 需如实告知健康状况，隐瞒可能影响理赔",
+  "crowd": "需要全面重疾保障，关注癌症、心血管疾病风险的人群",
+  "generalComment": "产品保障全面，可选癌症二次赔付、心血管二次赔付是最大亮点，非常适合关注癌症风险的人群。",
+  "tags": "金选,癌症二次赔",
+  "coverageArea": "中国大陆（不含港澳台）",
+  "hospitalScope": "二级及以上公立医院",
+  "claimScope": "经社保结算后100%赔付（未经社保结算赔付60%）",
+  "occupationScope": "1-6类职业",
+  "hesitationPeriod": "15天",
+  "policyEffectiveDate": "投保成功次日零时",
+  "purchaseLimit": 1,
+  "annualPremium": 4000,
+  "renewalWarranty": "长期险，无需续保",
+  "healthConditionNotice": "支持智能核保",
+  "coverageDetails": [
+    {
+      "mandatory": true,
+      "item_code": "CRITICAL_ILLNESS",
+      "item_name": "重大疾病保险金",
+      "description": "110种重大疾病，赔付100%基本保额",
+      "details": {
+        "illness_count": 110,
+        "payout_type": "SINGLE",
+        "payout_ratio": 1.0
+      }
+    },
+    {
+      "mandatory": true,
+      "item_code": "MODERATE_ILLNESS",
+      "item_name": "中症疾病保险金",
+      "description": "25种中症疾病，赔付60%基本保额，最多赔付2次",
+      "details": {
+        "illness_count": 25,
+        "payouts": 2,
+        "payout_ratio": 0.6,
+        "interval_days": 90
+      }
+    },
+    {
+      "mandatory": true,
+      "item_code": "MILD_ILLNESS",
+      "item_name": "轻症疾病保险金",
+      "description": "50种轻症疾病，赔付30%基本保额，最多赔付3次",
+      "details": {
+        "illness_count": 50,
+        "payouts": 3,
+        "payout_ratio": 0.3,
+        "interval_days": 90
+      }
+    },
+    {
+      "mandatory": false,
+      "item_code": "DEATH_OR_TOTAL_DISABILITY",
+      "item_name": "身故或全残保险金",
+      "description": "18岁后身故或全残，赔付100%基本保额",
+      "details": {
+        "payout_logic": "若18周岁保单周年日前身故或全残，赔付已交保费；若18周岁保单周年日后（含）身故或全残，赔付100%基本保额"
+      }
+    },
+    {
+      "mandatory": false,
+      "item_code": "MALIGNANT_TUMOR_MULTIPLE",
+      "item_name": "恶性肿瘤-重度多次保险金",
+      "description": "首次恶性肿瘤3年后，新发/复发/转移/持续可再赔",
+      "details": {
+        "payout_type": "MULTIPLE_UNGROUPED",
+        "max_payouts": 2,
+        "payout_ratios": [1.0, 1.0],
+        "interval_years": 3,
+        "condition": "新发、复发、转移、持续"
+      }
+    },
+    {
+      "mandatory": false,
+      "item_code": "CARDIOVASCULAR_DISEASE_MULTIPLE",
+      "item_name": "心血管疾病多次保险金",
+      "description": "首次心血管疾病3年后，复发可再赔",
+      "details": {
+        "payout_type": "MULTIPLE_UNGROUPED",
+        "max_payouts": 2,
+        "payout_ratios": [1.0, 1.0],
+        "interval_years": 3,
+        "condition": "复发"
+      }
+    },
+    {
+      "mandatory": true,
+      "item_code": "INSURED_PREMIUM_WAIVER",
+      "item_name": "被保险人豁免保险费",
+      "description": "首次重疾/中症/轻症后豁免后续保费",
+      "details": {
+        "trigger_events": ["首次重疾确诊", "首次中症确诊", "首次轻症确诊"]
+      }
+    }
+  ],
+  "valueAddedServices": [
+    {
+      "id": "SECOND_OPINION",
+      "name": "第二诊疗意见服务",
+      "description": "提供国内三甲医院专家第二诊疗意见"
+    },
+    {
+      "id": "GREEN_CHANNEL",
+      "name": "重疾就医绿通",
+      "description": "提供知名医院专家门诊预约、住院安排、手术安排服务"
+    },
+    {
+      "id": "CANCER_FOLLOW_UP",
+      "name": "癌症随访服务",
+      "description": "提供癌症康复随访和健康管理服务"
+    }
+  ]
+}

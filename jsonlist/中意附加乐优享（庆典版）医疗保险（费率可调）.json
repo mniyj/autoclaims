@@ -1,0 +1,54 @@
+{
+  "productCode": "GEN-RIDER-098",
+  "regulatoryName": "中意附加乐优享（庆典版）医疗保险（费率可调）",
+  "marketingName": "附加乐优享庆典版医疗险",
+  "productSummery": "附加医疗保险，涵盖住院医疗费用，费率可调",
+  "onlineClaimFlag": false,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2024版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2024-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "健康险",
+  "primaryCategoryCode": "A",
+  "secondaryCategory": "医疗保险",
+  "secondaryCategoryCode": "A02",
+  "racewayId": "A0203",
+  "racewayName": "住院补偿医疗",
+  "salesUrl": "https://www.generalichina.com/products/riders/leyouxiang-qingdian",
+  "underwritingAge": "出生满28日-65周岁",
+  "coveragePeriod": "1年",
+  "waitingPeriod": "30天",
+  "productHeroImage": "https://example.com/images/medical_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意附加乐优享（庆典版）医疗保险（费率可调）-条款.pdf"
+  ],
+  "clausesCode": ["GEN-RIDER-2024-098"],
+  "productIntroduction": "中意附加乐优享（庆典版）医疗保险（费率可调）是一款附加医疗保险产品，提供住院医疗费用保障。",
+  "productAdvantages": "1. 补充保障：可附加到主险\n2. 报销便捷：报销住院医疗费用\n3. 费率可调：支持费率调整",
+  "precautions": "1. 需附加到主险\n2. 有30天等待期\n3. 免赔额适用",
+  "crowd": "需要住院医疗保障的人群",
+  "generalComment": "作为附加医疗保险产品，报销便捷是主要亮点。",
+  "tags": "附加险",
+  "coveragePlans": [
+    {
+      "planType": "庆典版",
+      "annualLimit": 100000,
+      "guaranteedRenewalYears": 1,
+      "coverageDetails": [
+        {
+          "item_code": "HOSPITALIZATION_MEDICAL",
+          "item_name": "住院医疗保险金",
+          "details": {
+            "limit": 100000,
+            "deductible": 100,
+            "reimbursement_ratio": 0.8
+          }
+        }
+      ]
+    }
+  ],
+  "valueAddedServices": []
+}

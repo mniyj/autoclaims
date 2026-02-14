@@ -1,0 +1,48 @@
+{
+  "productCode": "GEN-RIDER-107",
+  "regulatoryName": "中意附加手术费用补偿医疗保险（互联网专属）",
+  "marketingName": "附加手术费用补偿医疗险互联网版",
+  "productSummery": "互联网专属附加手术费用补偿医疗保险，涵盖手术费用",
+  "onlineClaimFlag": false,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2024版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2024-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "健康险",
+  "primaryCategoryCode": "A",
+  "secondaryCategory": "医疗保险",
+  "secondaryCategoryCode": "A02",
+  "racewayId": "A0208",
+  "racewayName": "手术费用补偿医疗",
+  "salesUrl": "https://www.generalichina.com/products/riders/surgery-internet",
+  "underwritingAge": "出生满28日-65周岁",
+  "coveragePeriod": "1年",
+  "waitingPeriod": "30天",
+  "productHeroImage": "https://example.com/images/surgery_medical_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意附加手术费用补偿医疗保险（互联网专属）-条款.pdf"
+  ],
+  "clausesCode": ["GEN-RIDER-2024-107"],
+  "productIntroduction": "中意附加手术费用补偿医疗保险（互联网专属）是一款专为互联网渠道设计的附加手术费用补偿医疗保险产品，提供手术费用保障。",
+  "productAdvantages": "1. 专属渠道：互联网专属产品\n2. 投保便捷：线上投保便捷\n3. 报销便捷：报销手术费用",
+  "precautions": "1. 需附加到主险\n2. 有30天等待期\n3. 有年度赔付限额",
+  "crowd": "需要手术费用保障，习惯线上操作的人群",
+  "generalComment": "作为互联网专属附加手术费用补偿医疗险产品，投保便捷是主要亮点。",
+  "tags": "互联网专属",
+  "coverageDetails": [
+    {
+      "item_code": "SURGERY_MEDICAL",
+      "item_name": "手术费用补偿医疗保险金",
+      "details": {
+        "payout_type": "REIMBURSEMENT",
+        "limit": 30000,
+        "deductible": 0,
+        "reimbursement_ratio": 0.85
+      }
+    }
+  ],
+  "valueAddedServices": []
+}

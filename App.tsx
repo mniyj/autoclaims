@@ -21,8 +21,12 @@ import InsuranceTypeManagementPage from './components/InsuranceTypeManagementPag
 import UserListPage from './components/UserListPage';
 import DataDashboardPage from './components/DataDashboardPage';
 import ResponsibilityManagementPage from './components/ResponsibilityManagementPage';
-import { type Clause, type InsuranceProduct, ProductStatus, type DecisionTable, type IndustryData } from './types';
-import { SANITIZED_MOCK_CLAUSES as MOCK_CLAUSES } from './constants';
+import ClaimsMaterialManagementPage from './components/ClaimsMaterialManagementPage';
+import ClaimItemConfigPage from './components/ClaimItemConfigPage';
+import ClaimCaseListPage from './components/ClaimCaseListPage';
+import ClaimCaseDetailPage from './components/ClaimCaseDetailPage';
+import { type Clause, type InsuranceProduct, ProductStatus, type DecisionTable, type IndustryData, type ClaimCase } from './types';
+import { SANITIZED_MOCK_CLAUSES as MOCK_CLAUSES, MOCK_CLAIM_CASES } from './constants';
 
 // --- Icon Components ---
 const IconWrapper: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className }) => (
@@ -38,7 +42,7 @@ const ChevronUpIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" 
 
 // --- Layout Components ---
 
-type AppView = 'product_list' | 'product_config' | 'clause_management' | 'add_clause' | 'view_clause' | 'edit_clause' | 'add_product' | 'strategy_management' | 'edit_strategy' | 'system_settings' | 'company_management' | 'add_company' | 'view_company' | 'edit_company' | 'industry_data_list' | 'edit_industry_data' | 'smart_advisor_config' | 'insurance_type_management' | 'responsibility_management' | 'user_list' | 'data_dashboard';
+type AppView = 'product_list' | 'product_config' | 'clause_management' | 'add_clause' | 'view_clause' | 'edit_clause' | 'add_product' | 'strategy_management' | 'edit_strategy' | 'system_settings' | 'company_management' | 'add_company' | 'view_company' | 'edit_company' | 'industry_data_list' | 'edit_industry_data' | 'smart_advisor_config' | 'insurance_type_management' | 'responsibility_management' | 'user_list' | 'data_dashboard' | 'claims_material_management' | 'claim_item_config' | 'claim_case_list' | 'claim_case_detail';
 
 type NavSubItemData = { name: string; id: AppView };
 type NavItemData = {
@@ -62,6 +66,15 @@ const navItems: NavItemData[] = [
       { name: '智能保顾计算元素配置', id: 'smart_advisor_config' },
     ]
   },
+  {
+    name: '理赔管理',
+    icon: <ProductMgmtIcon />,
+    children: [
+      { name: '理赔材料管理', id: 'claims_material_management' },
+      { name: '理赔项目配置', id: 'claim_item_config' },
+      { name: '赔案清单', id: 'claim_case_list' },
+    ]
+  },
   { 
     name: '系统管理', 
     icon: <SettingsIcon />, 
@@ -76,6 +89,7 @@ const navItems: NavItemData[] = [
 
 const activeParentViews: Record<string, AppView[]> = {
     '智能保顾配置': ['product_list', 'product_config', 'add_product', 'clause_management', 'add_clause', 'view_clause', 'edit_clause', 'company_management', 'add_company', 'view_company', 'edit_company', 'industry_data_list', 'edit_industry_data', 'insurance_type_management', 'responsibility_management', 'strategy_management', 'edit_strategy', 'smart_advisor_config'],
+    '理赔管理': ['claims_material_management', 'claim_item_config', 'claim_case_list', 'claim_case_detail'],
     '系统管理': ['system_settings', 'user_list', 'data_dashboard']
 };
 
@@ -182,6 +196,7 @@ const App: React.FC = () => {
   const [selectedStrategy, setSelectedStrategy] = useState<DecisionTable | null>(null);
   const [selectedCompanyCode, setSelectedCompanyCode] = useState<string | null>(null);
   const [selectedIndustryData, setSelectedIndustryData] = useState<IndustryData | null>(null);
+  const [selectedClaim, setSelectedClaim] = useState<ClaimCase | null>(null);
 
   const handleLogin = (user: { username: string; companyCode?: string; tool?: '智能体' | '省心配' }) => {
     setIsLoggedIn(true);
@@ -234,6 +249,18 @@ const App: React.FC = () => {
       setView('edit_industry_data');
   }
 
+  const handleViewClaim = (claim: ClaimCase) => {
+    // In a real app, you would fetch the full detail here.
+    // For mock, if the claim-detail-1 is requested, we show the full one.
+    if (claim.reportNumber === 'CLAIM-2024-0421') {
+        const fullDetail = MOCK_CLAIM_CASES.find(c => c.id === 'claim-detail-1');
+        setSelectedClaim(fullDetail || claim);
+    } else {
+        setSelectedClaim(claim);
+    }
+    setView('claim_case_detail');
+  };
+
   const handleAddProductSave = (product: InsuranceProduct) => {
     const operator = currentUser?.username || '系统管理员';
     setProducts(prev => [{ ...product, operator }, ...prev]);
@@ -267,6 +294,9 @@ const App: React.FC = () => {
       }
       if (newView === 'industry_data_list') {
           setSelectedIndustryData(null);
+      }
+      if (newView === 'claim_case_list') {
+        setSelectedClaim(null);
       }
   }
 
@@ -308,6 +338,14 @@ const App: React.FC = () => {
             return <SmartAdvisorConfigPage />;
         case 'responsibility_management':
             return <ResponsibilityManagementPage />;
+        case 'claims_material_management':
+            return <ClaimsMaterialManagementPage />;
+        case 'claim_item_config':
+            return <ClaimItemConfigPage />;
+        case 'claim_case_list':
+            return <ClaimCaseListPage onViewDetail={handleViewClaim} />;
+        case 'claim_case_detail':
+            return selectedClaim && <ClaimCaseDetailPage claim={selectedClaim} onBack={() => setView('claim_case_list')} />;
         case 'user_list':
             return <UserListPage />;
         case 'data_dashboard':

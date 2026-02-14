@@ -1,0 +1,61 @@
+{
+  "productCode": "GEN-ACC-004",
+  "regulatoryName": "中意e路保列车交通意外伤害保险",
+  "marketingName": "e路保列车意外险",
+  "productSummery": "列车交通意外险，列车意外身故/伤残100万保额",
+  "onlineClaimFlag": true,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2024版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2024-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "意外保险",
+  "primaryCategoryCode": "C",
+  "secondaryCategory": "交通意外",
+  "secondaryCategoryCode": "C02",
+  "racewayId": "C0202",
+  "racewayName": "列车意外",
+  "salesUrl": "https://www.generalichina.com/products/elubao",
+  "underwritingAge": "出生满28日-80周岁",
+  "coveragePeriod": "1年",
+  "waitingPeriod": "无等待期",
+  "deductible": "无免赔额",
+  "productHeroImage": "https://example.com/images/accident_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意e路保列车交通意外伤害保险-条款.pdf",
+    "中意e路保列车交通意外伤害保险-产品说明书.pdf",
+    "中意e路保列车交通意外伤害保险-费率表.pdf"
+  ],
+  "clausesCode": ["GEN-ACC-2024-004"],
+  "productIntroduction": "中意e路保列车交通意外伤害保险是一款列车交通意外险产品，提供列车意外保障。",
+  "productAdvantages": "1. 高保额：列车意外身故/伤残最高100万保额\n2. 保费低廉：一年保费几十元\n3. 投保便捷：线上投保，快速生效",
+  "precautions": "1. 仅保障列车意外\n2. 其他意外不在保障范围内",
+  "crowd": "经常乘坐列车出行的人群",
+  "generalComment": "作为列车交通意外险产品，保费低廉，保障高额。",
+  "tags": "交通意外",
+  "coverageArea": "中国大陆",
+  "hospitalScope": "不限",
+  "claimScope": "列车意外身故/伤残",
+  "occupationScope": "不限职业",
+  "hesitationPeriod": "无犹豫期",
+  "policyEffectiveDate": "投保成功次日零时",
+  "purchaseLimit": 10,
+  "annualPremium": 30,
+  "renewalWarranty": "不保证续保",
+  "healthConditionNotice": "无需健康告知",
+  "coverageDetails": [
+    {
+      "item_code": "SPECIFIC_ACCIDENT",
+      "item_name": "列车意外身故、伤残保险金",
+      "description": "以乘客身份乘坐列车发生意外，导致身故或伤残",
+      "details": {
+        "scenario": "列车意外",
+        "limit": 1000000,
+        "payout_multiplier": 1.0
+      }
+    }
+  ],
+  "valueAddedServices": []
+}

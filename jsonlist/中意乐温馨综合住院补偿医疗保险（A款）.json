@@ -1,0 +1,63 @@
+{
+  "productCode": "GEN-MED-084",
+  "regulatoryName": "中意乐温馨综合住院补偿医疗保险（A款）",
+  "marketingName": "乐温馨住院补偿A款",
+  "productSummery": "综合住院补偿医疗险，涵盖住院医疗、手术费用",
+  "onlineClaimFlag": true,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2024版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2024-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "健康险",
+  "primaryCategoryCode": "A",
+  "secondaryCategory": "医疗保险",
+  "secondaryCategoryCode": "A02",
+  "racewayId": "A0203",
+  "racewayName": "住院补偿医疗",
+  "salesUrl": "https://www.generalichina.com/products/lewenxin-a",
+  "underwritingAge": "出生满28日-65周岁",
+  "coveragePeriod": "1年",
+  "waitingPeriod": "30天",
+  "productHeroImage": "https://example.com/images/medical_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意乐温馨综合住院补偿医疗保险（A款）-条款.pdf"
+  ],
+  "clausesCode": ["GEN-MED-2024-084"],
+  "productIntroduction": "中意乐温馨综合住院补偿医疗保险（A款）是一款住院补偿型医疗险产品，提供住院医疗费用保障。",
+  "productAdvantages": "1. 补偿全面：涵盖住院医疗、手术费用\n2. 投保灵活：可选不同保额\n3. 续保便捷：支持续保",
+  "precautions": "1. 有30天等待期\n2. 免赔额适用\n3. 有年度赔付限额",
+  "crowd": "需要住院医疗保障的人群",
+  "generalComment": "作为住院补偿医疗险产品，补偿全面是主要亮点。",
+  "tags": "住院医疗",
+  "coveragePlans": [
+    {
+      "planType": "A款",
+      "annualLimit": 100000,
+      "guaranteedRenewalYears": 1,
+      "coverageDetails": [
+        {
+          "item_code": "HOSPITALIZATION_MEDICAL",
+          "item_name": "住院医疗保险金",
+          "details": {
+            "limit": 80000,
+            "deductible": 100,
+            "reimbursement_ratio": 0.8
+          }
+        },
+        {
+          "item_code": "SURGERY_MEDICAL",
+          "item_name": "手术费用保险金",
+          "details": {
+            "limit": 20000,
+            "deductible": 0,
+            "reimbursement_ratio": 0.8
+          }
+        }
+      ]
+    }
+  ],
+  "valueAddedServices": []
+}

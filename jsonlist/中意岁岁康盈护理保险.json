@@ -1,0 +1,70 @@
+{
+  "productCode": "GEN-CARE-003",
+  "regulatoryName": "中意岁岁康盈护理保险",
+  "marketingName": "岁岁康盈护理险",
+  "productSummery": "终身护理保险，失能护理金+疾病身故金，提供长期护理保障",
+  "onlineClaimFlag": true,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2024版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2024-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "健康保险",
+  "primaryCategoryCode": "B",
+  "secondaryCategory": "护理保险",
+  "secondaryCategoryCode": "B05",
+  "racewayId": "B0501",
+  "racewayName": "终身护理",
+  "salesUrl": "https://www.generalichina.com/products/suisuikangying",
+  "underwritingAge": "出生满28日-65周岁",
+  "coveragePeriod": "终身",
+  "waitingPeriod": "90天",
+  "deductible": "无免赔额",
+  "productHeroImage": "https://example.com/images/care_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意岁岁康盈护理保险- 条款.pdf",
+    "中意岁岁康盈护理保险- 产品说明书.pdf",
+    "中意岁岁康盈护理保险- 基本保险金额表.pdf",
+    "中意岁岁康盈护理保险- 现金价值表.xlsx"
+  ],
+  "clausesCode": ["GEN-CARE-2024-003"],
+  "productIntroduction": "中意岁岁康盈护理保险是一款长期护理保险产品，提供失能护理金和疾病身故金双重保障，为失能人群提供长期护理保障。",
+  "productAdvantages": "1. 终身保障：提供终身失能护理保障\n2. 疾病身故：提供疾病身故金保障\n3. 现金价值：保单现金价值持续增长\n4. 免体检：符合条件可免体检投保",
+  "precautions": "1. 等待期内发生保险事故不承担保险责任\n2. 失能状态需符合条款约定的标准\n3. 护理金赔付后保单继续有效，但现金价值归零",
+  "crowd": "关注长期护理保障，希望提前规划失能风险的人群",
+  "generalComment": "作为护理保险产品，失能护理金是核心保障。",
+  "tags": "护理保障",
+  "coverageArea": "中国大陆（不含港澳台）",
+  "hospitalScope": "二级及以上公立医院或指定鉴定机构",
+  "claimScope": "经鉴定符合失能标准后赔付",
+  "occupationScope": "1-6类职业",
+  "hesitationPeriod": "15天",
+  "policyEffectiveDate": "投保成功次日零时",
+  "purchaseLimit": 1,
+  "annualPremium": 5000,
+  "renewalWarranty": "长期险，无需续保",
+  "healthConditionNotice": "支持智能核保",
+  "coverageDetails": [
+    {
+      "mandatory": true,
+      "item_code": "LONG_TERM_CARE_BENEFIT",
+      "item_name": "失能护理金",
+      "description": "被保险人进入长期护理状态，按约定给付护理金",
+      "details": {
+        "payout_logic": "每月给付10%基本保额"
+      }
+    },
+    {
+      "mandatory": true,
+      "item_code": "DEATH_BENEFIT",
+      "item_name": "疾病身故保险金",
+      "description": "被保险人因疾病身故，给付身故保险金",
+      "details": {
+        "payout_logic": "若未进入长期护理状态，身故赔付已交保费、现金价值、基本保额三者取大"
+      }
+    }
+  ],
+  "valueAddedServices": []
+}

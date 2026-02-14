@@ -1,0 +1,62 @@
+{
+  "productCode": "GEN-ANN-008",
+  "regulatoryName": "中意鑫享年年养老年金保险（万能型）",
+  "marketingName": "鑫享年年养老年金",
+  "productSummery": "万能型养老年金，灵活追加保费，结算利率可观",
+  "onlineClaimFlag": true,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2024版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2024-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "养老金",
+  "primaryCategoryCode": "D",
+  "secondaryCategory": "养老年金",
+  "secondaryCategoryCode": "D01",
+  "racewayId": "D0103",
+  "racewayName": "万能型养老年金",
+  "salesUrl": "https://www.generalichina.com/products/xinxiangniannian",
+  "underwritingAge": "出生满7日-65周岁",
+  "coveragePeriod": "终身",
+  "waitingPeriod": "无等待期",
+  "productHeroImage": "https://example.com/images/annuity_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意鑫享年年养老年金保险（万能型）- 条款.pdf",
+    "中意鑫享年年养老年金保险（万能型）- 产品说明书.pdf"
+  ],
+  "clausesCode": ["GEN-ANN-2024-008"],
+  "productIntroduction": "中意鑫享年年养老年金保险是一款万能型养老年金产品，提供灵活的保费追加方式和可观的结算利率。",
+  "productAdvantages": "1. 灵活追加：支持灵活追加保费\n2. 结算利率：每月公布结算利率\n3. 稳定领取：按年/月领取养老年金\n4. 保单价值：保单价值持续增长",
+  "precautions": "1. 结算利率是不确定的，以实际结算为准\n2. 前期退保可能有损失\n3. 万能账户有费用扣除",
+  "crowd": "希望灵活规划养老，追求较高收益的人群",
+  "generalComment": "作为万能型养老年金，灵活追加是最大亮点。",
+  "tags": "万能型,灵活追加",
+  "paymentMethod": "趸交/期交",
+  "paymentPeriod": "趸交/3年/5年/10年",
+  "payoutStartAge": "可选60/65/70周岁",
+  "payoutFrequency": "年领/月领",
+  "underwritingOccupation": "1-6类职业",
+  "coverageDetails": [
+    {
+      "item_code": "ANNUITY_PAYMENT",
+      "item_name": "养老年金",
+      "description": "自约定领取年龄起，按年/月领取养老年金直至身故",
+      "details": {
+        "start_age_options": [60, 65, 70],
+        "frequency_options": ["ANNUALLY", "MONTHLY"],
+        "guaranteed_period_years": 20
+      }
+    },
+    {
+      "item_code": "DEATH_BENEFIT",
+      "item_name": "身故保险金",
+      "description": "被保险人身故，给付身故保险金",
+      "details": {
+        "payout_logic": "若于约定领取年龄前身故，返还保单账户价值与已交保费的较大者"
+      }
+    }
+  ],
+  "valueAddedServices": []
+}

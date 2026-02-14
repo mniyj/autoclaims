@@ -1,0 +1,72 @@
+{
+  "productCode": "GEN-ACC-007",
+  "regulatoryName": "中意中e行意外伤害保险（互联网专属）",
+  "marketingName": "中e行意外险",
+  "productSummery": "综合意外险，意外身故/伤残50万保额，含意外医疗3万",
+  "onlineClaimFlag": true,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2024版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2024-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "意外保险",
+  "primaryCategoryCode": "C",
+  "secondaryCategory": "综合意外",
+  "secondaryCategoryCode": "C01",
+  "racewayId": "C0101",
+  "racewayName": "成人综合意外",
+  "salesUrl": "https://www.generalichina.com/products/zhongexing",
+  "underwritingAge": "18周岁-65周岁",
+  "coveragePeriod": "1年",
+  "waitingPeriod": "无等待期",
+  "deductible": "意外医疗100元免赔",
+  "productHeroImage": "https://example.com/images/accident_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意中e行意外伤害保险（互联网专属）- 条款.pdf",
+    "中意中e行意外伤害保险（互联网专属）- 产品说明书.pdf",
+    "中意中e行意外伤害保险（互联网专属）- 费率表.pdf"
+  ],
+  "clausesCode": ["GEN-ACC-2024-007"],
+  "productIntroduction": "中意中e行意外伤害保险是一款互联网专属综合意外险产品，提供意外身故/伤残保障、意外医疗保障。",
+  "productAdvantages": "1. 保障全面：意外身故/伤残+意外医疗\n2. 保费低廉：一年保费百元起\n3. 投保便捷：线上投保，快速生效",
+  "precautions": "1. 意外医疗需在二级及以上公立医院就医\n2. 职业类别限制",
+  "crowd": "18-65周岁成年人，需要综合意外保障的人群",
+  "generalComment": "作为互联网专属综合意外险产品，保费低廉，保障全面。",
+  "tags": "高性价比,互联网专属",
+  "coverageArea": "中国大陆（不含港澳台）",
+  "hospitalScope": "二级及以上公立医院",
+  "claimScope": "不限社保用药",
+  "occupationScope": "1-4类职业",
+  "hesitationPeriod": "无犹豫期",
+  "policyEffectiveDate": "投保成功次日零时",
+  "purchaseLimit": 5,
+  "annualPremium": 128,
+  "renewalWarranty": "不保证续保",
+  "healthConditionNotice": "无需健康告知",
+  "coverageDetails": [
+    {
+      "item_code": "ACCIDENTAL_DEATH_DISABILITY",
+      "item_name": "意外身故、伤残保险金",
+      "description": "因意外伤害导致身故或伤残，按约定给付保险金",
+      "details": {
+        "limit": 500000,
+        "payout_multiplier": 1.0
+      }
+    },
+    {
+      "item_code": "ACCIDENTAL_MEDICAL",
+      "item_name": "意外医疗保险金",
+      "description": "因意外伤害导致的医疗费用，按约定给付保险金",
+      "details": {
+        "limit": 30000,
+        "deductible": 100,
+        "reimbursement_ratio": 1.0,
+        "hospital_requirements": "二级及以上公立医院",
+        "coverage_scope": "不限社保用药"
+      }
+    }
+  ],
+  "valueAddedServices": []
+}

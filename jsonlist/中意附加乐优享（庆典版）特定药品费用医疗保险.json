@@ -1,0 +1,54 @@
+{
+  "productCode": "GEN-RIDER-099",
+  "regulatoryName": "中意附加乐优享（庆典版）特定药品费用医疗保险",
+  "marketingName": "附加乐优享庆典版特药医疗险",
+  "productSummery": "附加特定药品费用医疗保险，涵盖抗癌特药费用",
+  "onlineClaimFlag": false,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2024版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2024-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "健康险",
+  "primaryCategoryCode": "A",
+  "secondaryCategory": "医疗保险",
+  "secondaryCategoryCode": "A02",
+  "racewayId": "A0207",
+  "racewayName": "特定药品费用医疗",
+  "salesUrl": "https://www.generalichina.com/products/riders/leyouxiang-qingdian-drug",
+  "underwritingAge": "出生满28日-65周岁",
+  "coveragePeriod": "1年",
+  "waitingPeriod": "30天",
+  "productHeroImage": "https://example.com/images/drug_medical_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意附加乐优享（庆典版）特定药品费用医疗保险-条款.pdf"
+  ],
+  "clausesCode": ["GEN-RIDER-2024-099"],
+  "productIntroduction": "中意附加乐优享（庆典版）特定药品费用医疗保险是一款附加特定药品费用医疗保险产品，提供抗癌特药费用保障。",
+  "productAdvantages": "1. 补充保障：可附加到主险\n2. 特药保障：涵盖抗癌特药费用\n3. 药品丰富：覆盖多种抗癌特药",
+  "precautions": "1. 需附加到主险\n2. 有30天等待期\n3. 有年度赔付限额",
+  "crowd": "需要抗癌特药保障的人群",
+  "generalComment": "作为附加特定药品费用医疗险产品，特药保障是主要亮点。",
+  "tags": "附加险",
+  "coverageDetails": [
+    {
+      "item_code": "SPECIAL_DRUG_MEDICAL",
+      "item_name": "特定药品费用医疗保险金",
+      "details": {
+        "payout_type": "REIMBURSEMENT",
+        "limit": 100000,
+        "deductible": 0,
+        "reimbursement_ratio": 1.0,
+        "drug_list": "涵盖多种抗癌特药，具体以保险公司公布的药品清单为准"
+      }
+    }
+  ],
+  "valueAddedServices": [
+    {
+      "service_name": "特药配送",
+      "service_description": "提供特药配送服务"
+    }
+  ]
+}

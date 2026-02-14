@@ -1,0 +1,63 @@
+{
+  "productCode": "GEN-ANN-003",
+  "regulatoryName": "中意一生中意年金保险（分红型）",
+  "marketingName": "一生中意年金险",
+  "productSummery": "年金保险产品，稳定领取年金，可享分红",
+  "onlineClaimFlag": true,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2024版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2024-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "养老金",
+  "primaryCategoryCode": "D",
+  "secondaryCategory": "养老年金",
+  "secondaryCategoryCode": "D01",
+  "racewayId": "D0101",
+  "racewayName": "养老年金",
+  "salesUrl": "https://www.generalichina.com/products/yishengzhongyi",
+  "underwritingAge": "出生满7日-65周岁",
+  "coveragePeriod": "终身",
+  "waitingPeriod": "无等待期",
+  "productHeroImage": "https://example.com/images/annuity_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意一生中意年金保险（分红型）- 条款.pdf",
+    "中意一生中意年金保险（分红型）- 产品说明书.pdf"
+  ],
+  "clausesCode": ["GEN-ANN-2024-003"],
+  "productIntroduction": "中意一生中意年金保险是一款年金保险产品，提供稳定的年金领取，并可分享公司分红。",
+  "productAdvantages": "1. 稳定领取：按年/月领取年金\n2. 分红红利：分享公司经营成果\n3. 终身保障：提供终身保障",
+  "precautions": "1. 早期退保可能有损失\n2. 分红是不确定的",
+  "crowd": "希望提前规划养老，追求稳定现金流的人群",
+  "generalComment": "产品定位清晰，适合有养老规划需求的人群。",
+  "tags": "收益稳健",
+  "paymentMethod": "趸交/期交",
+  "paymentPeriod": "趸交/3年/5年/10年",
+  "payoutStartAge": "可选60/65/70周岁",
+  "payoutFrequency": "年领/月领",
+  "underwritingOccupation": "1-6类职业",
+  "coverageDetails": [
+    {
+      "item_code": "ANNUITY_PAYMENT",
+      "item_name": "养老年金",
+      "description": "自约定领取年龄起，按年/月领取养老年金直至身故",
+      "details": {
+        "start_age_options": [60, 65, 70],
+        "frequency_options": ["ANNUALLY", "MONTHLY"],
+        "guaranteed_period_years": 20,
+        "amount_logic": "年领：100%基本保额；月领：8.5%基本保额"
+      }
+    },
+    {
+      "item_code": "DEATH_BENEFIT",
+      "item_name": "身故保险金",
+      "description": "被保险人身故，给付身故保险金",
+      "details": {
+        "payout_logic": "若于约定领取年龄前身故，返还已交保费与现金价值的较大者"
+      }
+    }
+  ],
+  "valueAddedServices": []
+}

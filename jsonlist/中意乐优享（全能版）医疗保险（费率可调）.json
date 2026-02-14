@@ -1,0 +1,70 @@
+{
+  "productCode": "GEN-MED-007",
+  "regulatoryName": "中意乐优享（全能版）医疗保险（费率可调）",
+  "marketingName": "乐优享全能版医疗险",
+  "productSummery": "百万医疗险，400万保额，保证续保20年，费率可调",
+  "onlineClaimFlag": true,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2024版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2024-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "健康保险",
+  "primaryCategoryCode": "A",
+  "secondaryCategory": "医疗险",
+  "secondaryCategoryCode": "A01",
+  "racewayId": "A0102",
+  "racewayName": "百万医疗",
+  "salesUrl": "https://www.generalichina.com/products/leyouxiang",
+  "underwritingAge": "出生满28日-60周岁",
+  "coveragePeriod": "1年",
+  "waitingPeriod": "30天",
+  "deductible": "1万元年免赔额",
+  "productHeroImage": "https://example.com/images/medical_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意乐优享（全能版）医疗保险（费率可调）-条款.pdf",
+    "中意乐优享（全能版）医疗保险（费率可调）-产品说明书.pdf",
+    "中意乐优享（全能版）医疗保险（费率可调）-费率表.pdf"
+  ],
+  "clausesCode": ["GEN-MED-2024-007"],
+  "productIntroduction": "中意乐优享（全能版）医疗保险是一款百万医疗险产品，提供高额医疗保障，保证续保20年，费率可调。",
+  "productAdvantages": "1. 高保额：年度最高保额400万\n2. 保证续保：保证续保20年\n3. 费率可调：续保费率可调整",
+  "precautions": "1. 等待期内就医不承担保险责任\n2. 续保费率可能调整",
+  "crowd": "需要高额医疗保障的人群",
+  "generalComment": "作为百万医疗险产品，保障全面。",
+  "tags": "爆款",
+  "coverageArea": "中国大陆（不含港澳台）",
+  "hospitalScope": "二级及以上公立医院普通部",
+  "claimScope": "经社保结算后100%赔付",
+  "occupationScope": "1-4类职业",
+  "hesitationPeriod": "无犹豫期",
+  "policyEffectiveDate": "投保成功次日零时",
+  "purchaseLimit": 1,
+  "annualPremium": 450,
+  "renewalWarranty": "保证续保20年",
+  "outHospitalMedicine": "覆盖100种院外特药",
+  "healthConditionNotice": "支持智能核保",
+  "coveragePlans": [
+    {
+      "planType": "经典版",
+      "annualLimit": 4000000,
+      "guaranteedRenewalYears": 20,
+      "coverageDetails": [
+        {
+          "item_code": "GENERAL_HOSPITALIZATION",
+          "item_name": "一般医疗保险金",
+          "details": {
+            "limit": 4000000,
+            "deductible": 10000,
+            "reimbursement_ratio": 1.0,
+            "hospital_requirements": "二级及以上公立医院普通部",
+            "coverage_scope": "住院费用"
+          }
+        }
+      ]
+    }
+  ],
+  "valueAddedServices": []
+}

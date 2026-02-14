@@ -1,0 +1,92 @@
+{
+  "productCode": "GEN-CANCER-001",
+  "regulatoryName": "中意悠然安泰2.0老年恶性肿瘤疾病保险",
+  "marketingName": "悠然安泰2.0老年防癌险",
+  "productSummery": "专属老年防癌险，最高80岁可投，恶性肿瘤确诊即赔，保费低廉",
+  "onlineClaimFlag": true,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2024版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2024-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "健康保险",
+  "primaryCategoryCode": "B",
+  "secondaryCategory": "特定疾病保险",
+  "secondaryCategoryCode": "B04",
+  "racewayId": "B0401",
+  "racewayName": "防癌险",
+  "salesUrl": "https://www.generalichina.com/products/youranantai",
+  "underwritingAge": "40周岁-80周岁",
+  "coveragePeriod": "终身",
+  "waitingPeriod": "90天",
+  "deductible": "无免赔额",
+  "productHeroImage": "https://example.com/images/cancer_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意悠然安泰2.0老年恶性肿瘤疾病保险-条款.pdf",
+    "中意悠然安泰2.0老年恶性肿瘤疾病保险-产品说明书.pdf",
+    "中意悠然安泰2.0老年恶性肿瘤疾病保险-费率表.pdf",
+    "中意悠然安泰2.0老年恶性肿瘤疾病保险-现金价值表.xlsx"
+  ],
+  "clausesCode": ["GEN-CANCER-2024-001"],
+  "productIntroduction": "中意悠然安泰2.0老年恶性肿瘤疾病保险是专为中老年人设计的防癌险产品，最高80岁可投，提供恶性肿瘤保障，核保宽松，保费低廉。",
+  "productAdvantages": "1. 年龄宽松：40-80岁可投，最高可保至80岁\n2. 核保宽松：仅告知癌症相关健康问题\n3. 保费低廉：相比重疾险保费更低\n4. 确诊即赔：恶性肿瘤确诊即赔，无需等待治疗\n5. 终身保障：提供终身恶性肿瘤保障",
+  "precautions": "1. 仅保障恶性肿瘤，不保障其他重疾\n2. 等待期内确诊不承担保险责任\n3. 需如实告知癌症相关健康状况\n4. 年龄越大保费越高，建议尽早投保",
+  "crowd": "40-80岁中老年人，仅需恶性肿瘤保障的人群",
+  "generalComment": "作为老年专属防癌险，年龄上限高、核保宽松是最大优势，非常适合老年人投保。",
+  "tags": "老年专属,核保宽松",
+  "coverageArea": "中国大陆（不含港澳台）",
+  "hospitalScope": "二级及以上公立医院",
+  "claimScope": "经病理学检查确诊后赔付",
+  "occupationScope": "不限职业",
+  "hesitationPeriod": "15天",
+  "policyEffectiveDate": "投保成功次日零时",
+  "purchaseLimit": 1,
+  "annualPremium": 1500,
+  "renewalWarranty": "长期险，无需续保",
+  "healthConditionNotice": "健康告知宽松，仅告知癌症相关问题",
+  "coverageDetails": [
+    {
+      "mandatory": true,
+      "item_code": "CRITICAL_ILLNESS",
+      "item_name": "恶性肿瘤保险金",
+      "description": "确诊恶性肿瘤，赔付100%基本保额",
+      "details": {
+        "illness_count": 1,
+        "payout_type": "SINGLE",
+        "payout_ratio": 1.0,
+        "condition": "经专科医生明确诊断，且需满足条款约定的恶性肿瘤定义"
+      }
+    },
+    {
+      "mandatory": true,
+      "item_code": "MALIGNANT_TUMOR_MULTIPLE",
+      "item_name": "恶性肿瘤持续/复发/转移保险金",
+      "description": "首次恶性肿瘤确诊3年后，持续/复发/转移再次赔付",
+      "details": {
+        "payout_type": "MULTIPLE_UNGROUPED",
+        "max_payouts": 2,
+        "payout_ratios": [1.0, 1.0],
+        "interval_years": 3,
+        "condition": "新发、复发、转移、持续"
+      }
+    },
+    {
+      "mandatory": true,
+      "item_code": "DEATH_OR_TOTAL_DISABILITY",
+      "item_name": "身故或全残保险金",
+      "description": "身故或全残返还已交保费",
+      "details": {
+        "payout_logic": "若被保险人身故或全残，返还已交保费"
+      }
+    }
+  ],
+  "valueAddedServices": [
+    {
+      "id": "CANCER_SCREENING",
+      "name": "防癌体检服务",
+      "description": "提供年度防癌体检服务"
+    }
+  ]
+}

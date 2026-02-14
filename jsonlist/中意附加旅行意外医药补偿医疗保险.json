@@ -1,0 +1,54 @@
+{
+  "productCode": "GEN-RIDER-110",
+  "regulatoryName": "中意附加旅行意外医药补偿医疗保险",
+  "marketingName": "附加旅行意外医药补偿医疗险",
+  "productSummery": "附加旅行意外医药补偿医疗保险，专为旅行设计",
+  "onlineClaimFlag": false,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2024版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2024-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "意外险",
+  "primaryCategoryCode": "C",
+  "secondaryCategory": "旅行意外",
+  "secondaryCategoryCode": "C04",
+  "racewayId": "C0401",
+  "racewayName": "旅行意外医疗",
+  "salesUrl": "https://www.generalichina.com/products/riders/travel-accident-medical",
+  "underwritingAge": "出生满28日-80周岁",
+  "coveragePeriod": "与旅行期限一致，最长1年",
+  "waitingPeriod": "无",
+  "productHeroImage": "https://example.com/images/travel_accident_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意附加旅行意外医药补偿医疗保险-条款.pdf"
+  ],
+  "clausesCode": ["GEN-RIDER-2024-110"],
+  "productIntroduction": "中意附加旅行意外医药补偿医疗保险是一款专为旅行设计的附加意外医药补偿医疗保险产品，提供旅行期间意外医药费用保障。",
+  "productAdvantages": "1. 专属旅行：专为旅行设计\n2. 补充保障：可附加到主险\n3. 报销便捷：报销旅行期间意外医药费用",
+  "precautions": "1. 需附加到主险\n2. 仅保障旅行期间意外\n3. 免赔额适用",
+  "crowd": "旅行期间需要意外医药费用保障的人群",
+  "generalComment": "作为旅行专属意外医药补偿医疗险产品，报销便捷是主要亮点。",
+  "tags": "附加险",
+  "coverageDetails": [
+    {
+      "item_code": "TRAVEL_ACCIDENTAL_MEDICAL",
+      "item_name": "旅行意外医药补偿医疗保险金",
+      "details": {
+        "payout_type": "REIMBURSEMENT",
+        "limit": 50000,
+        "deductible": 100,
+        "reimbursement_ratio": 0.85,
+        "coverage_period": "旅行期间"
+      }
+    }
+  ],
+  "valueAddedServices": [
+    {
+      "service_name": "旅行援助",
+      "service_description": "提供旅行期间的医疗援助服务"
+    }
+  ]
+}

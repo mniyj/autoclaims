@@ -1,0 +1,57 @@
+{
+  "productCode": "GEN-ENDOW-009",
+  "regulatoryName": "中意附加守护安馨两全保险（互联网专属）",
+  "marketingName": "附加守护安馨两全保险",
+  "productSummery": "附加两全保险，满期给付生存金，身故保障",
+  "onlineClaimFlag": true,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2024版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2024-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "人寿保险",
+  "primaryCategoryCode": "G",
+  "secondaryCategory": "两全保险",
+  "secondaryCategoryCode": "G01",
+  "racewayId": "G0101",
+  "racewayName": "两全保险",
+  "salesUrl": "https://www.generalichina.com/products/shouhouanxin",
+  "underwritingAge": "出生满7日-65周岁",
+  "coveragePeriod": "保20年/30年",
+  "waitingPeriod": "90天",
+  "productHeroImage": "https://example.com/images/endowment_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意附加守护安馨两全保险（互联网专属）- 条款.pdf",
+    "中意附加守护安馨两全保险（互联网专属）- 产品说明书.pdf"
+  ],
+  "clausesCode": ["GEN-ENDOW-2024-009"],
+  "productIntroduction": "中意附加守护安馨两全保险是一款附加两全保险产品，提供满期生存金和身故保障。",
+  "productAdvantages": "1. 满期给付：满期给付生存金\n2. 身故保障：提供身故保障\n3. 附加险形式：可附加到主险",
+  "precautions": "1. 需附加到主险上才能投保\n2. 提前退保可能有损失",
+  "crowd": "需要附加两全保险保障的人群",
+  "generalComment": "作为附加两全保险，需要附加到主险上。",
+  "tags": "附加险",
+  "paymentMethod": "趸交/期交",
+  "paymentPeriod": "与主险一致",
+  "coverageDetails": [
+    {
+      "item_code": "MATURITY_BENEFIT",
+      "item_name": "满期保险金",
+      "description": "被保险人生存至保险期满，给付满期保险金",
+      "details": {
+        "amount_logic": "给付100%基本保额与已交保费的较大者"
+      }
+    },
+    {
+      "item_code": "DEATH_BENEFIT",
+      "item_name": "身故保险金",
+      "description": "被保险人身故，给付身故保险金",
+      "details": {
+        "payout_logic": "若于18周岁保单周年日前身故，返还已交保费；若于18周岁保单周年日后（含）身故，赔付100%基本保额与已交保费的较大者"
+      }
+    }
+  ],
+  "valueAddedServices": []
+}

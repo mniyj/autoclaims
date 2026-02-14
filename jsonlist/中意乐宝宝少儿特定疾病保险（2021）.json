@@ -1,0 +1,71 @@
+{
+  "productCode": "GEN-CI-CHILD-002",
+  "regulatoryName": "中意乐宝宝少儿特定疾病保险（2021）",
+  "marketingName": "乐宝宝少儿特定疾病保险",
+  "productSummery": "少儿特定疾病保险，覆盖20种少儿特疾",
+  "onlineClaimFlag": true,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2021版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2024-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "健康保险",
+  "primaryCategoryCode": "B",
+  "secondaryCategory": "少儿特定疾病保险",
+  "secondaryCategoryCode": "B07",
+  "racewayId": "B0701",
+  "racewayName": "少儿特疾",
+  "salesUrl": "https://www.generalichina.com/products/lebaobao",
+  "underwritingAge": "出生满28日-17周岁",
+  "coveragePeriod": "终身",
+  "waitingPeriod": "90天",
+  "deductible": "无免赔额",
+  "productHeroImage": "https://example.com/images/child_ci_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意乐宝宝少儿特定疾病保险（2021）- 条款.pdf",
+    "中意乐宝宝少儿特定疾病保险（2021）- 产品说明书.pdf",
+    "中意乐宝宝少儿特定疾病保险（2021）- 费率表.pdf"
+  ],
+  "clausesCode": ["GEN-CI-CHILD-2021-001"],
+  "productIntroduction": "中意乐宝宝少儿特定疾病保险是一款少儿特定疾病保险产品，覆盖20种少儿特疾。",
+  "productAdvantages": "1. 少儿专属：专为儿童设计\n2. 特疾覆盖：覆盖20种少儿特疾\n3. 保费低廉：一年保费百元起",
+  "precautions": "1. 仅保障少儿特定疾病\n2. 等待期内确诊不承担保险责任",
+  "crowd": "出生满28日-17周岁儿童",
+  "generalComment": "作为少儿特定疾病保险，专注少儿特疾保障。",
+  "tags": "少儿专属",
+  "coverageArea": "中国大陆（不含港澳台）",
+  "hospitalScope": "二级及以上公立医院",
+  "claimScope": "经确诊后赔付",
+  "occupationScope": "不限职业（儿童/学生）",
+  "hesitationPeriod": "15天",
+  "policyEffectiveDate": "投保成功次日零时",
+  "purchaseLimit": 1,
+  "annualPremium": 500,
+  "renewalWarranty": "长期险，无需续保",
+  "healthConditionNotice": "健康告知宽松",
+  "coverageDetails": [
+    {
+      "mandatory": true,
+      "item_code": "CHILD_SPECIFIC_ILLNESS",
+      "item_name": "少儿特定疾病保险金",
+      "description": "20种少儿特定疾病，赔付100%基本保额",
+      "details": {
+        "illness_count": 20,
+        "payout_type": "SINGLE",
+        "payout_ratio": 1.0
+      }
+    },
+    {
+      "mandatory": true,
+      "item_code": "DEATH_OR_TOTAL_DISABILITY",
+      "item_name": "身故或全残保险金",
+      "description": "身故或全残返还已交保费",
+      "details": {
+        "payout_logic": "若被保险人身故或全残，返还已交保费"
+      }
+    }
+  ],
+  "valueAddedServices": []
+}

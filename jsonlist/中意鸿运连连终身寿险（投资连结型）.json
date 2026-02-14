@@ -1,0 +1,58 @@
+{
+  "productCode": "GEN-WL-022",
+  "regulatoryName": "中意鸿运连连终身寿险（投资连结型）",
+  "marketingName": "鸿运连连投连险",
+  "productSummery": "投资连结型终身寿险，灵活追加保费，投资账户可选",
+  "onlineClaimFlag": true,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2024版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2024-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "人寿保险",
+  "primaryCategoryCode": "E",
+  "secondaryCategory": "投资连结型终身寿险",
+  "secondaryCategoryCode": "E04",
+  "racewayId": "E0401",
+  "racewayName": "投资连结型终身寿险",
+  "salesUrl": "https://www.generalichina.com/products/hongyunlianlian",
+  "underwritingAge": "出生满7日-70周岁",
+  "coveragePeriod": "终身",
+  "waitingPeriod": "90天",
+  "productHeroImage": "https://example.com/images/wholelife_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意鸿运连连终身寿险（投资连结型）-条款.pdf",
+    "中意鸿运连连终身寿险（投资连结型）-产品说明书.pdf"
+  ],
+  "clausesCode": ["GEN-WL-2024-022"],
+  "productIntroduction": "中意鸿运连连终身寿险是一款投资连结型终身寿险产品，提供灵活的保费追加方式和多个投资账户选择。",
+  "productAdvantages": "1. 灵活追加：支持灵活追加保费\n2. 账户可选：多个投资账户可选\n3. 资金运用：投资收益潜力高",
+  "precautions": "1. 投资收益是不确定的，存在投资风险\n2. 前期退保可能有损失",
+  "crowd": "有一定风险承受能力，追求较高投资收益的人群",
+  "generalComment": "作为投资连结型终身寿险，投资收益潜力是最大亮点，但也有投资风险。",
+  "tags": "投资连结型",
+  "effectiveAmountGrowthRate": 0.015,
+  "paymentFrequency": "年交/月交",
+  "paymentPeriod": "趸交/3年/5年/10年",
+  "partialSurrenderRules": {
+    "is_available": true,
+    "start_policy_year": 5,
+    "frequency_per_year": 10,
+    "min_amount_per_request": 1000,
+    "max_ratio_per_request": 0.2,
+    "min_remaining_premium": 0,
+    "description": "第5个保单年度起可申请减保"
+  },
+  "coverageDetails": [
+    {
+      "item_code": "DEATH_OR_TOTAL_DISABILITY",
+      "item_name": "身故或全残保险金",
+      "details": {
+        "payout_logic": "若于18周岁保单周年日前身故或全残，给付已交保费与投资账户价值的较大者；若于18周岁保单周年日后（含）身故或全残，给付投资账户价值与已交保费、基本保额三者中的较大值"
+      }
+    }
+  ],
+  "valueAddedServices": []
+}

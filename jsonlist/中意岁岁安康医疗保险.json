@@ -1,0 +1,70 @@
+{
+  "productCode": "GEN-MED-ELDERLY-003",
+  "regulatoryName": "中意岁岁安康医疗保险",
+  "marketingName": "岁岁安康老年医疗险",
+  "productSummery": "老年医疗险，200万保额，保证续保20年",
+  "onlineClaimFlag": true,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2024版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2024-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "健康保险",
+  "primaryCategoryCode": "A",
+  "secondaryCategory": "医疗险",
+  "secondaryCategoryCode": "A02",
+  "racewayId": "A0201",
+  "racewayName": "老年医疗",
+  "salesUrl": "https://www.generalichina.com/products/suisuiankang",
+  "underwritingAge": "50周岁-80周岁",
+  "coveragePeriod": "1年",
+  "waitingPeriod": "30天",
+  "deductible": "1万元年免赔额",
+  "productHeroImage": "https://example.com/images/elderly_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意岁岁安康医疗保险-条款.pdf",
+    "中意岁岁安康医疗保险-产品说明书.pdf",
+    "中意岁岁安康医疗保险-费率表.pdf"
+  ],
+  "clausesCode": ["GEN-MED-ELDERLY-2024-003"],
+  "productIntroduction": "中意岁岁安康医疗保险是一款老年专属医疗险产品，提供高额医疗保障，保证续保20年。",
+  "productAdvantages": "1. 老年专属：专为老年人设计\n2. 高保额：年度最高保额200万\n3. 保证续保：保证续保20年\n4. 核保宽松：健康告知宽松",
+  "precautions": "1. 等待期内就医不承担保险责任",
+  "crowd": "50-80周岁老年人",
+  "generalComment": "作为老年医疗险产品，年龄上限高是最大优势。",
+  "tags": "老年专属",
+  "coverageArea": "中国大陆（不含港澳台）",
+  "hospitalScope": "二级及以上公立医院普通部",
+  "claimScope": "经社保结算后100%赔付",
+  "occupationScope": "不限职业",
+  "hesitationPeriod": "无犹豫期",
+  "policyEffectiveDate": "投保成功次日零时",
+  "purchaseLimit": 1,
+  "annualPremium": 2000,
+  "renewalWarranty": "保证续保20年",
+  "outHospitalMedicine": "覆盖30种院外特药",
+  "healthConditionNotice": "健康告知宽松",
+  "coveragePlans": [
+    {
+      "planType": "经典版",
+      "annualLimit": 2000000,
+      "guaranteedRenewalYears": 20,
+      "coverageDetails": [
+        {
+          "item_code": "GENERAL_HOSPITALIZATION",
+          "item_name": "一般医疗保险金",
+          "details": {
+            "limit": 2000000,
+            "deductible": 10000,
+            "reimbursement_ratio": 1.0,
+            "hospital_requirements": "二级及以上公立医院普通部",
+            "coverage_scope": "住院费用"
+          }
+        }
+      ]
+    }
+  ],
+  "valueAddedServices": []
+}

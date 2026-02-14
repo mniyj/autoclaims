@@ -1,0 +1,81 @@
+{
+  "productCode": "GEN-MED-008",
+  "regulatoryName": "中意尊享世家医疗保险",
+  "marketingName": "尊享世家医疗险",
+  "productSummery": "高端医疗险，1000万保额，覆盖私立医院",
+  "onlineClaimFlag": true,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2024版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2024-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "健康保险",
+  "primaryCategoryCode": "A",
+  "secondaryCategory": "医疗险",
+  "secondaryCategoryCode": "A03",
+  "racewayId": "A0301",
+  "racewayName": "高端医疗",
+  "salesUrl": "https://www.generalichina.com/products/zunxiangshijia",
+  "underwritingAge": "出生满28日-65周岁",
+  "coveragePeriod": "1年",
+  "waitingPeriod": "30天",
+  "deductible": "0免赔/1万免赔/3万免赔可选",
+  "productHeroImage": "https://example.com/images/medical_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意尊享世家医疗保险-条款.pdf",
+    "中意尊享世家医疗保险-产品说明书.pdf",
+    "中意尊享世家医疗保险-费率表.pdf"
+  ],
+  "clausesCode": ["GEN-MED-2024-008"],
+  "productIntroduction": "中意尊享世家医疗保险是一款高端医疗险产品，提供高额医疗保障，覆盖公立医院特需部、私立医院等。",
+  "productAdvantages": "1. 高保额：年度最高保额1000万\n2. 医院广泛：覆盖公立医院特需部、私立医院\n3. 免赔额可选：0免赔/1万免赔/3万免赔可选\n4. 直付服务：提供医院直付服务",
+  "precautions": "1. 等待期内就医不承担保险责任\n2. 保费较高",
+  "crowd": "对医疗服务有较高要求的人群",
+  "generalComment": "作为高端医疗险产品，保障全面，服务优质。",
+  "tags": "高端医疗",
+  "coverageArea": "中国大陆（不含港澳台）",
+  "hospitalScope": "公立医院特需部、私立医院、昂贵医院",
+  "claimScope": "合理且必需的医疗费用100%赔付",
+  "occupationScope": "1-4类职业",
+  "hesitationPeriod": "无犹豫期",
+  "policyEffectiveDate": "投保成功次日零时",
+  "purchaseLimit": 1,
+  "annualPremium": 5000,
+  "renewalWarranty": "保证续保3年",
+  "outHospitalMedicine": "覆盖院外特药",
+  "healthConditionNotice": "需体检",
+  "coveragePlans": [
+    {
+      "planType": "经典版",
+      "annualLimit": 10000000,
+      "guaranteedRenewalYears": 3,
+      "coverageDetails": [
+        {
+          "item_code": "GENERAL_HOSPITALIZATION",
+          "item_name": "住院医疗保险金",
+          "details": {
+            "limit": 10000000,
+            "deductible": 0,
+            "reimbursement_ratio": 1.0,
+            "hospital_requirements": "公立医院特需部、私立医院、昂贵医院",
+            "coverage_scope": "住院费用"
+          }
+        }
+      ]
+    }
+  ],
+  "valueAddedServices": [
+    {
+      "id": "DIRECT_BILLING",
+      "name": "医院直付服务",
+      "description": "提供网络医院直付服务，无需垫付"
+    },
+    {
+      "id": "MEDICAL_GUIDANCE",
+      "name": "就医指导服务",
+      "description": "提供全国医院专家预约、住院安排服务"
+    }
+  ]
+}

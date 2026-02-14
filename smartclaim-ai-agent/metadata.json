@@ -1,0 +1,9 @@
+{
+  "name": "SmartClaim AI Agent",
+  "description": "An intelligent insurance claim assistant that guides users through reporting, document submission, and automated liability assessment.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ]
+}

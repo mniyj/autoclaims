@@ -1,0 +1,68 @@
+{
+  "productCode": "GEN-RIDER-109",
+  "regulatoryName": "中意附加投保人豁免保险费重大疾病保险（升级版）",
+  "marketingName": "附加投保人豁免重疾险升级版",
+  "productSummery": "附加投保人豁免保险费重大疾病保险升级版，投保人患重疾豁免保费",
+  "onlineClaimFlag": false,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2024版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2024-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "健康险",
+  "primaryCategoryCode": "A",
+  "secondaryCategory": "重疾险",
+  "secondaryCategoryCode": "A01",
+  "racewayId": "A0103",
+  "racewayName": "重疾豁免保费",
+  "salesUrl": "https://www.generalichina.com/products/riders/payer-waiver-upgrade",
+  "underwritingAge": "出生满18日-65周岁",
+  "coveragePeriod": "与主险一致",
+  "waitingPeriod": "90天",
+  "productHeroImage": "https://example.com/images/waiver_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意附加投保人豁免保险费重大疾病保险（升级版）-条款.pdf"
+  ],
+  "clausesCode": ["GEN-RIDER-2024-109"],
+  "productIntroduction": "中意附加投保人豁免保险费重大疾病保险（升级版）是一款投保人豁免保险费重大疾病保险产品升级版，投保人患重疾可豁免主险保费。",
+  "productAdvantages": "1. 保费豁免：投保人患重疾豁免主险保费\n2. 保障全面：涵盖多种重大疾病\n3. 升级保障：保障责任更全面\n4. 贴心设计：保障投保人风险",
+  "precautions": "1. 需附加到主险\n2. 有90天等待期\n3. 投保人需符合健康告知",
+  "crowd": "为家人投保，关注自身风险的人群",
+  "generalComment": "作为投保人豁免重疾险产品升级版，保费豁免、保障全面是主要亮点。",
+  "tags": "附加险",
+  "coverageDetails": [
+    {
+      "item_code": "PAYER_PREMIUM_WAIVER",
+      "item_name": "投保人保费豁免保险金",
+      "details": {
+        "payout_type": "PREMIUM_WAIVER",
+        "conditions": [
+          {
+            "condition": "重大疾病",
+            "description": "投保人初次发生合同约定重大疾病"
+          },
+          {
+            "condition": "身故",
+            "description": "投保人身故"
+          },
+          {
+            "condition": "全残",
+            "description": "投保人全残"
+          },
+          {
+            "condition": "中症",
+            "description": "投保人初次发生合同约定中症"
+          },
+          {
+            "condition": "轻症",
+            "description": "投保人初次发生合同约定轻症"
+          }
+        ],
+        "waiver_scope": "豁免主险合同及附加合同余期保险费"
+      }
+    }
+  ],
+  "valueAddedServices": []
+}

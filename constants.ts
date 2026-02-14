@@ -1,5 +1,5 @@
 
-import { type Clause, PrimaryCategory, ProductStatus, ClauseType, InsuranceCompanyProfile, CompanyListItem, IndustryData, CitySalaryData, CriticalIllnessRateData, AccidentRateData, DeathRateData, HospitalizationRateData, OutpatientRateData, InsuranceCategoryMapping, CategoryDefinition, EndUser, ResponsibilityItem } from './types';
+import { type Clause, PrimaryCategory, ProductStatus, ClauseType, InsuranceCompanyProfile, CompanyListItem, IndustryData, CitySalaryData, CriticalIllnessRateData, AccidentRateData, DeathRateData, HospitalizationRateData, OutpatientRateData, InsuranceCategoryMapping, CategoryDefinition, EndUser, ResponsibilityItem, ClaimsMaterial, ClaimItem, ProductClaimConfig, ClaimCase, ClaimStatus } from './types';
 
 export const PRODUCT_STATUSES = Object.values(ProductStatus);
 export const PRIMARY_CATEGORIES = Object.values(PrimaryCategory);
@@ -48,56 +48,56 @@ export const MOCK_RESPONSIBILITIES: ResponsibilityItem[] = [
     id: 'resp-1',
     code: 'GENERAL_HOSPITALIZATION',
     name: '住院医疗费用',
-    category: '医疗险',
+    category: '医疗保险',
     description: '住院治疗费用报销'
   },
   {
     id: 'resp-2',
     code: 'OUT_HOSPITAL_DRUG',
     name: '院外特效药费用',
-    category: '医疗险',
+    category: '医疗保险',
     description: '院外特效药清单覆盖'
   },
   {
     id: 'resp-3',
     code: 'CRITICAL_ILLNESS_MEDICAL',
     name: '重疾医疗费用',
-    category: '医疗险',
+    category: '医疗保险',
     description: '重大疾病相关住院及门诊治疗费用报销'
   },
   {
     id: 'resp-4',
     code: 'OUTPATIENT_MEDICAL',
     name: '门急诊医疗费用',
-    category: '医疗险',
+    category: '医疗保险',
     description: '普通门诊与急诊检查、药品、治疗费用报销'
   },
   {
     id: 'resp-5',
     code: 'MAJOR_CI',
     name: '重大疾病保险金',
-    category: '重疾险',
+    category: '重大疾病保险',
     description: '确诊合同约定的重大疾病一次性给付保险金'
   },
   {
     id: 'resp-6',
     code: 'MID_CI',
     name: '中症保险金',
-    category: '重疾险',
+    category: '重大疾病保险',
     description: '确诊中症一次性给付保险金'
   },
   {
     id: 'resp-7',
     code: 'MINOR_CI',
     name: '轻症保险金',
-    category: '重疾险',
+    category: '重大疾病保险',
     description: '确诊轻症一次性给付保险金'
   },
   {
     id: 'resp-8',
     code: 'CANCER_MULTIPAY',
     name: '癌症多次赔付',
-    category: '重疾险',
+    category: '重大疾病保险',
     description: '满足间隔期条件的癌症多次给付'
   },
   {
@@ -118,56 +118,56 @@ export const MOCK_RESPONSIBILITIES: ResponsibilityItem[] = [
     id: 'resp-11',
     code: 'PREMIUM_WAIVER',
     name: '保费豁免',
-    category: '重疾险',
+    category: '重大疾病保险',
     description: '确诊轻/中/重症后豁免剩余保险费'
   },
   {
     id: 'resp-12',
     code: 'ACCIDENT_DEATH',
     name: '意外身故',
-    category: '意外险',
+    category: '意外保险',
     description: '发生意外导致身故给付保险金'
   },
   {
     id: 'resp-13',
     code: 'ACCIDENT_DISABILITY',
     name: '意外伤残',
-    category: '意外险',
+    category: '意外保险',
     description: '意外伤残按等级给付保险金'
   },
   {
     id: 'resp-14',
     code: 'ACCIDENT_MEDICAL',
     name: '意外医疗',
-    category: '意外险',
+    category: '意外保险',
     description: '意外导致的门诊、住院医疗费用报销'
   },
   {
     id: 'resp-15',
     code: 'FRACTURE_ALLOWANCE',
     name: '骨折津贴',
-    category: '意外险',
+    category: '意外保险',
     description: '意外骨折按次给付津贴'
   },
   {
     id: 'resp-16',
     code: 'ANNUITY_PAYOUT',
     name: '年金领取',
-    category: '养老金',
+    category: '年金保险',
     description: '自约定起领日按期给付养老金'
   },
   {
     id: 'resp-17',
     code: 'SURVIVAL_BENEFIT',
     name: '生存金给付',
-    category: '储蓄型',
+    category: '年金保险',
     description: '在约定节点给付生存金'
   },
   {
     id: 'resp-18',
     code: 'CASH_VALUE',
     name: '现金价值保障',
-    category: '储蓄型',
+    category: '终身寿险',
     description: '保单现金价值随时间增长'
   }
 ];
@@ -2648,4 +2648,172 @@ export const MOCK_END_USERS: EndUser[] = [
     submissionTime: '2024-05-24 13:10:00',
     channel: 'Web官网'
   },
+];
+
+export const MOCK_CLAIMS_MATERIALS: ClaimsMaterial[] = [
+  {
+    id: 'mat-1',
+    name: '诊断证明书',
+    description: '医院出具的包含疾病诊断、治疗过程的正式证明文件。',
+    sampleUrl: 'https://pic1.imgdb.cn/item/69313be6a11464095f8a12dd.jpg',
+    jsonSchema: JSON.stringify({
+      type: 'object',
+      properties: {
+        diagnosis: { type: 'string', description: '诊断结果' },
+        hospital_name: { type: 'string', description: '医院名称' },
+        admission_date: { type: 'string', format: 'date', description: '入院日期' },
+        discharge_date: { type: 'string', format: 'date', description: '出院日期' }
+      }
+    }, null, 2),
+    required: true,
+    aiAuditPrompt: '从诊断证明书中抽取诊断结论、医院名称、入院与出院日期，用于校验投保责任是否覆盖该疾病。若信息缺失，指出缺失项。'
+  },
+  {
+    id: 'mat-2',
+    name: '费用总清单',
+    description: '医院打印的住院期间所有费用的明细清单。',
+    sampleUrl: 'https://pic1.imgdb.cn/item/69313be5a11464095f8a12d8.jpg',
+    jsonSchema: JSON.stringify({
+      type: 'object',
+      properties: {
+        total_amount: { type: 'number', description: '费用总额' },
+        self_paid: { type: 'number', description: '自费金额' },
+        medicare_paid: { type: 'number', description: '医保支付' }
+      }
+    }, null, 2),
+    required: true,
+    aiAuditPrompt: '核对费用总额、自费与医保支付三项数值并计算合理给付基数，输出不一致或异常值提示。'
+  },
+  {
+    id: 'mat-3',
+    name: '身份证',
+    description: '被保险人或受益人的有效身份证明。',
+    jsonSchema: JSON.stringify({
+      type: 'object',
+      properties: {
+        name: { type: 'string', description: '姓名' },
+        id_number: { type: 'string', description: '身份证号' }
+      }
+    }, null, 2),
+    required: true,
+    aiAuditPrompt: '比对证件姓名与保单被保险人/受益人信息，验证身份证号格式与校验位。'
+  }
+];
+
+export const MOCK_CLAIM_ITEMS: ClaimItem[] = [
+  {
+    id: 'item-1',
+    name: '一般住院医疗理赔',
+    description: '针对普通疾病住院产生的费用进行理赔。',
+    materialIds: ['mat-1', 'mat-2', 'mat-3']
+  },
+  {
+    id: 'item-2',
+    name: '意外伤残理赔',
+    description: '针对因意外导致的伤残进行理赔。',
+    materialIds: ['mat-1', 'mat-3']
+  }
+];
+
+export const MOCK_PRODUCT_CLAIM_CONFIGS: ProductClaimConfig[] = [
+  {
+    productCode: 'ZA-001',
+    responsibilityConfigs: [
+      {
+        responsibilityId: 'resp-1',
+        claimItemIds: ['item-1']
+      }
+    ]
+  }
+];
+
+export const MOCK_CLAIM_CASES: ClaimCase[] = [
+  {
+    id: 'claim-1',
+    reportNumber: 'R202405010001',
+    reporter: '张三',
+    reportTime: '2024-05-01 10:00:00',
+    accidentTime: '2024-04-28 15:30:00',
+    accidentReason: '疾病住院',
+    claimAmount: 5000.00,
+    productCode: 'ZA-001',
+    productName: '尊享e生2024版',
+    status: ClaimStatus.PROCESSING,
+    operator: '李四'
+  },
+  {
+    id: 'claim-2',
+    reportNumber: 'R202405100005',
+    reporter: '王五',
+    reportTime: '2024-05-10 14:20:00',
+    accidentTime: '2024-05-09 09:00:00',
+    accidentReason: '意外摔伤',
+    claimAmount: 1200.50,
+    productCode: 'ZA-002',
+    productName: '小米综合意外险',
+    status: ClaimStatus.REPORTED,
+    operator: '赵六'
+  },
+  {
+    id: 'claim-3',
+    reportNumber: 'R202405150012',
+    reporter: '陈七',
+    reportTime: '2024-05-15 09:15:00',
+    accidentTime: '2024-05-10 20:00:00',
+    accidentReason: '急性阑尾炎',
+    claimAmount: 8500.00,
+    productCode: 'ZA-001',
+    productName: '尊享e生2024版',
+    status: ClaimStatus.APPROVED,
+    operator: '孙八'
+  },
+  {
+    id: 'claim-4',
+    reportNumber: 'R202405200020',
+    reporter: '周九',
+    reportTime: '2024-05-20 16:45:00',
+    accidentTime: '2024-05-18 11:30:00',
+    accidentReason: '交通事故',
+    claimAmount: 25000.00,
+    productCode: 'ZA-003',
+    productName: '百万医疗险2024',
+    status: ClaimStatus.PENDING_INFO,
+    operator: '吴十'
+  },
+  {
+    id: 'claim-detail-1',
+    reportNumber: 'CLAIM-2024-0421',
+    reporter: '王芳',
+    reportTime: '2024-01-02 09:24',
+    accidentTime: '2024-01-01 15:15',
+    accidentReason: '疾病住院',
+    accidentLocation: '中国北京市朝阳区主街123号',
+    claimAmount: 144.00,
+    approvedAmount: 132.00,
+    productCode: 'ZA-001',
+    productName: '尊享e生2024版',
+    status: ClaimStatus.PROCESSING,
+    operator: '系统管理员',
+    policyholder: '张伟',
+    insured: '李娜',
+    policyPeriod: '2024年1月1日 - 2024年12月31日',
+    policyNumber: 'POL-2024-7890',
+    calculationItems: [
+      { id: 'calc-1', type: '医疗费用', fileName: '发票1.jpg', date: '2025-1-1', item: '色甘酸钠', amount: 17, claimAmount: 17, basis: '乙类药，保险覆盖，100%报销' },
+      { id: 'calc-2', type: '医疗费用', fileName: '发票1.jpg', date: '2025-1-1', item: '急诊诊疗', amount: 25, claimAmount: 25, basis: '甲类药，保险覆盖，100%报销' },
+      { id: 'calc-3', type: '医疗费用', fileName: '发票1.jpg', date: '2025-1-1', item: '氯胆乳膏', amount: 30, claimAmount: 24, basis: '丙类药，不属保险范围，80%报销' },
+      { id: 'calc-4', type: 'Medical', fileName: 'Invoice 2.jpg', date: '2025-1-2', item: 'Sodium Cromoglicate', amount: 17, claimAmount: 17, basis: 'Class B, covered by insurance, 100% reimbursement' },
+      { id: 'calc-5', type: 'Medical', fileName: 'Invoice 2.jpg', date: '2025-1-2', item: 'Emergency Consultation', amount: 25, claimAmount: 25, basis: 'Class A, covered by insurance, 100% reimbursement' },
+      { id: 'calc-6', type: 'Medical', fileName: 'Invoice 2.jpg', date: '2025-1-2', item: 'Hydroquinone Cream', amount: 30, claimAmount: 24, basis: 'Class C, not covered by insurance, 80% reimbursement' },
+    ],
+    fileCategories: [
+      { name: '医疗费用', files: [{ name: '发票1.jpg', url: '#' }, { name: '发票2.jpg', url: '#' }, { name: '诊断证明.pdf', url: '#' }] },
+      { name: '伤残费用', files: [] },
+      { name: '误工费', files: [{ name: '请假条.jpg', url: '#' }] }
+    ],
+    risks: [
+      { type: 'danger', title: '高欺诈概率', description: '基于图像分析，发票1.jpg显示可能被篡改的迹象。' },
+      { type: 'warning', title: '文件不完整', description: '雇主证明缺少公章。' }
+    ]
+  }
 ];

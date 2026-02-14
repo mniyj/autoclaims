@@ -1,0 +1,57 @@
+{
+  "productCode": "GEN-ENDOW-001",
+  "regulatoryName": "中意优选两全保险（分红型）",
+  "marketingName": "优选两全保险",
+  "productSummery": "两全保险，满期给付生存金，身故保障，可享分红",
+  "onlineClaimFlag": true,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2024版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2024-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "人寿保险",
+  "primaryCategoryCode": "G",
+  "secondaryCategory": "两全保险",
+  "secondaryCategoryCode": "G01",
+  "racewayId": "G0101",
+  "racewayName": "两全保险",
+  "salesUrl": "https://www.generalichina.com/products/youxuan",
+  "underwritingAge": "出生满7日-65周岁",
+  "coveragePeriod": "保20年/30年/保至60岁/保至70岁",
+  "waitingPeriod": "90天",
+  "productHeroImage": "https://example.com/images/endowment_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意优选两全保险（分红型）- 条款.pdf",
+    "中意优选两全保险（分红型）- 产品说明书.pdf"
+  ],
+  "clausesCode": ["GEN-ENDOW-2024-001"],
+  "productIntroduction": "中意优选两全保险是一款两全保险产品，提供满期生存金和身故保障，并可分享公司分红。",
+  "productAdvantages": "1. 满期给付：满期给付生存金\n2. 身故保障：提供身故保障\n3. 分红红利：分享公司经营成果",
+  "precautions": "1. 分红是不确定的\n2. 提前退保可能有损失",
+  "crowd": "希望获得满期金保障，同时需要身故保障的人群",
+  "generalComment": "作为两全保险，兼具储蓄和保障功能。",
+  "tags": "分红型",
+  "paymentMethod": "趸交/期交",
+  "paymentPeriod": "趸交/3年/5年/10年",
+  "coverageDetails": [
+    {
+      "item_code": "MATURITY_BENEFIT",
+      "item_name": "满期保险金",
+      "description": "被保险人生存至保险期满，给付满期保险金",
+      "details": {
+        "amount_logic": "给付100%基本保额与已交保费的较大者"
+      }
+    },
+    {
+      "item_code": "DEATH_BENEFIT",
+      "item_name": "身故保险金",
+      "description": "被保险人身故，给付身故保险金",
+      "details": {
+        "payout_logic": "若于18周岁保单周年日前身故，返还已交保费；若于18周岁保单周年日后（含）身故，赔付100%基本保额与已交保费的较大者"
+      }
+    }
+  ],
+  "valueAddedServices": []
+}

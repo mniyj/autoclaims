@@ -1,0 +1,58 @@
+{
+  "productCode": "GEN-WL-018",
+  "regulatoryName": "中意臻享一生（金典版）终身寿险（分红型）",
+  "marketingName": "臻享一生金典版",
+  "productSummery": "增额终身寿险，有效保额每年增长3.5%，支持减保",
+  "onlineClaimFlag": true,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2024版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2024-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "储蓄型",
+  "primaryCategoryCode": "E",
+  "secondaryCategory": "增额终身寿",
+  "secondaryCategoryCode": "E02",
+  "racewayId": "E0202",
+  "racewayName": "增额终身寿",
+  "salesUrl": "https://www.generalichina.com/products/zhenxiangyisheng",
+  "underwritingAge": "出生满7日-70周岁",
+  "coveragePeriod": "终身",
+  "waitingPeriod": "90天",
+  "productHeroImage": "https://example.com/images/wholelife_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意臻享一生（金典版）终身寿险（分红型）- 条款.pdf",
+    "中意臻享一生（金典版）终身寿险（分红型）- 产品说明书.pdf"
+  ],
+  "clausesCode": ["GEN-WL-2024-018"],
+  "productIntroduction": "中意臻享一生（金典版）终身寿险是一款保额递增的终身寿险产品，有效保额每年以3.5%复利增长。",
+  "productAdvantages": "1. 保额递增：年度有效保额每年增长3.5%\n2. 减保灵活：支持减保取现\n3. 分红红利：分享公司经营成果",
+  "precautions": "1. 前期退保可能有损失\n2. 分红是不确定的",
+  "crowd": "有长期储蓄需求，希望资产稳健增值的人群",
+  "generalComment": "作为增额终身寿险，兼具保障和储蓄功能。",
+  "tags": "收益稳健",
+  "effectiveAmountGrowthRate": 0.035,
+  "paymentFrequency": "年交",
+  "paymentPeriod": "趸交/3年/5年/10年",
+  "partialSurrenderRules": {
+    "is_available": true,
+    "start_policy_year": 5,
+    "frequency_per_year": 10,
+    "min_amount_per_request": 500,
+    "max_ratio_per_request": 0.2,
+    "min_remaining_premium": 0,
+    "description": "第5个保单年度起可申请减保"
+  },
+  "coverageDetails": [
+    {
+      "item_code": "DEATH_OR_TOTAL_DISABILITY",
+      "item_name": "身故或全残保险金",
+      "details": {
+        "payout_logic": "若于18周岁保单周年日前身故或全残，给付已交保费与现金价值的较大者；若于18周岁保单周年日后（含）身故或全残，给付已交保费、现金价值、年度有效保额三者中的较大值"
+      }
+    }
+  ],
+  "valueAddedServices": []
+}

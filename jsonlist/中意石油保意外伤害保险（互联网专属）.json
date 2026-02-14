@@ -1,0 +1,54 @@
+{
+  "productCode": "GEN-AC-090",
+  "regulatoryName": "中意石油保意外伤害保险（互联网专属）",
+  "marketingName": "石油保意外险互联网版",
+  "productSummery": "互联网专属意外伤害保险，为石油行业人员定制",
+  "onlineClaimFlag": true,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2024版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2024-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "意外险",
+  "primaryCategoryCode": "C",
+  "secondaryCategory": "意外伤害",
+  "secondaryCategoryCode": "C01",
+  "racewayId": "C0102",
+  "racewayName": "综合意外伤害保险",
+  "salesUrl": "https://www.generalichina.com/products/shiyoubao-accident-internet",
+  "underwritingAge": "出生满7日-65周岁",
+  "coveragePeriod": "1年",
+  "waitingPeriod": "无",
+  "productHeroImage": "https://example.com/images/accident_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意石油保意外伤害保险（互联网专属）-条款.pdf"
+  ],
+  "clausesCode": ["GEN-AC-2024-090"],
+  "productIntroduction": "中意石油保意外伤害保险（互联网专属）是一款专为石油行业人员定制的意外伤害保险产品，提供全面的意外风险保障。",
+  "productAdvantages": "1. 专属定制：专为石油行业人员定制\n2. 投保便捷：线上投保便捷\n3. 保障全面：涵盖意外身故、伤残",
+  "precautions": "1. 意外医疗责任需单独投保附加险\n2. 限石油行业人员投保",
+  "crowd": "石油行业从业人员",
+  "generalComment": "作为石油行业专属意外险产品，专属定制是主要亮点。",
+  "tags": "行业专属",
+  "coverageDetails": [
+    {
+      "item_code": "ACCIDENTAL_DEATH_DISABILITY",
+      "item_name": "意外身故、伤残保险金",
+      "details": {
+        "payout_type": "FIXED_AMOUNT",
+        "death_benefit": {
+          "amount": 200000,
+          "description": "被保险人因意外伤害导致身故，按基本保额给付"
+        },
+        "disability_benefit": {
+          "amount": 200000,
+          "description": "被保险人因意外伤害导致伤残，按伤残比例给付"
+        },
+        "disability_standard": "中国保险行业协会颁布的《人身保险伤残评定标准及代码》"
+      }
+    }
+  ],
+  "valueAddedServices": []
+}

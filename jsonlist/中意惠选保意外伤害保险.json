@@ -1,0 +1,112 @@
+{
+  "productCode": "GEN-ACC-001",
+  "regulatoryName": "中意惠选保意外伤害保险",
+  "marketingName": "惠选保意外险",
+  "productSummery": "综合意外险，意外身故/伤残100万保额，含意外医疗5万，猝死30万",
+  "onlineClaimFlag": true,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2024版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2024-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "意外保险",
+  "primaryCategoryCode": "C",
+  "secondaryCategory": "综合意外",
+  "secondaryCategoryCode": "C01",
+  "racewayId": "C0101",
+  "racewayName": "成人综合意外",
+  "salesUrl": "https://www.generalichina.com/products/huixuanbao",
+  "underwritingAge": "18周岁-65周岁",
+  "coveragePeriod": "1年",
+  "waitingPeriod": "无等待期（意外伤害无等待期）",
+  "deductible": "意外医疗100元免赔",
+  "productHeroImage": "https://example.com/images/accident_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意惠选保意外伤害保险- 条款.pdf",
+    "中意惠选保意外伤害保险- 产品说明书.pdf",
+    "中意惠选保意外伤害保险- 费率表.pdf"
+  ],
+  "clausesCode": ["GEN-ACC-2024-001"],
+  "productIntroduction": "中意惠选保意外伤害保险是一款综合意外险产品，提供意外身故/伤残保障、意外医疗保障、猝死保障，全面覆盖各类意外风险。",
+  "productAdvantages": "1. 保障全面：意外身故/伤残+意外医疗+猝死保障\n2. 高保额：意外身故/伤残最高100万保额\n3. 猝死保障：30万猝死保障，覆盖心源性猝死\n4. 意外医疗：5万意外医疗保额，0免赔100%赔付\n5. 投保灵活：支持多份投保",
+  "precautions": "1. 意外医疗需在二级及以上公立医院就医\n2. 猝死责任有等待期，等待期内不承担保险责任\n3. 职业类别限制，1-4类职业可投保\n4. 高风险职业、运动不在保障范围内",
+  "crowd": "18-65周岁成年人，需要意外保障的人群",
+  "generalComment": "作为综合意外险产品，保障全面，猝死保障是一大亮点，性价比高。",
+  "tags": "爆款,高性价比",
+  "coverageArea": "中国大陆（不含港澳台）",
+  "hospitalScope": "二级及以上公立医院",
+  "claimScope": "不限社保用药",
+  "occupationScope": "1-4类职业",
+  "hesitationPeriod": "无犹豫期（一年期产品）",
+  "policyEffectiveDate": "投保成功次日零时",
+  "purchaseLimit": 5,
+  "annualPremium": 168,
+  "renewalWarranty": "不保证续保",
+  "healthConditionNotice": "无需健康告知",
+  "coverageDetails": [
+    {
+      "item_code": "ACCIDENTAL_DEATH_DISABILITY",
+      "item_name": "意外身故、伤残保险金",
+      "description": "因意外伤害导致身故或伤残，按约定给付保险金",
+      "details": {
+        "limit": 1000000,
+        "payout_multiplier": 1.0
+      }
+    },
+    {
+      "item_code": "ACCIDENTAL_MEDICAL",
+      "item_name": "意外医疗保险金",
+      "description": "因意外伤害导致的医疗费用，按约定给付保险金",
+      "details": {
+        "limit": 50000,
+        "deductible": 100,
+        "reimbursement_ratio": 1.0,
+        "hospital_requirements": "二级及以上公立医院",
+        "coverage_scope": "不限社保用药"
+      }
+    },
+    {
+      "item_code": "SUDDEN_DEATH",
+      "item_name": "猝死保险金",
+      "description": "因突发急性病导致身故，按约定给付保险金",
+      "details": {
+        "limit": 300000,
+        "payout_multiplier": 0.3
+      }
+    },
+    {
+      "item_code": "HOSPITAL_INCOME",
+      "item_name": "意外住院津贴",
+      "description": "因意外伤害住院，按日给付津贴",
+      "details": {
+        "amount_per_day": 100,
+        "deductible_days": 3,
+        "max_days": 180
+      }
+    },
+    {
+      "item_code": "SPECIFIC_ACCIDENT",
+      "item_name": "航空意外额外赔",
+      "description": "乘坐民航客机发生意外，额外赔付",
+      "details": {
+        "scenario": "民航客机意外",
+        "payout_multiplier": 2.0,
+        "additional_limit": 2000000
+      }
+    }
+  ],
+  "valueAddedServices": [
+    {
+      "id": "MEDICAL_GUIDANCE",
+      "name": "医疗指引服务",
+      "description": "提供全国医院信息查询、就医指导服务"
+    },
+    {
+      "id": "EMERGENCY_RESCUE",
+      "name": "紧急救援服务",
+      "description": "提供全国范围内紧急救援协调服务"
+    }
+  ]
+}

@@ -1,0 +1,106 @@
+{
+  "productCode": "GEN-MED-086",
+  "regulatoryName": "中意悦享百万医疗保险（2021）",
+  "marketingName": "悦享百万医疗险2021",
+  "productSummery": "百万医疗险，涵盖一般医疗、重疾医疗、质子重离子",
+  "onlineClaimFlag": true,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2021版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2021-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "健康险",
+  "primaryCategoryCode": "A",
+  "secondaryCategory": "医疗保险",
+  "secondaryCategoryCode": "A02",
+  "racewayId": "A0201",
+  "racewayName": "百万医疗",
+  "salesUrl": "https://www.generalichina.com/products/yuexiangmillion-2021",
+  "underwritingAge": "出生满28日-60周岁",
+  "coveragePeriod": "1年",
+  "waitingPeriod": "30天",
+  "productHeroImage": "https://example.com/images/medical_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意悦享百万医疗保险（2021）-条款.pdf"
+  ],
+  "clausesCode": ["GEN-MED-2021-086"],
+  "productIntroduction": "中意悦享百万医疗保险（2021）是一款百万医疗险产品，提供高额医疗保障，涵盖一般医疗、重疾医疗、质子重离子等多种责任。",
+  "productAdvantages": "1. 保额高：年度最高保额可达400万\n2. 覆盖广：涵盖一般医疗、重疾医疗、质子重离子\n3. 增值服务：提供住院垫付、重疾绿通",
+  "precautions": "1. 有30天等待期\n2. 续保需经保险公司审核\n3. 免赔额适用",
+  "crowd": "需要高额医疗保障的人群",
+  "generalComment": "作为百万医疗险产品，保额高、覆盖广是主要亮点。",
+  "tags": "百万医疗",
+  "coveragePlans": [
+    {
+      "planType": "标准版",
+      "annualLimit": 3000000,
+      "guaranteedRenewalYears": 1,
+      "coverageDetails": [
+        {
+          "item_code": "GENERAL_HOSPITALIZATION",
+          "item_name": "一般医疗保险金",
+          "details": {
+            "limit": 1500000,
+            "deductible": 10000,
+            "reimbursement_ratio": 1.0
+          }
+        },
+        {
+          "item_code": "CRITICAL_ILLNESS_HOSPITALIZATION",
+          "item_name": "重大疾病医疗保险金",
+          "details": {
+            "limit": 1500000,
+            "deductible": 0,
+            "reimbursement_ratio": 1.0
+          }
+        }
+      ]
+    },
+    {
+      "planType": "升级版",
+      "annualLimit": 4000000,
+      "guaranteedRenewalYears": 1,
+      "coverageDetails": [
+        {
+          "item_code": "GENERAL_HOSPITALIZATION",
+          "item_name": "一般医疗保险金",
+          "details": {
+            "limit": 2000000,
+            "deductible": 10000,
+            "reimbursement_ratio": 1.0
+          }
+        },
+        {
+          "item_code": "CRITICAL_ILLNESS_HOSPITALIZATION",
+          "item_name": "重大疾病医疗保险金",
+          "details": {
+            "limit": 2000000,
+            "deductible": 0,
+            "reimbursement_ratio": 1.0
+          }
+        },
+        {
+          "item_code": "PROTON_ION_THERAPY",
+          "item_name": "质子重离子医疗保险金",
+          "details": {
+            "limit": 1000000,
+            "deductible": 0,
+            "reimbursement_ratio": 1.0
+          }
+        }
+      ]
+    }
+  ],
+  "valueAddedServices": [
+    {
+      "service_name": "住院垫付",
+      "service_description": "提供住院医疗费用垫付服务"
+    },
+    {
+      "service_name": "重疾绿通",
+      "service_description": "提供重大疾病就医绿色通道服务"
+    }
+  ]
+}

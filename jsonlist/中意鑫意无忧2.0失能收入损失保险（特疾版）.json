@@ -1,0 +1,69 @@
+{
+  "productCode": "GEN-DISABILITY-003",
+  "regulatoryName": "中意鑫意无忧2.0失能收入损失保险（特疾版）",
+  "marketingName": "鑫意无忧2.0失能收入损失险（特疾版）",
+  "productSummery": "失能收入损失保险，失能后按月给付失能保险金",
+  "onlineClaimFlag": true,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2024版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2024-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "健康保险",
+  "primaryCategoryCode": "B",
+  "secondaryCategory": "失能收入损失保险",
+  "secondaryCategoryCode": "B06",
+  "racewayId": "B0601",
+  "racewayName": "失能收入损失",
+  "salesUrl": "https://www.generalichina.com/products/xinyiwuyou",
+  "underwritingAge": "18周岁-55周岁",
+  "coveragePeriod": "保至60/65/70岁",
+  "waitingPeriod": "90天",
+  "deductible": "无免赔额",
+  "productHeroImage": "https://example.com/images/disability_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意鑫意无忧2.0失能收入损失保险（特疾版）- 条款.pdf",
+    "中意鑫意无忧2.0失能收入损失保险（特疾版）- 产品说明书.pdf",
+    "中意鑫意无忧2.0失能收入损失保险（特疾版）- 费率表.pdf",
+    "中意鑫意无忧2.0失能收入损失保险（特疾版）- 现金价值表.xlsx"
+  ],
+  "clausesCode": ["GEN-DISABILITY-2024-003"],
+  "productIntroduction": "中意鑫意无忧2.0失能收入损失保险（特疾版）是一款失能收入损失保险产品，失能后按月给付失能保险金。",
+  "productAdvantages": "1. 失能保障：失能后按月给付保险金\n2. 保障期长：可保至60/65/70岁",
+  "precautions": "1. 等待期内发生保险事故不承担保险责任",
+  "crowd": "关注失能风险，需要收入保障的人群",
+  "generalComment": "作为失能收入损失保险，失能后按月给付是核心保障。",
+  "tags": "收入保障",
+  "coverageArea": "中国大陆（不含港澳台）",
+  "hospitalScope": "二级及以上公立医院或指定鉴定机构",
+  "claimScope": "经鉴定符合失能标准后赔付",
+  "occupationScope": "1-4类职业",
+  "hesitationPeriod": "15天",
+  "policyEffectiveDate": "投保成功次日零时",
+  "purchaseLimit": 1,
+  "annualPremium": 2500,
+  "renewalWarranty": "长期险，无需续保",
+  "healthConditionNotice": "支持智能核保",
+  "coverageDetails": [
+    {
+      "item_code": "DISABILITY_INCOME_BENEFIT",
+      "item_name": "失能保险金",
+      "description": "被保险人失能后，按月给付失能保险金",
+      "details": {
+        "amount_logic": "每月给付10%基本保额",
+        "max_duration": "至保险期满或被保险人恢复或身故"
+      }
+    },
+    {
+      "item_code": "DEATH_BENEFIT",
+      "item_name": "身故保险金",
+      "description": "被保险人身故，给付身故保险金",
+      "details": {
+        "payout_logic": "若未失能身故，返还已交保费"
+      }
+    }
+  ],
+  "valueAddedServices": []
+}

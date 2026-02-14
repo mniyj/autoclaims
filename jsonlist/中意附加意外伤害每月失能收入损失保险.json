@@ -1,0 +1,49 @@
+{
+  "productCode": "GEN-RIDER-104",
+  "regulatoryName": "中意附加意外伤害每月失能收入损失保险",
+  "marketingName": "附加意外失能收入损失险",
+  "productSummery": "附加意外失能收入损失保险，提供失能收入损失津贴",
+  "onlineClaimFlag": false,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2024版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2024-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "意外险",
+  "primaryCategoryCode": "C",
+  "secondaryCategory": "失能收入损失",
+  "secondaryCategoryCode": "C03",
+  "racewayId": "C0301",
+  "racewayName": "意外失能收入损失",
+  "salesUrl": "https://www.generalichina.com/products/riders/accident-disability-income",
+  "underwritingAge": "出生满7日-65周岁",
+  "coveragePeriod": "1年",
+  "waitingPeriod": "无",
+  "productHeroImage": "https://example.com/images/disability_income_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意附加意外伤害每月失能收入损失保险-条款.pdf"
+  ],
+  "clausesCode": ["GEN-RIDER-2024-104"],
+  "productIntroduction": "中意附加意外伤害每月失能收入损失保险是一款附加意外失能收入损失保险产品，提供因意外导致失能的收入损失津贴。",
+  "productAdvantages": "1. 补充保障：可附加到主险\n2. 收入补偿：提供失能收入损失津贴\n3. 月度给付：按月给付津贴",
+  "precautions": "1. 需附加到主险\n2. 有等待期\n3. 有最长给付期限",
+  "crowd": "需要失能收入损失保障的人群",
+  "generalComment": "作为附加意外失能收入损失险产品，收入补偿是主要亮点。",
+  "tags": "附加险",
+  "coverageDetails": [
+    {
+      "item_code": "ACCIDENTAL_DISABILITY_INCOME",
+      "item_name": "意外失能收入损失保险金",
+      "details": {
+        "payout_type": "MONTHLY_ALLOWANCE",
+        "monthly_amount": 5000,
+        "max_payment_months": 36,
+        "waiting_period_days": 90,
+        "description": "被保险人因意外伤害导致失能，按月给付津贴"
+      }
+    }
+  ],
+  "valueAddedServices": []
+}

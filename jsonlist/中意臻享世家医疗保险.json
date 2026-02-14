@@ -1,0 +1,115 @@
+{
+  "productCode": "GEN-MED-092",
+  "regulatoryName": "中意臻享世家医疗保险",
+  "marketingName": "臻享世家医疗险",
+  "productSummery": "高端医疗险，涵盖住院医疗、门诊医疗、牙科",
+  "onlineClaimFlag": true,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2024版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2024-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "健康险",
+  "primaryCategoryCode": "A",
+  "secondaryCategory": "医疗保险",
+  "secondaryCategoryCode": "A02",
+  "racewayId": "A0206",
+  "racewayName": "高端医疗",
+  "salesUrl": "https://www.generalichina.com/products/zhenxiangshijia",
+  "underwritingAge": "出生满28日-65周岁",
+  "coveragePeriod": "1年",
+  "waitingPeriod": "30天",
+  "productHeroImage": "https://example.com/images/highend_medical_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意臻享世家医疗保险-条款.pdf"
+  ],
+  "clausesCode": ["GEN-MED-2024-092"],
+  "productIntroduction": "中意臻享世家医疗保险是一款高端医疗险产品，提供全面的医疗保障，涵盖住院医疗、门诊医疗、牙科等多种责任。",
+  "productAdvantages": "1. 高端保障：全面医疗保障\n2. 就医便捷：支持高端医疗机构\n3. 服务优质：提供专属健康管理服务",
+  "precautions": "1. 有30天等待期\n2. 保费较高\n3. 有年度赔付限额",
+  "crowd": "追求高品质医疗服务的人群",
+  "generalComment": "作为高端医疗险产品，保障全面、服务优质是主要亮点。",
+  "tags": "高端医疗",
+  "coveragePlans": [
+    {
+      "planType": "经典版",
+      "annualLimit": 2000000,
+      "guaranteedRenewalYears": 1,
+      "coverageDetails": [
+        {
+          "item_code": "HOSPITALIZATION_MEDICAL",
+          "item_name": "住院医疗保险金",
+          "details": {
+            "limit": 1500000,
+            "deductible": 0,
+            "reimbursement_ratio": 1.0
+          }
+        },
+        {
+          "item_code": "OUTPATIENT_MEDICAL",
+          "item_name": "门诊医疗保险金",
+          "details": {
+            "limit": 300000,
+            "deductible": 0,
+            "reimbursement_ratio": 1.0
+          }
+        },
+        {
+          "item_code": "DENTAL_MEDICAL",
+          "item_name": "牙科医疗保险金",
+          "details": {
+            "limit": 200000,
+            "deductible": 0,
+            "reimbursement_ratio": 1.0
+          }
+        }
+      ]
+    },
+    {
+      "planType": "尊享版",
+      "annualLimit": 5000000,
+      "guaranteedRenewalYears": 1,
+      "coverageDetails": [
+        {
+          "item_code": "HOSPITALIZATION_MEDICAL",
+          "item_name": "住院医疗保险金",
+          "details": {
+            "limit": 4000000,
+            "deductible": 0,
+            "reimbursement_ratio": 1.0
+          }
+        },
+        {
+          "item_code": "OUTPATIENT_MEDICAL",
+          "item_name": "门诊医疗保险金",
+          "details": {
+            "limit": 500000,
+            "deductible": 0,
+            "reimbursement_ratio": 1.0
+          }
+        },
+        {
+          "item_code": "DENTAL_MEDICAL",
+          "item_name": "牙科医疗保险金",
+          "details": {
+            "limit": 500000,
+            "deductible": 0,
+            "reimbursement_ratio": 1.0
+          }
+        }
+      ]
+    }
+  ],
+  "valueAddedServices": [
+    {
+      "service_name": "专属健康管家",
+      "service_description": "提供专属健康管家服务"
+    },
+    {
+      "service_name": "高端医疗绿通",
+      "service_description": "提供高端医疗机构就医绿色通道"
+    }
+  ]
+}

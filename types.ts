@@ -411,6 +411,91 @@ export interface TreeNode {
 // --- END: Types for Insurance Type Management ---
 
 // --- START: Types for End User Data (System Management) ---
+// --- START: Types for Claims Management ---
+export interface ClaimsMaterial {
+  id: string;
+  name: string;
+  description: string;
+  sampleUrl?: string;
+  jsonSchema: string; // JSON string representing the schema to extract
+  required: boolean;
+  aiAuditPrompt?: string;
+}
+
+export interface ClaimItem {
+  id: string;
+  name: string;
+  description: string;
+  materialIds: string[]; // IDs of ClaimsMaterial associated with this claim item
+}
+
+export interface ProductClaimConfig {
+  productCode: string;
+  responsibilityConfigs: ResponsibilityClaimConfig[];
+}
+
+export interface ResponsibilityClaimConfig {
+  responsibilityId: string;
+  claimItemIds: string[]; // IDs of ClaimItem associated with this responsibility
+}
+
+export enum ClaimStatus {
+  REPORTED = '已报案',
+  PROCESSING = '处理中',
+  PENDING_INFO = '待补传',
+  APPROVED = '已结案-给付',
+  REJECTED = '已结案-拒赔',
+  CANCELLED = '已撤案',
+}
+
+export interface ClaimCalculationItem {
+  id: string;
+  type: string;
+  fileName: string;
+  date: string;
+  item: string;
+  amount: number;
+  claimAmount: number;
+  basis: string;
+}
+
+export interface ClaimFileCategory {
+  name: string;
+  files: { name: string; url: string }[];
+}
+
+export interface ClaimRiskIndicator {
+  type: 'danger' | 'warning';
+  title: string;
+  description: string;
+}
+
+export interface ClaimCase {
+  id: string;
+  reportNumber: string;
+  reporter: string;
+  reportTime: string;
+  accidentTime: string;
+  accidentReason: string;
+  accidentLocation?: string;
+  claimAmount: number;
+  approvedAmount?: number;
+  productCode: string;
+  productName: string;
+  status: ClaimStatus;
+  operator: string;
+  
+  // Detailed fields
+  policyholder?: string;
+  insured?: string;
+  policyPeriod?: string;
+  policyNumber?: string;
+  calculationItems?: ClaimCalculationItem[];
+  fileCategories?: ClaimFileCategory[];
+  risks?: ClaimRiskIndicator[];
+}
+// --- END: Types for Claims Management ---
+
 export interface EndUser {
   id: string;
   name: string;

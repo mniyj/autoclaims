@@ -1,0 +1,60 @@
+{
+  "productCode": "GEN-ACC-008",
+  "regulatoryName": "中意乐无忧个人意外伤害保险",
+  "marketingName": "乐无忧意外险",
+  "productSummery": "个人意外伤害保险，意外身故/伤残20万保额",
+  "onlineClaimFlag": true,
+  "insurerName": "中意人寿保险有限公司",
+  "version": "2024版",
+  "salesRegions": "全国（不含港澳台）",
+  "effectiveDate": "2024-01-01",
+  "expiryDate": null,
+  "status": "生效",
+  "primaryCategory": "意外保险",
+  "primaryCategoryCode": "C",
+  "secondaryCategory": "综合意外",
+  "secondaryCategoryCode": "C01",
+  "racewayId": "C0101",
+  "racewayName": "成人综合意外",
+  "salesUrl": "https://www.generalichina.com/products/lewuyou",
+  "underwritingAge": "18周岁-65周岁",
+  "coveragePeriod": "1年",
+  "waitingPeriod": "无等待期",
+  "deductible": "无免赔额",
+  "productHeroImage": "https://example.com/images/accident_hero.jpg",
+  "productLongImage": [],
+  "productAttachment": [
+    "中意乐无忧个人意外伤害保险-条款.pdf",
+    "中意乐无忧个人意外伤害保险-产品说明书.pdf",
+    "中意乐无忧个人意外伤害保险-费率表.pdf"
+  ],
+  "clausesCode": ["GEN-ACC-2024-008"],
+  "productIntroduction": "中意乐无忧个人意外伤害保险是一款个人意外伤害保险产品，提供意外身故/伤残保障。",
+  "productAdvantages": "1. 保费低廉：一年保费几十元\n2. 投保便捷：线上投保，快速生效\n3. 保障简单：仅承担意外身故/伤残责任",
+  "precautions": "1. 仅保障意外身故/伤残\n2. 职业类别限制",
+  "crowd": "18-65周岁成年人，需要基础意外保障的人群",
+  "generalComment": "作为基础意外险产品，保费低廉，责任简单。",
+  "tags": "高性价比",
+  "coverageArea": "中国大陆（不含港澳台）",
+  "hospitalScope": "不限",
+  "claimScope": "意外身故/伤残",
+  "occupationScope": "1-6类职业",
+  "hesitationPeriod": "无犹豫期",
+  "policyEffectiveDate": "投保成功次日零时",
+  "purchaseLimit": 5,
+  "annualPremium": 38,
+  "renewalWarranty": "不保证续保",
+  "healthConditionNotice": "无需健康告知",
+  "coverageDetails": [
+    {
+      "item_code": "ACCIDENTAL_DEATH_DISABILITY",
+      "item_name": "意外身故、伤残保险金",
+      "description": "因意外伤害导致身故或伤残，按约定给付保险金",
+      "details": {
+        "limit": 200000,
+        "payout_multiplier": 1.0
+      }
+    }
+  ],
+  "valueAddedServices": []
+}
