@@ -25,6 +25,7 @@ import ClaimsMaterialManagementPage from './components/ClaimsMaterialManagementP
 import ClaimItemConfigPage from './components/ClaimItemConfigPage';
 import ClaimCaseListPage from './components/ClaimCaseListPage';
 import ClaimCaseDetailPage from './components/ClaimCaseDetailPage';
+import RulesetManagementPage from './components/RulesetManagementPage';
 import { type Clause, type InsuranceProduct, ProductStatus, type DecisionTable, type IndustryData, type ClaimCase } from './types';
 import { SANITIZED_MOCK_CLAUSES as MOCK_CLAUSES, MOCK_CLAIM_CASES } from './constants';
 
@@ -42,7 +43,7 @@ const ChevronUpIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" 
 
 // --- Layout Components ---
 
-type AppView = 'product_list' | 'product_config' | 'clause_management' | 'add_clause' | 'view_clause' | 'edit_clause' | 'add_product' | 'strategy_management' | 'edit_strategy' | 'system_settings' | 'company_management' | 'add_company' | 'view_company' | 'edit_company' | 'industry_data_list' | 'edit_industry_data' | 'smart_advisor_config' | 'insurance_type_management' | 'responsibility_management' | 'user_list' | 'data_dashboard' | 'claims_material_management' | 'claim_item_config' | 'claim_case_list' | 'claim_case_detail';
+type AppView = 'product_list' | 'product_config' | 'clause_management' | 'add_clause' | 'view_clause' | 'edit_clause' | 'add_product' | 'strategy_management' | 'edit_strategy' | 'system_settings' | 'company_management' | 'add_company' | 'view_company' | 'edit_company' | 'industry_data_list' | 'edit_industry_data' | 'smart_advisor_config' | 'insurance_type_management' | 'responsibility_management' | 'user_list' | 'data_dashboard' | 'claims_material_management' | 'claim_item_config' | 'claim_case_list' | 'claim_case_detail' | 'ruleset_management';
 
 type NavSubItemData = { name: string; id: AppView };
 type NavItemData = {
@@ -73,6 +74,7 @@ const navItems: NavItemData[] = [
       { name: '理赔材料管理', id: 'claims_material_management' },
       { name: '理赔项目配置', id: 'claim_item_config' },
       { name: '赔案清单', id: 'claim_case_list' },
+      { name: '规则集管理', id: 'ruleset_management' },
     ]
   },
   { 
@@ -89,7 +91,7 @@ const navItems: NavItemData[] = [
 
 const activeParentViews: Record<string, AppView[]> = {
     '智能保顾配置': ['product_list', 'product_config', 'add_product', 'clause_management', 'add_clause', 'view_clause', 'edit_clause', 'company_management', 'add_company', 'view_company', 'edit_company', 'industry_data_list', 'edit_industry_data', 'insurance_type_management', 'responsibility_management', 'strategy_management', 'edit_strategy', 'smart_advisor_config'],
-    '理赔管理': ['claims_material_management', 'claim_item_config', 'claim_case_list', 'claim_case_detail'],
+    '理赔管理': ['claims_material_management', 'claim_item_config', 'claim_case_list', 'claim_case_detail', 'ruleset_management'],
     '系统管理': ['system_settings', 'user_list', 'data_dashboard']
 };
 
@@ -346,6 +348,8 @@ const App: React.FC = () => {
             return <ClaimCaseListPage onViewDetail={handleViewClaim} />;
         case 'claim_case_detail':
             return selectedClaim && <ClaimCaseDetailPage claim={selectedClaim} onBack={() => setView('claim_case_list')} />;
+        case 'ruleset_management':
+            return <RulesetManagementPage />;
         case 'user_list':
             return <UserListPage />;
         case 'data_dashboard':

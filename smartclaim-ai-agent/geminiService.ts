@@ -43,7 +43,7 @@ export const getAIResponse = async (
   const ai = getAI();
   // Using gemini-2.5-flash for maps grounding support
   const model = 'gemini-2.5-flash';
-  
+
   const prompt = `
     Current Claim State: ${JSON.stringify(state)}
     History: ${messages.map(m => `${m.role}: ${m.content}`).join('\n')}
@@ -138,11 +138,15 @@ export const fetchPolicyTerms = async (incidentType: string): Promise<PolicyTerm
 };
 
 export const quickAnalyze = async (base64: string, mimeType: string): Promise<{ category: string; needsDeepAnalysis: boolean; ossUrl: string }> => {
-  const ossUrl = await uploadToOSS(base64, mimeType);
-  
+  // Run OSS upload in parallel - don't block AI analysis if upload fails
+  const ossPromise = uploadToOSS(base64, mimeType).catch(err => {
+    console.warn('OSS upload failed, continuing with analysis:', err);
+    return '';
+  });
+
   const ai = getAI();
   const model = 'gemini-2.5-flash';
-  
+
   const response = await ai.models.generateContent({
     model,
     contents: {
@@ -157,6 +161,8 @@ export const quickAnalyze = async (base64: string, mimeType: string): Promise<{ 
     }
   });
 
+  const ossUrl = await ossPromise;
+
   try {
     const result = JSON.parse(response.text || '{"category":"未知","needsDeepAnalysis":false}');
     return { ...result, ossUrl };
@@ -168,7 +174,7 @@ export const quickAnalyze = async (base64: string, mimeType: string): Promise<{ 
 export const analyzeDocument = async (base64: string, mimeType: string, state: ClaimState, ossUrl: string): Promise<DocumentAnalysis> => {
   const ai = getAI();
   const model = 'gemini-2.5-flash';
-  
+
   const dischargeSchema = {
     "document_type": "string (Fixed: '出院小结')",
     "document_id": "string",
@@ -226,7 +232,7 @@ export const analyzeDocument = async (base64: string, mimeType: string, state: C
 
   const result = JSON.parse(response.text || '{}');
   result.ossUrl = ossUrl;
-  
+
   return result;
 };
 

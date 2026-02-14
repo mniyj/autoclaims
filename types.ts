@@ -516,3 +516,298 @@ export interface EndUser {
   channel: string;
 }
 // --- END: Types for End User Data ---
+
+// --- START: Types for Ruleset Management ---
+
+export enum RulesetProductLine {
+  AUTO = 'AUTO',
+  ACCIDENT = 'ACCIDENT',
+  HEALTH = 'HEALTH',
+  PROPERTY = 'PROPERTY',
+  LIABILITY = 'LIABILITY',
+}
+
+export enum ExecutionDomain {
+  ELIGIBILITY = 'ELIGIBILITY',
+  ASSESSMENT = 'ASSESSMENT',
+  POST_PROCESS = 'POST_PROCESS',
+}
+
+export enum RuleStatus {
+  EFFECTIVE = 'EFFECTIVE',
+  OVERRIDDEN = 'OVERRIDDEN',
+  EXPIRED = 'EXPIRED',
+  DRAFT = 'DRAFT',
+  PENDING_REVIEW = 'PENDING_REVIEW',
+  DISABLED = 'DISABLED',
+}
+
+export enum RuleActionType {
+  APPROVE_CLAIM = 'APPROVE_CLAIM',
+  REJECT_CLAIM = 'REJECT_CLAIM',
+  SET_CLAIM_RATIO = 'SET_CLAIM_RATIO',
+  ROUTE_CLAIM_MANUAL = 'ROUTE_CLAIM_MANUAL',
+  FLAG_FRAUD = 'FLAG_FRAUD',
+  TERMINATE_CONTRACT = 'TERMINATE_CONTRACT',
+  APPROVE_ITEM = 'APPROVE_ITEM',
+  REJECT_ITEM = 'REJECT_ITEM',
+  ADJUST_ITEM_AMOUNT = 'ADJUST_ITEM_AMOUNT',
+  SET_ITEM_RATIO = 'SET_ITEM_RATIO',
+  FLAG_ITEM = 'FLAG_ITEM',
+  APPLY_FORMULA = 'APPLY_FORMULA',
+  APPLY_CAP = 'APPLY_CAP',
+  APPLY_DEDUCTIBLE = 'APPLY_DEDUCTIBLE',
+  SUM_COVERAGES = 'SUM_COVERAGES',
+  DEDUCT_PRIOR_BENEFIT = 'DEDUCT_PRIOR_BENEFIT',
+  ADD_REMARK = 'ADD_REMARK',
+}
+
+export enum RuleCategory {
+  E_LIABILITY_TRIGGER = 'E_LIABILITY_TRIGGER',
+  E_EXCLUSION = 'E_EXCLUSION',
+  E_OCCUPATION_CHECK = 'E_OCCUPATION_CHECK',
+  E_POLICY_STATUS = 'E_POLICY_STATUS',
+  E_PAYOUT_RATIO = 'E_PAYOUT_RATIO',
+  E_ANTI_FRAUD = 'E_ANTI_FRAUD',
+  A_PROVIDER_QUALIFY = 'A_PROVIDER_QUALIFY',
+  A_ITEM_EXCLUSION = 'A_ITEM_EXCLUSION',
+  A_ITEM_NECESSITY = 'A_ITEM_NECESSITY',
+  A_ITEM_PRICING = 'A_ITEM_PRICING',
+  A_ITEM_SOCIAL_INSURANCE = 'A_ITEM_SOCIAL_INSURANCE',
+  A_ITEM_DEPRECIATION = 'A_ITEM_DEPRECIATION',
+  A_ITEM_DEDUCTIBLE = 'A_ITEM_DEDUCTIBLE',
+  P_COMPENSATION_DEDUCT = 'P_COMPENSATION_DEDUCT',
+  P_CUMULATIVE_CAP = 'P_CUMULATIVE_CAP',
+  P_DEDUCTIBLE = 'P_DEDUCTIBLE',
+  P_LIABILITY_APPLY = 'P_LIABILITY_APPLY',
+  P_MULTI_COVERAGE = 'P_MULTI_COVERAGE',
+  P_PRIOR_BENEFIT_DEDUCT = 'P_PRIOR_BENEFIT_DEDUCT',
+}
+
+export enum ConditionOperator {
+  EQ = 'EQ',
+  NEQ = 'NEQ',
+  GT = 'GT',
+  GTE = 'GTE',
+  LT = 'LT',
+  LTE = 'LTE',
+  IN = 'IN',
+  NOT_IN = 'NOT_IN',
+  BETWEEN = 'BETWEEN',
+  NOT_BETWEEN = 'NOT_BETWEEN',
+  CONTAINS = 'CONTAINS',
+  NOT_CONTAINS = 'NOT_CONTAINS',
+  IS_NULL = 'IS_NULL',
+  IS_NOT_NULL = 'IS_NOT_NULL',
+  IS_TRUE = 'IS_TRUE',
+  IS_FALSE = 'IS_FALSE',
+  MATCHES = 'MATCHES',
+}
+
+export enum ConditionLogic {
+  AND = 'AND',
+  OR = 'OR',
+  NOT = 'NOT',
+  SINGLE = 'SINGLE',
+  ALWAYS_TRUE = 'ALWAYS_TRUE',
+}
+
+export interface LeafCondition {
+  field: string;
+  operator: ConditionOperator;
+  value?: unknown;
+  value_unit?: string | null;
+}
+
+export interface GroupCondition {
+  logic: 'AND' | 'OR' | 'NOT';
+  expressions: (LeafCondition | GroupCondition)[];
+}
+
+export interface RuleConditions {
+  logic: ConditionLogic;
+  expressions: (LeafCondition | GroupCondition)[];
+}
+
+export interface RuleActionParams {
+  reject_reason_code?: string;
+  payout_ratio?: number;
+  reduction_ratio?: number;
+  deductible_amount?: number;
+  cap_field?: string;
+  cap_amount?: number;
+  social_insurance_ratio?: number;
+  non_social_insurance_ratio?: number;
+  fraud_risk_score?: number;
+  route_reason?: string;
+  remark_template?: string;
+  formula?: {
+    expression: string;
+    output_field: string;
+  };
+  disability_grade_table?: Array<{
+    grade: number;
+    payout_ratio: number;
+  }>;
+  depreciation_table?: Array<{
+    age_from_months: number;
+    age_to_months: number;
+    monthly_rate_percent: number;
+  }>;
+  pricing_reference?: {
+    source: string;
+    tolerance_percent: number;
+  };
+}
+
+export interface RuleAction {
+  action_type: RuleActionType;
+  params: RuleActionParams;
+}
+
+export interface RuleExecution {
+  domain: ExecutionDomain;
+  loop_over?: string | null;
+  item_alias?: string | null;
+  item_action_on_reject?: 'ZERO_AMOUNT' | 'SKIP_ITEM' | 'FLAG_ITEM' | null;
+}
+
+export interface RuleSource {
+  source_type: 'STANDARD_CLAUSE' | 'ADDITIONAL_CLAUSE' | 'SPECIAL_AGREEMENT' | 'ENDORSEMENT' | 'REGULATORY';
+  source_ref: string;
+  source_text: string;
+  clause_code?: string | null;
+  page_location?: {
+    page: number;
+    bbox: number[];
+  } | null;
+}
+
+export interface RulePriority {
+  level: 1 | 2 | 3 | 4;
+  level_label: 'MAIN_CLAUSE' | 'ADDITIONAL_CLAUSE' | 'SPECIAL_AGREEMENT' | 'REGULATORY';
+  rank: number;
+}
+
+export interface ParsingConfidence {
+  overall: number;
+  condition_confidence: number;
+  action_confidence: number;
+  needs_human_review: boolean;
+  review_hints?: string[];
+}
+
+export interface RulesetRule {
+  rule_id: string;
+  rule_name: string;
+  description?: string;
+  execution: RuleExecution;
+  source: RuleSource;
+  priority: RulePriority;
+  category: RuleCategory;
+  applies_to?: {
+    coverage_codes: string[];
+  };
+  conditions: RuleConditions;
+  action: RuleAction;
+  status: RuleStatus;
+  overridden_by?: string | null;
+  override_reason?: string | null;
+  tags?: string[];
+  parsing_confidence?: ParsingConfidence;
+}
+
+export interface DomainConfig {
+  domain: ExecutionDomain;
+  label: string;
+  execution_mode: 'SEQUENTIAL_SHORT_CIRCUIT' | 'LOOP_PER_ITEM' | 'SEQUENTIAL_AGGREGATE';
+  input_granularity?: 'CLAIM_LEVEL' | 'ITEM_LEVEL' | 'AGGREGATE_LEVEL';
+  loop_collection?: string | null;
+  short_circuit_on?: string[] | null;
+  category_sequence: string[];
+}
+
+export interface ExecutionPipeline {
+  domains: DomainConfig[];
+}
+
+export interface OverrideChainItem {
+  rule_id: string;
+  priority_level: number;
+  status: string;
+  summary: string;
+}
+
+export interface OverrideChain {
+  chain_id: string;
+  topic: string;
+  affected_domain?: ExecutionDomain;
+  chain: OverrideChainItem[];
+  effective_rule_id: string;
+  conflict_type: 'OVERRIDE' | 'SAME_PRIORITY_CONFLICT' | 'COMPLEMENT';
+  resolution?: Record<string, unknown> | null;
+}
+
+export interface FieldDefinition {
+  label: string;
+  data_type: 'STRING' | 'NUMBER' | 'BOOLEAN' | 'DATE' | 'DATETIME' | 'ENUM' | 'ARRAY';
+  scope: 'CLAIM_LEVEL' | 'ITEM_LEVEL' | 'POLICY_LEVEL' | 'CALCULATED';
+  applicable_domains: ExecutionDomain[];
+  enum_values?: Array<{
+    code: string;
+    label: string;
+  }>;
+  source: string;
+}
+
+export interface RulesetPolicyInfo {
+  policy_no: string;
+  product_code: string;
+  product_name: string;
+  plan_name?: string | null;
+  insurer: string;
+  effective_date: string;
+  expiry_date: string;
+  payment_mode?: 'ANNUAL' | 'MONTHLY' | 'SINGLE';
+  insured_subject?: Record<string, unknown>;
+  clause_versions?: Array<Record<string, unknown>>;
+  coverages: Array<Record<string, unknown>>;
+}
+
+export interface RulesetMetadata {
+  schema_version: string;
+  version: string;
+  generated_at: string;
+  generated_by: 'AI_PARSING' | 'MANUAL_ENTRY' | 'HYBRID';
+  ai_model?: string;
+  total_rules: number;
+  rules_by_domain?: {
+    eligibility: number;
+    assessment: number;
+    post_process: number;
+  };
+  rules_by_status?: {
+    effective: number;
+    overridden: number;
+  };
+  unresolved_conflicts?: number;
+  low_confidence_rules?: number;
+  audit_trail?: Array<{
+    timestamp: string;
+    action: string;
+    user_id: string;
+    details: string;
+  }>;
+}
+
+export interface InsuranceRuleset {
+  ruleset_id: string;
+  product_line: RulesetProductLine;
+  policy_info: RulesetPolicyInfo;
+  rules: RulesetRule[];
+  override_chains: OverrideChain[];
+  field_dictionary: Record<string, FieldDefinition>;
+  execution_pipeline: ExecutionPipeline;
+  metadata: RulesetMetadata;
+}
+// --- END: Types for Ruleset Management ---

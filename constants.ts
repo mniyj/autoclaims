@@ -1,5 +1,5 @@
 
-import { type Clause, PrimaryCategory, ProductStatus, ClauseType, InsuranceCompanyProfile, CompanyListItem, IndustryData, CitySalaryData, CriticalIllnessRateData, AccidentRateData, DeathRateData, HospitalizationRateData, OutpatientRateData, InsuranceCategoryMapping, CategoryDefinition, EndUser, ResponsibilityItem, ClaimsMaterial, ClaimItem, ProductClaimConfig, ClaimCase, ClaimStatus } from './types';
+import { type Clause, PrimaryCategory, ProductStatus, ClauseType, InsuranceCompanyProfile, CompanyListItem, IndustryData, CitySalaryData, CriticalIllnessRateData, AccidentRateData, DeathRateData, HospitalizationRateData, OutpatientRateData, InsuranceCategoryMapping, CategoryDefinition, EndUser, ResponsibilityItem, ClaimsMaterial, ClaimItem, ProductClaimConfig, ClaimCase, ClaimStatus, type InsuranceRuleset, RulesetProductLine, ExecutionDomain, RuleStatus, RuleActionType, RuleCategory, ConditionOperator, ConditionLogic } from './types';
 
 export const PRODUCT_STATUSES = Object.values(ProductStatus);
 export const PRIMARY_CATEGORIES = Object.values(PrimaryCategory);
@@ -2817,3 +2817,440 @@ export const MOCK_CLAIM_CASES: ClaimCase[] = [
     ]
   }
 ];
+
+// --- START: Ruleset Management Labels & Mock Data ---
+
+export const PRODUCT_LINE_LABELS: Record<RulesetProductLine, string> = {
+  [RulesetProductLine.AUTO]: '车险',
+  [RulesetProductLine.ACCIDENT]: '意外险',
+  [RulesetProductLine.HEALTH]: '健康险',
+  [RulesetProductLine.PROPERTY]: '财产险',
+  [RulesetProductLine.LIABILITY]: '责任险',
+};
+
+export const DOMAIN_LABELS: Record<ExecutionDomain, string> = {
+  [ExecutionDomain.ELIGIBILITY]: '定责阶段',
+  [ExecutionDomain.ASSESSMENT]: '定损阶段',
+  [ExecutionDomain.POST_PROCESS]: '后处理阶段',
+};
+
+export const RULE_STATUS_LABELS: Record<RuleStatus, string> = {
+  [RuleStatus.EFFECTIVE]: '生效',
+  [RuleStatus.OVERRIDDEN]: '已覆盖',
+  [RuleStatus.EXPIRED]: '已过期',
+  [RuleStatus.DRAFT]: '草稿',
+  [RuleStatus.PENDING_REVIEW]: '待审核',
+  [RuleStatus.DISABLED]: '已禁用',
+};
+
+export const RULE_STATUS_COLORS: Record<RuleStatus, string> = {
+  [RuleStatus.EFFECTIVE]: 'bg-green-100 text-green-800',
+  [RuleStatus.OVERRIDDEN]: 'bg-orange-100 text-orange-800',
+  [RuleStatus.EXPIRED]: 'bg-gray-100 text-gray-500',
+  [RuleStatus.DRAFT]: 'bg-blue-100 text-blue-800',
+  [RuleStatus.PENDING_REVIEW]: 'bg-yellow-100 text-yellow-800',
+  [RuleStatus.DISABLED]: 'bg-red-100 text-red-800',
+};
+
+export const CATEGORY_LABELS: Record<RuleCategory, string> = {
+  [RuleCategory.E_LIABILITY_TRIGGER]: '责任触发',
+  [RuleCategory.E_EXCLUSION]: '免责条款',
+  [RuleCategory.E_OCCUPATION_CHECK]: '职业限制',
+  [RuleCategory.E_POLICY_STATUS]: '保单状态',
+  [RuleCategory.E_PAYOUT_RATIO]: '赔付比例',
+  [RuleCategory.E_ANTI_FRAUD]: '反欺诈',
+  [RuleCategory.A_PROVIDER_QUALIFY]: '服务商资质',
+  [RuleCategory.A_ITEM_EXCLUSION]: '明细排除',
+  [RuleCategory.A_ITEM_NECESSITY]: '必要性审核',
+  [RuleCategory.A_ITEM_PRICING]: '定价审核',
+  [RuleCategory.A_ITEM_SOCIAL_INSURANCE]: '社保结算',
+  [RuleCategory.A_ITEM_DEPRECIATION]: '折旧计算',
+  [RuleCategory.A_ITEM_DEDUCTIBLE]: '免赔额',
+  [RuleCategory.P_COMPENSATION_DEDUCT]: '补偿扣减',
+  [RuleCategory.P_CUMULATIVE_CAP]: '累计限额',
+  [RuleCategory.P_DEDUCTIBLE]: '免赔计算',
+  [RuleCategory.P_LIABILITY_APPLY]: '责任适用',
+  [RuleCategory.P_MULTI_COVERAGE]: '多重覆盖',
+  [RuleCategory.P_PRIOR_BENEFIT_DEDUCT]: '既往赔付扣减',
+};
+
+export const OPERATOR_LABELS: Record<ConditionOperator, string> = {
+  [ConditionOperator.EQ]: '等于',
+  [ConditionOperator.NEQ]: '不等于',
+  [ConditionOperator.GT]: '大于',
+  [ConditionOperator.GTE]: '大于等于',
+  [ConditionOperator.LT]: '小于',
+  [ConditionOperator.LTE]: '小于等于',
+  [ConditionOperator.IN]: '包含于',
+  [ConditionOperator.NOT_IN]: '不包含于',
+  [ConditionOperator.BETWEEN]: '介于',
+  [ConditionOperator.NOT_BETWEEN]: '不介于',
+  [ConditionOperator.CONTAINS]: '包含',
+  [ConditionOperator.NOT_CONTAINS]: '不包含',
+  [ConditionOperator.IS_NULL]: '为空',
+  [ConditionOperator.IS_NOT_NULL]: '不为空',
+  [ConditionOperator.IS_TRUE]: '为真',
+  [ConditionOperator.IS_FALSE]: '为假',
+  [ConditionOperator.MATCHES]: '正则匹配',
+};
+
+export const ACTION_TYPE_LABELS: Record<RuleActionType, string> = {
+  [RuleActionType.APPROVE_CLAIM]: '通过理赔',
+  [RuleActionType.REJECT_CLAIM]: '拒绝理赔',
+  [RuleActionType.SET_CLAIM_RATIO]: '设置赔付比例',
+  [RuleActionType.ROUTE_CLAIM_MANUAL]: '转人工审核',
+  [RuleActionType.FLAG_FRAUD]: '标记欺诈',
+  [RuleActionType.TERMINATE_CONTRACT]: '终止合同',
+  [RuleActionType.APPROVE_ITEM]: '通过明细',
+  [RuleActionType.REJECT_ITEM]: '拒绝明细',
+  [RuleActionType.ADJUST_ITEM_AMOUNT]: '调整明细金额',
+  [RuleActionType.SET_ITEM_RATIO]: '设置明细比例',
+  [RuleActionType.FLAG_ITEM]: '标记明细',
+  [RuleActionType.APPLY_FORMULA]: '应用公式',
+  [RuleActionType.APPLY_CAP]: '应用限额',
+  [RuleActionType.APPLY_DEDUCTIBLE]: '应用免赔额',
+  [RuleActionType.SUM_COVERAGES]: '汇总保障',
+  [RuleActionType.DEDUCT_PRIOR_BENEFIT]: '扣减既往赔付',
+  [RuleActionType.ADD_REMARK]: '添加备注',
+};
+
+export const PRIORITY_LEVEL_LABELS: Record<number, string> = {
+  1: '主险条款',
+  2: '附加险条款',
+  3: '特别约定/批单',
+  4: '监管强制',
+};
+
+export const SOURCE_TYPE_LABELS: Record<string, string> = {
+  STANDARD_CLAUSE: '标准条款',
+  ADDITIONAL_CLAUSE: '附加条款',
+  SPECIAL_AGREEMENT: '特别约定',
+  ENDORSEMENT: '批单',
+  REGULATORY: '监管规定',
+};
+
+export const EXECUTION_MODE_LABELS: Record<string, string> = {
+  SEQUENTIAL_SHORT_CIRCUIT: '串行短路',
+  LOOP_PER_ITEM: '逐项循环',
+  SEQUENTIAL_AGGREGATE: '串行汇总',
+};
+
+export const INPUT_GRANULARITY_LABELS: Record<string, string> = {
+  CLAIM_LEVEL: '案件级',
+  ITEM_LEVEL: '明细级',
+  AGGREGATE_LEVEL: '汇总级',
+};
+
+export const FIELD_SCOPE_LABELS: Record<string, string> = {
+  CLAIM_LEVEL: '案件级',
+  ITEM_LEVEL: '明细级',
+  POLICY_LEVEL: '保单级',
+  CALCULATED: '计算字段',
+};
+
+export const FIELD_DATA_TYPE_LABELS: Record<string, string> = {
+  STRING: '字符串',
+  NUMBER: '数值',
+  BOOLEAN: '布尔',
+  DATE: '日期',
+  DATETIME: '日期时间',
+  ENUM: '枚举',
+  ARRAY: '数组',
+};
+
+export const MOCK_RULESETS: InsuranceRuleset[] = [
+  {
+    ruleset_id: 'ruleset-accident-001',
+    product_line: RulesetProductLine.ACCIDENT,
+    policy_info: {
+      policy_no: 'ACC-2024-001',
+      product_code: 'ZM002',
+      product_name: '众民保综合意外险',
+      insurer: '众安保险',
+      effective_date: '2024-01-01',
+      expiry_date: '2025-01-01',
+      coverages: [
+        { coverage_code: 'ACC_DEATH', coverage_name: '意外身故', coverage_type: 'MAIN', benefit_type: 'LUMP_SUM', sum_insured: { amount: 500000, currency: 'CNY', per_unit: 'PER_PERSON' } },
+        { coverage_code: 'ACC_DISABILITY', coverage_name: '意外伤残', coverage_type: 'MAIN', benefit_type: 'LUMP_SUM', sum_insured: { amount: 500000, currency: 'CNY', per_unit: 'PER_PERSON' } },
+        { coverage_code: 'ACC_MEDICAL', coverage_name: '意外医疗', coverage_type: 'ADDITIONAL', benefit_type: 'REIMBURSEMENT', sum_insured: { amount: 50000, currency: 'CNY', per_unit: 'PER_ACCIDENT' } },
+      ],
+    },
+    rules: [
+      {
+        rule_id: 'rule-e-001',
+        rule_name: '保单有效期校验',
+        description: '检查事故发生时间是否在保单有效期内',
+        execution: { domain: ExecutionDomain.ELIGIBILITY, loop_over: null, item_alias: null },
+        source: { source_type: 'STANDARD_CLAUSE', source_ref: '第2.1条', source_text: '本保险合同的保险期间为一年，自保险合同生效之日起至约定的终止日止。', clause_code: 'ACC-MAIN-2024' },
+        priority: { level: 1, level_label: 'MAIN_CLAUSE', rank: 1 },
+        category: RuleCategory.E_POLICY_STATUS,
+        conditions: {
+          logic: ConditionLogic.AND,
+          expressions: [
+            { field: 'claim.accident_date', operator: ConditionOperator.GTE, value: 'policy.effective_date' },
+            { field: 'claim.accident_date', operator: ConditionOperator.LTE, value: 'policy.expiry_date' },
+          ],
+        },
+        action: { action_type: RuleActionType.APPROVE_CLAIM, params: {} },
+        status: RuleStatus.EFFECTIVE,
+        parsing_confidence: { overall: 0.98, condition_confidence: 0.97, action_confidence: 0.99, needs_human_review: false },
+      },
+      {
+        rule_id: 'rule-e-002',
+        rule_name: '酒驾免责',
+        description: '被保险人酒后驾驶导致的事故不予赔付',
+        execution: { domain: ExecutionDomain.ELIGIBILITY, loop_over: null, item_alias: null },
+        source: { source_type: 'STANDARD_CLAUSE', source_ref: '第5.3条', source_text: '被保险人饮酒或服用、吸食毒品后驾驶机动车导致的意外伤害，保险人不承担给付保险金的责任。', clause_code: 'ACC-MAIN-2024' },
+        priority: { level: 1, level_label: 'MAIN_CLAUSE', rank: 5 },
+        category: RuleCategory.E_EXCLUSION,
+        conditions: {
+          logic: ConditionLogic.AND,
+          expressions: [
+            { field: 'claim.is_driving', operator: ConditionOperator.IS_TRUE },
+            { field: 'claim.alcohol_level', operator: ConditionOperator.GT, value: 0.2, value_unit: 'mg/ml' },
+          ],
+        },
+        action: { action_type: RuleActionType.REJECT_CLAIM, params: { reject_reason_code: 'EXC_DUI' } },
+        status: RuleStatus.EFFECTIVE,
+        parsing_confidence: { overall: 0.95, condition_confidence: 0.92, action_confidence: 0.98, needs_human_review: false },
+      },
+      {
+        rule_id: 'rule-e-003',
+        rule_name: '职业类别限制',
+        description: '5-6类高危职业不予承保',
+        execution: { domain: ExecutionDomain.ELIGIBILITY, loop_over: null, item_alias: null },
+        source: { source_type: 'STANDARD_CLAUSE', source_ref: '第4.1条', source_text: '本保险承保1-4类职业的被保险人，5类及以上职业不在承保范围内。', clause_code: 'ACC-MAIN-2024' },
+        priority: { level: 1, level_label: 'MAIN_CLAUSE', rank: 3 },
+        category: RuleCategory.E_OCCUPATION_CHECK,
+        conditions: {
+          logic: ConditionLogic.SINGLE,
+          expressions: [
+            { field: 'insured.occupation_class', operator: ConditionOperator.GTE, value: 5 },
+          ],
+        },
+        action: { action_type: RuleActionType.REJECT_CLAIM, params: { reject_reason_code: 'OCC_HIGH_RISK' } },
+        status: RuleStatus.EFFECTIVE,
+        parsing_confidence: { overall: 0.97, condition_confidence: 0.96, action_confidence: 0.98, needs_human_review: false },
+      },
+      {
+        rule_id: 'rule-a-001',
+        rule_name: '医疗费用合理性校验',
+        description: '检查每项医疗费用是否在合理范围内',
+        execution: { domain: ExecutionDomain.ASSESSMENT, loop_over: 'claim.expense_items', item_alias: 'expense_item', item_action_on_reject: 'ZERO_AMOUNT' },
+        source: { source_type: 'STANDARD_CLAUSE', source_ref: '第8.2条', source_text: '保险人对被保险人实际支出的合理且必要的医疗费用按照约定进行赔付。', clause_code: 'ACC-MAIN-2024' },
+        priority: { level: 1, level_label: 'MAIN_CLAUSE', rank: 10 },
+        category: RuleCategory.A_ITEM_PRICING,
+        conditions: {
+          logic: ConditionLogic.AND,
+          expressions: [
+            { field: 'expense_item.amount', operator: ConditionOperator.GT, value: 0 },
+            { field: 'expense_item.is_reasonable', operator: ConditionOperator.IS_TRUE },
+          ],
+        },
+        action: { action_type: RuleActionType.APPROVE_ITEM, params: {} },
+        status: RuleStatus.EFFECTIVE,
+        parsing_confidence: { overall: 0.88, condition_confidence: 0.82, action_confidence: 0.94, needs_human_review: true, review_hints: ['is_reasonable 字段的判定标准需要确认'] },
+      },
+      {
+        rule_id: 'rule-a-002',
+        rule_name: '社保结算扣减',
+        description: '已通过社保结算的费用按80%报销，未经社保结算的按60%报销',
+        execution: { domain: ExecutionDomain.ASSESSMENT, loop_over: 'claim.expense_items', item_alias: 'expense_item' },
+        source: { source_type: 'STANDARD_CLAUSE', source_ref: '第8.4条', source_text: '经社会基本医疗保险结算后，保险人按80%的比例给付；未经社会基本医疗保险结算的，按60%给付。', clause_code: 'ACC-MAIN-2024' },
+        priority: { level: 1, level_label: 'MAIN_CLAUSE', rank: 15 },
+        category: RuleCategory.A_ITEM_SOCIAL_INSURANCE,
+        conditions: {
+          logic: ConditionLogic.SINGLE,
+          expressions: [
+            { field: 'expense_item.social_insurance_settled', operator: ConditionOperator.IS_TRUE },
+          ],
+        },
+        action: { action_type: RuleActionType.SET_ITEM_RATIO, params: { social_insurance_ratio: 0.8, non_social_insurance_ratio: 0.6 } },
+        status: RuleStatus.EFFECTIVE,
+        parsing_confidence: { overall: 0.96, condition_confidence: 0.95, action_confidence: 0.97, needs_human_review: false },
+      },
+      {
+        rule_id: 'rule-p-001',
+        rule_name: '免赔额扣减',
+        description: '每次事故扣除100元免赔额',
+        execution: { domain: ExecutionDomain.POST_PROCESS, loop_over: null, item_alias: null },
+        source: { source_type: 'STANDARD_CLAUSE', source_ref: '第8.5条', source_text: '每次事故免赔额为人民币100元。', clause_code: 'ACC-MAIN-2024' },
+        priority: { level: 1, level_label: 'MAIN_CLAUSE', rank: 20 },
+        category: RuleCategory.P_DEDUCTIBLE,
+        conditions: { logic: ConditionLogic.ALWAYS_TRUE, expressions: [] },
+        action: { action_type: RuleActionType.APPLY_DEDUCTIBLE, params: { deductible_amount: 100 } },
+        status: RuleStatus.EFFECTIVE,
+        parsing_confidence: { overall: 0.99, condition_confidence: 1.0, action_confidence: 0.98, needs_human_review: false },
+      },
+      {
+        rule_id: 'rule-p-002',
+        rule_name: '累计赔付限额',
+        description: '意外医疗累计赔付不超过保额',
+        execution: { domain: ExecutionDomain.POST_PROCESS, loop_over: null, item_alias: null },
+        source: { source_type: 'STANDARD_CLAUSE', source_ref: '第8.6条', source_text: '保险期间内，意外医疗保险金累计给付金额以保险金额为限。', clause_code: 'ACC-MAIN-2024' },
+        priority: { level: 1, level_label: 'MAIN_CLAUSE', rank: 25 },
+        category: RuleCategory.P_CUMULATIVE_CAP,
+        conditions: { logic: ConditionLogic.ALWAYS_TRUE, expressions: [] },
+        action: { action_type: RuleActionType.APPLY_CAP, params: { cap_field: 'coverage.sum_insured.amount', cap_amount: 50000 } },
+        status: RuleStatus.EFFECTIVE,
+        parsing_confidence: { overall: 0.97, condition_confidence: 1.0, action_confidence: 0.94, needs_human_review: false },
+      },
+    ],
+    override_chains: [
+      {
+        chain_id: 'chain-001',
+        topic: '社保结算比例',
+        affected_domain: ExecutionDomain.ASSESSMENT,
+        chain: [
+          { rule_id: 'rule-a-002', priority_level: 1, status: 'OVERRIDDEN', summary: '标准条款：社保80%/非社保60%' },
+          { rule_id: 'rule-sa-001', priority_level: 3, status: 'EFFECTIVE', summary: '特别约定：社保90%/非社保70%' },
+        ],
+        effective_rule_id: 'rule-sa-001',
+        conflict_type: 'OVERRIDE',
+      },
+    ],
+    field_dictionary: {
+      'claim.accident_date': { label: '事故日期', data_type: 'DATE', scope: 'CLAIM_LEVEL', applicable_domains: [ExecutionDomain.ELIGIBILITY], source: 'claim_input' },
+      'claim.is_driving': { label: '是否驾驶', data_type: 'BOOLEAN', scope: 'CLAIM_LEVEL', applicable_domains: [ExecutionDomain.ELIGIBILITY], source: 'claim_input' },
+      'claim.alcohol_level': { label: '血液酒精浓度', data_type: 'NUMBER', scope: 'CLAIM_LEVEL', applicable_domains: [ExecutionDomain.ELIGIBILITY], source: 'claim_input' },
+      'insured.occupation_class': { label: '职业类别', data_type: 'NUMBER', scope: 'POLICY_LEVEL', applicable_domains: [ExecutionDomain.ELIGIBILITY], source: 'policy_data' },
+      'expense_item.amount': { label: '费用金额', data_type: 'NUMBER', scope: 'ITEM_LEVEL', applicable_domains: [ExecutionDomain.ASSESSMENT], source: 'claim_input' },
+      'expense_item.is_reasonable': { label: '费用合理性', data_type: 'BOOLEAN', scope: 'ITEM_LEVEL', applicable_domains: [ExecutionDomain.ASSESSMENT], source: 'ai_assessment' },
+      'expense_item.social_insurance_settled': { label: '社保已结算', data_type: 'BOOLEAN', scope: 'ITEM_LEVEL', applicable_domains: [ExecutionDomain.ASSESSMENT], source: 'claim_input' },
+      'expense_item.drug_category': {
+        label: '药品类别', data_type: 'ENUM', scope: 'ITEM_LEVEL',
+        applicable_domains: [ExecutionDomain.ASSESSMENT],
+        enum_values: [{ code: 'A', label: '甲类' }, { code: 'B', label: '乙类' }, { code: 'C', label: '丙类' }],
+        source: 'drug_database',
+      },
+      'policy.effective_date': { label: '保单生效日', data_type: 'DATE', scope: 'POLICY_LEVEL', applicable_domains: [ExecutionDomain.ELIGIBILITY], source: 'policy_data' },
+      'policy.expiry_date': { label: '保单到期日', data_type: 'DATE', scope: 'POLICY_LEVEL', applicable_domains: [ExecutionDomain.ELIGIBILITY], source: 'policy_data' },
+      'coverage.sum_insured.amount': { label: '保额', data_type: 'NUMBER', scope: 'POLICY_LEVEL', applicable_domains: [ExecutionDomain.POST_PROCESS], source: 'policy_data' },
+    },
+    execution_pipeline: {
+      domains: [
+        {
+          domain: ExecutionDomain.ELIGIBILITY,
+          label: '定责阶段',
+          execution_mode: 'SEQUENTIAL_SHORT_CIRCUIT',
+          input_granularity: 'CLAIM_LEVEL',
+          short_circuit_on: ['REJECT_CLAIM', 'TERMINATE_CONTRACT'],
+          category_sequence: ['E_POLICY_STATUS', 'E_ANTI_FRAUD', 'E_OCCUPATION_CHECK', 'E_EXCLUSION', 'E_LIABILITY_TRIGGER', 'E_PAYOUT_RATIO'],
+        },
+        {
+          domain: ExecutionDomain.ASSESSMENT,
+          label: '定损阶段',
+          execution_mode: 'LOOP_PER_ITEM',
+          input_granularity: 'ITEM_LEVEL',
+          loop_collection: 'claim.expense_items',
+          short_circuit_on: null,
+          category_sequence: ['A_PROVIDER_QUALIFY', 'A_ITEM_EXCLUSION', 'A_ITEM_NECESSITY', 'A_ITEM_PRICING', 'A_ITEM_SOCIAL_INSURANCE', 'A_ITEM_DEPRECIATION', 'A_ITEM_DEDUCTIBLE'],
+        },
+        {
+          domain: ExecutionDomain.POST_PROCESS,
+          label: '后处理阶段',
+          execution_mode: 'SEQUENTIAL_AGGREGATE',
+          input_granularity: 'AGGREGATE_LEVEL',
+          short_circuit_on: null,
+          category_sequence: ['P_DEDUCTIBLE', 'P_CUMULATIVE_CAP', 'P_COMPENSATION_DEDUCT', 'P_LIABILITY_APPLY', 'P_MULTI_COVERAGE', 'P_PRIOR_BENEFIT_DEDUCT'],
+        },
+      ],
+    },
+    metadata: {
+      schema_version: '2.1.0',
+      version: '1.0.0',
+      generated_at: '2024-12-01T10:00:00Z',
+      generated_by: 'AI_PARSING',
+      ai_model: 'claude-3.5-sonnet',
+      total_rules: 7,
+      rules_by_domain: { eligibility: 3, assessment: 2, post_process: 2 },
+      rules_by_status: { effective: 7, overridden: 0 },
+      unresolved_conflicts: 0,
+      low_confidence_rules: 1,
+    },
+  },
+  {
+    ruleset_id: 'ruleset-health-001',
+    product_line: RulesetProductLine.HEALTH,
+    policy_info: {
+      policy_no: 'HLT-2024-001',
+      product_code: 'ZE2024',
+      product_name: '尊享e生2024版',
+      insurer: '众安保险',
+      effective_date: '2024-03-01',
+      expiry_date: '2025-03-01',
+      coverages: [
+        { coverage_code: 'HLT_INPATIENT', coverage_name: '住院医疗', coverage_type: 'MAIN', benefit_type: 'REIMBURSEMENT', sum_insured: { amount: 6000000, currency: 'CNY', per_unit: 'PER_PERSON' } },
+      ],
+    },
+    rules: [
+      {
+        rule_id: 'rule-h-e-001',
+        rule_name: '等待期校验',
+        description: '首次投保30天等待期内发生的疾病不予赔付（意外除外）',
+        execution: { domain: ExecutionDomain.ELIGIBILITY, loop_over: null, item_alias: null },
+        source: { source_type: 'STANDARD_CLAUSE', source_ref: '第3.2条', source_text: '首次投保或非连续投保的，自合同生效之日起30日为等待期。等待期内因疾病发生的医疗费用，保险人不承担保险金给付责任。', clause_code: 'HLT-MAIN-2024' },
+        priority: { level: 1, level_label: 'MAIN_CLAUSE', rank: 2 },
+        category: RuleCategory.E_POLICY_STATUS,
+        conditions: {
+          logic: ConditionLogic.AND,
+          expressions: [
+            { field: 'claim.cause_type', operator: ConditionOperator.EQ, value: 'ILLNESS' },
+            { field: 'claim.is_first_policy', operator: ConditionOperator.IS_TRUE },
+            { field: 'claim.days_since_effective', operator: ConditionOperator.LTE, value: 30 },
+          ],
+        },
+        action: { action_type: RuleActionType.REJECT_CLAIM, params: { reject_reason_code: 'WAITING_PERIOD' } },
+        status: RuleStatus.EFFECTIVE,
+        parsing_confidence: { overall: 0.65, condition_confidence: 0.58, action_confidence: 0.72, needs_human_review: true, review_hints: ['is_first_policy 和连续投保的判定逻辑需人工确认', 'days_since_effective 计算方式需验证'] },
+      },
+      {
+        rule_id: 'rule-h-a-001',
+        rule_name: '院外特效药审核',
+        description: '院外购药需提供处方及合理性证明',
+        execution: { domain: ExecutionDomain.ASSESSMENT, loop_over: 'claim.expense_items', item_alias: 'expense_item', item_action_on_reject: 'FLAG_ITEM' },
+        source: { source_type: 'ADDITIONAL_CLAUSE', source_ref: '附加条款第2条', source_text: '院外购买的特效药需提供主治医师处方及药品购买凭证，保险人有权对药品的合理性和必要性进行审核。', clause_code: 'HLT-ADD-DRUG-2024' },
+        priority: { level: 2, level_label: 'ADDITIONAL_CLAUSE', rank: 12 },
+        category: RuleCategory.A_ITEM_NECESSITY,
+        conditions: {
+          logic: ConditionLogic.AND,
+          expressions: [
+            { field: 'expense_item.purchase_channel', operator: ConditionOperator.EQ, value: 'OUT_HOSPITAL' },
+            { field: 'expense_item.has_prescription', operator: ConditionOperator.IS_FALSE },
+          ],
+        },
+        action: { action_type: RuleActionType.FLAG_ITEM, params: { route_reason: '院外购药缺少处方，需人工审核' } },
+        status: RuleStatus.EFFECTIVE,
+        parsing_confidence: { overall: 0.78, condition_confidence: 0.72, action_confidence: 0.84, needs_human_review: true, review_hints: ['purchase_channel 枚举值需确认', '是否需要额外检查药品目录'] },
+      },
+    ],
+    override_chains: [],
+    field_dictionary: {
+      'claim.cause_type': { label: '出险原因类型', data_type: 'ENUM', scope: 'CLAIM_LEVEL', applicable_domains: [ExecutionDomain.ELIGIBILITY], enum_values: [{ code: 'ACCIDENT', label: '意外' }, { code: 'ILLNESS', label: '疾病' }], source: 'claim_input' },
+      'claim.is_first_policy': { label: '是否首次投保', data_type: 'BOOLEAN', scope: 'CLAIM_LEVEL', applicable_domains: [ExecutionDomain.ELIGIBILITY], source: 'policy_data' },
+      'claim.days_since_effective': { label: '自生效日起天数', data_type: 'NUMBER', scope: 'CLAIM_LEVEL', applicable_domains: [ExecutionDomain.ELIGIBILITY], source: 'calculated' },
+      'expense_item.purchase_channel': { label: '购药渠道', data_type: 'ENUM', scope: 'ITEM_LEVEL', applicable_domains: [ExecutionDomain.ASSESSMENT], enum_values: [{ code: 'IN_HOSPITAL', label: '院内' }, { code: 'OUT_HOSPITAL', label: '院外' }], source: 'claim_input' },
+      'expense_item.has_prescription': { label: '是否有处方', data_type: 'BOOLEAN', scope: 'ITEM_LEVEL', applicable_domains: [ExecutionDomain.ASSESSMENT], source: 'claim_input' },
+    },
+    execution_pipeline: {
+      domains: [
+        { domain: ExecutionDomain.ELIGIBILITY, label: '定责阶段', execution_mode: 'SEQUENTIAL_SHORT_CIRCUIT', input_granularity: 'CLAIM_LEVEL', short_circuit_on: ['REJECT_CLAIM'], category_sequence: ['E_POLICY_STATUS', 'E_EXCLUSION', 'E_LIABILITY_TRIGGER'] },
+        { domain: ExecutionDomain.ASSESSMENT, label: '定损阶段', execution_mode: 'LOOP_PER_ITEM', input_granularity: 'ITEM_LEVEL', loop_collection: 'claim.expense_items', short_circuit_on: null, category_sequence: ['A_ITEM_EXCLUSION', 'A_ITEM_NECESSITY', 'A_ITEM_PRICING'] },
+        { domain: ExecutionDomain.POST_PROCESS, label: '后处理阶段', execution_mode: 'SEQUENTIAL_AGGREGATE', input_granularity: 'AGGREGATE_LEVEL', short_circuit_on: null, category_sequence: ['P_DEDUCTIBLE', 'P_CUMULATIVE_CAP'] },
+      ],
+    },
+    metadata: {
+      schema_version: '2.1.0',
+      version: '1.0.0',
+      generated_at: '2024-12-15T14:30:00Z',
+      generated_by: 'AI_PARSING',
+      ai_model: 'claude-3.5-sonnet',
+      total_rules: 2,
+      rules_by_domain: { eligibility: 1, assessment: 1, post_process: 0 },
+      rules_by_status: { effective: 2, overridden: 0 },
+      unresolved_conflicts: 0,
+      low_confidence_rules: 2,
+    },
+  },
+];
+// --- END: Ruleset Management Labels & Mock Data ---
