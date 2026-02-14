@@ -10,6 +10,12 @@ export default defineConfig(({ mode }) => {
       port: 8081,
       host: '0.0.0.0',
       hmr: false,
+      proxy: {
+        '/api': {
+          target: 'http://localhost:3000',
+          changeOrigin: true,
+        },
+      },
     },
     plugins: [tailwindcss(), react()],
     define: {

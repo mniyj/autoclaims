@@ -1,15 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { type InsuranceRuleset } from '../types';
-import { MOCK_RULESETS } from '../constants';
 import RulesetListView from './ruleset/RulesetListView';
 import RulesetDetailView from './ruleset/RulesetDetailView';
 import ImportRulesetModal from './ruleset/ImportRulesetModal';
+import { api } from '../services/api';
 
 const RulesetManagementPage: React.FC = () => {
-  const [rulesets, setRulesets] = useState<InsuranceRuleset[]>(MOCK_RULESETS);
+  const [rulesets, setRulesets] = useState<InsuranceRuleset[]>([]);
   const [currentView, setCurrentView] = useState<'list' | 'detail'>('list');
   const [selectedRuleset, setSelectedRuleset] = useState<InsuranceRuleset | null>(null);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchRulesets = async () => {
+      try {
+        const data = await api.rulesets.list();
+        setRulesets(data as InsuranceRuleset[]);
+      } catch (error) {
+        console.error('Failed to fetch rulesets:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRulesets();
+  }, []);
 
   const handleSelectRuleset = (ruleset: InsuranceRuleset) => {
     setSelectedRuleset(ruleset);
@@ -21,14 +36,22 @@ const RulesetManagementPage: React.FC = () => {
     setSelectedRuleset(null);
   };
 
-  const handleImport = (ruleset: InsuranceRuleset) => {
+  const handleImport = async (ruleset: InsuranceRuleset) => {
     // Check for duplicate ruleset_id
     const existing = rulesets.find(r => r.ruleset_id === ruleset.ruleset_id);
+    let newRulesets: InsuranceRuleset[];
     if (existing) {
       if (!confirm(`规则集 ${ruleset.ruleset_id} 已存在，是否覆盖？`)) return;
-      setRulesets(prev => prev.map(r => r.ruleset_id === ruleset.ruleset_id ? ruleset : r));
+      newRulesets = rulesets.map(r => r.ruleset_id === ruleset.ruleset_id ? ruleset : r);
     } else {
-      setRulesets(prev => [...prev, ruleset]);
+      newRulesets = [...rulesets, ruleset];
+    }
+    try {
+      await api.rulesets.saveAll(newRulesets);
+      setRulesets(newRulesets);
+    } catch (error) {
+      console.error('Failed to import ruleset:', error);
+      alert('导入失败');
     }
   };
 
@@ -43,14 +66,36 @@ const RulesetManagementPage: React.FC = () => {
     URL.revokeObjectURL(url);
   };
 
-  const handleDelete = (rulesetId: string) => {
-    setRulesets(prev => prev.filter(r => r.ruleset_id !== rulesetId));
+  const handleDelete = async (rulesetId: string) => {
+    const newRulesets = rulesets.filter(r => r.ruleset_id !== rulesetId);
+    try {
+      await api.rulesets.saveAll(newRulesets);
+      setRulesets(newRulesets);
+    } catch (error) {
+      console.error('Failed to delete ruleset:', error);
+      alert('删除失败');
+    }
   };
 
-  const handleUpdateRuleset = (updated: InsuranceRuleset) => {
-    setRulesets(prev => prev.map(r => r.ruleset_id === updated.ruleset_id ? updated : r));
-    setSelectedRuleset(updated);
+  const handleUpdateRuleset = async (updated: InsuranceRuleset) => {
+    const newRulesets = rulesets.map(r => r.ruleset_id === updated.ruleset_id ? updated : r);
+    try {
+      await api.rulesets.saveAll(newRulesets);
+      setRulesets(newRulesets);
+      setSelectedRuleset(updated);
+    } catch (error) {
+      console.error('Failed to update ruleset:', error);
+      alert('更新失败');
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <div className="text-gray-400 text-sm">加载中...</div>
+      </div>
+    );
+  }
 
   return (
     <div>

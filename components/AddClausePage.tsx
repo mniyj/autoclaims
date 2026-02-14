@@ -5,6 +5,8 @@ import Input from './ui/Input';
 import Select from './ui/Select';
 import FileUpload from './ui/FileUpload';
 import { PRODUCT_STATUSES, MOCK_COMPANY_LIST, CLAUSE_TYPES, LEVEL_1_DATA, LEVEL_2_DATA, LEVEL_3_DATA, MOCK_CLAUSES } from '../constants';
+import { api } from '../services/api';
+
 
 type NewClauseState = Partial<Clause> & {
     regulatoryName: string;
@@ -73,8 +75,8 @@ const AddClausePage: React.FC<{ onBack: () => void; initialClause?: Clause; comp
     const [newClause, setNewClause] = useState<NewClauseState | null>(initialClause ? { ...initialClause } as NewClauseState : null);
 
     // Derived options based on selection
-    const [level2Options, setLevel2Options] = useState<{code: string, name: string}[]>([]);
-    const [level3Options, setLevel3Options] = useState<{code: string, name: string}[]>([]);
+    const [level2Options, setLevel2Options] = useState<{ code: string, name: string }[]>([]);
+    const [level3Options, setLevel3Options] = useState<{ code: string, name: string }[]>([]);
 
     useEffect(() => {
         if (selectedLevel1Code) {
@@ -115,12 +117,12 @@ const AddClausePage: React.FC<{ onBack: () => void; initialClause?: Clause; comp
     const handleLevel3Change = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const code = e.target.value;
         setSelectedLevel3(code);
-        
+
         if (code) {
             const l1Data = LEVEL_1_DATA.find(l => l.code === selectedLevel1Code);
             const l2Data = LEVEL_2_DATA.find(l => l.code === selectedLevel2Code);
             const l3Data = LEVEL_3_DATA.find(l => l.code === code);
-            
+
             const legacyCategory = mapToLegacyCategory(l1Data?.name || '', l2Data?.name || '');
 
             setNewClause({
@@ -134,7 +136,7 @@ const AddClausePage: React.FC<{ onBack: () => void; initialClause?: Clause; comp
                 clauseType: initialClause?.clauseType || ClauseType.MAIN,
                 effectiveDate: initialClause?.effectiveDate || new Date().toISOString().split('T')[0],
                 discontinuationDate: initialClause?.discontinuationDate || new Date(new Date().setFullYear(new Date().getFullYear() + 5)).toISOString().split('T')[0],
-                
+
                 // New Classification Fields
                 categoryLevel1Code: l1Data?.code,
                 categoryLevel1Name: l1Data?.name,
@@ -170,10 +172,30 @@ const AddClausePage: React.FC<{ onBack: () => void; initialClause?: Clause; comp
         setNewClause(prev => prev ? { ...prev, [field]: value } : null);
     }
 
-    const handleSave = () => {
-        console.log('Saving clause:', newClause);
-        alert(initialClause ? '条款已修改！' : '条款已保存！');
-        onBack();
+
+
+    const handleSave = async () => {
+        if (!newClause) return;
+
+        try {
+            if (initialClause) {
+                // Edit Mode: Fetch list -> Update item -> Save list
+                const list = (await api.clauses.list()) as Clause[];
+                const updatedList = list.map(c => c.productCode === initialClause.productCode ? newClause : c) as Clause[];
+                // If not found (shouldn't happen), assume append? No, just save list.
+                // If the code changed (not possible as it is disabled), we are good.
+                await api.clauses.saveAll(updatedList);
+                alert('条款已修改！');
+            } else {
+                // Add Mode
+                await api.clauses.add(newClause);
+                alert('条款已保存！');
+            }
+            onBack();
+        } catch (error) {
+            console.error('Failed to save clause:', error);
+            alert('保存失败，请重试');
+        }
     };
 
     const CASH_VALUE_CATEGORIES: PrimaryCategory[] = [
@@ -198,9 +220,9 @@ const AddClausePage: React.FC<{ onBack: () => void; initialClause?: Clause; comp
                     <div className="space-y-6 text-center">
                         <h2 className="text-xl font-bold text-gray-800">第一步：选择险种分类</h2>
                         <p className="text-gray-500">请按层级选择您要新增条款的保险分类。</p>
-                        
+
                         <div className="max-w-md mx-auto space-y-4 text-left">
-                           <Select label="一级分类" id="level1" name="level1" value={selectedLevel1Name} onChange={handleLevel1Change}>
+                            <Select label="一级分类" id="level1" name="level1" value={selectedLevel1Name} onChange={handleLevel1Change}>
                                 <option value="">-- 请选择 --</option>
                                 {LEVEL_1_DATA.map(cat => <option key={cat.code} value={cat.name}>{cat.name}</option>)}
                             </Select>
@@ -232,7 +254,7 @@ const AddClausePage: React.FC<{ onBack: () => void; initialClause?: Clause; comp
                                 </span>
                             </h2>
                         </div>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <Input label="条款代码" id="productCode" name="productCode" value={newClause?.productCode || ''} disabled />
                             <Input label="条款名称" id="regulatoryName" name="regulatoryName" value={newClause?.regulatoryName || ''} onChange={handleChange} placeholder="例如：新版健康医疗保险" required />
@@ -244,7 +266,7 @@ const AddClausePage: React.FC<{ onBack: () => void; initialClause?: Clause; comp
                             <Select label="条款类型" id="clauseType" name="clauseType" value={newClause?.clauseType || ''} onChange={handleChange}>
                                 {CLAUSE_TYPES.map(type => <option key={type} value={type}>{type}</option>)}
                             </Select>
-                             <Select label="状态" id="status" name="status" value={newClause?.status || ''} onChange={handleChange}>
+                            <Select label="状态" id="status" name="status" value={newClause?.status || ''} onChange={handleChange}>
                                 {PRODUCT_STATUSES.map(stat => <option key={stat} value={stat}>{stat}</option>)}
                             </Select>
                             <Input label="生效日期" id="effectiveDate" name="effectiveDate" type="date" value={newClause?.effectiveDate || ''} onChange={handleChange} required />
@@ -252,9 +274,9 @@ const AddClausePage: React.FC<{ onBack: () => void; initialClause?: Clause; comp
                         </div>
 
                         <div className="space-y-6 pt-6 border-t border-gray-200">
-                             <h3 className="text-lg font-medium text-gray-900">条款文件上传</h3>
-                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <FileUpload 
+                            <h3 className="text-lg font-medium text-gray-900">条款文件上传</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <FileUpload
                                     label="条款原文"
                                     id="clauseTextFile"
                                     value={newClause?.clauseTextFile}
@@ -263,7 +285,7 @@ const AddClausePage: React.FC<{ onBack: () => void; initialClause?: Clause; comp
                                     accept=".pdf,.doc,.docx"
                                     required
                                 />
-                                <FileUpload 
+                                <FileUpload
                                     label="费率表"
                                     id="rateTableFile"
                                     value={newClause?.rateTableFile}
@@ -272,7 +294,7 @@ const AddClausePage: React.FC<{ onBack: () => void; initialClause?: Clause; comp
                                     accept=".pdf,.xls,.xlsx"
                                     required
                                 />
-                                 <FileUpload 
+                                <FileUpload
                                     label="产品说明"
                                     id="productDescriptionFile"
                                     value={newClause?.productDescriptionFile}
@@ -281,7 +303,7 @@ const AddClausePage: React.FC<{ onBack: () => void; initialClause?: Clause; comp
                                     accept=".pdf,.doc,.docx"
                                 />
                                 {showCashValueUpload && (
-                                     <FileUpload 
+                                    <FileUpload
                                         label="现金价值表"
                                         id="cashValueTableFile"
                                         value={newClause?.cashValueTableFile}
@@ -291,16 +313,16 @@ const AddClausePage: React.FC<{ onBack: () => void; initialClause?: Clause; comp
                                     />
                                 )}
                                 {showBasicSumInsuredUpload && (
-                                  <FileUpload 
-                                    label="基本保险金额表"
-                                    id="basicSumInsuredTableFile"
-                                    value={newClause?.basicSumInsuredTableFile}
-                                    onChange={(value) => handleFileChange('basicSumInsuredTableFile', value)}
-                                    helpText="上传基本保险金额表Excel文件"
-                                    accept=".xls,.xlsx"
-                                  />
+                                    <FileUpload
+                                        label="基本保险金额表"
+                                        id="basicSumInsuredTableFile"
+                                        value={newClause?.basicSumInsuredTableFile}
+                                        onChange={(value) => handleFileChange('basicSumInsuredTableFile', value)}
+                                        helpText="上传基本保险金额表Excel文件"
+                                        accept=".xls,.xlsx"
+                                    />
                                 )}
-                             </div>
+                            </div>
                         </div>
 
                         <div className="pt-6 border-t border-gray-200 flex justify-end space-x-3">

@@ -1,8 +1,9 @@
 
-import React, { useState, useMemo } from 'react';
-import { MOCK_CLAUSES, PRIMARY_CATEGORIES, CLAUSE_TYPES, MOCK_COMPANY_LIST } from '../constants';
+import React, { useState, useMemo, useEffect } from 'react';
+import { PRIMARY_CATEGORIES, CLAUSE_TYPES, MOCK_COMPANY_LIST } from '../constants';
 import { type Clause, ProductStatus } from '../types';
 import Pagination from './ui/Pagination';
+import { api } from '../services/api';
 
 interface ClauseManagementPageProps {
   onAddClause: () => void;
@@ -12,9 +13,21 @@ interface ClauseManagementPageProps {
 }
 
 const ClauseManagementPage: React.FC<ClauseManagementPageProps> = ({ onAddClause, onViewClause, onEditClause, companyCode }) => {
-  const [clauses, setClauses] = useState<Clause[]>(MOCK_CLAUSES);
+  const [clauses, setClauses] = useState<Clause[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
+
+  useEffect(() => {
+    const fetchClauses = async () => {
+      try {
+        const data = await api.clauses.list();
+        setClauses(data);
+      } catch (error) {
+        console.error('Failed to fetch clauses:', error);
+      }
+    };
+    fetchClauses();
+  }, []);
 
   // Filter States
   const [nameQuery, setNameQuery] = useState('');
@@ -45,19 +58,25 @@ const ClauseManagementPage: React.FC<ClauseManagementPageProps> = ({ onAddClause
     setCurrentPage(1);
   };
 
-  const handleStatusToggle = (productCode: string) => {
-    setClauses(prevClauses =>
-      prevClauses.map(clause => {
-        if (clause.productCode === productCode) {
-          const newStatus =
-            clause.status === ProductStatus.ACTIVE
-              ? ProductStatus.INACTIVE
-              : ProductStatus.ACTIVE;
-          return { ...clause, status: newStatus };
-        }
-        return clause;
-      })
-    );
+  const handleStatusToggle = async (productCode: string) => {
+    const updatedClauses = clauses.map(clause => {
+      if (clause.productCode === productCode) {
+        const newStatus =
+          clause.status === ProductStatus.ACTIVE
+            ? ProductStatus.INACTIVE
+            : ProductStatus.ACTIVE;
+        return { ...clause, status: newStatus };
+      }
+      return clause;
+    });
+
+    try {
+      await api.clauses.saveAll(updatedClauses);
+      setClauses(updatedClauses);
+    } catch (error) {
+      console.error('Failed to update status:', error);
+      alert('状态更新失败');
+    }
   };
 
   const filteredClauses = useMemo(() => {
@@ -94,66 +113,66 @@ const ClauseManagementPage: React.FC<ClauseManagementPageProps> = ({ onAddClause
 
   return (
     <div className="space-y-6">
-       <h1 className="text-2xl font-bold text-slate-900">条款管理</h1>
+      <h1 className="text-2xl font-bold text-slate-900">条款管理</h1>
 
-       {/* Filter Section */}
-       <div className="bg-white p-6 rounded-md shadow-sm">
+      {/* Filter Section */}
+      <div className="bg-white p-6 rounded-md shadow-sm">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
-             <div>
-                <label htmlFor="clauseName" className="block text-sm font-medium text-gray-700 mb-1">条款名称</label>
-                <input 
-                    id="clauseName"
-                    type="text" 
-                    value={nameQuery}
-                    onChange={(e) => setNameQuery(e.target.value)}
-                    placeholder="请输入条款名称" 
-                    className="w-full h-9 px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 text-sm"
-                />
-             </div>
-             <div>
-                <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">险种</label>
-                <select 
-                    id="category"
-                    value={categoryQuery}
-                    onChange={(e) => setCategoryQuery(e.target.value)}
-                    className="w-full h-9 px-3 py-2 border border-gray-300 rounded-md bg-white focus:ring-1 focus:ring-blue-500 text-sm"
-                >
-                    <option value="">全部</option>
-                    {PRIMARY_CATEGORIES.map(cat => (
-                        <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                </select>
-             </div>
-             <div>
-                <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">类型</label>
-                <select 
-                    id="type"
-                    value={typeQuery}
-                    onChange={(e) => setTypeQuery(e.target.value)}
-                    className="w-full h-9 px-3 py-2 border border-gray-300 rounded-md bg-white focus:ring-1 focus:ring-blue-500 text-sm"
-                >
-                    <option value="">全部</option>
-                    {CLAUSE_TYPES.map(t => (
-                        <option key={t} value={t}>{t}</option>
-                    ))}
-                </select>
-             </div>
-             <div className="flex items-center space-x-3">
-                <button onClick={handleReset} className="h-9 px-5 bg-white text-gray-700 text-sm font-medium rounded-md border border-gray-300 hover:bg-gray-50 transition">重置</button>
-                <button onClick={handleSearch} className="h-9 px-5 bg-blue-500 text-white text-sm font-medium rounded-md shadow-sm hover:bg-blue-600 transition">查询</button>
-             </div>
+          <div>
+            <label htmlFor="clauseName" className="block text-sm font-medium text-gray-700 mb-1">条款名称</label>
+            <input
+              id="clauseName"
+              type="text"
+              value={nameQuery}
+              onChange={(e) => setNameQuery(e.target.value)}
+              placeholder="请输入条款名称"
+              className="w-full h-9 px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 text-sm"
+            />
+          </div>
+          <div>
+            <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">险种</label>
+            <select
+              id="category"
+              value={categoryQuery}
+              onChange={(e) => setCategoryQuery(e.target.value)}
+              className="w-full h-9 px-3 py-2 border border-gray-300 rounded-md bg-white focus:ring-1 focus:ring-blue-500 text-sm"
+            >
+              <option value="">全部</option>
+              {PRIMARY_CATEGORIES.map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">类型</label>
+            <select
+              id="type"
+              value={typeQuery}
+              onChange={(e) => setTypeQuery(e.target.value)}
+              className="w-full h-9 px-3 py-2 border border-gray-300 rounded-md bg-white focus:ring-1 focus:ring-blue-500 text-sm"
+            >
+              <option value="">全部</option>
+              {CLAUSE_TYPES.map(t => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex items-center space-x-3">
+            <button onClick={handleReset} className="h-9 px-5 bg-white text-gray-700 text-sm font-medium rounded-md border border-gray-300 hover:bg-gray-50 transition">重置</button>
+            <button onClick={handleSearch} className="h-9 px-5 bg-blue-500 text-white text-sm font-medium rounded-md shadow-sm hover:bg-blue-600 transition">查询</button>
+          </div>
         </div>
       </div>
 
       <div className="bg-white shadow-sm rounded-md">
         <div className="p-6 flex justify-between items-center">
-            <h2 className="text-base font-semibold text-gray-900">条款列表</h2>
-            <button
-              onClick={onAddClause}
-              className="h-9 px-4 bg-blue-500 text-white text-sm font-medium rounded-md shadow-sm hover:bg-blue-600 transition-colors"
-            >
-              新增条款
-            </button>
+          <h2 className="text-base font-semibold text-gray-900">条款列表</h2>
+          <button
+            onClick={onAddClause}
+            className="h-9 px-4 bg-blue-500 text-white text-sm font-medium rounded-md shadow-sm hover:bg-blue-600 transition-colors"
+          >
+            新增条款
+          </button>
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full">
@@ -197,13 +216,13 @@ const ClauseManagementPage: React.FC<ClauseManagementPageProps> = ({ onAddClause
           </table>
         </div>
         <div className="p-4 border-t border-slate-200">
-            <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-                totalItems={filteredClauses.length}
-                itemsPerPage={ITEMS_PER_PAGE}
-            />
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            totalItems={filteredClauses.length}
+            itemsPerPage={ITEMS_PER_PAGE}
+          />
         </div>
       </div>
     </div>

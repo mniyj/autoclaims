@@ -1,0 +1,234 @@
+[
+  {
+    "antLevel3Code": "A0101",
+    "antLevel1Name": "医疗险",
+    "antLevel2Name": "住院医疗",
+    "antLevel3Name": "短期百万医疗",
+    "regLevel2Name": "医疗保险",
+    "functionCategory": "保障"
+  },
+  {
+    "antLevel3Code": "A0102",
+    "antLevel1Name": "医疗险",
+    "antLevel2Name": "住院医疗",
+    "antLevel3Name": "长期医疗",
+    "regLevel2Name": "医疗保险",
+    "functionCategory": "保障"
+  },
+  {
+    "antLevel3Code": "A0103",
+    "antLevel1Name": "医疗险",
+    "antLevel2Name": "住院医疗",
+    "antLevel3Name": "中老年长期医疗",
+    "regLevel2Name": "医疗保险",
+    "functionCategory": "保障"
+  },
+  {
+    "antLevel3Code": "A0104",
+    "antLevel1Name": "医疗险",
+    "antLevel2Name": "住院医疗",
+    "antLevel3Name": "长期防癌医疗",
+    "regLevel2Name": "医疗保险",
+    "functionCategory": "保障"
+  },
+  {
+    "antLevel3Code": "A0105",
+    "antLevel1Name": "医疗险",
+    "antLevel2Name": "住院医疗",
+    "antLevel3Name": "短期防癌医疗",
+    "regLevel2Name": "医疗保险",
+    "functionCategory": "保障"
+  },
+  {
+    "antLevel3Code": "A0201",
+    "antLevel1Name": "医疗险",
+    "antLevel2Name": "门诊医疗",
+    "antLevel3Name": "通用门诊医疗",
+    "regLevel2Name": "医疗保险",
+    "functionCategory": "保障"
+  },
+  {
+    "antLevel3Code": "A0202",
+    "antLevel1Name": "医疗险",
+    "antLevel2Name": "门诊医疗",
+    "antLevel3Name": "少儿门诊医疗",
+    "regLevel2Name": "医疗保险",
+    "functionCategory": "保障"
+  },
+  {
+    "antLevel3Code": "A0203",
+    "antLevel1Name": "医疗险",
+    "antLevel2Name": "门诊医疗",
+    "antLevel3Name": "意外医疗",
+    "regLevel2Name": "医疗保险",
+    "functionCategory": "保障"
+  },
+  {
+    "antLevel3Code": "B0101",
+    "antLevel1Name": "重疾险",
+    "antLevel2Name": "短期重疾",
+    "antLevel3Name": "一年期重疾",
+    "regLevel2Name": "疾病保险",
+    "functionCategory": "保障"
+  },
+  {
+    "antLevel3Code": "B0201",
+    "antLevel1Name": "重疾险",
+    "antLevel2Name": "定期重疾",
+    "antLevel3Name": "长期重疾",
+    "regLevel2Name": "疾病保险",
+    "functionCategory": "保障"
+  },
+  {
+    "antLevel3Code": "B0202",
+    "antLevel1Name": "重疾险",
+    "antLevel2Name": "定期重疾",
+    "antLevel3Name": "长期防癌",
+    "regLevel2Name": "疾病保险",
+    "functionCategory": "保障"
+  },
+  {
+    "antLevel3Code": "B0301",
+    "antLevel1Name": "重疾险",
+    "antLevel2Name": "终身重疾",
+    "antLevel3Name": "终身重疾",
+    "regLevel2Name": "疾病保险",
+    "functionCategory": "保障"
+  },
+  {
+    "antLevel3Code": "B0302",
+    "antLevel1Name": "重疾险",
+    "antLevel2Name": "终身重疾",
+    "antLevel3Name": "终身防癌",
+    "regLevel2Name": "疾病保险",
+    "functionCategory": "保障"
+  },
+  {
+    "antLevel3Code": "C0101",
+    "antLevel1Name": "意外险",
+    "antLevel2Name": "综合意外",
+    "antLevel3Name": "成人综合意外",
+    "regLevel2Name": "意外伤害保险",
+    "functionCategory": "保障"
+  },
+  {
+    "antLevel3Code": "C0102",
+    "antLevel1Name": "意外险",
+    "antLevel2Name": "综合意外",
+    "antLevel3Name": "少儿综合意外",
+    "regLevel2Name": "意外伤害保险",
+    "functionCategory": "保障"
+  },
+  {
+    "antLevel3Code": "C0103",
+    "antLevel1Name": "意外险",
+    "antLevel2Name": "综合意外",
+    "antLevel3Name": "学平险",
+    "regLevel2Name": "意外伤害保险",
+    "functionCategory": "保障"
+  },
+  {
+    "antLevel3Code": "C0104",
+    "antLevel1Name": "意外险",
+    "antLevel2Name": "综合意外",
+    "antLevel3Name": "老年综合意外",
+    "regLevel2Name": "意外伤害保险",
+    "functionCategory": "保障"
+  },
+  {
+    "antLevel3Code": "C0201",
+    "antLevel1Name": "意外险",
+    "antLevel2Name": "出行意外",
+    "antLevel3Name": "两轮电动车意外",
+    "regLevel2Name": "意外伤害保险",
+    "functionCategory": "保障"
+  },
+  {
+    "antLevel3Code": "C0202",
+    "antLevel1Name": "意外险",
+    "antLevel2Name": "出行意外",
+    "antLevel3Name": "交通意外",
+    "regLevel2Name": "意外伤害保险",
+    "functionCategory": "保障"
+  },
+  {
+    "antLevel3Code": "C0203",
+    "antLevel1Name": "意外险",
+    "antLevel2Name": "出行意外",
+    "antLevel3Name": "旅行意外",
+    "regLevel2Name": "意外伤害保险",
+    "functionCategory": "保障"
+  },
+  {
+    "antLevel3Code": "D0101",
+    "antLevel1Name": "养老金",
+    "antLevel2Name": "年金",
+    "antLevel3Name": "养老年金（分红型）",
+    "regLevel2Name": "养老年金保险",
+    "functionCategory": "储蓄"
+  },
+  {
+    "antLevel3Code": "D0102",
+    "antLevel1Name": "养老金",
+    "antLevel2Name": "年金",
+    "antLevel3Name": "养老年金",
+    "regLevel2Name": "养老年金保险",
+    "functionCategory": "储蓄"
+  },
+  {
+    "antLevel3Code": "E0101",
+    "antLevel1Name": "储蓄型",
+    "antLevel2Name": "年金",
+    "antLevel3Name": "中期年金（分红型）",
+    "regLevel2Name": "普通年金保险",
+    "functionCategory": "储蓄"
+  },
+  {
+    "antLevel3Code": "E0102",
+    "antLevel1Name": "储蓄型",
+    "antLevel2Name": "年金",
+    "antLevel3Name": "中期年金",
+    "regLevel2Name": "普通年金保险",
+    "functionCategory": "储蓄"
+  },
+  {
+    "antLevel3Code": "E0103",
+    "antLevel1Name": "储蓄型",
+    "antLevel2Name": "年金",
+    "antLevel3Name": "教育金",
+    "regLevel2Name": "普通年金保险",
+    "functionCategory": "储蓄"
+  },
+  {
+    "antLevel3Code": "E0201",
+    "antLevel1Name": "储蓄型",
+    "antLevel2Name": "增额终身寿",
+    "antLevel3Name": "增额终身寿（分红型）",
+    "regLevel2Name": "增额终身寿",
+    "functionCategory": "储蓄"
+  },
+  {
+    "antLevel3Code": "E0202",
+    "antLevel1Name": "储蓄型",
+    "antLevel2Name": "增额终身寿",
+    "antLevel3Name": "增额终身寿",
+    "regLevel2Name": "增额终身寿",
+    "functionCategory": "储蓄"
+  },
+  {
+    "antLevel3Code": "E0301",
+    "antLevel1Name": "储蓄型",
+    "antLevel2Name": "两全保险",
+    "antLevel3Name": "两全保险",
+    "regLevel2Name": "两全保险",
+    "functionCategory": "储蓄"
+  },
+  {
+    "antLevel3Code": "F0101",
+    "antLevel1Name": "定期寿险",
+    "antLevel2Name": "定期寿险",
+    "antLevel3Name": "定期寿险",
+    "regLevel2Name": "定期寿险",
+    "functionCategory": "保障"
+  }
+]

@@ -1,0 +1,116 @@
+[
+  {
+    "id": "U001",
+    "name": "张伟",
+    "age": 32,
+    "city": "北京",
+    "monthlyIncome": 25000,
+    "familyMembers": "配偶, 子女(1)",
+    "familyMemberCount": 3,
+    "gaps": {
+      "accident": 1000000,
+      "medical": 3000000,
+      "criticalIllness": 500000,
+      "termLife": 2000000,
+      "annuity": 0,
+      "education": 500000
+    },
+    "submissionTime": "2024-05-20 10:30:00",
+    "channel": "微信小程序"
+  },
+  {
+    "id": "U002",
+    "name": "李娜",
+    "age": 28,
+    "city": "上海",
+    "monthlyIncome": 18000,
+    "familyMembers": "未婚",
+    "familyMemberCount": 1,
+    "gaps": {
+      "accident": 500000,
+      "medical": 1000000,
+      "criticalIllness": 300000,
+      "termLife": 0,
+      "annuity": 200000,
+      "education": 0
+    },
+    "submissionTime": "2024-05-21 14:15:00",
+    "channel": "APP"
+  },
+  {
+    "id": "U003",
+    "name": "王强",
+    "age": 40,
+    "city": "深圳",
+    "monthlyIncome": 45000,
+    "familyMembers": "配偶, 子女(2), 父母(2)",
+    "familyMemberCount": 6,
+    "gaps": {
+      "accident": 2000000,
+      "medical": 6000000,
+      "criticalIllness": 1000000,
+      "termLife": 5000000,
+      "annuity": 1000000,
+      "education": 2000000
+    },
+    "submissionTime": "2024-05-22 09:00:00",
+    "channel": "Web官网"
+  },
+  {
+    "id": "U004",
+    "name": "刘芳",
+    "age": 35,
+    "city": "成都",
+    "monthlyIncome": 12000,
+    "familyMembers": "配偶, 子女(1)",
+    "familyMemberCount": 3,
+    "gaps": {
+      "accident": 300000,
+      "medical": 2000000,
+      "criticalIllness": 200000,
+      "termLife": 500000,
+      "annuity": 0,
+      "education": 100000
+    },
+    "submissionTime": "2024-05-22 16:45:00",
+    "channel": "微信小程序"
+  },
+  {
+    "id": "U005",
+    "name": "陈明",
+    "age": 25,
+    "city": "杭州",
+    "monthlyIncome": 15000,
+    "familyMembers": "未婚",
+    "familyMemberCount": 1,
+    "gaps": {
+      "accident": 500000,
+      "medical": 4000000,
+      "criticalIllness": 300000,
+      "termLife": 0,
+      "annuity": 0,
+      "education": 0
+    },
+    "submissionTime": "2024-05-23 11:20:00",
+    "channel": "APP"
+  },
+  {
+    "id": "U006",
+    "name": "赵敏",
+    "age": 45,
+    "city": "广州",
+    "monthlyIncome": 30000,
+    "familyMembers": "配偶, 子女(1)",
+    "familyMemberCount": 3,
+    "gaps": {
+      "accident": 1000000,
+      "medical": 2000000,
+      "criticalIllness": 800000,
+      "termLife": 1000000,
+      "annuity": 5000000,
+      "education": 0
+    },
+    "submissionTime": "2024-05-24 13:10:00",
+    "channel": "Web官网"
+  }
+]

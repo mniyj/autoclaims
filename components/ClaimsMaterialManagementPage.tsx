@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { MOCK_CLAIMS_MATERIALS } from '../constants';
 import { type ClaimsMaterial } from '../types';
 import Pagination from './ui/Pagination';
@@ -6,9 +6,10 @@ import Modal from './ui/Modal';
 import Input from './ui/Input';
 import Textarea from './ui/Textarea';
 import FileUpload from './ui/FileUpload';
+import { api } from '../services/api';
 
 const ClaimsMaterialManagementPage: React.FC = () => {
-  const [materials, setMaterials] = useState<ClaimsMaterial[]>(MOCK_CLAIMS_MATERIALS);
+  const [materials, setMaterials] = useState<ClaimsMaterial[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingMaterial, setEditingMaterial] = useState<Partial<ClaimsMaterial> | null>(null);
 
@@ -19,11 +20,30 @@ const ClaimsMaterialManagementPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
 
+  useEffect(() => {
+    const fetchMaterials = async () => {
+      try {
+        const data = await api.claimsMaterials.list();
+        if (data && data.length > 0) {
+          setMaterials(data);
+        } else {
+          // Auto-seed: persist MOCK data on first load
+          await api.claimsMaterials.saveAll(MOCK_CLAIMS_MATERIALS);
+          setMaterials(MOCK_CLAIMS_MATERIALS);
+        }
+      } catch (error) {
+        console.error('Failed to fetch claims materials:', error);
+        setMaterials(MOCK_CLAIMS_MATERIALS);
+      }
+    };
+    fetchMaterials();
+  }, []);
+
   const filteredMaterials = useMemo(() => {
     if (!searchQuery) return materials;
     const lowerQuery = searchQuery.toLowerCase();
-    return materials.filter(m => 
-      m.name.toLowerCase().includes(lowerQuery) || 
+    return materials.filter(m =>
+      m.name.toLowerCase().includes(lowerQuery) ||
       m.description.toLowerCase().includes(lowerQuery)
     );
   }, [materials, searchQuery]);
@@ -53,32 +73,48 @@ const ClaimsMaterialManagementPage: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm('确定要删除这个理赔材料吗？')) {
-      setMaterials(materials.filter(m => m.id !== id));
+      const newMaterials = materials.filter(m => m.id !== id);
+      try {
+        await api.claimsMaterials.saveAll(newMaterials);
+        setMaterials(newMaterials);
+      } catch (error) {
+        console.error('Failed to delete material:', error);
+        alert('删除失败');
+      }
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!editingMaterial?.name) {
       alert('请输入材料名称');
       return;
     }
 
     try {
-        JSON.parse(editingMaterial.jsonSchema || '{}');
+      JSON.parse(editingMaterial.jsonSchema || '{}');
     } catch (e) {
-        alert('JSON Schema 格式错误');
-        return;
+      alert('JSON Schema 格式错误');
+      return;
     }
 
+    let newMaterials = [...materials];
     if (materials.find(m => m.id === editingMaterial.id)) {
-      setMaterials(materials.map(m => m.id === editingMaterial.id ? editingMaterial as ClaimsMaterial : m));
+      newMaterials = materials.map(m => m.id === editingMaterial.id ? editingMaterial as ClaimsMaterial : m);
     } else {
-      setMaterials([...materials, editingMaterial as ClaimsMaterial]);
+      newMaterials = [...materials, editingMaterial as ClaimsMaterial];
     }
-    setIsModalOpen(false);
-    setEditingMaterial(null);
+
+    try {
+      await api.claimsMaterials.saveAll(newMaterials);
+      setMaterials(newMaterials);
+      setIsModalOpen(false);
+      setEditingMaterial(null);
+    } catch (error) {
+      console.error('Failed to save material:', error);
+      alert('保存失败');
+    }
   };
 
   return (
@@ -98,19 +134,19 @@ const ClaimsMaterialManagementPage: React.FC = () => {
         <div className="max-w-md">
           <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1">搜索材料</label>
           <div className="flex space-x-2">
-            <input 
+            <input
               id="search"
-              type="text" 
+              type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="搜索材料名称或说明" 
+              placeholder="搜索材料名称或说明"
               className="flex-1 h-9 px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 text-sm"
             />
-            <button 
-                onClick={() => setSearchQuery('')}
-                className="h-9 px-4 bg-gray-100 text-gray-600 text-sm font-medium rounded-md hover:bg-gray-200 transition"
+            <button
+              onClick={() => setSearchQuery('')}
+              className="h-9 px-4 bg-gray-100 text-gray-600 text-sm font-medium rounded-md hover:bg-gray-200 transition"
             >
-                重置
+              重置
             </button>
           </div>
         </div>
@@ -150,14 +186,14 @@ const ClaimsMaterialManagementPage: React.FC = () => {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-3">
-                      <button 
-                        onClick={() => handleEdit(material)} 
+                      <button
+                        onClick={() => handleEdit(material)}
                         className="text-brand-blue-600 hover:text-brand-blue-900 bg-brand-blue-50 hover:bg-brand-blue-100 px-3 py-1 rounded-md transition-colors"
                       >
                         修改
                       </button>
-                      <button 
-                        onClick={() => handleDelete(material.id)} 
+                      <button
+                        onClick={() => handleDelete(material.id)}
                         className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1 rounded-md transition-colors"
                       >
                         删除

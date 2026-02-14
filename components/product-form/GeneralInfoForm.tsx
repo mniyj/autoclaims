@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { type InsuranceProduct, type CoverageItem } from '../../types';
+import { type InsuranceProduct, type CoverageItem, type IntakeConfig } from '../../types';
 import { PRODUCT_STATUSES, PRIMARY_CATEGORIES, MAPPING_DATA, REGULATORY_OPTIONS } from '../../constants';
 import Input from '../ui/Input';
 import Select from '../ui/Select';
@@ -9,6 +9,7 @@ import FileUpload from '../ui/FileUpload';
 import MultiImageUpload from '../ui/MultiImageUpload';
 import TagEditor from './TagEditor';
 import Textarea from '../ui/Textarea';
+import IntakeFieldConfigEditor from './IntakeFieldConfigEditor';
 
 interface FormProps {
   product: InsuranceProduct;
@@ -35,6 +36,10 @@ const GeneralInfoForm: React.FC<FormProps> = ({ product, onFormChange }) => {
 
   const handleTagStylesChange = (styles: Record<string, 'gold' | 'green' | 'red' | 'gray'>) => {
     onFormChange('tagStyles', styles);
+  };
+
+  const handleIntakeConfigChange = (config: IntakeConfig) => {
+    onFormChange('intakeConfig', config);
   };
 
   const handleAddAttachment = (file: File | null) => {
@@ -296,6 +301,21 @@ const GeneralInfoForm: React.FC<FormProps> = ({ product, onFormChange }) => {
             <Input label="营销标语" id="promoTag" name="promoTag" value={product.promoTag || ''} onChange={handleChange} placeholder="例如：重疾险热销榜第1名" />
          </div>
       </div>
+
+      {/* Claim Intake Configuration - only shown when online claim is supported */}
+      {product.supportsOnlineClaim && (
+        <div className="border-t border-gray-200 pt-8">
+          <h3 className="text-lg font-medium text-gray-900 mb-2">报案信息配置</h3>
+          <p className="text-sm text-gray-500 mb-4">
+            配置C端用户报案时需要填写的字段，系统将根据此配置动态生成报案表单。
+          </p>
+          <IntakeFieldConfigEditor
+            config={product.intakeConfig}
+            onChange={handleIntakeConfigChange}
+            productCategory={product.primaryCategory}
+          />
+        </div>
+      )}
     </div>
   );
 };

@@ -4,6 +4,7 @@ import remarkGfm from 'remark-gfm';
 import { ClaimStatus, Message, ClaimState, ClaimDocument, HistoricalClaim, Policy, Attachment, MedicalInvoiceData, OCRData, DischargeSummaryData } from './types';
 import { MOCK_POLICIES, MOCK_HISTORICAL_CLAIMS } from './constants';
 import { getAIResponse, analyzeDocument, quickAnalyze, connectLive, transcribeAudio } from './geminiService';
+import { getSignedUrl } from './ossService';
 
 // --- Helpers ---
 function encode(bytes: Uint8Array) {
@@ -340,7 +341,19 @@ const GenericOCRDisplay = ({ data }: { data: OCRData }) => {
 // Image Previewer Component
 const ImagePreview = ({ attachment }: { attachment: Attachment }) => {
   const [scale, setScale] = useState(1);
-  const src = attachment.url || (attachment.base64 ? `data:${attachment.type};base64,${attachment.base64}` : '');
+  const [signedUrl, setSignedUrl] = useState('');
+
+  useEffect(() => {
+    let active = true;
+    if (attachment.ossKey) {
+      getSignedUrl(attachment.ossKey)
+        .then(url => { if (active) setSignedUrl(url); })
+        .catch(() => { if (active) setSignedUrl(''); });
+    }
+    return () => { active = false; };
+  }, [attachment.ossKey]);
+
+  const src = signedUrl || attachment.url || (attachment.base64 ? `data:${attachment.type};base64,${attachment.base64}` : '');
 
   return (
     <div className="relative w-full h-full flex flex-col bg-black/95">
@@ -614,6 +627,7 @@ export const App: React.FC = () => {
       type: doc.type,
       base64: doc.base64 || '',
       url: doc.url,
+      ossKey: doc.ossKey,
       analysis: doc.analysis || {
         category: doc.category || '未分类',
         isRelevant: true,
@@ -779,7 +793,7 @@ export const App: React.FC = () => {
             currentFile: undefined,
             active: Math.max(0, prev.active - 1)
           }));
-          results[current] = { ...att, analysis: mappedAnalysis, status: 'success', url: analysis.ossUrl || att.url };
+          results[current] = { ...att, analysis: mappedAnalysis, status: 'success', url: analysis.ossUrl || att.url, ossKey: analysis.ossKey || att.ossKey };
         } catch (err) {
           console.error(`Analysis failed for ${att.name}:`, err);
           failedCount++;
@@ -857,6 +871,7 @@ export const App: React.FC = () => {
         status: 'pending',
         base64: file.base64,
         url: file.url,
+        ossKey: file.ossKey,
         category: file.analysis?.category || '未分类',
         ocrData: file.analysis?.ocr,
         medicalData: file.analysis?.medicalData,

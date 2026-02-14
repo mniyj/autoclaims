@@ -1,0 +1,725 @@
+[
+  {
+    "ruleset_id": "RS-ACCIDENT-001",
+    "product_line": "ACCIDENT",
+    "policy_info": {
+      "policy_no": "POL-2024-ACC-001",
+      "product_code": "ZA-002",
+      "product_name": "小米综合意外险",
+      "insurer": "众安保险",
+      "effective_date": "2024-01-01",
+      "expiry_date": "2024-12-31",
+      "coverages": [
+        {
+          "coverage_code": "ACC_DEATH",
+          "coverage_name": "意外身故",
+          "sum_insured": 500000,
+          "deductible": 0,
+          "co_pay_ratio": 0
+        },
+        {
+          "coverage_code": "ACC_MEDICAL",
+          "coverage_name": "意外医疗",
+          "sum_insured": 50000,
+          "deductible": 100,
+          "co_pay_ratio": 0.1
+        }
+      ]
+    },
+    "rules": [
+      {
+        "rule_id": "R001",
+        "rule_name": "保障期间校验",
+        "description": "检查事故日期是否在保障期间内",
+        "category": "COVERAGE_PERIOD",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "条款第三条",
+          "clause_code": "CL-003",
+          "source_text": "保障期间为保险合同生效之日起至到期日止"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 10
+        },
+        "conditions": {
+          "logic": "AND",
+          "expressions": [
+            {
+              "field": "claim.accident_date",
+              "operator": "GTE",
+              "value": "${policy.effective_date}"
+            },
+            {
+              "field": "claim.accident_date",
+              "operator": "LTE",
+              "value": "${policy.expiry_date}"
+            }
+          ]
+        },
+        "action": {
+          "action_type": "APPROVE_CLAIM",
+          "params": {}
+        },
+        "parsing_confidence": {
+          "overall": 0.95,
+          "condition_confidence": 0.93,
+          "action_confidence": 0.97,
+          "needs_human_review": false
+        }
+      },
+      {
+        "rule_id": "R002",
+        "rule_name": "等待期校验",
+        "description": "意外险通常无等待期",
+        "category": "WAITING_PERIOD",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "POLICY",
+          "source_ref": "保单特约",
+          "clause_code": null,
+          "source_text": "意外险无等待期"
+        },
+        "priority": {
+          "level": 3,
+          "rank": 20
+        },
+        "conditions": {
+          "logic": "ALWAYS_TRUE",
+          "expressions": []
+        },
+        "action": {
+          "action_type": "APPROVE_CLAIM",
+          "params": {}
+        }
+      },
+      {
+        "rule_id": "R003",
+        "rule_name": "除外责任-酒驾",
+        "description": "酒后驾驶导致的事故不予赔付",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "条款第七条",
+          "clause_code": "CL-007",
+          "source_text": "被保险人饮酒、醉酒后驾车导致的事故，不承担给付保险金的责任"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 5
+        },
+        "conditions": {
+          "logic": "AND",
+          "expressions": [
+            {
+              "field": "claim.is_drunk_driving",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "EXCL_DRUNK_DRIVING"
+          }
+        },
+        "parsing_confidence": {
+          "overall": 0.65,
+          "condition_confidence": 0.58,
+          "action_confidence": 0.72,
+          "needs_human_review": true,
+          "review_hints": [
+            "酒驾判定条件可能需要补充BAC阈值"
+          ]
+        }
+      },
+      {
+        "rule_id": "R004",
+        "rule_name": "费用分类判断",
+        "category": "ITEM_CLASSIFICATION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ASSESSMENT",
+          "loop_over": "claim.expense_items",
+          "item_alias": "expense_item",
+          "item_action_on_reject": "ZERO_AMOUNT"
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "条款第十条",
+          "clause_code": "CL-010",
+          "source_text": "医疗费用按社保目录分类处理"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 10
+        },
+        "conditions": {
+          "logic": "AND",
+          "expressions": [
+            {
+              "field": "expense_item.category",
+              "operator": "IN",
+              "value": [
+                "治疗费",
+                "检查费",
+                "药品费",
+                "材料费",
+                "床位费"
+              ]
+            }
+          ]
+        },
+        "action": {
+          "action_type": "APPROVE_ITEM",
+          "params": {}
+        }
+      },
+      {
+        "rule_id": "R005",
+        "rule_name": "伤残等级赔付",
+        "category": "DISABILITY_ASSESSMENT",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ASSESSMENT",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "条款第五条",
+          "clause_code": "CL-005",
+          "source_text": "根据伤残等级对应比例给付残疾保险金"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 20
+        },
+        "conditions": {
+          "logic": "AND",
+          "expressions": [
+            {
+              "field": "claim.disability_grade",
+              "operator": "IS_NOT_NULL",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "SET_CLAIM_RATIO",
+          "params": {
+            "disability_grade_table": [
+              {
+                "grade": 1,
+                "payout_ratio": 1
+              },
+              {
+                "grade": 2,
+                "payout_ratio": 0.9
+              },
+              {
+                "grade": 3,
+                "payout_ratio": 0.8
+              },
+              {
+                "grade": 4,
+                "payout_ratio": 0.7
+              },
+              {
+                "grade": 5,
+                "payout_ratio": 0.6
+              },
+              {
+                "grade": 6,
+                "payout_ratio": 0.5
+              },
+              {
+                "grade": 7,
+                "payout_ratio": 0.4
+              },
+              {
+                "grade": 8,
+                "payout_ratio": 0.3
+              },
+              {
+                "grade": 9,
+                "payout_ratio": 0.2
+              },
+              {
+                "grade": 10,
+                "payout_ratio": 0.1
+              }
+            ]
+          }
+        }
+      },
+      {
+        "rule_id": "R006",
+        "rule_name": "免赔额扣除",
+        "category": "DEDUCTIBLE",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "POST_PROCESS",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "条款第十二条",
+          "clause_code": "CL-012",
+          "source_text": "每次事故免赔额100元"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 10
+        },
+        "conditions": {
+          "logic": "ALWAYS_TRUE",
+          "expressions": []
+        },
+        "action": {
+          "action_type": "APPLY_DEDUCTIBLE",
+          "params": {
+            "deductible_amount": 100
+          }
+        }
+      },
+      {
+        "rule_id": "R007",
+        "rule_name": "年度限额",
+        "category": "AGGREGATE_CAP",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "POST_PROCESS",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "保障计划表",
+          "clause_code": "CL-001",
+          "source_text": "意外医疗保险金限额：50,000元/年"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 20
+        },
+        "conditions": {
+          "logic": "ALWAYS_TRUE",
+          "expressions": []
+        },
+        "action": {
+          "action_type": "APPLY_CAP",
+          "params": {
+            "cap_field": "total_approved_amount",
+            "cap_amount": 50000
+          }
+        }
+      }
+    ],
+    "execution_pipeline": {
+      "domains": [
+        {
+          "domain": "ELIGIBILITY",
+          "label": "定责",
+          "execution_mode": "ALL_MATCH",
+          "input_granularity": "CLAIM",
+          "short_circuit_on": [
+            "REJECT_CLAIM"
+          ],
+          "category_sequence": [
+            "COVERAGE_PERIOD",
+            "WAITING_PERIOD",
+            "POLICY_STATUS",
+            "EXCLUSION",
+            "COVERAGE_SCOPE",
+            "CLAIM_TIMELINE"
+          ]
+        },
+        {
+          "domain": "ASSESSMENT",
+          "label": "定损",
+          "execution_mode": "ALL_MATCH",
+          "input_granularity": "ITEM",
+          "loop_collection": "claim.expense_items",
+          "short_circuit_on": [],
+          "category_sequence": [
+            "ITEM_CLASSIFICATION",
+            "PRICING_REASONABILITY",
+            "DISABILITY_ASSESSMENT",
+            "DEPRECIATION",
+            "PROPORTIONAL_LIABILITY"
+          ]
+        },
+        {
+          "domain": "POST_PROCESS",
+          "label": "后处理",
+          "execution_mode": "PRIORITY_ORDERED",
+          "input_granularity": "CLAIM",
+          "short_circuit_on": [],
+          "category_sequence": [
+            "DEDUCTIBLE",
+            "SUB_LIMIT",
+            "SOCIAL_INSURANCE",
+            "BENEFIT_OFFSET",
+            "AGGREGATE_CAP",
+            "POST_ADJUSTMENT"
+          ]
+        }
+      ]
+    },
+    "override_chains": [
+      {
+        "chain_id": "OC-001",
+        "topic": "免赔额适用方式",
+        "conflict_type": "OVERRIDE",
+        "affected_domain": "POST_PROCESS",
+        "effective_rule_id": "R006",
+        "chain": [
+          {
+            "rule_id": "R006",
+            "priority_level": 2,
+            "summary": "每次事故扣除100元免赔额",
+            "status": "EFFECTIVE"
+          }
+        ]
+      }
+    ],
+    "field_dictionary": {
+      "claim.accident_date": {
+        "label": "事故日期",
+        "data_type": "DATE",
+        "scope": "CLAIM",
+        "source": "报案信息",
+        "applicable_domains": [
+          "ELIGIBILITY",
+          "ASSESSMENT"
+        ]
+      },
+      "claim.is_drunk_driving": {
+        "label": "是否酒驾",
+        "data_type": "BOOLEAN",
+        "scope": "CLAIM",
+        "source": "调查信息",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ]
+      },
+      "claim.disability_grade": {
+        "label": "伤残等级",
+        "data_type": "NUMBER",
+        "scope": "CLAIM",
+        "source": "鉴定报告",
+        "applicable_domains": [
+          "ASSESSMENT"
+        ]
+      },
+      "expense_item.category": {
+        "label": "费用类别",
+        "data_type": "ENUM",
+        "scope": "ITEM",
+        "source": "费用明细",
+        "applicable_domains": [
+          "ASSESSMENT"
+        ],
+        "enum_values": [
+          {
+            "code": "治疗费",
+            "label": "治疗费"
+          },
+          {
+            "code": "检查费",
+            "label": "检查费"
+          },
+          {
+            "code": "药品费",
+            "label": "药品费"
+          },
+          {
+            "code": "材料费",
+            "label": "材料费"
+          },
+          {
+            "code": "床位费",
+            "label": "床位费"
+          }
+        ]
+      },
+      "policy.effective_date": {
+        "label": "保单生效日",
+        "data_type": "DATE",
+        "scope": "POLICY",
+        "source": "保单信息",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ]
+      },
+      "policy.expiry_date": {
+        "label": "保单到期日",
+        "data_type": "DATE",
+        "scope": "POLICY",
+        "source": "保单信息",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ]
+      },
+      "total_approved_amount": {
+        "label": "总核定金额",
+        "data_type": "NUMBER",
+        "scope": "COMPUTED",
+        "source": "计算值",
+        "applicable_domains": [
+          "POST_PROCESS"
+        ]
+      }
+    },
+    "metadata": {
+      "schema_version": "2.0",
+      "version": "1",
+      "generated_at": "2024-06-15T10:30:00Z",
+      "generated_by": "AI_PARSING",
+      "ai_model": "claude-3.5-sonnet",
+      "total_rules": 7,
+      "rules_by_domain": {
+        "eligibility": 3,
+        "assessment": 2,
+        "post_process": 2
+      },
+      "low_confidence_rules": 1,
+      "unresolved_conflicts": 0,
+      "audit_trail": [
+        {
+          "timestamp": "2024-06-15T10:30:00Z",
+          "user_id": "system",
+          "action": "AI解析生成规则集"
+        },
+        {
+          "timestamp": "2024-06-15T11:00:00Z",
+          "user_id": "admin",
+          "action": "人工审核通过"
+        }
+      ]
+    }
+  },
+  {
+    "ruleset_id": "RS-HEALTH-001",
+    "product_line": "HEALTH",
+    "policy_info": {
+      "policy_no": "POL-2024-HLT-001",
+      "product_code": "ZA-001",
+      "product_name": "尊享e生2024版",
+      "insurer": "众安保险",
+      "effective_date": "2024-01-01",
+      "expiry_date": "2024-12-31",
+      "coverages": [
+        {
+          "coverage_code": "HLT_INPATIENT",
+          "coverage_name": "住院医疗",
+          "sum_insured": 6000000,
+          "deductible": 10000,
+          "co_pay_ratio": 0
+        }
+      ]
+    },
+    "rules": [
+      {
+        "rule_id": "H001",
+        "rule_name": "等待期30天校验",
+        "description": "首次投保等待期30天",
+        "category": "WAITING_PERIOD",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "条款第四条",
+          "clause_code": "CL-004",
+          "source_text": "首次投保等待期为30天"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 15
+        },
+        "conditions": {
+          "logic": "OR",
+          "expressions": [
+            {
+              "logic": "AND",
+              "expressions": [
+                {
+                  "field": "policy.is_renewal",
+                  "operator": "IS_TRUE",
+                  "value": null
+                }
+              ]
+            },
+            {
+              "logic": "AND",
+              "expressions": [
+                {
+                  "field": "policy.is_renewal",
+                  "operator": "IS_FALSE",
+                  "value": null
+                },
+                {
+                  "field": "claim.accident_date",
+                  "operator": "GT",
+                  "value": "${policy.effective_date + 30d}"
+                }
+              ]
+            }
+          ]
+        },
+        "action": {
+          "action_type": "APPROVE_CLAIM",
+          "params": {}
+        },
+        "parsing_confidence": {
+          "overall": 0.88,
+          "condition_confidence": 0.82,
+          "action_confidence": 0.94,
+          "needs_human_review": false
+        }
+      },
+      {
+        "rule_id": "H002",
+        "rule_name": "年度免赔额1万元",
+        "category": "DEDUCTIBLE",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "POST_PROCESS",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "保障计划表",
+          "clause_code": "CL-001",
+          "source_text": "年度免赔额：10,000元"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 10
+        },
+        "conditions": {
+          "logic": "ALWAYS_TRUE",
+          "expressions": []
+        },
+        "action": {
+          "action_type": "APPLY_DEDUCTIBLE",
+          "params": {
+            "deductible_amount": 10000
+          }
+        }
+      }
+    ],
+    "execution_pipeline": {
+      "domains": [
+        {
+          "domain": "ELIGIBILITY",
+          "label": "定责",
+          "execution_mode": "ALL_MATCH",
+          "input_granularity": "CLAIM",
+          "short_circuit_on": [
+            "REJECT_CLAIM"
+          ],
+          "category_sequence": [
+            "COVERAGE_PERIOD",
+            "WAITING_PERIOD",
+            "EXCLUSION"
+          ]
+        },
+        {
+          "domain": "ASSESSMENT",
+          "label": "定损",
+          "execution_mode": "ALL_MATCH",
+          "input_granularity": "ITEM",
+          "loop_collection": "claim.expense_items",
+          "short_circuit_on": [],
+          "category_sequence": [
+            "ITEM_CLASSIFICATION",
+            "PRICING_REASONABILITY"
+          ]
+        },
+        {
+          "domain": "POST_PROCESS",
+          "label": "后处理",
+          "execution_mode": "PRIORITY_ORDERED",
+          "input_granularity": "CLAIM",
+          "short_circuit_on": [],
+          "category_sequence": [
+            "DEDUCTIBLE",
+            "SOCIAL_INSURANCE",
+            "AGGREGATE_CAP"
+          ]
+        }
+      ]
+    },
+    "override_chains": [],
+    "field_dictionary": {
+      "policy.is_renewal": {
+        "label": "是否续保",
+        "data_type": "BOOLEAN",
+        "scope": "POLICY",
+        "source": "保单信息",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ]
+      },
+      "claim.accident_date": {
+        "label": "事故日期",
+        "data_type": "DATE",
+        "scope": "CLAIM",
+        "source": "报案信息",
+        "applicable_domains": [
+          "ELIGIBILITY",
+          "ASSESSMENT"
+        ]
+      }
+    },
+    "metadata": {
+      "schema_version": "2.0",
+      "version": "1",
+      "generated_at": "2024-07-01T14:00:00Z",
+      "generated_by": "HYBRID",
+      "ai_model": "claude-3.5-sonnet",
+      "total_rules": 2,
+      "rules_by_domain": {
+        "eligibility": 1,
+        "assessment": 0,
+        "post_process": 1
+      },
+      "low_confidence_rules": 0,
+      "unresolved_conflicts": 0
+    }
+  }
+]

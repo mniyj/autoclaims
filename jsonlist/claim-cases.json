@@ -1,0 +1,179 @@
+[
+  {
+    "id": "claim-1",
+    "reportNumber": "R202405010001",
+    "reporter": "张三",
+    "reportTime": "2024-05-01 10:00:00",
+    "accidentTime": "2024-04-28 15:30:00",
+    "accidentReason": "疾病住院",
+    "claimAmount": 5000,
+    "productCode": "ZA-001",
+    "productName": "尊享e生2024版",
+    "status": "处理中",
+    "operator": "李四"
+  },
+  {
+    "id": "claim-2",
+    "reportNumber": "R202405100005",
+    "reporter": "王五",
+    "reportTime": "2024-05-10 14:20:00",
+    "accidentTime": "2024-05-09 09:00:00",
+    "accidentReason": "意外摔伤",
+    "claimAmount": 1200.5,
+    "productCode": "ZA-002",
+    "productName": "小米综合意外险",
+    "status": "已报案",
+    "operator": "赵六"
+  },
+  {
+    "id": "claim-3",
+    "reportNumber": "R202405150012",
+    "reporter": "陈七",
+    "reportTime": "2024-05-15 09:15:00",
+    "accidentTime": "2024-05-10 20:00:00",
+    "accidentReason": "急性阑尾炎",
+    "claimAmount": 8500,
+    "productCode": "ZA-001",
+    "productName": "尊享e生2024版",
+    "status": "已结案-给付",
+    "operator": "孙八"
+  },
+  {
+    "id": "claim-4",
+    "reportNumber": "R202405200020",
+    "reporter": "周九",
+    "reportTime": "2024-05-20 16:45:00",
+    "accidentTime": "2024-05-18 11:30:00",
+    "accidentReason": "交通事故",
+    "claimAmount": 25000,
+    "productCode": "ZA-003",
+    "productName": "百万医疗险2024",
+    "status": "待补传",
+    "operator": "吴十"
+  },
+  {
+    "id": "claim-detail-1",
+    "reportNumber": "CLAIM-2024-0421",
+    "reporter": "王芳",
+    "reportTime": "2024-01-02 09:24",
+    "accidentTime": "2024-01-01 15:15",
+    "accidentReason": "疾病住院",
+    "accidentLocation": "中国北京市朝阳区主街123号",
+    "claimAmount": 144,
+    "approvedAmount": 132,
+    "productCode": "ZA-001",
+    "productName": "尊享e生2024版",
+    "status": "处理中",
+    "operator": "系统管理员",
+    "policyholder": "张伟",
+    "insured": "李娜",
+    "policyPeriod": "2024年1月1日 - 2024年12月31日",
+    "policyNumber": "POL-2024-7890",
+    "calculationItems": [
+      {
+        "id": "calc-1",
+        "type": "医疗费用",
+        "fileName": "发票1.jpg",
+        "date": "2025-1-1",
+        "item": "色甘酸钠",
+        "amount": 17,
+        "claimAmount": 17,
+        "basis": "乙类药，保险覆盖，100%报销"
+      },
+      {
+        "id": "calc-2",
+        "type": "医疗费用",
+        "fileName": "发票1.jpg",
+        "date": "2025-1-1",
+        "item": "急诊诊疗",
+        "amount": 25,
+        "claimAmount": 25,
+        "basis": "甲类药，保险覆盖，100%报销"
+      },
+      {
+        "id": "calc-3",
+        "type": "医疗费用",
+        "fileName": "发票1.jpg",
+        "date": "2025-1-1",
+        "item": "氯胆乳膏",
+        "amount": 30,
+        "claimAmount": 24,
+        "basis": "丙类药，不属保险范围，80%报销"
+      },
+      {
+        "id": "calc-4",
+        "type": "Medical",
+        "fileName": "Invoice 2.jpg",
+        "date": "2025-1-2",
+        "item": "Sodium Cromoglicate",
+        "amount": 17,
+        "claimAmount": 17,
+        "basis": "Class B, covered by insurance, 100% reimbursement"
+      },
+      {
+        "id": "calc-5",
+        "type": "Medical",
+        "fileName": "Invoice 2.jpg",
+        "date": "2025-1-2",
+        "item": "Emergency Consultation",
+        "amount": 25,
+        "claimAmount": 25,
+        "basis": "Class A, covered by insurance, 100% reimbursement"
+      },
+      {
+        "id": "calc-6",
+        "type": "Medical",
+        "fileName": "Invoice 2.jpg",
+        "date": "2025-1-2",
+        "item": "Hydroquinone Cream",
+        "amount": 30,
+        "claimAmount": 24,
+        "basis": "Class C, not covered by insurance, 80% reimbursement"
+      }
+    ],
+    "fileCategories": [
+      {
+        "name": "医疗费用",
+        "files": [
+          {
+            "name": "发票1.jpg",
+            "url": "#"
+          },
+          {
+            "name": "发票2.jpg",
+            "url": "#"
+          },
+          {
+            "name": "诊断证明.pdf",
+            "url": "#"
+          }
+        ]
+      },
+      {
+        "name": "伤残费用",
+        "files": []
+      },
+      {
+        "name": "误工费",
+        "files": [
+          {
+            "name": "请假条.jpg",
+            "url": "#"
+          }
+        ]
+      }
+    ],
+    "risks": [
+      {
+        "type": "danger",
+        "title": "高欺诈概率",
+        "description": "基于图像分析，发票1.jpg显示可能被篡改的迹象。"
+      },
+      {
+        "type": "warning",
+        "title": "文件不完整",
+        "description": "雇主证明缺少公章。"
+      }
+    ]
+  }
+]

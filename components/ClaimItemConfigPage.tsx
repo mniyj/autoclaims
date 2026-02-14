@@ -1,18 +1,43 @@
-import React, { useState, useMemo } from 'react';
-import { MOCK_CLAIM_ITEMS, MOCK_CLAIMS_MATERIALS, MOCK_RESPONSIBILITIES, MOCK_CLAUSES } from '../constants';
+import React, { useState, useMemo, useEffect } from 'react';
 import { type ClaimItem, type ClaimsMaterial, type ProductClaimConfig, type ResponsibilityClaimConfig, type ResponsibilityItem, type Clause } from '../types';
 import Modal from './ui/Modal';
 import Input from './ui/Input';
 import Textarea from './ui/Textarea';
 import Select from './ui/Select';
+import { api } from '../services/api';
 
 const ClaimItemConfigPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'items' | 'products'>('items');
-  const [claimItems, setClaimItems] = useState<ClaimItem[]>(MOCK_CLAIM_ITEMS);
-  const [materials] = useState<ClaimsMaterial[]>(MOCK_CLAIMS_MATERIALS);
+  const [claimItems, setClaimItems] = useState<ClaimItem[]>([]);
+  const [materials, setMaterials] = useState<ClaimsMaterial[]>([]);
   const [productConfigs, setProductConfigs] = useState<ProductClaimConfig[]>([]);
-  const [products] = useState<Clause[]>(MOCK_CLAUSES);
-  const [responsibilities] = useState<ResponsibilityItem[]>(MOCK_RESPONSIBILITIES);
+  const [products, setProducts] = useState<Clause[]>([]);
+  const [responsibilities, setResponsibilities] = useState<ResponsibilityItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [itemsData, materialsData, configsData, productsData, respData] = await Promise.all([
+          api.claimItems.list(),
+          api.claimsMaterials.list(),
+          api.productClaimConfigs.list(),
+          api.clauses.list(),
+          api.responsibilities.list(),
+        ]);
+        setClaimItems(itemsData as ClaimItem[]);
+        setMaterials(materialsData as ClaimsMaterial[]);
+        setProductConfigs(configsData as ProductClaimConfig[]);
+        setProducts(productsData as Clause[]);
+        setResponsibilities(respData as ResponsibilityItem[]);
+      } catch (error) {
+        console.error('Failed to fetch claim item config data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   // Modal states for Claim Item
   const [isItemModalOpen, setIsItemModalOpen] = useState(false);
@@ -38,14 +63,22 @@ const ClaimItemConfigPage: React.FC = () => {
     setIsItemModalOpen(true);
   };
 
-  const handleSaveItem = () => {
+  const handleSaveItem = async () => {
     if (!editingItem?.name) return alert('请输入理赔项目名称');
+    let newItems: ClaimItem[];
     if (claimItems.find(i => i.id === editingItem.id)) {
-      setClaimItems(claimItems.map(i => i.id === editingItem.id ? editingItem as ClaimItem : i));
+      newItems = claimItems.map(i => i.id === editingItem.id ? editingItem as ClaimItem : i);
     } else {
-      setClaimItems([...claimItems, editingItem as ClaimItem]);
+      newItems = [...claimItems, editingItem as ClaimItem];
     }
-    setIsItemModalOpen(false);
+    try {
+      await api.claimItems.saveAll(newItems);
+      setClaimItems(newItems);
+      setIsItemModalOpen(false);
+    } catch (error) {
+      console.error('Failed to save claim item:', error);
+      alert('保存失败');
+    }
   };
 
   const toggleMaterial = (matId: string) => {
@@ -97,19 +130,33 @@ const ClaimItemConfigPage: React.FC = () => {
     }));
   };
 
-  const handleSaveConfig = () => {
+  const handleSaveConfig = async () => {
     if (!editingConfig?.productCode) return alert('请选择产品');
+    let newConfigs: ProductClaimConfig[];
     const existingIndex = productConfigs.findIndex(c => c.productCode === editingConfig.productCode);
     if (existingIndex > -1) {
-      const newConfigs = [...productConfigs];
+      newConfigs = [...productConfigs];
       newConfigs[existingIndex] = editingConfig as ProductClaimConfig;
-      setProductConfigs(newConfigs);
     } else {
-      setProductConfigs([...productConfigs, editingConfig as ProductClaimConfig]);
+      newConfigs = [...productConfigs, editingConfig as ProductClaimConfig];
     }
-    setIsConfigModalOpen(true); // Keep open or close? Close.
-    setIsConfigModalOpen(false);
+    try {
+      await api.productClaimConfigs.saveAll(newConfigs);
+      setProductConfigs(newConfigs);
+      setIsConfigModalOpen(false);
+    } catch (error) {
+      console.error('Failed to save product config:', error);
+      alert('保存失败');
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <div className="text-gray-400 text-sm">加载中...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

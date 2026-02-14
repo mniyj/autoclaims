@@ -1,0 +1,28 @@
+[
+  {
+    "id": "mat-1",
+    "name": "诊断证明书",
+    "description": "医院出具的包含疾病诊断、治疗过程的正式证明文件。",
+    "sampleUrl": "https://pic1.imgdb.cn/item/69313be6a11464095f8a12dd.jpg",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"diagnosis\": {\n      \"type\": \"string\",\n      \"description\": \"诊断结果\"\n    },\n    \"hospital_name\": {\n      \"type\": \"string\",\n      \"description\": \"医院名称\"\n    },\n    \"admission_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"入院日期\"\n    },\n    \"discharge_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"出院日期\"\n    }\n  }\n}",
+    "required": true,
+    "aiAuditPrompt": "从诊断证明书中抽取诊断结论、医院名称、入院与出院日期，用于校验投保责任是否覆盖该疾病。若信息缺失，指出缺失项。"
+  },
+  {
+    "id": "mat-2",
+    "name": "费用总清单",
+    "description": "医院打印的住院期间所有费用的明细清单。",
+    "sampleUrl": "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d8.jpg",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"total_amount\": {\n      \"type\": \"number\",\n      \"description\": \"费用总额\"\n    },\n    \"self_paid\": {\n      \"type\": \"number\",\n      \"description\": \"自费金额\"\n    },\n    \"medicare_paid\": {\n      \"type\": \"number\",\n      \"description\": \"医保支付\"\n    }\n  }\n}",
+    "required": true,
+    "aiAuditPrompt": "核对费用总额、自费与医保支付三项数值并计算合理给付基数，输出不一致或异常值提示。"
+  },
+  {
+    "id": "mat-3",
+    "name": "身份证",
+    "description": "被保险人或受益人的有效身份证明。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"name\": {\n      \"type\": \"string\",\n      \"description\": \"姓名\"\n    },\n    \"id_number\": {\n      \"type\": \"string\",\n      \"description\": \"身份证号\"\n    }\n  }\n}",
+    "required": true,
+    "aiAuditPrompt": "比对证件姓名与保单被保险人/受益人信息，验证身份证号格式与校验位。"
+  }
+]

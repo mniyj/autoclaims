@@ -1,17 +1,28 @@
-
-import React, { useState, useMemo } from 'react';
-import { MOCK_INDUSTRY_DATA } from '../constants';
+import React, { useState, useMemo, useEffect } from 'react';
 import { type IndustryData } from '../types';
 import Pagination from './ui/Pagination';
+import { api } from '../services/api';
 
 interface IndustryDataListPageProps {
-  onEdit: (data: IndustryData) => void;
+    onEdit: (data: IndustryData) => void;
 }
 
 const IndustryDataListPage: React.FC<IndustryDataListPageProps> = ({ onEdit }) => {
-    const [industryData, setIndustryData] = useState<IndustryData[]>(MOCK_INDUSTRY_DATA);
+    const [industryData, setIndustryData] = useState<IndustryData[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
     const ITEMS_PER_PAGE = 10;
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const data = await api.industryData.list();
+                setIndustryData(data);
+            } catch (error) {
+                console.error('Failed to fetch industry data:', error);
+            }
+        };
+        fetchData();
+    }, []);
 
     const paginatedData = useMemo(() => {
         const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -23,9 +34,9 @@ const IndustryDataListPage: React.FC<IndustryDataListPageProps> = ({ onEdit }) =
     return (
         <div className="space-y-6">
             <h1 className="text-2xl font-bold text-slate-900">行业基础数据</h1>
-            
+
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                 <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50/50">
+                <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50/50">
                     <h2 className="text-base font-semibold text-gray-900">行业基础数据清单</h2>
                 </div>
                 <div className="overflow-x-auto">
@@ -47,8 +58,8 @@ const IndustryDataListPage: React.FC<IndustryDataListPageProps> = ({ onEdit }) =
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{item.operator}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{item.operationTime}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                                        <button 
-                                            onClick={() => onEdit(item)} 
+                                        <button
+                                            onClick={() => onEdit(item)}
                                             className="text-brand-blue-600 hover:text-brand-blue-900 bg-brand-blue-50 hover:bg-brand-blue-100 px-3 py-1 rounded-md transition-colors"
                                         >
                                             编辑

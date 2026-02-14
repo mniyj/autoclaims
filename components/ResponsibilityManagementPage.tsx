@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { MOCK_RESPONSIBILITIES, PRIMARY_CATEGORIES } from '../constants';
 import { ResponsibilityItem } from '../types';
+import { api } from '../services/api';
 
 interface ModalProps {
     isOpen: boolean;
@@ -17,8 +18,8 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, footer 
             <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 flex flex-col max-h-[90vh] animate-in fade-in zoom-in duration-200">
                 <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100">
                     <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-                    <button 
-                        onClick={onClose} 
+                    <button
+                        onClick={onClose}
                         className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -40,17 +41,38 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, footer 
 };
 
 const ResponsibilityManagementPage: React.FC = () => {
-    const [responsibilities, setResponsibilities] = useState<ResponsibilityItem[]>(MOCK_RESPONSIBILITIES);
+    // Start with empty, load from API, fallback to Mock if empty? Or just empty.
+    // For seamless transition, if API return empty (first run), we could load MOCK and save it?
+    const [responsibilities, setResponsibilities] = useState<ResponsibilityItem[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [currentItem, setCurrentItem] = useState<Partial<ResponsibilityItem>>({});
 
+    useEffect(() => {
+        const fetchResponsibilities = async () => {
+            try {
+                const data = await api.responsibilities.list();
+                if (data && data.length > 0) {
+                    setResponsibilities(data);
+                } else {
+                    // Auto-seed: persist MOCK data on first load
+                    await api.responsibilities.saveAll(MOCK_RESPONSIBILITIES);
+                    setResponsibilities(MOCK_RESPONSIBILITIES);
+                }
+            } catch (error) {
+                console.error('Failed to fetch responsibilities:', error);
+                setResponsibilities(MOCK_RESPONSIBILITIES);
+            }
+        };
+        fetchResponsibilities();
+    }, []);
+
     // Filter Logic
     const filteredData = useMemo(() => {
         if (!searchQuery) return responsibilities;
         const lowerQuery = searchQuery.toLowerCase();
-        return responsibilities.filter(item => 
+        return responsibilities.filter(item =>
             item.code.toLowerCase().includes(lowerQuery) ||
             item.name.toLowerCase().includes(lowerQuery) ||
             item.category.toLowerCase().includes(lowerQuery)
@@ -78,39 +100,55 @@ const ResponsibilityManagementPage: React.FC = () => {
         setIsDeleteModalOpen(true);
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (!currentItem.code?.trim() || !currentItem.name?.trim() || !currentItem.category) {
-            // In a real app, use a toast
             alert('请完善必填信息');
             return;
         }
 
+        let newResponsibilities = [...responsibilities];
+
         if (currentItem.id) {
             // Update
-            setResponsibilities(prev => prev.map(item => item.id === currentItem.id ? currentItem as ResponsibilityItem : item));
+            newResponsibilities = newResponsibilities.map(item => item.id === currentItem.id ? currentItem as ResponsibilityItem : item);
         } else {
             // Create
             const newItem = {
                 ...currentItem,
                 id: `resp-${Date.now()}`,
             } as ResponsibilityItem;
-            setResponsibilities(prev => [newItem, ...prev]);
+            newResponsibilities = [newItem, ...newResponsibilities];
         }
-        setIsEditModalOpen(false);
+
+        try {
+            await api.responsibilities.saveAll(newResponsibilities);
+            setResponsibilities(newResponsibilities);
+            setIsEditModalOpen(false);
+        } catch (error) {
+            console.error('Failed to save responsibility:', error);
+            alert('保存失败');
+        }
     };
 
-    const handleConfirmDelete = () => {
+    const handleConfirmDelete = async () => {
         if (currentItem.id) {
-            setResponsibilities(prev => prev.filter(item => item.id !== currentItem.id));
+            const newResponsibilities = responsibilities.filter(item => item.id !== currentItem.id);
+            try {
+                await api.responsibilities.saveAll(newResponsibilities);
+                setResponsibilities(newResponsibilities);
+                setIsDeleteModalOpen(false);
+            } catch (error) {
+                console.error('Failed to delete responsibility:', error);
+                alert('删除失败');
+            }
         }
-        setIsDeleteModalOpen(false);
     };
 
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <h1 className="text-2xl font-bold text-slate-900">责任库管理</h1>
-                <button 
+                <button
                     onClick={handleAdd}
                     className="inline-flex items-center px-4 py-2 bg-brand-blue-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-brand-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-blue-500 transition-colors"
                 >
@@ -171,13 +209,13 @@ const ResponsibilityManagementPage: React.FC = () => {
                                             {item.description}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <button 
+                                            <button
                                                 onClick={() => handleEdit(item)}
                                                 className="text-brand-blue-600 hover:text-brand-blue-900 mr-4 transition-colors"
                                             >
                                                 编辑
                                             </button>
-                                            <button 
+                                            <button
                                                 onClick={() => handleDeleteClick(item)}
                                                 className="text-red-600 hover:text-red-900 transition-colors"
                                             >

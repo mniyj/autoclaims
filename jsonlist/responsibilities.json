@@ -1,0 +1,135 @@
+[
+  {
+    "code": "HAULDAMAGE",
+    "name": "车损",
+    "category": "医疗保险",
+    "description": "",
+    "id": "resp-1771088359193"
+  },
+  {
+    "id": "resp-1",
+    "code": "GENERAL_HOSPITALIZATION",
+    "name": "住院医疗费用",
+    "category": "医疗保险",
+    "description": "住院治疗费用报销"
+  },
+  {
+    "id": "resp-2",
+    "code": "OUT_HOSPITAL_DRUG",
+    "name": "院外特效药费用",
+    "category": "医疗保险",
+    "description": "院外特效药清单覆盖"
+  },
+  {
+    "id": "resp-3",
+    "code": "CRITICAL_ILLNESS_MEDICAL",
+    "name": "重疾医疗费用",
+    "category": "医疗保险",
+    "description": "重大疾病相关住院及门诊治疗费用报销"
+  },
+  {
+    "id": "resp-4",
+    "code": "OUTPATIENT_MEDICAL",
+    "name": "门急诊医疗费用",
+    "category": "医疗保险",
+    "description": "普通门诊与急诊检查、药品、治疗费用报销"
+  },
+  {
+    "id": "resp-5",
+    "code": "MAJOR_CI",
+    "name": "重大疾病保险金",
+    "category": "重大疾病保险",
+    "description": "确诊合同约定的重大疾病一次性给付保险金"
+  },
+  {
+    "id": "resp-6",
+    "code": "MID_CI",
+    "name": "中症保险金",
+    "category": "重大疾病保险",
+    "description": "确诊中症一次性给付保险金"
+  },
+  {
+    "id": "resp-7",
+    "code": "MINOR_CI",
+    "name": "轻症保险金",
+    "category": "重大疾病保险",
+    "description": "确诊轻症一次性给付保险金"
+  },
+  {
+    "id": "resp-8",
+    "code": "CANCER_MULTIPAY",
+    "name": "癌症多次赔付",
+    "category": "重大疾病保险",
+    "description": "满足间隔期条件的癌症多次给付"
+  },
+  {
+    "id": "resp-9",
+    "code": "DEATH_BENEFIT",
+    "name": "身故保险金",
+    "category": "定期寿险",
+    "description": "保障期内身故给付保险金"
+  },
+  {
+    "id": "resp-10",
+    "code": "INCOME_PROTECTION",
+    "name": "收入保障金",
+    "category": "定期寿险",
+    "description": "保障期内按月给付固定收入保障"
+  },
+  {
+    "id": "resp-11",
+    "code": "PREMIUM_WAIVER",
+    "name": "保费豁免",
+    "category": "重大疾病保险",
+    "description": "确诊轻/中/重症后豁免剩余保险费"
+  },
+  {
+    "id": "resp-12",
+    "code": "ACCIDENT_DEATH",
+    "name": "意外身故",
+    "category": "意外保险",
+    "description": "发生意外导致身故给付保险金"
+  },
+  {
+    "id": "resp-13",
+    "code": "ACCIDENT_DISABILITY",
+    "name": "意外伤残",
+    "category": "意外保险",
+    "description": "意外伤残按等级给付保险金"
+  },
+  {
+    "id": "resp-14",
+    "code": "ACCIDENT_MEDICAL",
+    "name": "意外医疗",
+    "category": "意外保险",
+    "description": "意外导致的门诊、住院医疗费用报销"
+  },
+  {
+    "id": "resp-15",
+    "code": "FRACTURE_ALLOWANCE",
+    "name": "骨折津贴",
+    "category": "意外保险",
+    "description": "意外骨折按次给付津贴"
+  },
+  {
+    "id": "resp-16",
+    "code": "ANNUITY_PAYOUT",
+    "name": "年金领取",
+    "category": "年金保险",
+    "description": "自约定起领日按期给付养老金"
+  },
+  {
+    "id": "resp-17",
+    "code": "SURVIVAL_BENEFIT",
+    "name": "生存金给付",
+    "category": "年金保险",
+    "description": "在约定节点给付生存金"
+  },
+  {
+    "id": "resp-18",
+    "code": "CASH_VALUE",
+    "name": "现金价值保障",
+    "category": "终身寿险",
+    "description": "保单现金价值随时间增长"
+  }
+]

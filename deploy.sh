@@ -55,7 +55,7 @@ fi
 # 2. 打包文件
 echo "🗜️  正在打包部署文件..."
 export COPYFILE_DISABLE=1
-tar --no-xattrs --exclude='._*' -czf deploy.tar.gz dist server.js package.json package-lock.json ecosystem.config.cjs
+tar --no-xattrs --exclude='._*' -czf deploy.tar.gz dist server.js server/ jsonlist/ package.json package-lock.json ecosystem.config.cjs
 
 # 3. 上传到服务器
 echo "📤 正在准备远程目录..."
@@ -80,6 +80,10 @@ ssh $SSH_OPTS "$SERVER_USER@$SERVER_IP" << EOF
   echo "   解压文件..."
   tar -xzf deploy.tar.gz
   rm deploy.tar.gz
+
+  # 确保 jsonlist 目录存在且可写（用于 JSON 数据持久化）
+  mkdir -p jsonlist
+  chmod 755 jsonlist
   
   # 检查 Node.js 环境 (略去详细安装步骤，假设已安装或使用之前脚本已安装)
   if ! command -v node &> /dev/null; then

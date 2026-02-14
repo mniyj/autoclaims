@@ -1,0 +1,412 @@
+[
+  {
+    "code": "gclife",
+    "fullName": "中意人寿",
+    "shortName": "中意人寿",
+    "hotline": "956156",
+    "website": "https://www.generalichina.com/",
+    "registeredCapital": "37 亿",
+    "status": "生效"
+  },
+  {
+    "code": "xintai",
+    "fullName": "信泰人寿保险股份有限公司",
+    "shortName": "信泰人寿",
+    "hotline": "95365",
+    "website": "https://www.xintai.com/",
+    "registeredCapital": "102.05 亿",
+    "status": "生效"
+  },
+  {
+    "code": "chinapostlife",
+    "fullName": "中邮人寿保险股份有限公司",
+    "shortName": "中邮人寿",
+    "hotline": "400-890-9999",
+    "website": "https://www.chinapost-life.com/",
+    "registeredCapital": "286.63 亿",
+    "status": "生效"
+  },
+  {
+    "code": "icbcaxa",
+    "fullName": "工银安盛人寿保险有限公司",
+    "shortName": "工银安盛",
+    "hotline": "95359",
+    "website": "https://www.icbc-axa.com/",
+    "registeredCapital": "125.05 亿",
+    "status": "生效"
+  },
+  {
+    "code": "gclife",
+    "shortName": "中意人寿",
+    "hotline": "956156",
+    "basicInfo": {
+      "companyName": "中意人寿",
+      "companyType": [
+        "寿险公司",
+        "中外合资"
+      ],
+      "registeredCapital": {
+        "value": 37,
+        "unit": "亿"
+      },
+      "address": "北京市朝阳区光华路5号院1号楼",
+      "website": "https://www.generalichina.com/"
+    },
+    "solvency": {
+      "rating": "优秀",
+      "dividendRealizationRate": "37%-103%",
+      "financialInvestmentYield": {
+        "annual": 2.21,
+        "recentThreeYears": 4.71
+      },
+      "comprehensiveInvestmentYield": {
+        "annual": 2.8,
+        "recentThreeYears": 6.23
+      },
+      "comprehensiveSolvencyRatio": 212.24,
+      "coreSolvencyRatio": 166.14,
+      "riskRating": "AAA",
+      "sarmraScore": 82.42,
+      "totalAssets": {
+        "value": 1557.1,
+        "unit": "亿元"
+      },
+      "reportDate": "2025年第2季度"
+    },
+    "serviceCapability": {
+      "qualityIndex": 86.96,
+      "complaintsPer10kPolicies": 0.254,
+      "complaintsPer100mPremium": 1.532,
+      "complaintsPer10kCustomers": 0.217,
+      "ratingDate": "2022年第四季度",
+      "complaintDataUpdateDate": "2023年第四季度"
+    },
+    "branchDistribution": {
+      "provinces": [
+        "北京市",
+        "上海市",
+        "广东省",
+        "江苏省",
+        "辽宁省",
+        "四川省",
+        "陕西省",
+        "山东省",
+        "黑龙江省",
+        "湖北省",
+        "河南省",
+        "浙江省",
+        "福建省",
+        "重庆市",
+        "河北省"
+      ]
+    },
+    "shareholders": {
+      "note": "占比5%以上",
+      "list": [
+        {
+          "name": "中国石油集团资本有限责任公司",
+          "stakePercentage": 50,
+          "type": "国有"
+        },
+        {
+          "name": "忠利保险有限公司",
+          "stakePercentage": 50,
+          "type": "外资"
+        }
+      ]
+    }
+  },
+  {
+    "code": "xintai",
+    "shortName": "信泰人寿",
+    "hotline": "95365",
+    "basicInfo": {
+      "companyName": "信泰人寿保险股份有限公司",
+      "companyType": [
+        "寿险公司"
+      ],
+      "registeredCapital": {
+        "value": 102.05,
+        "unit": "亿"
+      },
+      "address": "杭州市江干区五星路 66 号",
+      "website": "https://www.xintai.com/"
+    },
+    "solvency": {
+      "rating": "合格",
+      "dividendRealizationRate": "15%-114%",
+      "financialInvestmentYield": {
+        "annual": 0,
+        "recentThreeYears": 2.49
+      },
+      "comprehensiveInvestmentYield": {
+        "annual": 0,
+        "recentThreeYears": 2.57
+      },
+      "comprehensiveSolvencyRatio": 144.46,
+      "coreSolvencyRatio": 130.98,
+      "riskRating": "BB",
+      "sarmraScore": 69.25,
+      "totalAssets": {
+        "value": 2665.3,
+        "unit": "亿元"
+      },
+      "reportDate": "2025 年第 2 季度"
+    },
+    "serviceCapability": {
+      "qualityIndex": 77.09,
+      "complaintsPer10kPolicies": 1.196,
+      "complaintsPer100mPremium": 0.752,
+      "complaintsPer10kCustomers": 0.757,
+      "ratingDate": "2022 年第四季度",
+      "complaintDataUpdateDate": "2023 年第四季度"
+    },
+    "branchDistribution": {
+      "provinces": [
+        "浙江省",
+        "江苏省",
+        "北京市",
+        "河北省",
+        "福建省",
+        "河南省",
+        "山东省",
+        "黑龙江省",
+        "辽宁省",
+        "上海市",
+        "湖北省",
+        "江西省",
+        "广东省"
+      ]
+    },
+    "shareholders": {
+      "note": "占比 5% 以上",
+      "list": [
+        {
+          "name": "物产中大集团股份有限公司",
+          "stakePercentage": 33,
+          "type": "国有"
+        },
+        {
+          "name": "存款保险基金管理有限责任公司",
+          "stakePercentage": 17,
+          "type": "国有"
+        },
+        {
+          "name": "中国保险保障基金有限责任公司",
+          "stakePercentage": 17,
+          "type": "国有"
+        },
+        {
+          "name": "北京九盛资产管理有限责任公司",
+          "stakePercentage": 9.69,
+          "type": "民营"
+        },
+        {
+          "name": "杭州城投资本集团有限公司",
+          "stakePercentage": 9,
+          "type": "国有"
+        },
+        {
+          "name": "杭州萧山环境集团有限公司",
+          "stakePercentage": 5.6,
+          "type": "国有"
+        }
+      ]
+    }
+  },
+  {
+    "code": "chinapostlife",
+    "shortName": "中邮人寿",
+    "hotline": "400-890-9999",
+    "basicInfo": {
+      "companyName": "中邮人寿保险股份有限公司",
+      "companyType": [
+        "寿险公司",
+        "国有控股",
+        "中外合资"
+      ],
+      "registeredCapital": {
+        "value": 286.63,
+        "unit": "亿"
+      },
+      "address": "北京市西城区金融大街甲3号B座",
+      "website": "https://www.chinapost-life.com/"
+    },
+    "solvency": {
+      "rating": "良好",
+      "dividendRealizationRate": "35%-56%",
+      "financialInvestmentYield": {
+        "annual": 1.53,
+        "recentThreeYears": 3.8
+      },
+      "comprehensiveInvestmentYield": {
+        "annual": 2.29,
+        "recentThreeYears": 4.58
+      },
+      "comprehensiveSolvencyRatio": 194.59,
+      "coreSolvencyRatio": 128.57,
+      "riskRating": "BB",
+      "sarmraScore": 80.44,
+      "totalAssets": {
+        "value": 5825.8,
+        "unit": "亿元"
+      },
+      "reportDate": "2025年第2季度"
+    },
+    "serviceCapability": {
+      "qualityIndex": 83.74,
+      "complaintsPer10kPolicies": 0.151,
+      "complaintsPer100mPremium": 0.146,
+      "complaintsPer10kCustomers": 0.099,
+      "ratingDate": "2022年第四季度",
+      "complaintDataUpdateDate": "2023年第四季度"
+    },
+    "branchDistribution": {
+      "provinces": [
+        "江西省",
+        "四川省",
+        "陕西省",
+        "北京市",
+        "天津市",
+        "辽宁省",
+        "江苏省",
+        "浙江省",
+        "安徽省",
+        "宁夏回族自治区",
+        "河南省",
+        "黑龙江省",
+        "湖南省",
+        "广东省",
+        "山东省",
+        "重庆市",
+        "湖北省",
+        "上海市",
+        "河北省",
+        "吉林省",
+        "广西壮族自治区",
+        "福建省"
+      ]
+    },
+    "shareholders": {
+      "note": "占比5%以上",
+      "list": [
+        {
+          "name": "中国邮政集团有限公司",
+          "stakePercentage": 38.2,
+          "type": "国有"
+        },
+        {
+          "name": "友邦保险有限公司",
+          "stakePercentage": 25,
+          "type": "外资"
+        },
+        {
+          "name": "北京中邮资产管理有限公司",
+          "stakePercentage": 15,
+          "type": "国有"
+        },
+        {
+          "name": "中国集邮有限公司",
+          "stakePercentage": 12.19,
+          "type": "国有"
+        },
+        {
+          "name": "邮政科学研究规划院有限公司",
+          "stakePercentage": 9.62,
+          "type": "国有"
+        }
+      ]
+    }
+  },
+  {
+    "code": "icbcaxa",
+    "shortName": "工银安盛",
+    "hotline": "95359",
+    "basicInfo": {
+      "companyName": "工银安盛人寿保险有限公司",
+      "companyType": [
+        "寿险公司",
+        "国有控股",
+        "中外合资"
+      ],
+      "registeredCapital": {
+        "value": 125.05,
+        "unit": "亿"
+      },
+      "address": "中国（上海）自由贸易试验区陆家嘴环路 166 号",
+      "website": "https://www.icbc-axa.com/"
+    },
+    "solvency": {
+      "rating": "优秀",
+      "dividendRealizationRate": "19%-112%",
+      "financialInvestmentYield": {
+        "annual": 1.81,
+        "recentThreeYears": 3.77
+      },
+      "comprehensiveInvestmentYield": {
+        "annual": 3.14,
+        "recentThreeYears": 6
+      },
+      "comprehensiveSolvencyRatio": 261,
+      "coreSolvencyRatio": 195,
+      "riskRating": "AAA",
+      "sarmraScore": 82.12,
+      "totalAssets": {
+        "value": 3224,
+        "unit": "亿元"
+      },
+      "reportDate": "2025 年第 2 季度"
+    },
+    "serviceCapability": {
+      "qualityIndex": 83.73,
+      "complaintsPer10kPolicies": 0.753,
+      "complaintsPer100mPremium": 0.447,
+      "complaintsPer10kCustomers": 0.183,
+      "ratingDate": "2022 年第四季度",
+      "complaintDataUpdateDate": "2023 年第四季度"
+    },
+    "branchDistribution": {
+      "provinces": [
+        "上海市",
+        "北京市",
+        "广东省",
+        "辽宁省",
+        "天津市",
+        "浙江省",
+        "山东省",
+        "四川省",
+        "河北省",
+        "河南省",
+        "湖北省",
+        "陕西省",
+        "山西省",
+        "福建省",
+        "安徽省",
+        "重庆市",
+        "广西壮族自治区",
+        "云南省",
+        "江西省"
+      ]
+    },
+    "shareholders": {
+      "note": "占比 5% 以上",
+      "list": [
+        {
+          "name": "中国工商银行股份有限公司",
+          "stakePercentage": 60,
+          "type": "国有"
+        },
+        {
+          "name": "安盛中国公司",
+          "stakePercentage": 27.5,
+          "type": "外资"
+        },
+        {
+          "name": "五矿资本控股有限公司",
+          "stakePercentage": 10,
+          "type": "国有"
+        }
+      ]
+    }
+  }
+]

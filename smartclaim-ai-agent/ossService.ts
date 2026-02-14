@@ -1,39 +1,37 @@
-import OSS from 'ali-oss';
+export const uploadToOSS = async (base64: string, mimeType: string): Promise<{ url: string; objectKey: string }> => {
+  console.log('[OSS-AJ] Starting proxy upload for base64');
 
-let client: OSS | null = null;
+  try {
+    const response = await fetch('/api/upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fileName: `claims/${Date.now()}.jpg`,
+        fileType: mimeType,
+        base64
+      })
+    });
 
-const getClient = (): OSS => {
-  if (!client) {
-    const accessKeyId = process.env.ALIYUN_OSS_ACCESS_KEY_ID || '';
-    const accessKeySecret = process.env.ALIYUN_OSS_ACCESS_KEY_SECRET || '';
-
-    if (!accessKeyId || !accessKeySecret) {
-      throw new Error('OSS credentials not configured');
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Server upload failed');
     }
 
-    client = new OSS({
-      region: process.env.ALIYUN_OSS_REGION || 'oss-cn-beijing',
-      accessKeyId,
-      accessKeySecret,
-      bucket: process.env.ALIYUN_OSS_BUCKET || '',
-    });
+    const result = await response.json();
+    console.log('[OSS-AJ] Proxy upload successful:', result.url);
+    return { url: result.url, objectKey: result.objectKey || result.name };
+  } catch (error) {
+    console.error('[OSS-AJ] Proxy upload failed:', error);
+    throw error;
   }
-  return client;
 };
 
-export const uploadToOSS = async (base64: string, mimeType: string): Promise<string> => {
-  // Convert base64 to Blob via fetch (clean and browser-native)
-  const dataUrl = `data:${mimeType};base64,${base64}`;
-  const response = await fetch(dataUrl);
-  const blob = await response.blob();
-
-  // Create a File object from the Blob (ali-oss browser SDK prefers File)
-  const ext = mimeType.split('/')[1] || 'jpg';
-  const filename = `claims/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-  const file = new File([blob], filename, { type: mimeType });
-
-  const ossClient = getClient();
-  const result = await ossClient.put(filename, file);
-
+export const getSignedUrl = async (objectKey: string, expires = 3600): Promise<string> => {
+  const response = await fetch(`/api/oss-url?key=${encodeURIComponent(objectKey)}&expires=${expires}`);
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.message || 'Signed URL failed');
+  }
+  const result = await response.json();
   return result.url;
 };

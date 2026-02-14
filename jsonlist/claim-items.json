@@ -1,0 +1,21 @@
+[
+  {
+    "id": "item-1",
+    "name": "一般住院医疗理赔",
+    "description": "针对普通疾病住院产生的费用进行理赔。",
+    "materialIds": [
+      "mat-1",
+      "mat-2",
+      "mat-3"
+    ]
+  },
+  {
+    "id": "item-2",
+    "name": "意外伤残理赔",
+    "description": "针对因意外导致的伤残进行理赔。",
+    "materialIds": [
+      "mat-1",
+      "mat-3"
+    ]
+  }
+]

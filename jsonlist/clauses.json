@@ -1,0 +1,2669 @@
+[
+  {
+    "productCode": "HOS2024-A",
+    "regulatoryName": "超级健康医疗保险（2024版）",
+    "companyName": "人保健康",
+    "version": "2.1",
+    "salesRegions": "全国（不含港澳台）",
+    "effectiveDate": "2024-01-01",
+    "discontinuationDate": "2028-12-31",
+    "status": "生效",
+    "primaryCategory": "医疗保险",
+    "secondaryCategory": "住院医疗",
+    "primaryCategoryCode": "A",
+    "secondaryCategoryCode": "A01",
+    "racewayId": "A0101",
+    "racewayName": "短期百万医疗",
+    "clauseType": "主险",
+    "operator": "张三",
+    "coverageDetails": [],
+    "coveragePlans": [
+      {
+        "planType": "标准版",
+        "annualLimit": 6000000,
+        "guaranteedRenewalYears": 0,
+        "coverageDetails": [
+          {
+            "mandatory": true,
+            "item_code": "GENERAL_MEDICAL",
+            "item_name": "一般医疗保险金",
+            "description": "含住院、特殊门诊、外购药等费用。",
+            "details": {
+              "limit": 2000000,
+              "deductible": 10000,
+              "reimbursement_ratio": 1,
+              "hospital_requirements": "二级及以上公立医院",
+              "coverage_scope": "住院费用/特殊门诊/外购药"
+            }
+          },
+          {
+            "mandatory": true,
+            "item_code": "CRITICAL_ILLNESS_MEDICAL",
+            "item_name": "重疾医疗保险金",
+            "description": "120种重大疾病医疗费用保障。",
+            "details": {
+              "limit": 4000000,
+              "deductible": 0,
+              "reimbursement_ratio": 1,
+              "hospital_requirements": "二级及以上公立医院",
+              "coverage_scope": "重疾相关治疗费用"
+            }
+          }
+        ]
+      }
+    ],
+    "underwritingAge": "30天 - 60周岁",
+    "coveragePeriod": "1年",
+    "coverageArea": "中国大陆",
+    "hospitalScope": "二级及以上公立医院",
+    "claimScope": "不限社保",
+    "occupationScope": "1-4类职业",
+    "hesitationPeriod": "15天",
+    "waitingPeriod": "30天（一般疾病），90天（特殊疾病）",
+    "policyEffectiveDate": "T+1",
+    "purchaseLimit": 1,
+    "annualPremium": 300,
+    "valueAddedServices": [
+      {
+        "id": "vas1",
+        "name": "图文咨询服务",
+        "description": "用户可通过图文咨询的方式与医生进行一对一交流，医生为被保险人提供图文问诊、疾病诊断、用药处方等诊疗服务。服务时间每日9：00-21：00，精神类或心理咨询不在服务范围。客户可通过“众安互联网医院”微信小程序选择“健康咨询”使用。"
+      },
+      {
+        "id": "vas2",
+        "name": "视频问诊服务",
+        "description": "为被保险人提供视频问诊服务，每日9:00-21:00不限次使用。金牌医生快速接诊，提供1对1视频交流、疾病诊断、用药处方等诊疗服务（精神类或心理咨询不在服务范围）。金牌医生均具备国家专业医师资格证书，平均5年以上临床经验，保障问诊安全。客户可通过“众安互联网医院”微信小程序选择“视频问诊”使用。"
+      },
+      {
+        "id": "vas4",
+        "name": "医疗垫付服务",
+        "description": "若您在保险期间内等待期后（意外无等待期），在垫付服务覆盖城市中二级及以上的公立医院发生住院，且预估或实际住院费用需求超过产品免赔额需个人承担的医疗费用部分，可以申请进行垫付服务，垫付服务覆盖全国83个城市中的二级及以上公立医院（仅覆盖市区范围，城市下属的县、社区、镇、村等医院暂不支持）。\n客户可通过众安健康微信小程序、众安保险APP、众安健康微信公众号内在线申请医疗垫付或拨打客服电话952299或1010-9955提出垫付服务申请。服务专员联系客户收集材料，了解客户就医需求和费用情况，协助客户完成相关资料填写。"
+      }
+    ],
+    "productCardImage": "https://pic1.imgdb.cn/item/692dd43cc2ca2fe15cf17332.webp",
+    "productHeroImage": "https://pic1.imgdb.cn/item/69311d3fa11464095f88537e.webp",
+    "productLongImage": [
+      "https://pic1.imgdb.cn/item/69313be6a11464095f8a12dd.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d8.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d7.jpg"
+    ],
+    "productAttachments": [
+      "超级健康医疗保险条款.pdf"
+    ],
+    "productSummary": "这是一款覆盖广泛、保障全面的百万医疗险产品。",
+    "tags": [
+      "医疗垫付",
+      "就医绿通"
+    ],
+    "promoTag": "百万医疗险人手一份",
+    "cardMetric1Label": "总保额",
+    "cardMetric1Value": "最高600万",
+    "cardMetric2Label": "保障期限",
+    "cardMetric2Value": "1年",
+    "cardMetric3Label": "投保年龄",
+    "cardMetric3Value": "30天-60岁",
+    "supportsOnlineClaim": true,
+    "isOnline": true,
+    "clauseTextFile": "超级健康医疗保险条款_v2.1.pdf",
+    "rateTableFile": "医疗险费率表_2024.xlsx",
+    "productDescriptionFile": "超级健康产品说明.pdf",
+    "cashValueTableFile": ""
+  },
+  {
+    "productCode": "GCLIFE_MED_2025_A",
+    "regulatoryName": "中意优护百万医疗保险（2025版）",
+    "companyName": "中意人寿",
+    "version": "1.0",
+    "salesRegions": "全国（不含港澳台）",
+    "effectiveDate": "2025-06-01",
+    "discontinuationDate": "",
+    "status": "草稿",
+    "primaryCategory": "医疗保险",
+    "secondaryCategory": "住院医疗",
+    "primaryCategoryCode": "A",
+    "secondaryCategoryCode": "A01",
+    "racewayId": "A0102",
+    "racewayName": "长期医疗",
+    "clauseType": "主险",
+    "operator": "系统管理员",
+    "coverageDetails": [],
+    "underwritingAge": "30天 - 65周岁",
+    "coveragePeriod": "1年",
+    "coverageArea": "中国大陆",
+    "hospitalScope": "二级及以上公立医院普通部",
+    "claimScope": "经社保结算后100%",
+    "occupationScope": "1-4类职业",
+    "hesitationPeriod": "15天",
+    "waitingPeriod": "30天（一般疾病），90天（特定疾病）",
+    "policyEffectiveDate": "T+1",
+    "purchaseLimit": 1,
+    "annualPremium": 399,
+    "valueAddedServices": [
+      {
+        "id": "vas1",
+        "name": "就医绿色通道",
+        "description": "提供三甲医院就医协调、专家门诊加号服务。"
+      },
+      {
+        "id": "vas2",
+        "name": "医疗垫付",
+        "description": "住院期间符合条件的医疗费用可申请垫付。"
+      },
+      {
+        "id": "vas3",
+        "name": "特药服务",
+        "description": "覆盖院外特药清单，提供药品配送与用药指导。"
+      }
+    ],
+    "productCardImage": "https://pic1.imgdb.cn/item/692dd43cc2ca2fe15cf17332.webp",
+    "productHeroImage": "https://pic1.imgdb.cn/item/69311d3fa11464095f88537e.webp",
+    "productLongImage": [
+      "https://pic1.imgdb.cn/item/69313be6a11464095f8a12dd.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d8.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d7.jpg"
+    ],
+    "productAttachments": [
+      "中意优护百万医疗保险（2025版）条款.pdf"
+    ],
+    "productSummary": "保证续保3年，涵盖住院、门诊特需与院外特药，安心就医。",
+    "tags": [
+      "就医绿通",
+      "医疗垫付"
+    ],
+    "promoTag": "百万医疗守护家人",
+    "cardMetric1Label": "总保额",
+    "cardMetric1Value": "最高600万",
+    "cardMetric2Label": "免赔额",
+    "cardMetric2Value": "1万元/年",
+    "cardMetric3Label": "投保年龄",
+    "cardMetric3Value": "30天-65岁",
+    "supportsOnlineClaim": true,
+    "isOnline": true,
+    "clauseTextFile": "中意优护百万医疗保险条款_2025.pdf",
+    "rateTableFile": "医疗险费率表_中意_2025.xlsx",
+    "productDescriptionFile": "产品说明.pdf",
+    "cashValueTableFile": "",
+    "deductible": "年免赔额1万元",
+    "renewalWarranty": "保证续保3年",
+    "outHospitalMedicine": "院外特药100种，最高200万",
+    "healthConditionNotice": "支持智能核保",
+    "selectedResponsibilities": [
+      {
+        "id": "resp-1",
+        "code": "GENERAL_HOSPITALIZATION",
+        "name": "住院医疗费用",
+        "category": "医疗险",
+        "description": "住院治疗费用报销"
+      },
+      {
+        "id": "resp-2",
+        "code": "OUT_HOSPITAL_DRUG",
+        "name": "院外特效药费用",
+        "category": "医疗险",
+        "description": "院外特效药清单覆盖"
+      }
+    ],
+    "coveragePlans": [
+      {
+        "planType": "经典版",
+        "annualLimit": 6000000,
+        "guaranteedRenewalYears": 3,
+        "coverageDetails": [
+          {
+            "mandatory": true,
+            "item_code": "GENERAL_HOSPITALIZATION",
+            "item_name": "住院医疗费用",
+            "description": "住院治疗费用报销",
+            "details": {
+              "limit": 3000000,
+              "deductible": 10000,
+              "reimbursement_ratio": 1,
+              "hospital_requirements": "二级及以上公立医院普通部",
+              "coverage_scope": "住院费用/特殊门诊/外购药"
+            }
+          },
+          {
+            "mandatory": true,
+            "item_code": "CRITICAL_ILLNESS_MEDICAL",
+            "item_name": "重疾医疗费用",
+            "description": "重疾医疗专项保障",
+            "details": {
+              "limit": 6000000,
+              "deductible": 0,
+              "reimbursement_ratio": 1,
+              "hospital_requirements": "指定医院网络",
+              "coverage_scope": "重疾相关治疗费用"
+            }
+          }
+        ]
+      },
+      {
+        "planType": "升级版",
+        "annualLimit": 8000000,
+        "guaranteedRenewalYears": 6,
+        "coverageDetails": [
+          {
+            "mandatory": true,
+            "item_code": "GENERAL_HOSPITALIZATION",
+            "item_name": "住院医疗费用",
+            "description": "住院治疗费用报销",
+            "details": {
+              "limit": 4000000,
+              "deductible": 10000,
+              "reimbursement_ratio": 1,
+              "hospital_requirements": "二级及以上公立医院普通部",
+              "coverage_scope": "住院费用/特殊门诊/外购药"
+            }
+          },
+          {
+            "mandatory": false,
+            "item_code": "OUT_HOSPITAL_DRUG",
+            "item_name": "院外特药费用",
+            "description": "院外特药清单覆盖",
+            "details": {
+              "limit": 2000000,
+              "deductible": 0,
+              "reimbursement_ratio": 0.8,
+              "hospital_requirements": "指定药房与配送网络",
+              "coverage_scope": "院外特药费用"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productCode": "GCLIFE_CI_2025_B",
+    "regulatoryName": "中意康享重大疾病保险（2025版）",
+    "companyName": "中意人寿",
+    "version": "1.0",
+    "salesRegions": "全国（不含港澳台）",
+    "effectiveDate": "2025-07-01",
+    "discontinuationDate": "",
+    "status": "草稿",
+    "primaryCategory": "重大疾病保险",
+    "secondaryCategory": "定期重疾",
+    "primaryCategoryCode": "B",
+    "secondaryCategoryCode": "B02",
+    "racewayId": "B0201",
+    "racewayName": "长期重疾",
+    "clauseType": "主险",
+    "operator": "系统管理员",
+    "underwritingAge": "0 - 55周岁",
+    "coveragePeriod": "30年",
+    "coverageArea": "中国大陆",
+    "hospitalScope": "合法合规的医疗机构",
+    "claimScope": "确诊给付，医疗报销不适用",
+    "occupationScope": "1-4类职业",
+    "hesitationPeriod": "15天",
+    "waitingPeriod": "90天",
+    "policyEffectiveDate": "T+1",
+    "purchaseLimit": 1,
+    "annualPremium": 1200,
+    "valueAddedServices": [
+      {
+        "id": "vas_ci_1",
+        "name": "第二诊疗意见",
+        "description": "联合三甲医院重疾专家提供第二诊疗意见服务。"
+      },
+      {
+        "id": "vas_ci_2",
+        "name": "重疾专家远程会诊",
+        "description": "提供远程多学科专家联合会诊服务。"
+      }
+    ],
+    "productCardImage": "https://pic1.imgdb.cn/item/692dd43cc2ca2fe15cf17332.webp",
+    "productHeroImage": "https://pic1.imgdb.cn/item/69311d3fa11464095f88537e.webp",
+    "productLongImage": [
+      "https://pic1.imgdb.cn/item/69313be6a11464095f8a12dd.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d8.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d7.jpg"
+    ],
+    "productAttachments": [
+      "中意康享重大疾病保险（2025版）条款.pdf"
+    ],
+    "productSummary": "轻中重症覆盖，确诊即赔，聚焦家庭经济支柱的收入风险。",
+    "tags": [
+      "轻中重症全覆盖",
+      "多次赔付可选"
+    ],
+    "promoTag": "重疾保障升级",
+    "cardMetric1Label": "基本保额",
+    "cardMetric1Value": "50万",
+    "cardMetric2Label": "轻症赔付比例",
+    "cardMetric2Value": "30%",
+    "cardMetric3Label": "保障期限",
+    "cardMetric3Value": "30年",
+    "supportsOnlineClaim": true,
+    "isOnline": true,
+    "clauseTextFile": "中意康享重大疾病保险_2025.pdf",
+    "rateTableFile": "重疾险费率表_中意_2025.xlsx",
+    "productDescriptionFile": "产品说明.pdf",
+    "coveragePlans": [
+      {
+        "planType": "经典版",
+        "coverageDetails": [
+          {
+            "mandatory": true,
+            "item_code": "MAJOR_CI",
+            "item_name": "重大疾病保险金",
+            "description": "确诊给付一次",
+            "details": {
+              "limit": 500000,
+              "deductible": 0,
+              "reimbursement_ratio": 1,
+              "hospital_requirements": "不限",
+              "coverage_scope": "确诊给付"
+            }
+          },
+          {
+            "mandatory": true,
+            "item_code": "MID_CI",
+            "item_name": "中症保险金",
+            "description": "确诊给付一次",
+            "details": {
+              "limit": 100000,
+              "deductible": 0,
+              "reimbursement_ratio": 1,
+              "hospital_requirements": "不限",
+              "coverage_scope": "确诊给付"
+            }
+          },
+          {
+            "mandatory": true,
+            "item_code": "MINOR_CI",
+            "item_name": "轻症保险金",
+            "description": "确诊给付一次",
+            "details": {
+              "limit": 50000,
+              "deductible": 0,
+              "reimbursement_ratio": 1,
+              "hospital_requirements": "不限",
+              "coverage_scope": "确诊给付"
+            }
+          },
+          {
+            "mandatory": false,
+            "item_code": "DEATH_BENEFIT",
+            "item_name": "身故保险金",
+            "description": "保障期内身故给付",
+            "details": {
+              "limit": 500000,
+              "deductible": 0,
+              "reimbursement_ratio": 1,
+              "hospital_requirements": "不限",
+              "coverage_scope": "身故责任"
+            }
+          }
+        ]
+      },
+      {
+        "planType": "升级版",
+        "coverageDetails": [
+          {
+            "mandatory": true,
+            "item_code": "MAJOR_CI",
+            "item_name": "重大疾病保险金",
+            "description": "确诊给付一次",
+            "details": {
+              "limit": 800000,
+              "deductible": 0,
+              "reimbursement_ratio": 1,
+              "hospital_requirements": "不限",
+              "coverage_scope": "确诊给付"
+            }
+          },
+          {
+            "mandatory": true,
+            "item_code": "MID_CI",
+            "item_name": "中症保险金",
+            "description": "确诊给付一次",
+            "details": {
+              "limit": 200000,
+              "deductible": 0,
+              "reimbursement_ratio": 1,
+              "hospital_requirements": "不限",
+              "coverage_scope": "确诊给付"
+            }
+          },
+          {
+            "mandatory": true,
+            "item_code": "MINOR_CI",
+            "item_name": "轻症保险金",
+            "description": "确诊给付一次",
+            "details": {
+              "limit": 100000,
+              "deductible": 0,
+              "reimbursement_ratio": 1,
+              "hospital_requirements": "不限",
+              "coverage_scope": "确诊给付"
+            }
+          },
+          {
+            "mandatory": false,
+            "item_code": "DEATH_BENEFIT",
+            "item_name": "身故保险金",
+            "description": "保障期内身故给付",
+            "details": {
+              "limit": 800000,
+              "deductible": 0,
+              "reimbursement_ratio": 1,
+              "hospital_requirements": "不限",
+              "coverage_scope": "身故责任"
+            }
+          }
+        ]
+      }
+    ],
+    "coverageDetails": []
+  },
+  {
+    "productCode": "CZY-MED-EMB-2025-C",
+    "regulatoryName": "中意e民保医疗保险（互联网专属）",
+    "companyName": "中意人寿",
+    "version": "2025版",
+    "salesRegions": "中国大陆（不含港澳台）",
+    "effectiveDate": "2025-01-01",
+    "discontinuationDate": "",
+    "status": "生效",
+    "primaryCategory": "医疗保险",
+    "secondaryCategory": "医疗保险",
+    "primaryCategoryCode": "A",
+    "secondaryCategoryCode": "A01",
+    "racewayId": "A0102",
+    "racewayName": "长期医疗",
+    "clauseType": "主险",
+    "operator": "系统管理员",
+    "underwritingAge": "28天-80周岁",
+    "coveragePeriod": "1年",
+    "coverageArea": "全国（不含港澳台）",
+    "hospitalScope": "二级及以上公立医院普通部",
+    "claimScope": "医保范围内100%，医保外按合同约定比例报销",
+    "occupationScope": "1-4类",
+    "hesitationPeriod": "无",
+    "waitingPeriod": "90天",
+    "policyEffectiveDate": "次日零时",
+    "purchaseLimit": 1,
+    "annualPremium": 298,
+    "valueAddedServices": [
+      {
+        "id": "VAS01",
+        "name": "在线投保",
+        "description": "支持APP在线投保与电子保单"
+      },
+      {
+        "id": "VAS02",
+        "name": "在线理赔",
+        "description": "可通过掌上中意APP发起理赔"
+      },
+      {
+        "id": "VAS03",
+        "name": "智能核保",
+        "description": "提供智能核保，健康告知更宽松"
+      }
+    ],
+    "productCardImage": "https://pic1.imgdb.cn/item/692dd43cc2ca2fe15cf17332.webp",
+    "productHeroImage": "https://pic1.imgdb.cn/item/69311d3fa11464095f88537e.webp",
+    "productLongImage": [
+      "https://pic1.imgdb.cn/item/69313be6a11464095f8a12dd.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d8.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d7.jpg"
+    ],
+    "productAttachments": [
+      "中意e民保条款.pdf"
+    ],
+    "productSummary": "百万医疗基础款，含医保内/外医疗、质子重离子、特药、重疾相关保障，年度最高300万。",
+    "tags": [
+      "金选"
+    ],
+    "promoTag": "经典版入门医疗",
+    "cardMetric1Label": "总保额",
+    "cardMetric1Value": "300万",
+    "cardMetric2Label": "保障期限",
+    "cardMetric2Value": "1年",
+    "cardMetric3Label": "投保年龄",
+    "cardMetric3Value": "28天-80岁",
+    "supportsOnlineClaim": true,
+    "isOnline": true,
+    "deductible": "共享1万元免赔额",
+    "renewalWarranty": "3年保证续保",
+    "outHospitalMedicine": "特定院外药品，按责任限额报销",
+    "healthConditionNotice": "健康告知宽松，支持智能核保",
+    "selectedResponsibilities": [
+      {
+        "id": "resp-1",
+        "code": "GENERAL_HOSPITALIZATION",
+        "name": "住院医疗费用",
+        "category": "医疗险",
+        "description": "住院治疗费用报销"
+      },
+      {
+        "id": "resp-19",
+        "code": "GENERAL_OUT_OF_MEDICAL",
+        "name": "医保范围外医疗",
+        "category": "医疗险",
+        "description": "医保外合理住院治疗费用报销"
+      },
+      {
+        "id": "resp-20",
+        "code": "PROTON_HEAVY_ION",
+        "name": "质子重离子医疗保险金",
+        "category": "医疗险",
+        "description": "质子、重离子放射治疗费用保障"
+      },
+      {
+        "id": "resp-21",
+        "code": "SPECIAL_DRUG",
+        "name": "院外特定药品费用保险金",
+        "category": "医疗险",
+        "description": "特定抗肿瘤药品费用报销"
+      },
+      {
+        "id": "resp-22",
+        "code": "CRITICAL_ILLNESS_OUT_OF_TOWN",
+        "name": "重度疾病异地就医",
+        "category": "医疗险",
+        "description": "重疾跨省就医产生的合理费用"
+      },
+      {
+        "id": "resp-23",
+        "code": "CRITICAL_ILLNESS_GENE_TEST",
+        "name": "恶性肿瘤重度基因检测",
+        "category": "医疗险",
+        "description": "癌症相关基因检测费用"
+      },
+      {
+        "id": "resp-24",
+        "code": "CRITICAL_ILLNESS_DAILY_ALLOWANCE",
+        "name": "重度疾病住院津贴",
+        "category": "医疗险",
+        "description": "重疾住院期间按天给付津贴"
+      },
+      {
+        "id": "resp-25",
+        "code": "CRITICAL_ILLNESS_REHABILITATION",
+        "name": "重度疾病康复医疗",
+        "category": "医疗险",
+        "description": "癌症相关康复治疗、器械等费用"
+      }
+    ],
+    "coveragePlans": [
+      {
+        "planType": "经典版",
+        "annualLimit": 3000000,
+        "guaranteedRenewalYears": 3,
+        "coverageDetails": [
+          {
+            "mandatory": true,
+            "item_code": "GENERAL_HOSPITALIZATION",
+            "item_name": "医保范围内医疗",
+            "description": "医保内住院医疗费用",
+            "details": {
+              "limit": 3000000,
+              "deductible": 10000,
+              "reimbursement_ratio": 1,
+              "hospital_requirements": "二级及以上公立医院普通部",
+              "coverage_scope": "医保范围内住院医疗"
+            }
+          },
+          {
+            "mandatory": true,
+            "item_code": "GENERAL_OUT_OF_MEDICAL",
+            "item_name": "医保范围外医疗",
+            "description": "医保外合理住院费用",
+            "details": {
+              "limit": 3000000,
+              "deductible": 10000,
+              "reimbursement_ratio": 0.6,
+              "hospital_requirements": "二级及以上公立医院普通部",
+              "coverage_scope": "医保外住院医疗"
+            }
+          },
+          {
+            "mandatory": false,
+            "item_code": "PROTON_HEAVY_ION",
+            "item_name": "质子重离子医疗保险金",
+            "description": "质子、重离子治疗费用",
+            "details": {
+              "limit": 3000000,
+              "deductible": 10000,
+              "reimbursement_ratio": 1,
+              "hospital_requirements": "指定医疗机构",
+              "coverage_scope": "癌症放射治疗"
+            }
+          },
+          {
+            "mandatory": false,
+            "item_code": "SPECIAL_DRUG",
+            "item_name": "院外特定药品费用保险金",
+            "description": "特定抗肿瘤药品费用",
+            "details": {
+              "limit": 200000,
+              "deductible": 0,
+              "reimbursement_ratio": 1,
+              "hospital_requirements": "指定药品目录",
+              "coverage_scope": "院外特药费用"
+            }
+          },
+          {
+            "mandatory": false,
+            "item_code": "CRITICAL_ILLNESS_OUT_OF_TOWN",
+            "item_name": "重度疾病异地就医",
+            "description": "重疾异地治疗费用",
+            "details": {
+              "limit": 200000,
+              "deductible": 0,
+              "reimbursement_ratio": 1,
+              "hospital_requirements": "指定医院",
+              "coverage_scope": "重疾跨省就医费用"
+            }
+          },
+          {
+            "mandatory": false,
+            "item_code": "CRITICAL_ILLNESS_GENE_TEST",
+            "item_name": "恶性肿瘤重度基因检测",
+            "description": "癌症基因检测费用",
+            "details": {
+              "limit": 10000,
+              "deductible": 0,
+              "reimbursement_ratio": 1,
+              "hospital_requirements": "指定检测机构",
+              "coverage_scope": "癌症基因检测费用"
+            }
+          },
+          {
+            "mandatory": false,
+            "item_code": "CRITICAL_ILLNESS_DAILY_ALLOWANCE",
+            "item_name": "重度疾病住院津贴",
+            "description": "重疾住院每日津贴",
+            "details": {
+              "limit": 18000,
+              "deductible": 0,
+              "reimbursement_ratio": 1,
+              "hospital_requirements": "ICU或普通住院",
+              "coverage_scope": "津贴按天给付"
+            }
+          },
+          {
+            "mandatory": false,
+            "item_code": "CRITICAL_ILLNESS_REHABILITATION",
+            "item_name": "重度疾病康复医疗",
+            "description": "癌症相关康复费用",
+            "details": {
+              "limit": 30000,
+              "deductible": 0,
+              "reimbursement_ratio": 1,
+              "hospital_requirements": "康复科或指定机构",
+              "coverage_scope": "康复器械、治疗等费用"
+            }
+          }
+        ]
+      }
+    ],
+    "coverageDetails": []
+  },
+  {
+    "productCode": "ACC2023-B",
+    "regulatoryName": "个人综合意外保障计划",
+    "companyName": "阳光人寿",
+    "version": "1.5",
+    "salesRegions": "北京、上海、广东",
+    "effectiveDate": "2023-05-10",
+    "discontinuationDate": "2027-05-09",
+    "status": "生效",
+    "primaryCategory": "意外保险",
+    "secondaryCategory": "综合意外",
+    "primaryCategoryCode": "C",
+    "secondaryCategoryCode": "C01",
+    "racewayId": "C0101",
+    "racewayName": "成人综合意外",
+    "clauseType": "主险",
+    "operator": "李四",
+    "coverageDetails": [],
+    "selectedResponsibilities": [
+      {
+        "id": "acc-r1",
+        "code": "ACCIDENTAL_DEATH_DISABILITY",
+        "name": "意外身故/伤残",
+        "category": "意外险",
+        "description": ""
+      },
+      {
+        "id": "acc-r2",
+        "code": "ACCIDENTAL_MEDICAL",
+        "name": "意外医疗",
+        "category": "意外险",
+        "description": "门急诊与住院医疗"
+      }
+    ],
+    "coveragePlans": [
+      {
+        "planType": "标准版",
+        "coverageDetails": [
+          {
+            "mandatory": true,
+            "item_code": "ACCIDENTAL_DEATH_DISABILITY",
+            "item_name": "意外身故保险金",
+            "description": "",
+            "details": {
+              "limit": 200000
+            }
+          },
+          {
+            "mandatory": true,
+            "item_code": "ACCIDENTAL_DEATH_DISABILITY",
+            "item_name": "意外伤残保险金",
+            "description": "",
+            "details": {
+              "limit": 400000
+            }
+          },
+          {
+            "mandatory": true,
+            "item_code": "ACCIDENTAL_MEDICAL",
+            "item_name": "意外伤害医疗保险责任",
+            "description": "含门急诊和住院",
+            "details": {
+              "limit": 40000,
+              "deductible": 0,
+              "reimbursement_ratio": 1,
+              "hospital_requirements": "合法合规的医疗机构",
+              "coverage_scope": "门急诊/住院"
+            }
+          }
+        ]
+      }
+    ],
+    "underwritingAge": "18 - 65周岁",
+    "coveragePeriod": "1年",
+    "coverageArea": "全球",
+    "hospitalScope": "合法合规的医疗机构",
+    "claimScope": "合理且必要的医疗费用",
+    "occupationScope": "1-3类职业",
+    "hesitationPeriod": "10天",
+    "waitingPeriod": "T+3生效",
+    "policyEffectiveDate": "T+3",
+    "purchaseLimit": 3,
+    "annualPremium": 150,
+    "valueAddedServices": [
+      {
+        "id": "vas1",
+        "name": "24小时紧急救援服务",
+        "description": "提供全球范围内的紧急医疗运送、医疗转运、遗体/骨灰送返等服务，确保客户在紧急情况下获得及时援助。"
+      }
+    ],
+    "productSummary": "为您的每一次出行和日常生活提供坚实保障。",
+    "productCardImage": "https://pic1.imgdb.cn/item/692dd43cc2ca2fe15cf17332.webp",
+    "productHeroImage": "https://pic1.imgdb.cn/item/69311d3fa11464095f88537e.webp",
+    "productLongImage": [
+      "https://pic1.imgdb.cn/item/69313be6a11464095f8a12dd.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d8.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d7.jpg"
+    ],
+    "supportsOnlineClaim": true,
+    "isOnline": true,
+    "clauseTextFile": "个人综合意外保障计划_v1.5.pdf",
+    "rateTableFile": "意外险费率表_2023.xlsx",
+    "productDescriptionFile": "综合意外险产品说明.pdf"
+  },
+  {
+    "productCode": "ACC2024-C",
+    "regulatoryName": "青少年意外保障计划（2024版）",
+    "companyName": "中意人寿",
+    "version": "1.0",
+    "salesRegions": "全国",
+    "effectiveDate": "2024-03-01",
+    "discontinuationDate": "2029-02-28",
+    "status": "生效",
+    "primaryCategory": "意外保险",
+    "secondaryCategory": "青少年意外",
+    "clauseType": "主险",
+    "operator": "系统管理员",
+    "coverageDetails": [],
+    "selectedResponsibilities": [
+      {
+        "id": "acc-y1",
+        "code": "ACCIDENTAL_DEATH_DISABILITY",
+        "name": "意外身故/伤残",
+        "category": "意外险",
+        "description": ""
+      },
+      {
+        "id": "acc-y2",
+        "code": "ACCIDENTAL_MEDICAL",
+        "name": "意外医疗",
+        "category": "意外险",
+        "description": "门急诊及住院医疗"
+      }
+    ],
+    "coveragePlans": [
+      {
+        "planType": "标准版",
+        "coverageDetails": [
+          {
+            "mandatory": true,
+            "item_code": "ACCIDENTAL_DEATH_DISABILITY",
+            "item_name": "意外身故/残疾",
+            "description": "适用于未成年人",
+            "details": {
+              "limit": 300000
+            }
+          },
+          {
+            "mandatory": true,
+            "item_code": "ACCIDENTAL_MEDICAL",
+            "item_name": "意外医疗",
+            "description": "门急诊及住院医疗",
+            "details": {
+              "limit": 20000,
+              "deductible": 0,
+              "reimbursement_ratio": 1,
+              "hospital_requirements": "合法合规的医疗机构",
+              "coverage_scope": "门急诊/住院"
+            }
+          }
+        ]
+      }
+    ],
+    "valueAddedServices": [
+      {
+        "id": "vas1",
+        "name": "校园意外绿色通道",
+        "description": "提供校内事故快速理赔协助与就医指引。"
+      },
+      {
+        "id": "vas2",
+        "name": "门急诊垫付服务",
+        "description": "符合条件的门急诊费用可申请垫付。"
+      }
+    ],
+    "underwritingAge": "6 - 18周岁",
+    "coveragePeriod": "1年",
+    "coverageArea": "中国大陆",
+    "hospitalScope": "合法合规的医疗机构",
+    "claimScope": "合理且必要的医疗费用",
+    "occupationScope": "1-3类职业",
+    "hesitationPeriod": "10天",
+    "waitingPeriod": "T+1生效",
+    "policyEffectiveDate": "T+1",
+    "purchaseLimit": 1,
+    "annualPremium": 99,
+    "productCardImage": "https://pic1.imgdb.cn/item/692dd43cc2ca2fe15cf17332.webp",
+    "productHeroImage": "https://pic1.imgdb.cn/item/69311d3fa11464095f88537e.webp",
+    "productLongImage": [
+      "https://pic1.imgdb.cn/item/69313be6a11464095f8a12dd.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d8.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d7.jpg"
+    ],
+    "productAttachments": [
+      "青少年意外保障计划_v1.0.pdf"
+    ],
+    "productSummary": "面向青少年的人群意外保障产品。",
+    "supportsOnlineClaim": true,
+    "isOnline": true,
+    "clauseTextFile": "青少年意外保障计划_v1.0.pdf",
+    "rateTableFile": "意外险费率表_2024.xlsx",
+    "productDescriptionFile": "产品说明.pdf"
+  },
+  {
+    "productCode": "ACC2022-A",
+    "regulatoryName": "老年人意外保障（关爱版）",
+    "companyName": "工银安盛",
+    "version": "1.2",
+    "salesRegions": "全国（不含港澳台）",
+    "effectiveDate": "2022-08-01",
+    "discontinuationDate": "2026-07-31",
+    "status": "生效",
+    "primaryCategory": "意外保险",
+    "secondaryCategory": "老年意外",
+    "clauseType": "主险",
+    "operator": "系统管理员",
+    "coverageDetails": [],
+    "selectedResponsibilities": [
+      {
+        "id": "acc-o1",
+        "code": "ACCIDENTAL_DEATH_DISABILITY",
+        "name": "意外身故/伤残",
+        "category": "意外险",
+        "description": ""
+      },
+      {
+        "id": "acc-o2",
+        "code": "ACCIDENTAL_MEDICAL",
+        "name": "意外医疗",
+        "category": "意外险",
+        "description": ""
+      },
+      {
+        "id": "acc-o3",
+        "code": "SPECIFIC_ACCIDENT",
+        "name": "特定意外（骨折津贴）",
+        "category": "意外险",
+        "description": "骨折按次给付"
+      }
+    ],
+    "coveragePlans": [
+      {
+        "planType": "标准版",
+        "coverageDetails": [
+          {
+            "mandatory": true,
+            "item_code": "ACCIDENTAL_DEATH_DISABILITY",
+            "item_name": "意外身故",
+            "description": "",
+            "details": {
+              "limit": 100000
+            }
+          },
+          {
+            "mandatory": false,
+            "item_code": "SPECIFIC_ACCIDENT",
+            "item_name": "骨折津贴",
+            "description": "按次给付",
+            "details": {
+              "additional_limit": 3000,
+              "scenario": "骨折津贴（按次）"
+            }
+          },
+          {
+            "mandatory": true,
+            "item_code": "ACCIDENTAL_MEDICAL",
+            "item_name": "意外医疗",
+            "description": "",
+            "details": {
+              "limit": 10000,
+              "deductible": 0,
+              "reimbursement_ratio": 1,
+              "hospital_requirements": "合法合规的医疗机构",
+              "coverage_scope": "门急诊/住院"
+            }
+          }
+        ]
+      }
+    ],
+    "valueAddedServices": [
+      {
+        "id": "vas1",
+        "name": "急诊陪护协调",
+        "description": "为老年人提供急诊陪护协调服务。"
+      },
+      {
+        "id": "vas2",
+        "name": "住院绿色通道",
+        "description": "协助安排住院绿色通道与床位协调。"
+      }
+    ],
+    "underwritingAge": "60 - 80周岁",
+    "coveragePeriod": "1年",
+    "coverageArea": "中国大陆",
+    "hospitalScope": "合法合规的医疗机构",
+    "claimScope": "合理且必要的医疗费用",
+    "occupationScope": "1-2类职业",
+    "hesitationPeriod": "10天",
+    "waitingPeriod": "T+1",
+    "policyEffectiveDate": "T+1",
+    "purchaseLimit": 1,
+    "annualPremium": 199,
+    "productCardImage": "https://pic1.imgdb.cn/item/692dd43cc2ca2fe15cf17332.webp",
+    "productHeroImage": "https://pic1.imgdb.cn/item/69311d3fa11464095f88537e.webp",
+    "productLongImage": [
+      "https://pic1.imgdb.cn/item/69313be6a11464095f8a12dd.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d8.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d7.jpg"
+    ],
+    "productAttachments": [
+      "老年人意外保障_关爱版_v1.2.pdf"
+    ],
+    "productSummary": "专为老年人设计的意外保障方案。",
+    "supportsOnlineClaim": true,
+    "isOnline": true,
+    "clauseTextFile": "老年人意外保障_关爱版_v1.2.pdf",
+    "rateTableFile": "意外险费率表_2022.xlsx",
+    "productDescriptionFile": "产品说明.pdf"
+  },
+  {
+    "productCode": "ANN2024-A",
+    "regulatoryName": "稳健养老金计划",
+    "companyName": "信泰人寿",
+    "version": "1.0",
+    "salesRegions": "全国",
+    "effectiveDate": "2024-06-01",
+    "discontinuationDate": "2034-05-31",
+    "status": "生效",
+    "primaryCategory": "年金保险",
+    "secondaryCategory": "养老年金",
+    "clauseType": "主险",
+    "operator": "系统管理员",
+    "coverageDetails": [],
+    "coveragePlans": [
+      {
+        "planType": "标准版",
+        "coverageDetails": [
+          {
+            "mandatory": true,
+            "id": "1",
+            "name": "年金领取",
+            "amount": "按合同约定",
+            "details": "按约定频率领取年金"
+          }
+        ]
+      }
+    ],
+    "underwritingAge": "18 - 60周岁",
+    "coveragePeriod": "至约定领取完毕",
+    "waitingPeriod": "无",
+    "productCardImage": "https://pic1.imgdb.cn/item/692dd43cc2ca2fe15cf17332.webp",
+    "productHeroImage": "https://pic1.imgdb.cn/item/69311d3fa11464095f88537e.webp",
+    "productLongImage": [
+      "https://pic1.imgdb.cn/item/69313be6a11464095f8a12dd.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d8.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d7.jpg"
+    ],
+    "productAttachments": [
+      "稳健养老金计划.pdf"
+    ],
+    "productSummary": "提供稳定的养老金收益与现金流。",
+    "supportsOnlineClaim": true,
+    "isOnline": true,
+    "paymentMethod": "期交",
+    "paymentPeriod": "10年",
+    "payoutFrequency": "年领",
+    "payoutStartAge": 60,
+    "underwritingOccupation": "1-4类职业",
+    "clauseTextFile": "稳健养老金计划.pdf",
+    "rateTableFile": "年金险费率表.xlsx",
+    "productDescriptionFile": "产品说明.pdf"
+  },
+  {
+    "productCode": "ANN2025-B",
+    "regulatoryName": "增益型年金保险",
+    "companyName": "中邮人寿",
+    "version": "1.0",
+    "salesRegions": "全国",
+    "effectiveDate": "2025-01-01",
+    "discontinuationDate": "2035-12-31",
+    "status": "草稿",
+    "primaryCategory": "年金保险",
+    "secondaryCategory": "普通年金",
+    "clauseType": "主险",
+    "operator": "系统管理员",
+    "coverageDetails": [],
+    "coveragePlans": [
+      {
+        "planType": "标准版",
+        "coverageDetails": [
+          {
+            "mandatory": true,
+            "id": "1",
+            "name": "年金领取",
+            "amount": "按合同约定",
+            "details": "支持月领/年领"
+          }
+        ]
+      }
+    ],
+    "underwritingAge": "0 - 55周岁",
+    "coveragePeriod": "至约定领取完毕",
+    "waitingPeriod": "无",
+    "productCardImage": "https://pic1.imgdb.cn/item/692dd43cc2ca2fe15cf17332.webp",
+    "productHeroImage": "https://pic1.imgdb.cn/item/69311d3fa11464095f88537e.webp",
+    "productLongImage": [
+      "https://pic1.imgdb.cn/item/69313be6a11464095f8a12dd.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d8.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d7.jpg"
+    ],
+    "productAttachments": [
+      "增益型年金保险.pdf"
+    ],
+    "productSummary": "灵活的年金领取与增益方案。",
+    "supportsOnlineClaim": true,
+    "isOnline": true,
+    "paymentMethod": "期交",
+    "paymentPeriod": "15年",
+    "payoutFrequency": "月领",
+    "payoutStartAge": 65,
+    "underwritingOccupation": "1-4类职业",
+    "clauseTextFile": "增益型年金保险.pdf",
+    "rateTableFile": "年金险费率表_2025.xlsx",
+    "productDescriptionFile": "产品说明.pdf"
+  },
+  {
+    "productCode": "ANN2023-C",
+    "regulatoryName": "教育金年金保险",
+    "companyName": "工银安盛",
+    "version": "2.0",
+    "salesRegions": "全国",
+    "effectiveDate": "2023-09-01",
+    "discontinuationDate": "2033-08-31",
+    "status": "生效",
+    "primaryCategory": "年金保险",
+    "secondaryCategory": "普通年金",
+    "clauseType": "主险",
+    "operator": "系统管理员",
+    "coverageDetails": [],
+    "coveragePlans": [
+      {
+        "planType": "标准版",
+        "coverageDetails": [
+          {
+            "mandatory": true,
+            "id": "1",
+            "name": "教育金领取",
+            "amount": "按合同约定",
+            "details": "用于子女教育规划"
+          }
+        ]
+      }
+    ],
+    "underwritingAge": "0 - 16周岁",
+    "coveragePeriod": "至约定领取完毕",
+    "waitingPeriod": "无",
+    "productCardImage": "https://pic1.imgdb.cn/item/692dd43cc2ca2fe15cf17332.webp",
+    "productHeroImage": "https://pic1.imgdb.cn/item/69311d3fa11464095f88537e.webp",
+    "productLongImage": [
+      "https://pic1.imgdb.cn/item/69313be6a11464095f8a12dd.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d8.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d7.jpg"
+    ],
+    "productAttachments": [
+      "教育金年金保险.pdf"
+    ],
+    "productSummary": "为孩子教育储备资金的年金产品。",
+    "supportsOnlineClaim": true,
+    "isOnline": true,
+    "paymentMethod": "期交",
+    "paymentPeriod": "12年",
+    "payoutFrequency": "年领",
+    "payoutStartAge": 18,
+    "underwritingOccupation": "不限",
+    "clauseTextFile": "教育金年金保险.pdf",
+    "rateTableFile": "年金险费率表_教育金.xlsx",
+    "productDescriptionFile": "产品说明.pdf"
+  },
+  {
+    "productCode": "TL2024-A",
+    "regulatoryName": "定期寿险保障计划",
+    "companyName": "中邮人寿",
+    "version": "1.0",
+    "salesRegions": "全国",
+    "effectiveDate": "2024-02-01",
+    "discontinuationDate": "2029-01-31",
+    "status": "生效",
+    "primaryCategory": "定期寿险",
+    "secondaryCategory": "定期寿险",
+    "clauseType": "主险",
+    "operator": "系统管理员",
+    "coverageDetails": [],
+    "coveragePlans": [
+      {
+        "planType": "标准版",
+        "coverageDetails": [
+          {
+            "mandatory": true,
+            "id": "DEATH_OR_TOTAL_DISABILITY",
+            "name": "身故或全残保险金",
+            "amount": "100%基本保额",
+            "details": "核心责任"
+          }
+        ]
+      }
+    ],
+    "underwritingAge": "20 - 55周岁",
+    "coveragePeriod": "20年",
+    "waitingPeriod": "90天",
+    "productCardImage": "https://pic1.imgdb.cn/item/692dd43cc2ca2fe15cf17332.webp",
+    "productHeroImage": "https://pic1.imgdb.cn/item/69311d3fa11464095f88537e.webp",
+    "productLongImage": [
+      "https://pic1.imgdb.cn/item/69313be6a11464095f8a12dd.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d8.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d7.jpg"
+    ],
+    "productAttachments": [
+      "定期寿险保障计划.pdf"
+    ],
+    "productSummary": "保障家庭责任期的定期寿险方案。",
+    "supportsOnlineClaim": true,
+    "isOnline": true,
+    "basicSumAssured": 500000,
+    "paymentPeriod": "20年",
+    "underwritingOccupation": "1-4类职业",
+    "clauseTextFile": "定期寿险保障计划.pdf",
+    "rateTableFile": "定期寿险费率表.xlsx",
+    "productDescriptionFile": "产品说明.pdf"
+  },
+  {
+    "productCode": "TL2025-B",
+    "regulatoryName": "高额定期寿险（旗舰版）",
+    "companyName": "中意人寿",
+    "version": "1.0",
+    "salesRegions": "全国",
+    "effectiveDate": "2025-04-01",
+    "discontinuationDate": "2035-03-31",
+    "status": "草稿",
+    "primaryCategory": "定期寿险",
+    "secondaryCategory": "定期寿险",
+    "clauseType": "主险",
+    "operator": "系统管理员",
+    "coverageDetails": [],
+    "coveragePlans": [
+      {
+        "planType": "标准版",
+        "coverageDetails": [
+          {
+            "mandatory": true,
+            "id": "DEATH_OR_TOTAL_DISABILITY",
+            "name": "身故或全残保险金",
+            "amount": "100%基本保额",
+            "details": "核心责任"
+          }
+        ]
+      }
+    ],
+    "underwritingAge": "25 - 60周岁",
+    "coveragePeriod": "30年",
+    "waitingPeriod": "90天",
+    "productCardImage": "https://pic1.imgdb.cn/item/692dd43cc2ca2fe15cf17332.webp",
+    "productHeroImage": "https://pic1.imgdb.cn/item/69311d3fa11464095f88537e.webp",
+    "productLongImage": [
+      "https://pic1.imgdb.cn/item/69313be6a11464095f8a12dd.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d8.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d7.jpg"
+    ],
+    "productAttachments": [
+      "高额定期寿险_旗舰版.pdf"
+    ],
+    "productSummary": "高保额定寿，保障更长责任期。",
+    "supportsOnlineClaim": true,
+    "isOnline": true,
+    "basicSumAssured": 1000000,
+    "paymentPeriod": "30年",
+    "underwritingOccupation": "1-3类职业",
+    "clauseTextFile": "高额定期寿险_旗舰版.pdf",
+    "rateTableFile": "定期寿险费率表_旗舰.xlsx",
+    "productDescriptionFile": "产品说明.pdf"
+  },
+  {
+    "productCode": "TL2023-C",
+    "regulatoryName": "家庭守护定寿（收入保障版）",
+    "companyName": "工银安盛",
+    "version": "1.2",
+    "salesRegions": "全国",
+    "effectiveDate": "2023-07-01",
+    "discontinuationDate": "2028-06-30",
+    "status": "生效",
+    "primaryCategory": "定期寿险",
+    "secondaryCategory": "定期寿险",
+    "clauseType": "主险",
+    "operator": "系统管理员",
+    "coverageDetails": [],
+    "coveragePlans": [
+      {
+        "planType": "标准版",
+        "coverageDetails": [
+          {
+            "mandatory": true,
+            "id": "DEATH_OR_TOTAL_DISABILITY",
+            "name": "身故或全残保险金",
+            "amount": "100%基本保额",
+            "details": "等额给付"
+          },
+          {
+            "mandatory": false,
+            "id": "INCOME_PROTECTION",
+            "name": "收入保障金",
+            "amount": "5000元/月",
+            "details": "保障期内按月给付"
+          }
+        ]
+      }
+    ],
+    "underwritingAge": "25 - 55周岁",
+    "coveragePeriod": "20年",
+    "waitingPeriod": "90天",
+    "productCardImage": "https://pic1.imgdb.cn/item/692dd43cc2ca2fe15cf17332.webp",
+    "productHeroImage": "https://pic1.imgdb.cn/item/69311d3fa11464095f88537e.webp",
+    "productLongImage": [
+      "https://pic1.imgdb.cn/item/69313be6a11464095f8a12dd.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d8.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d7.jpg"
+    ],
+    "productAttachments": [
+      "家庭守护定寿_收入保障版_v1.2.pdf"
+    ],
+    "productSummary": "为家庭收入提供稳定保障的定寿方案。",
+    "supportsOnlineClaim": true,
+    "isOnline": true,
+    "basicSumAssured": 300000,
+    "paymentPeriod": "20年",
+    "underwritingOccupation": "1-3类职业",
+    "clauseTextFile": "家庭守护定寿_收入保障版_v1.2.pdf",
+    "rateTableFile": "定期寿险费率表_收入保障.xlsx",
+    "productDescriptionFile": "产品说明.pdf"
+  },
+  {
+    "productCode": "WL2024-ZE-A",
+    "regulatoryName": "增额终身寿（成长版）",
+    "companyName": "信泰人寿",
+    "version": "1.0",
+    "salesRegions": "全国",
+    "effectiveDate": "2024-05-01",
+    "discontinuationDate": "2034-04-30",
+    "status": "生效",
+    "primaryCategory": "终身寿险",
+    "secondaryCategory": "增额终身寿",
+    "clauseType": "主险",
+    "operator": "系统管理员",
+    "coverageDetails": [],
+    "coveragePlans": [
+      {
+        "planType": "标准版",
+        "coverageDetails": [
+          {
+            "mandatory": true,
+            "id": "1",
+            "name": "身故保险金",
+            "amount": "按合同约定",
+            "details": "现金价值逐年增长"
+          }
+        ]
+      }
+    ],
+    "underwritingAge": "0 - 55周岁",
+    "coveragePeriod": "终身",
+    "waitingPeriod": "90天",
+    "productCardImage": "https://pic1.imgdb.cn/item/692dd43cc2ca2fe15cf17332.webp",
+    "productHeroImage": "https://pic1.imgdb.cn/item/69311d3fa11464095f88537e.webp",
+    "productLongImage": [
+      "https://pic1.imgdb.cn/item/69313be6a11464095f8a12dd.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d8.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d7.jpg"
+    ],
+    "productAttachments": [
+      "增额终身寿_成长版.pdf"
+    ],
+    "productSummary": "长期增额，兼顾保障与财富传承。",
+    "supportsOnlineClaim": true,
+    "isOnline": true,
+    "paymentFrequency": "年交",
+    "paymentPeriod": "20年",
+    "paymentMethod": "期交",
+    "clauseTextFile": "增额终身寿_成长版.pdf",
+    "rateTableFile": "终身寿费率表_增额.xlsx",
+    "productDescriptionFile": "产品说明.pdf"
+  },
+  {
+    "productCode": "WL2025-ZE-B",
+    "regulatoryName": "增额终身寿（传承版）",
+    "companyName": "中意人寿",
+    "version": "1.0",
+    "salesRegions": "全国",
+    "effectiveDate": "2025-01-01",
+    "discontinuationDate": "2035-12-31",
+    "status": "草稿",
+    "primaryCategory": "终身寿险",
+    "secondaryCategory": "增额终身寿",
+    "clauseType": "主险",
+    "operator": "系统管理员",
+    "coverageDetails": [],
+    "coveragePlans": [
+      {
+        "planType": "标准版",
+        "coverageDetails": [
+          {
+            "mandatory": true,
+            "id": "1",
+            "name": "身故保险金",
+            "amount": "按合同约定",
+            "details": "聚焦家族财富传承"
+          }
+        ]
+      }
+    ],
+    "underwritingAge": "18 - 55周岁",
+    "coveragePeriod": "终身",
+    "waitingPeriod": "90天",
+    "productCardImage": "https://pic1.imgdb.cn/item/692dd43cc2ca2fe15cf17332.webp",
+    "productHeroImage": "https://pic1.imgdb.cn/item/69311d3fa11464095f88537e.webp",
+    "productLongImage": [
+      "https://pic1.imgdb.cn/item/69313be6a11464095f8a12dd.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d8.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d7.jpg"
+    ],
+    "productAttachments": [
+      "增额终身寿_传承版.pdf"
+    ],
+    "productSummary": "面向中长期财富规划的保障型产品。",
+    "supportsOnlineClaim": true,
+    "isOnline": true,
+    "paymentFrequency": "年交",
+    "paymentPeriod": "30年",
+    "paymentMethod": "期交",
+    "clauseTextFile": "增额终身寿_传承版.pdf",
+    "rateTableFile": "终身寿费率表_传承.xlsx",
+    "productDescriptionFile": "产品说明.pdf"
+  },
+  {
+    "productCode": "WL2023-ZE-C",
+    "regulatoryName": "增额终身寿（稳健版）",
+    "companyName": "工银安盛",
+    "version": "2.0",
+    "salesRegions": "全国",
+    "effectiveDate": "2023-03-01",
+    "discontinuationDate": "2030-02-28",
+    "status": "生效",
+    "primaryCategory": "终身寿险",
+    "secondaryCategory": "增额终身寿",
+    "clauseType": "主险",
+    "operator": "系统管理员",
+    "coverageDetails": [],
+    "coveragePlans": [
+      {
+        "planType": "标准版",
+        "coverageDetails": [
+          {
+            "mandatory": true,
+            "id": "1",
+            "name": "身故保险金",
+            "amount": "按合同约定",
+            "details": "现金价值稳健增长"
+          }
+        ]
+      }
+    ],
+    "underwritingAge": "18 - 60周岁",
+    "coveragePeriod": "终身",
+    "waitingPeriod": "90天",
+    "productCardImage": "https://pic1.imgdb.cn/item/692dd43cc2ca2fe15cf17332.webp",
+    "productHeroImage": "https://pic1.imgdb.cn/item/69311d3fa11464095f88537e.webp",
+    "productLongImage": [
+      "https://pic1.imgdb.cn/item/69313be6a11464095f8a12dd.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d8.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d7.jpg"
+    ],
+    "productAttachments": [
+      "增额终身寿_稳健版_v2.0.pdf"
+    ],
+    "productSummary": "兼顾保障与资产稳健增值的终身寿。",
+    "supportsOnlineClaim": true,
+    "isOnline": true,
+    "paymentFrequency": "年交",
+    "paymentPeriod": "20年",
+    "paymentMethod": "期交",
+    "clauseTextFile": "增额终身寿_稳健版_v2.0.pdf",
+    "rateTableFile": "终身寿费率表_稳健.xlsx",
+    "productDescriptionFile": "产品说明.pdf"
+  },
+  {
+    "productCode": "xintai_ann_d_2026001",
+    "companyName": "信泰人寿",
+    "regulatoryName": "信泰如意福享（2026）养老年金保险（互联网专属）",
+    "productSummary": "",
+    "version": "1.0",
+    "status": "草稿",
+    "effectiveDate": "2026-01-01",
+    "discontinuationDate": "",
+    "salesRegions": "全国",
+    "supportsOnlineClaim": false,
+    "isOnline": true,
+    "productCardImage": "https://pic1.imgdb.cn/item/692dd43cc2ca2fe15cf17332.webp",
+    "productHeroImage": "https://pic1.imgdb.cn/item/69311d3fa11464095f88537e.webp",
+    "productLongImage": [
+      "https://pic1.imgdb.cn/item/69313be6a11464095f8a12dd.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d8.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d7.jpg"
+    ],
+    "productAttachments": [
+      "/Users/pegasus/Documents/trae_projects/insure_crawler/data/raw/xintai_life/信泰如意福享（2026）养老年金保险（互联网专属）/信泰如意福享（2026）养老年金保险（互联网专属）_备案材料.pdf"
+    ],
+    "coverageDetails": [],
+    "underwritingAge": "18至59周岁",
+    "coveragePeriod": "终身",
+    "waitingPeriod": "无",
+    "cardMetric1Label": "交费方式",
+    "cardMetric1Value": "多期可选",
+    "cardMetric2Label": "投保年龄",
+    "cardMetric2Value": "18至59周岁",
+    "cardMetric3Label": "保险期间",
+    "cardMetric3Value": "终身",
+    "primaryCategory": "年金保险",
+    "paymentMethod": "一次性付清、3年交、5年交、10年交",
+    "paymentPeriod": "10年",
+    "payoutFrequency": "每年",
+    "payoutStartAge": 60,
+    "underwritingOccupation": "不限",
+    "secondaryCategory": "养老年金保险",
+    "clauseType": "主险",
+    "primaryCategoryCode": "D",
+    "secondaryCategoryCode": "D01",
+    "racewayId": "D0102",
+    "racewayName": "养老年金",
+    "coveragePlans": [
+      {
+        "planType": "标准版",
+        "coverageDetails": [
+          {
+            "mandatory": true,
+            "item_code": "ANNUITY_PAYMENT",
+            "item_name": "养老年金",
+            "description": "自起领日每年给付",
+            "details": {
+              "start_age_options": [
+                60
+              ],
+              "frequency_options": [
+                "ANNUALLY"
+              ],
+              "amount_logic": "按合同约定"
+            }
+          },
+          {
+            "mandatory": true,
+            "item_code": "DEATH_BENEFIT",
+            "item_name": "身故保险金",
+            "description": "按条款约定给付",
+            "details": {
+              "start_age_options": [
+                60
+              ],
+              "frequency_options": [
+                "ANNUALLY"
+              ],
+              "payout_logic": "按条款约定给付"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productCode": "xintai_ann_d_2026002",
+    "companyName": "信泰人寿",
+    "regulatoryName": "信泰如意怡享（2026）养老年金保险",
+    "productSummary": "",
+    "version": "1.0",
+    "status": "草稿",
+    "effectiveDate": "2026-02-01",
+    "discontinuationDate": "",
+    "salesRegions": "全国",
+    "supportsOnlineClaim": false,
+    "isOnline": false,
+    "productCardImage": "https://pic1.imgdb.cn/item/692dd43cc2ca2fe15cf17332.webp",
+    "productHeroImage": "https://pic1.imgdb.cn/item/69311d3fa11464095f88537e.webp",
+    "productLongImage": [
+      "https://pic1.imgdb.cn/item/69313be6a11464095f8a12dd.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d8.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d7.jpg"
+    ],
+    "productAttachments": [
+      "/Users/pegasus/Documents/trae_projects/insure_crawler/data/raw/xintai_life/信泰如意怡享（2026）养老年金保险/信泰如意怡享（2026）养老年金保险_备案材料.pdf"
+    ],
+    "coverageDetails": [],
+    "underwritingAge": "18至65周岁",
+    "coveragePeriod": "至被保险人年满 100 周岁后的首个保单周年日",
+    "waitingPeriod": "无",
+    "cardMetric1Label": "交费方式",
+    "cardMetric1Value": "多期可选",
+    "cardMetric2Label": "投保年龄",
+    "cardMetric2Value": "18至65周岁",
+    "cardMetric3Label": "保险期间",
+    "cardMetric3Value": "至100周岁",
+    "primaryCategory": "年金保险",
+    "paymentMethod": "一次性付清、3年交、5年交、10年交",
+    "paymentPeriod": "10年",
+    "payoutFrequency": "每年",
+    "payoutStartAge": 60,
+    "underwritingOccupation": "不限",
+    "secondaryCategory": "养老年金保险",
+    "clauseType": "主险",
+    "primaryCategoryCode": "D",
+    "secondaryCategoryCode": "D01",
+    "racewayId": "D0102",
+    "racewayName": "养老年金",
+    "coveragePlans": [
+      {
+        "planType": "标准版",
+        "coverageDetails": [
+          {
+            "mandatory": true,
+            "item_code": "ANNUITY_PAYMENT",
+            "item_name": "养老年金",
+            "description": "自起领日每年给付",
+            "details": {
+              "start_age_options": [
+                60
+              ],
+              "frequency_options": [
+                "ANNUALLY"
+              ],
+              "amount_logic": "按合同约定"
+            }
+          },
+          {
+            "mandatory": true,
+            "item_code": "DEATH_BENEFIT",
+            "item_name": "身故保险金",
+            "description": "按条款约定给付",
+            "details": {
+              "start_age_options": [
+                60
+              ],
+              "frequency_options": [
+                "ANNUALLY"
+              ],
+              "payout_logic": "按条款约定给付"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productCode": "xintai_ann_d_2025003",
+    "companyName": "信泰人寿",
+    "regulatoryName": "信泰如意鑫享3.0养老年金保险",
+    "productSummary": "",
+    "version": "3.0",
+    "status": "草稿",
+    "effectiveDate": "2025-03-01",
+    "discontinuationDate": "",
+    "salesRegions": "全国",
+    "supportsOnlineClaim": false,
+    "isOnline": false,
+    "productCardImage": "https://pic1.imgdb.cn/item/692dd43cc2ca2fe15cf17332.webp",
+    "productHeroImage": "https://pic1.imgdb.cn/item/69311d3fa11464095f88537e.webp",
+    "productLongImage": [
+      "https://pic1.imgdb.cn/item/69313be6a11464095f8a12dd.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d8.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d7.jpg"
+    ],
+    "productAttachments": [
+      "/Users/pegasus/Documents/trae_projects/insure_crawler/data/raw/xintai_life/信泰如意鑫享3.0养老年金保险/信泰如意鑫享3.0养老年金保险_备案材料.pdf"
+    ],
+    "coverageDetails": [],
+    "underwritingAge": "0至65周岁",
+    "coveragePeriod": "终身",
+    "waitingPeriod": "无",
+    "cardMetric1Label": "交费方式",
+    "cardMetric1Value": "多期可选",
+    "cardMetric2Label": "投保年龄",
+    "cardMetric2Value": "0至65周岁",
+    "cardMetric3Label": "保险期间",
+    "cardMetric3Value": "终身",
+    "primaryCategory": "年金保险",
+    "paymentMethod": "一次性付清、5年交、10年交、20年交",
+    "paymentPeriod": "20年",
+    "payoutFrequency": "每年",
+    "payoutStartAge": 60,
+    "underwritingOccupation": "不限",
+    "secondaryCategory": "养老年金保险",
+    "clauseType": "主险",
+    "primaryCategoryCode": "D",
+    "secondaryCategoryCode": "D01",
+    "racewayId": "D0102",
+    "racewayName": "养老年金",
+    "coveragePlans": [
+      {
+        "planType": "标准版",
+        "coverageDetails": [
+          {
+            "mandatory": true,
+            "item_code": "ANNUITY_PAYMENT",
+            "item_name": "养老年金",
+            "description": "自起领日每年给付",
+            "details": {
+              "start_age_options": [
+                60
+              ],
+              "frequency_options": [
+                "ANNUALLY"
+              ],
+              "amount_logic": "按合同约定"
+            }
+          },
+          {
+            "mandatory": true,
+            "item_code": "DEATH_BENEFIT",
+            "item_name": "身故保险金",
+            "description": "按条款约定给付",
+            "details": {
+              "start_age_options": [
+                60
+              ],
+              "frequency_options": [
+                "ANNUALLY"
+              ],
+              "payout_logic": "按条款约定给付"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productCode": "xintai_ann_d_2025004",
+    "companyName": "信泰人寿",
+    "regulatoryName": "信泰如意鸿禧A款养老年金保险（分红型）",
+    "productSummary": "",
+    "version": "A版",
+    "status": "草稿",
+    "effectiveDate": "2025-04-01",
+    "discontinuationDate": "",
+    "salesRegions": "全国",
+    "supportsOnlineClaim": false,
+    "isOnline": false,
+    "productCardImage": "https://pic1.imgdb.cn/item/692dd43cc2ca2fe15cf17332.webp",
+    "productHeroImage": "https://pic1.imgdb.cn/item/69311d3fa11464095f88537e.webp",
+    "productLongImage": [
+      "https://pic1.imgdb.cn/item/69313be6a11464095f8a12dd.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d8.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d7.jpg"
+    ],
+    "productAttachments": [
+      "/Users/pegasus/Documents/trae_projects/insure_crawler/data/raw/xintai_life/信泰如意鸿禧A款养老年金保险（分红型）/信泰如意鸿禧A款养老年金保险（分红型）_备案材料.pdf"
+    ],
+    "coverageDetails": [],
+    "underwritingAge": "18至65周岁",
+    "coveragePeriod": "至被保险人年满 100 周岁后的首个保单周年日",
+    "waitingPeriod": "无",
+    "cardMetric1Label": "交费方式",
+    "cardMetric1Value": "多期可选",
+    "cardMetric2Label": "投保年龄",
+    "cardMetric2Value": "18至65周岁",
+    "cardMetric3Label": "保险期间",
+    "cardMetric3Value": "至100周岁",
+    "primaryCategory": "年金保险",
+    "paymentMethod": "一次性付清、3年交、5年交、10年交",
+    "paymentPeriod": "10年",
+    "payoutFrequency": "每年",
+    "payoutStartAge": 60,
+    "underwritingOccupation": "不限",
+    "secondaryCategory": "养老年金保险（分红型）",
+    "clauseType": "主险",
+    "primaryCategoryCode": "D",
+    "secondaryCategoryCode": "D01",
+    "racewayId": "D0101",
+    "racewayName": "养老年金（分红型）",
+    "coveragePlans": [
+      {
+        "planType": "标准版",
+        "coverageDetails": [
+          {
+            "mandatory": true,
+            "item_code": "ANNUITY_PAYMENT",
+            "item_name": "养老年金",
+            "description": "自起领日每年给付",
+            "details": {
+              "start_age_options": [
+                60
+              ],
+              "frequency_options": [
+                "ANNUALLY"
+              ],
+              "amount_logic": "按合同约定"
+            }
+          },
+          {
+            "mandatory": true,
+            "item_code": "DEATH_BENEFIT",
+            "item_name": "身故保险金",
+            "description": "按条款约定给付",
+            "details": {
+              "start_age_options": [
+                60
+              ],
+              "frequency_options": [
+                "ANNUALLY"
+              ],
+              "payout_logic": "按条款约定给付"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productCode": "xintai_ann_d_2025005",
+    "companyName": "信泰人寿",
+    "regulatoryName": "信泰如意鸿禧B款养老年金保险（分红型）",
+    "productSummary": "",
+    "version": "B版",
+    "status": "草稿",
+    "effectiveDate": "2025-05-01",
+    "discontinuationDate": "",
+    "salesRegions": "全国",
+    "supportsOnlineClaim": false,
+    "isOnline": false,
+    "productCardImage": "https://pic1.imgdb.cn/item/692dd43cc2ca2fe15cf17332.webp",
+    "productHeroImage": "https://pic1.imgdb.cn/item/69311d3fa11464095f88537e.webp",
+    "productLongImage": [
+      "https://pic1.imgdb.cn/item/69313be6a11464095f8a12dd.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d8.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d7.jpg"
+    ],
+    "productAttachments": [
+      "/Users/pegasus/Documents/trae_projects/insure_crawler/data/raw/xintai_life/信泰如意鸿禧B款养老年金保险（分红型）/信泰如意鸿禧B款养老年金保险（分红型）_备案材料.pdf"
+    ],
+    "coverageDetails": [],
+    "underwritingAge": "18至65周岁",
+    "coveragePeriod": "至被保险人年满 100 周岁后的首个保单周年日",
+    "waitingPeriod": "无",
+    "cardMetric1Label": "交费方式",
+    "cardMetric1Value": "多期可选",
+    "cardMetric2Label": "投保年龄",
+    "cardMetric2Value": "18至65周岁",
+    "cardMetric3Label": "保险期间",
+    "cardMetric3Value": "至100周岁",
+    "primaryCategory": "年金保险",
+    "paymentMethod": "一次性付清、3年交、5年交、10年交",
+    "paymentPeriod": "10年",
+    "payoutFrequency": "每年",
+    "payoutStartAge": 60,
+    "underwritingOccupation": "不限",
+    "secondaryCategory": "养老年金保险（分红型）",
+    "clauseType": "主险",
+    "primaryCategoryCode": "D",
+    "secondaryCategoryCode": "D01",
+    "racewayId": "D0101",
+    "racewayName": "养老年金（分红型）",
+    "coveragePlans": [
+      {
+        "planType": "标准版",
+        "coverageDetails": [
+          {
+            "mandatory": true,
+            "item_code": "ANNUITY_PAYMENT",
+            "item_name": "养老年金",
+            "description": "自起领日每年给付",
+            "details": {
+              "start_age_options": [
+                60
+              ],
+              "frequency_options": [
+                "ANNUALLY"
+              ],
+              "amount_logic": "按合同约定"
+            }
+          },
+          {
+            "mandatory": true,
+            "item_code": "DEATH_BENEFIT",
+            "item_name": "身故保险金",
+            "description": "按条款约定给付",
+            "details": {
+              "start_age_options": [
+                60
+              ],
+              "frequency_options": [
+                "ANNUALLY"
+              ],
+              "payout_logic": "按条款约定给付"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productCode": "xintai_ann_d_2025006",
+    "companyName": "信泰人寿",
+    "regulatoryName": "信泰如意鑫享A款养老年金保险（分红型）",
+    "productSummary": "",
+    "version": "A版",
+    "status": "草稿",
+    "effectiveDate": "2025-06-01",
+    "discontinuationDate": "",
+    "salesRegions": "全国",
+    "supportsOnlineClaim": false,
+    "isOnline": false,
+    "productCardImage": "https://pic1.imgdb.cn/item/692dd43cc2ca2fe15cf17332.webp",
+    "productHeroImage": "https://pic1.imgdb.cn/item/69311d3fa11464095f88537e.webp",
+    "productLongImage": [
+      "https://pic1.imgdb.cn/item/69313be6a11464095f8a12dd.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d8.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d7.jpg"
+    ],
+    "productAttachments": [
+      "/Users/pegasus/Documents/trae_projects/insure_crawler/data/raw/xintai_life/信泰如意鑫享A款养老年金保险（分红型）/信泰如意鑫享A款养老年金保险（分红型）_备案材料.pdf"
+    ],
+    "coverageDetails": [],
+    "underwritingAge": "18至65周岁",
+    "coveragePeriod": "至被保险人年满 100 周岁后的首个保单周年日",
+    "waitingPeriod": "无",
+    "cardMetric1Label": "交费方式",
+    "cardMetric1Value": "多期可选",
+    "cardMetric2Label": "投保年龄",
+    "cardMetric2Value": "18至65周岁",
+    "cardMetric3Label": "保险期间",
+    "cardMetric3Value": "至100周岁",
+    "primaryCategory": "年金保险",
+    "paymentMethod": "一次性付清、3年交、5年交、10年交",
+    "paymentPeriod": "10年",
+    "payoutFrequency": "每年",
+    "payoutStartAge": 60,
+    "underwritingOccupation": "不限",
+    "secondaryCategory": "养老年金保险（分红型）",
+    "clauseType": "主险",
+    "primaryCategoryCode": "D",
+    "secondaryCategoryCode": "D01",
+    "racewayId": "D0101",
+    "racewayName": "养老年金（分红型）",
+    "coveragePlans": [
+      {
+        "planType": "标准版",
+        "coverageDetails": [
+          {
+            "mandatory": true,
+            "item_code": "ANNUITY_PAYMENT",
+            "item_name": "养老年金",
+            "description": "自起领日每年给付",
+            "details": {
+              "start_age_options": [
+                60
+              ],
+              "frequency_options": [
+                "ANNUALLY"
+              ],
+              "amount_logic": "按合同约定"
+            }
+          },
+          {
+            "mandatory": true,
+            "item_code": "DEATH_BENEFIT",
+            "item_name": "身故保险金",
+            "description": "按条款约定给付",
+            "details": {
+              "start_age_options": [
+                60
+              ],
+              "frequency_options": [
+                "ANNUALLY"
+              ],
+              "payout_logic": "按条款约定给付"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productCode": "xintai_ann_d_2025007",
+    "companyName": "信泰人寿",
+    "regulatoryName": "信泰如意鑫享B款养老年金保险（分红型）",
+    "productSummary": "",
+    "version": "B版",
+    "status": "草稿",
+    "effectiveDate": "2025-07-01",
+    "discontinuationDate": "",
+    "salesRegions": "全国",
+    "supportsOnlineClaim": false,
+    "isOnline": false,
+    "productCardImage": "https://pic1.imgdb.cn/item/692dd43cc2ca2fe15cf17332.webp",
+    "productHeroImage": "https://pic1.imgdb.cn/item/69311d3fa11464095f88537e.webp",
+    "productLongImage": [
+      "https://pic1.imgdb.cn/item/69313be6a11464095f8a12dd.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d8.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d7.jpg"
+    ],
+    "productAttachments": [
+      "/Users/pegasus/Documents/trae_projects/insure_crawler/data/raw/xintai_life/信泰如意鑫享B款养老年金保险（分红型）/信泰如意鑫享B款养老年金保险（分红型）_备案材料.pdf"
+    ],
+    "coverageDetails": [],
+    "underwritingAge": "18至65周岁",
+    "coveragePeriod": "至被保险人年满 100 周岁后的首个保单周年日",
+    "waitingPeriod": "无",
+    "cardMetric1Label": "交费方式",
+    "cardMetric1Value": "多期可选",
+    "cardMetric2Label": "投保年龄",
+    "cardMetric2Value": "18至65周岁",
+    "cardMetric3Label": "保险期间",
+    "cardMetric3Value": "至100周岁",
+    "primaryCategory": "年金保险",
+    "paymentMethod": "一次性付清、3年交、5年交、10年交",
+    "paymentPeriod": "10年",
+    "payoutFrequency": "每年",
+    "payoutStartAge": 60,
+    "underwritingOccupation": "不限",
+    "secondaryCategory": "养老年金保险（分红型）",
+    "clauseType": "主险",
+    "primaryCategoryCode": "D",
+    "secondaryCategoryCode": "D01",
+    "racewayId": "D0101",
+    "racewayName": "养老年金（分红型）",
+    "coveragePlans": [
+      {
+        "planType": "标准版",
+        "coverageDetails": [
+          {
+            "mandatory": true,
+            "item_code": "ANNUITY_PAYMENT",
+            "item_name": "养老年金",
+            "description": "自起领日每年给付",
+            "details": {
+              "start_age_options": [
+                60
+              ],
+              "frequency_options": [
+                "ANNUALLY"
+              ],
+              "amount_logic": "按合同约定"
+            }
+          },
+          {
+            "mandatory": true,
+            "item_code": "DEATH_BENEFIT",
+            "item_name": "身故保险金",
+            "description": "按条款约定给付",
+            "details": {
+              "start_age_options": [
+                60
+              ],
+              "frequency_options": [
+                "ANNUALLY"
+              ],
+              "payout_logic": "按条款约定给付"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productCode": "gclife_ann_d_2025001",
+    "regulatoryName": "中意悠然安养养老年金保险（分红型）",
+    "companyName": "中意人寿",
+    "version": "A版",
+    "salesRegions": "全国",
+    "effectiveDate": "",
+    "discontinuationDate": "",
+    "status": "生效",
+    "primaryCategory": "年金保险",
+    "secondaryCategory": "养老年金保险（分红型）",
+    "primaryCategoryCode": "D",
+    "secondaryCategoryCode": "D01",
+    "racewayId": "D0101",
+    "racewayName": "养老年金（分红型）",
+    "coverageDetails": [],
+    "underwritingAge": "18至59周岁",
+    "coveragePeriod": "至被保险人年满 70 周岁、80 周岁后的首个保单周年日，或终身。",
+    "waitingPeriod": "无",
+    "productCardImage": "https://pic1.imgdb.cn/item/692dd43cc2ca2fe15cf17332.webp",
+    "productHeroImage": "https://pic1.imgdb.cn/item/69311d3fa11464095f88537e.webp",
+    "productLongImage": [
+      "https://pic1.imgdb.cn/item/69313be6a11464095f8a12dd.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d8.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d7.jpg"
+    ],
+    "productAttachments": [
+      "/Users/pegasus/Documents/金融管家/中意人寿/中意悠然安养养老年金保险（分红型）- 条款/中意悠然安养养老年金保险（分红型）- 基本保险金额表.pdf",
+      "/Users/pegasus/Documents/金融管家/中意人寿/中意悠然安养养老年金保险（分红型）- 条款/中意悠然安养养老年金保险（分红型）- 现金价值表.xls",
+      "/Users/pegasus/Documents/金融管家/中意人寿/中意悠然安养养老年金保险（分红型）- 条款/中意悠然安养养老年金保险（分红型）- 条款.pdf",
+      "/Users/pegasus/Documents/金融管家/中意人寿/中意悠然安养养老年金保险（分红型）- 条款/中意悠然安养养老年金保险（分红型）- 产品说明书.pdf"
+    ],
+    "productSummary": "",
+    "operator": "",
+    "clauseType": "主险",
+    "tags": [],
+    "promoTag": "",
+    "cardMetric1Label": "交费方式",
+    "cardMetric1Value": "多期可选",
+    "cardMetric2Label": "投保年龄",
+    "cardMetric2Value": "18至59周岁",
+    "cardMetric3Label": "保险期间",
+    "cardMetric3Value": "至70/80岁",
+    "supportsOnlineClaim": false,
+    "isOnline": false,
+    "paymentMethod": "一次性付清、5 年交、10 年交、20 年交、交至 54 周岁、交至 59 周岁。",
+    "paymentPeriod": "",
+    "payoutFrequency": "每年",
+    "payoutStartAge": 55,
+    "underwritingOccupation": "",
+    "coveragePlans": [
+      {
+        "planType": "标准版",
+        "coverageDetails": [
+          {
+            "mandatory": true,
+            "item_code": "ANNUITY_PAYMENT",
+            "item_name": "养老年金",
+            "description": "自起领日每年给付",
+            "details": {
+              "start_age_options": [
+                55
+              ],
+              "frequency_options": [
+                "ANNUALLY"
+              ],
+              "amount_logic": "按合同约定"
+            }
+          },
+          {
+            "mandatory": true,
+            "item_code": "DEATH_BENEFIT",
+            "item_name": "身故保险金",
+            "description": "按条款约定给付",
+            "details": {
+              "start_age_options": [
+                55
+              ],
+              "frequency_options": [
+                "ANNUALLY"
+              ],
+              "payout_logic": "按条款约定给付"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productCode": "gclife_ann_d_2025002",
+    "regulatoryName": "中意悠然鑫瑞养老年金保险（分红型）",
+    "companyName": "中意人寿",
+    "version": "A版",
+    "salesRegions": "全国",
+    "effectiveDate": "",
+    "discontinuationDate": "",
+    "status": "生效",
+    "primaryCategory": "年金保险",
+    "secondaryCategory": "养老年金保险（分红型）",
+    "primaryCategoryCode": "D",
+    "secondaryCategoryCode": "D01",
+    "racewayId": "D0101",
+    "racewayName": "养老年金（分红型）",
+    "coverageDetails": [],
+    "underwritingAge": "",
+    "coveragePeriod": "自生效日的零时起至被保险人年满 75 周岁、年满 85 周岁或年满 100 周岁后的首个",
+    "waitingPeriod": "无",
+    "productCardImage": "https://pic1.imgdb.cn/item/692dd43cc2ca2fe15cf17332.webp",
+    "productHeroImage": "https://pic1.imgdb.cn/item/69311d3fa11464095f88537e.webp",
+    "productLongImage": [
+      "https://pic1.imgdb.cn/item/69313be6a11464095f8a12dd.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d8.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d7.jpg"
+    ],
+    "productAttachments": [
+      "/Users/pegasus/Documents/金融管家/中意人寿/中意悠然鑫瑞养老年金保险（分红型）- 条款/中意悠然鑫瑞养老年金保险（分红型）- 现金价值表.xlsx",
+      "/Users/pegasus/Documents/金融管家/中意人寿/中意悠然鑫瑞养老年金保险（分红型）- 条款/中意悠然鑫瑞养老年金保险（分红型）- 费率表.pdf",
+      "/Users/pegasus/Documents/金融管家/中意人寿/中意悠然鑫瑞养老年金保险（分红型）- 条款/中意悠然鑫瑞养老年金保险（分红型）- 条款.pdf",
+      "/Users/pegasus/Documents/金融管家/中意人寿/中意悠然鑫瑞养老年金保险（分红型）- 条款/中意悠然鑫瑞养老年金保险（分红型）- 产品说明书.pdf"
+    ],
+    "productSummary": "",
+    "operator": "",
+    "clauseType": "主险",
+    "tags": [],
+    "promoTag": "",
+    "cardMetric1Label": "交费方式",
+    "cardMetric1Value": "多期可选",
+    "cardMetric2Label": "投保年龄",
+    "cardMetric2Value": "",
+    "cardMetric3Label": "保险期间",
+    "cardMetric3Value": "至75-100岁",
+    "supportsOnlineClaim": false,
+    "isOnline": false,
+    "paymentMethod": "一次性付清、3 年交、5 年交、10 年交",
+    "paymentPeriod": "",
+    "payoutFrequency": "每年",
+    "payoutStartAge": 0,
+    "underwritingOccupation": "",
+    "coveragePlans": [
+      {
+        "planType": "标准版",
+        "coverageDetails": [
+          {
+            "mandatory": true,
+            "item_code": "ANNUITY_PAYMENT",
+            "item_name": "养老年金",
+            "description": "自起领日每年给付",
+            "details": {
+              "start_age_options": [
+                0
+              ],
+              "frequency_options": [
+                "ANNUALLY"
+              ],
+              "amount_logic": "按合同约定"
+            }
+          },
+          {
+            "mandatory": true,
+            "item_code": "DEATH_BENEFIT",
+            "item_name": "身故保险金",
+            "description": "按条款约定给付",
+            "details": {
+              "start_age_options": [
+                0
+              ],
+              "frequency_options": [
+                "ANNUALLY"
+              ],
+              "payout_logic": "按条款约定给付"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productCode": "gclife_ann_d_2025003",
+    "regulatoryName": "中意一生中意年金保险（分红型）",
+    "companyName": "中意人寿",
+    "version": "A版",
+    "salesRegions": "全国",
+    "effectiveDate": "",
+    "discontinuationDate": "",
+    "status": "生效",
+    "primaryCategory": "年金保险",
+    "secondaryCategory": "养老年金保险（分红型）",
+    "primaryCategoryCode": "D",
+    "secondaryCategoryCode": "D01",
+    "racewayId": "D0101",
+    "racewayName": "养老年金（分红型）",
+    "coverageDetails": [],
+    "underwritingAge": "",
+    "coveragePeriod": "自生效日的零时起至被保险人年满 88 周岁后的首个保单周年日的二十四时止。",
+    "waitingPeriod": "无",
+    "productCardImage": "https://pic1.imgdb.cn/item/692dd43cc2ca2fe15cf17332.webp",
+    "productHeroImage": "https://pic1.imgdb.cn/item/69311d3fa11464095f88537e.webp",
+    "productLongImage": [
+      "https://pic1.imgdb.cn/item/69313be6a11464095f8a12dd.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d8.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d7.jpg"
+    ],
+    "productAttachments": [
+      "/Users/pegasus/Documents/金融管家/中意人寿/中意一生中意年金保险（分红型）- 条款/中意一生中意年金保险（分红型）- 产品说明书.pdf",
+      "/Users/pegasus/Documents/金融管家/中意人寿/中意一生中意年金保险（分红型）- 条款/中意一生中意年金保险（分红型）- 基本保险金额表.pdf",
+      "/Users/pegasus/Documents/金融管家/中意人寿/中意一生中意年金保险（分红型）- 条款/中意一生中意年金保险（分红型）- 条款.pdf",
+      "/Users/pegasus/Documents/金融管家/中意人寿/中意一生中意年金保险（分红型）- 条款/中意一生中意年金保险（分红型）- 现金价值表.xls"
+    ],
+    "productSummary": "",
+    "operator": "",
+    "clauseType": "主险",
+    "tags": [],
+    "promoTag": "",
+    "cardMetric1Label": "交费方式",
+    "cardMetric1Value": "多期可选",
+    "cardMetric2Label": "投保年龄",
+    "cardMetric2Value": "",
+    "cardMetric3Label": "保险期间",
+    "cardMetric3Value": "至88周岁",
+    "supportsOnlineClaim": false,
+    "isOnline": false,
+    "paymentMethod": "一次性付清、3 年交、5 年交、10 年交。",
+    "paymentPeriod": "",
+    "payoutFrequency": "每年",
+    "payoutStartAge": 0,
+    "underwritingOccupation": "",
+    "coveragePlans": [
+      {
+        "planType": "标准版",
+        "coverageDetails": [
+          {
+            "mandatory": true,
+            "item_code": "DEATH_BENEFIT",
+            "item_name": "身故保险金",
+            "description": "按条款约定给付",
+            "details": {
+              "start_age_options": [
+                0
+              ],
+              "frequency_options": [
+                "ANNUALLY"
+              ],
+              "payout_logic": "按条款约定给付"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productCode": "gclife_ann_d_2025004",
+    "regulatoryName": "中意真爱久久（尊享版）养老年金保险（分红型）",
+    "companyName": "中意人寿",
+    "version": "A版",
+    "salesRegions": "全国",
+    "effectiveDate": "",
+    "discontinuationDate": "",
+    "status": "生效",
+    "primaryCategory": "年金保险",
+    "secondaryCategory": "养老年金保险（分红型）",
+    "primaryCategoryCode": "D",
+    "secondaryCategoryCode": "D01",
+    "racewayId": "D0101",
+    "racewayName": "养老年金（分红型）",
+    "coverageDetails": [],
+    "underwritingAge": "",
+    "coveragePeriod": "自生效日的零时起至被保险人年满 100 周岁后的首个保单周年日的二十四时止",
+    "waitingPeriod": "无",
+    "productCardImage": "https://pic1.imgdb.cn/item/692dd43cc2ca2fe15cf17332.webp",
+    "productHeroImage": "https://pic1.imgdb.cn/item/69311d3fa11464095f88537e.webp",
+    "productLongImage": [
+      "https://pic1.imgdb.cn/item/69313be6a11464095f8a12dd.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d8.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d7.jpg"
+    ],
+    "productAttachments": [
+      "/Users/pegasus/Documents/金融管家/中意人寿/中意真爱久久（尊享版）养老年金保险（分红型）- 条款/中意真爱久久（尊享版）养老年金保险（分红型）- 条款.pdf",
+      "/Users/pegasus/Documents/金融管家/中意人寿/中意真爱久久（尊享版）养老年金保险（分红型）- 条款/中意真爱久久（尊享版）养老年金保险（分红型）- 产品说明书.pdf",
+      "/Users/pegasus/Documents/金融管家/中意人寿/中意真爱久久（尊享版）养老年金保险（分红型）- 条款/中意真爱久久（尊享版）养老年金保险（分红型）- 基本保险金额表.pdf",
+      "/Users/pegasus/Documents/金融管家/中意人寿/中意真爱久久（尊享版）养老年金保���（分红型）- 条款/中意真爱久久（尊享版）养老年金保险（分红型）- 现金价值表.xlsx"
+    ],
+    "productSummary": "",
+    "operator": "",
+    "clauseType": "主险",
+    "tags": [],
+    "promoTag": "",
+    "cardMetric1Label": "交费方式",
+    "cardMetric1Value": "多期可选",
+    "cardMetric2Label": "投保年龄",
+    "cardMetric2Value": "",
+    "cardMetric3Label": "保险期间",
+    "cardMetric3Value": "至100周岁",
+    "supportsOnlineClaim": false,
+    "isOnline": false,
+    "paymentMethod": "一次性付清、3 年交、5 年交、10 年交",
+    "paymentPeriod": "",
+    "payoutFrequency": "每年",
+    "payoutStartAge": 0,
+    "underwritingOccupation": "",
+    "coveragePlans": [
+      {
+        "planType": "标准版",
+        "coverageDetails": [
+          {
+            "mandatory": true,
+            "item_code": "ANNUITY_PAYMENT",
+            "item_name": "养老年金",
+            "description": "自起领日每年给付",
+            "details": {
+              "start_age_options": [
+                0
+              ],
+              "frequency_options": [
+                "ANNUALLY"
+              ],
+              "amount_logic": "按合同约定"
+            }
+          },
+          {
+            "mandatory": true,
+            "item_code": "DEATH_BENEFIT",
+            "item_name": "身故保险金",
+            "description": "按条款约定给付",
+            "details": {
+              "start_age_options": [
+                0
+              ],
+              "frequency_options": [
+                "ANNUALLY"
+              ],
+              "payout_logic": "按条款约定给付"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productCode": "gclife_ann_u_2025005",
+    "regulatoryName": "中意鑫享年年养老年金保险（万能型）",
+    "companyName": "中意人寿",
+    "version": "A版",
+    "salesRegions": "全国",
+    "effectiveDate": "",
+    "discontinuationDate": "",
+    "status": "生效",
+    "primaryCategory": "年金保险",
+    "secondaryCategory": "养老年金保险（万能型）",
+    "primaryCategoryCode": "D",
+    "secondaryCategoryCode": "D01",
+    "racewayId": "D0102",
+    "racewayName": "养老年金",
+    "coverageDetails": [],
+    "underwritingAge": "",
+    "coveragePeriod": "终身",
+    "waitingPeriod": "无",
+    "productCardImage": "https://pic1.imgdb.cn/item/692dd43cc2ca2fe15cf17332.webp",
+    "productHeroImage": "https://pic1.imgdb.cn/item/69311d3fa11464095f88537e.webp",
+    "productLongImage": [
+      "https://pic1.imgdb.cn/item/69313be6a11464095f8a12dd.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d8.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d7.jpg"
+    ],
+    "productAttachments": [
+      "/Users/pegasus/Documents/金融管家/中意人寿/中意鑫享年年养老年金保险（万能型）- 条款/中意鑫享年年养老年金保险（万能型）- 条款.pdf",
+      "/Users/pegasus/Documents/金融管家/中意人寿/中意鑫享年年养老年金保险（万能型）- 条款/中意鑫享年年养老年金保险（万能型）- 产品说明书.pdf"
+    ],
+    "productSummary": "",
+    "operator": "",
+    "clauseType": "主险",
+    "tags": [],
+    "promoTag": "",
+    "cardMetric1Label": "交费方式",
+    "cardMetric1Value": "灵活加费",
+    "cardMetric2Label": "投保年龄",
+    "cardMetric2Value": "",
+    "cardMetric3Label": "保险期间",
+    "cardMetric3Value": "终身",
+    "supportsOnlineClaim": false,
+    "isOnline": false,
+    "paymentMethod": "一次性付清保险费、定期追加保险费、不定期追加保险费、约定转入的保险费",
+    "paymentPeriod": "",
+    "payoutFrequency": "每年",
+    "payoutStartAge": 55,
+    "underwritingOccupation": "",
+    "coveragePlans": [
+      {
+        "planType": "标准版",
+        "coverageDetails": [
+          {
+            "mandatory": true,
+            "item_code": "ANNUITY_PAYMENT",
+            "item_name": "养老年金",
+            "description": "自起领日每年给付",
+            "details": {
+              "start_age_options": [
+                55
+              ],
+              "frequency_options": [
+                "ANNUALLY"
+              ],
+              "amount_logic": "按合同约定"
+            }
+          },
+          {
+            "mandatory": true,
+            "item_code": "DEATH_BENEFIT",
+            "item_name": "身故保险金",
+            "description": "按条款约定给付",
+            "details": {
+              "start_age_options": [
+                55
+              ],
+              "frequency_options": [
+                "ANNUALLY"
+              ],
+              "payout_logic": "按条款约定给付"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productCode": "gclife_ann_n_2025006",
+    "regulatoryName": "中意裕享金生养老年金保险",
+    "companyName": "中意人寿",
+    "version": "A版",
+    "salesRegions": "全国",
+    "effectiveDate": "",
+    "discontinuationDate": "",
+    "status": "生效",
+    "primaryCategory": "年金保险",
+    "secondaryCategory": "养老年金保险",
+    "primaryCategoryCode": "D",
+    "secondaryCategoryCode": "D01",
+    "racewayId": "D0102",
+    "racewayName": "养老年金",
+    "coverageDetails": [],
+    "underwritingAge": "",
+    "coveragePeriod": "本合同的保险期间为自生效日的零时起至被保险人年满 105 周岁后的首个保单周年",
+    "waitingPeriod": "无",
+    "productCardImage": "https://pic1.imgdb.cn/item/692dd43cc2ca2fe15cf17332.webp",
+    "productHeroImage": "https://pic1.imgdb.cn/item/69311d3fa11464095f88537e.webp",
+    "productLongImage": [
+      "https://pic1.imgdb.cn/item/69313be6a11464095f8a12dd.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d8.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d7.jpg"
+    ],
+    "productAttachments": [
+      "/Users/pegasus/Documents/金融管家/中意人寿/中意裕享金生养老年金保险/中意裕享金生养老年金保险 - 产品说明书.pdf",
+      "/Users/pegasus/Documents/金融管家/中意人寿/中意裕享金生养老年金保险/中意裕享金生养老年金保险 - 现金价值表.xlsx",
+      "/Users/pegasus/Documents/金融管家/中意人寿/中意裕享金生养老年金保险/中意裕享金生养老年金保险 - 条款.pdf",
+      "/Users/pegasus/Documents/金融管家/中意人寿/中意裕享金生养老年金保险/中意裕享金生养老年金保险 - 基本保险金额表.pdf"
+    ],
+    "productSummary": "",
+    "operator": "",
+    "clauseType": "主险",
+    "tags": [],
+    "promoTag": "",
+    "cardMetric1Label": "交费方式",
+    "cardMetric1Value": "多期可选",
+    "cardMetric2Label": "投保年龄",
+    "cardMetric2Value": "",
+    "cardMetric3Label": "保险期间",
+    "cardMetric3Value": "至105周岁",
+    "supportsOnlineClaim": false,
+    "isOnline": false,
+    "paymentMethod": "一次性付清、3 年交、5 年交、10 年交",
+    "paymentPeriod": "",
+    "payoutFrequency": "每年",
+    "payoutStartAge": 0,
+    "underwritingOccupation": "",
+    "coveragePlans": [
+      {
+        "planType": "标准版",
+        "coverageDetails": [
+          {
+            "mandatory": true,
+            "item_code": "ANNUITY_PAYMENT",
+            "item_name": "养老年金",
+            "description": "自起领日每年给付",
+            "details": {
+              "start_age_options": [
+                0
+              ],
+              "frequency_options": [
+                "ANNUALLY"
+              ],
+              "amount_logic": "按合同约定"
+            }
+          },
+          {
+            "mandatory": true,
+            "item_code": "DEATH_BENEFIT",
+            "item_name": "身故保险金",
+            "description": "按条款约定给付",
+            "details": {
+              "start_age_options": [
+                0
+              ],
+              "frequency_options": [
+                "ANNUALLY"
+              ],
+              "payout_logic": "按条款约定给付"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productCode": "gclife_ann_n_2025007",
+    "regulatoryName": "中意裕享金生（尊享版）养老年金保险",
+    "companyName": "中意人寿",
+    "version": "A版",
+    "salesRegions": "全国",
+    "effectiveDate": "",
+    "discontinuationDate": "",
+    "status": "生效",
+    "primaryCategory": "年金保险",
+    "secondaryCategory": "养老年金保险",
+    "primaryCategoryCode": "D",
+    "secondaryCategoryCode": "D01",
+    "racewayId": "D0102",
+    "racewayName": "养老年金",
+    "coverageDetails": [],
+    "underwritingAge": "",
+    "coveragePeriod": "本合同的保险期间为自生效日的零时起至被保险人年满 105 周岁后的首个保单周年",
+    "waitingPeriod": "无",
+    "productCardImage": "https://pic1.imgdb.cn/item/692dd43cc2ca2fe15cf17332.webp",
+    "productHeroImage": "https://pic1.imgdb.cn/item/69311d3fa11464095f88537e.webp",
+    "productLongImage": [
+      "https://pic1.imgdb.cn/item/69313be6a11464095f8a12dd.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d8.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d7.jpg"
+    ],
+    "productAttachments": [
+      "/Users/pegasus/Documents/金融管家/中意人寿/中意裕享金生（尊享版）养老年金保险/中意裕享金生（尊享版）养老年金保险 - 基本保险金额表.pdf",
+      "/Users/pegasus/Documents/金融管家/中意人寿/中意裕享金生（尊享版）养老年金保险/中意裕享金生（尊享版）养老年金保险 - 产品说明书.pdf",
+      "/Users/pegasus/Documents/金融管家/中意人寿/中意裕享金生（尊享版）养老年金保险/中意裕享金生（尊享版）养老年金保险 - 条款.pdf",
+      "/Users/pegasus/Documents/金融管家/中意人寿/中意裕享金生（尊享版）养老年金保险/中意裕享金生（尊享版）养老年金保险 - 现金价值表.xlsx"
+    ],
+    "productSummary": "",
+    "operator": "",
+    "clauseType": "主险",
+    "tags": [],
+    "promoTag": "",
+    "cardMetric1Label": "交费方式",
+    "cardMetric1Value": "多期可选",
+    "cardMetric2Label": "投保年龄",
+    "cardMetric2Value": "",
+    "cardMetric3Label": "保险期间",
+    "cardMetric3Value": "至105周岁",
+    "supportsOnlineClaim": false,
+    "isOnline": false,
+    "paymentMethod": "一次性付清、3 年交、5 年交、10 年交",
+    "paymentPeriod": "",
+    "payoutFrequency": "每年",
+    "payoutStartAge": 0,
+    "underwritingOccupation": "",
+    "coveragePlans": [
+      {
+        "planType": "标准版",
+        "coverageDetails": [
+          {
+            "mandatory": true,
+            "item_code": "ANNUITY_PAYMENT",
+            "item_name": "养老年金",
+            "description": "自起领日每年给付",
+            "details": {
+              "start_age_options": [
+                0
+              ],
+              "frequency_options": [
+                "ANNUALLY"
+              ],
+              "amount_logic": "按合同约定"
+            }
+          },
+          {
+            "mandatory": true,
+            "item_code": "DEATH_BENEFIT",
+            "item_name": "身故保险金",
+            "description": "按条款约定给付",
+            "details": {
+              "start_age_options": [
+                0
+              ],
+              "frequency_options": [
+                "ANNUALLY"
+              ],
+              "payout_logic": "按条款约定给付"
+            }
+          }
+        ]
+      }
+    ]
+  }
+]

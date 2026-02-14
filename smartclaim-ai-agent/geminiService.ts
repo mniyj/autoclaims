@@ -137,11 +137,11 @@ export const fetchPolicyTerms = async (incidentType: string): Promise<PolicyTerm
   }
 };
 
-export const quickAnalyze = async (base64: string, mimeType: string): Promise<{ category: string; needsDeepAnalysis: boolean; ossUrl: string }> => {
+export const quickAnalyze = async (base64: string, mimeType: string): Promise<{ category: string; needsDeepAnalysis: boolean; ossUrl: string; ossKey: string }> => {
   // Run OSS upload in parallel - don't block AI analysis if upload fails
   const ossPromise = uploadToOSS(base64, mimeType).catch(err => {
     console.warn('OSS upload failed, continuing with analysis:', err);
-    return '';
+    return { url: '', objectKey: '' };
   });
 
   const ai = getAI();
@@ -161,13 +161,13 @@ export const quickAnalyze = async (base64: string, mimeType: string): Promise<{ 
     }
   });
 
-  const ossUrl = await ossPromise;
+  const ossResult = await ossPromise;
 
   try {
     const result = JSON.parse(response.text || '{"category":"未知","needsDeepAnalysis":false}');
-    return { ...result, ossUrl };
+    return { ...result, ossUrl: ossResult.url, ossKey: ossResult.objectKey };
   } catch {
-    return { category: '未知', needsDeepAnalysis: false, ossUrl };
+    return { category: '未知', needsDeepAnalysis: false, ossUrl: ossResult.url, ossKey: ossResult.objectKey };
   }
 };
 

@@ -1,0 +1,151 @@
+[
+  {
+    "productCode": "HOS2024-A",
+    "regulatoryName": "超级健康医疗保险（2024版）",
+    "marketingName": "超级健康医疗保险（2024版）- 市场版",
+    "companyName": "人保健康",
+    "version": "2.1",
+    "salesRegions": "全国（不含港澳台）",
+    "effectiveDate": "2024-01-01",
+    "discontinuationDate": "2028-12-31",
+    "status": "生效",
+    "primaryCategory": "健康保险",
+    "secondaryCategory": "住院医疗",
+    "primaryCategoryCode": "A",
+    "secondaryCategoryCode": "A01",
+    "racewayId": "A0101",
+    "racewayName": "短期百万医疗",
+    "clauseType": "主险",
+    "operator": "张三",
+    "coverageDetails": [
+      {
+        "mandatory": true,
+        "id": "1",
+        "name": "一般医疗保险金",
+        "amount": "200万",
+        "details": "含住院、特殊门诊、外购药等费用。"
+      },
+      {
+        "mandatory": true,
+        "id": "2",
+        "name": "重疾医疗保险金",
+        "amount": "400万",
+        "details": "120种重大疾病医疗费用保障。"
+      }
+    ],
+    "coveragePlans": [
+      {
+        "planType": "标准版",
+        "annualLimit": 6000000,
+        "deductible": 10000,
+        "description": "适合个人与小家庭投保的基础计划",
+        "coverageDetails": [
+          {
+            "mandatory": true,
+            "id": "1",
+            "name": "一般医疗保险金",
+            "amount": "200万",
+            "details": "含住院、特殊门诊、外购药等费用。"
+          }
+        ]
+      }
+    ],
+    "valueAddedServices": [],
+    "tags": [],
+    "promoTag": "",
+    "cardMetric1Label": "保额",
+    "cardMetric1Value": "600万",
+    "cardMetric2Label": "保障期限",
+    "cardMetric2Value": "1年",
+    "cardMetric3Label": "投保年龄",
+    "cardMetric3Value": "0-60岁",
+    "supportsOnlineClaim": true,
+    "isOnline": true,
+    "salesUrl": "",
+    "productAttachments": []
+  },
+  {
+    "productCode": "ZA-001",
+    "regulatoryName": "尊享e生2024版",
+    "marketingName": "尊享e生2024版- 市场版",
+    "companyName": "众安",
+    "version": "1.0",
+    "salesRegions": "全国",
+    "effectiveDate": "2024-02-01",
+    "discontinuationDate": "2028-12-31",
+    "status": "生效",
+    "primaryCategory": "健康保险",
+    "secondaryCategory": "住院医疗",
+    "primaryCategoryCode": "A",
+    "secondaryCategoryCode": "A01",
+    "racewayId": "A0102",
+    "racewayName": "长期医疗",
+    "clauseType": "主险",
+    "operator": "系统管理员",
+    "coverageDetails": [
+      {
+        "mandatory": true,
+        "id": "1",
+        "name": "一般医疗保险金",
+        "amount": "300万",
+        "details": "包含住院、特殊门诊与外购药"
+      }
+    ],
+    "coveragePlans": [],
+    "valueAddedServices": [],
+    "tags": [],
+    "promoTag": "",
+    "cardMetric1Label": "保额",
+    "cardMetric1Value": "300万",
+    "cardMetric2Label": "保障期限",
+    "cardMetric2Value": "1年",
+    "cardMetric3Label": "投保年龄",
+    "cardMetric3Value": "0-65岁",
+    "supportsOnlineClaim": true,
+    "isOnline": true,
+    "salesUrl": "",
+    "productAttachments": []
+  },
+  {
+    "productCode": "ZA-002",
+    "regulatoryName": "小米综合意外险",
+    "marketingName": "小米综合意外险- 市场版",
+    "companyName": "众安",
+    "version": "1.3",
+    "salesRegions": "全国",
+    "effectiveDate": "2024-03-01",
+    "discontinuationDate": "2028-12-31",
+    "status": "生效",
+    "primaryCategory": "意外保险",
+    "secondaryCategory": "综合意外",
+    "primaryCategoryCode": "C",
+    "secondaryCategoryCode": "C01",
+    "racewayId": "C0101",
+    "racewayName": "成人综合意外",
+    "clauseType": "主险",
+    "operator": "系统管理员",
+    "coverageDetails": [
+      {
+        "mandatory": true,
+        "id": "1",
+        "name": "意外身故/伤残",
+        "amount": "100万",
+        "details": "交通意外与日常意外保障"
+      }
+    ],
+    "coveragePlans": [],
+    "valueAddedServices": [],
+    "tags": [],
+    "promoTag": "",
+    "cardMetric1Label": "保额",
+    "cardMetric1Value": "100万",
+    "cardMetric2Label": "保障期限",
+    "cardMetric2Value": "1年",
+    "cardMetric3Label": "投保年龄",
+    "cardMetric3Value": "18-60岁",
+    "supportsOnlineClaim": true,
+    "isOnline": true,
+    "salesUrl": "",
+    "productAttachments": []
+  }
+]

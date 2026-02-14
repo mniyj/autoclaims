@@ -115,6 +115,7 @@ export interface BaseProduct {
   cardMetric3Value?: string;
   supportsOnlineClaim: boolean;
   isOnline?: boolean;
+  intakeConfig?: IntakeConfig;
 
   // New file upload fields
   clauseTextFile?: string;
@@ -517,14 +518,55 @@ export interface EndUser {
 }
 // --- END: Types for End User Data ---
 
-// --- START: Types for Ruleset Management ---
+// --- START: Types for Claim Intake Configuration ---
+export interface IntakeValidation {
+  rule: string;
+  error_msg: string;
+}
 
+export interface IntakeFollowUp {
+  condition: string;
+  extra_fields: string[];
+}
+
+export type IntakeFieldType = 'text' | 'date' | 'time' | 'number' | 'textarea'
+  | 'enum' | 'enum_with_other' | 'multi_select' | 'text_with_search' | 'boolean';
+
+export interface IntakeField {
+  field_id: string;
+  label: string;
+  type: IntakeFieldType;
+  required: boolean;
+  placeholder?: string;
+  options?: string[];
+  validation?: IntakeValidation;
+  follow_up?: IntakeFollowUp;
+  data_source?: string;
+  voice_slot_enabled?: boolean;
+}
+
+export interface IntakeVoiceInput {
+  enabled: boolean;
+  mode: 'realtime_or_record';
+  slot_filling_prompt?: string;
+}
+
+export interface IntakeConfig {
+  product_type?: string;
+  config_version?: string;
+  fields: IntakeField[];
+  voice_input: IntakeVoiceInput;
+}
+// --- END: Types for Claim Intake Configuration ---
+
+// --- START: Types for Ruleset Management ---
 export enum RulesetProductLine {
-  AUTO = 'AUTO',
   ACCIDENT = 'ACCIDENT',
   HEALTH = 'HEALTH',
-  PROPERTY = 'PROPERTY',
-  LIABILITY = 'LIABILITY',
+  CRITICAL_ILLNESS = 'CRITICAL_ILLNESS',
+  TERM_LIFE = 'TERM_LIFE',
+  WHOLE_LIFE = 'WHOLE_LIFE',
+  ANNUITY = 'ANNUITY',
 }
 
 export enum ExecutionDomain {
@@ -535,11 +577,8 @@ export enum ExecutionDomain {
 
 export enum RuleStatus {
   EFFECTIVE = 'EFFECTIVE',
-  OVERRIDDEN = 'OVERRIDDEN',
-  EXPIRED = 'EXPIRED',
-  DRAFT = 'DRAFT',
-  PENDING_REVIEW = 'PENDING_REVIEW',
   DISABLED = 'DISABLED',
+  DRAFT = 'DRAFT',
 }
 
 export enum RuleActionType {
@@ -563,60 +602,57 @@ export enum RuleActionType {
 }
 
 export enum RuleCategory {
-  E_LIABILITY_TRIGGER = 'E_LIABILITY_TRIGGER',
-  E_EXCLUSION = 'E_EXCLUSION',
-  E_OCCUPATION_CHECK = 'E_OCCUPATION_CHECK',
-  E_POLICY_STATUS = 'E_POLICY_STATUS',
-  E_PAYOUT_RATIO = 'E_PAYOUT_RATIO',
-  E_ANTI_FRAUD = 'E_ANTI_FRAUD',
-  A_PROVIDER_QUALIFY = 'A_PROVIDER_QUALIFY',
-  A_ITEM_EXCLUSION = 'A_ITEM_EXCLUSION',
-  A_ITEM_NECESSITY = 'A_ITEM_NECESSITY',
-  A_ITEM_PRICING = 'A_ITEM_PRICING',
-  A_ITEM_SOCIAL_INSURANCE = 'A_ITEM_SOCIAL_INSURANCE',
-  A_ITEM_DEPRECIATION = 'A_ITEM_DEPRECIATION',
-  A_ITEM_DEDUCTIBLE = 'A_ITEM_DEDUCTIBLE',
-  P_COMPENSATION_DEDUCT = 'P_COMPENSATION_DEDUCT',
-  P_CUMULATIVE_CAP = 'P_CUMULATIVE_CAP',
-  P_DEDUCTIBLE = 'P_DEDUCTIBLE',
-  P_LIABILITY_APPLY = 'P_LIABILITY_APPLY',
-  P_MULTI_COVERAGE = 'P_MULTI_COVERAGE',
-  P_PRIOR_BENEFIT_DEDUCT = 'P_PRIOR_BENEFIT_DEDUCT',
+  COVERAGE_SCOPE = 'COVERAGE_SCOPE',
+  EXCLUSION = 'EXCLUSION',
+  WAITING_PERIOD = 'WAITING_PERIOD',
+  CLAIM_TIMELINE = 'CLAIM_TIMELINE',
+  COVERAGE_PERIOD = 'COVERAGE_PERIOD',
+  POLICY_STATUS = 'POLICY_STATUS',
+  ITEM_CLASSIFICATION = 'ITEM_CLASSIFICATION',
+  PRICING_REASONABILITY = 'PRICING_REASONABILITY',
+  DISABILITY_ASSESSMENT = 'DISABILITY_ASSESSMENT',
+  DEPRECIATION = 'DEPRECIATION',
+  PROPORTIONAL_LIABILITY = 'PROPORTIONAL_LIABILITY',
+  DEDUCTIBLE = 'DEDUCTIBLE',
+  SUB_LIMIT = 'SUB_LIMIT',
+  SOCIAL_INSURANCE = 'SOCIAL_INSURANCE',
+  BENEFIT_OFFSET = 'BENEFIT_OFFSET',
+  AGGREGATE_CAP = 'AGGREGATE_CAP',
+  POST_ADJUSTMENT = 'POST_ADJUSTMENT',
 }
 
 export enum ConditionOperator {
   EQ = 'EQ',
-  NEQ = 'NEQ',
+  NE = 'NE',
   GT = 'GT',
   GTE = 'GTE',
   LT = 'LT',
   LTE = 'LTE',
   IN = 'IN',
   NOT_IN = 'NOT_IN',
-  BETWEEN = 'BETWEEN',
-  NOT_BETWEEN = 'NOT_BETWEEN',
   CONTAINS = 'CONTAINS',
   NOT_CONTAINS = 'NOT_CONTAINS',
+  STARTS_WITH = 'STARTS_WITH',
+  BETWEEN = 'BETWEEN',
   IS_NULL = 'IS_NULL',
   IS_NOT_NULL = 'IS_NOT_NULL',
   IS_TRUE = 'IS_TRUE',
   IS_FALSE = 'IS_FALSE',
-  MATCHES = 'MATCHES',
+  MATCHES_REGEX = 'MATCHES_REGEX',
 }
 
 export enum ConditionLogic {
   AND = 'AND',
   OR = 'OR',
   NOT = 'NOT',
-  SINGLE = 'SINGLE',
   ALWAYS_TRUE = 'ALWAYS_TRUE',
 }
 
 export interface LeafCondition {
   field: string;
   operator: ConditionOperator;
-  value?: unknown;
-  value_unit?: string | null;
+  value: string | number | boolean | string[] | null;
+  value_unit?: string;
 }
 
 export interface GroupCondition {
@@ -632,61 +668,49 @@ export interface RuleConditions {
 export interface RuleActionParams {
   reject_reason_code?: string;
   payout_ratio?: number;
-  reduction_ratio?: number;
-  deductible_amount?: number;
-  cap_field?: string;
-  cap_amount?: number;
-  social_insurance_ratio?: number;
-  non_social_insurance_ratio?: number;
   fraud_risk_score?: number;
   route_reason?: string;
-  remark_template?: string;
-  formula?: {
-    expression: string;
-    output_field: string;
-  };
-  disability_grade_table?: Array<{
-    grade: number;
-    payout_ratio: number;
-  }>;
-  depreciation_table?: Array<{
-    age_from_months: number;
-    age_to_months: number;
-    monthly_rate_percent: number;
-  }>;
+  reduction_ratio?: number;
   pricing_reference?: {
     source: string;
     tolerance_percent: number;
   };
+  formula?: {
+    expression: string;
+    output_field: string;
+  };
+  cap_field?: string;
+  cap_amount?: number;
+  deductible_amount?: number;
+  remark_template?: string;
+  social_insurance_ratio?: number;
+  non_social_insurance_ratio?: number;
+  disability_grade_table?: { grade: number; payout_ratio: number }[];
+  depreciation_table?: { age_from_months: number; age_to_months: number; monthly_rate_percent: number }[];
+}
+
+export interface RuleExecution {
+  domain: ExecutionDomain;
+  loop_over: string | null;
+  item_alias: string | null;
+  item_action_on_reject: 'ZERO_AMOUNT' | 'SKIP_ITEM' | 'FLAG_ITEM' | null;
+}
+
+export interface RuleSource {
+  source_type: 'CLAUSE' | 'POLICY' | 'REGULATION' | 'AI_GENERATED' | 'MANUAL';
+  source_ref: string;
+  clause_code: string | null;
+  source_text: string;
+}
+
+export interface RulePriority {
+  level: 1 | 2 | 3 | 4;
+  rank: number;
 }
 
 export interface RuleAction {
   action_type: RuleActionType;
   params: RuleActionParams;
-}
-
-export interface RuleExecution {
-  domain: ExecutionDomain;
-  loop_over?: string | null;
-  item_alias?: string | null;
-  item_action_on_reject?: 'ZERO_AMOUNT' | 'SKIP_ITEM' | 'FLAG_ITEM' | null;
-}
-
-export interface RuleSource {
-  source_type: 'STANDARD_CLAUSE' | 'ADDITIONAL_CLAUSE' | 'SPECIAL_AGREEMENT' | 'ENDORSEMENT' | 'REGULATORY';
-  source_ref: string;
-  source_text: string;
-  clause_code?: string | null;
-  page_location?: {
-    page: number;
-    bbox: number[];
-  } | null;
-}
-
-export interface RulePriority {
-  level: 1 | 2 | 3 | 4;
-  level_label: 'MAIN_CLAUSE' | 'ADDITIONAL_CLAUSE' | 'SPECIAL_AGREEMENT' | 'REGULATORY';
-  rank: number;
 }
 
 export interface ParsingConfidence {
@@ -701,29 +725,24 @@ export interface RulesetRule {
   rule_id: string;
   rule_name: string;
   description?: string;
+  category: string;
+  tags?: string[];
+  status: RuleStatus;
   execution: RuleExecution;
   source: RuleSource;
   priority: RulePriority;
-  category: RuleCategory;
-  applies_to?: {
-    coverage_codes: string[];
-  };
   conditions: RuleConditions;
   action: RuleAction;
-  status: RuleStatus;
-  overridden_by?: string | null;
-  override_reason?: string | null;
-  tags?: string[];
   parsing_confidence?: ParsingConfidence;
 }
 
 export interface DomainConfig {
-  domain: ExecutionDomain;
+  domain: string;
   label: string;
-  execution_mode: 'SEQUENTIAL_SHORT_CIRCUIT' | 'LOOP_PER_ITEM' | 'SEQUENTIAL_AGGREGATE';
-  input_granularity?: 'CLAIM_LEVEL' | 'ITEM_LEVEL' | 'AGGREGATE_LEVEL';
-  loop_collection?: string | null;
-  short_circuit_on?: string[] | null;
+  execution_mode: string;
+  input_granularity?: string;
+  loop_collection?: string;
+  short_circuit_on?: string[];
   category_sequence: string[];
 }
 
@@ -731,47 +750,43 @@ export interface ExecutionPipeline {
   domains: DomainConfig[];
 }
 
-export interface OverrideChainItem {
-  rule_id: string;
-  priority_level: number;
-  status: string;
-  summary: string;
-}
-
 export interface OverrideChain {
   chain_id: string;
   topic: string;
-  affected_domain?: ExecutionDomain;
-  chain: OverrideChainItem[];
+  conflict_type: string;
+  affected_domain?: string;
   effective_rule_id: string;
-  conflict_type: 'OVERRIDE' | 'SAME_PRIORITY_CONFLICT' | 'COMPLEMENT';
-  resolution?: Record<string, unknown> | null;
+  chain: {
+    rule_id: string;
+    priority_level: number;
+    summary: string;
+    status: string;
+  }[];
 }
 
 export interface FieldDefinition {
   label: string;
-  data_type: 'STRING' | 'NUMBER' | 'BOOLEAN' | 'DATE' | 'DATETIME' | 'ENUM' | 'ARRAY';
-  scope: 'CLAIM_LEVEL' | 'ITEM_LEVEL' | 'POLICY_LEVEL' | 'CALCULATED';
-  applicable_domains: ExecutionDomain[];
-  enum_values?: Array<{
-    code: string;
-    label: string;
-  }>;
+  data_type: string;
+  scope: string;
   source: string;
+  applicable_domains: string[];
+  enum_values?: { code: string; label: string }[];
 }
 
 export interface RulesetPolicyInfo {
   policy_no: string;
   product_code: string;
   product_name: string;
-  plan_name?: string | null;
   insurer: string;
   effective_date: string;
   expiry_date: string;
-  payment_mode?: 'ANNUAL' | 'MONTHLY' | 'SINGLE';
-  insured_subject?: Record<string, unknown>;
-  clause_versions?: Array<Record<string, unknown>>;
-  coverages: Array<Record<string, unknown>>;
+  coverages: {
+    coverage_code: string;
+    coverage_name: string;
+    sum_insured: number;
+    deductible: number;
+    co_pay_ratio: number;
+  }[];
 }
 
 export interface RulesetMetadata {
@@ -786,18 +801,14 @@ export interface RulesetMetadata {
     assessment: number;
     post_process: number;
   };
-  rules_by_status?: {
-    effective: number;
-    overridden: number;
-  };
-  unresolved_conflicts?: number;
   low_confidence_rules?: number;
-  audit_trail?: Array<{
+  unresolved_conflicts?: number;
+  audit_trail?: {
     timestamp: string;
-    action: string;
     user_id: string;
-    details: string;
-  }>;
+    action: string;
+    details?: string;
+  }[];
 }
 
 export interface InsuranceRuleset {
@@ -805,9 +816,99 @@ export interface InsuranceRuleset {
   product_line: RulesetProductLine;
   policy_info: RulesetPolicyInfo;
   rules: RulesetRule[];
+  execution_pipeline: ExecutionPipeline;
   override_chains: OverrideChain[];
   field_dictionary: Record<string, FieldDefinition>;
-  execution_pipeline: ExecutionPipeline;
   metadata: RulesetMetadata;
 }
 // --- END: Types for Ruleset Management ---
+
+// --- START: Types for Medical Invoice Audit & Insurance Catalog ---
+// Import MedicalInvoiceData from smartclaim-ai-agent
+import type { MedicalInvoiceData } from './smartclaim-ai-agent/types';
+
+// 医保目录相关类型
+export interface MedicalInsuranceCatalogItem {
+  id: string;
+  province: string; // 省份代码，如 "beijing", "shanghai", "national"（国家目录）
+  category: 'drug' | 'treatment' | 'material'; // 药品/诊疗项目/耗材
+  code: string; // 医保编码
+  name: string; // 标准名称
+  type: 'A' | 'B' | 'C' | 'excluded'; // 甲乙丙类或不在目录
+  reimbursementRatio?: number; // 报销比例（0-100）
+  restrictions?: string; // 使用限制说明
+  effectiveDate: string; // 生效日期
+  expiryDate?: string; // 失效日期
+}
+
+// 医院等级数据
+export interface HospitalInfo {
+  id: string;
+  name: string; // 医院名称
+  province: string;
+  city: string;
+  level: '三级甲等' | '三级乙等' | '二级甲等' | '二级乙等' | '一级' | '未定级' | '民营';
+  type: '公立' | '民营';
+  address?: string;
+  qualifiedForInsurance: boolean; // 是否符合保险理赔要求（公立二级及以上）
+}
+
+// 发票识别结果（扩展现有 MedicalInvoiceData）
+export interface InvoiceAuditResult {
+  invoiceId: string;
+  ossUrl: string;
+  ossKey: string;
+  uploadTime: string;
+  claimCaseId?: string; // 关联的理赔案件ID
+
+  // OCR 原始数据
+  ocrData: MedicalInvoiceData; // 复用 smartclaim-ai-agent 的类型
+
+  // 医院校验结果
+  hospitalValidation: {
+    hospitalName: string;
+    matchedHospital?: HospitalInfo;
+    isQualified: boolean; // 是否符合理赔要求
+    reason?: string; // 不符合原因
+  };
+
+  // 费用明细审核结果
+  itemAudits: InvoiceItemAudit[];
+
+  // 汇总统计
+  summary: {
+    totalAmount: number; // 总金额
+    qualifiedAmount: number; // 符合医保目录的金额
+    unqualifiedAmount: number; // 不符合的金额
+    qualifiedItemCount: number;
+    unqualifiedItemCount: number;
+    estimatedReimbursement: number; // 预估报销金额
+  };
+
+  auditStatus: 'pending' | 'completed' | 'failed';
+  auditTime?: string;
+}
+
+export interface InvoiceItemAudit {
+  itemName: string; // 费用项目名称（从发票识别）
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+
+  // 医保目录匹配结果
+  catalogMatch: {
+    matched: boolean;
+    matchedItem?: MedicalInsuranceCatalogItem;
+    matchConfidence: number; // 匹配置信度 0-100
+    matchMethod: 'exact' | 'fuzzy' | 'manual' | 'none';
+  };
+
+  // 审核结论
+  isQualified: boolean; // 是否符合医保目录
+  qualificationReason: string; // 判定依据
+  estimatedReimbursement: number; // 预估报销金额
+  remarks?: string;
+}
+
+export { MedicalInvoiceData };
+// --- END: Types for Medical Invoice Audit & Insurance Catalog ---

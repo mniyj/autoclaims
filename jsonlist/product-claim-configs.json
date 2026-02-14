@@ -1,0 +1,13 @@
+[
+  {
+    "productCode": "ZA-001",
+    "responsibilityConfigs": [
+      {
+        "responsibilityId": "resp-1",
+        "claimItemIds": [
+          "item-1"
+        ]
+      }
+    ]
+  }
+]

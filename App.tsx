@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ProductListPage from './components/ProductListPage';
 import ProductConfigPage from './components/ProductConfigPage';
 import ClauseManagementPage from './components/ClauseManagementPage';
@@ -25,9 +25,24 @@ import ClaimsMaterialManagementPage from './components/ClaimsMaterialManagementP
 import ClaimItemConfigPage from './components/ClaimItemConfigPage';
 import ClaimCaseListPage from './components/ClaimCaseListPage';
 import ClaimCaseDetailPage from './components/ClaimCaseDetailPage';
-import RulesetManagementPage from './components/RulesetManagementPage';
 import { type Clause, type InsuranceProduct, ProductStatus, type DecisionTable, type IndustryData, type ClaimCase } from './types';
-import { SANITIZED_MOCK_CLAUSES as MOCK_CLAUSES, MOCK_CLAIM_CASES } from './constants';
+import {
+  SANITIZED_MOCK_CLAUSES as MOCK_CLAUSES,
+  MOCK_CLAIM_CASES,
+  MOCK_RESPONSIBILITIES,
+  MOCK_CLAIMS_MATERIALS,
+  MOCK_CLAIM_ITEMS,
+  MOCK_PRODUCT_CLAIM_CONFIGS,
+  MOCK_RULESETS,
+  MOCK_END_USERS,
+  MOCK_COMPANY_LIST,
+  MOCK_COMPANY_PROFILES,
+  LEVEL_1_DATA,
+  LEVEL_2_DATA,
+  LEVEL_3_DATA,
+  MAPPING_DATA,
+} from './constants';
+import { api } from './services/api';
 
 // --- Icon Components ---
 const IconWrapper: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className }) => (
@@ -43,7 +58,7 @@ const ChevronUpIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" 
 
 // --- Layout Components ---
 
-type AppView = 'product_list' | 'product_config' | 'clause_management' | 'add_clause' | 'view_clause' | 'edit_clause' | 'add_product' | 'strategy_management' | 'edit_strategy' | 'system_settings' | 'company_management' | 'add_company' | 'view_company' | 'edit_company' | 'industry_data_list' | 'edit_industry_data' | 'smart_advisor_config' | 'insurance_type_management' | 'responsibility_management' | 'user_list' | 'data_dashboard' | 'claims_material_management' | 'claim_item_config' | 'claim_case_list' | 'claim_case_detail' | 'ruleset_management';
+type AppView = 'product_list' | 'product_config' | 'clause_management' | 'add_clause' | 'view_clause' | 'edit_clause' | 'add_product' | 'strategy_management' | 'edit_strategy' | 'system_settings' | 'company_management' | 'add_company' | 'view_company' | 'edit_company' | 'industry_data_list' | 'edit_industry_data' | 'smart_advisor_config' | 'insurance_type_management' | 'responsibility_management' | 'user_list' | 'data_dashboard' | 'claims_material_management' | 'claim_item_config' | 'claim_case_list' | 'claim_case_detail';
 
 type NavSubItemData = { name: string; id: AppView };
 type NavItemData = {
@@ -53,9 +68,9 @@ type NavItemData = {
 };
 
 const navItems: NavItemData[] = [
-  { 
-    name: '智能保顾配置', 
-    icon: <StrategyIcon />, 
+  {
+    name: '智能保顾配置',
+    icon: <StrategyIcon />,
     children: [
       { name: '产品列表', id: 'product_list' },
       { name: '条款管理', id: 'clause_management' },
@@ -74,12 +89,20 @@ const navItems: NavItemData[] = [
       { name: '理赔材料管理', id: 'claims_material_management' },
       { name: '理赔项目配置', id: 'claim_item_config' },
       { name: '赔案清单', id: 'claim_case_list' },
-      { name: '规则集管理', id: 'ruleset_management' },
     ]
   },
-  { 
-    name: '系统管理', 
-    icon: <SettingsIcon />, 
+  {
+    name: '系统管理',
+    icon: <SettingsIcon />,
+    children: [
+      { name: '用户清单', id: 'user_list' },
+      { name: '数据看板', id: 'data_dashboard' },
+      { name: '账号设置', id: 'system_settings' },
+    ]
+  },
+  {
+    name: '系统管理',
+    icon: <SettingsIcon />,
     children: [
       { name: '用户清单', id: 'user_list' },
       { name: '数据看板', id: 'data_dashboard' },
@@ -90,92 +113,92 @@ const navItems: NavItemData[] = [
 
 
 const activeParentViews: Record<string, AppView[]> = {
-    '智能保顾配置': ['product_list', 'product_config', 'add_product', 'clause_management', 'add_clause', 'view_clause', 'edit_clause', 'company_management', 'add_company', 'view_company', 'edit_company', 'industry_data_list', 'edit_industry_data', 'insurance_type_management', 'responsibility_management', 'strategy_management', 'edit_strategy', 'smart_advisor_config'],
-    '理赔管理': ['claims_material_management', 'claim_item_config', 'claim_case_list', 'claim_case_detail', 'ruleset_management'],
-    '系统管理': ['system_settings', 'user_list', 'data_dashboard']
+  '智能保顾配置': ['product_list', 'product_config', 'add_product', 'clause_management', 'add_clause', 'view_clause', 'edit_clause', 'company_management', 'add_company', 'view_company', 'edit_company', 'industry_data_list', 'edit_industry_data', 'insurance_type_management', 'responsibility_management', 'strategy_management', 'edit_strategy', 'smart_advisor_config'],
+  '理赔管理': ['claims_material_management', 'claim_item_config', 'claim_case_list', 'claim_case_detail'],
+  '系统管理': ['system_settings', 'user_list', 'data_dashboard']
 };
 
 const Sidebar: React.FC<{ currentView: AppView; onViewChange: (view: AppView) => void; }> = ({ currentView, onViewChange }) => {
-    const [openGroup, setOpenGroup] = useState<string>('智能保顾配置');
+  const [openGroup, setOpenGroup] = useState<string>('智能保顾配置');
 
-    const toggleGroup = (name: string) => {
-        setOpenGroup(prev => prev === name ? '' : name);
-    };
-    
-    return (
-        <aside className="w-56 flex-shrink-0 bg-gradient-to-b from-slate-50 to-slate-100 p-2 flex flex-col border-r border-slate-200">
-            <div className="flex items-center h-16 px-4">
-                <img src="https://mdn.alipayobjects.com/huamei_wbchdc/afts/img/A*2yRxQIapKMwAAAAAAAAAAAAADkOZAQ/original" alt="AntChain Logo" className="h-8" />
-                <span className="text-slate-800 text-lg font-bold ml-3">保险科技</span>
-            </div>
-            <nav className="flex-1 space-y-1 mt-2">
-                {navItems.map(item => {
-                    const isParentActive = activeParentViews[item.name]?.includes(currentView);
-                    const isOpen = openGroup === item.name;
+  const toggleGroup = (name: string) => {
+    setOpenGroup(prev => prev === name ? '' : name);
+  };
+
+  return (
+    <aside className="w-56 flex-shrink-0 bg-gradient-to-b from-slate-50 to-slate-100 p-2 flex flex-col border-r border-slate-200">
+      <div className="flex items-center h-16 px-4">
+        <img src="https://mdn.alipayobjects.com/huamei_wbchdc/afts/img/A*2yRxQIapKMwAAAAAAAAAAAAADkOZAQ/original" alt="AntChain Logo" className="h-8" />
+        <span className="text-slate-800 text-lg font-bold ml-3">保险科技</span>
+      </div>
+      <nav className="flex-1 space-y-1 mt-2">
+        {navItems.map(item => {
+          const isParentActive = activeParentViews[item.name]?.includes(currentView);
+          const isOpen = openGroup === item.name;
+
+          return (
+            <div key={item.name}>
+              <button
+                onClick={() => toggleGroup(item.name)}
+                className={`flex items-center justify-between w-full px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${isParentActive ? 'text-slate-800' : 'text-slate-500 hover:bg-slate-100'}`}
+              >
+                <div className="flex items-center">
+                  {item.icon}
+                  <span className="ml-3 font-semibold">{item.name}</span>
+                </div>
+                <span className={`transform transition-transform`}>
+                  {isOpen ? <ChevronUpIcon /> : <ChevronDownIcon />}
+                </span>
+              </button>
+              {isOpen && (
+                <div className="pl-4 mt-1 space-y-1">
+                  {item.children.map(child => {
+                    let isActive = false;
+                    if (child.id === 'product_list') {
+                      isActive = ['product_list', 'product_config', 'add_product'].includes(currentView);
+                    } else if (child.id === 'clause_management') {
+                      isActive = ['clause_management', 'add_clause', 'view_clause', 'edit_clause'].includes(currentView);
+                    } else if (child.id === 'strategy_management') {
+                      isActive = ['strategy_management', 'edit_strategy'].includes(currentView);
+                    } else if (child.id === 'company_management') {
+                      isActive = ['company_management', 'add_company', 'view_company', 'edit_company'].includes(currentView);
+                    } else if (child.id === 'industry_data_list') {
+                      isActive = ['industry_data_list', 'edit_industry_data'].includes(currentView);
+                    } else {
+                      isActive = currentView === child.id;
+                    }
 
                     return (
-                        <div key={item.name}>
-                            <button 
-                                onClick={() => toggleGroup(item.name)} 
-                                className={`flex items-center justify-between w-full px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${isParentActive ? 'text-slate-800' : 'text-slate-500 hover:bg-slate-100'}`}
-                            >
-                                <div className="flex items-center">
-                                    {item.icon}
-                                    <span className="ml-3 font-semibold">{item.name}</span>
-                                </div>
-                                <span className={`transform transition-transform`}>
-                                    {isOpen ? <ChevronUpIcon /> : <ChevronDownIcon />}
-                                </span>
-                            </button>
-                            {isOpen && (
-                                <div className="pl-4 mt-1 space-y-1">
-                                    {item.children.map(child => {
-                                        let isActive = false;
-                                         if (child.id === 'product_list') {
-                                            isActive = ['product_list', 'product_config', 'add_product'].includes(currentView);
-                                        } else if (child.id === 'clause_management') {
-                                            isActive = ['clause_management', 'add_clause', 'view_clause', 'edit_clause'].includes(currentView);
-                                        } else if (child.id === 'strategy_management') {
-                                            isActive = ['strategy_management', 'edit_strategy'].includes(currentView);
-                                        } else if (child.id === 'company_management') {
-                                            isActive = ['company_management', 'add_company', 'view_company', 'edit_company'].includes(currentView);
-                                        } else if (child.id === 'industry_data_list') {
-                                            isActive = ['industry_data_list', 'edit_industry_data'].includes(currentView);
-                                        } else {
-                                            isActive = currentView === child.id;
-                                        }
-
-                                        return (
-                                            <button 
-                                                key={child.id} 
-                                                onClick={() => onViewChange(child.id)}
-                                                className={`w-full text-left pl-7 pr-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive ? 'bg-[#f0f2f5] font-semibold text-slate-800' : 'text-slate-600 hover:bg-slate-100'}`}
-                                            >
-                                                {child.name}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            )}
-                        </div>
+                      <button
+                        key={child.id}
+                        onClick={() => onViewChange(child.id)}
+                        className={`w-full text-left pl-7 pr-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive ? 'bg-[#f0f2f5] font-semibold text-slate-800' : 'text-slate-600 hover:bg-slate-100'}`}
+                      >
+                        {child.name}
+                      </button>
                     );
-                })}
-            </nav>
-        </aside>
-    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </nav>
+    </aside>
+  );
 };
 
 const Header: React.FC<{ onLogout: () => void; }> = ({ onLogout }) => (
-    <header className="bg-transparent h-16 px-6 flex items-center justify-end">
-        <div className="flex items-center space-x-5">
-            <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden">
-                    <img src="https://i.pravatar.cc/40?u=test" alt="User Avatar" />
-                </div>
-                <span className="text-sm font-medium text-gray-700">麦礼</span>
-            </div>
+  <header className="bg-transparent h-16 px-6 flex items-center justify-end">
+    <div className="flex items-center space-x-5">
+      <div className="flex items-center space-x-3">
+        <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden">
+          <img src="https://i.pravatar.cc/40?u=test" alt="User Avatar" />
         </div>
-    </header>
+        <span className="text-sm font-medium text-gray-700">麦礼</span>
+      </div>
+    </div>
+  </header>
 );
 
 // --- Main App Component ---
@@ -185,20 +208,53 @@ const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<{ username: string; companyCode?: string; tool?: '智能体' | '省心配' } | null>(null);
   const [view, setView] = useState<AppView>('product_list');
   const [currentProduct, setCurrentProduct] = useState<InsuranceProduct | null>(null);
-  const [products, setProducts] = useState<InsuranceProduct[]>(() => MOCK_CLAUSES.map(c => ({
-    ...c,
-    marketingName: `${c.regulatoryName} - 市场版`,
-    salesUrl: '',
-    productHeroImage: c.productHeroImage || 'https://pic1.imgdb.cn/item/69311d3fa11464095f88537e.webp',
-    productCardImage: c.productCardImage || 'https://pic1.imgdb.cn/item/692dd43cc2ca2fe15cf17332.webp',
-    productLongImage: (c.productLongImage && c.productLongImage.length > 0) ? c.productLongImage : ['https://pic1.imgdb.cn/item/69313be6a11464095f8a12dd.jpg', 'https://pic1.imgdb.cn/item/69313be5a11464095f8a12d8.jpg', 'https://pic1.imgdb.cn/item/69313be5a11464095f8a12d7.jpg'],
-    ...(c as any),
-  })));
+  const [products, setProducts] = useState<InsuranceProduct[]>([]);
   const [selectedClause, setSelectedClause] = useState<Clause | null>(null);
   const [selectedStrategy, setSelectedStrategy] = useState<DecisionTable | null>(null);
   const [selectedCompanyCode, setSelectedCompanyCode] = useState<string | null>(null);
   const [selectedIndustryData, setSelectedIndustryData] = useState<IndustryData | null>(null);
   const [selectedClaim, setSelectedClaim] = useState<ClaimCase | null>(null);
+
+  // Auto-seed: on first run, if backend has no data, persist MOCK data to JSON files
+  useEffect(() => {
+    const seedIfEmpty = async (apiResource: { list: () => Promise<any[]>; saveAll: (data: any[]) => Promise<any> }, mockData: any[]) => {
+      try {
+        const data = await apiResource.list();
+        if (data && data.length > 0) return data;
+        if (mockData && mockData.length > 0) {
+          await apiResource.saveAll(mockData);
+          return mockData;
+        }
+        return data;
+      } catch {
+        return mockData || [];
+      }
+    };
+
+    const initData = async () => {
+      try {
+        // Seed all resources in parallel
+        const [productsData] = await Promise.all([
+          seedIfEmpty(api.products, MOCK_CLAUSES),
+          seedIfEmpty(api.clauses, MOCK_CLAUSES),
+          seedIfEmpty(api.responsibilities, MOCK_RESPONSIBILITIES),
+          seedIfEmpty(api.claimsMaterials, MOCK_CLAIMS_MATERIALS),
+          seedIfEmpty(api.claimItems, MOCK_CLAIM_ITEMS),
+          seedIfEmpty(api.claimCases, MOCK_CLAIM_CASES),
+          seedIfEmpty(api.rulesets, MOCK_RULESETS),
+          seedIfEmpty(api.productClaimConfigs, MOCK_PRODUCT_CLAIM_CONFIGS),
+          seedIfEmpty(api.endUsers, MOCK_END_USERS),
+          seedIfEmpty(api.companies, [...MOCK_COMPANY_LIST, ...Object.values(MOCK_COMPANY_PROFILES)]),
+          seedIfEmpty(api.insuranceTypes, [...LEVEL_1_DATA, ...LEVEL_2_DATA, ...LEVEL_3_DATA]),
+          seedIfEmpty(api.mappingData, MAPPING_DATA),
+        ]);
+        setProducts(productsData as InsuranceProduct[]);
+      } catch (error) {
+        console.error('Failed to initialize data:', error);
+      }
+    };
+    initData();
+  }, []);
 
   const handleLogin = (user: { username: string; companyCode?: string; tool?: '智能体' | '省心配' }) => {
     setIsLoggedIn(true);
@@ -220,7 +276,7 @@ const App: React.FC = () => {
     setCurrentProduct(null);
     setView('product_list');
   };
-  
+
   const handleViewClause = (clause: Clause) => {
     setSelectedClause(clause);
     setView('view_clause');
@@ -235,7 +291,7 @@ const App: React.FC = () => {
     setSelectedStrategy(strategy);
     setView('edit_strategy');
   };
-  
+
   const handleViewCompany = (code: string) => {
     setSelectedCompanyCode(code);
     setView('view_company');
@@ -245,124 +301,143 @@ const App: React.FC = () => {
     setSelectedCompanyCode(code);
     setView('edit_company');
   };
-  
+
   const handleEditIndustryData = (data: IndustryData) => {
-      setSelectedIndustryData(data);
-      setView('edit_industry_data');
+    setSelectedIndustryData(data);
+    setView('edit_industry_data');
   }
 
-  const handleViewClaim = (claim: ClaimCase) => {
-    // In a real app, you would fetch the full detail here.
-    // For mock, if the claim-detail-1 is requested, we show the full one.
-    if (claim.reportNumber === 'CLAIM-2024-0421') {
-        const fullDetail = MOCK_CLAIM_CASES.find(c => c.id === 'claim-detail-1');
-        setSelectedClaim(fullDetail || claim);
-    } else {
-        setSelectedClaim(claim);
+  const handleViewClaim = async (claim: ClaimCase) => {
+    // Try to fetch the full detail from API
+    try {
+      const fullDetail = await api.claimCases.getById(claim.id);
+      setSelectedClaim(fullDetail as ClaimCase || claim);
+    } catch {
+      setSelectedClaim(claim);
     }
     setView('claim_case_detail');
   };
 
-  const handleAddProductSave = (product: InsuranceProduct) => {
+  const handleAddProductSave = async (product: InsuranceProduct) => {
     const operator = currentUser?.username || '系统管理员';
-    setProducts(prev => [{ ...product, operator }, ...prev]);
-    setView('product_list');
+    const newProduct = { ...product, operator };
+    try {
+      await api.products.add(newProduct);
+      const data = await api.products.list();
+      setProducts(data);
+      setView('product_list');
+    } catch (error) {
+      console.error('Failed to save product:', error);
+      alert('保存失败');
+    }
   };
 
-  const handleEditProductSave = (product: InsuranceProduct) => {
+  const handleEditProductSave = async (product: InsuranceProduct) => {
     const operator = currentUser?.username || '系统管理员';
-    setProducts(prev => prev.map(p => p.productCode === product.productCode ? { ...product, operator } : p));
-    setView('product_list');
+    const updatedProducts = products.map(p => p.productCode === product.productCode ? { ...product, operator } : p);
+    try {
+      await api.products.saveAll(updatedProducts);
+      setProducts(updatedProducts);
+      setView('product_list');
+    } catch (error) {
+      console.error('Failed to update product:', error);
+      alert('更新失败');
+    }
+
   };
 
-  const handleUpdateProductStatus = (productCode: string, status: ProductStatus) => {
+  const handleUpdateProductStatus = async (productCode: string, status: ProductStatus) => {
     const operator = currentUser?.username || '系统管理员';
-    setProducts(prev => prev.map(p => p.productCode === productCode ? { ...p, status, operator } : p));
+    const updatedProducts = products.map(p => p.productCode === productCode ? { ...p, status, operator } : p);
+    try {
+      await api.products.saveAll(updatedProducts);
+      setProducts(updatedProducts);
+    } catch (error) {
+      console.error('Failed to update status:', error);
+    }
   };
 
   const handleViewChange = (newView: AppView) => {
-      setView(newView);
-      if (newView === 'product_list') {
-        setCurrentProduct(null);
-      }
-      if (newView === 'clause_management') {
-        setSelectedClause(null);
-      }
-       if (newView === 'strategy_management') {
-        setSelectedStrategy(null);
-      }
-      if (newView === 'company_management') {
-        setSelectedCompanyCode(null);
-      }
-      if (newView === 'industry_data_list') {
-          setSelectedIndustryData(null);
-      }
-      if (newView === 'claim_case_list') {
-        setSelectedClaim(null);
-      }
+    setView(newView);
+    if (newView === 'product_list') {
+      setCurrentProduct(null);
+    }
+    if (newView === 'clause_management') {
+      setSelectedClause(null);
+    }
+    if (newView === 'strategy_management') {
+      setSelectedStrategy(null);
+    }
+    if (newView === 'company_management') {
+      setSelectedCompanyCode(null);
+    }
+    if (newView === 'industry_data_list') {
+      setSelectedIndustryData(null);
+    }
+    if (newView === 'claim_case_list') {
+      setSelectedClaim(null);
+    }
   }
 
   const renderContent = () => {
-    switch(view) {
-        case 'product_list':
-            return <ProductListPage products={products} onSelectConfig={handleSelectConfig} onAddProduct={() => setView('add_product')} onUpdateStatus={handleUpdateProductStatus} companyCode={currentUser?.companyCode || undefined} />;
-        case 'product_config':
-            return currentProduct && <ProductConfigPage product={currentProduct} onBack={handleBackToList} onSave={handleEditProductSave} />;
-        case 'add_product':
-            return <AddProductPage onBack={handleBackToList} onSave={handleAddProductSave} companyCode={currentUser?.companyCode} />;
-        case 'clause_management':
-            return <ClauseManagementPage onAddClause={() => setView('add_clause')} onViewClause={handleViewClause} onEditClause={handleEditClause} companyCode={currentUser?.companyCode || undefined} />;
-        case 'add_clause':
-            return <AddClausePage onBack={() => setView('clause_management')} companyCode={currentUser?.companyCode || undefined} />;
-        case 'view_clause':
-            return selectedClause && <ViewClausePage clause={selectedClause} onBack={() => { setView('clause_management'); setSelectedClause(null); }} />;
-        case 'edit_clause':
-            return selectedClause && <AddClausePage onBack={() => { setView('clause_management'); setSelectedClause(null); }} initialClause={selectedClause} />;
-        case 'insurance_type_management':
-            return <InsuranceTypeManagementPage tool={currentUser?.tool} />;
-        case 'strategy_management':
-            return <StrategyManagementPage onEditStrategy={handleEditStrategy} />;
-        case 'edit_strategy':
-            return selectedStrategy && <EditStrategyPage strategy={selectedStrategy} onBack={() => setView('strategy_management')} />;
-        case 'company_management':
-            return <CompanyManagementPage onViewCompany={handleViewCompany} onAddCompany={() => setView('add_company')} onEditCompany={handleEditCompany} companyCode={currentUser?.companyCode || undefined} />;
-        case 'add_company':
-            return <AddCompanyPage onBack={() => setView('company_management')} />;
-        case 'view_company':
-            return selectedCompanyCode && <ViewCompanyPage companyCode={selectedCompanyCode} onBack={() => { setView('company_management'); setSelectedCompanyCode(null); }} />;
-        case 'edit_company':
-            return selectedCompanyCode && <EditCompanyPage companyCode={selectedCompanyCode} onBack={() => { setView('company_management'); setSelectedCompanyCode(null); }} />;
-        case 'industry_data_list':
-            return <IndustryDataListPage onEdit={handleEditIndustryData} />;
-        case 'edit_industry_data':
-            return selectedIndustryData && <EditIndustryDataPage industryData={selectedIndustryData} onBack={() => { setView('industry_data_list'); setSelectedIndustryData(null); }} />;
-        case 'smart_advisor_config':
-            return <SmartAdvisorConfigPage />;
-        case 'responsibility_management':
-            return <ResponsibilityManagementPage />;
-        case 'claims_material_management':
-            return <ClaimsMaterialManagementPage />;
-        case 'claim_item_config':
-            return <ClaimItemConfigPage />;
-        case 'claim_case_list':
-            return <ClaimCaseListPage onViewDetail={handleViewClaim} />;
-        case 'claim_case_detail':
-            return selectedClaim && <ClaimCaseDetailPage claim={selectedClaim} onBack={() => setView('claim_case_list')} />;
-        case 'ruleset_management':
-            return <RulesetManagementPage />;
-        case 'user_list':
-            return <UserListPage />;
-        case 'data_dashboard':
-            return <DataDashboardPage />;
-        case 'system_settings':
-            return <SystemSettingsPage currentUser={currentUser || undefined} />;
-        default:
-            return <ProductListPage onSelectConfig={handleSelectConfig} onAddProduct={() => setView('add_product')} />;
+    switch (view) {
+      case 'product_list':
+        return <ProductListPage products={products} onSelectConfig={handleSelectConfig} onAddProduct={() => setView('add_product')} onUpdateStatus={handleUpdateProductStatus} companyCode={currentUser?.companyCode || undefined} />;
+      case 'product_config':
+        return currentProduct && <ProductConfigPage product={currentProduct} onBack={handleBackToList} onSave={handleEditProductSave} />;
+      case 'add_product':
+        return <AddProductPage onBack={handleBackToList} onSave={handleAddProductSave} companyCode={currentUser?.companyCode} />;
+      case 'clause_management':
+        return <ClauseManagementPage onAddClause={() => setView('add_clause')} onViewClause={handleViewClause} onEditClause={handleEditClause} companyCode={currentUser?.companyCode || undefined} />;
+      case 'add_clause':
+        return <AddClausePage onBack={() => setView('clause_management')} companyCode={currentUser?.companyCode || undefined} />;
+      case 'view_clause':
+        return selectedClause && <ViewClausePage clause={selectedClause} onBack={() => { setView('clause_management'); setSelectedClause(null); }} />;
+      case 'edit_clause':
+        return selectedClause && <AddClausePage onBack={() => { setView('clause_management'); setSelectedClause(null); }} initialClause={selectedClause} />;
+      case 'insurance_type_management':
+        return <InsuranceTypeManagementPage tool={currentUser?.tool} />;
+      case 'strategy_management':
+        return <StrategyManagementPage onEditStrategy={handleEditStrategy} />;
+      case 'edit_strategy':
+        return selectedStrategy && <EditStrategyPage strategy={selectedStrategy} onBack={() => setView('strategy_management')} />;
+      case 'company_management':
+        return <CompanyManagementPage onViewCompany={handleViewCompany} onAddCompany={() => setView('add_company')} onEditCompany={handleEditCompany} companyCode={currentUser?.companyCode || undefined} />;
+      case 'add_company':
+        return <AddCompanyPage onBack={() => setView('company_management')} />;
+      case 'view_company':
+        return selectedCompanyCode && <ViewCompanyPage companyCode={selectedCompanyCode} onBack={() => { setView('company_management'); setSelectedCompanyCode(null); }} />;
+      case 'edit_company':
+        return selectedCompanyCode && <EditCompanyPage companyCode={selectedCompanyCode} onBack={() => { setView('company_management'); setSelectedCompanyCode(null); }} />;
+      case 'industry_data_list':
+        return <IndustryDataListPage onEdit={handleEditIndustryData} />;
+      case 'edit_industry_data':
+        return selectedIndustryData && <EditIndustryDataPage industryData={selectedIndustryData} onBack={() => { setView('industry_data_list'); setSelectedIndustryData(null); }} />;
+      case 'smart_advisor_config':
+        return <SmartAdvisorConfigPage />;
+      case 'responsibility_management':
+        return <ResponsibilityManagementPage />;
+      case 'claims_material_management':
+        return <ClaimsMaterialManagementPage />;
+      case 'claim_item_config':
+        return <ClaimItemConfigPage />;
+      case 'claim_case_list':
+        return <ClaimCaseListPage onViewDetail={handleViewClaim} />;
+      case 'claim_case_detail':
+        return selectedClaim && <ClaimCaseDetailPage claim={selectedClaim} onBack={() => setView('claim_case_list')} />;
+      case 'user_list':
+        return <UserListPage />;
+      case 'data_dashboard':
+        return <DataDashboardPage />;
+      case 'system_settings':
+        return <SystemSettingsPage currentUser={currentUser || undefined} />;
+      default:
+        return <ProductListPage onSelectConfig={handleSelectConfig} onAddProduct={() => setView('add_product')} />;
     }
   }
 
   if (!isLoggedIn) {
-      return <LoginPage onLogin={handleLogin} />;
+    return <LoginPage onLogin={handleLogin} />;
   }
 
   return (
@@ -372,7 +447,7 @@ const App: React.FC = () => {
         <div className="absolute top-0 left-0 w-full h-[200px] bg-gradient-to-b from-[#e6f4ff] to-[#f0f2f5] pointer-events-none" />
         <Header onLogout={handleLogout} />
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-transparent px-6 pb-6 relative">
-            {renderContent()}
+          {renderContent()}
         </main>
       </div>
     </div>

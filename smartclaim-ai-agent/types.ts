@@ -50,6 +50,7 @@ export interface HistoricalClaim {
 export interface Attachment {
   base64?: string;
   url?: string;
+  ossKey?: string;
   type: string;
   name: string;
   analysis?: DocumentAnalysis;
@@ -212,6 +213,7 @@ export interface ClaimDocument {
   status: 'pending' | 'verified' | 'rejected';
   base64?: string;
   url?: string;
+  ossKey?: string;
   category?: string;
   ocrData?: OCRData;
   medicalData?: MedicalInvoiceData;

@@ -1,16 +1,31 @@
-import React, { useState, useMemo } from 'react';
-import { MOCK_CLAIM_CASES } from '../constants';
+import React, { useState, useMemo, useEffect } from 'react';
 import { type ClaimCase, ClaimStatus } from '../types';
 import Pagination from './ui/Pagination';
 import Select from './ui/Select';
 import Input from './ui/Input';
+import { api } from '../services/api';
 
 interface ClaimCaseListPageProps {
   onViewDetail: (claim: ClaimCase) => void;
 }
 
 const ClaimCaseListPage: React.FC<ClaimCaseListPageProps> = ({ onViewDetail }) => {
-  const [cases, setCases] = useState<ClaimCase[]>(MOCK_CLAIM_CASES);
+  const [cases, setCases] = useState<ClaimCase[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCases = async () => {
+      try {
+        const data = await api.claimCases.list();
+        setCases(data as ClaimCase[]);
+      } catch (error) {
+        console.error('Failed to fetch claim cases:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCases();
+  }, []);
   
   // Filter States
   const [reportNumber, setReportNumber] = useState('');
@@ -105,6 +120,14 @@ const ClaimCaseListPage: React.FC<ClaimCaseListPageProps> = ({ onViewDetail }) =
       default: return 'bg-gray-50 text-gray-700 border-gray-100';
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <div className="text-gray-400 text-sm">加载中...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
