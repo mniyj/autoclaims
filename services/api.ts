@@ -58,10 +58,23 @@ export const api = {
     endUsers: buildResource('end-users'),
     users: buildResource('users'),
     mappingData: buildResource('mapping-data'),
+    medicalInsuranceCatalog: buildResource('medical-insurance-catalog'),
+    hospitalInfo: buildResource('hospital-info'),
+    invoiceAudits: buildResource('invoice-audits'),
     // Utils
     getUploadToken: async () => {
         const response = await fetch('/api/upload-token');
         if (!response.ok) throw new Error('Failed to get upload token');
+        return response.json();
+    },
+    // 新增专用 API
+    auditInvoice: async (ocrData: any, ossUrl: string, province: string) => {
+        const response = await fetch('/api/audit-invoice', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ocrData, ossUrl, province })
+        });
+        if (!response.ok) throw new Error('Invoice audit failed');
         return response.json();
     }
 };

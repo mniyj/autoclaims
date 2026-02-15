@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import OSS from 'ali-oss';
+import { GoogleGenAI } from '@google/genai';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -96,6 +97,63 @@ const parseBody = (req) => {
     });
 };
 
+const GLM_OCR_URL = 'https://open.bigmodel.cn/api/paas/v4/layout_parsing';
+
+const getGeminiApiKey = () => process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || process.env.API_KEY;
+
+const formatErrorMessage = (error) => {
+    if (error instanceof Error) {
+        const causeMessage = error.cause instanceof Error ? error.cause.message : '';
+        return causeMessage ? `${error.message} | Cause: ${causeMessage}` : error.message;
+    }
+    return 'Unknown error';
+};
+
+const hasInlineData = (contents) => {
+    const parts = Array.isArray(contents?.parts) ? contents.parts : [];
+    return parts.some(part => part && typeof part === 'object' && part.inlineData);
+};
+
+const getGeminiModelCandidates = (requested, contents) => {
+    const candidates = [];
+    if (requested) candidates.push(requested);
+    const envDefault = process.env.GEMINI_MODEL || process.env.DEFAULT_GEMINI_MODEL;
+    if (envDefault && !candidates.includes(envDefault)) candidates.push(envDefault);
+    const visionFallbacks = ['gemini-1.5-flash-latest', 'gemini-1.5-pro-latest', 'gemini-1.0-pro-vision'];
+    const textFallbacks = ['gemini-1.5-flash-latest', 'gemini-1.5-pro-latest', 'gemini-1.0-pro'];
+    const fallbackList = hasInlineData(contents) ? visionFallbacks : textFallbacks;
+    fallbackList.forEach(model => {
+        if (!candidates.includes(model)) candidates.push(model);
+    });
+    return candidates;
+};
+
+const callGemini = async ({ model, contents, temperature = 0.1 }) => {
+    const apiKey = getGeminiApiKey();
+    if (!apiKey) {
+        throw new Error('Gemini API Key not found');
+    }
+    const ai = new GoogleGenAI({ apiKey });
+    const candidates = getGeminiModelCandidates(model, contents);
+    let lastError;
+    for (const candidate of candidates) {
+        try {
+            const response = await ai.models.generateContent({
+                model: candidate,
+                contents,
+                config: {
+                    responseMimeType: 'application/json',
+                    temperature
+                }
+            });
+            return response;
+        } catch (error) {
+            lastError = error;
+        }
+    }
+    throw new Error(`Gemini request failed: ${formatErrorMessage(lastError)}`);
+};
+
 // Supported resources
 const allowedResources = [
     'products',
@@ -113,6 +171,9 @@ const allowedResources = [
     'end-users',
     'users',
     'mapping-data',
+    'medical-insurance-catalog',  // 医保目录
+    'hospital-info',              // 医院信息
+    'invoice-audits',             // 发票审核记录
 ];
 
 export const handleApiRequest = async (req, res) => {
@@ -241,6 +302,121 @@ export const handleApiRequest = async (req, res) => {
             console.error('[API] OSS Signed URL Failed:', error);
             res.statusCode = 500;
             res.end(JSON.stringify({ error: 'Signed URL failed', message: error.message }));
+        }
+        return;
+    }
+
+    if (resource === 'invoice-ocr') {
+        if (req.method !== 'POST') {
+            res.statusCode = 405;
+            res.end(JSON.stringify({ error: 'Method Not Allowed' }));
+            return;
+        }
+
+        try {
+            const { mode, base64Data, mimeType, prompt, geminiModel, invoiceSchema } = await parseBody(req);
+            if (!base64Data || !mimeType) {
+                res.statusCode = 400;
+                res.end(JSON.stringify({ error: 'Missing base64 data or mimeType' }));
+                return;
+            }
+
+            if (mode === 'glm-ocr') {
+                const glmApiKey = process.env.GLM_OCR_API_KEY || process.env.ZHIPU_API_KEY;
+                if (!glmApiKey) {
+                    res.statusCode = 500;
+                    res.end(JSON.stringify({ error: 'GLM OCR API Key not found' }));
+                    return;
+                }
+
+                const dataUri = `data:${mimeType};base64,${base64Data}`;
+                let glmResponse;
+                try {
+                    glmResponse = await fetch(GLM_OCR_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${glmApiKey}`
+                        },
+                        body: JSON.stringify({
+                            model: 'glm-ocr',
+                            file: dataUri
+                        })
+                    });
+                } catch (error) {
+                    res.statusCode = 502;
+                    res.end(JSON.stringify({ error: `GLM OCR fetch failed: ${formatErrorMessage(error)}` }));
+                    return;
+                }
+
+                if (!glmResponse.ok) {
+                    const errorText = await glmResponse.text();
+                    res.statusCode = glmResponse.status;
+                    res.end(JSON.stringify({ error: `GLM OCR Failed: ${errorText}` }));
+                    return;
+                }
+
+                const glmResult = await glmResponse.json();
+                const ocrText = glmResult.md_results || '';
+                const schemaText = JSON.stringify(invoiceSchema || {}, null, 2);
+                const parsePrompt = `以下是中国医疗发票的 OCR 识别结果（Markdown 格式）。请从中提取结构化信息。
+
+## 重要规则
+1. 只提取 OCR 文本中**明确存在**的信息，严禁补充或编造
+2. 费用明细项目**不要重复**，同一项目只提取一次
+3. 注意区分"个人自付"（personalSelfPayment，医保目录内）和"个人自费"（personalSelfExpense，医保目录外）
+4. 医院名称优先从票面印刷文字提取，印章文字仅作参考且不要优先采用
+5. 忽略 OCR 排版干扰，专注于内容
+
+## OCR 原文
+${ocrText}
+
+## 输出 JSON 格式
+${schemaText}
+
+## 输出规范
+- 日期格式：YYYY-MM-DD
+- 数字字段：纯数字，不含货币符号或千分位逗号
+- 无法识别的字段：字符串用 ""，数字用 0`;
+
+                const parseResponse = await callGemini({
+                    model: geminiModel || 'gemini-1.5-flash',
+                    contents: {
+                        parts: [{ text: parsePrompt }]
+                    },
+                    temperature: 0
+                });
+
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({
+                    text: parseResponse.text || '{}',
+                    usageMetadata: {
+                        ocr: glmResult.usage,
+                        parsing: parseResponse.usageMetadata
+                    }
+                }));
+                return;
+            }
+
+            const response = await callGemini({
+                model: geminiModel || 'gemini-1.5-flash',
+                contents: {
+                    parts: [
+                        { inlineData: { mimeType, data: base64Data } },
+                        { text: prompt || '' }
+                    ]
+                },
+                temperature: 0.1
+            });
+
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({
+                text: response.text || '{}',
+                usageMetadata: response.usageMetadata
+            }));
+        } catch (error) {
+            res.statusCode = 500;
+            res.end(JSON.stringify({ error: formatErrorMessage(error) }));
         }
         return;
     }

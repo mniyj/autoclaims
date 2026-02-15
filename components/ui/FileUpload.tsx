@@ -21,7 +21,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ label, id, value, onChange, hel
       setUploading(true);
       try {
         const { uploadToOSS } = await import('../../services/ossService');
-        const url = await uploadToOSS(file);
+        const { url } = await uploadToOSS(file);
         console.log('[DEBUG] Uploaded to OSS, URL:', url);
         alert('上传成功！URL: ' + url);
         onChange(url);

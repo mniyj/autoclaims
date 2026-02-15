@@ -72,6 +72,8 @@ export interface Message {
 }
 
 export interface MedicalInvoiceData {
+  /** 文档类型：summary_invoice=汇总发票, detail_list=明细清单, single_invoice=单张完整发票 */
+  documentType?: 'summary_invoice' | 'detail_list' | 'single_invoice';
   basicInfo: {
     admissionDate?: string;
     age: string;
@@ -93,12 +95,13 @@ export interface MedicalInvoiceData {
   }[];
   totalAmount?: number;
   insurancePayment?: {
-    governmentFundPayment?: number;
-    personalPayment?: number;
-    personalSelfPayment?: number;
-    otherPayment?: number;
-    personalAccountPayment?: number;
-    personalCashPayment?: number;
+    governmentFundPayment?: number;  // 统筹基金支付
+    personalPayment?: number;        // 个人支付（总）
+    personalSelfPayment?: number;    // 个人自付（医保目录范围内由个人承担）
+    personalSelfExpense?: number;    // 个人自费（医保目录范围外全额自费）
+    otherPayment?: number;           // 其他支付
+    personalAccountPayment?: number; // 个人账户支付
+    personalCashPayment?: number;    // 个人现金支付
   };
   invoiceInfo?: {
     invoiceCode?: string;

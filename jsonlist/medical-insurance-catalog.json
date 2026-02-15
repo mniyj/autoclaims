@@ -1,0 +1,737 @@
+[
+  {
+    "id": "1",
+    "province": "beijing",
+    "category": "drug",
+    "code": "XA01AA01",
+    "name": "阿莫西林胶囊",
+    "genericName": "阿莫西林",
+    "aliases": [
+      "再林",
+      "联邦阿莫仙",
+      "阿莫仙"
+    ],
+    "dosageForm": "胶囊",
+    "specifications": "0.5g×24粒",
+    "type": "A",
+    "reimbursementRatio": 80,
+    "restrictions": "",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "2",
+    "province": "beijing",
+    "category": "drug",
+    "code": "XA01AA02",
+    "name": "头孢克肟胶囊",
+    "genericName": "头孢克肟",
+    "aliases": [
+      "世福素",
+      "达力芬"
+    ],
+    "dosageForm": "胶囊",
+    "specifications": "0.1g×6粒",
+    "type": "B",
+    "reimbursementRatio": 70,
+    "restrictions": "",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "3",
+    "province": "beijing",
+    "category": "drug",
+    "code": "XA01AA03",
+    "name": "阿奇霉素片",
+    "genericName": "阿奇霉素",
+    "aliases": [
+      "希舒美",
+      "维宏"
+    ],
+    "dosageForm": "片剂",
+    "specifications": "0.25g×6片",
+    "type": "A",
+    "reimbursementRatio": 85,
+    "restrictions": "",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "4",
+    "province": "beijing",
+    "category": "drug",
+    "code": "XA02BA01",
+    "name": "奥美拉唑肠溶胶囊",
+    "genericName": "奥美拉唑",
+    "aliases": [
+      "洛赛克",
+      "奥克"
+    ],
+    "dosageForm": "肠溶胶囊",
+    "specifications": "20mg×14粒",
+    "type": "A",
+    "reimbursementRatio": 80,
+    "restrictions": "",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "5",
+    "province": "beijing",
+    "category": "drug",
+    "code": "XA02BA02",
+    "name": "对乙酰氨基酚片",
+    "genericName": "对乙酰氨基酚",
+    "aliases": [
+      "扑热息痛",
+      "泰诺林",
+      "百服宁",
+      "必理通"
+    ],
+    "dosageForm": "片剂",
+    "specifications": "0.5g×12片",
+    "type": "A",
+    "reimbursementRatio": 85,
+    "restrictions": "",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "6",
+    "province": "beijing",
+    "category": "drug",
+    "code": "XA02BA03",
+    "name": "氯雷他定片",
+    "genericName": "氯雷他定",
+    "aliases": [
+      "开瑞坦",
+      "百为坦"
+    ],
+    "dosageForm": "片剂",
+    "specifications": "10mg×6片",
+    "type": "B",
+    "reimbursementRatio": 70,
+    "restrictions": "",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "7",
+    "province": "beijing",
+    "category": "drug",
+    "code": "XC01DA01",
+    "name": "阿托伐他汀钙片",
+    "genericName": "阿托伐他汀",
+    "aliases": [
+      "立普妥",
+      "尤佳"
+    ],
+    "dosageForm": "片剂",
+    "specifications": "20mg×7片",
+    "type": "B",
+    "reimbursementRatio": 65,
+    "restrictions": "限高脂血症患者",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "8",
+    "province": "beijing",
+    "category": "drug",
+    "code": "XZ01ZZ01",
+    "name": "人血白蛋白注射液",
+    "genericName": "人血白蛋白",
+    "aliases": [],
+    "dosageForm": "注射液",
+    "specifications": "10g/50ml",
+    "type": "C",
+    "reimbursementRatio": 0,
+    "restrictions": "丙类，需全额自付",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "9",
+    "province": "beijing",
+    "category": "drug",
+    "code": "XZ01EX01",
+    "name": "某进口靶向药",
+    "genericName": "",
+    "aliases": [],
+    "dosageForm": "片剂",
+    "specifications": "50mg×30片",
+    "type": "excluded",
+    "reimbursementRatio": 0,
+    "restrictions": "不在医保目录范围内",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "10",
+    "province": "beijing",
+    "category": "treatment",
+    "code": "T01001",
+    "name": "CT检查",
+    "aliases": [
+      "CT扫描",
+      "电子计算机断层扫描"
+    ],
+    "type": "A",
+    "reimbursementRatio": 85,
+    "restrictions": "",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "11",
+    "province": "beijing",
+    "category": "treatment",
+    "code": "T01002",
+    "name": "核磁共振检查",
+    "aliases": [
+      "MRI",
+      "MRI检查",
+      "磁共振成像"
+    ],
+    "type": "B",
+    "reimbursementRatio": 75,
+    "restrictions": "需医生开具检查单",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "12",
+    "province": "beijing",
+    "category": "treatment",
+    "code": "T01003",
+    "name": "B型超声检查",
+    "aliases": [
+      "B超",
+      "彩超",
+      "超声检查"
+    ],
+    "type": "A",
+    "reimbursementRatio": 90,
+    "restrictions": "",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "13",
+    "province": "beijing",
+    "category": "treatment",
+    "code": "T01004",
+    "name": "心电图检查",
+    "aliases": [
+      "ECG",
+      "心电"
+    ],
+    "type": "A",
+    "reimbursementRatio": 90,
+    "restrictions": "",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "14",
+    "province": "beijing",
+    "category": "treatment",
+    "code": "T01005",
+    "name": "血细胞分析",
+    "aliases": [
+      "血常规",
+      "血常规检查",
+      "全血细胞计数"
+    ],
+    "type": "A",
+    "reimbursementRatio": 95,
+    "restrictions": "",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "15",
+    "province": "beijing",
+    "category": "treatment",
+    "code": "T01006",
+    "name": "静脉输液",
+    "aliases": [
+      "输液",
+      "挂水"
+    ],
+    "type": "A",
+    "reimbursementRatio": 90,
+    "restrictions": "",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "16",
+    "province": "beijing",
+    "category": "material",
+    "code": "M01001",
+    "name": "一次性输液器",
+    "aliases": [
+      "输液器"
+    ],
+    "type": "A",
+    "reimbursementRatio": 90,
+    "restrictions": "",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "17",
+    "province": "beijing",
+    "category": "material",
+    "code": "M01002",
+    "name": "一次性注射器",
+    "aliases": [
+      "注射器"
+    ],
+    "type": "A",
+    "reimbursementRatio": 90,
+    "restrictions": "",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "18",
+    "province": "beijing",
+    "category": "material",
+    "code": "M01003",
+    "name": "医用纱布",
+    "aliases": [
+      "纱布",
+      "无菌纱布"
+    ],
+    "type": "A",
+    "reimbursementRatio": 85,
+    "restrictions": "",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "19",
+    "province": "shanghai",
+    "category": "drug",
+    "code": "SH-XA01AA01",
+    "name": "阿莫西林胶囊",
+    "genericName": "阿莫西林",
+    "aliases": [
+      "再林",
+      "联邦阿莫仙"
+    ],
+    "dosageForm": "胶囊",
+    "specifications": "0.5g×24粒",
+    "type": "A",
+    "reimbursementRatio": 85,
+    "restrictions": "",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "20",
+    "province": "shanghai",
+    "category": "drug",
+    "code": "SH-XA02BA01",
+    "name": "布洛芬缓释胶囊",
+    "genericName": "布洛芬",
+    "aliases": [
+      "芬必得",
+      "美林"
+    ],
+    "dosageForm": "缓释胶囊",
+    "specifications": "0.3g×20粒",
+    "type": "A",
+    "reimbursementRatio": 80,
+    "restrictions": "",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "21",
+    "province": "shanghai",
+    "category": "drug",
+    "code": "SH-XA02BA02",
+    "name": "盐酸二甲双胍片",
+    "genericName": "二甲双胍",
+    "aliases": [
+      "格华止",
+      "美迪康"
+    ],
+    "dosageForm": "片剂",
+    "specifications": "0.5g×20片",
+    "type": "A",
+    "reimbursementRatio": 80,
+    "restrictions": "限2型糖尿病患者",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "22",
+    "province": "shanghai",
+    "category": "drug",
+    "code": "SH-XA02BA03",
+    "name": "氯吡格雷片",
+    "genericName": "氯吡格雷",
+    "aliases": [
+      "波立维",
+      "泰嘉"
+    ],
+    "dosageForm": "片剂",
+    "specifications": "75mg×7片",
+    "type": "B",
+    "reimbursementRatio": 70,
+    "restrictions": "限心脑血管疾病患者",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "23",
+    "province": "shanghai",
+    "category": "treatment",
+    "code": "SH-T01001",
+    "name": "CT检查",
+    "aliases": [
+      "CT扫描"
+    ],
+    "type": "A",
+    "reimbursementRatio": 90,
+    "restrictions": "",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "24",
+    "province": "shanghai",
+    "category": "treatment",
+    "code": "SH-T01002",
+    "name": "核磁共振检查",
+    "aliases": [
+      "MRI",
+      "MRI检查"
+    ],
+    "type": "B",
+    "reimbursementRatio": 80,
+    "restrictions": "",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "25",
+    "province": "shanghai",
+    "category": "material",
+    "code": "SH-M01001",
+    "name": "一次性输液器",
+    "aliases": [
+      "输液器"
+    ],
+    "type": "A",
+    "reimbursementRatio": 95,
+    "restrictions": "",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "26",
+    "province": "guangdong",
+    "category": "drug",
+    "code": "GD-XA01AA01",
+    "name": "阿莫西林胶囊",
+    "genericName": "阿莫西林",
+    "aliases": [
+      "再林"
+    ],
+    "dosageForm": "胶囊",
+    "specifications": "0.5g×24粒",
+    "type": "A",
+    "reimbursementRatio": 75,
+    "restrictions": "",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "27",
+    "province": "guangdong",
+    "category": "drug",
+    "code": "GD-XA01AA02",
+    "name": "头孢呋辛酯片",
+    "genericName": "头孢呋辛酯",
+    "aliases": [
+      "达力新",
+      "新菌灵"
+    ],
+    "dosageForm": "片剂",
+    "specifications": "0.25g×12片",
+    "type": "B",
+    "reimbursementRatio": 65,
+    "restrictions": "",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "28",
+    "province": "guangdong",
+    "category": "drug",
+    "code": "GD-XC01DA01",
+    "name": "苯磺酸氨氯地平片",
+    "genericName": "氨氯地平",
+    "aliases": [
+      "络活喜",
+      "安内真"
+    ],
+    "dosageForm": "片剂",
+    "specifications": "5mg×7片",
+    "type": "A",
+    "reimbursementRatio": 80,
+    "restrictions": "限高血压患者",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "29",
+    "province": "guangdong",
+    "category": "drug",
+    "code": "GD-XA02BA01",
+    "name": "对乙酰氨基酚片",
+    "genericName": "对乙酰氨基酚",
+    "aliases": [
+      "扑热息痛",
+      "泰诺林",
+      "百服宁"
+    ],
+    "dosageForm": "片剂",
+    "specifications": "0.5g×12片",
+    "type": "A",
+    "reimbursementRatio": 80,
+    "restrictions": "",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "30",
+    "province": "guangdong",
+    "category": "treatment",
+    "code": "GD-T01001",
+    "name": "CT检查",
+    "aliases": [
+      "CT扫描"
+    ],
+    "type": "A",
+    "reimbursementRatio": 80,
+    "restrictions": "",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "31",
+    "province": "guangdong",
+    "category": "treatment",
+    "code": "GD-T01002",
+    "name": "X线检查",
+    "aliases": [
+      "X光",
+      "X光检查",
+      "DR"
+    ],
+    "type": "A",
+    "reimbursementRatio": 85,
+    "restrictions": "",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "32",
+    "province": "guangdong",
+    "category": "material",
+    "code": "GD-M01001",
+    "name": "一次性输液器",
+    "aliases": [
+      "输液器"
+    ],
+    "type": "A",
+    "reimbursementRatio": 85,
+    "restrictions": "",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "33",
+    "province": "national",
+    "category": "drug",
+    "code": "N01AA01",
+    "name": "布洛芬缓释胶囊",
+    "genericName": "布洛芬",
+    "aliases": [
+      "芬必得"
+    ],
+    "dosageForm": "缓释胶囊",
+    "specifications": "0.3g×20粒",
+    "type": "A",
+    "reimbursementRatio": 80,
+    "restrictions": "",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "34",
+    "province": "national",
+    "category": "drug",
+    "code": "N01AA02",
+    "name": "阿司匹林肠溶片",
+    "genericName": "阿司匹林",
+    "aliases": [
+      "拜阿司匹灵",
+      "巴米尔"
+    ],
+    "dosageForm": "肠溶片",
+    "specifications": "100mg×30片",
+    "type": "A",
+    "reimbursementRatio": 85,
+    "restrictions": "",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "35",
+    "province": "national",
+    "category": "drug",
+    "code": "N01AA03",
+    "name": "维生素C片",
+    "genericName": "维生素C",
+    "aliases": [
+      "VC",
+      "抗坏血酸"
+    ],
+    "dosageForm": "片剂",
+    "specifications": "0.1g×100片",
+    "type": "A",
+    "reimbursementRatio": 90,
+    "restrictions": "",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "36",
+    "province": "national",
+    "category": "drug",
+    "code": "N01AA04",
+    "name": "蒙脱石散",
+    "genericName": "蒙脱石",
+    "aliases": [
+      "思密达"
+    ],
+    "dosageForm": "散剂",
+    "specifications": "3g×10袋",
+    "type": "A",
+    "reimbursementRatio": 80,
+    "restrictions": "",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "37",
+    "province": "national",
+    "category": "drug",
+    "code": "N01AA05",
+    "name": "多潘立酮片",
+    "genericName": "多潘立酮",
+    "aliases": [
+      "吗丁啉"
+    ],
+    "dosageForm": "片剂",
+    "specifications": "10mg×30片",
+    "type": "A",
+    "reimbursementRatio": 80,
+    "restrictions": "",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "38",
+    "province": "national",
+    "category": "drug",
+    "code": "N01AA06",
+    "name": "美托洛尔缓释片",
+    "genericName": "美托洛尔",
+    "aliases": [
+      "倍他乐克",
+      "琥珀酸美托洛尔"
+    ],
+    "dosageForm": "缓释片",
+    "specifications": "47.5mg×7片",
+    "type": "B",
+    "reimbursementRatio": 70,
+    "restrictions": "限高血压、心绞痛患者",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "39",
+    "province": "national",
+    "category": "treatment",
+    "code": "N-T01001",
+    "name": "肝功能检查",
+    "aliases": [
+      "肝功",
+      "肝功全套"
+    ],
+    "type": "A",
+    "reimbursementRatio": 90,
+    "restrictions": "",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "40",
+    "province": "national",
+    "category": "treatment",
+    "code": "N-T01002",
+    "name": "肾功能检查",
+    "aliases": [
+      "肾功",
+      "肾功全套"
+    ],
+    "type": "A",
+    "reimbursementRatio": 90,
+    "restrictions": "",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "41",
+    "province": "national",
+    "category": "treatment",
+    "code": "N-T01003",
+    "name": "尿液分析",
+    "aliases": [
+      "尿常规",
+      "尿检"
+    ],
+    "type": "A",
+    "reimbursementRatio": 95,
+    "restrictions": "",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "42",
+    "province": "national",
+    "category": "material",
+    "code": "N-M01001",
+    "name": "医用外科口罩",
+    "aliases": [
+      "口罩",
+      "外科口罩"
+    ],
+    "type": "A",
+    "reimbursementRatio": 80,
+    "restrictions": "",
+    "effectiveDate": "2024-01-01"
+  },
+  {
+    "id": "catalog-1771125014007",
+    "province": "national",
+    "category": "treatment",
+    "code": "zhenchafei",
+    "name": "诊查费",
+    "type": "A",
+    "reimbursementRatio": 100,
+    "restrictions": "",
+    "effectiveDate": "2026-02-15"
+  },
+  {
+    "id": "catalog-1771129665840",
+    "province": "national",
+    "category": "treatment",
+    "code": "tanniaosu",
+    "name": "13碳尿素呼气试验",
+    "type": "A",
+    "reimbursementRatio": 100,
+    "restrictions": "",
+    "effectiveDate": "2026-02-15"
+  },
+  {
+    "id": "catalog-1771141887458",
+    "province": "national",
+    "category": "treatment",
+    "code": "jingmaizhushe",
+    "name": "静脉注射",
+    "type": "A",
+    "reimbursementRatio": 100,
+    "restrictions": "",
+    "effectiveDate": "2026-02-15"
+  },
+  {
+    "id": "catalog-1771141925058",
+    "province": "national",
+    "category": "material",
+    "code": "ycxsyzkcxg",
+    "name": "一次性使用真空采血管",
+    "type": "A",
+    "reimbursementRatio": 100,
+    "restrictions": "",
+    "effectiveDate": "2026-02-15"
+  }
+]

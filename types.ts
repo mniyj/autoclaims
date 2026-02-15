@@ -833,12 +833,19 @@ export interface MedicalInsuranceCatalogItem {
   province: string; // 省份代码，如 "beijing", "shanghai", "national"（国家目录）
   category: 'drug' | 'treatment' | 'material'; // 药品/诊疗项目/耗材
   code: string; // 医保编码
-  name: string; // 标准名称
+  name: string; // 标准名称（通用名）
   type: 'A' | 'B' | 'C' | 'excluded'; // 甲乙丙类或不在目录
   reimbursementRatio?: number; // 报销比例（0-100）
   restrictions?: string; // 使用限制说明
   effectiveDate: string; // 生效日期
   expiryDate?: string; // 失效日期
+
+  // 名称兼容化字段 - 用于处理发票名称与目录名称不一致
+  aliases?: string[];           // 别名列表（商品名、曾用名、常见缩写等）
+  genericName?: string;         // 药品通用名（国际非专利药名对应的中文名）
+  specifications?: string;      // 规格型号
+  dosageForm?: string;          // 剂型
+  manufacturer?: string;        // 生产厂家
 }
 
 // 医院等级数据
@@ -853,40 +860,100 @@ export interface HospitalInfo {
   qualifiedForInsurance: boolean; // 是否符合保险理赔要求（公立二级及以上）
 }
 
-// 发票识别结果（扩展现有 MedicalInvoiceData）
+// 增加 AI 交互日志类型定义
+export interface AIInteractionLog {
+  model: string;
+  prompt: string;
+  response: string;
+  duration: number;
+  timestamp: string;
+  usageMetadata?: any;
+}
+
+export interface StepLog {
+  step: 'ocr' | 'hospital' | 'catalog' | 'summary';
+  input: any;
+  output: any;
+  duration: number;
+  timestamp: string;
+}
+
+/** 单张图片的 OCR 识别结果（多图模式下使用） */
+export interface InvoiceImageOcrResult {
+  imageIndex: number;           // 图片在上传组中的序号（0-based）
+  ossUrl: string;               // 图片 OSS URL
+  ossKey: string;               // 图片 OSS Key
+  fileName: string;             // 原始文件名
+  documentType: 'summary_invoice' | 'detail_list' | 'single_invoice';
+  ocrData: MedicalInvoiceData;  // 该图片的 OCR 识别结果
+  aiLog?: AIInteractionLog;     // 该图片的 AI 交互日志
+}
+
+// 审核记录中增加 AI 日志字段
 export interface InvoiceAuditResult {
   invoiceId: string;
   ossUrl: string;
   ossKey: string;
   uploadTime: string;
-  claimCaseId?: string; // 关联的理赔案件ID
+  claimCaseId?: string;
 
-  // OCR 原始数据
-  ocrData: MedicalInvoiceData; // 复用 smartclaim-ai-agent 的类型
-
-  // 医院校验结果
+  // 1. OCR Result
+  ocrData: MedicalInvoiceData;
+  // 2. Hospital Validation
   hospitalValidation: {
     hospitalName: string;
     matchedHospital?: HospitalInfo;
-    isQualified: boolean; // 是否符合理赔要求
-    reason?: string; // 不符合原因
+    isQualified: boolean;
+    reason?: string;
   };
-
-  // 费用明细审核结果
+  // 3. Item Audits (with catalog matching)
   itemAudits: InvoiceItemAudit[];
-
-  // 汇总统计
+  // 4. Summary
   summary: {
-    totalAmount: number; // 总金额
-    qualifiedAmount: number; // 符合医保目录的金额
-    unqualifiedAmount: number; // 不符合的金额
+    totalAmount: number;
+    qualifiedAmount: number;
+    unqualifiedAmount: number;
     qualifiedItemCount: number;
     unqualifiedItemCount: number;
-    estimatedReimbursement: number; // 预估报销金额
+    estimatedReimbursement: number;
   };
 
-  auditStatus: 'pending' | 'completed' | 'failed';
+  // Status
+  auditStatus: 'processing' | 'completed' | 'failed';
   auditTime?: string;
+  errorMessage?: string;
+  
+  // AI Log
+  aiLog?: AIInteractionLog;
+  // Step Logs
+  stepLogs?: StepLog[];
+  // Validation Warnings (OCR 后置验证结果)
+  validationWarnings?: ValidationWarning[];
+
+  // 多图支持
+  imageCount?: number;                                         // 图片数量（1=单图，>1=多图）
+  imageOcrResults?: InvoiceImageOcrResult[];                    // 每张图片的独立 OCR 结果
+  summaryChargeItems?: MedicalInvoiceData['chargeItems'];      // 汇总发票大类项目（仅参考，不参与审核）
+  crossValidation?: {                                          // 汇总 vs 明细金额交叉验证
+    summaryTotal: number;
+    detailItemsTotal: number;
+    difference: number;
+    isConsistent: boolean;
+  };
+}
+
+// OCR 后置验证警告
+export interface ValidationWarning {
+  type: 'duplicate_item' | 'amount_mismatch' | 'total_mismatch' | 'insurance_balance' | 'abnormal_value' | 'summary_detail_mismatch';
+  severity: 'info' | 'warning' | 'error';
+  message: string;
+  details?: {
+    field?: string;
+    expected?: number;
+    actual?: number;
+    difference?: number;
+    items?: string[];  // 涉及的项目名称
+  };
 }
 
 export interface InvoiceItemAudit {
@@ -900,7 +967,7 @@ export interface InvoiceItemAudit {
     matched: boolean;
     matchedItem?: MedicalInsuranceCatalogItem;
     matchConfidence: number; // 匹配置信度 0-100
-    matchMethod: 'exact' | 'fuzzy' | 'manual' | 'none';
+    matchMethod: 'exact' | 'alias' | 'fuzzy' | 'ai' | 'manual' | 'none';
   };
 
   // 审核结论
