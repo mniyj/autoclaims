@@ -27,7 +27,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
             </svg>
           </button>
         </div>
-        <div className="p-6 text-gray-700">
+        <div className="p-6 text-gray-700 overflow-y-auto max-h-[70vh]">
           {children}
         </div>
         <div className="flex justify-end p-4 bg-gray-50 rounded-b-lg">

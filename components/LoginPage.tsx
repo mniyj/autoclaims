@@ -9,6 +9,7 @@ interface LoginUser {
 
 interface LoginPageProps {
   onLogin: (user: LoginUser) => void;
+  onClaimantEntry: () => void;
 }
 
 interface PasswordFormProps {
@@ -125,7 +126,7 @@ const QrCode = () => (
   </div>
 );
 
-const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
+const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onClaimantEntry }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -199,6 +200,15 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                          
                      </div>
                      
+                 </div>
+                 <div className="mt-6">
+                     <button
+                       type="button"
+                       onClick={onClaimantEntry}
+                       className="w-full flex justify-center py-3 px-4 rounded-md text-sm font-medium text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 transition"
+                     >
+                       进入索赔人端
+                     </button>
                  </div>
              </div>
          </div>

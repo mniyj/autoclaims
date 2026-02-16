@@ -28,7 +28,15 @@ import ClaimCaseDetailPage from './components/ClaimCaseDetailPage';
 import InvoiceAuditPage from './components/InvoiceAuditPage';
 import MedicalCatalogManagementPage from './components/MedicalCatalogManagementPage';
 import HospitalManagementPage from './components/HospitalManagementPage';
+import UserOperationLogsPage from './components/UserOperationLogsPage';
+import { AITestPanel } from './services/ai/AITestPanel';
+import { aiService } from './services/ai/aiService';
+import { GeminiProvider } from './services/ai/providers/geminiProvider';
+import { ClaudeProvider } from './services/ai/providers/claudeProvider';
 import { type Clause, type InsuranceProduct, ProductStatus, type DecisionTable, type IndustryData, type ClaimCase } from './types';
+
+aiService.registerProvider(new GeminiProvider());
+aiService.registerProvider(new ClaudeProvider());
 import {
   SANITIZED_MOCK_CLAUSES as MOCK_CLAUSES,
   MOCK_CLAIM_CASES,
@@ -61,7 +69,7 @@ const ChevronUpIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" 
 
 // --- Layout Components ---
 
-type AppView = 'product_list' | 'product_config' | 'clause_management' | 'add_clause' | 'view_clause' | 'edit_clause' | 'add_product' | 'strategy_management' | 'edit_strategy' | 'system_settings' | 'company_management' | 'add_company' | 'view_company' | 'edit_company' | 'industry_data_list' | 'edit_industry_data' | 'smart_advisor_config' | 'insurance_type_management' | 'responsibility_management' | 'user_list' | 'data_dashboard' | 'claims_material_management' | 'claim_item_config' | 'claim_case_list' | 'claim_case_detail' | 'invoice_audit' | 'medical_catalog_management' | 'hospital_management';
+type AppView = 'product_list' | 'product_config' | 'clause_management' | 'add_clause' | 'view_clause' | 'edit_clause' | 'add_product' | 'strategy_management' | 'edit_strategy' | 'system_settings' | 'company_management' | 'add_company' | 'view_company' | 'edit_company' | 'industry_data_list' | 'edit_industry_data' | 'smart_advisor_config' | 'insurance_type_management' | 'responsibility_management' | 'user_list' | 'data_dashboard' | 'claims_material_management' | 'claim_item_config' | 'claim_case_list' | 'claim_case_detail' | 'invoice_audit' | 'medical_catalog_management' | 'hospital_management' | 'user_operation_logs' | 'ai_test';
 
 type NavSubItemData = { name: string; id: AppView };
 type NavItemData = {
@@ -103,16 +111,9 @@ const navItems: NavItemData[] = [
     children: [
       { name: '用户清单', id: 'user_list' },
       { name: '数据看板', id: 'data_dashboard' },
+      { name: '用户操作日志', id: 'user_operation_logs' },
       { name: '账号设置', id: 'system_settings' },
-    ]
-  },
-  {
-    name: '系统管理',
-    icon: <SettingsIcon />,
-    children: [
-      { name: '用户清单', id: 'user_list' },
-      { name: '数据看板', id: 'data_dashboard' },
-      { name: '账号设置', id: 'system_settings' },
+      { name: 'AI 测试', id: 'ai_test' },
     ]
   },
 ];
@@ -121,7 +122,7 @@ const navItems: NavItemData[] = [
 const activeParentViews: Record<string, AppView[]> = {
   '智能保顾配置': ['product_list', 'product_config', 'add_product', 'clause_management', 'add_clause', 'view_clause', 'edit_clause', 'company_management', 'add_company', 'view_company', 'edit_company', 'industry_data_list', 'edit_industry_data', 'insurance_type_management', 'responsibility_management', 'strategy_management', 'edit_strategy', 'smart_advisor_config'],
   '理赔管理': ['claims_material_management', 'claim_item_config', 'claim_case_list', 'claim_case_detail', 'invoice_audit', 'medical_catalog_management', 'hospital_management'],
-  '系统管理': ['system_settings', 'user_list', 'data_dashboard']
+  '系统管理': ['system_settings', 'user_list', 'data_dashboard', 'user_operation_logs', 'ai_test']
 };
 
 const Sidebar: React.FC<{ currentView: AppView; onViewChange: (view: AppView) => void; }> = ({ currentView, onViewChange }) => {
@@ -207,10 +208,54 @@ const Header: React.FC<{ onLogout: () => void; }> = ({ onLogout }) => (
   </header>
 );
 
+const ClaimantEntryPage: React.FC<{ onBack: () => void; }> = ({ onBack }) => (
+  <div className="min-h-screen w-full flex items-center justify-center p-6 bg-[#f5f7fb]">
+    <div className="w-full max-w-xl bg-white rounded-2xl shadow-sm border border-gray-200 p-8 space-y-6">
+      <div className="flex items-center space-x-3">
+        <img src="https://mdn.alipayobjects.com/huamei_wbchdc/afts/img/A*2yRxQIapKMwAAAAAAAAAAAAADkOZAQ/original" alt="Logo" className="h-8" />
+        <div>
+          <h1 className="text-xl font-bold text-gray-900">索赔人端入口</h1>
+          <p className="text-sm text-gray-500 mt-1">用于提交索赔与查询进度</p>
+        </div>
+      </div>
+      <div className="bg-[#f8fafc] border border-gray-200 rounded-lg p-4 space-y-2">
+        <div className="flex items-center justify-between text-sm text-gray-600">
+          <span>索赔提交</span>
+          <span className="text-gray-900 font-medium">待接入</span>
+        </div>
+        <div className="flex items-center justify-between text-sm text-gray-600">
+          <span>材料上传</span>
+          <span className="text-gray-900 font-medium">待接入</span>
+        </div>
+        <div className="flex items-center justify-between text-sm text-gray-600">
+          <span>进度查询</span>
+          <span className="text-gray-900 font-medium">待接入</span>
+        </div>
+      </div>
+      <div className="flex items-center justify-between">
+        <button
+          type="button"
+          onClick={onBack}
+          className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800"
+        >
+          返回管理员登录
+        </button>
+        <button
+          type="button"
+          className="px-5 py-2.5 rounded-md text-sm font-medium text-white bg-brand-blue-600 hover:bg-brand-blue-700 transition"
+        >
+          开始索赔
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
 // --- Main App Component ---
 
 const App: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [publicView, setPublicView] = useState<'login' | 'claimant_entry'>('login');
   const [currentUser, setCurrentUser] = useState<{ username: string; companyCode?: string; tool?: '智能体' | '省心配' } | null>(null);
   const [view, setView] = useState<AppView>('product_list');
   const [currentProduct, setCurrentProduct] = useState<InsuranceProduct | null>(null);
@@ -271,6 +316,7 @@ const App: React.FC = () => {
     setIsLoggedIn(false);
     setCurrentUser(null);
     setView('product_list');
+    setPublicView('login');
   };
 
   const handleSelectConfig = (product: InsuranceProduct) => {
@@ -443,13 +489,28 @@ const App: React.FC = () => {
         return <DataDashboardPage />;
       case 'system_settings':
         return <SystemSettingsPage currentUser={currentUser || undefined} />;
+      case 'user_operation_logs':
+        return <UserOperationLogsPage />;
+      case 'ai_test':
+        return (
+          <div className="p-6">
+            <div className="mb-4">
+              <h1 className="text-2xl font-bold">AI 测试面板</h1>
+              <p className="text-gray-600 mt-1">测试不同 AI 提供商的性能、成本和准确性</p>
+            </div>
+            <AITestPanel onClose={() => setView('system_settings')} />
+          </div>
+        );
       default:
         return <ProductListPage onSelectConfig={handleSelectConfig} onAddProduct={() => setView('add_product')} />;
     }
   }
 
   if (!isLoggedIn) {
-    return <LoginPage onLogin={handleLogin} />;
+    if (publicView === 'claimant_entry') {
+      return <ClaimantEntryPage onBack={() => setPublicView('login')} />;
+    }
+    return <LoginPage onLogin={handleLogin} onClaimantEntry={() => setPublicView('claimant_entry')} />;
   }
 
   return (
@@ -462,6 +523,16 @@ const App: React.FC = () => {
           {renderContent()}
         </main>
       </div>
+      <button
+        onClick={() => setView('ai_test')}
+        className="fixed bottom-6 right-6 bg-blue-500 hover:bg-blue-600 text-white px-4 py-3 rounded-full shadow-lg flex items-center space-x-2 z-40 transition-all hover:scale-105"
+        title="AI 测试面板"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+        <span>AI 测试</span>
+      </button>
     </div>
   );
 };

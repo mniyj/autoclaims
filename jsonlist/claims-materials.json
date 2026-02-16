@@ -1,28 +1,380 @@
 [
   {
     "id": "mat-1",
-    "name": "诊断证明书",
-    "description": "医院出具的包含疾病诊断、治疗过程的正式证明文件。",
-    "sampleUrl": "https://pic1.imgdb.cn/item/69313be6a11464095f8a12dd.jpg",
-    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"diagnosis\": {\n      \"type\": \"string\",\n      \"description\": \"诊断结果\"\n    },\n    \"hospital_name\": {\n      \"type\": \"string\",\n      \"description\": \"医院名称\"\n    },\n    \"admission_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"入院日期\"\n    },\n    \"discharge_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"出院日期\"\n    }\n  }\n}",
+    "name": "身份证正面",
+    "description": "被保险人或受益人的身份证正面照片，包含姓名、性别、民族、出生日期、住址、身份证号等信息。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"name\": {\n      \"type\": \"string\",\n      \"description\": \"姓名\"\n    },\n    \"gender\": {\n      \"type\": \"string\",\n      \"description\": \"性别\"\n    },\n    \"ethnicity\": {\n      \"type\": \"string\",\n      \"description\": \"民族\"\n    },\n    \"birth_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"出生日期\"\n    },\n    \"address\": {\n      \"type\": \"string\",\n      \"description\": \"住址\"\n    },\n    \"id_number\": {\n      \"type\": \"string\",\n      \"description\": \"身份证号码\"\n    }\n  },\n  \"required\": [\n    \"name\",\n    \"id_number\"\n  ]\n}",
     "required": true,
-    "aiAuditPrompt": "从诊断证明书中抽取诊断结论、医院名称、入院与出院日期，用于校验投保责任是否覆盖该疾病。若信息缺失，指出缺失项。"
+    "aiAuditPrompt": "请从身份证正面提取姓名、性别、民族、出生日期、住址和身份证号码。校验要点：1）身份证号码必须为18位，校验最后一位校验码是否正确；2）比对姓名是否与保单上的被保险人/受益人一致；3）检查出生日期与身份证号中的出生日期编码是否一致。若有信息模糊无法识别，请标注具体字段。"
   },
   {
     "id": "mat-2",
-    "name": "费用总清单",
-    "description": "医院打印的住院期间所有费用的明细清单。",
-    "sampleUrl": "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d8.jpg",
-    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"total_amount\": {\n      \"type\": \"number\",\n      \"description\": \"费用总额\"\n    },\n    \"self_paid\": {\n      \"type\": \"number\",\n      \"description\": \"自费金额\"\n    },\n    \"medicare_paid\": {\n      \"type\": \"number\",\n      \"description\": \"医保支付\"\n    }\n  }\n}",
+    "name": "身份证反面",
+    "description": "被保险人或受益人的身份证反面照片，包含签发机关和有效期限。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"issuing_authority\": {\n      \"type\": \"string\",\n      \"description\": \"签发机关\"\n    },\n    \"valid_from\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"有效期起始日期\"\n    },\n    \"valid_until\": {\n      \"type\": \"string\",\n      \"description\": \"有效期截止日期（可能为\\\"长期\\\"）\"\n    }\n  },\n  \"required\": [\n    \"valid_from\",\n    \"valid_until\"\n  ]\n}",
     "required": true,
-    "aiAuditPrompt": "核对费用总额、自费与医保支付三项数值并计算合理给付基数，输出不一致或异常值提示。"
+    "aiAuditPrompt": "请从身份证反面提取签发机关、有效期起始日期和截止日期。校验要点：1）有效期截止日期是否晚于事故发生日/就诊日期，若已过期则标记为\"证件已过期\"；2）若截止日期为\"长期\"则视为有效。"
   },
   {
     "id": "mat-3",
-    "name": "身份证",
-    "description": "被保险人或受益人的有效身份证明。",
-    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"name\": {\n      \"type\": \"string\",\n      \"description\": \"姓名\"\n    },\n    \"id_number\": {\n      \"type\": \"string\",\n      \"description\": \"身份证号\"\n    }\n  }\n}",
+    "name": "驾驶证（含副页）",
+    "description": "机动车驾驶人的驾驶证正页及副页，用于交通事故理赔时核实驾驶资质。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"name\": {\n      \"type\": \"string\",\n      \"description\": \"姓名\"\n    },\n    \"license_number\": {\n      \"type\": \"string\",\n      \"description\": \"驾驶证号码\"\n    },\n    \"vehicle_class\": {\n      \"type\": \"string\",\n      \"description\": \"准驾车型\"\n    },\n    \"valid_period\": {\n      \"type\": \"string\",\n      \"description\": \"有效期限\"\n    },\n    \"issue_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"初次领证日期\"\n    },\n    \"file_number\": {\n      \"type\": \"string\",\n      \"description\": \"档案编号\"\n    }\n  },\n  \"required\": [\n    \"name\",\n    \"license_number\",\n    \"vehicle_class\"\n  ]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从驾驶证正页和副页提取姓名、驾驶证号、准驾车型、有效期限和初次领证日期。校验要点：1）驾驶证有效期是否覆盖事故发生日期；2）准驾车型是否与事故中驾驶的车辆类型匹配（如C1不能驾驶大型车辆）；3）是否存在扣分或违章记录标注。"
+  },
+  {
+    "id": "mat-4",
+    "name": "行驶证（含副页）",
+    "description": "机动车行驶证正页及副页，用于核实车辆信息和年检状态。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"plate_number\": {\n      \"type\": \"string\",\n      \"description\": \"号牌号码\"\n    },\n    \"vehicle_type\": {\n      \"type\": \"string\",\n      \"description\": \"车辆类型\"\n    },\n    \"owner\": {\n      \"type\": \"string\",\n      \"description\": \"所有人\"\n    },\n    \"vin\": {\n      \"type\": \"string\",\n      \"description\": \"车辆识别代号（VIN）\"\n    },\n    \"engine_number\": {\n      \"type\": \"string\",\n      \"description\": \"发动机号码\"\n    },\n    \"register_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"注册日期\"\n    },\n    \"inspection_valid_until\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"检验有效期至\"\n    }\n  },\n  \"required\": [\n    \"plate_number\",\n    \"vehicle_type\",\n    \"owner\"\n  ]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从行驶证正页和副页提取号牌号码、车辆类型、所有人、VIN码、发动机号、注册日期和检验有效期。校验要点：1）检验有效期是否覆盖事故发生日期，若已过期则标记；2）车辆类型与驾驶证准驾车型是否匹配。"
+  },
+  {
+    "id": "mat-5",
+    "name": "委托授权书",
+    "description": "被保险人或受益人委托他人代为办理理赔的授权委托书。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"principal_name\": {\n      \"type\": \"string\",\n      \"description\": \"委托人姓名\"\n    },\n    \"agent_name\": {\n      \"type\": \"string\",\n      \"description\": \"被委托人（代理人）姓名\"\n    },\n    \"principal_id\": {\n      \"type\": \"string\",\n      \"description\": \"委托人身份证号\"\n    },\n    \"agent_id\": {\n      \"type\": \"string\",\n      \"description\": \"被委托人身份证号\"\n    },\n    \"scope\": {\n      \"type\": \"string\",\n      \"description\": \"委托事项/授权范围\"\n    },\n    \"date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"委托日期\"\n    },\n    \"has_signature\": {\n      \"type\": \"boolean\",\n      \"description\": \"是否有委托人签名\"\n    },\n    \"has_fingerprint\": {\n      \"type\": \"boolean\",\n      \"description\": \"是否有指纹确认\"\n    }\n  },\n  \"required\": [\n    \"principal_name\",\n    \"agent_name\",\n    \"scope\"\n  ]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从委托授权书提取委托人姓名和身份证号、被委托人姓名和身份证号、委托事项范围和日期。校验要点：1）委托人是否为保单被保险人或受益人；2）授权范围是否明确覆盖理赔申请及领取赔款事项；3）是否有委托人亲笔签名或指纹确认；4）委托日期是否合理（不应早于事故日期）。"
+  },
+  {
+    "id": "mat-6",
+    "name": "银行卡（正反面）",
+    "description": "用于接收理赔款项的银行卡正反面照片。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"bank_name\": {\n      \"type\": \"string\",\n      \"description\": \"开户银行\"\n    },\n    \"card_number\": {\n      \"type\": \"string\",\n      \"description\": \"银行卡号\"\n    },\n    \"account_holder\": {\n      \"type\": \"string\",\n      \"description\": \"持卡人姓名\"\n    }\n  },\n  \"required\": [\n    \"bank_name\",\n    \"card_number\",\n    \"account_holder\"\n  ]\n}",
     "required": true,
-    "aiAuditPrompt": "比对证件姓名与保单被保险人/受益人信息，验证身份证号格式与校验位。"
+    "aiAuditPrompt": "请从银行卡照片提取开户银行名称、银行卡号和持卡人姓名。校验要点：1）持卡人姓名是否与被保险人或受益人一致（若有委托授权书则应与被委托人一致）；2）银行卡号格式是否合法（一般为16-19位数字）；3）确认银行卡号清晰可辨。"
+  },
+  {
+    "id": "mat-7",
+    "name": "户籍所在地证明",
+    "description": "户籍所在地派出所或社区出具的户籍证明，用于确认城镇/农村户籍性质以适用不同赔偿标准。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"name\": {\n      \"type\": \"string\",\n      \"description\": \"姓名\"\n    },\n    \"id_number\": {\n      \"type\": \"string\",\n      \"description\": \"身份证号\"\n    },\n    \"household_address\": {\n      \"type\": \"string\",\n      \"description\": \"户籍地址\"\n    },\n    \"household_type\": {\n      \"type\": \"string\",\n      \"description\": \"户籍性质（城镇/农村）\"\n    },\n    \"issue_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"开具日期\"\n    },\n    \"issuing_authority\": {\n      \"type\": \"string\",\n      \"description\": \"出具机关\"\n    }\n  },\n  \"required\": [\n    \"name\",\n    \"household_address\",\n    \"household_type\"\n  ]\n}",
+    "required": false,
+    "aiAuditPrompt": "请提取户籍证明中的姓名、身份证号、户籍地址、户籍性质（城镇或农村）、开具日期和出具机关。校验要点：1）户籍性质直接影响残疾赔偿金和死亡赔偿金计算标准（城镇标准通常高于农村标准）；2）证明是否由户籍所在地公安派出所或社区出具并盖章。"
+  },
+  {
+    "id": "mat-8",
+    "name": "交通事故责任认定书",
+    "description": "交警部门出具的交通事故责任认定文书，明确各方事故责任比例。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"document_number\": {\n      \"type\": \"string\",\n      \"description\": \"文书编号\"\n    },\n    \"accident_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"事故发生日期\"\n    },\n    \"accident_time\": {\n      \"type\": \"string\",\n      \"description\": \"事故发生时间\"\n    },\n    \"accident_location\": {\n      \"type\": \"string\",\n      \"description\": \"事故发生地点\"\n    },\n    \"parties\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"name\": {\n            \"type\": \"string\",\n            \"description\": \"当事人姓名\"\n          },\n          \"vehicle_info\": {\n            \"type\": \"string\",\n            \"description\": \"车辆信息\"\n          },\n          \"responsibility\": {\n            \"type\": \"string\",\n            \"description\": \"责任认定（全责/主责/同责/次责/无责）\"\n          }\n        }\n      },\n      \"description\": \"当事人及责任划分\"\n    },\n    \"accident_summary\": {\n      \"type\": \"string\",\n      \"description\": \"事故经过摘要\"\n    },\n    \"issuing_authority\": {\n      \"type\": \"string\",\n      \"description\": \"出具机关\"\n    }\n  },\n  \"required\": [\n    \"accident_date\",\n    \"accident_location\",\n    \"parties\"\n  ]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从交通事故责任认定书中提取文书编号、事故日期时间、地点、各方当事人信息和责任划分、事故经过摘要。校验要点：1）明确各方责任比例（全责100%、主责70%、同责50%、次责30%、无责0%）；2）事故日期应在保险有效期内；3）被保险人在事故中的角色和责任。"
+  },
+  {
+    "id": "mat-9",
+    "name": "认定工伤决定书",
+    "description": "人力资源和社会保障局出具的工伤认定决定书，确认工伤事实。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"decision_number\": {\n      \"type\": \"string\",\n      \"description\": \"决定书编号\"\n    },\n    \"employee_name\": {\n      \"type\": \"string\",\n      \"description\": \"职工姓名\"\n    },\n    \"employer\": {\n      \"type\": \"string\",\n      \"description\": \"用人单位\"\n    },\n    \"injury_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"受伤日期\"\n    },\n    \"injury_description\": {\n      \"type\": \"string\",\n      \"description\": \"受伤经过及诊断\"\n    },\n    \"work_injury_conclusion\": {\n      \"type\": \"string\",\n      \"description\": \"工伤认定结论\"\n    },\n    \"decision_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"决定日期\"\n    },\n    \"issuing_authority\": {\n      \"type\": \"string\",\n      \"description\": \"出具机关\"\n    }\n  },\n  \"required\": [\n    \"employee_name\",\n    \"employer\",\n    \"injury_date\",\n    \"work_injury_conclusion\"\n  ]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从认定工伤决定书中提取决定书编号、职工姓名、用人单位、受伤日期、受伤经过及诊断、工伤认定结论和决定日期。校验要点：1）确认工伤认定结论为\"认定为工伤\"或\"视同工伤\"；2）受伤日期与就诊日期逻辑一致；3）确认出具机关为人力资源和社会保障局。"
+  },
+  {
+    "id": "mat-10",
+    "name": "工伤认定申请表",
+    "description": "申请人向人社部门提交的工伤认定申请表格。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"applicant_name\": {\n      \"type\": \"string\",\n      \"description\": \"申请人姓名\"\n    },\n    \"employer\": {\n      \"type\": \"string\",\n      \"description\": \"用人单位名称\"\n    },\n    \"injury_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"事故伤害日期\"\n    },\n    \"injury_cause\": {\n      \"type\": \"string\",\n      \"description\": \"事故伤害原因\"\n    },\n    \"injury_description\": {\n      \"type\": \"string\",\n      \"description\": \"受伤害经过简述\"\n    },\n    \"application_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"申请日期\"\n    }\n  },\n  \"required\": [\n    \"applicant_name\",\n    \"employer\",\n    \"injury_date\"\n  ]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从工伤认定申请表中提取申请人姓名、用人单位、事故伤害日期、伤害原因、受伤经过简述和申请日期。校验要点：1）申请人信息与认定工伤决定书中的职工信息应一致；2）事故日期和伤害经过描述应与工伤决定书吻合。"
+  },
+  {
+    "id": "mat-11",
+    "name": "门（急）诊病历",
+    "description": "医院门诊或急诊的就诊病历记录，包含主诉、诊断和治疗方案。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"hospital_name\": {\n      \"type\": \"string\",\n      \"description\": \"医院名称\"\n    },\n    \"department\": {\n      \"type\": \"string\",\n      \"description\": \"就诊科室\"\n    },\n    \"visit_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"就诊日期\"\n    },\n    \"patient_name\": {\n      \"type\": \"string\",\n      \"description\": \"患者姓名\"\n    },\n    \"chief_complaint\": {\n      \"type\": \"string\",\n      \"description\": \"主诉\"\n    },\n    \"present_illness\": {\n      \"type\": \"string\",\n      \"description\": \"现病史\"\n    },\n    \"diagnosis\": {\n      \"type\": \"string\",\n      \"description\": \"诊断\"\n    },\n    \"treatment\": {\n      \"type\": \"string\",\n      \"description\": \"处理/治疗方案\"\n    },\n    \"doctor_name\": {\n      \"type\": \"string\",\n      \"description\": \"医生姓名\"\n    }\n  },\n  \"required\": [\n    \"hospital_name\",\n    \"visit_date\",\n    \"diagnosis\"\n  ]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从门（急）诊病历中提取医院名称、就诊科室、就诊日期、患者姓名、主诉、现病史、诊断结果、治疗方案和医生姓名。校验要点：1）就诊日期与事故发生日期的时间逻辑是否合理（应在事故发生后）；2）诊断结果与事故伤情是否存在因果关系；3）治疗方案是否与诊断匹配。"
+  },
+  {
+    "id": "mat-12",
+    "name": "住院病历/病案",
+    "description": "完整的住院病历资料，包含入院记录、病程记录、出院小结等。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"hospital_name\": {\n      \"type\": \"string\",\n      \"description\": \"医院名称\"\n    },\n    \"patient_name\": {\n      \"type\": \"string\",\n      \"description\": \"患者姓名\"\n    },\n    \"admission_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"入院日期\"\n    },\n    \"discharge_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"出院日期\"\n    },\n    \"hospital_days\": {\n      \"type\": \"number\",\n      \"description\": \"住院天数\"\n    },\n    \"admission_diagnosis\": {\n      \"type\": \"string\",\n      \"description\": \"入院诊断\"\n    },\n    \"discharge_diagnosis\": {\n      \"type\": \"string\",\n      \"description\": \"出院诊断\"\n    },\n    \"treatment_summary\": {\n      \"type\": \"string\",\n      \"description\": \"治疗经过摘要\"\n    },\n    \"discharge_instructions\": {\n      \"type\": \"string\",\n      \"description\": \"出院医嘱\"\n    }\n  },\n  \"required\": [\n    \"hospital_name\",\n    \"admission_date\",\n    \"discharge_date\",\n    \"discharge_diagnosis\"\n  ]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从住院病历中提取医院名称、患者姓名、入院日期、出院日期、住院天数、入院诊断、出院诊断、治疗经过和出院医嘱。校验要点：1）住院天数计算是否正确（出院日期-入院日期）；2）入院诊断与出院诊断是否一致或有合理变化；3）治疗经过与诊断是否匹配。"
+  },
+  {
+    "id": "mat-13",
+    "name": "诊断证明书",
+    "description": "医院出具的正式诊断证明文件，是理赔审核的核心医疗材料。",
+    "sampleUrl": "https://pic1.imgdb.cn/item/69313be6a11464095f8a12dd.jpg",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"hospital_name\": {\n      \"type\": \"string\",\n      \"description\": \"医院名称\"\n    },\n    \"patient_name\": {\n      \"type\": \"string\",\n      \"description\": \"患者姓名\"\n    },\n    \"diagnosis\": {\n      \"type\": \"string\",\n      \"description\": \"诊断结果\"\n    },\n    \"diagnosis_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"诊断日期\"\n    },\n    \"doctor_name\": {\n      \"type\": \"string\",\n      \"description\": \"诊断医生\"\n    },\n    \"treatment_advice\": {\n      \"type\": \"string\",\n      \"description\": \"治疗建议\"\n    },\n    \"rest_days\": {\n      \"type\": \"number\",\n      \"description\": \"建议休息天数\"\n    },\n    \"has_hospital_seal\": {\n      \"type\": \"boolean\",\n      \"description\": \"是否有医院公章\"\n    }\n  },\n  \"required\": [\n    \"hospital_name\",\n    \"diagnosis\",\n    \"diagnosis_date\"\n  ]\n}",
+    "required": true,
+    "aiAuditPrompt": "请从诊断证明书中提取医院名称、患者姓名、诊断结果、诊断日期、诊断医生、治疗建议和建议休息天数。校验要点：1）诊断结果与事故伤情是否存在因果关系；2）医院是否为二级及以上医疗机构；3）是否有医院诊断专用章；4）建议休息天数与伤情严重程度是否匹配。若信息缺失，请指出具体缺失项。"
+  },
+  {
+    "id": "mat-14",
+    "name": "转院证明",
+    "description": "原医院出具的同意转院治疗的证明文件。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"patient_name\": {\n      \"type\": \"string\",\n      \"description\": \"患者姓名\"\n    },\n    \"original_hospital\": {\n      \"type\": \"string\",\n      \"description\": \"转出医院\"\n    },\n    \"receiving_hospital\": {\n      \"type\": \"string\",\n      \"description\": \"转入医院\"\n    },\n    \"transfer_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"转院日期\"\n    },\n    \"transfer_reason\": {\n      \"type\": \"string\",\n      \"description\": \"转院原因\"\n    }\n  },\n  \"required\": [\n    \"original_hospital\",\n    \"receiving_hospital\",\n    \"transfer_date\",\n    \"transfer_reason\"\n  ]\n}",
+    "required": false,
+    "aiAuditPrompt": "请提取转院证明中的患者姓名、转出医院、转入医院、转院日期和转院原因。校验要点：1）转院原因是否合理（如原医院不具备治疗条件）；2）转出和转入医院是否均为正规医疗机构；3）转院日期与住院记录是否衔接。"
+  },
+  {
+    "id": "mat-15",
+    "name": "医嘱休息证明（病假单）",
+    "description": "医生出具的建议患者休息的证明文件，用于计算误工天数。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"hospital_name\": {\n      \"type\": \"string\",\n      \"description\": \"医院名称\"\n    },\n    \"patient_name\": {\n      \"type\": \"string\",\n      \"description\": \"患者姓名\"\n    },\n    \"diagnosis\": {\n      \"type\": \"string\",\n      \"description\": \"诊断\"\n    },\n    \"rest_start_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"休息起始日期\"\n    },\n    \"rest_end_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"休息截止日期\"\n    },\n    \"rest_days\": {\n      \"type\": \"number\",\n      \"description\": \"建议休息天数\"\n    },\n    \"doctor_name\": {\n      \"type\": \"string\",\n      \"description\": \"医生姓名\"\n    }\n  },\n  \"required\": [\n    \"hospital_name\",\n    \"patient_name\",\n    \"rest_days\"\n  ]\n}",
+    "required": false,
+    "aiAuditPrompt": "请提取医嘱休息证明中的医院名称、患者姓名、诊断、休息起止日期和休息天数。校验要点：1）建休天数是否与伤情严重程度匹配（轻微伤一般不超过15天，骨折通常3-6个月）；2）休息期与住院期是否有重叠（住院期间已包含在误工期内）；3）是否有医生签名和医院盖章。"
+  },
+  {
+    "id": "mat-16",
+    "name": "医嘱护理证明",
+    "description": "医院出具的患者需要护理的医嘱证明，用于计算护理费。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"hospital_name\": {\n      \"type\": \"string\",\n      \"description\": \"医院名称\"\n    },\n    \"patient_name\": {\n      \"type\": \"string\",\n      \"description\": \"患者姓名\"\n    },\n    \"nursing_level\": {\n      \"type\": \"string\",\n      \"description\": \"护理等级（特级/一级/二级/三级）\"\n    },\n    \"nursing_period_start\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"护理期开始日期\"\n    },\n    \"nursing_period_end\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"护理期结束日期\"\n    },\n    \"nursing_persons\": {\n      \"type\": \"number\",\n      \"description\": \"护理人数\"\n    },\n    \"doctor_name\": {\n      \"type\": \"string\",\n      \"description\": \"医生姓名\"\n    }\n  },\n  \"required\": [\n    \"hospital_name\",\n    \"patient_name\",\n    \"nursing_level\",\n    \"nursing_persons\"\n  ]\n}",
+    "required": false,
+    "aiAuditPrompt": "请提取医嘱护理证明中的医院名称、患者姓名、护理等级、护理期限和护理人数。校验要点：1）护理等级与伤情严重程度是否匹配；2）护理人数一般为1人，2人护理需要特殊医嘱说明；3）护理期限是否合理。"
+  },
+  {
+    "id": "mat-17",
+    "name": "营养费医嘱",
+    "description": "医生出具的患者需要加强营养的医嘱证明，用于计算营养费。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"hospital_name\": {\n      \"type\": \"string\",\n      \"description\": \"医院名称\"\n    },\n    \"patient_name\": {\n      \"type\": \"string\",\n      \"description\": \"患者姓名\"\n    },\n    \"nutrition_period_start\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"营养期开始日期\"\n    },\n    \"nutrition_period_end\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"营养期结束日期\"\n    },\n    \"nutrition_days\": {\n      \"type\": \"number\",\n      \"description\": \"营养期天数\"\n    },\n    \"doctor_name\": {\n      \"type\": \"string\",\n      \"description\": \"医生姓名\"\n    }\n  },\n  \"required\": [\n    \"hospital_name\",\n    \"patient_name\",\n    \"nutrition_days\"\n  ]\n}",
+    "required": false,
+    "aiAuditPrompt": "请提取营养费医嘱中的医院名称、患者姓名、营养期限和天数。校验要点：1）营养期天数是否有医嘱明确支持；2）营养期限与住院/恢复期是否合理衔接；3）是否有医生签名。"
+  },
+  {
+    "id": "mat-18",
+    "name": "住院天数证明",
+    "description": "医院出具的住院天数证明文件，用于核实住院期间的各项费用计算基础。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"hospital_name\": {\n      \"type\": \"string\",\n      \"description\": \"医院名称\"\n    },\n    \"patient_name\": {\n      \"type\": \"string\",\n      \"description\": \"患者姓名\"\n    },\n    \"admission_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"入院日期\"\n    },\n    \"discharge_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"出院日期\"\n    },\n    \"total_days\": {\n      \"type\": \"number\",\n      \"description\": \"住院总天数\"\n    },\n    \"department\": {\n      \"type\": \"string\",\n      \"description\": \"住院科室\"\n    }\n  },\n  \"required\": [\n    \"hospital_name\",\n    \"patient_name\",\n    \"admission_date\",\n    \"discharge_date\",\n    \"total_days\"\n  ]\n}",
+    "required": false,
+    "aiAuditPrompt": "请提取住院天数证明中的医院名称、患者姓名、入院日期、出院日期、住院总天数和科室。校验要点：1）住院天数计算是否正确（出院日期-入院日期）；2）与住院病历中的入院和出院日期是否一致。"
+  },
+  {
+    "id": "mat-19",
+    "name": "外购药处方笺",
+    "description": "医生开具的需要到院外药房购买药品的处方笺。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"hospital_name\": {\n      \"type\": \"string\",\n      \"description\": \"开方医院\"\n    },\n    \"patient_name\": {\n      \"type\": \"string\",\n      \"description\": \"患者姓名\"\n    },\n    \"drug_name\": {\n      \"type\": \"string\",\n      \"description\": \"药品名称\"\n    },\n    \"dosage\": {\n      \"type\": \"string\",\n      \"description\": \"用法用量\"\n    },\n    \"quantity\": {\n      \"type\": \"string\",\n      \"description\": \"数量\"\n    },\n    \"prescribing_doctor\": {\n      \"type\": \"string\",\n      \"description\": \"处方医生\"\n    },\n    \"prescription_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"处方日期\"\n    }\n  },\n  \"required\": [\n    \"hospital_name\",\n    \"patient_name\",\n    \"drug_name\",\n    \"prescribing_doctor\"\n  ]\n}",
+    "required": false,
+    "aiAuditPrompt": "请提取外购药处方笺中的开方医院、患者姓名、药品名称、用法用量、数量、处方医生和处方日期。校验要点：1）外购药品是否与诊断结果相关；2）处方是否由主治医师开具；3）处方日期是否在治疗期间内；4）与购药发票中的药品名称和数量是否一致。"
+  },
+  {
+    "id": "mat-20",
+    "name": "医疗费发票",
+    "description": "医院出具的医疗费用发票（门诊或住院发票），是理赔金额核定的主要依据。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"hospital_name\": {\n      \"type\": \"string\",\n      \"description\": \"医院名称\"\n    },\n    \"patient_name\": {\n      \"type\": \"string\",\n      \"description\": \"患者姓名\"\n    },\n    \"invoice_number\": {\n      \"type\": \"string\",\n      \"description\": \"发票号码\"\n    },\n    \"invoice_code\": {\n      \"type\": \"string\",\n      \"description\": \"发票代码\"\n    },\n    \"invoice_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"开票日期\"\n    },\n    \"total_amount\": {\n      \"type\": \"number\",\n      \"description\": \"金额合计\"\n    },\n    \"self_paid\": {\n      \"type\": \"number\",\n      \"description\": \"个人自付金额\"\n    },\n    \"insurance_paid\": {\n      \"type\": \"number\",\n      \"description\": \"医保统筹支付\"\n    },\n    \"personal_account\": {\n      \"type\": \"number\",\n      \"description\": \"个人账户支付\"\n    }\n  },\n  \"required\": [\n    \"hospital_name\",\n    \"invoice_number\",\n    \"total_amount\"\n  ]\n}",
+    "required": true,
+    "aiAuditPrompt": "请从医疗费发票中提取医院名称、患者姓名、发票号码、发票代码、开票日期、金额合计、个人自付、医保统筹支付和个人账户支付。校验要点：1）各项金额相加是否等于合计金额；2）发票日期是否在就诊期间内；3）发票是否为正规财政票据或税务发票；4）与费用明细清单中的总金额是否一致。"
+  },
+  {
+    "id": "mat-21",
+    "name": "费用明细清单",
+    "description": "医院出具的住院/门诊费用逐项明细清单。",
+    "sampleUrl": "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d8.jpg",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"hospital_name\": {\n      \"type\": \"string\",\n      \"description\": \"医院名称\"\n    },\n    \"patient_name\": {\n      \"type\": \"string\",\n      \"description\": \"患者姓名\"\n    },\n    \"items\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"item_name\": {\n            \"type\": \"string\",\n            \"description\": \"项目名称\"\n          },\n          \"category\": {\n            \"type\": \"string\",\n            \"description\": \"费用类别\"\n          },\n          \"quantity\": {\n            \"type\": \"number\",\n            \"description\": \"数量\"\n          },\n          \"unit_price\": {\n            \"type\": \"number\",\n            \"description\": \"单价\"\n          },\n          \"total_price\": {\n            \"type\": \"number\",\n            \"description\": \"金额\"\n          }\n        }\n      },\n      \"description\": \"费用明细项目列表\"\n    },\n    \"total_amount\": {\n      \"type\": \"number\",\n      \"description\": \"费用总额\"\n    }\n  },\n  \"required\": [\n    \"hospital_name\",\n    \"items\",\n    \"total_amount\"\n  ]\n}",
+    "required": true,
+    "aiAuditPrompt": "请从费用明细清单中提取医院名称、患者姓名、所有费用明细项（项目名称、类别、数量、单价、金额）和费用总额。校验要点：1）各项费用金额=单价×数量；2）所有项目金额之和是否等于总额；3）与医疗费发票的总金额是否一致；4）是否存在异常高价项目。"
+  },
+  {
+    "id": "mat-22",
+    "name": "购药发票",
+    "description": "在院外药房购买药品的购药发票。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"pharmacy_name\": {\n      \"type\": \"string\",\n      \"description\": \"药房名称\"\n    },\n    \"invoice_number\": {\n      \"type\": \"string\",\n      \"description\": \"发票号码\"\n    },\n    \"invoice_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"购药日期\"\n    },\n    \"drug_items\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"drug_name\": {\n            \"type\": \"string\",\n            \"description\": \"药品名称\"\n          },\n          \"quantity\": {\n            \"type\": \"number\",\n            \"description\": \"数量\"\n          },\n          \"unit_price\": {\n            \"type\": \"number\",\n            \"description\": \"单价\"\n          },\n          \"amount\": {\n            \"type\": \"number\",\n            \"description\": \"金额\"\n          }\n        }\n      },\n      \"description\": \"购药明细\"\n    },\n    \"total_amount\": {\n      \"type\": \"number\",\n      \"description\": \"合计金额\"\n    }\n  },\n  \"required\": [\n    \"pharmacy_name\",\n    \"invoice_number\",\n    \"total_amount\"\n  ]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从购药发票中提取药房名称、发票号码、购药日期、药品明细（名称、数量、单价、金额）和合计金额。校验要点：1）购买的药品是否与外购药处方笺中开具的药品一致；2）药品数量是否与处方匹配；3）购药日期是否在治疗期间内；4）药房是否为正规药店。"
+  },
+  {
+    "id": "mat-23",
+    "name": "辅助器具发票",
+    "description": "购买残疾辅助器具（如轮椅、拐杖、假肢等）的发票。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"seller_name\": {\n      \"type\": \"string\",\n      \"description\": \"销售商名称\"\n    },\n    \"invoice_number\": {\n      \"type\": \"string\",\n      \"description\": \"发票号码\"\n    },\n    \"invoice_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"购买日期\"\n    },\n    \"item_name\": {\n      \"type\": \"string\",\n      \"description\": \"器具名称\"\n    },\n    \"specification\": {\n      \"type\": \"string\",\n      \"description\": \"规格型号\"\n    },\n    \"quantity\": {\n      \"type\": \"number\",\n      \"description\": \"数量\"\n    },\n    \"unit_price\": {\n      \"type\": \"number\",\n      \"description\": \"单价\"\n    },\n    \"total_amount\": {\n      \"type\": \"number\",\n      \"description\": \"合计金额\"\n    }\n  },\n  \"required\": [\n    \"seller_name\",\n    \"item_name\",\n    \"total_amount\"\n  ]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从辅助器具发票中提取销售商名称、发票号码、器具名称、规格型号、数量、单价和合计金额。校验要点：1）器具类型是否与伤残等级和伤情匹配（如截肢才需要假肢）；2）价格是否在当地辅助器具配制机构的标准范围内；3）是否有残疾辅助器具证明或医嘱支持。"
+  },
+  {
+    "id": "mat-24",
+    "name": "护理费发票",
+    "description": "聘请护工或护理机构的护理费用发票。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"nursing_institution\": {\n      \"type\": \"string\",\n      \"description\": \"护理机构/护工姓名\"\n    },\n    \"invoice_number\": {\n      \"type\": \"string\",\n      \"description\": \"发票号码\"\n    },\n    \"invoice_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"发票日期\"\n    },\n    \"nursing_period_start\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"护理起始日期\"\n    },\n    \"nursing_period_end\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"护理结束日期\"\n    },\n    \"nursing_days\": {\n      \"type\": \"number\",\n      \"description\": \"护理天数\"\n    },\n    \"daily_rate\": {\n      \"type\": \"number\",\n      \"description\": \"日费率\"\n    },\n    \"total_amount\": {\n      \"type\": \"number\",\n      \"description\": \"合计金额\"\n    }\n  },\n  \"required\": [\n    \"nursing_institution\",\n    \"nursing_days\",\n    \"total_amount\"\n  ]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从护理费发票中提取护理机构/护工信息、发票号码、护理起止日期、护理天数、日费率和合计金额。校验要点：1）护理天数是否与医嘱护理证明中的护理期限一致；2）日费率是否在当地护理行业合理范围内；3）金额=天数×日费率的计算是否正确。"
+  },
+  {
+    "id": "mat-25",
+    "name": "交通费票据",
+    "description": "因就医产生的交通费用票据（出租车票、公交票、火车票等）。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"transport_type\": {\n      \"type\": \"string\",\n      \"description\": \"交通方式（出租车/公交/地铁/火车/飞机等）\"\n    },\n    \"departure\": {\n      \"type\": \"string\",\n      \"description\": \"出发地\"\n    },\n    \"destination\": {\n      \"type\": \"string\",\n      \"description\": \"目的地\"\n    },\n    \"date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"乘车日期\"\n    },\n    \"amount\": {\n      \"type\": \"number\",\n      \"description\": \"金额\"\n    },\n    \"ticket_number\": {\n      \"type\": \"string\",\n      \"description\": \"票号\"\n    }\n  },\n  \"required\": [\n    \"transport_type\",\n    \"date\",\n    \"amount\"\n  ]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从交通费票据中提取交通方式、出发地、目的地、日期、金额和票号。校验要点：1）交通日期是否在就医期间内（与诊断证明、住院病历日期对应）；2）出发地或目的地是否与就诊医院所在地一致；3）交通方式是否合理（一般应选择经济便捷方式，特殊情况如伤情严重可乘坐出租车/飞机）。"
+  },
+  {
+    "id": "mat-26",
+    "name": "住宿费发票",
+    "description": "因异地就医产生的住宿费用发票。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"hotel_name\": {\n      \"type\": \"string\",\n      \"description\": \"住宿单位名称\"\n    },\n    \"invoice_number\": {\n      \"type\": \"string\",\n      \"description\": \"发票号码\"\n    },\n    \"check_in_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"入住日期\"\n    },\n    \"check_out_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"退房日期\"\n    },\n    \"days\": {\n      \"type\": \"number\",\n      \"description\": \"住宿天数\"\n    },\n    \"daily_rate\": {\n      \"type\": \"number\",\n      \"description\": \"日房价\"\n    },\n    \"total_amount\": {\n      \"type\": \"number\",\n      \"description\": \"合计金额\"\n    }\n  },\n  \"required\": [\n    \"hotel_name\",\n    \"days\",\n    \"total_amount\"\n  ]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从住宿费发票中提取住宿单位名称、发票号码、入住退房日期、天数、日房价和合计金额。校验要点：1）住宿日期是否与就医日期匹配（应为异地就医期间）；2）住宿地点是否在就诊医院附近；3）日房价是否在当地合理标准内（一般参照当地国家机关一般工作人员出差住宿标准）。"
+  },
+  {
+    "id": "mat-27",
+    "name": "鉴定费发票",
+    "description": "进行伤残鉴定、劳动能力鉴定等产生的鉴定费发票。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"institution_name\": {\n      \"type\": \"string\",\n      \"description\": \"鉴定机构名称\"\n    },\n    \"invoice_number\": {\n      \"type\": \"string\",\n      \"description\": \"发票号码\"\n    },\n    \"invoice_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"发票日期\"\n    },\n    \"appraisal_type\": {\n      \"type\": \"string\",\n      \"description\": \"鉴定类型（伤残鉴定/劳动能力鉴定/护理依赖鉴定等）\"\n    },\n    \"total_amount\": {\n      \"type\": \"number\",\n      \"description\": \"鉴定费金额\"\n    }\n  },\n  \"required\": [\n    \"institution_name\",\n    \"appraisal_type\",\n    \"total_amount\"\n  ]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从鉴定费发票中提取鉴定机构名称、发票号码、日期、鉴定类型和金额。校验要点：1）鉴定机构是否具有法定资质；2）鉴定费用是否在当地收费标准范围内；3）鉴定类型与案件所需鉴定项目是否匹配。"
+  },
+  {
+    "id": "mat-28",
+    "name": "丧葬费票据",
+    "description": "死亡案件中产生的丧葬服务费用票据。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"service_provider\": {\n      \"type\": \"string\",\n      \"description\": \"殡葬服务单位\"\n    },\n    \"invoice_number\": {\n      \"type\": \"string\",\n      \"description\": \"发票号码\"\n    },\n    \"invoice_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"发票日期\"\n    },\n    \"service_items\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"item_name\": {\n            \"type\": \"string\",\n            \"description\": \"服务项目\"\n          },\n          \"amount\": {\n            \"type\": \"number\",\n            \"description\": \"金额\"\n          }\n        }\n      },\n      \"description\": \"丧葬服务明细\"\n    },\n    \"total_amount\": {\n      \"type\": \"number\",\n      \"description\": \"合计金额\"\n    }\n  },\n  \"required\": [\n    \"service_provider\",\n    \"total_amount\"\n  ]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从丧葬费票据中提取殡葬服务单位、发票信息、服务项目明细和合计金额。校验要点：1）丧葬费法定标准为受诉法院所在地上一年度职工月平均工资×6个月，实际费用仅作参考；2）服务项目是否合理（基本丧葬服务）。"
+  },
+  {
+    "id": "mat-29",
+    "name": "误工证明",
+    "description": "用人单位出具的因伤误工及收入减少情况的证明。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"employer_name\": {\n      \"type\": \"string\",\n      \"description\": \"用人单位名称\"\n    },\n    \"employee_name\": {\n      \"type\": \"string\",\n      \"description\": \"员工姓名\"\n    },\n    \"position\": {\n      \"type\": \"string\",\n      \"description\": \"职务/岗位\"\n    },\n    \"absence_start_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"误工起始日期\"\n    },\n    \"absence_end_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"误工截止日期\"\n    },\n    \"absence_days\": {\n      \"type\": \"number\",\n      \"description\": \"误工天数\"\n    },\n    \"salary_deduction\": {\n      \"type\": \"number\",\n      \"description\": \"扣发工资金额\"\n    },\n    \"has_employer_seal\": {\n      \"type\": \"boolean\",\n      \"description\": \"是否有单位公章\"\n    }\n  },\n  \"required\": [\n    \"employer_name\",\n    \"employee_name\",\n    \"absence_days\"\n  ]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从误工证明中提取用人单位名称、员工姓名、职务、误工起止日期、误工天数和扣发工资金额。校验要点：1）误工期是否与医嘱建休期匹配（误工期不超过建休期+住院期）；2）是否有用人单位公章；3）扣发工资金额是否与收入证明中的收入水平一致。"
+  },
+  {
+    "id": "mat-30",
+    "name": "收入证明/工资证明",
+    "description": "用人单位出具的工资收入证明，用于计算误工费赔偿基数。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"employer_name\": {\n      \"type\": \"string\",\n      \"description\": \"用人单位名称\"\n    },\n    \"employee_name\": {\n      \"type\": \"string\",\n      \"description\": \"员工姓名\"\n    },\n    \"position\": {\n      \"type\": \"string\",\n      \"description\": \"职务/岗位\"\n    },\n    \"monthly_salary\": {\n      \"type\": \"number\",\n      \"description\": \"月工资收入\"\n    },\n    \"annual_income\": {\n      \"type\": \"number\",\n      \"description\": \"年收入\"\n    },\n    \"employment_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"入职日期\"\n    },\n    \"has_employer_seal\": {\n      \"type\": \"boolean\",\n      \"description\": \"是否有单位公章\"\n    }\n  },\n  \"required\": [\n    \"employer_name\",\n    \"employee_name\",\n    \"monthly_salary\"\n  ]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从收入证明中提取用人单位、员工姓名、职务、月工资和年收入。校验要点：1）月收入水平是否与行业及地区平均水平大致匹配，过高需要银行流水和纳税证明佐证；2）年收入是否约等于月工资×12；3）是否有用人单位公章。"
+  },
+  {
+    "id": "mat-31",
+    "name": "劳动合同",
+    "description": "劳动者与用人单位签订的劳动合同，证明劳动关系。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"employer_name\": {\n      \"type\": \"string\",\n      \"description\": \"用人单位名称\"\n    },\n    \"employee_name\": {\n      \"type\": \"string\",\n      \"description\": \"劳动者姓名\"\n    },\n    \"contract_start_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"合同起始日期\"\n    },\n    \"contract_end_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"合同终止日期\"\n    },\n    \"position\": {\n      \"type\": \"string\",\n      \"description\": \"工作岗位\"\n    },\n    \"salary\": {\n      \"type\": \"number\",\n      \"description\": \"劳动报酬（月薪）\"\n    },\n    \"contract_type\": {\n      \"type\": \"string\",\n      \"description\": \"合同类型（固定期限/无固定期限/以完成一定工作任务为期限）\"\n    }\n  },\n  \"required\": [\n    \"employer_name\",\n    \"employee_name\",\n    \"contract_start_date\"\n  ]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从劳动合同中提取用人单位、劳动者姓名、合同期限、工作岗位、劳动报酬和合同类型。校验要点：1）合同有效期是否覆盖事故发生日期（证明事故时存在劳动关系）；2）合同中约定的工资是否与收入证明一致；3）用人单位是否与误工证明中的单位一致。"
+  },
+  {
+    "id": "mat-32",
+    "name": "工资银行流水",
+    "description": "银行打印的工资入账记录流水，用于佐证实际收入水平。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"account_holder\": {\n      \"type\": \"string\",\n      \"description\": \"账户持有人\"\n    },\n    \"bank_name\": {\n      \"type\": \"string\",\n      \"description\": \"开户银行\"\n    },\n    \"period_start\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"流水起始日期\"\n    },\n    \"period_end\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"流水截止日期\"\n    },\n    \"monthly_entries\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"date\": {\n            \"type\": \"string\",\n            \"format\": \"date\",\n            \"description\": \"交易日期\"\n          },\n          \"description\": {\n            \"type\": \"string\",\n            \"description\": \"摘要/交易对方\"\n          },\n          \"amount\": {\n            \"type\": \"number\",\n            \"description\": \"金额\"\n          }\n        }\n      },\n      \"description\": \"工资入账明细\"\n    },\n    \"average_monthly_income\": {\n      \"type\": \"number\",\n      \"description\": \"月均工资收入\"\n    }\n  },\n  \"required\": [\n    \"account_holder\",\n    \"bank_name\",\n    \"average_monthly_income\"\n  ]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从工资银行流水中提取账户持有人、开户银行、流水期间和每月工资入账记录。校验要点：1）工资入账记录是否来自与误工证明、劳动合同中一致的用人单位；2）月均工资是否与收入证明中声称的月薪大致一致；3）事故后是否出现工资减少或停发情况（佐证误工损失）。"
+  },
+  {
+    "id": "mat-33",
+    "name": "纳税证明",
+    "description": "税务机关出具的个人所得税纳税证明或完税凭证。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"taxpayer_name\": {\n      \"type\": \"string\",\n      \"description\": \"纳税人姓名\"\n    },\n    \"id_number\": {\n      \"type\": \"string\",\n      \"description\": \"身份证号\"\n    },\n    \"tax_period_start\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"纳税期间起\"\n    },\n    \"tax_period_end\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"纳税期间止\"\n    },\n    \"total_income\": {\n      \"type\": \"number\",\n      \"description\": \"收入总额\"\n    },\n    \"total_tax\": {\n      \"type\": \"number\",\n      \"description\": \"已缴税额\"\n    },\n    \"issuing_authority\": {\n      \"type\": \"string\",\n      \"description\": \"出具机关\"\n    }\n  },\n  \"required\": [\n    \"taxpayer_name\",\n    \"total_income\",\n    \"total_tax\"\n  ]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从纳税证明中提取纳税人姓名、身份证号、纳税期间、收入总额、已缴税额和出具机关。校验要点：1）纳税记录中的收入水平是否与收入证明、银行流水一致；2）纳税期间是否覆盖事故前的连续收入时段；3）通过税额反推的税前收入是否与声称的月薪匹配。"
+  },
+  {
+    "id": "mat-34",
+    "name": "护理人员收入证明",
+    "description": "护理人员（非专业护工）所在单位出具的收入证明，用于计算护理费中的误工损失。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"employer_name\": {\n      \"type\": \"string\",\n      \"description\": \"用人单位名称\"\n    },\n    \"employee_name\": {\n      \"type\": \"string\",\n      \"description\": \"护理人员姓名\"\n    },\n    \"position\": {\n      \"type\": \"string\",\n      \"description\": \"职务/岗位\"\n    },\n    \"monthly_salary\": {\n      \"type\": \"number\",\n      \"description\": \"月工资收入\"\n    },\n    \"has_employer_seal\": {\n      \"type\": \"boolean\",\n      \"description\": \"是否有单位公章\"\n    },\n    \"issue_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"开具日期\"\n    }\n  },\n  \"required\": [\n    \"employer_name\",\n    \"employee_name\",\n    \"monthly_salary\"\n  ]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从护理人员收入证明中提取单位名称、护理人员姓名、职务和月收入。校验要点：1）护理人员是否为被保险人的亲属或朋友（非专业护工）；2）月收入水平是否合理；3）护理天数对应的误工损失=月收入÷21.75×护理天数。"
+  },
+  {
+    "id": "mat-35",
+    "name": "伤残鉴定意见书",
+    "description": "司法鉴定机构出具的人体伤残等级鉴定意见书。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"institution_name\": {\n      \"type\": \"string\",\n      \"description\": \"鉴定机构名称\"\n    },\n    \"appraisal_number\": {\n      \"type\": \"string\",\n      \"description\": \"鉴定文书编号\"\n    },\n    \"appraisal_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"鉴定日期\"\n    },\n    \"subject_name\": {\n      \"type\": \"string\",\n      \"description\": \"被鉴定人姓名\"\n    },\n    \"disability_grade\": {\n      \"type\": \"string\",\n      \"description\": \"伤残等级（一级~十级）\"\n    },\n    \"injury_description\": {\n      \"type\": \"string\",\n      \"description\": \"伤情描述\"\n    },\n    \"conclusions\": {\n      \"type\": \"string\",\n      \"description\": \"鉴定结论\"\n    },\n    \"appraiser_names\": {\n      \"type\": \"string\",\n      \"description\": \"鉴定人\"\n    }\n  },\n  \"required\": [\n    \"institution_name\",\n    \"subject_name\",\n    \"disability_grade\",\n    \"conclusions\"\n  ]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从伤残鉴定意见书中提取鉴定机构、文书编号、鉴定日期、被鉴定人、伤残等级、伤情描述和鉴定结论。校验要点：1）鉴定机构是否具有司法鉴定资质（应在司法行政部门登记）；2）伤残等级与伤情描述是否匹配（如十级为最轻，一级为最重）；3）鉴定日期是否在伤情稳定后（一般出院后3-6个月）；4）伤残等级直接影响残疾赔偿金计算（十级=10%，九级=20%，依此类推）。"
+  },
+  {
+    "id": "mat-36",
+    "name": "劳动能力鉴定结论",
+    "description": "劳动能力鉴定委员会出具的劳动能力鉴定结论通知书，用于工伤案件。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"committee_name\": {\n      \"type\": \"string\",\n      \"description\": \"鉴定委员会名称\"\n    },\n    \"conclusion_number\": {\n      \"type\": \"string\",\n      \"description\": \"鉴定结论编号\"\n    },\n    \"subject_name\": {\n      \"type\": \"string\",\n      \"description\": \"被鉴定人姓名\"\n    },\n    \"employer\": {\n      \"type\": \"string\",\n      \"description\": \"用人单位\"\n    },\n    \"disability_level\": {\n      \"type\": \"string\",\n      \"description\": \"伤残等级\"\n    },\n    \"nursing_dependency_level\": {\n      \"type\": \"string\",\n      \"description\": \"生活自理障碍等级\"\n    },\n    \"conclusion_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"鉴定日期\"\n    }\n  },\n  \"required\": [\n    \"committee_name\",\n    \"subject_name\",\n    \"disability_level\"\n  ]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从劳动能力鉴定结论中提取鉴定委员会、被鉴定人、用人单位、伤残等级、生活自理障碍等级和鉴定日期。校验要点：1）鉴定结论是否由设区的市级以上劳动能力鉴定委员会出具；2）与认定工伤决定书中的人员信息是否一致；3）伤残等级是否合理。"
+  },
+  {
+    "id": "mat-37",
+    "name": "残疾辅助器具证明",
+    "description": "辅助器具配制机构出具的残疾人需要配置辅助器具的证明。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"institution_name\": {\n      \"type\": \"string\",\n      \"description\": \"配制机构名称\"\n    },\n    \"subject_name\": {\n      \"type\": \"string\",\n      \"description\": \"申请人姓名\"\n    },\n    \"device_type\": {\n      \"type\": \"string\",\n      \"description\": \"器具类型（假肢/矫形器/轮椅/助听器等）\"\n    },\n    \"device_specification\": {\n      \"type\": \"string\",\n      \"description\": \"器具规格型号\"\n    },\n    \"replacement_cycle\": {\n      \"type\": \"string\",\n      \"description\": \"更换周期\"\n    },\n    \"price_limit\": {\n      \"type\": \"number\",\n      \"description\": \"价格限额\"\n    },\n    \"issue_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"出具日期\"\n    }\n  },\n  \"required\": [\n    \"institution_name\",\n    \"subject_name\",\n    \"device_type\"\n  ]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从残疾辅助器具证明中提取配制机构、申请人、器具类型、规格、更换周期和价格限额。校验要点：1）器具类型是否与伤残情况匹配；2）配制机构是否具有相应资质；3）价格限额是否在国产普及型标准范围内；4）更换周期对于计算后续费用很重要。"
+  },
+  {
+    "id": "mat-38",
+    "name": "护理依赖鉴定",
+    "description": "对需要长期护理的伤残人员进行的护理依赖程度鉴定。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"institution_name\": {\n      \"type\": \"string\",\n      \"description\": \"鉴定机构名称\"\n    },\n    \"subject_name\": {\n      \"type\": \"string\",\n      \"description\": \"被鉴定人姓名\"\n    },\n    \"nursing_dependency_level\": {\n      \"type\": \"string\",\n      \"description\": \"护理依赖等级（完全/大部分/部分护理依赖）\"\n    },\n    \"evaluation_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"评定日期\"\n    },\n    \"daily_activities_assessment\": {\n      \"type\": \"string\",\n      \"description\": \"日常生活能力评估\"\n    },\n    \"conclusions\": {\n      \"type\": \"string\",\n      \"description\": \"鉴定结论\"\n    }\n  },\n  \"required\": [\n    \"institution_name\",\n    \"subject_name\",\n    \"nursing_dependency_level\"\n  ]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从护理依赖鉴定中提取鉴定机构、被鉴定人、护理依赖等级、评定日期和日常生活能力评估结论。校验要点：1）护理依赖等级分为完全（100%）、大部分（80%）和部分（50%）三级；2）鉴定机构是否有资质；3）等级认定与后续护理费计算标准直接相关。"
+  },
+  {
+    "id": "mat-39",
+    "name": "居住证明/暂住证",
+    "description": "证明被害人在城镇地区连续居住满一年以上的居住证明或暂住证，用于适用城镇标准计算赔偿。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"name\": {\n      \"type\": \"string\",\n      \"description\": \"姓名\"\n    },\n    \"id_number\": {\n      \"type\": \"string\",\n      \"description\": \"身份证号\"\n    },\n    \"residence_address\": {\n      \"type\": \"string\",\n      \"description\": \"居住地址\"\n    },\n    \"residence_type\": {\n      \"type\": \"string\",\n      \"description\": \"居住证类型\"\n    },\n    \"valid_from\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"有效期起始\"\n    },\n    \"valid_until\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"有效期截止\"\n    },\n    \"issuing_authority\": {\n      \"type\": \"string\",\n      \"description\": \"发证机关\"\n    }\n  },\n  \"required\": [\n    \"name\",\n    \"residence_address\"\n  ]\n}",
+    "required": false,
+    "aiAuditPrompt": "请提取居住证明中的姓名、身份证号、居住地址、有效期限和发证机关。校验要点：1）是否在城镇连续居住满一年以上（可结合居住证有效期判断）；2）如果户籍为农村但在城镇居住满一年且有固定收入，可适用城镇标准计算赔偿金；3）居住证是否在有效期内。"
+  },
+  {
+    "id": "mat-40",
+    "name": "被扶养人身份证明",
+    "description": "被扶养人的身份证、户口本或出生证明等身份证明文件。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"dependent_name\": {\n      \"type\": \"string\",\n      \"description\": \"被扶养人姓名\"\n    },\n    \"gender\": {\n      \"type\": \"string\",\n      \"description\": \"性别\"\n    },\n    \"birth_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"出生日期\"\n    },\n    \"id_number\": {\n      \"type\": \"string\",\n      \"description\": \"身份证号\"\n    },\n    \"relationship_to_victim\": {\n      \"type\": \"string\",\n      \"description\": \"与受害人关系\"\n    },\n    \"dependent_type\": {\n      \"type\": \"string\",\n      \"description\": \"被扶养人类型（未成年子女/无劳动能力配偶/年迈父母等）\"\n    }\n  },\n  \"required\": [\n    \"dependent_name\",\n    \"birth_date\",\n    \"relationship_to_victim\"\n  ]\n}",
+    "required": false,
+    "aiAuditPrompt": "请提取被扶养人身份证明中的姓名、性别、出生日期、身份证号、与受害人关系和被扶养人类型。校验要点：1）未成年人扶养至18周岁（扶养年限=18-现年龄）；2）无劳动能力又无其他生活来源的成年人扶养20年，60周岁以上每增加一岁减少一年，75周岁以上为5年；3）多个被扶养人的年赔偿总额不超过上一年度城镇/农村居民人均消费支出。"
+  },
+  {
+    "id": "mat-41",
+    "name": "扶养关系证明",
+    "description": "村委会、居委会或民政部门出具的扶养关系证明。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"supporter_name\": {\n      \"type\": \"string\",\n      \"description\": \"扶养人（受害人）姓名\"\n    },\n    \"dependent_name\": {\n      \"type\": \"string\",\n      \"description\": \"被扶养人姓名\"\n    },\n    \"relationship\": {\n      \"type\": \"string\",\n      \"description\": \"扶养关系\"\n    },\n    \"other_supporters_count\": {\n      \"type\": \"number\",\n      \"description\": \"其他扶养义务人数\"\n    },\n    \"issuing_authority\": {\n      \"type\": \"string\",\n      \"description\": \"出具机关\"\n    },\n    \"issue_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"开具日期\"\n    }\n  },\n  \"required\": [\n    \"supporter_name\",\n    \"dependent_name\",\n    \"relationship\"\n  ]\n}",
+    "required": false,
+    "aiAuditPrompt": "请提取扶养关系证明中的扶养人、被扶养人、扶养关系、其他扶养义务人数和出具机关。校验要点：1）确认扶养关系真实性（如父母子女关系、配偶关系）；2）其他共同扶养义务人数直接影响赔偿金分摊（被扶养人生活费÷共同扶养人数）；3）出具机关是否为户籍所在地村委会/居委会或民政部门。"
+  },
+  {
+    "id": "mat-42",
+    "name": "被扶养人无收入证明",
+    "description": "证明被扶养人确无劳动能力和收入来源的证明文件。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"dependent_name\": {\n      \"type\": \"string\",\n      \"description\": \"被扶养人姓名\"\n    },\n    \"id_number\": {\n      \"type\": \"string\",\n      \"description\": \"身份证号\"\n    },\n    \"has_income\": {\n      \"type\": \"boolean\",\n      \"description\": \"是否有收入（应为false）\"\n    },\n    \"reason_no_income\": {\n      \"type\": \"string\",\n      \"description\": \"无收入原因（残疾/年幼/年迈等）\"\n    },\n    \"issuing_authority\": {\n      \"type\": \"string\",\n      \"description\": \"出具机关\"\n    },\n    \"issue_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"开具日期\"\n    }\n  },\n  \"required\": [\n    \"dependent_name\",\n    \"reason_no_income\"\n  ]\n}",
+    "required": false,
+    "aiAuditPrompt": "请提取被扶养人无收入证明中的被扶养人姓名、身份证号、无收入原因和出具机关。校验要点：1）无收入原因是否合理（未成年、在校学生、残疾人、年迈丧失劳动能力等）；2）确认被扶养人确实丧失劳动能力或无其他生活来源；3）证明是否由相关部门或社区出具并盖章。"
+  },
+  {
+    "id": "mat-43",
+    "name": "死亡证明",
+    "description": "医院或公安机关出具的死亡医学证明书或死亡证明。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"deceased_name\": {\n      \"type\": \"string\",\n      \"description\": \"死者姓名\"\n    },\n    \"id_number\": {\n      \"type\": \"string\",\n      \"description\": \"身份证号\"\n    },\n    \"death_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"死亡日期\"\n    },\n    \"death_cause\": {\n      \"type\": \"string\",\n      \"description\": \"死亡原因\"\n    },\n    \"death_location\": {\n      \"type\": \"string\",\n      \"description\": \"死亡地点\"\n    },\n    \"certifying_institution\": {\n      \"type\": \"string\",\n      \"description\": \"出具机构\"\n    }\n  },\n  \"required\": [\n    \"deceased_name\",\n    \"death_date\",\n    \"death_cause\"\n  ]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从死亡证明中提取死者姓名、身份证号、死亡日期、死亡原因、死亡地点和出具机构。校验要点：1）死亡原因是否与事故存在因果关系（如交通事故致死、工伤致死）；2）死亡日期与事故日期的逻辑关系是否合理；3）出具机构应为医院或公安机关。"
+  },
+  {
+    "id": "mat-44",
+    "name": "户籍注销证明",
+    "description": "公安派出所出具的死者户籍已注销的证明文件。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"deceased_name\": {\n      \"type\": \"string\",\n      \"description\": \"死者姓名\"\n    },\n    \"id_number\": {\n      \"type\": \"string\",\n      \"description\": \"身份证号\"\n    },\n    \"cancellation_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"户籍注销日期\"\n    },\n    \"issuing_authority\": {\n      \"type\": \"string\",\n      \"description\": \"出具机关（派出所）\"\n    }\n  },\n  \"required\": [\n    \"deceased_name\",\n    \"cancellation_date\"\n  ]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从户籍注销证明中提取死者姓名、身份证号、户籍注销日期和出具机关。校验要点：1）户籍注销日期应在死亡日期之后；2）姓名和身份证号与死亡证明一致；3）出具机关应为户籍所在地公安派出所。"
+  },
+  {
+    "id": "mat-45",
+    "name": "亲属关系证明",
+    "description": "公安、民政或社区出具的死者与理赔申请人之间亲属关系的证明。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"deceased_name\": {\n      \"type\": \"string\",\n      \"description\": \"死者姓名\"\n    },\n    \"claimant_name\": {\n      \"type\": \"string\",\n      \"description\": \"申请人姓名\"\n    },\n    \"relationship\": {\n      \"type\": \"string\",\n      \"description\": \"亲属关系（配偶/子女/父母等）\"\n    },\n    \"issuing_authority\": {\n      \"type\": \"string\",\n      \"description\": \"出具机关\"\n    },\n    \"issue_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"开具日期\"\n    }\n  },\n  \"required\": [\n    \"deceased_name\",\n    \"claimant_name\",\n    \"relationship\"\n  ]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从亲属关系证明中提取死者姓名、申请人姓名、亲属关系、出具机关和开具日期。校验要点：1）确认申请人为法定赔偿权利人（配偶、父母、子女为第一顺序继承人）；2）亲属关系真实性由户籍所在地相关部门证明；3）若有多个权利人，需全部出具关系证明。"
+  },
+  {
+    "id": "mat-46",
+    "name": "调解协议书/判决书",
+    "description": "交通事故调解协议、人民法院民事判决书或调解书，明确赔偿金额和各项分项。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"case_number\": {\n      \"type\": \"string\",\n      \"description\": \"案号/文书编号\"\n    },\n    \"document_type\": {\n      \"type\": \"string\",\n      \"description\": \"文书类型（调解协议/民事判决书/民事调解书）\"\n    },\n    \"parties\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"role\": {\n            \"type\": \"string\",\n            \"description\": \"当事人角色（原告/被告/申请人/被申请人）\"\n          },\n          \"name\": {\n            \"type\": \"string\",\n            \"description\": \"姓名/名称\"\n          }\n        }\n      },\n      \"description\": \"当事人信息\"\n    },\n    \"agreement_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"协议/判决日期\"\n    },\n    \"compensation_items\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"item\": {\n            \"type\": \"string\",\n            \"description\": \"赔偿项目\"\n          },\n          \"amount\": {\n            \"type\": \"number\",\n            \"description\": \"金额\"\n          }\n        }\n      },\n      \"description\": \"赔偿明细\"\n    },\n    \"total_compensation\": {\n      \"type\": \"number\",\n      \"description\": \"赔偿总额\"\n    },\n    \"court_or_mediator\": {\n      \"type\": \"string\",\n      \"description\": \"法院/调解机构\"\n    }\n  },\n  \"required\": [\n    \"document_type\",\n    \"total_compensation\"\n  ]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从调解协议书或判决书中提取案号、文书类型、各方当事人、协议/判决日期、赔偿明细（各项赔偿项目及金额）和赔偿总额。校验要点：1）各项赔偿金额之和是否等于赔偿总额；2）赔偿项目是否完整（医疗费、误工费、护理费、残疾赔偿金等）；3）被保险人在案件中的角色及应承担的赔偿比例。"
+  },
+  {
+    "id": "mat-47",
+    "name": "律师费发票及合同",
+    "description": "聘请律师代理理赔案件的律师服务合同和律师费发票。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"law_firm_name\": {\n      \"type\": \"string\",\n      \"description\": \"律师事务所名称\"\n    },\n    \"lawyer_name\": {\n      \"type\": \"string\",\n      \"description\": \"律师姓名\"\n    },\n    \"contract_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"合同签订日期\"\n    },\n    \"fee_type\": {\n      \"type\": \"string\",\n      \"description\": \"收费方式（固定/风险代理/计时等）\"\n    },\n    \"fee_amount\": {\n      \"type\": \"number\",\n      \"description\": \"律师费金额\"\n    },\n    \"invoice_number\": {\n      \"type\": \"string\",\n      \"description\": \"发票号码\"\n    },\n    \"invoice_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"发票日期\"\n    }\n  },\n  \"required\": [\n    \"law_firm_name\",\n    \"fee_amount\"\n  ]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从律师费发票及合同中提取律师事务所名称、律师姓名、合同日期、收费方式、律师费金额和发票信息。校验要点：1）律师费是否在当地律师收费指导价标准范围内；2）律师服务合同与发票金额是否一致；3）发票是否为正规律师事务所开具的增值税发票。"
   }
 ]

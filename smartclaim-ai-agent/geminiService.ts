@@ -1,6 +1,7 @@
 
 import { GoogleGenAI, Type, GenerateContentResponse, Modality } from "@google/genai";
 import { ClaimState, ClaimStatus, PolicyTerm, DocumentAnalysis } from "./types";
+import { AIInteractionLog } from "../types";
 import { uploadToOSS } from "./ossService";
 
 const getAI = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -68,11 +69,13 @@ export const getAIResponse = async (
     };
   }
 
+  const startTime = Date.now();
   const response = await ai.models.generateContent({
     model,
     contents: [{ parts: [{ text: prompt }] }],
     config,
   });
+  const duration = Date.now() - startTime;
 
   const groundingLinks = response.candidates?.[0]?.groundingMetadata?.groundingChunks
     ?.map((chunk: any) => {
@@ -82,9 +85,19 @@ export const getAIResponse = async (
     })
     .filter((link: any) => link !== null);
 
+  const aiLog: AIInteractionLog = {
+    model,
+    prompt,
+    response: response.text || "",
+    duration,
+    timestamp: new Date().toISOString(),
+    usageMetadata: (response as any).usageMetadata
+  };
+
   return {
     text: response.text || "我暂时无法回答。",
-    groundingLinks
+    groundingLinks,
+    aiLog
   };
 };
 
@@ -137,7 +150,7 @@ export const fetchPolicyTerms = async (incidentType: string): Promise<PolicyTerm
   }
 };
 
-export const quickAnalyze = async (base64: string, mimeType: string): Promise<{ category: string; needsDeepAnalysis: boolean; ossUrl: string; ossKey: string }> => {
+export const quickAnalyze = async (base64: string, mimeType: string): Promise<{ category: string; needsDeepAnalysis: boolean; ossUrl: string; ossKey: string; aiLog: AIInteractionLog }> => {
   // Run OSS upload in parallel - don't block AI analysis if upload fails
   const ossPromise = uploadToOSS(base64, mimeType).catch(err => {
     console.warn('OSS upload failed, continuing with analysis:', err);
@@ -147,12 +160,14 @@ export const quickAnalyze = async (base64: string, mimeType: string): Promise<{ 
   const ai = getAI();
   const model = 'gemini-2.5-flash';
 
+  const promptText = "快速识别文档类型，返回JSON: {\"category\": \"类型(身份证/医疗发票/出院小结/诊断证明/现场照片/银行卡等)\", \"needsDeepAnalysis\": true/false}";
+  const startTime = Date.now();
   const response = await ai.models.generateContent({
     model,
     contents: {
       parts: [
         { inlineData: { mimeType, data: base64 } },
-        { text: "快速识别文档类型，返回JSON: {\"category\": \"类型(身份证/医疗发票/出院小结/诊断证明/现场照片/银行卡等)\", \"needsDeepAnalysis\": true/false}" }
+        { text: promptText }
       ]
     },
     config: {
@@ -160,18 +175,28 @@ export const quickAnalyze = async (base64: string, mimeType: string): Promise<{ 
       temperature: 0.1,
     }
   });
+  const duration = Date.now() - startTime;
 
   const ossResult = await ossPromise;
 
+  const aiLog: AIInteractionLog = {
+    model,
+    prompt: promptText,
+    response: response.text || "",
+    duration,
+    timestamp: new Date().toISOString(),
+    usageMetadata: (response as any).usageMetadata
+  };
+
   try {
     const result = JSON.parse(response.text || '{"category":"未知","needsDeepAnalysis":false}');
-    return { ...result, ossUrl: ossResult.url, ossKey: ossResult.objectKey };
+    return { ...result, ossUrl: ossResult.url, ossKey: ossResult.objectKey, aiLog };
   } catch {
-    return { category: '未知', needsDeepAnalysis: false, ossUrl: ossResult.url, ossKey: ossResult.objectKey };
+    return { category: '未知', needsDeepAnalysis: false, ossUrl: ossResult.url, ossKey: ossResult.objectKey, aiLog };
   }
 };
 
-export const analyzeDocument = async (base64: string, mimeType: string, state: ClaimState, ossUrl: string): Promise<DocumentAnalysis> => {
+export const analyzeDocument = async (base64: string, mimeType: string, state: ClaimState, ossUrl: string): Promise<{ analysis: DocumentAnalysis; aiLog: AIInteractionLog }> => {
   const ai = getAI();
   const model = 'gemini-2.5-flash';
 
@@ -216,6 +241,7 @@ export const analyzeDocument = async (base64: string, mimeType: string, state: C
   "ocr": {"name":"","date":"","amount":0,"invoiceNumber":""}
 }`;
 
+  const startTime = Date.now();
   const response = await ai.models.generateContent({
     model,
     contents: {
@@ -229,11 +255,21 @@ export const analyzeDocument = async (base64: string, mimeType: string, state: C
       temperature: 0.1,
     }
   });
+  const duration = Date.now() - startTime;
 
   const result = JSON.parse(response.text || '{}');
   result.ossUrl = ossUrl;
 
-  return result;
+  const aiLog: AIInteractionLog = {
+    model,
+    prompt,
+    response: response.text || "",
+    duration,
+    timestamp: new Date().toISOString(),
+    usageMetadata: (response as any).usageMetadata
+  };
+
+  return { analysis: result, aiLog };
 };
 
 export const performFinalAssessment = async (state: ClaimState) => {

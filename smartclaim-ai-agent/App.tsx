@@ -5,6 +5,9 @@ import { ClaimStatus, Message, ClaimState, ClaimDocument, HistoricalClaim, Polic
 import { MOCK_POLICIES, MOCK_HISTORICAL_CLAIMS } from './constants';
 import { getAIResponse, analyzeDocument, quickAnalyze, connectLive, transcribeAudio } from './geminiService';
 import { getSignedUrl } from './ossService';
+import { logUserOperation } from './logService';
+import { UserOperationType } from '../types';
+import type { AIInteractionLog } from '../types';
 
 // --- Helpers ---
 function encode(bytes: Uint8Array) {
@@ -607,6 +610,169 @@ export const App: React.FC = () => {
     }
   }, [fileInspectData]);
 
+  const handleViewAttachments = (attachments: Attachment[], context: string) => {
+    setFileInspectData(attachments);
+    logUserOperation({
+      operationType: UserOperationType.VIEW_FILE,
+      operationLabel: '查看材料',
+      userName,
+      userGender,
+      inputData: {
+        context,
+        count: attachments.length,
+        names: attachments.slice(0, 5).map(item => item.name)
+      }
+    });
+  };
+
+  const handlePreviewAttachment = (attachment: Attachment, context: string) => {
+    setPreviewAttachment(attachment);
+    logUserOperation({
+      operationType: UserOperationType.VIEW_FILE,
+      operationLabel: '预览材料',
+      userName,
+      userGender,
+      inputData: {
+        context,
+        name: attachment.name,
+        type: attachment.type
+      }
+    });
+  };
+
+  const handleResetChat = () => {
+    setMessages([]);
+    logUserOperation({
+      operationType: UserOperationType.SUBMIT_FORM,
+      operationLabel: '重置对话',
+      userName,
+      userGender
+    });
+  };
+
+  const handleTogglePolicyExpand = (nextExpanded: boolean, total: number) => {
+    setIsPolicyExpanded(nextExpanded);
+    logUserOperation({
+      operationType: UserOperationType.SUBMIT_FORM,
+      operationLabel: nextExpanded ? '展开保单列表' : '收起保单列表',
+      userName,
+      userGender,
+      inputData: { total }
+    });
+  };
+
+  const handleToggleClaimsExpand = (nextExpanded: boolean, total: number) => {
+    setIsClaimsExpanded(nextExpanded);
+    logUserOperation({
+      operationType: UserOperationType.SUBMIT_FORM,
+      operationLabel: nextExpanded ? '展开案件列表' : '收起案件列表',
+      userName,
+      userGender,
+      inputData: { total }
+    });
+  };
+
+  const handleOpenUploadGuide = () => {
+    setShowUploadGuide(true);
+    logUserOperation({
+      operationType: UserOperationType.UPLOAD_FILE,
+      operationLabel: '打开上传指引',
+      userName,
+      userGender
+    });
+  };
+
+  const handleCloseUploadGuide = () => {
+    setShowUploadGuide(false);
+    logUserOperation({
+      operationType: UserOperationType.UPLOAD_FILE,
+      operationLabel: '关闭上传指引',
+      userName,
+      userGender
+    });
+  };
+
+  const handleUploadGuideChooseFile = () => {
+    setShowUploadGuide(false);
+    fileInputRef.current?.click();
+    logUserOperation({
+      operationType: UserOperationType.UPLOAD_FILE,
+      operationLabel: '上传指引选择文件',
+      userName,
+      userGender
+    });
+  };
+
+  const handlePolicyUploadClick = () => {
+    policyUploadRef.current?.click();
+    logUserOperation({
+      operationType: UserOperationType.UPLOAD_FILE,
+      operationLabel: '选择上传保单',
+      userName,
+      userGender
+    });
+  };
+
+  const handleReplaceFileClick = () => {
+    fileInputRef.current?.click();
+    logUserOperation({
+      operationType: UserOperationType.UPLOAD_FILE,
+      operationLabel: '更换文件',
+      userName,
+      userGender
+    });
+  };
+
+  const handleCloseFileInspect = () => {
+    setFileInspectData(null);
+    logUserOperation({
+      operationType: UserOperationType.VIEW_FILE,
+      operationLabel: '关闭文件列表',
+      userName,
+      userGender
+    });
+  };
+
+  const handleClosePreview = () => {
+    setPreviewAttachment(null);
+    logUserOperation({
+      operationType: UserOperationType.VIEW_FILE,
+      operationLabel: '关闭材料预览',
+      userName,
+      userGender
+    });
+  };
+
+  const handleOpenReportingForm = () => {
+    setShowReportingForm(true);
+    logUserOperation({
+      operationType: UserOperationType.SUBMIT_FORM,
+      operationLabel: '打开报案表单',
+      userName,
+      userGender
+    });
+  };
+
+  const handleCloseReportingForm = () => {
+    setShowReportingForm(false);
+    logUserOperation({
+      operationType: UserOperationType.SUBMIT_FORM,
+      operationLabel: '关闭报案表单',
+      userName,
+      userGender
+    });
+  };
+
+  const handleCloseClaimDetail = () => {
+    setSelectedDetailClaim(null);
+    logUserOperation({
+      operationType: UserOperationType.VIEW_CLAIM_DETAIL,
+      operationLabel: '关闭案件详情',
+      userName,
+      userGender
+    });
+  };
+
   // --- Handlers ---
 
   const handleLogin = (name: string, gender: string) => {
@@ -619,6 +785,13 @@ export const App: React.FC = () => {
       ...prev[0],
       content: `您好，**${name}${gender}**！我是 **SmartClaim AI**。✨\n\n请告诉我您遇到了什么问题，或者点击下方按钮快速开始。`
     }]);
+
+    logUserOperation({
+      operationType: UserOperationType.LOGIN,
+      operationLabel: '索赔人登录',
+      userName: name,
+      userGender: gender
+    });
   };
 
   const handleDocumentClick = (doc: ClaimDocument) => {
@@ -643,12 +816,21 @@ export const App: React.FC = () => {
     };
     setFileInspectData([attachment]);
     setExpandedDocIndex(0);
+    logUserOperation({
+      operationType: UserOperationType.VIEW_FILE,
+      operationLabel: '查看历史材料',
+      userName,
+      userGender,
+      inputData: { name: attachment.name, type: attachment.type }
+    });
   };
 
   const handleSend = async (overrideInput?: string) => {
     const textToSend = overrideInput || input;
     if (!textToSend.trim() || isLoading) return;
 
+    const messagePreview = textToSend.slice(0, 200);
+    const operationStart = Date.now();
     const userMsg: Message = { id: Date.now().toString(), role: 'user', content: textToSend, timestamp: Date.now() };
     setMessages(prev => [...prev, userMsg]);
     setInput('');
@@ -671,6 +853,15 @@ export const App: React.FC = () => {
         }]);
         setIsLoading(false);
       }, 600);
+      logUserOperation({
+        operationType: UserOperationType.REPORT_CLAIM,
+        operationLabel: '发起报案',
+        userName,
+        userGender,
+        inputData: { message: messagePreview, messageLength: textToSend.length },
+        outputData: { policyCount: MOCK_POLICIES.length },
+        duration: Date.now() - operationStart
+      });
       return;
     }
 
@@ -687,11 +878,20 @@ export const App: React.FC = () => {
         }]);
         setIsLoading(false);
       }, 600);
+      logUserOperation({
+        operationType: UserOperationType.VIEW_PROGRESS,
+        operationLabel: '查看理赔进度',
+        userName,
+        userGender,
+        inputData: { message: messagePreview, messageLength: textToSend.length },
+        outputData: { claimCount: claimState.historicalClaims.length },
+        duration: Date.now() - operationStart
+      });
       return;
     }
 
     try {
-      const { text, groundingLinks } = await getAIResponse(
+      const { text, groundingLinks, aiLog } = await getAIResponse(
         messages.concat(userMsg).map(m => ({ role: m.role, content: m.content })),
         claimState,
         userLocation
@@ -715,15 +915,36 @@ export const App: React.FC = () => {
         groundingLinks,
         attachments: responseAttachments
       }]);
+      logUserOperation({
+        operationType: UserOperationType.SEND_MESSAGE,
+        operationLabel: '发送消息',
+        userName,
+        userGender,
+        inputData: { message: messagePreview, messageLength: textToSend.length },
+        outputData: { responseLength: text.length, groundingLinkCount: groundingLinks?.length || 0 },
+        aiInteractions: aiLog ? [aiLog] : undefined,
+        duration: Date.now() - operationStart
+      });
     } catch (error) {
       setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: "网络连接似乎有些问题，请稍后再试。", timestamp: Date.now() }]);
+      logUserOperation({
+        operationType: UserOperationType.SEND_MESSAGE,
+        operationLabel: '发送消息',
+        userName,
+        userGender,
+        inputData: { message: messagePreview, messageLength: textToSend.length },
+        success: false,
+        errorMessage: error instanceof Error ? error.message : String(error),
+        duration: Date.now() - operationStart
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const processFiles = async (files: FileList | File[]) => {
+  const processFiles = async (files: FileList | File[], source: 'file' | 'camera' | 'policy' = 'file') => {
     setIsLoading(true);
+    const uploadStart = Date.now();
     const fileArray = Array.from(files);
     const limitedFiles = fileArray.slice(0, MAX_FILES_PER_UPLOAD);
     if (fileArray.length > MAX_FILES_PER_UPLOAD) {
@@ -760,6 +981,7 @@ export const App: React.FC = () => {
 
     let completedCount = 0;
     let failedCount = 0;
+    const aiLogs: AIInteractionLog[] = [];
 
     const results: Array<Attachment & { status: 'success' | 'failed'; error?: string }> = new Array(newAttachments.length);
     let nextIndex = 0;
@@ -775,9 +997,10 @@ export const App: React.FC = () => {
         }));
         setIsAnalyzing(att.name);
         try {
-          const analysis = await quickAnalyze(att.base64!, att.type);
+          const analysisResult = await quickAnalyze(att.base64!, att.type);
+          aiLogs.push(analysisResult.aiLog);
           const mappedAnalysis = {
-            category: analysis.category || '未知类型',
+            category: analysisResult.category || '未知类型',
             isRelevant: true,
             relevanceReasoning: '快速识别',
             clarityScore: 0,
@@ -793,7 +1016,7 @@ export const App: React.FC = () => {
             currentFile: undefined,
             active: Math.max(0, prev.active - 1)
           }));
-          results[current] = { ...att, analysis: mappedAnalysis, status: 'success', url: analysis.ossUrl || att.url, ossKey: analysis.ossKey || att.ossKey };
+          results[current] = { ...att, analysis: mappedAnalysis, status: 'success', url: analysisResult.ossUrl || att.url, ossKey: analysisResult.ossKey || att.ossKey };
         } catch (err) {
           console.error(`Analysis failed for ${att.name}:`, err);
           failedCount++;
@@ -853,17 +1076,38 @@ export const App: React.FC = () => {
     setUploadProgress({ total: 0, completed: 0, failed: 0, active: 0 });
 
     setIsLoading(false);
+    logUserOperation({
+      operationType: UserOperationType.UPLOAD_FILE,
+      operationLabel: '上传材料',
+      userName,
+      userGender,
+      inputData: {
+        source,
+        totalFiles: fileArray.length,
+        limitedFiles: limitedFiles.length,
+        fileTypes: Array.from(new Set(limitedFiles.map(file => file.type)))
+      },
+      outputData: {
+        successCount: completedCount,
+        failedCount,
+        categories: categoryCounts
+      },
+      aiInteractions: aiLogs.length > 0 ? aiLogs : undefined,
+      duration: Date.now() - uploadStart,
+      success: failedCount === 0
+    });
   };
 
   const handlePolicyUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      processFiles(e.target.files);
+      processFiles(e.target.files, 'policy');
     }
     if (policyUploadRef.current) policyUploadRef.current.value = '';
   }
 
   const handleClaimClick = (claim: HistoricalClaim) => {
     if (pendingFiles.length > 0) {
+      const attachStart = Date.now();
       const newDocs: ClaimDocument[] = pendingFiles.map((file, index) => ({
         id: `DOC-${Date.now()}-${index}`,
         name: file.name,
@@ -909,31 +1153,72 @@ export const App: React.FC = () => {
       if (updatedClaim) {
         setSelectedDetailClaim(updatedClaim);
       }
+      logUserOperation({
+        operationType: UserOperationType.SUBMIT_FORM,
+        operationLabel: '关联材料至案件',
+        userName,
+        userGender,
+        claimId: claim.id,
+        inputData: { attachCount: newDocs.length },
+        outputData: { claimId: claim.id },
+        duration: Date.now() - attachStart
+      });
     } else {
       setSelectedDetailClaim(claim);
+      logUserOperation({
+        operationType: UserOperationType.VIEW_CLAIM_DETAIL,
+        operationLabel: '查看案件详情',
+        userName,
+        userGender,
+        claimId: claim.id
+      });
     }
   };
 
   // Camera & Voice Functions
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      processFiles(e.target.files);
+      processFiles(e.target.files, 'file');
     }
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const openCamera = async () => {
+    const cameraStart = Date.now();
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
       cameraStreamRef.current = stream;
       if (videoRef.current) videoRef.current.srcObject = stream;
       setIsCameraOpen(true);
-    } catch (err) { console.error(err); }
+      logUserOperation({
+        operationType: UserOperationType.UPLOAD_FILE,
+        operationLabel: '打开相机',
+        userName,
+        userGender,
+        duration: Date.now() - cameraStart
+      });
+    } catch (err) {
+      console.error(err);
+      logUserOperation({
+        operationType: UserOperationType.UPLOAD_FILE,
+        operationLabel: '打开相机失败',
+        userName,
+        userGender,
+        success: false,
+        errorMessage: String(err)
+      });
+    }
   };
 
   const closeCamera = () => {
     cameraStreamRef.current?.getTracks().forEach(t => t.stop());
     setIsCameraOpen(false);
+    logUserOperation({
+      operationType: UserOperationType.UPLOAD_FILE,
+      operationLabel: '关闭相机',
+      userName,
+      userGender
+    });
   };
 
   const capturePhoto = () => {
@@ -944,7 +1229,7 @@ export const App: React.FC = () => {
     canvas.getContext('2d')?.drawImage(videoRef.current, 0, 0);
     const base64 = canvas.toDataURL('image/jpeg').split(',')[1];
     closeCamera();
-    processFiles([new File([decode(base64)], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' })]);
+    processFiles([new File([decode(base64)], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' })], 'camera');
   };
 
   const toggleVoiceMode = async () => {
@@ -952,7 +1237,14 @@ export const App: React.FC = () => {
       liveSessionRef.current?.close();
       mediaStreamRef.current?.getTracks().forEach((t: MediaStreamTrack) => t.stop());
       setIsVoiceMode(false);
+      logUserOperation({
+        operationType: UserOperationType.LIVE_AUDIO_SESSION,
+        operationLabel: '结束语音会话',
+        userName,
+        userGender
+      });
     } else {
+      const voiceStart = Date.now();
       try {
         setIsVoiceMode(true);
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -989,7 +1281,24 @@ export const App: React.FC = () => {
           onclose: () => setIsVoiceMode(false)
         });
         liveSessionRef.current = await sessionPromise;
-      } catch (err) { setIsVoiceMode(false); }
+        logUserOperation({
+          operationType: UserOperationType.LIVE_AUDIO_SESSION,
+          operationLabel: '开始语音会话',
+          userName,
+          userGender,
+          duration: Date.now() - voiceStart
+        });
+      } catch (err) {
+        setIsVoiceMode(false);
+        logUserOperation({
+          operationType: UserOperationType.LIVE_AUDIO_SESSION,
+          operationLabel: '开始语音会话失败',
+          userName,
+          userGender,
+          success: false,
+          errorMessage: String(err)
+        });
+      }
     }
   };
 
@@ -1018,14 +1327,29 @@ export const App: React.FC = () => {
       setMessages(prev => [...prev, aiMsg]);
       setIsLoading(false);
     }, 600);
+    logUserOperation({
+      operationType: UserOperationType.SUBMIT_FORM,
+      operationLabel: '选择保单',
+      userName,
+      userGender,
+      inputData: { policyId: policy.id, policyType: policy.type }
+    });
   };
 
   const handleIntentChoice = (choice: 'new' | 'supplement') => {
     if (choice === 'new') handleSend('我要新报案');
     else setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: '请选择关联的案件：', timestamp: Date.now(), claimsList: claimState.historicalClaims }]);
+    logUserOperation({
+      operationType: UserOperationType.SUBMIT_FORM,
+      operationLabel: '选择报案方式',
+      userName,
+      userGender,
+      inputData: { choice }
+    });
   };
 
   const handleFormSubmit = () => {
+    const reportStart = Date.now();
     const newClaimId = 'CLM' + Date.now().toString().slice(-6);
 
     // Map pending files if any
@@ -1055,6 +1379,20 @@ export const App: React.FC = () => {
     setPendingFiles([]); // Clear pending
     setShowReportingForm(false);
     handleSend('立案已提交');
+    logUserOperation({
+      operationType: UserOperationType.REPORT_CLAIM,
+      operationLabel: '提交报案',
+      userName,
+      userGender,
+      claimId: newClaimId,
+      inputData: {
+        formType,
+        descriptionLength: formDescription.trim().length,
+        pendingFileCount: pendingFiles.length
+      },
+      outputData: { claimId: newClaimId },
+      duration: Date.now() - reportStart
+    });
   };
 
   // --- Render ---
@@ -1081,7 +1419,7 @@ export const App: React.FC = () => {
             </div>
           </div>
         </div>
-        <button onClick={() => setMessages([])} className="w-10 h-10 rounded-full glass-btn flex items-center justify-center text-slate-600">
+        <button onClick={handleResetChat} className="w-10 h-10 rounded-full glass-btn flex items-center justify-center text-slate-600">
           <i className="fas fa-rotate-right"></i>
         </button>
       </header>
@@ -1102,7 +1440,7 @@ export const App: React.FC = () => {
                   <div className="mt-3 grid grid-cols-5 gap-2">
                     {/* Render first 4 items normally */}
                     {msg.attachments.slice(0, 4).map((att, i) => (
-                      <div key={i} className="flex flex-col gap-1 items-center cursor-pointer group" onClick={() => setFileInspectData(msg.attachments!)}>
+                      <div key={i} className="flex flex-col gap-1 items-center cursor-pointer group" onClick={() => handleViewAttachments(msg.attachments!, '消息附件')}>
                         <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-black/10 border border-white/20 group-hover:shadow-md transition-all">
                           {att.type.includes('image') && (att.base64 || att.url) ? <img src={att.url || `data:${att.type};base64,${att.base64}`} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><i className={`fas ${getDocIcon(att.name)} text-xl opacity-50`}></i></div>}
                         </div>
@@ -1112,7 +1450,7 @@ export const App: React.FC = () => {
 
                     {/* If exactly 5 items, render the 5th one normally */}
                     {msg.attachments.length === 5 && (
-                      <div className="flex flex-col gap-1 items-center cursor-pointer group" onClick={() => setFileInspectData(msg.attachments!)}>
+                      <div className="flex flex-col gap-1 items-center cursor-pointer group" onClick={() => handleViewAttachments(msg.attachments!, '消息附件')}>
                         <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-black/10 border border-white/20 group-hover:shadow-md transition-all">
                           {msg.attachments[4].type.includes('image') && (msg.attachments[4].base64 || msg.attachments[4].url) ? <img src={msg.attachments[4].url || `data:${msg.attachments[4].type};base64,${msg.attachments[4].base64}`} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><i className={`fas ${getDocIcon(msg.attachments[4].name)} text-xl opacity-50`}></i></div>}
                         </div>
@@ -1122,7 +1460,7 @@ export const App: React.FC = () => {
 
                     {/* If more than 5 items, render the +N button in the 5th slot */}
                     {msg.attachments.length > 5 && (
-                      <div className="flex flex-col gap-1 items-center cursor-pointer group" onClick={() => setFileInspectData(msg.attachments!)}>
+                      <div className="flex flex-col gap-1 items-center cursor-pointer group" onClick={() => handleViewAttachments(msg.attachments!, '消息附件')}>
                         <div className="relative w-full aspect-square rounded-lg bg-white/20 border border-white/30 group-hover:bg-white/30 transition-all flex items-center justify-center text-white font-bold text-xs shadow-inner">
                           +{msg.attachments.length - 4}
                         </div>
@@ -1144,7 +1482,7 @@ export const App: React.FC = () => {
                       return (
                         <div
                           className={`p-3 rounded-xl border flex items-center gap-3 shadow-sm hover:shadow-md transition-all cursor-pointer ${isError ? 'bg-red-50 border-red-200' : 'bg-white/60 border-white/60'}`}
-                          onClick={() => setFileInspectData(msg.analysisResults!)}
+                          onClick={() => handleViewAttachments(msg.analysisResults!, '分析结果')}
                         >
                           <div className={`w-12 h-12 rounded-lg flex items-center justify-center text-xl shrink-0 overflow-hidden border ${isError ? 'bg-red-100 border-red-200 text-red-500' : 'bg-blue-50 border-blue-100 text-blue-500'}`}>
                             {firstDoc.type.includes('image') && imgSrc ? <img src={imgSrc} className="w-full h-full object-cover" /> : <i className={`fas ${getDocIcon(firstDoc.name)}`}></i>}
@@ -1177,7 +1515,7 @@ export const App: React.FC = () => {
 
                     {/* View All Button if > 1 result */}
                     {msg.analysisResults.length > 1 && (
-                      <button onClick={() => setFileInspectData(msg.analysisResults!)} className="w-full py-2.5 bg-white/40 hover:bg-white/60 rounded-lg text-xs font-bold text-slate-600 transition-colors border border-white/40 flex items-center justify-center gap-2">
+                      <button onClick={() => handleViewAttachments(msg.analysisResults!, '分析结果')} className="w-full py-2.5 bg-white/40 hover:bg-white/60 rounded-lg text-xs font-bold text-slate-600 transition-colors border border-white/40 flex items-center justify-center gap-2">
                         查看全部 {msg.analysisResults.length} 个结果 <i className="fas fa-chevron-right text-[10px]"></i>
                       </button>
                     )}
@@ -1203,7 +1541,7 @@ export const App: React.FC = () => {
                     <button onClick={toggleVoiceMode} className="glass-btn px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2">
                       <i className="fas fa-microphone text-blue-500"></i> 语音报案
                     </button>
-                    <button onClick={() => setShowReportingForm(true)} className="glass-btn px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2">
+                    <button onClick={handleOpenReportingForm} className="glass-btn px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2">
                       <i className="fas fa-pen-to-square text-cyan-500"></i> 在线填单
                     </button>
                   </div>
@@ -1302,7 +1640,7 @@ export const App: React.FC = () => {
                               {/* Expand Toggle */}
                               {filteredPolicies.length > 3 && (
                                 <button
-                                  onClick={() => setIsPolicyExpanded(!isPolicyExpanded)}
+                                  onClick={() => handleTogglePolicyExpand(!isPolicyExpanded, filteredPolicies.length)}
                                   className="flex-1 py-2 rounded-lg bg-white/60 hover:bg-white text-xs text-slate-600 font-bold border border-slate-100 transition-colors"
                                 >
                                   {isPolicyExpanded ? '收起' : `查看全部 (${filteredPolicies.length})`}
@@ -1311,7 +1649,7 @@ export const App: React.FC = () => {
 
                               {/* Upload Button */}
                               <button
-                                onClick={() => policyUploadRef.current?.click()}
+                                onClick={handlePolicyUploadClick}
                                 className="flex-1 py-2 rounded-lg border border-dashed border-blue-300 bg-blue-50/50 hover:bg-blue-50 text-xs text-blue-600 font-bold flex items-center justify-center gap-1.5 transition-colors"
                               >
                                 <i className="fas fa-file-arrow-up"></i> 上传保单 PDF
@@ -1382,7 +1720,7 @@ export const App: React.FC = () => {
 
                             {filteredClaims.length > 3 && (
                               <button
-                                onClick={() => setIsClaimsExpanded(!isClaimsExpanded)}
+                                onClick={() => handleToggleClaimsExpand(!isClaimsExpanded, filteredClaims.length)}
                                 className="w-full py-2 rounded-lg bg-white/60 hover:bg-white text-xs text-slate-600 font-bold border border-slate-100 transition-colors flex items-center justify-center gap-1"
                               >
                                 {isClaimsExpanded ? '收起' : `查看更多历史案件 (${filteredClaims.length - 3})`}
@@ -1461,7 +1799,7 @@ export const App: React.FC = () => {
 
           {/* Input Bar */}
           <div className="input-dock p-2 flex items-center gap-2">
-            <button onClick={() => setShowUploadGuide(true)} className="w-10 h-10 rounded-full hover:bg-blue-50 text-blue-500 flex items-center justify-center transition-colors">
+            <button onClick={handleOpenUploadGuide} className="w-10 h-10 rounded-full hover:bg-blue-50 text-blue-500 flex items-center justify-center transition-colors">
               <i className="fas fa-paperclip text-lg"></i>
             </button>
             <button onClick={openCamera} className="w-10 h-10 rounded-full hover:bg-blue-50 text-blue-500 flex items-center justify-center transition-colors">
@@ -1488,7 +1826,7 @@ export const App: React.FC = () => {
 
       {/* Upload Guide Modal */}
       {showUploadGuide && (
-        <div className="absolute inset-0 z-50 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 animate-enter" onClick={() => setShowUploadGuide(false)}>
+        <div className="absolute inset-0 z-50 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 animate-enter" onClick={handleCloseUploadGuide}>
           <div className="bg-white/90 backdrop-blur-xl p-6 rounded-2xl shadow-2xl max-w-sm w-full border border-white/50" onClick={e => e.stopPropagation()}>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
@@ -1523,10 +1861,7 @@ export const App: React.FC = () => {
             </div>
 
             <button
-              onClick={() => {
-                setShowUploadGuide(false);
-                fileInputRef.current?.click();
-              }}
+              onClick={handleUploadGuideChooseFile}
               className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-600/30 transition-all active:scale-95 flex items-center justify-center gap-2"
             >
               <i className="fas fa-plus"></i> 选择文件
@@ -1537,11 +1872,11 @@ export const App: React.FC = () => {
 
       {/* Reporting Form Modal */}
       {showReportingForm && (
-        <div className="absolute inset-0 z-50 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 animate-enter" onClick={() => setShowReportingForm(false)}>
+        <div className="absolute inset-0 z-50 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 animate-enter" onClick={handleCloseReportingForm}>
           <div className="glass-panel w-full max-w-md p-6 rounded-[32px] shadow-2xl" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold text-slate-800">在线报案</h3>
-              <button onClick={() => setShowReportingForm(false)} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500"><i className="fas fa-xmark"></i></button>
+              <button onClick={handleCloseReportingForm} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500"><i className="fas fa-xmark"></i></button>
             </div>
 
             <div className="space-y-4">
@@ -1619,7 +1954,7 @@ export const App: React.FC = () => {
           <div className="glass-panel w-full max-w-lg max-h-[85vh] rounded-[32px] overflow-hidden flex flex-col shadow-2xl animate-enter">
             <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white/50">
               <h2 className="text-xl font-bold text-slate-800">案件详情</h2>
-              <button onClick={() => setSelectedDetailClaim(null)} className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-slate-200 transition-colors"><i className="fas fa-xmark"></i></button>
+              <button onClick={handleCloseClaimDetail} className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-slate-200 transition-colors"><i className="fas fa-xmark"></i></button>
             </div>
             <div className="flex-1 overflow-y-auto p-6 space-y-8 scroll-smooth">
               {/* Status Section */}
@@ -1704,7 +2039,7 @@ export const App: React.FC = () => {
           <div className="w-full sm:max-w-lg bg-white h-[90vh] sm:h-auto sm:max-h-[80vh] sm:rounded-[32px] rounded-t-[32px] shadow-2xl overflow-hidden flex flex-col">
             <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white z-10">
               <h3 className="text-lg font-bold text-slate-800">文件详情 ({fileInspectData.length})</h3>
-              <button onClick={() => setFileInspectData(null)} className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-slate-200"><i className="fas fa-xmark"></i></button>
+              <button onClick={handleCloseFileInspect} className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-slate-200"><i className="fas fa-xmark"></i></button>
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50">
               {fileInspectData.map((doc, i) => {
@@ -1714,7 +2049,7 @@ export const App: React.FC = () => {
                   <div key={i} className={`p-4 rounded-xl shadow-sm border flex gap-4 animate-enter ${isError ? 'bg-red-50 border-red-200' : 'bg-white border-slate-100'}`} style={{ animationDelay: `${i * 50}ms` }}>
                     <div
                       className="w-20 h-20 rounded-lg bg-slate-100 shrink-0 overflow-hidden border border-slate-100 relative group cursor-pointer"
-                      onClick={() => setPreviewAttachment(doc)}
+                      onClick={() => handlePreviewAttachment(doc, '文件列表')}
                     >
                       {doc.type.includes('image') && imgSrc ? (
                         <img src={imgSrc} className={`w-full h-full object-cover transition-transform group-hover:scale-110 ${isError ? 'opacity-80' : ''}`} />
@@ -1743,7 +2078,7 @@ export const App: React.FC = () => {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              fileInputRef.current?.click();
+                              handleReplaceFileClick();
                             }}
                             className="text-[10px] bg-red-100 hover:bg-red-200 text-red-600 px-2 py-1 rounded-full font-bold transition-colors"
                           >
@@ -1796,7 +2131,7 @@ export const App: React.FC = () => {
               })}
             </div>
             <div className="p-4 border-t border-slate-100 bg-white">
-              <button onClick={() => setFileInspectData(null)} className="w-full py-3.5 rounded-xl bg-slate-900 text-white font-bold shadow-lg shadow-slate-900/20 active:scale-95 transition-all">确认</button>
+              <button onClick={handleCloseFileInspect} className="w-full py-3.5 rounded-xl bg-slate-900 text-white font-bold shadow-lg shadow-slate-900/20 active:scale-95 transition-all">确认</button>
             </div>
           </div>
         </div>
@@ -1808,7 +2143,7 @@ export const App: React.FC = () => {
           {/* Top Bar */}
           <div className="h-16 bg-black/95 text-white flex items-center justify-between px-6 border-b border-white/10 shrink-0">
             <h3 className="font-bold truncate max-w-md">{previewAttachment.name}</h3>
-            <button onClick={() => setPreviewAttachment(null)} className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
+            <button onClick={handleClosePreview} className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
               <i className="fas fa-xmark text-lg"></i>
             </button>
           </div>

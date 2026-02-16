@@ -61,6 +61,7 @@ export const api = {
     medicalInsuranceCatalog: buildResource('medical-insurance-catalog'),
     hospitalInfo: buildResource('hospital-info'),
     invoiceAudits: buildResource('invoice-audits'),
+    userOperationLogs: buildResource('user-operation-logs'),
     // Utils
     getUploadToken: async () => {
         const response = await fetch('/api/upload-token');

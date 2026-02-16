@@ -868,14 +868,31 @@ export interface AIInteractionLog {
   duration: number;
   timestamp: string;
   usageMetadata?: any;
+  timing?: {
+    ocrDuration?: number;      // OCR 识别耗时 (ms)
+    parsingDuration?: number;  // 大模型格式化耗时 (ms)
+    totalDuration?: number;    // 总耗时 (ms)
+  };
+  errorMessage?: string;       // 错误信息（如果失败）
+  statusCode?: number;         // HTTP 状态码
 }
 
 export interface StepLog {
-  step: 'ocr' | 'hospital' | 'catalog' | 'summary';
+  step: 'ocr' | 'hospital' | 'catalog' | 'summary' | 'upload' | 'catalog_fetch' | 'catalog_sync' | 'catalog_ai' | 'saving';
   input: any;
   output: any;
   duration: number;
   timestamp: string;
+}
+
+/** 审核子步骤耗时记录（用于前端展示） */
+export interface StepTiming {
+  step: string;       // 步骤标识，与 AuditStep 对应
+  label: string;      // 中文显示名称
+  startTime: number;  // Date.now() 开始时间戳
+  endTime?: number;   // Date.now() 结束时间戳（undefined 表示进行中）
+  duration?: number;  // 耗时毫秒（endTime - startTime）
+  detail?: string;    // 额外描述（如 "3/5 张图片"）
 }
 
 /** 单张图片的 OCR 识别结果（多图模式下使用） */
@@ -940,6 +957,31 @@ export interface InvoiceAuditResult {
     difference: number;
     isConsistent: boolean;
   };
+
+  // 各子步骤耗时记录
+  stepTimings?: StepTiming[];
+}
+
+/** 通用材料审核结果（非发票类材料使用） */
+export interface MaterialAuditResult {
+  auditId: string;
+  materialType: string;       // 材料类型 ID（如 "mat-1"）
+  materialName: string;       // 材料名称（如 "身份证正面"）
+  ossUrl: string;
+  ossKey: string;
+  uploadTime: string;
+
+  // OCR 提取的结构化数据（根据材料 jsonSchema 提取）
+  extractedData: Record<string, any>;
+
+  // AI 审核结论
+  auditConclusion: string;    // AI 给出的审核结论文本
+  auditStatus: 'completed' | 'failed';
+  errorMessage?: string;
+
+  // 日志
+  aiLog?: AIInteractionLog;
+  stepTimings?: StepTiming[];
 }
 
 // OCR 后置验证警告
@@ -979,3 +1021,64 @@ export interface InvoiceItemAudit {
 
 export { MedicalInvoiceData };
 // --- END: Types for Medical Invoice Audit & Insurance Catalog ---
+
+// --- START: Types for User Operation Logs ---
+// 用户操作类型枚举（涵盖所有C端用户操作）
+export enum UserOperationType {
+  LOGIN = 'LOGIN',                          // 用户登录
+  LOGOUT = 'LOGOUT',                        // 用户登出
+  REPORT_CLAIM = 'REPORT_CLAIM',            // 提交报案
+  UPLOAD_FILE = 'UPLOAD_FILE',              // 上传文件
+  DELETE_FILE = 'DELETE_FILE',              // 删除文件
+  VIEW_FILE = 'VIEW_FILE',                  // 查看文件
+  SEND_MESSAGE = 'SEND_MESSAGE',            // 发送消息
+  RECEIVE_MESSAGE = 'RECEIVE_MESSAGE',      // 接收消息
+  VIEW_PROGRESS = 'VIEW_PROGRESS',          // 查看进度
+  VIEW_CLAIM_DETAIL = 'VIEW_CLAIM_DETAIL',  // 查看赔案详情
+  SUBMIT_FORM = 'SUBMIT_FORM',              // 提交表单
+  UPDATE_PROFILE = 'UPDATE_PROFILE',        // 更新资料
+  ANALYZE_DOCUMENT = 'ANALYZE_DOCUMENT',    // 文档分析
+  QUICK_ANALYZE = 'QUICK_ANALYZE',          // 快速分析
+  VOICE_TRANSCRIPTION = 'VOICE_TRANSCRIPTION', // 语音转写
+  LIVE_AUDIO_SESSION = 'LIVE_AUDIO_SESSION',   // 实时语音会话
+}
+
+// 用户操作日志主类型
+export interface UserOperationLog {
+  logId: string;                    // 格式: log-YYYYMMDDHHMMSS-random
+  timestamp: string;                // ISO时间戳
+
+  // 用户标识
+  userName: string;                 // 用户名（来自登录）
+  userGender?: string;              // 用户性别
+  sessionId?: string;               // 浏览器会话ID（用于追踪匿名用户）
+
+  // 操作详情
+  operationType: UserOperationType; // 操作类型
+  operationLabel: string;           // 操作描述（中文）
+
+  // 关联上下文
+  claimId?: string;                 // 关联的理赔案件ID
+  claimReportNumber?: string;       // 理赔报案号
+  currentStatus?: string;           // 案件当前状态
+
+  // 数据记录
+  inputData?: Record<string, any>;  // 输入数据（表单、参数等）
+  outputData?: Record<string, any>; // 输出数据（结果、响应等）
+
+  // AI交互（如果涉及AI调用）
+  aiInteractions?: AIInteractionLog[]; // AI调用记录数组
+
+  // 性能指标
+  duration?: number;                // 操作总耗时（毫秒）
+  success: boolean;                 // 操作是否成功
+  errorMessage?: string;            // 错误信息（如果失败）
+
+  // 技术信息
+  userAgent?: string;               // 浏览器UA
+  deviceType?: 'mobile' | 'desktop' | 'tablet';
+
+  // 扩展字段
+  metadata?: Record<string, any>;   // 其他元数据
+}
+// --- END: Types for User Operation Logs ---

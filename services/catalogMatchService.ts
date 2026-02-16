@@ -11,8 +11,8 @@ export interface BatchMatchOptions {
   enableAiMatch?: boolean;
   /** 批量 AI 匹配时每批的最大项目数，默认 15 */
   aiBatchSize?: number;
-  /** 匹配进度回调 */
-  onProgress?: (detail: string) => void;
+  /** 匹配进度回调，phase 区分同步阶段和 AI 阶段 */
+  onProgress?: (phase: 'sync' | 'ai', detail: string) => void;
 }
 
 // 获取 Gemini AI 实例
@@ -615,11 +615,11 @@ export const batchMatchCatalogItems = async (
   }
 
   const syncHitCount = syncResults.size;
-  onProgress?.(`快速匹配 ${syncHitCount}/${items.length} 项命中，${unmatchedItems.length} 项待 AI 匹配`);
+  onProgress?.('sync', `快速匹配 ${syncHitCount}/${items.length} 项命中，${unmatchedItems.length} 项待 AI 匹配`);
 
   // ─── 阶段二：批量 AI 语义匹配（仅对未命中项）─────
   if (unmatchedItems.length > 0 && enableAiMatch) {
-    onProgress?.(`AI 语义匹配中 (0/${unmatchedItems.length})...`);
+    onProgress?.('ai', `AI 语义匹配中 (0/${unmatchedItems.length})...`);
 
     const aiResults = await batchAiSemanticMatch(
       unmatchedItems.map(({ itemName, category }) => ({ itemName, category })),
@@ -628,7 +628,7 @@ export const batchMatchCatalogItems = async (
       aiBatchSize,
       80,
       (completed, total) => {
-        onProgress?.(`AI 语义匹配中 (${completed}/${total})...`);
+        onProgress?.('ai', `AI 语义匹配中 (${completed}/${total})...`);
       }
     );
 
@@ -638,7 +638,7 @@ export const batchMatchCatalogItems = async (
     }
   } else if (unmatchedItems.length > 0 && !enableAiMatch) {
     // AI 匹配已关闭，未命中项全部标记为 none
-    onProgress?.(`AI 匹配已关闭，${unmatchedItems.length} 项未匹配`);
+    onProgress?.('sync', `AI 匹配已关闭，${unmatchedItems.length} 项未匹配`);
     for (const item of unmatchedItems) {
       syncResults.set(item.index, { matched: false, matchConfidence: 0, matchMethod: 'none' });
     }

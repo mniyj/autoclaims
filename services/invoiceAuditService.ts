@@ -1,8 +1,8 @@
-import { recognizeMedicalInvoice, recognizeMultipleInvoiceImages } from './invoiceOcrService';
-import { matchCatalogItem, inferItemCategory, calculateEstimatedReimbursement, normalizeItemName } from './catalogMatchService';
+import { recognizeMedicalInvoice, recognizeMultipleInvoiceImages, recognizeClaimMaterial } from './invoiceOcrService';
+import { batchMatchCatalogItems, inferItemCategory, calculateEstimatedReimbursement, normalizeItemName, matchCatalogItem, type BatchMatchOptions } from './catalogMatchService';
 import { uploadToOSS, uploadBase64ToOSS } from './ossService';
 import { api } from './api';
-import { type InvoiceAuditResult, type InvoiceItemAudit, type InvoiceImageOcrResult, type HospitalInfo, type MedicalInsuranceCatalogItem, type MedicalInvoiceData, type ValidationWarning, type AIInteractionLog } from '../types';
+import { type InvoiceAuditResult, type InvoiceItemAudit, type InvoiceImageOcrResult, type HospitalInfo, type MedicalInsuranceCatalogItem, type MedicalInvoiceData, type ValidationWarning, type AIInteractionLog, type StepTiming, type MaterialAuditResult } from '../types';
 
 // ============================================================
 // 审核步骤类型定义
@@ -18,7 +18,24 @@ import { type InvoiceAuditResult, type InvoiceItemAudit, type InvoiceImageOcrRes
  * done     - 审核完成
  * error    - 审核出错
  */
-export type AuditStep = 'idle' | 'ocr' | 'hospital' | 'catalog' | 'summary' | 'done' | 'error';
+export type AuditStep =
+  | 'idle'
+  | 'upload'         // 图片上传到 OSS
+  | 'ocr'            // AI OCR 识别 + 后置验证
+  | 'hospital'       // 医院校验
+  | 'catalog_fetch'  // 获取医保目录数据
+  | 'catalog_sync'   // 快速匹配（Level 1-3）
+  | 'catalog_ai'     // AI 语义匹配（Level 4）
+  | 'summary'        // 汇总统计
+  | 'saving'         // 保存审核结果
+  | 'done'
+  | 'error';
+
+/** 审核流程选项 */
+export interface AuditOptions {
+  /** 是否启用 AI 语义匹配（Level 4），默认 true */
+  enableAiMatch?: boolean;
+}
 
 // ============================================================
 // 医院资质校验
@@ -450,59 +467,21 @@ export const validateAndFixOcrResult = (
 export const performFullAudit = async (
   imageSource: string | Blob | File[],
   province: string,
-  model: 'gemini' | 'glm-ocr' = 'gemini',
+  model: 'gemini' | 'glm-ocr' | 'glm-ocr-structured' = 'gemini',
   claimCaseId?: string,
-  onProgress?: (step: AuditStep, detail?: string) => void
+  onProgress?: (step: AuditStep, detail?: string) => void,
+  options?: AuditOptions
 ): Promise<InvoiceAuditResult> => {
   // 多图模式：传入 File[] 时委托给 performMultiImageAudit
   if (Array.isArray(imageSource)) {
-    return performMultiImageAudit(imageSource, province, model, claimCaseId, onProgress);
+    return performMultiImageAudit(imageSource, province, model, claimCaseId, onProgress, options);
   }
 
   const invoiceId = `INV-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
   const uploadTime = new Date().toISOString();
 
-  // 确定 ossUrl 和 ossKey — 上传图片到 OSS 持久存储
-  // ossKey 初始化为空字符串，只在上传成功后才赋值，避免产生幽灵路径
   let ossUrl = '';
   let ossKey = '';
-
-  if (typeof imageSource === 'string' && imageSource.startsWith('http')) {
-    // 已经是 OSS/HTTP URL
-    ossUrl = imageSource;
-    try {
-      ossKey = new URL(imageSource).pathname.replace(/^\//, '');
-    } catch {
-      // URL 解析失败，ossKey 保持空字符串
-    }
-  } else if (imageSource instanceof File) {
-    // 将 File 上传到 OSS
-    try {
-      const uploadResult = await uploadToOSS(imageSource, 'invoices');
-      ossUrl = uploadResult.url;
-      ossKey = uploadResult.objectKey;
-    } catch (err) {
-      console.warn('OSS upload failed, continuing audit without persistent image:', err);
-    }
-  } else if (imageSource instanceof Blob) {
-    // 将 Blob 转为 base64 后上传
-    try {
-      const base64 = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const result = (reader.result as string).split(',')[1];
-          resolve(result);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(imageSource);
-      });
-      const uploadResult = await uploadBase64ToOSS(base64, 'image/jpeg', 'invoices');
-      ossUrl = uploadResult.url;
-      ossKey = uploadResult.objectKey;
-    } catch (err) {
-      console.warn('OSS upload failed, continuing audit without persistent image:', err);
-    }
-  }
 
   // 初始化部分结果（用于出错时返回）
   let ocrData: MedicalInvoiceData | undefined;
@@ -524,10 +503,60 @@ export const performFullAudit = async (
   };
 
   const stepLogs: import('../types').StepLog[] = [];
+  const stepTimings: StepTiming[] = [];
+
+  // 辅助：记录子步骤计时
+  const startTiming = (step: string, label: string) => {
+    stepTimings.push({ step, label, startTime: Date.now() });
+  };
+  const endTiming = (detail?: string) => {
+    const last = stepTimings[stepTimings.length - 1];
+    if (last && !last.endTime) {
+      last.endTime = Date.now();
+      last.duration = last.endTime - last.startTime;
+      if (detail) last.detail = detail;
+    }
+  };
 
   try {
-    // ─── 步骤 1: OCR 发票识别 ───────────────────────
-    onProgress?.('ocr');
+    // ─── 步骤 1: 图片上传到 OSS ───────────────────
+    onProgress?.('upload', '上传图片到 OSS...');
+    startTiming('upload', '图片上传');
+
+    if (typeof imageSource === 'string' && imageSource.startsWith('http')) {
+      ossUrl = imageSource;
+      try {
+        ossKey = new URL(imageSource).pathname.replace(/^\//, '');
+      } catch { /* ignore */ }
+    } else if (imageSource instanceof File) {
+      try {
+        const uploadResult = await uploadToOSS(imageSource, 'invoices');
+        ossUrl = uploadResult.url;
+        ossKey = uploadResult.objectKey;
+      } catch (err) {
+        console.warn('OSS upload failed, continuing audit without persistent image:', err);
+      }
+    } else if (imageSource instanceof Blob) {
+      try {
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => { resolve((reader.result as string).split(',')[1]); };
+          reader.onerror = reject;
+          reader.readAsDataURL(imageSource);
+        });
+        const uploadResult = await uploadBase64ToOSS(base64, 'image/jpeg', 'invoices');
+        ossUrl = uploadResult.url;
+        ossKey = uploadResult.objectKey;
+      } catch (err) {
+        console.warn('OSS upload failed, continuing audit without persistent image:', err);
+      }
+    }
+
+    endTiming();
+
+    // ─── 步骤 2: OCR 发票识别 ───────────────────────
+    onProgress?.('ocr', '发票 AI 识别中...');
+    startTiming('ocr', 'OCR 识别');
     const ocrStart = Date.now();
 
     const ocrResult = await recognizeMedicalInvoice(imageSource, model);
@@ -546,24 +575,19 @@ export const performFullAudit = async (
       throw new Error('发票识别结果为空或未识别到费用明细');
     }
 
-    // ─── 步骤 1.5: OCR 后置验证 — 去重 + 金额交叉验证 ───
+    // OCR 后置验证
     const validationResult = validateAndFixOcrResult(ocrData);
-    // 用验证后的数据替换原始数据（去重后的 chargeItems）
     Object.assign(ocrData, validationResult.fixedData);
     validationWarnings = validationResult.warnings;
 
-    if (validationWarnings.length > 0) {
-      console.log(`[Validation] ${validationWarnings.length} warning(s):`,
-        validationWarnings.map(w => `[${w.severity}] ${w.message}`));
-    }
+    endTiming(`${ocrData.chargeItems.length} 项明细`);
 
-    // ─── 步骤 2: 医院资质校验 ───────────────────────
-    onProgress?.('hospital');
+    // ─── 步骤 3: 医院资质校验 ───────────────────────
+    onProgress?.('hospital', '医院资质校验中...');
+    startTiming('hospital', '医院校验');
     const hospitalStart = Date.now();
 
     const hospitalName = ocrData.invoiceInfo?.hospitalName || '';
-
-    // 从后端获取医院数据
     let hospitalData: HospitalInfo[] = [];
     try {
       hospitalData = await api.hospitalInfo.list() as HospitalInfo[];
@@ -585,11 +609,12 @@ export const performFullAudit = async (
       timestamp: new Date().toISOString()
     });
 
-    // ─── 步骤 3: 医保目录匹配 ───────────────────────
-    onProgress?.('catalog');
-    const catalogStart = Date.now();
+    endTiming(hospitalValidation.isQualified ? '合格' : '不合格');
 
-    // 从后端获取医保目录数据
+    // ─── 步骤 4a: 获取医保目录数据 ──────────────────
+    onProgress?.('catalog_fetch', '获取医保目录数据...');
+    startTiming('catalog_fetch', '获取目录');
+
     let catalogData: MedicalInsuranceCatalogItem[] = [];
     try {
       catalogData = await api.medicalInsuranceCatalog.list() as MedicalInsuranceCatalogItem[];
@@ -597,56 +622,79 @@ export const performFullAudit = async (
       console.warn('获取医保目录数据失败，将无法进行目录匹配:', err);
     }
 
-    // 逐项审核费用明细
+    endTiming(`${catalogData.length} 条目录`);
+
+    // ─── 步骤 4b-4c: 批量匹配（快速 + AI） ─────────
+    onProgress?.('catalog_sync', '快速匹配中...');
+    startTiming('catalog_sync', '快速匹配');
+    const catalogStart = Date.now();
+
     const itemAudits: InvoiceItemAudit[] = [];
-    const matchLogs: any[] = []; // Collect detailed match logs
+    const matchLogs: any[] = [];
 
-    for (const chargeItem of ocrData.chargeItems) {
-      const { itemName, quantity, unitPrice, totalPrice } = chargeItem;
+    const itemsForMatch = ocrData.chargeItems.map(item => ({
+      itemName: item.itemName,
+      category: inferItemCategory(item.itemName),
+    }));
 
-      // 推断费用项目类别（药品/诊疗项目/耗材）
-      const category = inferItemCategory(itemName);
-
-      // 匹配医保目录
-      let catalogMatch: InvoiceItemAudit['catalogMatch'];
-      try {
-        catalogMatch = await matchCatalogItem(itemName, province, category, catalogData);
-      } catch (err) {
-        console.warn(`目录匹配失败 [${itemName}]:`, err);
-        catalogMatch = {
-          matched: false,
-          matchConfidence: 0,
-          matchMethod: 'none',
-        };
-      }
-
-      // Log the match attempt
-      matchLogs.push({
-        itemName,
-        category,
-        matchResult: catalogMatch
+    let matchResults: Array<InvoiceItemAudit['catalogMatch']>;
+    try {
+      matchResults = await batchMatchCatalogItems(itemsForMatch, province, catalogData, {
+        enableAiMatch: options?.enableAiMatch ?? true,
+        onProgress: (phase, detail) => {
+          if (phase === 'sync') {
+            onProgress?.('catalog_sync', detail);
+            // 同步阶段完成 → 结束 catalog_sync 计时
+            endTiming(detail);
+            // 如果有 AI 阶段，开始 catalog_ai 计时
+            if (options?.enableAiMatch !== false) {
+              startTiming('catalog_ai', 'AI 匹配');
+            }
+          } else {
+            onProgress?.('catalog_ai', detail);
+          }
+        },
       });
+    } catch (err) {
+      console.warn('批量目录匹配失败，回退到逐项匹配:', err);
+      matchResults = [];
+      for (const item of itemsForMatch) {
+        try {
+          const match = await matchCatalogItem(item.itemName, province, item.category, catalogData);
+          matchResults.push(match);
+        } catch {
+          matchResults.push({ matched: false, matchConfidence: 0, matchMethod: 'none' });
+        }
+      }
+    }
 
-      // 判定审核结论
-      const qualification = determineQualification(
-        catalogMatch,
-        totalPrice,
-        catalogMatch.matchedItem
-      );
+    // 确保 catalog_ai 计时结束（如果存在）
+    const lastTiming = stepTimings[stepTimings.length - 1];
+    if (lastTiming && !lastTiming.endTime) {
+      endTiming();
+    }
 
-      const itemAudit: InvoiceItemAudit = {
-        itemName,
-        quantity,
-        unitPrice,
-        totalPrice,
-        catalogMatch,
+    // 如果 AI 被关闭，catalog_ai 显示为已跳过
+    if (options?.enableAiMatch === false) {
+      stepTimings.push({ step: 'catalog_ai', label: 'AI 匹配', startTime: Date.now(), endTime: Date.now(), duration: 0, detail: '已跳过' });
+    }
+
+    // 逐项组装审核结果（纯同步操作）
+    for (let i = 0; i < ocrData.chargeItems.length; i++) {
+      const chargeItem = ocrData.chargeItems[i];
+      const { itemName, quantity, unitPrice, totalPrice } = chargeItem;
+      const catalogMatch = matchResults[i];
+
+      matchLogs.push({ itemName, category: itemsForMatch[i].category, matchResult: catalogMatch });
+      const qualification = determineQualification(catalogMatch, totalPrice, catalogMatch.matchedItem);
+
+      itemAudits.push({
+        itemName, quantity, unitPrice, totalPrice, catalogMatch,
         isQualified: qualification.isQualified,
         qualificationReason: qualification.qualificationReason,
         estimatedReimbursement: qualification.estimatedReimbursement,
         remarks: qualification.remarks,
-      };
-
-      itemAudits.push(itemAudit);
+      });
     }
 
     stepLogs.push({
@@ -657,8 +705,9 @@ export const performFullAudit = async (
       timestamp: new Date().toISOString()
     });
 
-    // ─── 步骤 4: 汇总统计 ──────────────────────────
-    onProgress?.('summary');
+    // ─── 步骤 5: 汇总统计 ──────────────────────────
+    onProgress?.('summary', '汇总统计中...');
+    startTiming('summary', '汇总统计');
     const summaryStart = Date.now();
 
     const totalAmount = ocrData.totalAmount || itemAudits.reduce((sum, item) => sum + item.totalPrice, 0);
@@ -667,17 +716,11 @@ export const performFullAudit = async (
 
     const summary = {
       totalAmount: Math.round(totalAmount * 100) / 100,
-      qualifiedAmount: Math.round(
-        qualifiedItems.reduce((sum, item) => sum + item.totalPrice, 0) * 100
-      ) / 100,
-      unqualifiedAmount: Math.round(
-        unqualifiedItems.reduce((sum, item) => sum + item.totalPrice, 0) * 100
-      ) / 100,
+      qualifiedAmount: Math.round(qualifiedItems.reduce((sum, item) => sum + item.totalPrice, 0) * 100) / 100,
+      unqualifiedAmount: Math.round(unqualifiedItems.reduce((sum, item) => sum + item.totalPrice, 0) * 100) / 100,
       qualifiedItemCount: qualifiedItems.length,
       unqualifiedItemCount: unqualifiedItems.length,
-      estimatedReimbursement: Math.round(
-        itemAudits.reduce((sum, item) => sum + item.estimatedReimbursement, 0) * 100
-      ) / 100,
+      estimatedReimbursement: Math.round(itemAudits.reduce((sum, item) => sum + item.estimatedReimbursement, 0) * 100) / 100,
     };
 
     stepLogs.push({
@@ -688,30 +731,29 @@ export const performFullAudit = async (
       timestamp: new Date().toISOString()
     });
 
-    // ─── 步骤 5: 构建并保存审核结果 ─────────────────
+    endTiming();
+
+    // ─── 步骤 6: 保存审核结果 ────────────────────────
+    onProgress?.('saving', '保存审核结果...');
+    startTiming('saving', '保存结果');
+
     const result: InvoiceAuditResult = {
-      invoiceId,
-      ossUrl,
-      ossKey,
-      uploadTime,
-      claimCaseId,
-      ocrData,
-      hospitalValidation,
-      itemAudits,
-      summary,
+      invoiceId, ossUrl, ossKey, uploadTime, claimCaseId,
+      ocrData, hospitalValidation, itemAudits, summary,
       auditStatus: 'completed',
       auditTime: new Date().toISOString(),
-      aiLog,
-      stepLogs,
-      validationWarnings,
+      aiLog, stepLogs, validationWarnings, stepTimings,
     };
 
-    // 持久化保存审核结果
     try {
       await api.invoiceAudits.add(result);
     } catch (err) {
       console.warn('保存审核结果失败，但审核流程已完成:', err);
     }
+
+    endTiming();
+    // 将最终 stepTimings 写回 result
+    result.stepTimings = stepTimings;
 
     onProgress?.('done');
 
@@ -720,6 +762,13 @@ export const performFullAudit = async (
     // 任一步骤失败，返回部分结果并标记为失败
     console.error('发票审核流程失败:', error);
     onProgress?.('error');
+
+    // 结束当前正在计时的步骤
+    const lastT = stepTimings[stepTimings.length - 1];
+    if (lastT && !lastT.endTime) {
+      lastT.endTime = Date.now();
+      lastT.duration = lastT.endTime - lastT.startTime;
+    }
 
     const failedResult: InvoiceAuditResult = {
       invoiceId,
@@ -738,6 +787,7 @@ export const performFullAudit = async (
       auditTime: new Date().toISOString(),
       errorMessage: error instanceof Error ? error.message : '审核过程中发生未知错误',
       aiLog,
+      stepTimings,
     };
 
     // 即使失败也尝试保存记录，便于后续排查
@@ -849,14 +899,14 @@ const mergeMultiImageOcrResults = (imageResults: InvoiceImageOcrResult[]): Merge
 const performMultiImageAudit = async (
   images: File[],
   province: string,
-  model: 'gemini' | 'glm-ocr' = 'gemini',
+  model: 'gemini' | 'glm-ocr' | 'glm-ocr-structured' = 'gemini',
   claimCaseId?: string,
-  onProgress?: (step: AuditStep, detail?: string) => void
+  onProgress?: (step: AuditStep, detail?: string) => void,
+  options?: AuditOptions
 ): Promise<InvoiceAuditResult> => {
   const invoiceId = `INV-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
   const uploadTime = new Date().toISOString();
 
-  // 初始化部分结果
   let ocrData: MedicalInvoiceData | undefined;
   let validationWarnings: ValidationWarning[] = [];
   let hospitalValidation: InvoiceAuditResult['hospitalValidation'] = {
@@ -866,25 +916,33 @@ const performMultiImageAudit = async (
   };
   let itemAudits: InvoiceItemAudit[] = [];
   let summary: InvoiceAuditResult['summary'] = {
-    totalAmount: 0,
-    qualifiedAmount: 0,
-    unqualifiedAmount: 0,
-    qualifiedItemCount: 0,
-    unqualifiedItemCount: 0,
-    estimatedReimbursement: 0,
+    totalAmount: 0, qualifiedAmount: 0, unqualifiedAmount: 0,
+    qualifiedItemCount: 0, unqualifiedItemCount: 0, estimatedReimbursement: 0,
   };
   const stepLogs: import('../types').StepLog[] = [];
+  const stepTimings: StepTiming[] = [];
   let imageOcrResults: InvoiceImageOcrResult[] = [];
   let summaryChargeItems: MedicalInvoiceData['chargeItems'] = [];
   let crossValidation: InvoiceAuditResult['crossValidation'] | undefined;
-
-  // 第一张图片的 OSS 信息（向后兼容）
   let ossUrl = '';
   let ossKey = '';
 
+  const startTiming = (step: string, label: string) => {
+    stepTimings.push({ step, label, startTime: Date.now() });
+  };
+  const endTiming = (detail?: string) => {
+    const last = stepTimings[stepTimings.length - 1];
+    if (last && !last.endTime) {
+      last.endTime = Date.now();
+      last.duration = last.endTime - last.startTime;
+      if (detail) last.detail = detail;
+    }
+  };
+
   try {
-    // ─── 步骤 0: 并行上传所有图片到 OSS ───────────────
-    onProgress?.('ocr', `上传图片中 (0/${images.length})`);
+    // ─── 步骤 1: 并行上传所有图片到 OSS ───────────────
+    onProgress?.('upload', `上传图片中 (${images.length} 张)...`);
+    startTiming('upload', '图片上传');
 
     const ossResults = await Promise.all(
       images.map(async (file) => {
@@ -898,11 +956,13 @@ const performMultiImageAudit = async (
       })
     );
 
-    // 取第一张图片的 OSS 信息（向后兼容 ossUrl/ossKey）
     ossUrl = ossResults[0]?.url || '';
     ossKey = ossResults[0]?.objectKey || '';
+    endTiming(`${images.length} 张图片`);
 
-    // ─── 步骤 1: 逐张 OCR 识别 ───────────────────────
+    // ─── 步骤 2: OCR 识别 ───────────────────────────
+    onProgress?.('ocr', `发票识别中 (0/${images.length})...`);
+    startTiming('ocr', 'OCR 识别');
     const ocrStart = Date.now();
 
     const ocrResults = await recognizeMultipleInvoiceImages(
@@ -913,7 +973,6 @@ const performMultiImageAudit = async (
       }
     );
 
-    // 构建 InvoiceImageOcrResult[]
     imageOcrResults = ocrResults.map((result, index) => ({
       imageIndex: index,
       ossUrl: ossResults[index]?.url || '',
@@ -929,8 +988,7 @@ const performMultiImageAudit = async (
       input: { imageCount: images.length, model, fileNames: images.map(f => f.name) },
       output: {
         imageOcrResults: imageOcrResults.map(r => ({
-          fileName: r.fileName,
-          documentType: r.documentType,
+          fileName: r.fileName, documentType: r.documentType,
           chargeItemCount: r.ocrData.chargeItems?.length || 0,
         })),
       },
@@ -938,7 +996,7 @@ const performMultiImageAudit = async (
       timestamp: new Date().toISOString(),
     });
 
-    // ─── 步骤 1.5: 多图合并 ─────────────────────────
+    // 多图合并
     const mergeResult = mergeMultiImageOcrResults(imageOcrResults);
     ocrData = mergeResult.mergedData;
     summaryChargeItems = mergeResult.summaryChargeItems;
@@ -948,31 +1006,26 @@ const performMultiImageAudit = async (
       throw new Error('所有图片中均未识别到费用明细项目');
     }
 
-    // 如果汇总 vs 明细金额不一致，生成警告
     if (crossValidation && !crossValidation.isConsistent) {
       validationWarnings.push({
-        type: 'summary_detail_mismatch',
-        severity: 'warning',
+        type: 'summary_detail_mismatch', severity: 'warning',
         message: `汇总发票金额 (${crossValidation.summaryTotal.toFixed(2)}) 与明细合计 (${crossValidation.detailItemsTotal.toFixed(2)}) 存在 ${crossValidation.difference.toFixed(2)} 元差异`,
-        details: {
-          expected: crossValidation.summaryTotal,
-          actual: crossValidation.detailItemsTotal,
-          difference: crossValidation.difference,
-        },
+        details: { expected: crossValidation.summaryTotal, actual: crossValidation.detailItemsTotal, difference: crossValidation.difference },
       });
     }
 
-    // ─── 步骤 1.75: OCR 后置验证（对合并后的明细项） ─────
     const validationResult = validateAndFixOcrResult(ocrData);
     Object.assign(ocrData, validationResult.fixedData);
     validationWarnings = [...validationWarnings, ...validationResult.warnings];
 
-    // ─── 步骤 2: 医院资质校验 ───────────────────────
-    onProgress?.('hospital');
+    endTiming(`${images.length} 张图片，${ocrData.chargeItems.length} 项明细`);
+
+    // ─── 步骤 3: 医院资质校验 ───────────────────────
+    onProgress?.('hospital', '医院资质校验中...');
+    startTiming('hospital', '医院校验');
     const hospitalStart = Date.now();
 
     const hospitalName = ocrData.invoiceInfo?.hospitalName || '';
-
     let hospitalData: HospitalInfo[] = [];
     try {
       hospitalData = await api.hospitalInfo.list() as HospitalInfo[];
@@ -994,9 +1047,11 @@ const performMultiImageAudit = async (
       timestamp: new Date().toISOString(),
     });
 
-    // ─── 步骤 3: 医保目录匹配（仅明细项） ──────────────
-    onProgress?.('catalog');
-    const catalogStart = Date.now();
+    endTiming(hospitalValidation.isQualified ? '合格' : '不合格');
+
+    // ─── 步骤 4a: 获取医保目录数据 ──────────────────
+    onProgress?.('catalog_fetch', '获取医保目录数据...');
+    startTiming('catalog_fetch', '获取目录');
 
     let catalogData: MedicalInsuranceCatalogItem[] = [];
     try {
@@ -1005,31 +1060,66 @@ const performMultiImageAudit = async (
       console.warn('获取医保目录数据失败:', err);
     }
 
+    endTiming(`${catalogData.length} 条目录`);
+
+    // ─── 步骤 4b-4c: 批量匹配 ──────────────────────
+    onProgress?.('catalog_sync', '快速匹配中...');
+    startTiming('catalog_sync', '快速匹配');
+    const catalogStart = Date.now();
+
     itemAudits = [];
     const matchLogs: any[] = [];
 
-    for (const chargeItem of ocrData.chargeItems) {
-      const { itemName, quantity, unitPrice, totalPrice } = chargeItem;
-      const category = inferItemCategory(itemName);
+    const itemsForMatch = ocrData.chargeItems.map(item => ({
+      itemName: item.itemName,
+      category: inferItemCategory(item.itemName),
+    }));
 
-      let catalogMatch: InvoiceItemAudit['catalogMatch'];
-      try {
-        catalogMatch = await matchCatalogItem(itemName, province, category, catalogData);
-      } catch (err) {
-        console.warn(`目录匹配失败 [${itemName}]:`, err);
-        catalogMatch = { matched: false, matchConfidence: 0, matchMethod: 'none' };
+    let matchResults: Array<InvoiceItemAudit['catalogMatch']>;
+    try {
+      matchResults = await batchMatchCatalogItems(itemsForMatch, province, catalogData, {
+        enableAiMatch: options?.enableAiMatch ?? true,
+        onProgress: (phase, detail) => {
+          if (phase === 'sync') {
+            onProgress?.('catalog_sync', detail);
+            endTiming(detail);
+            if (options?.enableAiMatch !== false) {
+              startTiming('catalog_ai', 'AI 匹配');
+            }
+          } else {
+            onProgress?.('catalog_ai', detail);
+          }
+        },
+      });
+    } catch (err) {
+      console.warn('批量目录匹配失败，回退到逐项匹配:', err);
+      matchResults = [];
+      for (const item of itemsForMatch) {
+        try {
+          const match = await matchCatalogItem(item.itemName, province, item.category, catalogData);
+          matchResults.push(match);
+        } catch {
+          matchResults.push({ matched: false, matchConfidence: 0, matchMethod: 'none' });
+        }
       }
+    }
 
-      matchLogs.push({ itemName, category, matchResult: catalogMatch });
+    // 确保最后一个 timing 结束
+    const lastT2 = stepTimings[stepTimings.length - 1];
+    if (lastT2 && !lastT2.endTime) endTiming();
 
+    if (options?.enableAiMatch === false) {
+      stepTimings.push({ step: 'catalog_ai', label: 'AI 匹配', startTime: Date.now(), endTime: Date.now(), duration: 0, detail: '已跳过' });
+    }
+
+    for (let i = 0; i < ocrData.chargeItems.length; i++) {
+      const chargeItem = ocrData.chargeItems[i];
+      const { itemName, quantity, unitPrice, totalPrice } = chargeItem;
+      const catalogMatch = matchResults[i];
+      matchLogs.push({ itemName, category: itemsForMatch[i].category, matchResult: catalogMatch });
       const qualification = determineQualification(catalogMatch, totalPrice, catalogMatch.matchedItem);
-
       itemAudits.push({
-        itemName,
-        quantity,
-        unitPrice,
-        totalPrice,
-        catalogMatch,
+        itemName, quantity, unitPrice, totalPrice, catalogMatch,
         isQualified: qualification.isQualified,
         qualificationReason: qualification.qualificationReason,
         estimatedReimbursement: qualification.estimatedReimbursement,
@@ -1045,9 +1135,9 @@ const performMultiImageAudit = async (
       timestamp: new Date().toISOString(),
     });
 
-    // ─── 步骤 4: 汇总统计 ──────────────────────────
-    onProgress?.('summary');
-    const summaryStart = Date.now();
+    // ─── 步骤 5: 汇总统计 ──────────────────────────
+    onProgress?.('summary', '汇总统计中...');
+    startTiming('summary', '汇总统计');
 
     const totalAmount = ocrData.totalAmount || itemAudits.reduce((sum, item) => sum + item.totalPrice, 0);
     const qualifiedItems = itemAudits.filter((item) => item.isQualified);
@@ -1066,29 +1156,24 @@ const performMultiImageAudit = async (
       step: 'summary',
       input: { itemAuditsCount: itemAudits.length },
       output: summary,
-      duration: Date.now() - summaryStart,
+      duration: Date.now() - Date.now(),
       timestamp: new Date().toISOString(),
     });
 
-    // ─── 步骤 5: 构建并保存审核结果 ─────────────────
+    endTiming();
+
+    // ─── 步骤 6: 保存审核结果 ────────────────────────
+    onProgress?.('saving', '保存审核结果...');
+    startTiming('saving', '保存结果');
+
     const result: InvoiceAuditResult = {
-      invoiceId,
-      ossUrl,
-      ossKey,
-      uploadTime,
-      claimCaseId,
-      ocrData,
-      hospitalValidation,
-      itemAudits,
-      summary,
+      invoiceId, ossUrl, ossKey, uploadTime, claimCaseId,
+      ocrData, hospitalValidation, itemAudits, summary,
       auditStatus: 'completed',
       auditTime: new Date().toISOString(),
       aiLog: imageOcrResults[0]?.aiLog,
-      stepLogs,
-      validationWarnings,
-      // 多图字段
-      imageCount: images.length,
-      imageOcrResults,
+      stepLogs, validationWarnings, stepTimings,
+      imageCount: images.length, imageOcrResults,
       summaryChargeItems: summaryChargeItems.length > 0 ? summaryChargeItems : undefined,
       crossValidation,
     };
@@ -1099,28 +1184,30 @@ const performMultiImageAudit = async (
       console.warn('保存审核结果失败，但审核流程已完成:', err);
     }
 
+    endTiming();
+    result.stepTimings = stepTimings;
+
     onProgress?.('done');
     return result;
   } catch (error) {
     console.error('多图发票审核流程失败:', error);
     onProgress?.('error');
 
+    const lastTErr = stepTimings[stepTimings.length - 1];
+    if (lastTErr && !lastTErr.endTime) {
+      lastTErr.endTime = Date.now();
+      lastTErr.duration = lastTErr.endTime - lastTErr.startTime;
+    }
+
     const failedResult: InvoiceAuditResult = {
-      invoiceId,
-      ossUrl,
-      ossKey,
-      uploadTime,
-      claimCaseId,
+      invoiceId, ossUrl, ossKey, uploadTime, claimCaseId,
       ocrData: ocrData || { basicInfo: { name: '', age: '' }, chargeItems: [] },
-      hospitalValidation,
-      itemAudits,
-      summary,
+      hospitalValidation, itemAudits, summary,
       auditStatus: 'failed',
       auditTime: new Date().toISOString(),
       errorMessage: error instanceof Error ? error.message : '审核过程中发生未知错误',
       aiLog: imageOcrResults[0]?.aiLog,
-      stepLogs,
-      validationWarnings,
+      stepLogs, validationWarnings, stepTimings,
       imageCount: images.length,
       imageOcrResults: imageOcrResults.length > 0 ? imageOcrResults : undefined,
     };
@@ -1132,6 +1219,160 @@ const performMultiImageAudit = async (
     }
 
     return failedResult;
+  }
+};
+
+// ============================================================
+// 通用材料审核流程（3 步简化流程）
+// ============================================================
+
+/**
+ * 执行通用材料审核流程（非发票类材料）
+ *
+ * 简化 3 步流程：
+ * 1. upload — 上传图片到 OSS
+ * 2. ocr    — 调用 AI OCR 识别 + 审核（使用材料自带的 prompt + schema）
+ * 3. saving — 保存审核结果
+ *
+ * @param imageSource - 图片来源
+ * @param model - AI 模型
+ * @param materialType - 材料类型 ID
+ * @param materialName - 材料名称
+ * @param aiAuditPrompt - 材料的 AI 审核提示词
+ * @param jsonSchema - 材料的 JSON Schema
+ * @param onProgress - 步骤进度回调
+ * @returns 通用材料审核结果
+ */
+export const performMaterialAudit = async (
+  imageSource: string | Blob | File,
+  model: 'gemini' | 'glm-ocr' | 'paddle-ocr',
+  materialType: string,
+  materialName: string,
+  aiAuditPrompt: string,
+  jsonSchema: string,
+  onProgress?: (step: AuditStep, detail?: string) => void
+): Promise<MaterialAuditResult> => {
+  const auditId = `MAT-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+  const uploadTime = new Date().toISOString();
+
+  let ossUrl = '';
+  let ossKey = '';
+  const stepTimings: StepTiming[] = [];
+
+  const startTiming = (step: string, label: string) => {
+    stepTimings.push({ step, label, startTime: Date.now() });
+  };
+  const endTiming = (detail?: string) => {
+    const last = stepTimings[stepTimings.length - 1];
+    if (last && !last.endTime) {
+      last.endTime = Date.now();
+      last.duration = last.endTime - last.startTime;
+      if (detail) last.detail = detail;
+    }
+  };
+
+  try {
+    // ─── 步骤 1: 图片上传到 OSS ───────────────────
+    onProgress?.('upload', '上传图片到 OSS...');
+    startTiming('upload', '图片上传');
+
+    if (typeof imageSource === 'string' && imageSource.startsWith('http')) {
+      ossUrl = imageSource;
+      try { ossKey = new URL(imageSource).pathname.replace(/^\//, ''); } catch { /* ignore */ }
+    } else if (imageSource instanceof File) {
+      try {
+        const uploadResult = await uploadToOSS(imageSource, 'materials');
+        ossUrl = uploadResult.url;
+        ossKey = uploadResult.objectKey;
+      } catch (err) {
+        console.warn('OSS upload failed, continuing audit without persistent image:', err);
+      }
+    } else if (imageSource instanceof Blob) {
+      try {
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => { resolve((reader.result as string).split(',')[1]); };
+          reader.onerror = reject;
+          reader.readAsDataURL(imageSource);
+        });
+        const uploadResult = await uploadBase64ToOSS(base64, 'image/jpeg', 'materials');
+        ossUrl = uploadResult.url;
+        ossKey = uploadResult.objectKey;
+      } catch (err) {
+        console.warn('OSS upload failed, continuing audit without persistent image:', err);
+      }
+    }
+
+    endTiming();
+
+    // ─── 步骤 2: AI OCR 识别 + 审核 ─────────────────
+    onProgress?.('ocr', `「${materialName}」识别中...`);
+    startTiming('ocr', 'OCR 识别');
+
+    const ocrResult = await recognizeClaimMaterial(
+      imageSource,
+      materialName,
+      aiAuditPrompt,
+      jsonSchema,
+      model
+    );
+
+    endTiming();
+
+    // ─── 步骤 3: 保存审核结果 ────────────────────────
+    onProgress?.('saving', '保存审核结果...');
+    startTiming('saving', '保存结果');
+
+    const result: MaterialAuditResult = {
+      auditId,
+      materialType,
+      materialName,
+      ossUrl,
+      ossKey,
+      uploadTime,
+      extractedData: ocrResult.extractedData,
+      auditConclusion: ocrResult.auditConclusion,
+      auditStatus: 'completed',
+      aiLog: ocrResult.log,
+      stepTimings,
+    };
+
+    // 复用 invoiceAudits 存储（存入相同的持久化资源）
+    try {
+      await api.invoiceAudits.add(result as any);
+    } catch (err) {
+      console.warn('保存材料审核结果失败，但审核流程已完成:', err);
+    }
+
+    endTiming();
+    result.stepTimings = stepTimings;
+
+    onProgress?.('done');
+    return result;
+  } catch (error) {
+    console.error('材料审核流程失败:', error);
+    onProgress?.('error');
+
+    // 结束当前正在计时的步骤
+    const lastT = stepTimings[stepTimings.length - 1];
+    if (lastT && !lastT.endTime) {
+      lastT.endTime = Date.now();
+      lastT.duration = lastT.endTime - lastT.startTime;
+    }
+
+    return {
+      auditId,
+      materialType,
+      materialName,
+      ossUrl,
+      ossKey,
+      uploadTime,
+      extractedData: {},
+      auditConclusion: '',
+      auditStatus: 'failed',
+      errorMessage: error instanceof Error ? error.message : '审核过程中发生未知错误',
+      stepTimings,
+    };
   }
 };
 

@@ -98,6 +98,9 @@ const parseBody = (req) => {
 };
 
 const GLM_OCR_URL = 'https://open.bigmodel.cn/api/paas/v4/layout_parsing';
+const GLM_CHAT_URL = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
+// RapidOCR 服务地址（启动: python server/paddle_ocr_server.py）
+const PADDLE_OCR_URL = process.env.PADDLE_OCR_URL || 'http://localhost:8866/predict/ocr_system';
 
 const getGeminiApiKey = () => process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || process.env.API_KEY;
 
@@ -107,6 +110,39 @@ const formatErrorMessage = (error) => {
         return causeMessage ? `${error.message} | Cause: ${causeMessage}` : error.message;
     }
     return 'Unknown error';
+};
+
+const extractJsonFromText = (text) => {
+    if (!text || typeof text !== 'string') return '';
+    const cleaned = text.replace(/```json/gi, '```').replace(/```/g, '').trim();
+    const first = cleaned.indexOf('{');
+    const last = cleaned.lastIndexOf('}');
+    if (first >= 0 && last > first) {
+        return cleaned.slice(first, last + 1);
+    }
+    return cleaned;
+};
+
+const callGlmChat = async ({ apiKey, model, messages, temperature = 0 }) => {
+    const response = await fetch(GLM_CHAT_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+            model,
+            messages,
+            temperature
+        })
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`GLM Chat Failed: ${errorText}`);
+    }
+
+    return response.json();
 };
 
 const hasInlineData = (contents) => {
@@ -119,8 +155,8 @@ const getGeminiModelCandidates = (requested, contents) => {
     if (requested) candidates.push(requested);
     const envDefault = process.env.GEMINI_MODEL || process.env.DEFAULT_GEMINI_MODEL;
     if (envDefault && !candidates.includes(envDefault)) candidates.push(envDefault);
-    const visionFallbacks = ['gemini-1.5-flash-latest', 'gemini-1.5-pro-latest', 'gemini-1.0-pro-vision'];
-    const textFallbacks = ['gemini-1.5-flash-latest', 'gemini-1.5-pro-latest', 'gemini-1.0-pro'];
+    const visionFallbacks = ['gemini-2.5-flash', 'gemini-2.5-pro'];
+    const textFallbacks = ['gemini-2.5-flash', 'gemini-2.5-pro'];
     const fallbackList = hasInlineData(contents) ? visionFallbacks : textFallbacks;
     fallbackList.forEach(model => {
         if (!candidates.includes(model)) candidates.push(model);
@@ -174,6 +210,7 @@ const allowedResources = [
     'medical-insurance-catalog',  // 医保目录
     'hospital-info',              // 医院信息
     'invoice-audits',             // 发票审核记录
+    'user-operation-logs',        // 用户操作日志
 ];
 
 export const handleApiRequest = async (req, res) => {
@@ -321,7 +358,84 @@ export const handleApiRequest = async (req, res) => {
                 return;
             }
 
-            if (mode === 'glm-ocr') {
+            // PaddleOCR 模式
+            if (mode === 'paddle-ocr') {
+                const ocrStartTime = Date.now();
+                let paddleResponse;
+                try {
+                    paddleResponse = await fetch(PADDLE_OCR_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            images: [`data:${mimeType};base64,${base64Data}`]
+                        })
+                    });
+                } catch (error) {
+                    res.statusCode = 502;
+                    res.end(JSON.stringify({ error: `Paddle OCR fetch failed: ${formatErrorMessage(error)}` }));
+                    return;
+                }
+
+                if (!paddleResponse.ok) {
+                    const errorText = await paddleResponse.text();
+                    res.statusCode = paddleResponse.status;
+                    res.end(JSON.stringify({ error: `Paddle OCR Failed: ${errorText}` }));
+                    return;
+                }
+
+                const paddleResult = await paddleResponse.json();
+                const ocrDuration = Date.now() - ocrStartTime;
+                
+                // Paddle OCR 返回结果格式: { results: [{ data: [{ text, confidence, text_region }] }] }
+                const ocrTexts = (paddleResult.results?.[0]?.data || []).map(item => item.text).filter(Boolean);
+                const ocrText = ocrTexts.join('\n');
+
+                const schemaText = JSON.stringify(invoiceSchema || {}, null, 2);
+                const parsePrompt = `以下是中国医疗发票的 OCR 识别结果。请从中提取结构化信息。
+
+## 重要规则
+1. 只提取 OCR 文本中**明确存在**的信息，严禁补充或编造
+2. 费用明细项目**不要重复**，同一项目只提取一次
+3. 注意区分"个人自付"(personalSelfPayment)和"个人自费"(personalSelfExpense)
+4. 医院名称优先从票面印刷文字提取
+5. 只返回 JSON，不要使用代码块或多余文字
+
+## OCR 原文
+${ocrText}
+
+## 输出 JSON 格式
+${schemaText}
+
+## 输出规范
+- 日期格式：YYYY-MM-DD
+- 数字字段：纯数字，不含货币符号或千分位逗号
+- 无法识别的字段：字符串用 ""，数字用 0`;
+
+                const parsingStartTime = Date.now();
+                const parseResponse = await callGemini({
+                    model: geminiModel || 'gemini-2.5-flash',
+                    contents: { parts: [{ text: parsePrompt }] },
+                    temperature: 0
+                });
+                const parsingDuration = Date.now() - parsingStartTime;
+
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({
+                    text: parseResponse.text || '{}',
+                    usageMetadata: {
+                        ocr: { textLength: ocrText.length },
+                        parsing: parseResponse.usageMetadata
+                    },
+                    timing: {
+                        ocrDuration,
+                        parsingDuration,
+                        totalDuration: ocrDuration + parsingDuration
+                    }
+                }));
+                return;
+            }
+
+            if (mode === 'glm-ocr' || mode === 'glm-ocr-structured') {
                 const glmApiKey = process.env.GLM_OCR_API_KEY || process.env.ZHIPU_API_KEY;
                 if (!glmApiKey) {
                     res.statusCode = 500;
@@ -329,6 +443,7 @@ export const handleApiRequest = async (req, res) => {
                     return;
                 }
 
+                const ocrStartTime = Date.now();
                 const dataUri = `data:${mimeType};base64,${base64Data}`;
                 let glmResponse;
                 try {
@@ -357,6 +472,7 @@ export const handleApiRequest = async (req, res) => {
                 }
 
                 const glmResult = await glmResponse.json();
+                const ocrDuration = Date.now() - ocrStartTime;
                 const ocrText = glmResult.md_results || '';
                 const schemaText = JSON.stringify(invoiceSchema || {}, null, 2);
                 const parsePrompt = `以下是中国医疗发票的 OCR 识别结果（Markdown 格式）。请从中提取结构化信息。
@@ -367,6 +483,7 @@ export const handleApiRequest = async (req, res) => {
 3. 注意区分"个人自付"（personalSelfPayment，医保目录内）和"个人自费"（personalSelfExpense，医保目录外）
 4. 医院名称优先从票面印刷文字提取，印章文字仅作参考且不要优先采用
 5. 忽略 OCR 排版干扰，专注于内容
+6. 只返回 JSON，不要使用代码块或多余文字
 
 ## OCR 原文
 ${ocrText}
@@ -379,13 +496,44 @@ ${schemaText}
 - 数字字段：纯数字，不含货币符号或千分位逗号
 - 无法识别的字段：字符串用 ""，数字用 0`;
 
+                if (mode === 'glm-ocr-structured') {
+                    const parsingStartTime = Date.now();
+                    const glmTextModel = process.env.GLM_TEXT_MODEL || process.env.ZHIPU_MODEL || 'glm-4.7-flash';
+                    const glmParseResponse = await callGlmChat({
+                        apiKey: glmApiKey,
+                        model: glmTextModel,
+                        messages: [{ role: 'user', content: parsePrompt }],
+                        temperature: 0
+                    });
+                    const parsingDuration = Date.now() - parsingStartTime;
+                    const glmContent = glmParseResponse?.choices?.[0]?.message?.content || '';
+                    const extracted = extractJsonFromText(glmContent);
+
+                    res.setHeader('Content-Type', 'application/json');
+                    res.end(JSON.stringify({
+                        text: extracted || '{}',
+                        usageMetadata: {
+                            ocr: glmResult.usage,
+                            parsing: glmParseResponse.usage
+                        },
+                        timing: {
+                            ocrDuration,
+                            parsingDuration,
+                            totalDuration: ocrDuration + parsingDuration
+                        }
+                    }));
+                    return;
+                }
+
+                const parsingStartTime = Date.now();
                 const parseResponse = await callGemini({
-                    model: geminiModel || 'gemini-1.5-flash',
+                    model: geminiModel || 'gemini-2.5-flash',
                     contents: {
                         parts: [{ text: parsePrompt }]
                     },
                     temperature: 0
                 });
+                const parsingDuration = Date.now() - parsingStartTime;
 
                 res.setHeader('Content-Type', 'application/json');
                 res.end(JSON.stringify({
@@ -393,13 +541,18 @@ ${schemaText}
                     usageMetadata: {
                         ocr: glmResult.usage,
                         parsing: parseResponse.usageMetadata
+                    },
+                    timing: {
+                        ocrDuration,
+                        parsingDuration,
+                        totalDuration: ocrDuration + parsingDuration
                     }
                 }));
                 return;
             }
 
             const response = await callGemini({
-                model: geminiModel || 'gemini-1.5-flash',
+                model: geminiModel || 'gemini-2.5-flash',
                 contents: {
                     parts: [
                         { inlineData: { mimeType, data: base64Data } },
@@ -446,10 +599,20 @@ ${schemaText}
         } else if (req.method === 'POST') {
             const newItem = await parseBody(req);
             const data = readData(resource);
-            data.push(newItem);
-            writeData(resource, data);
-            res.statusCode = 201;
-            res.end(JSON.stringify({ success: true, data: newItem }));
+
+            // 特殊处理：批量日志插入
+            if (resource === 'user-operation-logs' && newItem.logs && Array.isArray(newItem.logs)) {
+                data.push(...newItem.logs);
+                writeData(resource, data);
+                res.statusCode = 201;
+                res.end(JSON.stringify({ success: true, count: newItem.logs.length }));
+            } else {
+                // 原有逻辑：单个插入
+                data.push(newItem);
+                writeData(resource, data);
+                res.statusCode = 201;
+                res.end(JSON.stringify({ success: true, data: newItem }));
+            }
         } else if (req.method === 'PUT') {
             const payload = await parseBody(req);
             if (id) {

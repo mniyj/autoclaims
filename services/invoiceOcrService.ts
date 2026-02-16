@@ -22,7 +22,7 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
  */
 export const recognizeMedicalInvoice = async (
   imageSource: string | Blob,
-  model: 'gemini' | 'glm-ocr' = 'gemini'
+  model: 'gemini' | 'glm-ocr' | 'glm-ocr-structured' | 'paddle-ocr' = 'gemini'
 ): Promise<{ data: MedicalInvoiceData; log: AIInteractionLog }> => {
   const geminiModel = 'gemini-2.5-flash';
 
@@ -153,7 +153,7 @@ ${JSON.stringify(invoiceSchema, null, 2)}
     let usageMetadata: any;
 
     console.group('Invoice OCR Request');
-    console.log('Model:', model === 'glm-ocr' ? `glm-ocr + ${geminiModel}` : geminiModel);
+    console.log('Model:', model === 'glm-ocr' ? `glm-ocr + ${geminiModel}` : model === 'glm-ocr-structured' ? 'glm-ocr + glm' : model === 'paddle-ocr' ? `rapid-ocr + ${geminiModel}` : geminiModel);
     console.groupEnd();
 
     const response = await fetch('/api/invoice-ocr', {
@@ -177,6 +177,7 @@ ${JSON.stringify(invoiceSchema, null, 2)}
 
     responseText = payload.text || '{}';
     usageMetadata = payload.usageMetadata;
+    const timing = payload.timing; // OCR + 格式化分步耗时
 
     const duration = Date.now() - start;
     
@@ -204,7 +205,8 @@ ${JSON.stringify(invoiceSchema, null, 2)}
         response: responseText,
         duration,
         timestamp: new Date().toISOString(),
-        usageMetadata
+        usageMetadata,
+        timing
       }
     };
   } catch (error) {
@@ -224,20 +226,147 @@ ${JSON.stringify(invoiceSchema, null, 2)}
  */
 export const recognizeMultipleInvoiceImages = async (
   images: Array<{ source: File | string | Blob; fileName: string }>,
-  model: 'gemini' | 'glm-ocr' = 'gemini',
+  model: 'gemini' | 'glm-ocr' | 'glm-ocr-structured' | 'paddle-ocr' = 'gemini',
   onImageProgress?: (completedCount: number, total: number) => void
 ): Promise<Array<{ data: MedicalInvoiceData; log: AIInteractionLog; fileName: string }>> => {
-  const results: Array<{ data: MedicalInvoiceData; log: AIInteractionLog; fileName: string }> = [];
+  const CONCURRENCY = 2; // 最大并发数（避免触发 API 限流）
+  const results: Array<{ data: MedicalInvoiceData; log: AIInteractionLog; fileName: string } | null> = new Array(images.length).fill(null);
+  let completed = 0;
 
-  // 顺序处理每张图片，避免 API 并发限制
-  for (let i = 0; i < images.length; i++) {
-    const { source, fileName } = images[i];
-    const result = await recognizeMedicalInvoice(source, model);
-    results.push({ ...result, fileName });
-    onImageProgress?.(i + 1, images.length);
+  // 分批并发处理
+  for (let i = 0; i < images.length; i += CONCURRENCY) {
+    const batch = images.slice(i, i + CONCURRENCY);
+    const batchResults = await Promise.all(
+      batch.map(async ({ source, fileName }) => {
+        const result = await recognizeMedicalInvoice(source, model);
+        completed++;
+        onImageProgress?.(completed, images.length);
+        return { ...result, fileName };
+      })
+    );
+    batchResults.forEach((r, j) => { results[i + j] = r; });
   }
 
-  return results;
+  return results as Array<{ data: MedicalInvoiceData; log: AIInteractionLog; fileName: string }>;
+};
+
+/**
+ * 通用理赔材料 OCR 识别 + 审核
+ * 使用材料自身的 aiAuditPrompt 和 jsonSchema 驱动 AI 识别
+ *
+ * @param imageSource - 图片来源（base64 / Blob / OSS URL）
+ * @param materialName - 材料名称
+ * @param aiAuditPrompt - 材料定义中的 AI 审核提示词
+ * @param jsonSchema - 材料定义中的 JSON Schema（字符串）
+ * @param model - AI 模型选择
+ * @returns 提取的结构化数据、审核结论和 AI 交互日志
+ */
+export const recognizeClaimMaterial = async (
+  imageSource: string | Blob,
+  materialName: string,
+  aiAuditPrompt: string,
+  jsonSchema: string,
+  model: 'gemini' | 'glm-ocr' | 'paddle-ocr' = 'gemini'
+): Promise<{ extractedData: Record<string, any>; auditConclusion: string; log: AIInteractionLog }> => {
+  const geminiModel = 'gemini-2.5-flash';
+
+  let base64Data: string;
+  let mimeType = 'image/jpeg';
+
+  // 处理不同的输入类型（复用现有逻辑）
+  if (typeof imageSource === 'string') {
+    if (imageSource.startsWith('http://') || imageSource.startsWith('https://')) {
+      const response = await fetch(imageSource);
+      const blob = await response.blob();
+      base64Data = await blobToBase64(blob);
+      mimeType = blob.type || 'image/jpeg';
+    } else {
+      base64Data = imageSource.replace(/^data:image\/\w+;base64,/, '');
+    }
+  } else {
+    base64Data = await blobToBase64(imageSource);
+    mimeType = imageSource.type || 'image/jpeg';
+  }
+
+  // 构造提示词：融合材料的 aiAuditPrompt 和 jsonSchema
+  const prompt = `你是一个专业的保险理赔材料审核系统。请对上传的「${materialName}」进行 OCR 识别和审核。
+
+## 提取要求
+请严格根据图片中可见的文字内容提取信息，按以下 JSON Schema 结构提取：
+${jsonSchema}
+
+## 审核要求
+${aiAuditPrompt}
+
+## 重要规则
+1. 只提取图片中**明确可见**的文字和数字，严禁补充、推测或编造任何信息
+2. 如果某个区域模糊不清或被遮挡，对应字段返回空字符串，**不要猜测**
+3. 数字必须严格按图片显示提取
+4. 日期格式统一为 YYYY-MM-DD
+5. 无法识别的字段：字符串用空字符串 ""，数字用 0
+
+## 输出格式
+请严格返回以下 JSON 格式（不要包含 markdown 代码块标记）：
+{
+  "extractedData": { ... 按 schema 提取的字段 },
+  "auditConclusion": "审核结论文本，包含提取摘要和校验结果"
+}`;
+
+  try {
+    const start = Date.now();
+
+    console.group('Material OCR Request');
+    console.log('Material:', materialName);
+    console.log('Model:', model);
+    console.groupEnd();
+
+    const response = await fetch('/api/invoice-ocr', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        mode: model,
+        base64Data,
+        mimeType,
+        prompt,
+        geminiModel,
+      })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const message = payload?.error || payload?.message || response.statusText || '材料识别服务异常';
+      throw new Error(message);
+    }
+
+    const responseText = payload.text || '{}';
+    const usageMetadata = payload.usageMetadata;
+    const timing = payload.timing;
+    const duration = Date.now() - start;
+
+    console.group('Material OCR Response');
+    console.log('Duration:', duration, 'ms');
+    console.log('Raw JSON:', responseText);
+    console.groupEnd();
+
+    const result = JSON.parse(responseText);
+
+    return {
+      extractedData: result.extractedData || result,
+      auditConclusion: result.auditConclusion || '识别完成',
+      log: {
+        model,
+        prompt,
+        response: responseText,
+        duration,
+        timestamp: new Date().toISOString(),
+        usageMetadata,
+        timing,
+      }
+    };
+  } catch (error) {
+    console.error('Claim material recognition failed:', error);
+    throw new Error(`材料识别失败: ${error instanceof Error ? error.message : '未知错误'}`);
+  }
 };
 
 /**
@@ -248,7 +377,7 @@ export const recognizeMultipleInvoiceImages = async (
 export const quickRecognizeInvoiceType = async (
   imageSource: string | Blob
 ): Promise<{ category: string; needsDeepAnalysis: boolean }> => {
-  const model = 'gemini-1.5-flash-latest';
+  const model = 'gemini-2.5-flash';
 
   let base64Data: string;
   let mimeType = 'image/jpeg';

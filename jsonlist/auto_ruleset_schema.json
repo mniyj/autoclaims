@@ -1,0 +1,2471 @@
+{
+  "ruleset_id": "RS-AUTO-2026-PICC0088",
+  "product_line": "AUTO",
+  "policy_info": {
+    "policy_no": "PDZA202632010000088888",
+    "product_code": "PICC_AUTO_COMP_2020",
+    "product_name": "中国人保机动车商业保险",
+    "plan_name": null,
+    "insurer": "中国人民财产保险股份有限公司",
+    "effective_date": "2026-01-15",
+    "expiry_date": "2027-01-14",
+    "payment_mode": "ANNUAL",
+    "insured_subject": {
+      "subject_type": "VEHICLE",
+      "vehicle": {
+        "plate_no": "沪A·88888",
+        "vin": "LSVNV4180K2000888",
+        "model": "大众朗逸 2024款 1.5L 自动舒适版",
+        "engine_no": "K2000888",
+        "register_date": "2024-03-20",
+        "usage_type": "PERSONAL",
+        "new_vehicle_purchase_price": 129900,
+        "actual_value": 107917
+      },
+      "person": null
+    },
+    "clause_versions": [
+      {
+        "clause_code": "CBIRC-AUTO-MAIN-2020",
+        "clause_name": "中国保险行业协会机动车商业保险示范条款（2020版）",
+        "clause_type": "MAIN",
+        "filing_no": "T/IAC 2-2020"
+      },
+      {
+        "clause_code": "CBIRC-AUTO-ADD-MED-2020",
+        "clause_name": "附加医保外医疗费用责任险",
+        "clause_type": "ADDITIONAL",
+        "filing_no": "T/IAC 2-2020 附加4"
+      }
+    ],
+    "coverages": [
+      {
+        "coverage_code": "VHL",
+        "coverage_name": "机动车损失保险",
+        "coverage_type": "MAIN",
+        "benefit_type": "INDEMNITY",
+        "sum_insured": {
+          "amount": 129900,
+          "currency": "CNY",
+          "per_unit": "PER_VEHICLE"
+        },
+        "deductible": null,
+        "premium": 2380.0
+      },
+      {
+        "coverage_code": "TPL",
+        "coverage_name": "第三者责任保险",
+        "coverage_type": "MAIN",
+        "benefit_type": "INDEMNITY",
+        "sum_insured": {
+          "amount": 2000000,
+          "currency": "CNY",
+          "per_unit": "PER_ACCIDENT"
+        },
+        "deductible": null,
+        "premium": 1285.0
+      },
+      {
+        "coverage_code": "ADD_MED",
+        "coverage_name": "附加医保外医疗费用责任",
+        "coverage_type": "ADDITIONAL",
+        "benefit_type": "REIMBURSEMENT",
+        "sum_insured": {
+          "amount": 50000,
+          "currency": "CNY",
+          "per_unit": "PER_ACCIDENT"
+        },
+        "deductible": null,
+        "premium": 180.0
+      }
+    ]
+  },
+  "execution_pipeline": {
+    "domains": [
+      {
+        "domain": "ELIGIBILITY",
+        "label": "定责域 - 案件级判定",
+        "execution_mode": "SEQUENTIAL_SHORT_CIRCUIT",
+        "input_granularity": "CLAIM_LEVEL",
+        "loop_collection": null,
+        "short_circuit_on": [
+          "REJECT_CLAIM",
+          "TERMINATE_CONTRACT"
+        ],
+        "category_sequence": [
+          "E_POLICY_STATUS",
+          "E_LIABILITY_TRIGGER",
+          "E_EXCLUSION",
+          "E_PAYOUT_RATIO",
+          "E_ANTI_FRAUD"
+        ]
+      },
+      {
+        "domain": "ASSESSMENT",
+        "label": "定损域 - 明细级循环",
+        "execution_mode": "LOOP_PER_ITEM",
+        "input_granularity": "ITEM_LEVEL",
+        "loop_collection": "claim.damage_items",
+        "short_circuit_on": null,
+        "category_sequence": [
+          "A_PROVIDER_QUALIFY",
+          "A_ITEM_EXCLUSION",
+          "A_ITEM_NECESSITY",
+          "A_ITEM_PRICING",
+          "A_ITEM_DEPRECIATION",
+          "A_ITEM_SOCIAL_INSURANCE",
+          "A_ITEM_DEDUCTIBLE"
+        ]
+      },
+      {
+        "domain": "POST_PROCESS",
+        "label": "后处理域 - 汇总计算",
+        "execution_mode": "SEQUENTIAL_AGGREGATE",
+        "input_granularity": "AGGREGATE_LEVEL",
+        "loop_collection": null,
+        "short_circuit_on": null,
+        "category_sequence": [
+          "P_LIABILITY_APPLY",
+          "P_DEDUCTIBLE",
+          "P_CUMULATIVE_CAP",
+          "P_MULTI_COVERAGE"
+        ]
+      }
+    ]
+  },
+  "rules": [
+    {
+      "rule_id": "R-E-TRIG-001",
+      "rule_name": "车损险-碰撞/意外触发责任",
+      "description": "因碰撞、倾覆、自然灾害等造成被保险机动车直接损失",
+      "execution": {
+        "domain": "ELIGIBILITY",
+        "loop_over": null,
+        "item_alias": null,
+        "item_action_on_reject": null
+      },
+      "source": {
+        "source_type": "STANDARD_CLAUSE",
+        "source_ref": "CBIRC-AUTO-MAIN-2020#Article8.Section1",
+        "source_text": "第八条 保险期间内，被保险人或被保险机动车驾驶人在使用被保险机动车过程中，因自然灾害、意外事故造成被保险机动车直接损失，且不属于免除保险人责任的范围，保险人依照本保险合同的约定负责赔偿。",
+        "clause_code": "CBIRC-AUTO-MAIN-2020"
+      },
+      "priority": {
+        "level": 1,
+        "level_label": "MAIN_CLAUSE",
+        "rank": 0
+      },
+      "category": "E_LIABILITY_TRIGGER",
+      "applies_to": {
+        "coverage_codes": [
+          "VHL"
+        ]
+      },
+      "conditions": {
+        "logic": "AND",
+        "expressions": [
+          {
+            "field": "claim.accident_type",
+            "operator": "IN",
+            "value": [
+              "COLLISION",
+              "ROLLOVER",
+              "FALLING_OBJECT",
+              "FIRE",
+              "EXPLOSION",
+              "NATURAL_DISASTER"
+            ],
+            "value_unit": null
+          },
+          {
+            "field": "claim.loss_type",
+            "operator": "EQ",
+            "value": "DIRECT_LOSS",
+            "value_unit": null
+          },
+          {
+            "field": "vehicle.is_insured_vehicle",
+            "operator": "IS_TRUE",
+            "value": null
+          }
+        ]
+      },
+      "action": {
+        "action_type": "APPROVE_CLAIM",
+        "params": {
+          "remark_template": "根据{source.source_ref}，本次事故属于碰撞/意外事故直接损失，车损险责任成立"
+        }
+      },
+      "status": "EFFECTIVE",
+      "overridden_by": null,
+      "override_reason": null,
+      "tags": [
+        "基础触发",
+        "高频"
+      ],
+      "parsing_confidence": {
+        "overall": 0.99,
+        "condition_confidence": 0.99,
+        "action_confidence": 0.99,
+        "needs_human_review": false,
+        "review_hints": []
+      }
+    },
+    {
+      "rule_id": "R-E-TRIG-002",
+      "rule_name": "三者险-触发责任",
+      "description": "被保险机动车发生事故造成第三者人身伤亡或财产损失",
+      "execution": {
+        "domain": "ELIGIBILITY",
+        "loop_over": null,
+        "item_alias": null,
+        "item_action_on_reject": null
+      },
+      "source": {
+        "source_type": "STANDARD_CLAUSE",
+        "source_ref": "CBIRC-AUTO-MAIN-2020#Article22",
+        "source_text": "保险期间内，被保险人或其允许的驾驶人在使用被保险机动车过程中发生意外事故，致使第三者遭受人身伤亡或财产直接损毁，依法应当对第三者承担的损害赔偿责任，保险人依照本保险合同的约定，对于超过机动车交通事故责任强制保险各分项赔偿限额以上的部分负责赔偿。",
+        "clause_code": "CBIRC-AUTO-MAIN-2020"
+      },
+      "priority": {
+        "level": 1,
+        "level_label": "MAIN_CLAUSE",
+        "rank": 0
+      },
+      "category": "E_LIABILITY_TRIGGER",
+      "applies_to": {
+        "coverage_codes": [
+          "TPL"
+        ]
+      },
+      "conditions": {
+        "logic": "AND",
+        "expressions": [
+          {
+            "field": "claim.has_third_party",
+            "operator": "IS_TRUE",
+            "value": null
+          },
+          {
+            "field": "claim.compulsory_insurance_exceeded",
+            "operator": "IS_TRUE",
+            "value": null
+          }
+        ]
+      },
+      "action": {
+        "action_type": "APPROVE_CLAIM",
+        "params": {
+          "remark_template": "三者险责任成立，超出交强险限额部分由商业三者险赔付"
+        }
+      },
+      "status": "EFFECTIVE",
+      "overridden_by": null,
+      "override_reason": null,
+      "tags": [
+        "基础触发",
+        "三者险"
+      ],
+      "parsing_confidence": {
+        "overall": 0.99,
+        "condition_confidence": 0.99,
+        "action_confidence": 0.99,
+        "needs_human_review": false,
+        "review_hints": []
+      }
+    },
+    {
+      "rule_id": "R-E-EXC-001",
+      "rule_name": "酒驾免责（标准条款）",
+      "description": "饮酒后驾车（BAC≥20mg/100ml）属于免责范围",
+      "execution": {
+        "domain": "ELIGIBILITY",
+        "loop_over": null,
+        "item_alias": null,
+        "item_action_on_reject": null
+      },
+      "source": {
+        "source_type": "STANDARD_CLAUSE",
+        "source_ref": "CBIRC-AUTO-MAIN-2020#Article10.Item5",
+        "source_text": "饮酒、吸食或注射毒品、服用国家管制的精神药品或者麻醉药品，被保险人或其允许的驾驶人…造成被保险机动车的任何损失和费用，保险人不负责赔偿。",
+        "clause_code": "CBIRC-AUTO-MAIN-2020"
+      },
+      "priority": {
+        "level": 1,
+        "level_label": "MAIN_CLAUSE",
+        "rank": 100
+      },
+      "category": "E_EXCLUSION",
+      "applies_to": {
+        "coverage_codes": []
+      },
+      "conditions": {
+        "logic": "SINGLE",
+        "expressions": [
+          {
+            "field": "driver.bac_level",
+            "operator": "GTE",
+            "value": 20,
+            "value_unit": "MG_PER_100ML"
+          }
+        ]
+      },
+      "action": {
+        "action_type": "REJECT_CLAIM",
+        "params": {
+          "reject_reason_code": "EXC_DUI",
+          "remark_template": "驾驶人BAC={driver.bac_level}mg/100ml≥20，饮酒驾驶属除外责任"
+        }
+      },
+      "status": "OVERRIDDEN",
+      "overridden_by": "R-E-EXC-001A",
+      "override_reason": "特别约定将饮酒驾驶（20≤BAC<80）改为50%赔付",
+      "tags": [
+        "免责",
+        "酒驾"
+      ],
+      "parsing_confidence": {
+        "overall": 0.99,
+        "condition_confidence": 0.99,
+        "action_confidence": 0.99,
+        "needs_human_review": false,
+        "review_hints": []
+      }
+    },
+    {
+      "rule_id": "R-E-EXC-001A",
+      "rule_name": "特约-饮酒驾驶（20≤BAC<80）50%赔付",
+      "description": "饮酒驾驶但未达醉驾标准的，按保额50%比例赔付",
+      "execution": {
+        "domain": "ELIGIBILITY",
+        "loop_over": null,
+        "item_alias": null,
+        "item_action_on_reject": null
+      },
+      "source": {
+        "source_type": "SPECIAL_AGREEMENT",
+        "source_ref": "POLICY-SA-003",
+        "source_text": "经双方协商，饮酒后驾车（血液酒精含量20mg/100ml≤BAC<80mg/100ml）发生保险事故的，保险人按保险金额的50%承担赔偿责任。",
+        "clause_code": null
+      },
+      "priority": {
+        "level": 3,
+        "level_label": "SPECIAL_AGREEMENT",
+        "rank": 0
+      },
+      "category": "E_PAYOUT_RATIO",
+      "applies_to": {
+        "coverage_codes": []
+      },
+      "conditions": {
+        "logic": "AND",
+        "expressions": [
+          {
+            "field": "driver.bac_level",
+            "operator": "GTE",
+            "value": 20,
+            "value_unit": "MG_PER_100ML"
+          },
+          {
+            "field": "driver.bac_level",
+            "operator": "LT",
+            "value": 80,
+            "value_unit": "MG_PER_100ML"
+          }
+        ]
+      },
+      "action": {
+        "action_type": "SET_CLAIM_RATIO",
+        "params": {
+          "payout_ratio": 0.5,
+          "remark_template": "特约：饮酒驾驶BAC={driver.bac_level}(20~80)，按50%比例赔付"
+        }
+      },
+      "status": "EFFECTIVE",
+      "overridden_by": null,
+      "override_reason": null,
+      "tags": [
+        "特约",
+        "饮酒",
+        "减额赔付"
+      ],
+      "parsing_confidence": {
+        "overall": 0.98,
+        "condition_confidence": 0.98,
+        "action_confidence": 0.98,
+        "needs_human_review": false,
+        "review_hints": []
+      }
+    },
+    {
+      "rule_id": "R-E-EXC-001B",
+      "rule_name": "特约-醉酒驾驶（BAC≥80）仍免责",
+      "description": "醉酒驾驶的仍不予赔付",
+      "execution": {
+        "domain": "ELIGIBILITY",
+        "loop_over": null,
+        "item_alias": null,
+        "item_action_on_reject": null
+      },
+      "source": {
+        "source_type": "SPECIAL_AGREEMENT",
+        "source_ref": "POLICY-SA-003",
+        "source_text": "醉酒驾驶（血液酒精含量≥80mg/100ml）的，保险人不承担赔偿责任。",
+        "clause_code": null
+      },
+      "priority": {
+        "level": 3,
+        "level_label": "SPECIAL_AGREEMENT",
+        "rank": 10
+      },
+      "category": "E_EXCLUSION",
+      "applies_to": {
+        "coverage_codes": []
+      },
+      "conditions": {
+        "logic": "SINGLE",
+        "expressions": [
+          {
+            "field": "driver.bac_level",
+            "operator": "GTE",
+            "value": 80,
+            "value_unit": "MG_PER_100ML"
+          }
+        ]
+      },
+      "action": {
+        "action_type": "REJECT_CLAIM",
+        "params": {
+          "reject_reason_code": "EXC_DUI_DRUNK",
+          "remark_template": "BAC={driver.bac_level}≥80，醉酒驾驶属除外责任"
+        }
+      },
+      "status": "EFFECTIVE",
+      "overridden_by": null,
+      "override_reason": null,
+      "tags": [
+        "免责",
+        "醉驾"
+      ],
+      "parsing_confidence": {
+        "overall": 0.99,
+        "condition_confidence": 0.99,
+        "action_confidence": 0.99,
+        "needs_human_review": false,
+        "review_hints": []
+      }
+    },
+    {
+      "rule_id": "R-E-EXC-002",
+      "rule_name": "无证驾驶免责",
+      "description": "驾驶人无有效驾驶证或准驾不符的免责",
+      "execution": {
+        "domain": "ELIGIBILITY",
+        "loop_over": null,
+        "item_alias": null,
+        "item_action_on_reject": null
+      },
+      "source": {
+        "source_type": "STANDARD_CLAUSE",
+        "source_ref": "CBIRC-AUTO-MAIN-2020#Article10.Item6",
+        "source_text": "无驾驶证，驾驶证被依法扣留、暂扣、吊销、注销期间的…保险人不负责赔偿。",
+        "clause_code": "CBIRC-AUTO-MAIN-2020"
+      },
+      "priority": {
+        "level": 1,
+        "level_label": "MAIN_CLAUSE",
+        "rank": 100
+      },
+      "category": "E_EXCLUSION",
+      "applies_to": {
+        "coverage_codes": []
+      },
+      "conditions": {
+        "logic": "SINGLE",
+        "expressions": [
+          {
+            "field": "driver.license_status",
+            "operator": "IN",
+            "value": [
+              "NO_LICENSE",
+              "EXPIRED",
+              "SUSPENDED",
+              "REVOKED",
+              "MISMATCH"
+            ]
+          }
+        ]
+      },
+      "action": {
+        "action_type": "REJECT_CLAIM",
+        "params": {
+          "reject_reason_code": "EXC_NO_LICENSE",
+          "remark_template": "驾驶证状态={driver.license_status}，属除外责任"
+        }
+      },
+      "status": "EFFECTIVE",
+      "overridden_by": null,
+      "override_reason": null,
+      "tags": [
+        "免责",
+        "无证驾驶"
+      ],
+      "parsing_confidence": {
+        "overall": 0.99,
+        "condition_confidence": 0.99,
+        "action_confidence": 0.99,
+        "needs_human_review": false,
+        "review_hints": []
+      }
+    },
+    {
+      "rule_id": "R-E-EXC-003",
+      "rule_name": "地震免责（标准条款）",
+      "description": "地震及其次生灾害造成的损失属于免责范围",
+      "execution": {
+        "domain": "ELIGIBILITY",
+        "loop_over": null,
+        "item_alias": null,
+        "item_action_on_reject": null
+      },
+      "source": {
+        "source_type": "STANDARD_CLAUSE",
+        "source_ref": "CBIRC-AUTO-MAIN-2020#Article10.Item8",
+        "source_text": "地震及其次生灾害…保险人不负责赔偿。",
+        "clause_code": "CBIRC-AUTO-MAIN-2020"
+      },
+      "priority": {
+        "level": 1,
+        "level_label": "MAIN_CLAUSE",
+        "rank": 100
+      },
+      "category": "E_EXCLUSION",
+      "applies_to": {
+        "coverage_codes": [
+          "VHL"
+        ]
+      },
+      "conditions": {
+        "logic": "SINGLE",
+        "expressions": [
+          {
+            "field": "claim.accident_type",
+            "operator": "IN",
+            "value": [
+              "EARTHQUAKE",
+              "EARTHQUAKE_SECONDARY"
+            ]
+          }
+        ]
+      },
+      "action": {
+        "action_type": "REJECT_CLAIM",
+        "params": {
+          "reject_reason_code": "EXC_EARTHQUAKE",
+          "remark_template": "地震及其次生灾害属除外责任"
+        }
+      },
+      "status": "OVERRIDDEN",
+      "overridden_by": "R-E-EXC-003A",
+      "override_reason": "特别约定扩展承保地震责任",
+      "tags": [
+        "免责",
+        "地震"
+      ],
+      "parsing_confidence": {
+        "overall": 0.99,
+        "condition_confidence": 0.99,
+        "action_confidence": 0.99,
+        "needs_human_review": false,
+        "review_hints": []
+      }
+    },
+    {
+      "rule_id": "R-E-EXC-003A",
+      "rule_name": "特约-扩展地震责任",
+      "description": "特别约定扩展承保地震责任，每次事故绝对免赔额2000元",
+      "execution": {
+        "domain": "ELIGIBILITY",
+        "loop_over": null,
+        "item_alias": null,
+        "item_action_on_reject": null
+      },
+      "source": {
+        "source_type": "SPECIAL_AGREEMENT",
+        "source_ref": "POLICY-SA-001",
+        "source_text": "经双方协商，本保险合同扩展承保地震及其次生灾害导致的保险事故，每次事故绝对免赔额2000元。",
+        "clause_code": null
+      },
+      "priority": {
+        "level": 3,
+        "level_label": "SPECIAL_AGREEMENT",
+        "rank": 0
+      },
+      "category": "E_LIABILITY_TRIGGER",
+      "applies_to": {
+        "coverage_codes": [
+          "VHL"
+        ]
+      },
+      "conditions": {
+        "logic": "SINGLE",
+        "expressions": [
+          {
+            "field": "claim.accident_type",
+            "operator": "IN",
+            "value": [
+              "EARTHQUAKE",
+              "EARTHQUAKE_SECONDARY"
+            ]
+          }
+        ]
+      },
+      "action": {
+        "action_type": "APPROVE_CLAIM",
+        "params": {
+          "deductible_amount": 2000,
+          "remark_template": "特约扩展地震责任，绝对免赔2000元"
+        }
+      },
+      "status": "EFFECTIVE",
+      "overridden_by": null,
+      "override_reason": null,
+      "tags": [
+        "特约",
+        "地震",
+        "扩展承保"
+      ],
+      "parsing_confidence": {
+        "overall": 0.98,
+        "condition_confidence": 0.97,
+        "action_confidence": 0.99,
+        "needs_human_review": false,
+        "review_hints": []
+      }
+    },
+    {
+      "rule_id": "R-E-RATIO-001",
+      "rule_name": "三者险-责任比例计算",
+      "description": "根据交通事故认定书确定的责任比例设置赔付比例",
+      "execution": {
+        "domain": "ELIGIBILITY",
+        "loop_over": null,
+        "item_alias": null,
+        "item_action_on_reject": null
+      },
+      "source": {
+        "source_type": "STANDARD_CLAUSE",
+        "source_ref": "CBIRC-AUTO-MAIN-2020#Article27",
+        "source_text": "保险人按照被保险机动车驾驶人在事故中所负的事故责任比例，承担相应的赔偿责任。",
+        "clause_code": "CBIRC-AUTO-MAIN-2020"
+      },
+      "priority": {
+        "level": 1,
+        "level_label": "MAIN_CLAUSE",
+        "rank": 0
+      },
+      "category": "E_PAYOUT_RATIO",
+      "applies_to": {
+        "coverage_codes": [
+          "TPL"
+        ]
+      },
+      "conditions": {
+        "logic": "SINGLE",
+        "expressions": [
+          {
+            "field": "claim.liability_determination",
+            "operator": "IS_NOT_NULL",
+            "value": null
+          }
+        ]
+      },
+      "action": {
+        "action_type": "SET_CLAIM_RATIO",
+        "params": {
+          "formula": {
+            "expression": "CASE(claim.liability_type, 'FULL'=1.0, 'PRIMARY'=0.7, 'EQUAL'=0.5, 'SECONDARY'=0.3, 'NONE'=0.0)",
+            "output_field": "result.liability_ratio"
+          }
+        }
+      },
+      "status": "EFFECTIVE",
+      "overridden_by": null,
+      "override_reason": null,
+      "tags": [
+        "责任比例",
+        "高频"
+      ],
+      "parsing_confidence": {
+        "overall": 0.97,
+        "condition_confidence": 0.96,
+        "action_confidence": 0.98,
+        "needs_human_review": false,
+        "review_hints": []
+      }
+    },
+    {
+      "rule_id": "R-E-COND-001",
+      "rule_name": "48小时报案时效",
+      "description": "被保险人知道保险事故发生后应在48小时内通知保险人",
+      "execution": {
+        "domain": "ELIGIBILITY",
+        "loop_over": null,
+        "item_alias": null,
+        "item_action_on_reject": null
+      },
+      "source": {
+        "source_type": "STANDARD_CLAUSE",
+        "source_ref": "CBIRC-AUTO-MAIN-2020#Article17",
+        "source_text": "被保险人知道保险事故发生后，应在48小时内通知保险人。",
+        "clause_code": "CBIRC-AUTO-MAIN-2020"
+      },
+      "priority": {
+        "level": 1,
+        "level_label": "MAIN_CLAUSE",
+        "rank": 200
+      },
+      "category": "E_EXCLUSION",
+      "applies_to": {
+        "coverage_codes": []
+      },
+      "conditions": {
+        "logic": "SINGLE",
+        "expressions": [
+          {
+            "field": "claim.hours_to_report",
+            "operator": "GT",
+            "value": 48,
+            "value_unit": "HOURS"
+          }
+        ]
+      },
+      "action": {
+        "action_type": "ROUTE_CLAIM_MANUAL",
+        "params": {
+          "route_reason": "报案时间超过48小时，需人工核实延迟原因及对损失认定的影响"
+        }
+      },
+      "status": "EFFECTIVE",
+      "overridden_by": null,
+      "override_reason": null,
+      "tags": [
+        "报案时效",
+        "转人工"
+      ],
+      "parsing_confidence": {
+        "overall": 0.98,
+        "condition_confidence": 0.98,
+        "action_confidence": 0.98,
+        "needs_human_review": false,
+        "review_hints": []
+      }
+    },
+    {
+      "rule_id": "R-E-FRAUD-001",
+      "rule_name": "高额理赔反欺诈预警",
+      "description": "单次报损金额超过车辆实际价值80%的触发反欺诈预警",
+      "execution": {
+        "domain": "ELIGIBILITY",
+        "loop_over": null,
+        "item_alias": null,
+        "item_action_on_reject": null
+      },
+      "source": {
+        "source_type": "REGULATORY",
+        "source_ref": "INTERNAL-ANTIFRAUD-VHL-001",
+        "source_text": "单次报损金额超过车辆实际价值80%的，自动标记高风险案件。",
+        "clause_code": null
+      },
+      "priority": {
+        "level": 4,
+        "level_label": "REGULATORY",
+        "rank": 100
+      },
+      "category": "E_ANTI_FRAUD",
+      "applies_to": {
+        "coverage_codes": [
+          "VHL"
+        ]
+      },
+      "conditions": {
+        "logic": "SINGLE",
+        "expressions": [
+          {
+            "field": "claim.loss_ratio_to_value",
+            "operator": "GTE",
+            "value": 0.8
+          }
+        ]
+      },
+      "action": {
+        "action_type": "FLAG_FRAUD",
+        "params": {
+          "fraud_risk_score": 75,
+          "route_reason": "报损/实际价值比={claim.loss_ratio_to_value}≥80%，触发反欺诈预警"
+        }
+      },
+      "status": "EFFECTIVE",
+      "overridden_by": null,
+      "override_reason": null,
+      "tags": [
+        "反欺诈",
+        "监管"
+      ],
+      "parsing_confidence": {
+        "overall": 0.99,
+        "condition_confidence": 0.99,
+        "action_confidence": 0.99,
+        "needs_human_review": false,
+        "review_hints": []
+      }
+    },
+    {
+      "rule_id": "R-A-REPAIR-001",
+      "rule_name": "维修厂资质校验",
+      "description": "车损维修须在保险人认可的维修厂或4S店进行",
+      "execution": {
+        "domain": "ASSESSMENT",
+        "loop_over": "claim.damage_items",
+        "item_alias": "damage_item",
+        "item_action_on_reject": "FLAG_ITEM"
+      },
+      "source": {
+        "source_type": "STANDARD_CLAUSE",
+        "source_ref": "CBIRC-AUTO-MAIN-2020#Article14",
+        "source_text": "被保险机动车应在保险人认可的修理厂修理。",
+        "clause_code": "CBIRC-AUTO-MAIN-2020"
+      },
+      "priority": {
+        "level": 1,
+        "level_label": "MAIN_CLAUSE",
+        "rank": 0
+      },
+      "category": "A_PROVIDER_QUALIFY",
+      "applies_to": {
+        "coverage_codes": [
+          "VHL"
+        ]
+      },
+      "conditions": {
+        "logic": "SINGLE",
+        "expressions": [
+          {
+            "field": "damage_item.repair_shop_qualified",
+            "operator": "IS_FALSE",
+            "value": null
+          }
+        ]
+      },
+      "action": {
+        "action_type": "FLAG_ITEM",
+        "params": {
+          "remark_template": "维修厂{damage_item.repair_shop_name}未在认可名录，需人工确认"
+        }
+      },
+      "status": "EFFECTIVE",
+      "overridden_by": null,
+      "override_reason": null,
+      "tags": [
+        "维修厂",
+        "资质"
+      ],
+      "parsing_confidence": {
+        "overall": 0.97,
+        "condition_confidence": 0.96,
+        "action_confidence": 0.98,
+        "needs_human_review": false,
+        "review_hints": []
+      }
+    },
+    {
+      "rule_id": "R-A-EXCL-001",
+      "rule_name": "间接损失排除",
+      "description": "因市场价格变动造成的贬值、停驶损失等间接损失不予赔付",
+      "execution": {
+        "domain": "ASSESSMENT",
+        "loop_over": "claim.damage_items",
+        "item_alias": "damage_item",
+        "item_action_on_reject": "ZERO_AMOUNT"
+      },
+      "source": {
+        "source_type": "STANDARD_CLAUSE",
+        "source_ref": "CBIRC-AUTO-MAIN-2020#Article11.Item4",
+        "source_text": "因市场价格变动造成的贬值、修理后因价值降低引起的减值损失、停驶损失、停运损失等间接损失，保险人不负责赔偿。",
+        "clause_code": "CBIRC-AUTO-MAIN-2020"
+      },
+      "priority": {
+        "level": 1,
+        "level_label": "MAIN_CLAUSE",
+        "rank": 100
+      },
+      "category": "A_ITEM_EXCLUSION",
+      "applies_to": {
+        "coverage_codes": [
+          "VHL"
+        ]
+      },
+      "conditions": {
+        "logic": "SINGLE",
+        "expressions": [
+          {
+            "field": "damage_item.item_type",
+            "operator": "IN",
+            "value": [
+              "DEPRECIATION_LOSS",
+              "DOWNTIME_LOSS",
+              "MARKET_DEVALUATION"
+            ]
+          }
+        ]
+      },
+      "action": {
+        "action_type": "REJECT_ITEM",
+        "params": {
+          "reject_reason_code": "INDIRECT_LOSS",
+          "remark_template": "{damage_item.item_name}属间接损失（{damage_item.item_type}），不予赔付"
+        }
+      },
+      "status": "EFFECTIVE",
+      "overridden_by": null,
+      "override_reason": null,
+      "tags": [
+        "项目排除",
+        "间接损失"
+      ],
+      "parsing_confidence": {
+        "overall": 0.99,
+        "condition_confidence": 0.99,
+        "action_confidence": 0.99,
+        "needs_human_review": false,
+        "review_hints": []
+      }
+    },
+    {
+      "rule_id": "R-A-PRICE-001",
+      "rule_name": "配件价格合理性校验",
+      "description": "配件单价与行业指导价对比，超出30%的标记为异常",
+      "execution": {
+        "domain": "ASSESSMENT",
+        "loop_over": "claim.damage_items",
+        "item_alias": "damage_item",
+        "item_action_on_reject": "FLAG_ITEM"
+      },
+      "source": {
+        "source_type": "REGULATORY",
+        "source_ref": "INTERNAL-PRICING-001",
+        "source_text": "维修配件价格应参照保险行业零配件定价数据库，偏差超过30%的标记异常。",
+        "clause_code": null
+      },
+      "priority": {
+        "level": 4,
+        "level_label": "REGULATORY",
+        "rank": 0
+      },
+      "category": "A_ITEM_PRICING",
+      "applies_to": {
+        "coverage_codes": [
+          "VHL"
+        ]
+      },
+      "conditions": {
+        "logic": "AND",
+        "expressions": [
+          {
+            "field": "damage_item.item_type",
+            "operator": "EQ",
+            "value": "PART"
+          },
+          {
+            "field": "damage_item.price_deviation_percent",
+            "operator": "GT",
+            "value": 30,
+            "value_unit": "PERCENT"
+          }
+        ]
+      },
+      "action": {
+        "action_type": "ADJUST_ITEM_AMOUNT",
+        "params": {
+          "pricing_reference": {
+            "source": "INDUSTRY_PARTS_DB",
+            "tolerance_percent": 30
+          },
+          "formula": {
+            "expression": "damage_item.reference_price * 1.3",
+            "output_field": "damage_item.approved_amount"
+          },
+          "remark_template": "配件{damage_item.part_name}报价{damage_item.claimed_amount}超出指导价{damage_item.reference_price}的30%，核定为指导价×130%={damage_item.approved_amount}"
+        }
+      },
+      "status": "EFFECTIVE",
+      "overridden_by": null,
+      "override_reason": null,
+      "tags": [
+        "定损",
+        "配件定价",
+        "合理性校验"
+      ],
+      "parsing_confidence": {
+        "overall": 0.96,
+        "condition_confidence": 0.95,
+        "action_confidence": 0.97,
+        "needs_human_review": false,
+        "review_hints": []
+      }
+    },
+    {
+      "rule_id": "R-A-PRICE-002",
+      "rule_name": "工时费合理性校验",
+      "description": "维修工时费与地区标准对比，超出区域均值50%的标记异常",
+      "execution": {
+        "domain": "ASSESSMENT",
+        "loop_over": "claim.damage_items",
+        "item_alias": "damage_item",
+        "item_action_on_reject": "FLAG_ITEM"
+      },
+      "source": {
+        "source_type": "REGULATORY",
+        "source_ref": "INTERNAL-PRICING-002",
+        "source_text": "维修工时费应参照地区行业标准，偏差超过50%的标记异常。",
+        "clause_code": null
+      },
+      "priority": {
+        "level": 4,
+        "level_label": "REGULATORY",
+        "rank": 0
+      },
+      "category": "A_ITEM_PRICING",
+      "applies_to": {
+        "coverage_codes": [
+          "VHL"
+        ]
+      },
+      "conditions": {
+        "logic": "AND",
+        "expressions": [
+          {
+            "field": "damage_item.item_type",
+            "operator": "EQ",
+            "value": "LABOR"
+          },
+          {
+            "field": "damage_item.price_deviation_percent",
+            "operator": "GT",
+            "value": 50,
+            "value_unit": "PERCENT"
+          }
+        ]
+      },
+      "action": {
+        "action_type": "ADJUST_ITEM_AMOUNT",
+        "params": {
+          "pricing_reference": {
+            "source": "REGIONAL_LABOR_RATE_DB",
+            "tolerance_percent": 50
+          },
+          "formula": {
+            "expression": "damage_item.reference_price * 1.5",
+            "output_field": "damage_item.approved_amount"
+          },
+          "remark_template": "工时费{damage_item.claimed_amount}超出区域标准50%，核定为标准×150%={damage_item.approved_amount}"
+        }
+      },
+      "status": "EFFECTIVE",
+      "overridden_by": null,
+      "override_reason": null,
+      "tags": [
+        "定损",
+        "工时费",
+        "合理性校验"
+      ],
+      "parsing_confidence": {
+        "overall": 0.96,
+        "condition_confidence": 0.95,
+        "action_confidence": 0.97,
+        "needs_human_review": false,
+        "review_hints": []
+      }
+    },
+    {
+      "rule_id": "R-A-DEP-001",
+      "rule_name": "零部件折旧（标准条款）",
+      "description": "换件赔付时按车龄适用折旧率",
+      "execution": {
+        "domain": "ASSESSMENT",
+        "loop_over": "claim.damage_items",
+        "item_alias": "damage_item",
+        "item_action_on_reject": null
+      },
+      "source": {
+        "source_type": "STANDARD_CLAUSE",
+        "source_ref": "CBIRC-AUTO-MAIN-2020#Article15",
+        "source_text": "保险人按照被保险机动车使用年限适用零部件折旧率计算赔款。",
+        "clause_code": "CBIRC-AUTO-MAIN-2020"
+      },
+      "priority": {
+        "level": 1,
+        "level_label": "MAIN_CLAUSE",
+        "rank": 0
+      },
+      "category": "A_ITEM_DEPRECIATION",
+      "applies_to": {
+        "coverage_codes": [
+          "VHL"
+        ]
+      },
+      "conditions": {
+        "logic": "AND",
+        "expressions": [
+          {
+            "field": "damage_item.item_type",
+            "operator": "EQ",
+            "value": "PART"
+          },
+          {
+            "field": "damage_item.repair_type",
+            "operator": "EQ",
+            "value": "REPLACE"
+          }
+        ]
+      },
+      "action": {
+        "action_type": "ADJUST_ITEM_AMOUNT",
+        "params": {
+          "depreciation_table": [
+            {
+              "age_from_months": 0,
+              "age_to_months": 6,
+              "monthly_rate_percent": 0.6
+            },
+            {
+              "age_from_months": 7,
+              "age_to_months": 12,
+              "monthly_rate_percent": 0.6
+            },
+            {
+              "age_from_months": 13,
+              "age_to_months": 24,
+              "monthly_rate_percent": 0.5
+            },
+            {
+              "age_from_months": 25,
+              "age_to_months": 36,
+              "monthly_rate_percent": 0.45
+            },
+            {
+              "age_from_months": 37,
+              "age_to_months": 999,
+              "monthly_rate_percent": 0.35
+            }
+          ],
+          "formula": {
+            "expression": "damage_item.approved_amount * (1 - vehicle.age_months * monthly_rate / 100)",
+            "output_field": "damage_item.approved_amount"
+          }
+        }
+      },
+      "status": "OVERRIDDEN",
+      "overridden_by": "R-A-DEP-001A",
+      "override_reason": "特约：新车首年免折旧",
+      "tags": [
+        "折旧",
+        "换件"
+      ],
+      "parsing_confidence": {
+        "overall": 0.98,
+        "condition_confidence": 0.97,
+        "action_confidence": 0.99,
+        "needs_human_review": false,
+        "review_hints": []
+      }
+    },
+    {
+      "rule_id": "R-A-DEP-001A",
+      "rule_name": "特约-新车首年免折旧",
+      "description": "车龄12个月内的免折旧按原价赔付",
+      "execution": {
+        "domain": "ASSESSMENT",
+        "loop_over": "claim.damage_items",
+        "item_alias": "damage_item",
+        "item_action_on_reject": null
+      },
+      "source": {
+        "source_type": "SPECIAL_AGREEMENT",
+        "source_ref": "POLICY-SA-002",
+        "source_text": "新车购置12个月（含）以内发生保险事故的，换件赔付不适用折旧，按配件原价赔付。",
+        "clause_code": null
+      },
+      "priority": {
+        "level": 3,
+        "level_label": "SPECIAL_AGREEMENT",
+        "rank": 0
+      },
+      "category": "A_ITEM_DEPRECIATION",
+      "applies_to": {
+        "coverage_codes": [
+          "VHL"
+        ]
+      },
+      "conditions": {
+        "logic": "AND",
+        "expressions": [
+          {
+            "field": "damage_item.item_type",
+            "operator": "EQ",
+            "value": "PART"
+          },
+          {
+            "field": "damage_item.repair_type",
+            "operator": "EQ",
+            "value": "REPLACE"
+          },
+          {
+            "field": "vehicle.age_months",
+            "operator": "LTE",
+            "value": 12
+          }
+        ]
+      },
+      "action": {
+        "action_type": "ADD_REMARK",
+        "params": {
+          "remark_template": "特约：新车首年免折旧，配件{damage_item.part_name}按原价赔付"
+        }
+      },
+      "status": "EFFECTIVE",
+      "overridden_by": null,
+      "override_reason": null,
+      "tags": [
+        "特约",
+        "免折旧",
+        "新车"
+      ],
+      "parsing_confidence": {
+        "overall": 0.98,
+        "condition_confidence": 0.98,
+        "action_confidence": 0.98,
+        "needs_human_review": false,
+        "review_hints": []
+      }
+    },
+    {
+      "rule_id": "R-A-TPL-MED-001",
+      "rule_name": "三者医疗费-医保外用药排除（标准条款）",
+      "description": "三者险标准条款下，医保外用药不赔",
+      "execution": {
+        "domain": "ASSESSMENT",
+        "loop_over": "claim.damage_items",
+        "item_alias": "damage_item",
+        "item_action_on_reject": "ZERO_AMOUNT"
+      },
+      "source": {
+        "source_type": "STANDARD_CLAUSE",
+        "source_ref": "CBIRC-AUTO-MAIN-2020#Article28",
+        "source_text": "保险人对被保险机动车驾驶人承担的超出基本医疗保险范围的医疗费用不负赔偿责任。",
+        "clause_code": "CBIRC-AUTO-MAIN-2020"
+      },
+      "priority": {
+        "level": 1,
+        "level_label": "MAIN_CLAUSE",
+        "rank": 0
+      },
+      "category": "A_ITEM_SOCIAL_INSURANCE",
+      "applies_to": {
+        "coverage_codes": [
+          "TPL"
+        ]
+      },
+      "conditions": {
+        "logic": "AND",
+        "expressions": [
+          {
+            "field": "damage_item.item_type",
+            "operator": "EQ",
+            "value": "THIRD_PARTY_MEDICAL"
+          },
+          {
+            "field": "damage_item.is_social_insurance_covered",
+            "operator": "IS_FALSE",
+            "value": null
+          }
+        ]
+      },
+      "action": {
+        "action_type": "REJECT_ITEM",
+        "params": {
+          "reject_reason_code": "NON_SI_MEDICAL",
+          "remark_template": "{damage_item.item_name}属医保外费用，三者险标准条款不赔"
+        }
+      },
+      "status": "EFFECTIVE",
+      "overridden_by": null,
+      "override_reason": null,
+      "tags": [
+        "三者医疗",
+        "医保外"
+      ],
+      "parsing_confidence": {
+        "overall": 0.98,
+        "condition_confidence": 0.97,
+        "action_confidence": 0.99,
+        "needs_human_review": false,
+        "review_hints": []
+      }
+    },
+    {
+      "rule_id": "R-A-TPL-MED-002",
+      "rule_name": "附加医保外用药-费用补偿",
+      "description": "附加医保外医疗费用责任险，赔付三者医保外合理用药",
+      "execution": {
+        "domain": "ASSESSMENT",
+        "loop_over": "claim.damage_items",
+        "item_alias": "damage_item",
+        "item_action_on_reject": null
+      },
+      "source": {
+        "source_type": "ADDITIONAL_CLAUSE",
+        "source_ref": "CBIRC-AUTO-ADD-MED-2020#Article2",
+        "source_text": "附加医保外医疗费用责任险，对超出基本医疗保险范围的必要且合理的医疗费用，保险人在保额限额内赔付。",
+        "clause_code": "CBIRC-AUTO-ADD-MED-2020"
+      },
+      "priority": {
+        "level": 2,
+        "level_label": "ADDITIONAL_CLAUSE",
+        "rank": 0
+      },
+      "category": "A_ITEM_SOCIAL_INSURANCE",
+      "applies_to": {
+        "coverage_codes": [
+          "ADD_MED"
+        ]
+      },
+      "conditions": {
+        "logic": "AND",
+        "expressions": [
+          {
+            "field": "damage_item.item_type",
+            "operator": "EQ",
+            "value": "THIRD_PARTY_MEDICAL"
+          },
+          {
+            "field": "damage_item.is_social_insurance_covered",
+            "operator": "IS_FALSE",
+            "value": null
+          },
+          {
+            "field": "damage_item.treatment_reasonable_necessary",
+            "operator": "IS_TRUE",
+            "value": null
+          }
+        ]
+      },
+      "action": {
+        "action_type": "APPROVE_ITEM",
+        "params": {
+          "remark_template": "附加医保外责任险承保，{damage_item.item_name}金额{damage_item.claimed_amount}元予以赔付"
+        }
+      },
+      "status": "EFFECTIVE",
+      "overridden_by": null,
+      "override_reason": null,
+      "tags": [
+        "附加险",
+        "医保外"
+      ],
+      "parsing_confidence": {
+        "overall": 0.97,
+        "condition_confidence": 0.96,
+        "action_confidence": 0.98,
+        "needs_human_review": false,
+        "review_hints": []
+      }
+    },
+    {
+      "rule_id": "R-A-NEC-001",
+      "rule_name": "维修方式合理性-可修复不应更换",
+      "description": "损伤部件经评估可通过修复恢复功能的，不应按更换件赔付",
+      "execution": {
+        "domain": "ASSESSMENT",
+        "loop_over": "claim.damage_items",
+        "item_alias": "damage_item",
+        "item_action_on_reject": null
+      },
+      "source": {
+        "source_type": "STANDARD_CLAUSE",
+        "source_ref": "CBIRC-AUTO-MAIN-2020#Article14.Section2",
+        "source_text": "因被保险机动车损失程度可以修复的，按修复费用赔偿；不能修复的，按更换费用赔偿。",
+        "clause_code": "CBIRC-AUTO-MAIN-2020"
+      },
+      "priority": {
+        "level": 1,
+        "level_label": "MAIN_CLAUSE",
+        "rank": 0
+      },
+      "category": "A_ITEM_NECESSITY",
+      "applies_to": {
+        "coverage_codes": [
+          "VHL"
+        ]
+      },
+      "conditions": {
+        "logic": "AND",
+        "expressions": [
+          {
+            "field": "damage_item.item_type",
+            "operator": "EQ",
+            "value": "PART"
+          },
+          {
+            "field": "damage_item.repair_type",
+            "operator": "EQ",
+            "value": "REPLACE"
+          },
+          {
+            "field": "damage_item.is_repairable",
+            "operator": "IS_TRUE",
+            "value": null
+          }
+        ]
+      },
+      "action": {
+        "action_type": "ADJUST_ITEM_AMOUNT",
+        "params": {
+          "formula": {
+            "expression": "damage_item.repair_cost_estimate",
+            "output_field": "damage_item.approved_amount"
+          },
+          "remark_template": "配件{damage_item.part_name}经评估可修复，按修复费用{damage_item.repair_cost_estimate}核定（原报更换{damage_item.claimed_amount}）"
+        }
+      },
+      "status": "EFFECTIVE",
+      "overridden_by": null,
+      "override_reason": null,
+      "tags": [
+        "定损",
+        "修复vs更换"
+      ],
+      "parsing_confidence": {
+        "overall": 0.93,
+        "condition_confidence": 0.9,
+        "action_confidence": 0.96,
+        "needs_human_review": true,
+        "review_hints": [
+          "可修复性判定依赖定损员现场评估，自动化准确率有限"
+        ]
+      }
+    },
+    {
+      "rule_id": "R-A-NEC-002",
+      "rule_name": "与事故无关旧损排除",
+      "description": "维修项目中经查为事故前已存在的旧损，不予赔付",
+      "execution": {
+        "domain": "ASSESSMENT",
+        "loop_over": "claim.damage_items",
+        "item_alias": "damage_item",
+        "item_action_on_reject": "ZERO_AMOUNT"
+      },
+      "source": {
+        "source_type": "STANDARD_CLAUSE",
+        "source_ref": "CBIRC-AUTO-MAIN-2020#Article8",
+        "source_text": "保险人仅对与保险事故有因果关系的损失承担赔偿责任。",
+        "clause_code": "CBIRC-AUTO-MAIN-2020"
+      },
+      "priority": {
+        "level": 1,
+        "level_label": "MAIN_CLAUSE",
+        "rank": 10
+      },
+      "category": "A_ITEM_NECESSITY",
+      "applies_to": {
+        "coverage_codes": [
+          "VHL"
+        ]
+      },
+      "conditions": {
+        "logic": "SINGLE",
+        "expressions": [
+          {
+            "field": "damage_item.is_pre_existing_damage",
+            "operator": "IS_TRUE",
+            "value": null
+          }
+        ]
+      },
+      "action": {
+        "action_type": "REJECT_ITEM",
+        "params": {
+          "reject_reason_code": "PRE_EXISTING_DAMAGE",
+          "remark_template": "配件{damage_item.part_name}经查为事故前已存在旧损，与本次事故无因果关系，不予赔付"
+        }
+      },
+      "status": "EFFECTIVE",
+      "overridden_by": null,
+      "override_reason": null,
+      "tags": [
+        "定损",
+        "旧损排除"
+      ],
+      "parsing_confidence": {
+        "overall": 0.91,
+        "condition_confidence": 0.88,
+        "action_confidence": 0.94,
+        "needs_human_review": true,
+        "review_hints": [
+          "旧损判定需结合事故前后照片对比和维修厂诊断"
+        ]
+      }
+    },
+    {
+      "rule_id": "R-A-EXCL-002",
+      "rule_name": "自然磨损/老化排除",
+      "description": "因自然磨损、腐蚀、老化导致的损失不予赔付",
+      "execution": {
+        "domain": "ASSESSMENT",
+        "loop_over": "claim.damage_items",
+        "item_alias": "damage_item",
+        "item_action_on_reject": "ZERO_AMOUNT"
+      },
+      "source": {
+        "source_type": "STANDARD_CLAUSE",
+        "source_ref": "CBIRC-AUTO-MAIN-2020#Article11.Item2",
+        "source_text": "自然磨损、朽蚀、腐蚀、故障、本身质量缺陷造成的损失，保险人不负责赔偿。",
+        "clause_code": "CBIRC-AUTO-MAIN-2020"
+      },
+      "priority": {
+        "level": 1,
+        "level_label": "MAIN_CLAUSE",
+        "rank": 110
+      },
+      "category": "A_ITEM_EXCLUSION",
+      "applies_to": {
+        "coverage_codes": [
+          "VHL"
+        ]
+      },
+      "conditions": {
+        "logic": "SINGLE",
+        "expressions": [
+          {
+            "field": "damage_item.damage_cause",
+            "operator": "IN",
+            "value": [
+              "NATURAL_WEAR",
+              "CORROSION",
+              "AGING",
+              "QUALITY_DEFECT",
+              "MECHANICAL_FAILURE"
+            ]
+          }
+        ]
+      },
+      "action": {
+        "action_type": "REJECT_ITEM",
+        "params": {
+          "reject_reason_code": "NATURAL_WEAR",
+          "remark_template": "{damage_item.part_name}损失原因为{damage_item.damage_cause}，属自然磨损/老化/故障，不予赔付"
+        }
+      },
+      "status": "EFFECTIVE",
+      "overridden_by": null,
+      "override_reason": null,
+      "tags": [
+        "项目排除",
+        "自然磨损"
+      ],
+      "parsing_confidence": {
+        "overall": 0.97,
+        "condition_confidence": 0.96,
+        "action_confidence": 0.98,
+        "needs_human_review": false,
+        "review_hints": []
+      }
+    },
+    {
+      "rule_id": "R-A-NEC-003",
+      "rule_name": "三者伤者诊疗必需合理性校验",
+      "description": "三者伤者医疗费用中诊疗项目须与事故伤情相关且医学必需",
+      "execution": {
+        "domain": "ASSESSMENT",
+        "loop_over": "claim.damage_items",
+        "item_alias": "damage_item",
+        "item_action_on_reject": "FLAG_ITEM"
+      },
+      "source": {
+        "source_type": "STANDARD_CLAUSE",
+        "source_ref": "CBIRC-AUTO-MAIN-2020#Article26",
+        "source_text": "保险人对必要的、合理的费用承担赔偿责任。",
+        "clause_code": "CBIRC-AUTO-MAIN-2020"
+      },
+      "priority": {
+        "level": 1,
+        "level_label": "MAIN_CLAUSE",
+        "rank": 0
+      },
+      "category": "A_ITEM_NECESSITY",
+      "applies_to": {
+        "coverage_codes": [
+          "TPL",
+          "ADD_MED"
+        ]
+      },
+      "conditions": {
+        "logic": "AND",
+        "expressions": [
+          {
+            "field": "damage_item.item_type",
+            "operator": "EQ",
+            "value": "THIRD_PARTY_MEDICAL"
+          },
+          {
+            "field": "damage_item.treatment_reasonable_necessary",
+            "operator": "IS_FALSE",
+            "value": null
+          }
+        ]
+      },
+      "action": {
+        "action_type": "FLAG_ITEM",
+        "params": {
+          "route_reason": "三者医疗费用{damage_item.item_name}未通过必需合理性校验，需人工审核",
+          "remark_template": "诊疗必需性存疑：{damage_item.item_name}与事故伤情关联性待核实"
+        }
+      },
+      "status": "EFFECTIVE",
+      "overridden_by": null,
+      "override_reason": null,
+      "tags": [
+        "三者医疗",
+        "必需合理"
+      ],
+      "parsing_confidence": {
+        "overall": 0.92,
+        "condition_confidence": 0.9,
+        "action_confidence": 0.94,
+        "needs_human_review": true,
+        "review_hints": [
+          "诊疗必需性需结合伤情诊断书和治疗方案综合判断"
+        ]
+      }
+    },
+    {
+      "rule_id": "R-P-LIABILITY-001",
+      "rule_name": "三者险-按责任比例计算赔付",
+      "description": "三者险赔付金额 = 核定损失总额 × 责任比例",
+      "execution": {
+        "domain": "POST_PROCESS",
+        "loop_over": null,
+        "item_alias": null,
+        "item_action_on_reject": null
+      },
+      "source": {
+        "source_type": "STANDARD_CLAUSE",
+        "source_ref": "CBIRC-AUTO-MAIN-2020#Article27",
+        "source_text": "保险人按照被保险机动车驾驶人在事故中所负的事故责任比例承担赔偿责任。",
+        "clause_code": "CBIRC-AUTO-MAIN-2020"
+      },
+      "priority": {
+        "level": 1,
+        "level_label": "MAIN_CLAUSE",
+        "rank": 0
+      },
+      "category": "P_LIABILITY_APPLY",
+      "applies_to": {
+        "coverage_codes": [
+          "TPL"
+        ]
+      },
+      "conditions": {
+        "logic": "ALWAYS_TRUE",
+        "expressions": []
+      },
+      "action": {
+        "action_type": "APPLY_FORMULA",
+        "params": {
+          "formula": {
+            "expression": "result.tpl_approved_total * result.liability_ratio",
+            "output_field": "result.tpl_payout_before_cap"
+          },
+          "remark_template": "三者险核定总额{result.tpl_approved_total}×责任比例{result.liability_ratio}={result.tpl_payout_before_cap}"
+        }
+      },
+      "status": "EFFECTIVE",
+      "overridden_by": null,
+      "override_reason": null,
+      "tags": [
+        "后处理",
+        "责任比例"
+      ],
+      "parsing_confidence": {
+        "overall": 0.99,
+        "condition_confidence": 0.99,
+        "action_confidence": 0.99,
+        "needs_human_review": false,
+        "review_hints": []
+      }
+    },
+    {
+      "rule_id": "R-P-CAP-001",
+      "rule_name": "车损险-赔偿限额封顶",
+      "description": "车损险赔偿不超过保险金额（车辆实际价值）",
+      "execution": {
+        "domain": "POST_PROCESS",
+        "loop_over": null,
+        "item_alias": null,
+        "item_action_on_reject": null
+      },
+      "source": {
+        "source_type": "STANDARD_CLAUSE",
+        "source_ref": "CBIRC-AUTO-MAIN-2020#Article9",
+        "source_text": "保险金额按保险合同签订时被保险机动车的实际价值确定，为赔偿的最高限额。",
+        "clause_code": "CBIRC-AUTO-MAIN-2020"
+      },
+      "priority": {
+        "level": 1,
+        "level_label": "MAIN_CLAUSE",
+        "rank": 0
+      },
+      "category": "P_CUMULATIVE_CAP",
+      "applies_to": {
+        "coverage_codes": [
+          "VHL"
+        ]
+      },
+      "conditions": {
+        "logic": "ALWAYS_TRUE",
+        "expressions": []
+      },
+      "action": {
+        "action_type": "APPLY_CAP",
+        "params": {
+          "cap_field": "coverage.VHL.sum_insured.amount",
+          "formula": {
+            "expression": "min(result.vhl_approved_total, coverage.VHL.sum_insured.amount)",
+            "output_field": "result.vhl_payout"
+          },
+          "remark_template": "车损险核定{result.vhl_approved_total}元，保额封顶{coverage.VHL.sum_insured.amount}元，赔付{result.vhl_payout}元"
+        }
+      },
+      "status": "EFFECTIVE",
+      "overridden_by": null,
+      "override_reason": null,
+      "tags": [
+        "后处理",
+        "限额封顶"
+      ],
+      "parsing_confidence": {
+        "overall": 0.99,
+        "condition_confidence": 0.99,
+        "action_confidence": 0.99,
+        "needs_human_review": false,
+        "review_hints": []
+      }
+    },
+    {
+      "rule_id": "R-P-CAP-002",
+      "rule_name": "三者险-赔偿限额封顶",
+      "description": "三者险赔偿不超过保险金额",
+      "execution": {
+        "domain": "POST_PROCESS",
+        "loop_over": null,
+        "item_alias": null,
+        "item_action_on_reject": null
+      },
+      "source": {
+        "source_type": "STANDARD_CLAUSE",
+        "source_ref": "CBIRC-AUTO-MAIN-2020#Article24",
+        "source_text": "每次事故赔偿金额以保险合同载明的保险金额为限。",
+        "clause_code": "CBIRC-AUTO-MAIN-2020"
+      },
+      "priority": {
+        "level": 1,
+        "level_label": "MAIN_CLAUSE",
+        "rank": 0
+      },
+      "category": "P_CUMULATIVE_CAP",
+      "applies_to": {
+        "coverage_codes": [
+          "TPL"
+        ]
+      },
+      "conditions": {
+        "logic": "ALWAYS_TRUE",
+        "expressions": []
+      },
+      "action": {
+        "action_type": "APPLY_CAP",
+        "params": {
+          "cap_field": "coverage.TPL.sum_insured.amount",
+          "formula": {
+            "expression": "min(result.tpl_payout_before_cap, coverage.TPL.sum_insured.amount)",
+            "output_field": "result.tpl_payout"
+          }
+        }
+      },
+      "status": "EFFECTIVE",
+      "overridden_by": null,
+      "override_reason": null,
+      "tags": [
+        "后处理",
+        "限额封顶"
+      ],
+      "parsing_confidence": {
+        "overall": 0.99,
+        "condition_confidence": 0.99,
+        "action_confidence": 0.99,
+        "needs_human_review": false,
+        "review_hints": []
+      }
+    },
+    {
+      "rule_id": "R-P-DEDUCT-001",
+      "rule_name": "地震特约-绝对免赔额扣减",
+      "description": "地震扩展承保的绝对免赔额2000元",
+      "execution": {
+        "domain": "POST_PROCESS",
+        "loop_over": null,
+        "item_alias": null,
+        "item_action_on_reject": null
+      },
+      "source": {
+        "source_type": "SPECIAL_AGREEMENT",
+        "source_ref": "POLICY-SA-001",
+        "source_text": "地震责任每次事故绝对免赔额2000元。",
+        "clause_code": null
+      },
+      "priority": {
+        "level": 3,
+        "level_label": "SPECIAL_AGREEMENT",
+        "rank": 0
+      },
+      "category": "P_DEDUCTIBLE",
+      "applies_to": {
+        "coverage_codes": [
+          "VHL"
+        ]
+      },
+      "conditions": {
+        "logic": "SINGLE",
+        "expressions": [
+          {
+            "field": "claim.accident_type",
+            "operator": "IN",
+            "value": [
+              "EARTHQUAKE",
+              "EARTHQUAKE_SECONDARY"
+            ]
+          }
+        ]
+      },
+      "action": {
+        "action_type": "APPLY_DEDUCTIBLE",
+        "params": {
+          "deductible_amount": 2000,
+          "formula": {
+            "expression": "max(0, result.vhl_payout - 2000)",
+            "output_field": "result.vhl_payout"
+          }
+        }
+      },
+      "status": "EFFECTIVE",
+      "overridden_by": null,
+      "override_reason": null,
+      "tags": [
+        "后处理",
+        "免赔额",
+        "地震"
+      ],
+      "parsing_confidence": {
+        "overall": 0.98,
+        "condition_confidence": 0.98,
+        "action_confidence": 0.98,
+        "needs_human_review": false,
+        "review_hints": []
+      }
+    }
+  ],
+  "override_chains": [
+    {
+      "chain_id": "OC-DUI-001",
+      "topic": "酒驾免责范围",
+      "affected_domain": "ELIGIBILITY",
+      "chain": [
+        {
+          "rule_id": "R-E-EXC-001",
+          "priority_level": 1,
+          "status": "OVERRIDDEN",
+          "summary": "标准条款：饮酒驾驶（BAC≥20）一律免责"
+        },
+        {
+          "rule_id": "R-E-EXC-001A",
+          "priority_level": 3,
+          "status": "EFFECTIVE",
+          "summary": "特约：饮酒驾驶（20≤BAC<80）按50%赔付"
+        },
+        {
+          "rule_id": "R-E-EXC-001B",
+          "priority_level": 3,
+          "status": "EFFECTIVE",
+          "summary": "特约：醉驾（BAC≥80）仍免责"
+        }
+      ],
+      "effective_rule_id": "R-E-EXC-001A",
+      "conflict_type": "OVERRIDE",
+      "resolution": null
+    },
+    {
+      "chain_id": "OC-EARTHQUAKE-001",
+      "topic": "地震责任范围",
+      "affected_domain": "ELIGIBILITY",
+      "chain": [
+        {
+          "rule_id": "R-E-EXC-003",
+          "priority_level": 1,
+          "status": "OVERRIDDEN",
+          "summary": "标准条款：地震一律免责"
+        },
+        {
+          "rule_id": "R-E-EXC-003A",
+          "priority_level": 3,
+          "status": "EFFECTIVE",
+          "summary": "特约：扩展承保地震，免赔2000"
+        }
+      ],
+      "effective_rule_id": "R-E-EXC-003A",
+      "conflict_type": "OVERRIDE",
+      "resolution": null
+    },
+    {
+      "chain_id": "OC-DEPRECIATION-001",
+      "topic": "零部件折旧规则",
+      "affected_domain": "ASSESSMENT",
+      "chain": [
+        {
+          "rule_id": "R-A-DEP-001",
+          "priority_level": 1,
+          "status": "OVERRIDDEN",
+          "summary": "标准条款：按车龄月折旧率0.35%~0.6%"
+        },
+        {
+          "rule_id": "R-A-DEP-001A",
+          "priority_level": 3,
+          "status": "EFFECTIVE",
+          "summary": "特约：新车首年（≤12月）免折旧"
+        }
+      ],
+      "effective_rule_id": "R-A-DEP-001A",
+      "conflict_type": "OVERRIDE",
+      "resolution": null
+    }
+  ],
+  "field_dictionary": {
+    "claim.accident_type": {
+      "label": "事故类型",
+      "data_type": "ENUM",
+      "scope": "CLAIM_LEVEL",
+      "applicable_domains": [
+        "ELIGIBILITY"
+      ],
+      "enum_values": [
+        {
+          "code": "COLLISION",
+          "label": "碰撞"
+        },
+        {
+          "code": "ROLLOVER",
+          "label": "倾覆"
+        },
+        {
+          "code": "FALLING_OBJECT",
+          "label": "坠落物"
+        },
+        {
+          "code": "FIRE",
+          "label": "火灾"
+        },
+        {
+          "code": "EXPLOSION",
+          "label": "爆炸"
+        },
+        {
+          "code": "NATURAL_DISASTER",
+          "label": "自然灾害"
+        },
+        {
+          "code": "EARTHQUAKE",
+          "label": "地震"
+        },
+        {
+          "code": "EARTHQUAKE_SECONDARY",
+          "label": "地震次生灾害"
+        }
+      ],
+      "source": "CLAIMS_SYSTEM"
+    },
+    "claim.loss_type": {
+      "label": "损失类型",
+      "data_type": "ENUM",
+      "scope": "CLAIM_LEVEL",
+      "applicable_domains": [
+        "ELIGIBILITY"
+      ],
+      "enum_values": [
+        {
+          "code": "DIRECT_LOSS",
+          "label": "直接损失"
+        },
+        {
+          "code": "INDIRECT_LOSS",
+          "label": "间接损失"
+        }
+      ],
+      "source": "CLAIMS_SYSTEM"
+    },
+    "claim.has_third_party": {
+      "label": "是否涉及第三者",
+      "data_type": "BOOLEAN",
+      "scope": "CLAIM_LEVEL",
+      "applicable_domains": [
+        "ELIGIBILITY"
+      ],
+      "source": "CLAIMS_SYSTEM"
+    },
+    "claim.compulsory_insurance_exceeded": {
+      "label": "是否超出交强险限额",
+      "data_type": "BOOLEAN",
+      "scope": "CLAIM_LEVEL",
+      "applicable_domains": [
+        "ELIGIBILITY"
+      ],
+      "source": "CLAIMS_SYSTEM"
+    },
+    "claim.liability_determination": {
+      "label": "责任认定结果",
+      "data_type": "STRING",
+      "scope": "CLAIM_LEVEL",
+      "applicable_domains": [
+        "ELIGIBILITY"
+      ],
+      "source": "POLICE_REPORT"
+    },
+    "claim.liability_type": {
+      "label": "责任类型",
+      "data_type": "ENUM",
+      "scope": "CLAIM_LEVEL",
+      "applicable_domains": [
+        "ELIGIBILITY",
+        "POST_PROCESS"
+      ],
+      "enum_values": [
+        {
+          "code": "FULL",
+          "label": "全责"
+        },
+        {
+          "code": "PRIMARY",
+          "label": "主责"
+        },
+        {
+          "code": "EQUAL",
+          "label": "同等"
+        },
+        {
+          "code": "SECONDARY",
+          "label": "次责"
+        },
+        {
+          "code": "NONE",
+          "label": "无责"
+        }
+      ],
+      "source": "POLICE_REPORT"
+    },
+    "claim.hours_to_report": {
+      "label": "报案时间（小时）",
+      "data_type": "NUMBER",
+      "scope": "CLAIM_LEVEL",
+      "applicable_domains": [
+        "ELIGIBILITY"
+      ],
+      "source": "CLAIMS_SYSTEM"
+    },
+    "claim.loss_ratio_to_value": {
+      "label": "报损/实际价值比",
+      "data_type": "NUMBER",
+      "scope": "CLAIM_LEVEL",
+      "applicable_domains": [
+        "ELIGIBILITY"
+      ],
+      "source": "CALCULATED"
+    },
+    "driver.bac_level": {
+      "label": "驾驶人血液酒精含量(mg/100ml)",
+      "data_type": "NUMBER",
+      "scope": "CLAIM_LEVEL",
+      "applicable_domains": [
+        "ELIGIBILITY"
+      ],
+      "source": "POLICE_REPORT"
+    },
+    "driver.license_status": {
+      "label": "驾驶证状态",
+      "data_type": "ENUM",
+      "scope": "CLAIM_LEVEL",
+      "applicable_domains": [
+        "ELIGIBILITY"
+      ],
+      "enum_values": [
+        {
+          "code": "VALID",
+          "label": "有效"
+        },
+        {
+          "code": "NO_LICENSE",
+          "label": "无证"
+        },
+        {
+          "code": "EXPIRED",
+          "label": "过期"
+        },
+        {
+          "code": "SUSPENDED",
+          "label": "暂扣"
+        },
+        {
+          "code": "REVOKED",
+          "label": "吊销"
+        },
+        {
+          "code": "MISMATCH",
+          "label": "准驾不符"
+        }
+      ],
+      "source": "TRAFFIC_AUTHORITY"
+    },
+    "vehicle.is_insured_vehicle": {
+      "label": "是否被保险车辆",
+      "data_type": "BOOLEAN",
+      "scope": "CLAIM_LEVEL",
+      "applicable_domains": [
+        "ELIGIBILITY"
+      ],
+      "source": "POLICY_SYSTEM"
+    },
+    "vehicle.age_months": {
+      "label": "车龄（月）",
+      "data_type": "NUMBER",
+      "scope": "CLAIM_LEVEL",
+      "applicable_domains": [
+        "ASSESSMENT"
+      ],
+      "source": "CALCULATED"
+    },
+    "damage_item.item_type": {
+      "label": "损失项目类型",
+      "data_type": "ENUM",
+      "scope": "ITEM_LEVEL",
+      "applicable_domains": [
+        "ASSESSMENT"
+      ],
+      "enum_values": [
+        {
+          "code": "PART",
+          "label": "配件"
+        },
+        {
+          "code": "LABOR",
+          "label": "工时"
+        },
+        {
+          "code": "MATERIAL",
+          "label": "辅料"
+        },
+        {
+          "code": "THIRD_PARTY_MEDICAL",
+          "label": "三者医疗"
+        },
+        {
+          "code": "THIRD_PARTY_PROPERTY",
+          "label": "三者财产"
+        },
+        {
+          "code": "DEPRECIATION_LOSS",
+          "label": "贬值损失"
+        },
+        {
+          "code": "DOWNTIME_LOSS",
+          "label": "停驶损失"
+        },
+        {
+          "code": "MARKET_DEVALUATION",
+          "label": "市场减值"
+        }
+      ],
+      "source": "DAMAGE_ASSESSMENT"
+    },
+    "damage_item.part_name": {
+      "label": "配件名称",
+      "data_type": "STRING",
+      "scope": "ITEM_LEVEL",
+      "applicable_domains": [
+        "ASSESSMENT"
+      ],
+      "source": "DAMAGE_ASSESSMENT"
+    },
+    "damage_item.claimed_amount": {
+      "label": "报损金额（元）",
+      "data_type": "NUMBER",
+      "scope": "ITEM_LEVEL",
+      "applicable_domains": [
+        "ASSESSMENT"
+      ],
+      "source": "DAMAGE_ASSESSMENT"
+    },
+    "damage_item.reference_price": {
+      "label": "行业指导价（元）",
+      "data_type": "NUMBER",
+      "scope": "ITEM_LEVEL",
+      "applicable_domains": [
+        "ASSESSMENT"
+      ],
+      "source": "INDUSTRY_PARTS_DB"
+    },
+    "damage_item.price_deviation_percent": {
+      "label": "价格偏差百分比",
+      "data_type": "NUMBER",
+      "scope": "ITEM_LEVEL",
+      "applicable_domains": [
+        "ASSESSMENT"
+      ],
+      "source": "CALCULATED"
+    },
+    "damage_item.repair_type": {
+      "label": "维修方式",
+      "data_type": "ENUM",
+      "scope": "ITEM_LEVEL",
+      "applicable_domains": [
+        "ASSESSMENT"
+      ],
+      "enum_values": [
+        {
+          "code": "REPAIR",
+          "label": "修复"
+        },
+        {
+          "code": "REPLACE",
+          "label": "更换"
+        }
+      ],
+      "source": "DAMAGE_ASSESSMENT"
+    },
+    "damage_item.repair_shop_qualified": {
+      "label": "维修厂是否合格",
+      "data_type": "BOOLEAN",
+      "scope": "ITEM_LEVEL",
+      "applicable_domains": [
+        "ASSESSMENT"
+      ],
+      "source": "REPAIR_SHOP_DB"
+    },
+    "damage_item.is_social_insurance_covered": {
+      "label": "是否医保目录内",
+      "data_type": "BOOLEAN",
+      "scope": "ITEM_LEVEL",
+      "applicable_domains": [
+        "ASSESSMENT"
+      ],
+      "source": "MEDICAL_AUDIT"
+    },
+    "damage_item.treatment_reasonable_necessary": {
+      "label": "治疗是否必需合理",
+      "data_type": "BOOLEAN",
+      "scope": "ITEM_LEVEL",
+      "applicable_domains": [
+        "ASSESSMENT"
+      ],
+      "source": "MEDICAL_AUDIT"
+    },
+    "damage_item.approved_amount": {
+      "label": "核定金额（元）",
+      "data_type": "NUMBER",
+      "scope": "ITEM_LEVEL",
+      "applicable_domains": [
+        "ASSESSMENT"
+      ],
+      "source": "CALCULATED"
+    },
+    "result.liability_ratio": {
+      "label": "责任比例",
+      "data_type": "NUMBER",
+      "scope": "CLAIM_LEVEL",
+      "applicable_domains": [
+        "POST_PROCESS"
+      ],
+      "source": "CALCULATED"
+    },
+    "result.vhl_approved_total": {
+      "label": "车损险核定总额",
+      "data_type": "NUMBER",
+      "scope": "CLAIM_LEVEL",
+      "applicable_domains": [
+        "POST_PROCESS"
+      ],
+      "source": "CALCULATED"
+    },
+    "result.tpl_approved_total": {
+      "label": "三者险核定总额",
+      "data_type": "NUMBER",
+      "scope": "CLAIM_LEVEL",
+      "applicable_domains": [
+        "POST_PROCESS"
+      ],
+      "source": "CALCULATED"
+    },
+    "result.vhl_payout": {
+      "label": "车损险最终赔付",
+      "data_type": "NUMBER",
+      "scope": "CLAIM_LEVEL",
+      "applicable_domains": [
+        "POST_PROCESS"
+      ],
+      "source": "CALCULATED"
+    },
+    "result.tpl_payout": {
+      "label": "三者险最终赔付",
+      "data_type": "NUMBER",
+      "scope": "CLAIM_LEVEL",
+      "applicable_domains": [
+        "POST_PROCESS"
+      ],
+      "source": "CALCULATED"
+    },
+    "damage_item.item_name": {
+      "label": "损失项目名称",
+      "data_type": "STRING",
+      "scope": "ITEM_LEVEL",
+      "applicable_domains": [
+        "ASSESSMENT"
+      ],
+      "source": "DAMAGE_ASSESSMENT"
+    },
+    "damage_item.is_repairable": {
+      "label": "是否可修复",
+      "data_type": "BOOLEAN",
+      "scope": "ITEM_LEVEL",
+      "applicable_domains": [
+        "ASSESSMENT"
+      ],
+      "source": "DAMAGE_ASSESSMENT"
+    },
+    "damage_item.repair_cost_estimate": {
+      "label": "修复费用估算（元）",
+      "data_type": "NUMBER",
+      "scope": "ITEM_LEVEL",
+      "applicable_domains": [
+        "ASSESSMENT"
+      ],
+      "source": "DAMAGE_ASSESSMENT"
+    },
+    "damage_item.is_pre_existing_damage": {
+      "label": "是否事故前旧损",
+      "data_type": "BOOLEAN",
+      "scope": "ITEM_LEVEL",
+      "applicable_domains": [
+        "ASSESSMENT"
+      ],
+      "source": "DAMAGE_ASSESSMENT"
+    },
+    "damage_item.damage_cause": {
+      "label": "损伤原因",
+      "data_type": "ENUM",
+      "scope": "ITEM_LEVEL",
+      "applicable_domains": [
+        "ASSESSMENT"
+      ],
+      "enum_values": [
+        {
+          "code": "ACCIDENT",
+          "label": "事故碰撞"
+        },
+        {
+          "code": "NATURAL_WEAR",
+          "label": "自然磨损"
+        },
+        {
+          "code": "CORROSION",
+          "label": "腐蚀"
+        },
+        {
+          "code": "AGING",
+          "label": "老化"
+        },
+        {
+          "code": "QUALITY_DEFECT",
+          "label": "质量缺陷"
+        },
+        {
+          "code": "MECHANICAL_FAILURE",
+          "label": "机械故障"
+        }
+      ],
+      "source": "DAMAGE_ASSESSMENT"
+    },
+    "damage_item.repair_shop_name": {
+      "label": "维修厂名称",
+      "data_type": "STRING",
+      "scope": "ITEM_LEVEL",
+      "applicable_domains": [
+        "ASSESSMENT"
+      ],
+      "source": "REPAIR_SHOP_DB"
+    },
+    "damage_item.quantity": {
+      "label": "数量",
+      "data_type": "NUMBER",
+      "scope": "ITEM_LEVEL",
+      "applicable_domains": [
+        "ASSESSMENT"
+      ],
+      "source": "DAMAGE_ASSESSMENT"
+    }
+  },
+  "metadata": {
+    "schema_version": "2.0.0",
+    "version": "2.1.0",
+    "generated_at": "2026-02-11T15:00:00+08:00",
+    "generated_by": "AI_PARSING",
+    "ai_model": "claude-sonnet-4-20250514",
+    "total_rules": 27,
+    "rules_by_domain": {
+      "eligibility": 11,
+      "assessment": 12,
+      "post_process": 4
+    },
+    "rules_by_status": {
+      "effective": 24,
+      "overridden": 3
+    },
+    "unresolved_conflicts": 0,
+    "low_confidence_rules": 3,
+    "audit_trail": [
+      {
+        "timestamp": "2026-02-11T14:00:00+08:00",
+        "action": "CREATED",
+        "user_id": "SYSTEM",
+        "details": "V2规则集初始化：11条定责域、8条定损域、4条后处理域"
+      },
+      {
+        "timestamp": "2026-02-11T15:00:00+08:00",
+        "action": "APPROVED",
+        "user_id": "U-MANAGER",
+        "details": "审批通过"
+      },
+      {
+        "timestamp": "2026-02-11T16:00:00+08:00",
+        "action": "ENHANCED_ASSESSMENT",
+        "user_id": "AI",
+        "details": "补充ASSESSMENT域规则：新增A_ITEM_NECESSITY(3条)、A_ITEM_EXCLUSION(1条)，定损域规则从8条增至12条；新增7个ITEM_LEVEL字段"
+      }
+    ]
+  }
+}

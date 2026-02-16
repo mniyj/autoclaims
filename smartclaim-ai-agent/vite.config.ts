@@ -5,6 +5,8 @@ import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
+  const apiPort = Number(env.ADMIN_API_PORT || env.DEV_PORT || 8080);
+  const apiTarget = env.API_PROXY_TARGET || `http://127.0.0.1:${apiPort}`;
   return {
     server: {
       port: 8081,
@@ -12,7 +14,7 @@ export default defineConfig(({ mode }) => {
       hmr: false,
       proxy: {
         '/api': {
-          target: 'http://localhost:3000',
+          target: apiTarget,
           changeOrigin: true,
         },
       },

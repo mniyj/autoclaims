@@ -1,0 +1,125 @@
+[
+  {
+    "logId": "log-test",
+    "timestamp": "2026-02-16T00:00:00Z",
+    "userName": "test",
+    "operationType": "SEND_MESSAGE",
+    "operationLabel": "test"
+  },
+  {
+    "logId": "log-test3",
+    "timestamp": "2026-02-16T00:00:00Z",
+    "userName": "test",
+    "operationType": "SEND_MESSAGE",
+    "operationLabel": "test"
+  },
+  {
+    "logId": "log-20260216140954-e3gyf3",
+    "timestamp": "2026-02-16T14:09:54.050Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1771239829424-v6gam9qy",
+    "operationType": "LOGIN",
+    "operationLabel": "索赔人登录",
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Trae/1.107.1 Chrome/142.0.7444.235 Electron/39.2.7 Safari/537.36",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260216141030-f5ag3c",
+    "timestamp": "2026-02-16T14:10:30.833Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1771239829424-v6gam9qy",
+    "operationType": "REPORT_CLAIM",
+    "operationLabel": "发起报案",
+    "inputData": {
+      "message": "我要报案",
+      "messageLength": 4
+    },
+    "outputData": {
+      "policyCount": 5
+    },
+    "duration": 0,
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Trae/1.107.1 Chrome/142.0.7444.235 Electron/39.2.7 Safari/537.36",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260216141044-2zt8ef",
+    "timestamp": "2026-02-16T14:10:44.667Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1771239829424-v6gam9qy",
+    "operationType": "UPLOAD_FILE",
+    "operationLabel": "打开上传指引",
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Trae/1.107.1 Chrome/142.0.7444.235 Electron/39.2.7 Safari/537.36",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260216141045-8y90nl",
+    "timestamp": "2026-02-16T14:10:45.634Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1771239829424-v6gam9qy",
+    "operationType": "UPLOAD_FILE",
+    "operationLabel": "上传指引选择文件",
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Trae/1.107.1 Chrome/142.0.7444.235 Electron/39.2.7 Safari/537.36",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260216141052-oh4tnl",
+    "timestamp": "2026-02-16T14:10:52.762Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1771239829424-v6gam9qy",
+    "operationType": "UPLOAD_FILE",
+    "operationLabel": "上传材料",
+    "inputData": {
+      "source": "file",
+      "totalFiles": 1,
+      "limitedFiles": 1,
+      "fileTypes": [
+        "image/png"
+      ]
+    },
+    "outputData": {
+      "successCount": 1,
+      "failedCount": 0,
+      "categories": {
+        "医疗发票": 1
+      }
+    },
+    "aiInteractions": [
+      {
+        "model": "gemini-2.5-flash",
+        "prompt": "快速识别文档类型，返回JSON: {\"category\": \"类型(身份证/医疗发票/出院小结/诊断证明/现场照片/银行卡等)\", \"needsDeepAnalysis\": true/false}",
+        "response": "{\n  \"category\": \"医疗发票\",\n  \"needsDeepAnalysis\": true\n}",
+        "duration": 4606,
+        "timestamp": "2026-02-16T14:10:52.761Z",
+        "usageMetadata": {
+          "promptTokenCount": 302,
+          "candidatesTokenCount": 21,
+          "totalTokenCount": 404,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 44
+            },
+            {
+              "modality": "IMAGE",
+              "tokenCount": 258
+            }
+          ],
+          "thoughtsTokenCount": 81
+        }
+      }
+    ],
+    "duration": 4696,
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Trae/1.107.1 Chrome/142.0.7444.235 Electron/39.2.7 Safari/537.36",
+    "deviceType": "desktop"
+  }
+]
