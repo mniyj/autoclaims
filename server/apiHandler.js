@@ -3,6 +3,9 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import OSS from 'ali-oss';
 import { GoogleGenAI } from '@google/genai';
+import { checkEligibility, calculateAmount, executeFullReview } from './rules/engine.js';
+import { executeSmartReview } from './ai/agent.js';
+import { readAuditLogs, aiCostTracker } from './middleware/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -567,6 +570,173 @@ ${schemaText}
                 text: response.text || '{}',
                 usageMetadata: response.usageMetadata
             }));
+        } catch (error) {
+            res.statusCode = 500;
+            res.end(JSON.stringify({ error: formatErrorMessage(error) }));
+        }
+        return;
+    }
+
+    // ============ 规则引擎 API ============
+    
+    // 责任判断 API
+    if (resource === 'claim' && id === 'check-eligibility') {
+        if (req.method !== 'POST') {
+            res.statusCode = 405;
+            res.end(JSON.stringify({ error: 'Method Not Allowed' }));
+            return;
+        }
+        
+        try {
+            const { claimCaseId, productCode, ocrData } = await parseBody(req);
+            if (!claimCaseId && !productCode) {
+                res.statusCode = 400;
+                res.end(JSON.stringify({ error: 'Missing claimCaseId or productCode' }));
+                return;
+            }
+            
+            const result = await checkEligibility({ claimCaseId, productCode, ocrData });
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify(result));
+        } catch (error) {
+            res.statusCode = 500;
+            res.end(JSON.stringify({ error: formatErrorMessage(error) }));
+        }
+        return;
+    }
+    
+    // 金额计算 API
+    if (resource === 'claim' && id === 'calculate-amount') {
+        if (req.method !== 'POST') {
+            res.statusCode = 405;
+            res.end(JSON.stringify({ error: 'Method Not Allowed' }));
+            return;
+        }
+        
+        try {
+            const { claimCaseId, productCode, eligibilityResult, invoiceItems, ocrData } = await parseBody(req);
+            
+            const result = await calculateAmount({
+                claimCaseId,
+                productCode,
+                eligibilityResult,
+                invoiceItems,
+                ocrData
+            });
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify(result));
+        } catch (error) {
+            res.statusCode = 500;
+            res.end(JSON.stringify({ error: formatErrorMessage(error) }));
+        }
+        return;
+    }
+    
+    // 完整审核 API（责任判断 + 金额计算）
+    if (resource === 'claim' && id === 'full-review') {
+        if (req.method !== 'POST') {
+            res.statusCode = 405;
+            res.end(JSON.stringify({ error: 'Method Not Allowed' }));
+            return;
+        }
+        
+        try {
+            const { claimCaseId, productCode, ocrData, invoiceItems } = await parseBody(req);
+            if (!claimCaseId && !productCode) {
+                res.statusCode = 400;
+                res.end(JSON.stringify({ error: 'Missing claimCaseId or productCode' }));
+                return;
+            }
+            
+            const result = await executeFullReview({ claimCaseId, productCode, ocrData, invoiceItems });
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify(result));
+        } catch (error) {
+            res.statusCode = 500;
+            res.end(JSON.stringify({ error: formatErrorMessage(error) }));
+        }
+        return;
+    }
+    
+    // ============ AI 智能审核 API ============
+    
+    // AI 智能审核（LangChain Agent）
+    if (resource === 'ai' && id === 'smart-review') {
+        if (req.method !== 'POST') {
+            res.statusCode = 405;
+            res.end(JSON.stringify({ error: 'Method Not Allowed' }));
+            return;
+        }
+        
+        try {
+            const { claimCaseId, productCode, ocrData, invoiceItems } = await parseBody(req);
+            if (!claimCaseId && !productCode) {
+                res.statusCode = 400;
+                res.end(JSON.stringify({ error: 'Missing claimCaseId or productCode' }));
+                return;
+            }
+            
+            const result = await executeSmartReview({
+                claimCaseId,
+                productCode,
+                ocrData,
+                invoiceItems
+            });
+            
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify(result));
+        } catch (error) {
+            console.error('[AI Smart Review Error]', error);
+            res.statusCode = 500;
+            res.end(JSON.stringify({ 
+                error: formatErrorMessage(error),
+                decision: 'MANUAL_REVIEW',
+                reasoning: '智能审核服务异常，请转人工处理'
+            }));
+        }
+        return;
+    }
+    
+    // 审计日志查询
+    if (resource === 'ai' && id === 'audit-logs') {
+        if (req.method !== 'GET') {
+            res.statusCode = 405;
+            res.end(JSON.stringify({ error: 'Method Not Allowed' }));
+            return;
+        }
+        
+        try {
+            const date = url.searchParams.get('date') || new Date().toISOString().split('T')[0];
+            const type = url.searchParams.get('type') || null;
+            const claimCaseId = url.searchParams.get('claimCaseId') || null;
+            
+            const logs = readAuditLogs(date, { type, claimCaseId });
+            
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({
+                date,
+                count: logs.length,
+                logs
+            }));
+        } catch (error) {
+            res.statusCode = 500;
+            res.end(JSON.stringify({ error: formatErrorMessage(error) }));
+        }
+        return;
+    }
+    
+    // AI 调用统计
+    if (resource === 'ai' && id === 'stats') {
+        if (req.method !== 'GET') {
+            res.statusCode = 405;
+            res.end(JSON.stringify({ error: 'Method Not Allowed' }));
+            return;
+        }
+        
+        try {
+            const stats = aiCostTracker.getStats();
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify(stats));
         } catch (error) {
             res.statusCode = 500;
             res.end(JSON.stringify({ error: formatErrorMessage(error) }));

@@ -121,5 +121,17 @@
     "success": true,
     "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Trae/1.107.1 Chrome/142.0.7444.235 Electron/39.2.7 Safari/537.36",
     "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260216195248-4bzuoz",
+    "timestamp": "2026-02-16T19:52:48.604Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1771271568604-uc93r7bj",
+    "operationType": "LOGIN",
+    "operationLabel": "索赔人登录",
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
   }
 ]
