@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { type ClaimItem, type ClaimsMaterial, type ProductClaimConfig, type ResponsibilityClaimConfig, type ResponsibilityItem, type Clause } from '../types';
+import { type ClaimItem, type ClaimsMaterial, type ProductClaimConfig, type ResponsibilityClaimConfig, type ResponsibilityItem, type InsuranceProduct } from '../types';
 import Modal from './ui/Modal';
 import Input from './ui/Input';
 import Textarea from './ui/Textarea';
@@ -11,7 +11,7 @@ const ClaimItemConfigPage: React.FC = () => {
   const [claimItems, setClaimItems] = useState<ClaimItem[]>([]);
   const [materials, setMaterials] = useState<ClaimsMaterial[]>([]);
   const [productConfigs, setProductConfigs] = useState<ProductClaimConfig[]>([]);
-  const [products, setProducts] = useState<Clause[]>([]);
+  const [products, setProducts] = useState<InsuranceProduct[]>([]);
   const [responsibilities, setResponsibilities] = useState<ResponsibilityItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -22,13 +22,13 @@ const ClaimItemConfigPage: React.FC = () => {
           api.claimItems.list(),
           api.claimsMaterials.list(),
           api.productClaimConfigs.list(),
-          api.clauses.list(),
+          api.products.list(),
           api.responsibilities.list(),
         ]);
         setClaimItems(itemsData as ClaimItem[]);
         setMaterials(materialsData as ClaimsMaterial[]);
         setProductConfigs(configsData as ProductClaimConfig[]);
-        setProducts(productsData as Clause[]);
+        setProducts(productsData as InsuranceProduct[]);
         setResponsibilities(respData as ResponsibilityItem[]);
       } catch (error) {
         console.error('Failed to fetch claim item config data:', error);
@@ -46,20 +46,21 @@ const ClaimItemConfigPage: React.FC = () => {
   // Modal states for Product Config
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const [editingConfig, setEditingConfig] = useState<Partial<ProductClaimConfig> | null>(null);
-  const [selectedRespId, setSelectedRespId] = useState<string>('');
+  const [selectedRespIds, setSelectedRespIds] = useState<string[]>([]);
 
   const handleAddItem = () => {
     setEditingItem({
       id: `item-${Date.now()}`,
       name: '',
       description: '',
-      materialIds: []
+      materialIds: [],
+      responsibilityIds: []
     });
     setIsItemModalOpen(true);
   };
 
   const handleEditItem = (item: ClaimItem) => {
-    setEditingItem({ ...item });
+    setEditingItem({ ...item, responsibilityIds: item.responsibilityIds || [] });
     setIsItemModalOpen(true);
   };
 
@@ -90,29 +91,43 @@ const ClaimItemConfigPage: React.FC = () => {
     }
   };
 
+  const toggleResponsibilityForItem = (respId: string) => {
+    setEditingItem(prev => {
+      const currentIds = prev?.responsibilityIds || [];
+      const nextIds = currentIds.includes(respId)
+        ? currentIds.filter(id => id !== respId)
+        : [...currentIds, respId];
+      return { ...prev!, responsibilityIds: nextIds };
+    });
+  };
+
   const handleAddConfig = () => {
     setEditingConfig({
       productCode: '',
       responsibilityConfigs: []
     });
-    setSelectedRespId('');
+    setSelectedRespIds([]);
     setIsConfigModalOpen(true);
   };
 
   const handleAddRespToConfig = () => {
-    if (!selectedRespId) return;
-    if (editingConfig?.responsibilityConfigs?.find(rc => rc.responsibilityId === selectedRespId)) {
-        return alert('该责任已在配置中');
+    if (!editingConfig?.productCode) return alert('请先选择产品');
+    if (selectedRespIds.length === 0) return;
+    const existingIds = new Set((editingConfig?.responsibilityConfigs || []).map(rc => rc.responsibilityId));
+    const newRespConfigs: ResponsibilityClaimConfig[] = selectedRespIds
+      .filter(id => !existingIds.has(id))
+      .map(id => ({
+        responsibilityId: id,
+        claimItemIds: []
+      }));
+    if (newRespConfigs.length === 0) {
+      return alert('所选责任已在配置中');
     }
-    const newRespConfig: ResponsibilityClaimConfig = {
-      responsibilityId: selectedRespId,
-      claimItemIds: []
-    };
     setEditingConfig(prev => ({
       ...prev!,
-      responsibilityConfigs: [...(prev?.responsibilityConfigs || []), newRespConfig]
+      responsibilityConfigs: [...(prev?.responsibilityConfigs || []), ...newRespConfigs]
     }));
-    setSelectedRespId('');
+    setSelectedRespIds([]);
   };
 
   const toggleClaimItemForResp = (respId: string, itemId: string) => {
@@ -149,6 +164,16 @@ const ClaimItemConfigPage: React.FC = () => {
       alert('保存失败');
     }
   };
+
+  const selectedProduct = useMemo(() => {
+    if (!editingConfig?.productCode) return null;
+    return products.find(p => p.productCode === editingConfig.productCode) || null;
+  }, [editingConfig?.productCode, products]);
+
+  const filteredResponsibilities = useMemo(() => {
+    if (!selectedProduct) return [];
+    return responsibilities.filter(r => r.category === selectedProduct.primaryCategory);
+  }, [responsibilities, selectedProduct]);
 
   if (loading) {
     return (
@@ -252,7 +277,16 @@ const ClaimItemConfigPage: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                      <button onClick={() => { setEditingConfig(config); setIsConfigModalOpen(true); }} className="text-brand-blue-600 hover:underline">编辑</button>
+                      <button
+                        onClick={() => {
+                          setEditingConfig(config);
+                          setSelectedRespIds([]);
+                          setIsConfigModalOpen(true);
+                        }}
+                        className="text-brand-blue-600 hover:underline"
+                      >
+                        编辑
+                      </button>
                     </td>
                   </tr>
                 )) : (
@@ -281,6 +315,33 @@ const ClaimItemConfigPage: React.FC = () => {
         <div className="space-y-4">
           <Input label="项目名称" value={editingItem?.name || ''} onChange={e => setEditingItem(prev => ({ ...prev!, name: e.target.value }))} required />
           <Textarea label="项目说明" value={editingItem?.description || ''} onChange={e => setEditingItem(prev => ({ ...prev!, description: e.target.value }))} rows={2} />
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">关联责任</label>
+            {(editingItem?.responsibilityIds || []).length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {(editingItem?.responsibilityIds || []).map(id => (
+                  <span key={id} className="px-2 py-1 text-xs rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                    {responsibilities.find(resp => resp.id === id)?.name || id}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <div className="text-sm text-gray-500">请选择要关联的责任</div>
+            )}
+            <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2 border border-gray-200 rounded-md bg-white">
+              {responsibilities.map(resp => (
+                <label key={resp.id} className="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={editingItem?.responsibilityIds?.includes(resp.id) || false}
+                    onChange={() => toggleResponsibilityForItem(resp.id)}
+                    className="rounded border-gray-300 text-brand-blue-600 focus:ring-brand-blue-500"
+                  />
+                  <span className="text-sm text-gray-700">{resp.name}</span>
+                </label>
+              ))}
+            </div>
+          </div>
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700">关联理赔材料</label>
             <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2 border border-gray-200 rounded-md">
@@ -315,26 +376,47 @@ const ClaimItemConfigPage: React.FC = () => {
       >
         <div className="space-y-6">
           <Select
+            id="claim-config-product"
             label="选择产品"
             value={editingConfig?.productCode || ''}
-            onChange={val => setEditingConfig(prev => ({ ...prev!, productCode: val }))}
-            options={products.map(p => ({ label: p.regulatoryName, value: p.productCode }))}
-            placeholder="请选择产品"
-          />
+            onChange={(e) => {
+              const value = e.target.value;
+              setEditingConfig(prev => ({ ...prev!, productCode: value, responsibilityConfigs: [] }));
+              setSelectedRespIds([]);
+            }}
+          >
+            <option value="">请选择产品</option>
+            {products.map(product => (
+              <option key={product.productCode} value={product.productCode}>
+                {product.regulatoryName}
+              </option>
+            ))}
+          </Select>
 
           <div className="border-t border-gray-200 pt-4">
             <div className="flex items-end space-x-2 mb-4">
               <div className="flex-1">
                 <Select
-                  label="添加责任"
-                  value={selectedRespId}
-                  onChange={setSelectedRespId}
-                  options={responsibilities.map(r => ({ label: r.name, value: r.id }))}
-                  placeholder="选择要配置的责任"
-                />
+                  id="claim-config-responsibility"
+                  label="添加责任（可多选）"
+                  multiple
+                  size={6}
+                  value={selectedRespIds}
+                  onChange={(e) => {
+                    const values = Array.from(e.target.selectedOptions).map(option => (option as HTMLOptionElement).value).filter(Boolean);
+                    setSelectedRespIds(values);
+                  }}
+                >
+                  {filteredResponsibilities.map(resp => (
+                    <option key={resp.id} value={resp.id}>
+                      {resp.name}
+                    </option>
+                  ))}
+                </Select>
               </div>
               <button
                 onClick={handleAddRespToConfig}
+                disabled={!editingConfig?.productCode || selectedRespIds.length === 0}
                 className="h-10 px-4 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800"
               >
                 添加

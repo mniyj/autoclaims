@@ -1,72 +1,46 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { MOCK_RESPONSIBILITIES, PRIMARY_CATEGORIES } from '../constants';
+import { MOCK_RESPONSIBILITIES } from '../constants';
 import { ResponsibilityItem } from '../types';
 import { api } from '../services/api';
-
-interface ModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    title: string;
-    children: React.ReactNode;
-    footer?: React.ReactNode;
-}
-
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, footer }) => {
-    if (!isOpen) return null;
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 flex flex-col max-h-[90vh] animate-in fade-in zoom-in duration-200">
-                <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100">
-                    <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-                    <button
-                        onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                        </svg>
-                    </button>
-                </div>
-                <div className="p-6 overflow-y-auto flex-1">
-                    {children}
-                </div>
-                {footer && (
-                    <div className="px-6 py-4 border-t border-gray-100 bg-gray-50/50 rounded-b-xl flex justify-end gap-3">
-                        {footer}
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-};
+import Modal from './ui/Modal';
 
 const ResponsibilityManagementPage: React.FC = () => {
-    // Start with empty, load from API, fallback to Mock if empty? Or just empty.
-    // For seamless transition, if API return empty (first run), we could load MOCK and save it?
-    const [responsibilities, setResponsibilities] = useState<ResponsibilityItem[]>([]);
+    const [responsibilities, setResponsibilities] = useState<ResponsibilityItem[]>(MOCK_RESPONSIBILITIES);
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState<string>('全部');
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [currentItem, setCurrentItem] = useState<Partial<ResponsibilityItem>>({});
+    const [isEditing, setIsEditing] = useState(false);
+
+    const [insuranceTypes, setInsuranceTypes] = useState<any>(null);
 
     useEffect(() => {
-        const fetchResponsibilities = async () => {
+        const loadData = async () => {
             try {
-                const data = await api.responsibilities.list();
-                if (data && data.length > 0) {
-                    setResponsibilities(data);
-                } else {
-                    // Auto-seed: persist MOCK data on first load
-                    await api.responsibilities.saveAll(MOCK_RESPONSIBILITIES);
-                    setResponsibilities(MOCK_RESPONSIBILITIES);
+                // Parallel fetch for efficiency
+                const [insuranceData, responsibilitiesData] = await Promise.all([
+                    api.insuranceTypes.list(),
+                    api.responsibilities.list()
+                ]);
+
+                setInsuranceTypes(insuranceData);
+                
+                if (Array.isArray(responsibilitiesData) && responsibilitiesData.length > 0) {
+                    setResponsibilities(responsibilitiesData);
                 }
             } catch (error) {
-                console.error('Failed to fetch responsibilities:', error);
-                setResponsibilities(MOCK_RESPONSIBILITIES);
+                console.error('Failed to load data:', error);
             }
         };
-        fetchResponsibilities();
+        loadData();
     }, []);
+
+    // Get all categories from insurance-types.json (using level3 names)
+    const allCategories = useMemo(() => {
+        if (!insuranceTypes || !insuranceTypes.mappings) return [];
+        return insuranceTypes.mappings.map((item: any) => item.antLevel3Name);
+    }, [insuranceTypes]);
 
     // Filter Logic
     const filteredData = useMemo(() => {
@@ -84,7 +58,7 @@ const ResponsibilityManagementPage: React.FC = () => {
         setCurrentItem({
             code: '',
             name: '',
-            category: PRIMARY_CATEGORIES[0],
+            category: '',
             description: ''
         });
         setIsEditModalOpen(true);
@@ -296,7 +270,8 @@ const ResponsibilityManagementPage: React.FC = () => {
                             onChange={e => setCurrentItem(prev => ({ ...prev, category: e.target.value }))}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-1 focus:ring-brand-blue-500 focus:border-brand-blue-500 outline-none bg-white transition-shadow"
                         >
-                            {PRIMARY_CATEGORIES.map(cat => (
+                            <option value="">请选择</option>
+                            {allCategories.map(cat => (
                                 <option key={cat} value={cat}>{cat}</option>
                             ))}
                         </select>

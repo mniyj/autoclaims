@@ -4,7 +4,7 @@ import { type Clause, ProductStatus, PrimaryCategory, ClauseType } from '../type
 import Input from './ui/Input';
 import Select from './ui/Select';
 import FileUpload from './ui/FileUpload';
-import { PRODUCT_STATUSES, MOCK_COMPANY_LIST, CLAUSE_TYPES, LEVEL_1_DATA, LEVEL_2_DATA, LEVEL_3_DATA, MOCK_CLAUSES } from '../constants';
+import { PRODUCT_STATUSES, MOCK_COMPANY_LIST, CLAUSE_TYPES, MOCK_CLAUSES } from '../constants';
 import { api } from '../services/api';
 
 
@@ -33,6 +33,7 @@ const mapToLegacyCategory = (l1Name: string, l2Name: string): PrimaryCategory =>
         if (l2Name && l2Name.includes('年金')) return PrimaryCategory.ANNUITY;
         return PrimaryCategory.WHOLE_LIFE; // For 增额终身寿, 两全保险
     }
+    if (l1Name === '车险') return PrimaryCategory.CAR_INSURANCE;
     return PrimaryCategory.HEALTH; // Default fallback
 };
 
@@ -75,31 +76,48 @@ const AddClausePage: React.FC<{ onBack: () => void; initialClause?: Clause; comp
     const [newClause, setNewClause] = useState<NewClauseState | null>(initialClause ? { ...initialClause } as NewClauseState : null);
 
     // Derived options based on selection
+    const [insuranceTypes, setInsuranceTypes] = useState<any>({ level1: [], level2: [], mappings: [] });
     const [level2Options, setLevel2Options] = useState<{ code: string, name: string }[]>([]);
     const [level3Options, setLevel3Options] = useState<{ code: string, name: string }[]>([]);
 
     useEffect(() => {
-        if (selectedLevel1Code) {
-            const options = LEVEL_2_DATA.filter(l2 => l2.code.charAt(0) === selectedLevel1Code).map(l2 => ({ code: l2.code, name: l2.name }));
+        const fetchInsuranceTypes = async () => {
+            try {
+                const data = await api.insuranceTypes.list();
+                setInsuranceTypes(data || { level1: [], level2: [], mappings: [] });
+            } catch (error) {
+                console.error('Failed to fetch insurance types:', error);
+            }
+        };
+        fetchInsuranceTypes();
+    }, []);
+
+    useEffect(() => {
+        if (selectedLevel1Code && insuranceTypes.level2) {
+            const options = insuranceTypes.level2
+                .filter((l2: any) => l2.code.charAt(0) === selectedLevel1Code)
+                .map((l2: any) => ({ code: l2.code, name: l2.name }));
             setLevel2Options(options);
         } else {
             setLevel2Options([]);
         }
-    }, [selectedLevel1Code]);
+    }, [selectedLevel1Code, insuranceTypes]);
 
     useEffect(() => {
-        if (selectedLevel2Code) {
-            const options = LEVEL_3_DATA.filter(l3 => l3.code.slice(0, 3) === selectedLevel2Code).map(l3 => ({ code: l3.code, name: l3.name }));
+        if (selectedLevel2Code && insuranceTypes.mappings) {
+            const options = insuranceTypes.mappings
+                .filter((l3: any) => l3.antLevel3Code.slice(0, 3) === selectedLevel2Code)
+                .map((l3: any) => ({ code: l3.antLevel3Code, name: l3.antLevel3Name }));
             setLevel3Options(options);
         } else {
             setLevel3Options([]);
         }
-    }, [selectedLevel2Code]);
+    }, [selectedLevel2Code, insuranceTypes]);
 
 
     const handleLevel1Change = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const value = e.target.value;
-        const l1Data = LEVEL_1_DATA.find(l => l.name === value);
+        const l1Data = insuranceTypes.level1.find((l: any) => l.name === value);
         setSelectedLevel1Name(value);
         setSelectedLevel1Code(l1Data?.code || '');
         setSelectedLevel2Code('');
@@ -119,9 +137,9 @@ const AddClausePage: React.FC<{ onBack: () => void; initialClause?: Clause; comp
         setSelectedLevel3(code);
 
         if (code) {
-            const l1Data = LEVEL_1_DATA.find(l => l.code === selectedLevel1Code);
-            const l2Data = LEVEL_2_DATA.find(l => l.code === selectedLevel2Code);
-            const l3Data = LEVEL_3_DATA.find(l => l.code === code);
+            const l1Data = insuranceTypes.level1.find((l: any) => l.code === selectedLevel1Code);
+            const l2Data = insuranceTypes.level2.find((l: any) => l.code === selectedLevel2Code);
+            const l3Data = insuranceTypes.mappings.find((l: any) => l.antLevel3Code === code);
 
             const legacyCategory = mapToLegacyCategory(l1Data?.name || '', l2Data?.name || '');
 
@@ -142,8 +160,8 @@ const AddClausePage: React.FC<{ onBack: () => void; initialClause?: Clause; comp
                 categoryLevel1Name: l1Data?.name,
                 categoryLevel2Code: l2Data?.code,
                 categoryLevel2Name: l2Data?.name,
-                categoryLevel3Code: l3Data?.code,
-                categoryLevel3Name: l3Data?.name,
+                categoryLevel3Code: l3Data?.antLevel3Code,
+                categoryLevel3Name: l3Data?.antLevel3Name,
 
                 // Legacy Fields
                 primaryCategory: legacyCategory,
@@ -224,7 +242,7 @@ const AddClausePage: React.FC<{ onBack: () => void; initialClause?: Clause; comp
                         <div className="max-w-md mx-auto space-y-4 text-left">
                             <Select label="一级分类" id="level1" name="level1" value={selectedLevel1Name} onChange={handleLevel1Change}>
                                 <option value="">-- 请选择 --</option>
-                                {LEVEL_1_DATA.map(cat => <option key={cat.code} value={cat.name}>{cat.name}</option>)}
+                                {insuranceTypes.level1.map((cat: any) => <option key={cat.code} value={cat.name}>{cat.name}</option>)}
                             </Select>
 
                             <Select label="二级分类" id="level2" name="level2" value={selectedLevel2Code} onChange={handleLevel2Change} disabled={!selectedLevel1Code}>
@@ -250,7 +268,7 @@ const AddClausePage: React.FC<{ onBack: () => void; initialClause?: Clause; comp
                             <h2 className="text-xl font-bold text-gray-800">
                                 {initialClause ? '修改条款' : '新增条款'}
                                 <span className="ml-2 text-base font-normal text-gray-500">
-                                    ({selectedLevel1Name} &gt; {LEVEL_2_DATA.find(l => l.code === selectedLevel2Code)?.name || ''} &gt; {newClause.categoryLevel3Name})
+                                    ({selectedLevel1Name} &gt; {insuranceTypes.level2.find((l: any) => l.code === selectedLevel2Code)?.name || ''} &gt; {newClause.categoryLevel3Name})
                                 </span>
                             </h2>
                         </div>

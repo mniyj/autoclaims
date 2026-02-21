@@ -1,0 +1,360 @@
+{
+  "ACC_MEDICAL": {
+    "description": "意外医疗费用理算",
+    "insuranceType": "ACCIDENT",
+    "formula": "min((approved - deductible) * ratio, cap - prior)",
+    "variables": {
+      "approved": {
+        "source": "claim.approved_expenses",
+        "type": "number",
+        "label": "核准医疗费用"
+      },
+      "deductible": {
+        "source": "coverage.deductible",
+        "type": "number",
+        "label": "免赔额"
+      },
+      "ratio": {
+        "source": "coverage.reimbursement_ratio",
+        "type": "number",
+        "label": "赔付比例"
+      },
+      "cap": {
+        "source": "coverage.sum_insured",
+        "type": "number",
+        "label": "保额/年度限额"
+      },
+      "prior": {
+        "source": "claim.prior_benefit",
+        "type": "number",
+        "label": "已理赔金额"
+      }
+    },
+    "steps": [
+      {
+        "name": "扣免赔额",
+        "expr": "approved - deductible",
+        "output": "after_deductible"
+      },
+      {
+        "name": "应用赔付比例",
+        "expr": "after_deductible * ratio",
+        "output": "gross_amount"
+      },
+      {
+        "name": "扣既往理赔",
+        "expr": "gross_amount - prior",
+        "output": "net_amount"
+      },
+      {
+        "name": "应用限额",
+        "expr": "min(net_amount, cap)",
+        "output": "final_amount"
+      }
+    ],
+    "output": {
+      "field": "final_amount",
+      "type": "number",
+      "label": "理算金额"
+    }
+  },
+
+  "ACC_DISABILITY": {
+    "description": "意外伤残理算",
+    "insuranceType": "ACCIDENT",
+    "formula": "sum_insured * grade_ratio",
+    "variables": {
+      "sum_insured": {
+        "source": "coverage.sum_insured",
+        "type": "number",
+        "label": "基本保额"
+      },
+      "grade_ratio": {
+        "source": "lookup",
+        "lookup_table": "disability_grade_table",
+        "lookup_key": "claim.disability_grade",
+        "type": "number",
+        "label": "伤残赔付比例"
+      },
+      "disability_grade": {
+        "source": "claim.disability_grade",
+        "type": "string",
+        "label": "伤残等级（1-10）"
+      }
+    },
+    "lookup_tables": {
+      "disability_grade_table": {
+        "1": 1.0,
+        "2": 0.9,
+        "3": 0.8,
+        "4": 0.7,
+        "5": 0.6,
+        "6": 0.5,
+        "7": 0.4,
+        "8": 0.3,
+        "9": 0.2,
+        "10": 0.1
+      }
+    },
+    "steps": [
+      {
+        "name": "查询赔付比例",
+        "expr": "grade_ratio",
+        "output": "grade_ratio"
+      },
+      {
+        "name": "计算赔付金额",
+        "expr": "sum_insured * grade_ratio",
+        "output": "final_amount"
+      }
+    ],
+    "output": {
+      "field": "final_amount",
+      "type": "number",
+      "label": "伤残理赔金额"
+    }
+  },
+
+  "ACC_DEATH": {
+    "description": "意外身故理算",
+    "insuranceType": "ACCIDENT",
+    "formula": "sum_insured",
+    "variables": {
+      "sum_insured": {
+        "source": "coverage.sum_insured",
+        "type": "number",
+        "label": "身故保额"
+      }
+    },
+    "steps": [
+      {
+        "name": "直接给付保额",
+        "expr": "sum_insured",
+        "output": "final_amount"
+      }
+    ],
+    "output": {
+      "field": "final_amount",
+      "type": "number",
+      "label": "身故理赔金额"
+    }
+  },
+
+  "ACC_HOSPITAL_ALLOWANCE": {
+    "description": "意外住院津贴理算",
+    "insuranceType": "ACCIDENT",
+    "formula": "days * daily_allowance",
+    "variables": {
+      "days": {
+        "source": "claim.hospital_days",
+        "type": "number",
+        "label": "住院天数"
+      },
+      "daily_allowance": {
+        "source": "coverage.daily_allowance",
+        "type": "number",
+        "label": "每日津贴金额"
+      }
+    },
+    "steps": [
+      {
+        "name": "计算津贴总额",
+        "expr": "days * daily_allowance",
+        "output": "final_amount"
+      }
+    ],
+    "output": {
+      "field": "final_amount",
+      "type": "number",
+      "label": "住院津贴金额"
+    }
+  },
+
+  "HEALTH_CI": {
+    "description": "重大疾病给付",
+    "insuranceType": "HEALTH",
+    "formula": "sum_insured * stage_ratio",
+    "variables": {
+      "sum_insured": {
+        "source": "coverage.sum_insured",
+        "type": "number",
+        "label": "重疾保额"
+      },
+      "stage_ratio": {
+        "source": "lookup",
+        "lookup_table": "ci_stage_table",
+        "lookup_key": "claim.ci_stage",
+        "type": "number",
+        "label": "疾病分期赔付比例"
+      }
+    },
+    "lookup_tables": {
+      "ci_stage_table": {
+        "轻度": 0.3,
+        "中度": 0.6,
+        "重度": 1.0
+      }
+    },
+    "steps": [
+      {
+        "name": "查询分期比例",
+        "expr": "stage_ratio",
+        "output": "stage_ratio"
+      },
+      {
+        "name": "计算给付金额",
+        "expr": "sum_insured * stage_ratio",
+        "output": "final_amount"
+      }
+    ],
+    "output": {
+      "field": "final_amount",
+      "type": "number",
+      "label": "重疾给付金额"
+    }
+  },
+
+  "HEALTH_MEDICAL": {
+    "description": "健康医疗费用理算",
+    "insuranceType": "HEALTH",
+    "formula": "min((approved - deductible) * ratio, cap - prior)",
+    "variables": {
+      "approved": {
+        "source": "claim.approved_expenses",
+        "type": "number",
+        "label": "核准医疗费用"
+      },
+      "deductible": {
+        "source": "coverage.deductible",
+        "type": "number",
+        "label": "免赔额"
+      },
+      "ratio": {
+        "source": "coverage.reimbursement_ratio",
+        "type": "number",
+        "label": "赔付比例"
+      },
+      "cap": {
+        "source": "coverage.sum_insured",
+        "type": "number",
+        "label": "年度限额"
+      },
+      "prior": {
+        "source": "claim.prior_benefit",
+        "type": "number",
+        "label": "已理赔金额"
+      }
+    },
+    "steps": [
+      {
+        "name": "扣免赔额",
+        "expr": "approved - deductible",
+        "output": "after_deductible"
+      },
+      {
+        "name": "应用赔付比例",
+        "expr": "after_deductible * ratio",
+        "output": "gross_amount"
+      },
+      {
+        "name": "扣既往理赔",
+        "expr": "gross_amount - prior",
+        "output": "net_amount"
+      },
+      {
+        "name": "应用限额",
+        "expr": "min(net_amount, cap)",
+        "output": "final_amount"
+      }
+    ],
+    "output": {
+      "field": "final_amount",
+      "type": "number",
+      "label": "医疗理赔金额"
+    }
+  },
+
+  "AUTO_DAMAGE": {
+    "description": "车辆损失理算",
+    "insuranceType": "AUTO",
+    "formula": "min(repair_cost, actual_value) * liability_ratio",
+    "variables": {
+      "repair_cost": {
+        "source": "claim.repair_estimate",
+        "type": "number",
+        "label": "定损金额"
+      },
+      "actual_value": {
+        "source": "vehicle.actual_value",
+        "type": "number",
+        "label": "车辆实际价值"
+      },
+      "liability_ratio": {
+        "source": "claim.liability_ratio",
+        "type": "number",
+        "label": "责任比例"
+      }
+    },
+    "steps": [
+      {
+        "name": "取定损与价值较小值",
+        "expr": "min(repair_cost, actual_value)",
+        "output": "base_amount"
+      },
+      {
+        "name": "应用责任比例",
+        "expr": "base_amount * liability_ratio",
+        "output": "final_amount"
+      }
+    ],
+    "output": {
+      "field": "final_amount",
+      "type": "number",
+      "label": "车损理赔金额"
+    }
+  },
+
+  "AUTO_INJURY": {
+    "description": "车上人员伤亡理算",
+    "insuranceType": "AUTO",
+    "formula": "sum_insured * grade_ratio",
+    "variables": {
+      "sum_insured": {
+        "source": "coverage.per_seat_sum_insured",
+        "type": "number",
+        "label": "每座保额"
+      },
+      "grade_ratio": {
+        "source": "lookup",
+        "lookup_table": "injury_grade_table",
+        "lookup_key": "claim.injury_grade",
+        "type": "number",
+        "label": "伤亡等级比例"
+      }
+    },
+    "lookup_tables": {
+      "injury_grade_table": {
+        "死亡": 1.0,
+        "重伤": 0.8,
+        "轻伤": 0.3
+      }
+    },
+    "steps": [
+      {
+        "name": "查询伤亡比例",
+        "expr": "grade_ratio",
+        "output": "grade_ratio"
+      },
+      {
+        "name": "计算给付金额",
+        "expr": "sum_insured * grade_ratio",
+        "output": "final_amount"
+      }
+    ],
+    "output": {
+      "field": "final_amount",
+      "type": "number",
+      "label": "人员伤亡理赔金额"
+    }
+  }
+}

@@ -1,0 +1,1093 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "InsurancePolicyRuleSet_V2",
+  "description": "保险规则集通用 Schema V2.1 —— 适用于车险、意外险等产品线。三域执行模型（定责/定损/后处理），完整ASSESSMENT域含医疗必需合理性校验和费用定价校验。",
+  "version": "2.1.0",
+  "type": "object",
+  "required": [
+    "ruleset_id",
+    "product_line",
+    "policy_info",
+    "rules",
+    "override_chains",
+    "field_dictionary",
+    "execution_pipeline",
+    "metadata"
+  ],
+  "properties": {
+    "ruleset_id": {
+      "type": "string",
+      "description": "规则集唯一标识"
+    },
+    "product_line": {
+      "type": "string",
+      "enum": [
+        "AUTO",
+        "ACCIDENT",
+        "HEALTH",
+        "PROPERTY",
+        "LIABILITY"
+      ],
+      "description": "产品线标识"
+    },
+    "policy_info": {
+      "type": "object",
+      "description": "保单基本信息 —— 不同产品线字段有差异，此处定义通用部分",
+      "required": [
+        "policy_no",
+        "product_code",
+        "product_name",
+        "insurer",
+        "effective_date",
+        "expiry_date",
+        "coverages"
+      ],
+      "properties": {
+        "policy_no": {
+          "type": "string"
+        },
+        "product_code": {
+          "type": "string"
+        },
+        "product_name": {
+          "type": "string"
+        },
+        "plan_name": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "保障计划名称（意外险适用）"
+        },
+        "insurer": {
+          "type": "string"
+        },
+        "effective_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "expiry_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "payment_mode": {
+          "type": "string",
+          "enum": [
+            "ANNUAL",
+            "MONTHLY",
+            "SINGLE"
+          ]
+        },
+        "insured_subject": {
+          "type": "object",
+          "description": "保险标的 —— 车险为车辆，意外险为被保险人",
+          "properties": {
+            "subject_type": {
+              "type": "string",
+              "enum": [
+                "VEHICLE",
+                "PERSON"
+              ]
+            },
+            "vehicle": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "description": "车辆信息（车险适用）",
+              "properties": {
+                "plate_no": {
+                  "type": "string"
+                },
+                "vin": {
+                  "type": "string"
+                },
+                "model": {
+                  "type": "string"
+                },
+                "engine_no": {
+                  "type": "string"
+                },
+                "register_date": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "usage_type": {
+                  "type": "string",
+                  "enum": [
+                    "PERSONAL",
+                    "COMMERCIAL",
+                    "GOVERNMENT",
+                    "SPECIAL"
+                  ]
+                },
+                "new_vehicle_purchase_price": {
+                  "type": "number"
+                },
+                "actual_value": {
+                  "type": "number"
+                }
+              }
+            },
+            "person": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "description": "被保险人信息（意外险/健康险适用）",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "id_type": {
+                  "type": "string",
+                  "enum": [
+                    "ID_CARD",
+                    "PASSPORT",
+                    "MILITARY_ID",
+                    "HK_MACAO_PASS",
+                    "OTHER"
+                  ]
+                },
+                "id_number": {
+                  "type": "string"
+                },
+                "gender": {
+                  "type": "string",
+                  "enum": [
+                    "MALE",
+                    "FEMALE"
+                  ]
+                },
+                "birth_date": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "age_at_inception": {
+                  "type": "integer"
+                },
+                "occupation_class": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 7
+                },
+                "occupation_code": {
+                  "type": "string"
+                },
+                "occupation_name": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "clause_versions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "clause_code": {
+                "type": "string"
+              },
+              "clause_name": {
+                "type": "string"
+              },
+              "clause_type": {
+                "type": "string",
+                "enum": [
+                  "MAIN",
+                  "ADDITIONAL"
+                ]
+              },
+              "filing_no": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "coverages": {
+          "type": "array",
+          "description": "保障明细",
+          "items": {
+            "type": "object",
+            "required": [
+              "coverage_code",
+              "coverage_name",
+              "coverage_type",
+              "benefit_type",
+              "sum_insured"
+            ],
+            "properties": {
+              "coverage_code": {
+                "type": "string"
+              },
+              "coverage_name": {
+                "type": "string"
+              },
+              "coverage_type": {
+                "type": "string",
+                "enum": [
+                  "MAIN",
+                  "ADDITIONAL"
+                ]
+              },
+              "benefit_type": {
+                "type": "string",
+                "enum": [
+                  "LUMP_SUM",
+                  "REIMBURSEMENT",
+                  "INDEMNITY",
+                  "PER_DIEM"
+                ],
+                "description": "定额给付/费用补偿/损失赔偿/日额给付"
+              },
+              "sum_insured": {
+                "type": "object",
+                "properties": {
+                  "amount": {
+                    "type": "number"
+                  },
+                  "currency": {
+                    "type": "string",
+                    "default": "CNY"
+                  },
+                  "per_unit": {
+                    "type": "string",
+                    "enum": [
+                      "PER_PERSON",
+                      "PER_ACCIDENT",
+                      "AGGREGATE",
+                      "PER_VEHICLE"
+                    ]
+                  }
+                }
+              },
+              "deductible": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "properties": {
+                  "amount": {
+                    "type": "number"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "ABSOLUTE",
+                      "RELATIVE",
+                      "FRANCHISE"
+                    ]
+                  },
+                  "currency": {
+                    "type": "string",
+                    "default": "CNY"
+                  }
+                }
+              },
+              "reimbursement_rules": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "description": "赔付比例规则（费用补偿型适用）",
+                "properties": {
+                  "social_insurance_covered_ratio": {
+                    "type": "number"
+                  },
+                  "social_insurance_uncovered_ratio": {
+                    "type": "number"
+                  },
+                  "without_social_insurance_ratio": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                }
+              },
+              "premium": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "execution_pipeline": {
+      "type": "object",
+      "description": "三域执行管道定义 —— 规定执行顺序和短路行为",
+      "required": [
+        "domains"
+      ],
+      "properties": {
+        "domains": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "domain",
+              "label",
+              "execution_mode",
+              "category_sequence"
+            ],
+            "properties": {
+              "domain": {
+                "type": "string",
+                "enum": [
+                  "ELIGIBILITY",
+                  "ASSESSMENT",
+                  "POST_PROCESS"
+                ],
+                "description": "执行域"
+              },
+              "label": {
+                "type": "string"
+              },
+              "execution_mode": {
+                "type": "string",
+                "enum": [
+                  "SEQUENTIAL_SHORT_CIRCUIT",
+                  "LOOP_PER_ITEM",
+                  "SEQUENTIAL_AGGREGATE"
+                ],
+                "description": "串行短路/逐项循环/串行汇总"
+              },
+              "input_granularity": {
+                "type": "string",
+                "enum": [
+                  "CLAIM_LEVEL",
+                  "ITEM_LEVEL",
+                  "AGGREGATE_LEVEL"
+                ],
+                "description": "输入粒度"
+              },
+              "loop_collection": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "循环对象路径（仅 LOOP_PER_ITEM 时有值）"
+              },
+              "short_circuit_on": {
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "items": {
+                  "type": "string"
+                },
+                "description": "触发短路的 action_type 列表"
+              },
+              "category_sequence": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "该域内的 category 执行顺序"
+              }
+            }
+          }
+        }
+      }
+    },
+    "rules": {
+      "type": "array",
+      "description": "全部规则",
+      "items": {
+        "type": "object",
+        "required": [
+          "rule_id",
+          "rule_name",
+          "execution",
+          "source",
+          "priority",
+          "category",
+          "status",
+          "conditions",
+          "action"
+        ],
+        "properties": {
+          "rule_id": {
+            "type": "string"
+          },
+          "rule_name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "execution": {
+            "type": "object",
+            "description": "执行域与循环控制 —— V2核心新增",
+            "required": [
+              "domain"
+            ],
+            "properties": {
+              "domain": {
+                "type": "string",
+                "enum": [
+                  "ELIGIBILITY",
+                  "ASSESSMENT",
+                  "POST_PROCESS"
+                ],
+                "description": "所属执行域"
+              },
+              "loop_over": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "循环对象字段路径（ASSESSMENT域：如 'claim.expense_items' / 'claim.damage_items'）"
+              },
+              "item_alias": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "循环变量别名（如 'expense_item' / 'damage_item'）"
+              },
+              "item_action_on_reject": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "enum": [
+                  "ZERO_AMOUNT",
+                  "SKIP_ITEM",
+                  "FLAG_ITEM",
+                  null
+                ],
+                "description": "明细级拒绝时的处理方式"
+              }
+            }
+          },
+          "source": {
+            "type": "object",
+            "required": [
+              "source_type",
+              "source_ref"
+            ],
+            "properties": {
+              "source_type": {
+                "type": "string",
+                "enum": [
+                  "STANDARD_CLAUSE",
+                  "ADDITIONAL_CLAUSE",
+                  "SPECIAL_AGREEMENT",
+                  "ENDORSEMENT",
+                  "REGULATORY"
+                ],
+                "description": "标准条款/附加条款/特别约定/批单/监管规定"
+              },
+              "source_ref": {
+                "type": "string"
+              },
+              "source_text": {
+                "type": "string"
+              },
+              "clause_code": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "page_location": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "properties": {
+                  "page": {
+                    "type": "integer"
+                  },
+                  "bbox": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "priority": {
+            "type": "object",
+            "required": [
+              "level",
+              "rank"
+            ],
+            "properties": {
+              "level": {
+                "type": "integer",
+                "enum": [
+                  1,
+                  2,
+                  3,
+                  4
+                ],
+                "description": "1=主险条款, 2=附加险条款, 3=特别约定/批单, 4=监管强制"
+              },
+              "level_label": {
+                "type": "string",
+                "enum": [
+                  "MAIN_CLAUSE",
+                  "ADDITIONAL_CLAUSE",
+                  "SPECIAL_AGREEMENT",
+                  "REGULATORY"
+                ]
+              },
+              "rank": {
+                "type": "integer",
+                "default": 0
+              }
+            }
+          },
+          "category": {
+            "type": "string",
+            "description": "规则类别 —— 前缀对应执行域 (E_=定责, A_=定损, P_=后处理)",
+            "enum": [
+              "E_LIABILITY_TRIGGER",
+              "E_EXCLUSION",
+              "E_OCCUPATION_CHECK",
+              "E_POLICY_STATUS",
+              "E_PAYOUT_RATIO",
+              "E_ANTI_FRAUD",
+              "A_PROVIDER_QUALIFY",
+              "A_ITEM_EXCLUSION",
+              "A_ITEM_NECESSITY",
+              "A_ITEM_PRICING",
+              "A_ITEM_SOCIAL_INSURANCE",
+              "A_ITEM_DEPRECIATION",
+              "A_ITEM_DEDUCTIBLE",
+              "P_COMPENSATION_DEDUCT",
+              "P_CUMULATIVE_CAP",
+              "P_DEDUCTIBLE",
+              "P_LIABILITY_APPLY",
+              "P_MULTI_COVERAGE",
+              "P_PRIOR_BENEFIT_DEDUCT"
+            ]
+          },
+          "applies_to": {
+            "type": "object",
+            "description": "适用范围",
+            "properties": {
+              "coverage_codes": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "适用保障代码列表，空数组=全部"
+              }
+            }
+          },
+          "conditions": {
+            "type": "object",
+            "description": "触发条件（逻辑表达式树）",
+            "required": [
+              "logic",
+              "expressions"
+            ],
+            "properties": {
+              "logic": {
+                "type": "string",
+                "enum": [
+                  "AND",
+                  "OR",
+                  "NOT",
+                  "SINGLE",
+                  "ALWAYS_TRUE"
+                ]
+              },
+              "expressions": {
+                "type": "array",
+                "items": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "title": "LeafCondition",
+                      "required": [
+                        "field",
+                        "operator"
+                      ],
+                      "properties": {
+                        "field": {
+                          "type": "string"
+                        },
+                        "operator": {
+                          "type": "string",
+                          "enum": [
+                            "EQ",
+                            "NEQ",
+                            "GT",
+                            "GTE",
+                            "LT",
+                            "LTE",
+                            "IN",
+                            "NOT_IN",
+                            "BETWEEN",
+                            "NOT_BETWEEN",
+                            "CONTAINS",
+                            "NOT_CONTAINS",
+                            "IS_NULL",
+                            "IS_NOT_NULL",
+                            "IS_TRUE",
+                            "IS_FALSE",
+                            "MATCHES"
+                          ]
+                        },
+                        "value": {},
+                        "value_unit": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "title": "GroupCondition",
+                      "required": [
+                        "logic",
+                        "expressions"
+                      ],
+                      "properties": {
+                        "logic": {
+                          "type": "string",
+                          "enum": [
+                            "AND",
+                            "OR",
+                            "NOT"
+                          ]
+                        },
+                        "expressions": {
+                          "type": "array"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "action": {
+            "type": "object",
+            "required": [
+              "action_type"
+            ],
+            "properties": {
+              "action_type": {
+                "type": "string",
+                "enum": [
+                  "APPROVE_CLAIM",
+                  "REJECT_CLAIM",
+                  "SET_CLAIM_RATIO",
+                  "ROUTE_CLAIM_MANUAL",
+                  "FLAG_FRAUD",
+                  "TERMINATE_CONTRACT",
+                  "APPROVE_ITEM",
+                  "REJECT_ITEM",
+                  "ADJUST_ITEM_AMOUNT",
+                  "SET_ITEM_RATIO",
+                  "FLAG_ITEM",
+                  "APPLY_FORMULA",
+                  "APPLY_CAP",
+                  "APPLY_DEDUCTIBLE",
+                  "SUM_COVERAGES",
+                  "DEDUCT_PRIOR_BENEFIT",
+                  "ADD_REMARK"
+                ],
+                "description": "动作类型 —— 前6个为案件级(ELIGIBILITY), 中5个为明细级(ASSESSMENT), 后6个为汇总级(POST_PROCESS)"
+              },
+              "params": {
+                "type": "object",
+                "description": "动作参数 —— 按 action_type 不同参数不同",
+                "properties": {
+                  "reject_reason_code": {
+                    "type": "string"
+                  },
+                  "payout_ratio": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "reduction_ratio": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "deductible_amount": {
+                    "type": "number"
+                  },
+                  "cap_field": {
+                    "type": "string"
+                  },
+                  "cap_amount": {
+                    "type": "number"
+                  },
+                  "social_insurance_ratio": {
+                    "type": "number"
+                  },
+                  "non_social_insurance_ratio": {
+                    "type": "number"
+                  },
+                  "fraud_risk_score": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "route_reason": {
+                    "type": "string"
+                  },
+                  "remark_template": {
+                    "type": "string"
+                  },
+                  "formula": {
+                    "type": "object",
+                    "properties": {
+                      "expression": {
+                        "type": "string"
+                      },
+                      "output_field": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "disability_grade_table": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "grade": {
+                          "type": "integer"
+                        },
+                        "payout_ratio": {
+                          "type": "number"
+                        }
+                      }
+                    }
+                  },
+                  "depreciation_table": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "age_from_months": {
+                          "type": "integer"
+                        },
+                        "age_to_months": {
+                          "type": "integer"
+                        },
+                        "monthly_rate_percent": {
+                          "type": "number"
+                        }
+                      }
+                    }
+                  },
+                  "pricing_reference": {
+                    "type": "object",
+                    "description": "定价参照（车险定损/医疗审核）",
+                    "properties": {
+                      "source": {
+                        "type": "string"
+                      },
+                      "tolerance_percent": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "EFFECTIVE",
+              "OVERRIDDEN",
+              "EXPIRED",
+              "DRAFT",
+              "PENDING_REVIEW",
+              "DISABLED"
+            ]
+          },
+          "overridden_by": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "override_reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "parsing_confidence": {
+            "type": "object",
+            "properties": {
+              "overall": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "condition_confidence": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "action_confidence": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "needs_human_review": {
+                "type": "boolean"
+              },
+              "review_hints": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "override_chains": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "chain_id",
+          "topic",
+          "chain",
+          "effective_rule_id",
+          "conflict_type"
+        ],
+        "properties": {
+          "chain_id": {
+            "type": "string"
+          },
+          "topic": {
+            "type": "string"
+          },
+          "affected_domain": {
+            "type": "string",
+            "enum": [
+              "ELIGIBILITY",
+              "ASSESSMENT",
+              "POST_PROCESS"
+            ]
+          },
+          "chain": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "rule_id": {
+                  "type": "string"
+                },
+                "priority_level": {
+                  "type": "integer"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "summary": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "effective_rule_id": {
+            "type": "string"
+          },
+          "conflict_type": {
+            "type": "string",
+            "enum": [
+              "OVERRIDE",
+              "SAME_PRIORITY_CONFLICT",
+              "COMPLEMENT"
+            ]
+          },
+          "resolution": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "field_dictionary": {
+      "type": "object",
+      "description": "字段数据字典 —— V2新增scope区分案件级/明细级字段",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "label",
+          "data_type",
+          "scope",
+          "source"
+        ],
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "data_type": {
+            "type": "string",
+            "enum": [
+              "STRING",
+              "NUMBER",
+              "BOOLEAN",
+              "DATE",
+              "DATETIME",
+              "ENUM",
+              "ARRAY"
+            ]
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "CLAIM_LEVEL",
+              "ITEM_LEVEL",
+              "POLICY_LEVEL",
+              "CALCULATED"
+            ],
+            "description": "字段作用域：前端条件构建器据此过滤可选字段"
+          },
+          "applicable_domains": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "ELIGIBILITY",
+                "ASSESSMENT",
+                "POST_PROCESS"
+              ]
+            },
+            "description": "可在哪些执行域中使用"
+          },
+          "enum_values": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "source": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "version",
+        "generated_at",
+        "generated_by",
+        "total_rules"
+      ],
+      "properties": {
+        "schema_version": {
+          "type": "string",
+          "const": "2.1.0"
+        },
+        "version": {
+          "type": "string"
+        },
+        "generated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "generated_by": {
+          "type": "string",
+          "enum": [
+            "AI_PARSING",
+            "MANUAL_ENTRY",
+            "HYBRID"
+          ]
+        },
+        "ai_model": {
+          "type": "string"
+        },
+        "total_rules": {
+          "type": "integer"
+        },
+        "rules_by_domain": {
+          "type": "object",
+          "properties": {
+            "eligibility": {
+              "type": "integer"
+            },
+            "assessment": {
+              "type": "integer"
+            },
+            "post_process": {
+              "type": "integer"
+            }
+          }
+        },
+        "rules_by_status": {
+          "type": "object",
+          "properties": {
+            "effective": {
+              "type": "integer"
+            },
+            "overridden": {
+              "type": "integer"
+            }
+          }
+        },
+        "unresolved_conflicts": {
+          "type": "integer"
+        },
+        "low_confidence_rules": {
+          "type": "integer"
+        },
+        "audit_trail": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "action": {
+                "type": "string"
+              },
+              "user_id": {
+                "type": "string"
+              },
+              "details": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

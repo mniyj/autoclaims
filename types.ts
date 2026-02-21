@@ -12,6 +12,7 @@ export enum PrimaryCategory {
   TERM_LIFE = '定期寿险',
   WHOLE_LIFE = '终身寿险',
   ANNUITY = '年金保险',
+  CAR_INSURANCE = '车险',
 }
 
 export enum ClauseType {
@@ -116,6 +117,8 @@ export interface BaseProduct {
   supportsOnlineClaim: boolean;
   isOnline?: boolean;
   intakeConfig?: IntakeConfig;
+  intakeConfigUpdatedAt?: string;
+  intakeConfigOperator?: string;
 
   // New file upload fields
   clauseTextFile?: string;
@@ -169,18 +172,25 @@ export interface AnnuityProduct extends BaseProduct {
   coveragePlans?: CoveragePlan[];
 }
 
+export interface CarInsuranceProduct extends BaseProduct {
+  primaryCategory: PrimaryCategory.CAR_INSURANCE;
+  coveragePlans?: CoveragePlan[];
+}
+
 export type InsuranceProduct =
   | HealthAccidentCriticalIllnessProduct
   | TermLifeProduct
   | WholeLifeProduct
-  | AnnuityProduct;
+  | AnnuityProduct
+  | CarInsuranceProduct;
 
 // Type for the clause data fetched from the "database"
 export type Clause =
   | Omit<HealthAccidentCriticalIllnessProduct, 'marketingName' | 'salesUrl'>
   | Omit<TermLifeProduct, 'marketingName' | 'salesUrl'>
   | Omit<WholeLifeProduct, 'marketingName' | 'salesUrl'>
-  | Omit<AnnuityProduct, 'marketingName' | 'salesUrl'>;
+  | Omit<AnnuityProduct, 'marketingName' | 'salesUrl'>
+  | Omit<CarInsuranceProduct, 'marketingName' | 'salesUrl'>;
 
 // --- START: Types for Strategy Management ---
 export interface DecisionRule {
@@ -428,6 +438,7 @@ export interface ClaimItem {
   name: string;
   description: string;
   materialIds: string[]; // IDs of ClaimsMaterial associated with this claim item
+  responsibilityIds?: string[];
 }
 
 export interface ProductClaimConfig {
@@ -556,6 +567,9 @@ export interface IntakeConfig {
   config_version?: string;
   fields: IntakeField[];
   voice_input: IntakeVoiceInput;
+  claimMaterials?: {
+    extraMaterialIds: string[];
+  };
 }
 // --- END: Types for Claim Intake Configuration ---
 
@@ -1022,6 +1036,237 @@ export interface InvoiceItemAudit {
 export { MedicalInvoiceData };
 // --- END: Types for Medical Invoice Audit & Insurance Catalog ---
 
+// --- START: Types for Quote and Policy Management ---
+
+// 询价单状态
+export enum QuoteStatus {
+  DRAFT = '草稿',
+  PENDING = '待报价',
+  QUOTED = '已报价',
+  ACCEPTED = '已接受',
+  REJECTED = '已拒绝',
+  EXPIRED = '已过期',
+  CONVERTED = '已转保单',
+}
+
+// 保单状态
+export enum PolicyStatus {
+  DRAFT = '草稿',
+  PENDING_PAYMENT = '待支付',
+  EFFECTIVE = '生效中',
+  LAPSED = '失效',
+  SURRENDERED = '已退保',
+  EXPIRED = '已满期',
+  CANCELLED = '已注销',
+}
+
+// 询价类型
+export enum QuoteType {
+  INDIVIDUAL = '个人询价',
+  GROUP = '团体询价',
+}
+
+// 投保人信息
+export interface QuotePolicyholder {
+  name: string;
+  idType: '身份证' | '护照' | '港澳通行证' | '其他';
+  idNumber: string;
+  gender: '男' | '女';
+  birthDate: string;
+  phone: string;
+  email?: string;
+  address?: string;
+}
+
+// 被保险人信息
+export interface QuoteInsured {
+  id: string;
+  name: string;
+  idType: '身份证' | '护照' | '港澳通行证' | '其他';
+  idNumber: string;
+  gender: '男' | '女';
+  birthDate: string;
+  relationship: '本人' | '配偶' | '子女' | '父母' | '其他';
+  occupation?: string;
+  phone?: string;
+}
+
+// 询价方案条款配置
+export interface QuotePlanClause {
+  clauseCode: string;
+  clauseName: string;
+  clauseType: '主险' | '附加险';
+  sumInsured: number;
+  premium: number;
+  deductible?: string;
+  coverageDetails?: CoverageItem[];
+}
+
+// 询价方案
+export interface QuotePlan {
+  id: string;
+  planName: string;
+  productCode: string;
+  productName: string;
+  companyName: string;
+  premium: number;
+  paymentPeriod: string;
+  coveragePeriod: string;
+  clauses: QuotePlanClause[];
+  notes?: string;
+}
+
+// 询价单
+export interface QuoteRequest {
+  id: string;
+  quoteNumber: string;
+  type: QuoteType;
+  status: QuoteStatus;
+  policyholder: QuotePolicyholder;
+  insureds: QuoteInsured[];
+  plans: QuotePlan[];
+  selectedPlanId?: string;
+  effectiveDate?: string;
+  expiryDate?: string;
+  validUntil?: string;
+  createdAt: string;
+  updatedAt: string;
+  operator: string;
+  notes?: string;
+}
+
+// 保单条款
+export interface PolicyClause {
+  clauseCode: string;
+  clauseName: string;
+  clauseType: '主险' | '附加险';
+  sumInsured: number;
+  premium: number;
+  paymentFrequency: '年缴' | '半年缴' | '季缴' | '月缴';
+  deductible?: string;
+  coverageDetails?: CoverageItem[];
+  waitingPeriod?: string;
+}
+
+// 特别约定
+export interface SpecialAgreement {
+  id: string;
+  title: string;
+  content: string;
+  category: '扩展责任' | '限制责任' | '特约事项' | '其他';
+  effectiveDate?: string;
+  expiryDate?: string;
+}
+
+// 免赔约定
+export interface DeductionRule {
+  id: string;
+  name: string;
+  type: '绝对免赔额' | '相对免赔额' | '比例免赔' | '累积免赔';
+  value: number;
+  unit: '元' | '%' | '次';
+  description: string;
+  applicableScope: '每次事故' | '年度累积' | '保单期间';
+}
+
+// 保单明细表项
+export interface PolicyScheduleItem {
+  id: string;
+  category: string;
+  itemName: string;
+  sumInsured: number;
+  deductible: number;
+  reimbursementRatio: number;
+  remarks?: string;
+}
+
+// 保单明细表
+export interface PolicySchedule {
+  version: string;
+  generatedAt: string;
+  items: PolicyScheduleItem[];
+  totalSumInsured: number;
+  totalPremium: number;
+}
+
+// 保单
+export interface InsurancePolicy {
+  id: string;
+  policyNumber: string;
+  quoteId?: string;
+  quoteNumber?: string;
+  status: PolicyStatus;
+
+  // 产品信息
+  productCode: string;
+  productName: string;
+  companyName: string;
+
+  // 当事人信息
+  policyholder: QuotePolicyholder;
+  insureds: QuoteInsured[];
+
+  // 条款配置
+  mainClause: PolicyClause;
+  riderClauses: PolicyClause[];
+
+  // 特别约定与免赔
+  specialAgreements: SpecialAgreement[];
+  deductionRules: DeductionRule[];
+
+  // 保单明细表
+  schedule?: PolicySchedule;
+
+  // 日期信息
+  effectiveDate: string;
+  expiryDate: string;
+  issueDate: string;
+  paymentDueDate?: string;
+
+  // 金额信息
+  totalPremium: number;
+  paymentFrequency: '年缴' | '半年缴' | '季缴' | '月缴';
+  paidPremium?: number;
+
+  // 理赔统计
+  claimCount: number;
+  totalClaimAmount: number;
+
+  // 元数据
+  createdAt: string;
+  updatedAt: string;
+  operator: string;
+  notes?: string;
+}
+
+// 保单列表项（用于列表展示）
+export interface PolicyListItem {
+  id: string;
+  policyNumber: string;
+  productName: string;
+  companyName: string;
+  policyholder: string;
+  effectiveDate: string;
+  expiryDate: string;
+  status: PolicyStatus;
+  totalPremium: number;
+  claimCount: number;
+}
+
+// 询价单列表项（用于列表展示）
+export interface QuoteListItem {
+  id: string;
+  quoteNumber: string;
+  type: QuoteType;
+  status: QuoteStatus;
+  policyholder: string;
+  insuredCount: number;
+  planCount: number;
+  createdAt: string;
+  validUntil?: string;
+}
+// --- END: Types for Quote and Policy Management ---
+
 // --- START: Types for User Operation Logs ---
 // 用户操作类型枚举（涵盖所有C端用户操作）
 export enum UserOperationType {
@@ -1082,3 +1327,178 @@ export interface UserOperationLog {
   metadata?: Record<string, any>;   // 其他元数据
 }
 // --- END: Types for User Operation Logs ---
+
+// --- START: Types for Multi-File Processing ---
+
+/** 文件类型分类 */
+export type FileTypeCategory =
+  | 'image_invoice'      // 发票图片
+  | 'image_report'       // 检查报告图片
+  | 'image_scene'        // 现场照片
+  | 'image_id'           // 身份证件
+  | 'image_other'        // 其他图片
+  | 'pdf_clause'         // 条款 PDF
+  | 'pdf_report'         // 报告 PDF
+  | 'pdf_invoice'        // 发票 PDF
+  | 'pdf_other'          // 其他 PDF
+  | 'video_scene'        // 事故现场视频
+  | 'video_surveillance' // 监控视频
+  | 'excel_expense'      // 费用清单 Excel
+  | 'excel_other'        // 其他 Excel
+  | 'word_diagnosis'     // 诊断证明 Word
+  | 'word_other'         // 其他 Word
+  | 'other';             // 其他类型
+
+/** 解析状态 */
+export type ParseStatus = 'pending' | 'processing' | 'completed' | 'failed';
+
+/** 视频关键帧 */
+export interface KeyFrame {
+  timestamp: number;        // 时间戳（毫秒）
+  imageData: string;        // Base64 图像数据
+  description?: string;     // AI 描述
+}
+
+/** 视频元数据 */
+export interface VideoMetadata {
+  duration: number;         // 时长（秒）
+  width?: number;           // 宽度
+  height?: number;          // 高度
+  keyFrames: KeyFrame[];    // 关键帧
+  audioTranscript?: string; // 语音转写文本
+  format?: string;          // 视频格式
+  size?: number;            // 文件大小（字节）
+}
+
+/** PDF 元数据 */
+export interface PDFMetadata {
+  pageCount: number;        // 页数
+  hasText: boolean;         // 是否包含可提取文本
+  hasImages: boolean;       // 是否包含图片
+  needsOCR: boolean;        // 是否需要 OCR
+}
+
+/** 文档 AI 分析结果 */
+export interface DocumentAnalysisResult {
+  documentType: string;              // 文档类型
+  confidence: number;                // 整体置信度 0-100
+  extractedFields: Record<string, any>;  // 提取的字段
+  summary?: string;                  // 文档摘要
+  warnings?: string[];               // 警告信息
+  anomalies?: string[];              // 异常发现
+}
+
+/** 解析后的文档 */
+export interface ParsedDocument {
+  documentId: string;                    // 文档 ID
+  fileName: string;                      // 原始文件名
+  fileType: FileTypeCategory;            // 文件类型分类
+  mimeType: string;                      // MIME 类型
+  ossKey: string;                        // OSS 存储路径
+  ossUrl: string;                        // OSS 访问 URL
+  parseStatus: ParseStatus;              // 解析状态
+
+  // 解析结果
+  extractedText?: string;                // 提取的文本
+  structuredData?: Record<string, any>;  // 结构化数据
+  ocrData?: MedicalInvoiceData;          // OCR 识别数据（发票等）
+
+  // 类型特定元数据
+  videoMetadata?: VideoMetadata;         // 视频专用
+  pdfMetadata?: PDFMetadata;             // PDF 专用
+
+  // AI 分析结果
+  aiAnalysis?: DocumentAnalysisResult;   // AI 分析
+  confidence: number;                    // 整体置信度
+
+  // 处理信息
+  parseTime?: string;                    // 解析时间
+  parseDuration?: number;                // 解析耗时（毫秒）
+  errorMessage?: string;                 // 错误信息
+}
+
+/** 交叉验证类型 */
+export type CrossValidationType =
+  | 'amount_consistency'     // 金额一致性
+  | 'date_consistency'       // 日期一致性
+  | 'identity'               // 身份一致性
+  | 'timeline';              // 时间线合理性
+
+/** 交叉验证严重程度 */
+export type CrossValidationSeverity = 'info' | 'warning' | 'error';
+
+/** 交叉验证结果 */
+export interface CrossValidationResult {
+  type: CrossValidationType;             // 验证类型
+  passed: boolean;                       // 是否通过
+  severity: CrossValidationSeverity;     // 严重程度
+  message: string;                       // 验证消息
+  details: {
+    field?: string;                      // 涉及字段
+    expected?: number | string;          // 期望值
+    actual?: number | string;            // 实际值
+    difference?: number;                 // 差异
+    relatedDocuments?: string[];         // 相关文档 ID
+  };
+}
+
+/** 材料完整性检查结果 */
+export interface DocumentCompletenessResult {
+  isComplete: boolean;                   // 是否完整
+  completenessScore: number;             // 完整度评分 0-100
+  requiredMaterials: string[];           // 必需材料列表
+  providedMaterials: string[];           // 已提供材料列表
+  missingMaterials: string[];            // 缺失材料列表
+  optionalMaterials: string[];           // 可选材料列表
+  warnings?: string[];                   // 警告信息
+}
+
+/** 人工介入点类型 */
+export type InterventionType =
+  | 'document_incomplete'    // 材料不完整
+  | 'eligibility_doubt'      // 责任存疑
+  | 'amount_anomaly'         // 金额异常
+  | 'high_risk'              // 高风险
+  | 'fraud_suspected'        // 欺诈嫌疑
+  | 'manual_request';        // 用户请求人工
+
+/** 人工介入点 */
+export interface InterventionPoint {
+  id: string;                            // 介入点 ID
+  type: InterventionType;                // 介入类型
+  reason: string;                        // 介入原因
+  timestamp: string;                     // 时间戳
+  requiredAction: string;                // 需要的操作
+  resolved: boolean;                     // 是否已解决
+  resolvedBy?: string;                   // 解决人
+  resolvedAt?: string;                   // 解决时间
+  resolution?: string;                   // 解决方案
+}
+
+/** 多文件处理请求 */
+export interface MultiFileProcessRequest {
+  claimCaseId: string;                   // 案件 ID
+  productCode: string;                   // 产品代码
+  documents: Array<{
+    ossKey: string;                      // OSS 路径
+    fileName: string;                    // 文件名
+    mimeType: string;                    // MIME 类型
+  }>;
+  options?: {
+    skipOCR?: boolean;                   // 跳过 OCR
+    skipAI?: boolean;                    // 跳过 AI 分析
+    language?: string;                   // 语言
+  };
+}
+
+/** 多文件处理响应 */
+export interface MultiFileProcessResponse {
+  claimCaseId: string;                   // 案件 ID
+  documents: ParsedDocument[];           // 解析后的文档
+  crossValidation: CrossValidationResult[];  // 交叉验证结果
+  completeness: DocumentCompletenessResult;  // 完整性检查
+  interventionPoints: InterventionPoint[];   // 人工介入点
+  processingTime: number;                // 总处理时间（毫秒）
+}
+
+// --- END: Types for Multi-File Processing ---

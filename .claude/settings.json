@@ -1,0 +1,7 @@
+{
+  "enabledPlugins": {
+    "superpowers-chrome@superpowers-marketplace": true,
+    "document-skills@anthropic-agent-skills": true,
+    "everything-claude-code@everything-claude-code": true
+  }
+}

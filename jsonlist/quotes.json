@@ -1,0 +1,103 @@
+[
+  {
+    "id": "quote-001",
+    "quoteNumber": "QT2026011700001",
+    "type": "个人询价",
+    "status": "已转保单",
+    "policyholder": {
+      "name": "张三",
+      "idType": "身份证",
+      "idNumber": "110101199001011234",
+      "gender": "男",
+      "birthDate": "1990-01-01",
+      "phone": "13800138000",
+      "email": "zhangsan@example.com",
+      "address": "北京市朝阳区某某街道123号"
+    },
+    "insureds": [
+      {
+        "id": "insured-001",
+        "name": "张三",
+        "idType": "身份证",
+        "idNumber": "110101199001011234",
+        "gender": "男",
+        "birthDate": "1990-01-01",
+        "relationship": "本人",
+        "phone": "13800138000"
+      }
+    ],
+    "plans": [
+      {
+        "id": "plan-001",
+        "planName": "基础保障方案",
+        "productCode": "PROD001",
+        "productName": "众民保·全民普惠医疗险",
+        "companyName": "众安保险",
+        "premium": 365,
+        "paymentPeriod": "年缴",
+        "coveragePeriod": "1年",
+        "clauses": [
+          {
+            "clauseCode": "CL001",
+            "clauseName": "基本医疗保险",
+            "clauseType": "主险",
+            "sumInsured": 2000000,
+            "premium": 300,
+            "paymentFrequency": "年缴"
+          }
+        ]
+      }
+    ],
+    "selectedPlanId": "plan-001",
+    "effectiveDate": "2026-02-01",
+    "expiryDate": "2027-02-01",
+    "validUntil": "2026-03-17",
+    "createdAt": "2026-02-17T10:00:00Z",
+    "updatedAt": "2026-02-18T03:55:25.233Z",
+    "operator": "admin",
+    "notes": "客户对保额要求较高"
+  },
+  {
+    "id": "quote-002",
+    "quoteNumber": "QT2026011600002",
+    "type": "团体询价",
+    "status": "草稿",
+    "policyholder": {
+      "name": "某某科技有限公司",
+      "idType": "其他",
+      "idNumber": "91110108123456789X",
+      "gender": "男",
+      "birthDate": "2010-01-01",
+      "phone": "010-12345678",
+      "email": "company@example.com",
+      "address": "上海市浦东新区某某路456号"
+    },
+    "insureds": [
+      {
+        "id": "insured-002",
+        "name": "李四",
+        "idType": "身份证",
+        "idNumber": "110101199205201234",
+        "gender": "女",
+        "birthDate": "1992-05-20",
+        "relationship": "员工",
+        "phone": "13900139000"
+      },
+      {
+        "id": "insured-003",
+        "name": "王五",
+        "idType": "身份证",
+        "idNumber": "110101198810101234",
+        "gender": "男",
+        "birthDate": "1988-10-10",
+        "relationship": "员工",
+        "phone": "13700137000"
+      }
+    ],
+    "plans": [],
+    "createdAt": "2026-02-16T15:30:00Z",
+    "updatedAt": "2026-02-16T15:30:00Z",
+    "operator": "admin",
+    "notes": "团体险询价，等待核保结果"
+  }
+]

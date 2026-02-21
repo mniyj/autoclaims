@@ -1,10 +1,10 @@
 [
   {
-    "code": "HAULDAMAGE",
+    "code": "CAR_DAMAGE",
     "name": "车损",
-    "category": "医疗保险",
+    "category": " 商业险",
     "description": "",
-    "id": "resp-1771088359193"
+    "id": "resp-1771486527055"
   },
   {
     "id": "resp-1",

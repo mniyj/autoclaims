@@ -16,7 +16,7 @@
     "racewayId": "A0101",
     "racewayName": "短期百万医疗",
     "clauseType": "主险",
-    "operator": "张三",
+    "operator": "admin",
     "coverageDetails": [
       {
         "mandatory": true,

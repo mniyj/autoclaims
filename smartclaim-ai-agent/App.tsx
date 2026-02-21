@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ClaimStatus, Message, ClaimState, ClaimDocument, HistoricalClaim, Policy, Attachment, MedicalInvoiceData, OCRData, DischargeSummaryData } from './types';
-import { MOCK_POLICIES, MOCK_HISTORICAL_CLAIMS } from './constants';
+import { MOCK_HISTORICAL_CLAIMS } from './constants';
 import { getAIResponse, analyzeDocument, quickAnalyze, connectLive, transcribeAudio } from './geminiService';
 import { getSignedUrl } from './ossService';
 import { logUserOperation } from './logService';
@@ -59,6 +59,32 @@ function createBlob(data: Float32Array): any {
     mimeType: 'audio/pcm;rate=16000',
   };
 }
+
+type BackendPolicy = {
+  id?: string;
+  policyNumber?: string;
+  productName?: string;
+  productCode?: string;
+  insureds?: Array<{ name?: string }>;
+  policyholder?: { name?: string };
+  effectiveDate?: string;
+  issueDate?: string;
+  expiryDate?: string;
+};
+
+const fetchPoliciesFromBackend = async (): Promise<Policy[]> => {
+  const response = await fetch('/api/policies');
+  if (!response.ok) throw new Error('Failed to load policies');
+  const data = await response.json();
+  const policies = Array.isArray(data) ? data : [];
+  return policies.map((policy: BackendPolicy) => ({
+    id: policy.policyNumber || policy.id || '',
+    insuredName: policy.insureds?.[0]?.name || policy.policyholder?.name || '',
+    type: policy.productName || policy.productCode || '未知险种',
+    validFrom: policy.effectiveDate || policy.issueDate || '',
+    validUntil: policy.expiryDate || ''
+  })).filter(p => p.id);
+};
 
 const getDocIcon = (name: string) => {
   const lowerName = name.toLowerCase();
@@ -836,32 +862,48 @@ export const App: React.FC = () => {
     setInput('');
     setIsLoading(true);
 
-    // Mock specific flows for demo
     if (textToSend.includes('报案') && claimState.status === ClaimStatus.REPORTING) {
-      setTimeout(() => {
-        // Reset policy selection state
+      try {
         setPolicySearchTerm('');
         setIsPolicyExpanded(false);
-
+        const policies = await fetchPoliciesFromBackend();
         setMessages(prev => [...prev, {
           id: Date.now().toString(),
           role: 'assistant',
-          content: `为您找到 ${MOCK_POLICIES.length} 份有效保单。请选择：`,
+          content: `为您找到 ${policies.length} 份保单。请选择：`,
           timestamp: Date.now(),
           policySelection: true,
-          policies: MOCK_POLICIES
+          policies
         }]);
+        logUserOperation({
+          operationType: UserOperationType.REPORT_CLAIM,
+          operationLabel: '发起报案',
+          userName,
+          userGender,
+          inputData: { message: messagePreview, messageLength: textToSend.length },
+          outputData: { policyCount: policies.length },
+          duration: Date.now() - operationStart
+        });
+      } catch (error) {
+        setMessages(prev => [...prev, {
+          id: Date.now().toString(),
+          role: 'assistant',
+          content: '暂未获取到保单数据，请稍后重试或上传保单 PDF。',
+          timestamp: Date.now(),
+          policySelection: true,
+          policies: []
+        }]);
+        logUserOperation({
+          operationType: UserOperationType.REPORT_CLAIM,
+          operationLabel: '发起报案失败',
+          userName,
+          userGender,
+          success: false,
+          errorMessage: String(error)
+        });
+      } finally {
         setIsLoading(false);
-      }, 600);
-      logUserOperation({
-        operationType: UserOperationType.REPORT_CLAIM,
-        operationLabel: '发起报案',
-        userName,
-        userGender,
-        inputData: { message: messagePreview, messageLength: textToSend.length },
-        outputData: { policyCount: MOCK_POLICIES.length },
-        duration: Date.now() - operationStart
-      });
+      }
       return;
     }
 

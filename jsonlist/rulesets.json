@@ -721,5 +721,3897 @@
       "low_confidence_rules": 0,
       "unresolved_conflicts": 0
     }
+  },
+  {
+    "ruleset_id": "RS-ACC-2026-ZA0057",
+    "product_line": "ACCIDENT",
+    "policy_info": {
+      "policy_no": "PM157CG2579335929704",
+      "product_code": "ZA_ACC_COMP_2022",
+      "product_name": "无忧保综合意外险（2022升级版）",
+      "plan_name": "计划一",
+      "insurer": "众安在线财产保险股份有限公司",
+      "effective_date": "2024-05-18",
+      "expiry_date": "2025-05-17",
+      "payment_mode": "MONTHLY",
+      "insured_subject": {
+        "subject_type": "PERSON",
+        "vehicle": null,
+        "person": {
+          "name": "张XX",
+          "id_type": "ID_CARD",
+          "id_number": "310***********0011",
+          "gender": "MALE",
+          "birth_date": "1990-06-15",
+          "age_at_inception": 33,
+          "occupation_class": 2,
+          "occupation_code": "O200101",
+          "occupation_name": "办公室行政人员"
+        }
+      },
+      "clause_versions": [
+        {
+          "clause_code": "ZA-PA-MAIN-2021-129",
+          "clause_name": "众安在线个人意外伤害保险条款",
+          "clause_type": "MAIN",
+          "filing_no": "众安在线财险（备-意外）【2021】（主）129号"
+        },
+        {
+          "clause_code": "ZA-PA-ADD-MED-2021-189",
+          "clause_name": "附加个人意外伤害医疗费用保险条款",
+          "clause_type": "ADDITIONAL",
+          "filing_no": "众安在线财险（备-意外）【2021】（附）189号"
+        },
+        {
+          "clause_code": "ZA-PA-TRANS-2021-151",
+          "clause_name": "众安在线营运交通工具乘客意外伤害保险条款",
+          "clause_type": "MAIN",
+          "filing_no": "众安在线财险（备-意外）【2021】（主）151号"
+        },
+        {
+          "clause_code": "ZA-PA-DRIVE-2021-142",
+          "clause_name": "众安在线驾乘人员意外伤害保险条款",
+          "clause_type": "MAIN",
+          "filing_no": "众安在线财险（备-意外）【2021】（主）142号"
+        },
+        {
+          "clause_code": "ZA-PA-ADD-AMB-2021-164",
+          "clause_name": "附加救护车费用保险条款",
+          "clause_type": "ADDITIONAL",
+          "filing_no": "众安在线财险（备-意外）【2021】（附）164号"
+        }
+      ],
+      "coverages": [
+        {
+          "coverage_code": "ACC_DEATH_DISAB",
+          "coverage_name": "意外身故/伤残",
+          "coverage_type": "MAIN",
+          "benefit_type": "LUMP_SUM",
+          "sum_insured": {
+            "amount": 100000,
+            "currency": "CNY",
+            "per_unit": "PER_PERSON"
+          },
+          "deductible": null,
+          "reimbursement_rules": null,
+          "premium": null
+        },
+        {
+          "coverage_code": "ACC_MEDICAL",
+          "coverage_name": "意外医疗",
+          "coverage_type": "ADDITIONAL",
+          "benefit_type": "REIMBURSEMENT",
+          "sum_insured": {
+            "amount": 10000,
+            "currency": "CNY",
+            "per_unit": "PER_PERSON"
+          },
+          "deductible": {
+            "amount": 0,
+            "type": "ABSOLUTE",
+            "currency": "CNY"
+          },
+          "reimbursement_rules": {
+            "social_insurance_covered_ratio": 1,
+            "social_insurance_uncovered_ratio": 0.8,
+            "without_social_insurance_ratio": null
+          },
+          "premium": null
+        },
+        {
+          "coverage_code": "ACC_PUBLIC_TRANS",
+          "coverage_name": "营运交通工具乘客意外身故/伤残",
+          "coverage_type": "MAIN",
+          "benefit_type": "LUMP_SUM",
+          "sum_insured": {
+            "amount": 100000,
+            "currency": "CNY",
+            "per_unit": "PER_PERSON"
+          },
+          "deductible": null,
+          "reimbursement_rules": null,
+          "premium": null
+        },
+        {
+          "coverage_code": "ACC_PRIVATE_CAR",
+          "coverage_name": "自驾车乘客意外身故/伤残",
+          "coverage_type": "MAIN",
+          "benefit_type": "LUMP_SUM",
+          "sum_insured": {
+            "amount": 100000,
+            "currency": "CNY",
+            "per_unit": "PER_PERSON"
+          },
+          "deductible": null,
+          "reimbursement_rules": null,
+          "premium": null
+        },
+        {
+          "coverage_code": "ACC_AMBULANCE",
+          "coverage_name": "救护车费用",
+          "coverage_type": "ADDITIONAL",
+          "benefit_type": "REIMBURSEMENT",
+          "sum_insured": {
+            "amount": 200,
+            "currency": "CNY",
+            "per_unit": "PER_ACCIDENT"
+          },
+          "deductible": null,
+          "reimbursement_rules": null,
+          "premium": null
+        }
+      ]
+    },
+    "execution_pipeline": {
+      "domains": [
+        {
+          "domain": "ELIGIBILITY",
+          "label": "定责域 - 案件级判定（是否意外→免责筛查→赔付比例）",
+          "execution_mode": "SEQUENTIAL_SHORT_CIRCUIT",
+          "input_granularity": "CLAIM_LEVEL",
+          "loop_collection": null,
+          "short_circuit_on": [
+            "REJECT_CLAIM",
+            "TERMINATE_CONTRACT"
+          ],
+          "category_sequence": [
+            "E_POLICY_STATUS",
+            "E_OCCUPATION_CHECK",
+            "E_LIABILITY_TRIGGER",
+            "E_EXCLUSION",
+            "E_PAYOUT_RATIO",
+            "E_ANTI_FRAUD"
+          ]
+        },
+        {
+          "domain": "ASSESSMENT",
+          "label": "定损域 - 费用明细级循环（每笔费用逐条过规则）",
+          "execution_mode": "LOOP_PER_ITEM",
+          "input_granularity": "ITEM_LEVEL",
+          "loop_collection": "claim.expense_items",
+          "short_circuit_on": null,
+          "category_sequence": [
+            "A_PROVIDER_QUALIFY",
+            "A_ITEM_EXCLUSION",
+            "A_ITEM_NECESSITY",
+            "A_ITEM_SOCIAL_INSURANCE",
+            "A_ITEM_PRICING",
+            "A_ITEM_DEDUCTIBLE"
+          ]
+        },
+        {
+          "domain": "POST_PROCESS",
+          "label": "后处理域 - 汇总封顶、补偿扣减、多险别叠加",
+          "execution_mode": "SEQUENTIAL_AGGREGATE",
+          "input_granularity": "AGGREGATE_LEVEL",
+          "loop_collection": null,
+          "short_circuit_on": null,
+          "category_sequence": [
+            "P_COMPENSATION_DEDUCT",
+            "P_CUMULATIVE_CAP",
+            "P_PRIOR_BENEFIT_DEDUCT",
+            "P_MULTI_COVERAGE"
+          ]
+        }
+      ]
+    },
+    "rules": [
+      {
+        "rule_id": "R-E-PAY-001",
+        "rule_name": "月缴保费-逾期终止",
+        "description": "月缴模式下，保费逾期超过30天宽限期的，合同自动终止",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "STANDARD_CLAUSE",
+          "source_ref": "ZA-PA-MAIN-2021-129#Article15",
+          "source_text": "分期支付保险费的，投保人未按约定期限支付保险费的，自违约之日起超过30日仍未支付的，本合同效力终止。",
+          "clause_code": "ZA-PA-MAIN-2021-129"
+        },
+        "priority": {
+          "level": 1,
+          "level_label": "MAIN_CLAUSE",
+          "rank": 0
+        },
+        "category": "E_POLICY_STATUS",
+        "applies_to": {
+          "coverage_codes": []
+        },
+        "conditions": {
+          "logic": "AND",
+          "expressions": [
+            {
+              "field": "policy.payment_mode",
+              "operator": "EQ",
+              "value": "MONTHLY"
+            },
+            {
+              "field": "policy.premium_overdue",
+              "operator": "IS_TRUE",
+              "value": null
+            },
+            {
+              "field": "policy.days_overdue",
+              "operator": "GT",
+              "value": 30,
+              "value_unit": "DAYS"
+            }
+          ]
+        },
+        "action": {
+          "action_type": "TERMINATE_CONTRACT",
+          "params": {
+            "reject_reason_code": "PREMIUM_OVERDUE",
+            "remark_template": "保费逾期{policy.days_overdue}天>30天宽限期，合同效力终止"
+          }
+        },
+        "status": "EFFECTIVE",
+        "overridden_by": null,
+        "override_reason": null,
+        "tags": [
+          "保费",
+          "合同终止"
+        ],
+        "parsing_confidence": {
+          "overall": 0.99,
+          "condition_confidence": 0.99,
+          "action_confidence": 0.99,
+          "needs_human_review": false,
+          "review_hints": []
+        }
+      },
+      {
+        "rule_id": "R-E-OCC-001",
+        "rule_name": "职业限制-仅承保1~3类职业",
+        "description": "被保险人职业类别须为1~3类，4类及以上不予承保",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "STANDARD_CLAUSE",
+          "source_ref": "ZA-PA-MAIN-2021-129#投保须知.Section3",
+          "source_text": "本产品仅承保1~3类职业人员，4类及以上职业人员不在承保范围内。",
+          "clause_code": "ZA-PA-MAIN-2021-129"
+        },
+        "priority": {
+          "level": 1,
+          "level_label": "MAIN_CLAUSE",
+          "rank": 0
+        },
+        "category": "E_OCCUPATION_CHECK",
+        "applies_to": {
+          "coverage_codes": []
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.insured_occupation_class_at_accident",
+              "operator": "GTE",
+              "value": 4
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "OCC_OUT_OF_SCOPE",
+            "remark_template": "被保险人事故时职业类别={claim.insured_occupation_class_at_accident}(≥4类)，不在承保范围"
+          }
+        },
+        "status": "EFFECTIVE",
+        "overridden_by": null,
+        "override_reason": null,
+        "tags": [
+          "职业",
+          "准入"
+        ],
+        "parsing_confidence": {
+          "overall": 0.99,
+          "condition_confidence": 0.99,
+          "action_confidence": 0.99,
+          "needs_human_review": false,
+          "review_hints": []
+        }
+      },
+      {
+        "rule_id": "R-E-OCC-002",
+        "rule_name": "职业变更-未通知且新职业在拒保范围",
+        "description": "职业变更未通知且新职业属于拒保清单的，拒赔并退还保费",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "STANDARD_CLAUSE",
+          "source_ref": "ZA-PA-MAIN-2021-129#Article12",
+          "source_text": "被保险人变更职业或工种未及时通知保险人，且变更后的职业或工种依照保险人职业分类在拒保范围内的，保险人对该保险事故不承担给付保险金的责任。",
+          "clause_code": "ZA-PA-MAIN-2021-129"
+        },
+        "priority": {
+          "level": 1,
+          "level_label": "MAIN_CLAUSE",
+          "rank": 10
+        },
+        "category": "E_OCCUPATION_CHECK",
+        "applies_to": {
+          "coverage_codes": []
+        },
+        "conditions": {
+          "logic": "AND",
+          "expressions": [
+            {
+              "field": "claim.insured_occupation_changed",
+              "operator": "IS_TRUE",
+              "value": null
+            },
+            {
+              "field": "claim.insured_occupation_change_notified",
+              "operator": "IS_FALSE",
+              "value": null
+            },
+            {
+              "field": "claim.insured_new_occupation_in_decline_list",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "OCC_CHANGE_DECLINE",
+            "remark_template": "职业变更至拒保范围且未通知，拒赔并退还未到期保费"
+          }
+        },
+        "status": "EFFECTIVE",
+        "overridden_by": null,
+        "override_reason": null,
+        "tags": [
+          "职业",
+          "变更",
+          "拒赔"
+        ],
+        "parsing_confidence": {
+          "overall": 0.97,
+          "condition_confidence": 0.96,
+          "action_confidence": 0.98,
+          "needs_human_review": false,
+          "review_hints": []
+        }
+      },
+      {
+        "rule_id": "R-E-TRIG-001",
+        "rule_name": "意外身故-触发责任",
+        "description": "被保险人遭受意外伤害事故，并自事故发生之日起180日内因该事故身故的",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "STANDARD_CLAUSE",
+          "source_ref": "ZA-PA-MAIN-2021-129#Article3.Section1",
+          "source_text": "在保险期间内，被保险人遭受意外伤害事故，并自该事故发生之日起180日内因该事故身故的，保险人按保险金额给付身故保险金。",
+          "clause_code": "ZA-PA-MAIN-2021-129"
+        },
+        "priority": {
+          "level": 1,
+          "level_label": "MAIN_CLAUSE",
+          "rank": 0
+        },
+        "category": "E_LIABILITY_TRIGGER",
+        "applies_to": {
+          "coverage_codes": [
+            "ACC_DEATH_DISAB"
+          ]
+        },
+        "conditions": {
+          "logic": "AND",
+          "expressions": [
+            {
+              "field": "claim.cause_type",
+              "operator": "EQ",
+              "value": "ACCIDENT"
+            },
+            {
+              "field": "claim.result_type",
+              "operator": "EQ",
+              "value": "DEATH"
+            },
+            {
+              "field": "claim.days_from_accident_to_result",
+              "operator": "LTE",
+              "value": 180,
+              "value_unit": "DAYS"
+            },
+            {
+              "field": "policy.is_within_coverage_period",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "APPROVE_CLAIM",
+          "params": {
+            "payout_ratio": 1,
+            "remark_template": "意外身故责任成立，自事故日起{claim.days_from_accident_to_result}天≤180天，按保额100%给付"
+          }
+        },
+        "status": "EFFECTIVE",
+        "overridden_by": null,
+        "override_reason": null,
+        "tags": [
+          "触发",
+          "身故",
+          "高频"
+        ],
+        "parsing_confidence": {
+          "overall": 0.99,
+          "condition_confidence": 0.99,
+          "action_confidence": 0.99,
+          "needs_human_review": false,
+          "review_hints": []
+        }
+      },
+      {
+        "rule_id": "R-E-TRIG-002",
+        "rule_name": "意外伤残-触发责任",
+        "description": "被保险人遭受意外伤害事故致残，按《人身保险伤残评定标准》给付",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "STANDARD_CLAUSE",
+          "source_ref": "ZA-PA-MAIN-2021-129#Article3.Section2",
+          "source_text": "被保险人因遭受意外伤害事故，并自该事故发生之日起180日内因该事故造成《人身保险伤残评定标准及代码》所列伤残之一的，保险人按该标准规定的给付比例乘以保险金额给付伤残保险金。",
+          "clause_code": "ZA-PA-MAIN-2021-129"
+        },
+        "priority": {
+          "level": 1,
+          "level_label": "MAIN_CLAUSE",
+          "rank": 0
+        },
+        "category": "E_LIABILITY_TRIGGER",
+        "applies_to": {
+          "coverage_codes": [
+            "ACC_DEATH_DISAB"
+          ]
+        },
+        "conditions": {
+          "logic": "AND",
+          "expressions": [
+            {
+              "field": "claim.cause_type",
+              "operator": "EQ",
+              "value": "ACCIDENT"
+            },
+            {
+              "field": "claim.result_type",
+              "operator": "EQ",
+              "value": "DISABILITY"
+            },
+            {
+              "field": "claim.disability_grade",
+              "operator": "BETWEEN",
+              "value": [
+                1,
+                10
+              ]
+            },
+            {
+              "field": "claim.days_from_accident_to_result",
+              "operator": "LTE",
+              "value": 180,
+              "value_unit": "DAYS"
+            }
+          ]
+        },
+        "action": {
+          "action_type": "SET_CLAIM_RATIO",
+          "params": {
+            "disability_grade_table": [
+              {
+                "grade": 1,
+                "payout_ratio": 1
+              },
+              {
+                "grade": 2,
+                "payout_ratio": 0.9
+              },
+              {
+                "grade": 3,
+                "payout_ratio": 0.8
+              },
+              {
+                "grade": 4,
+                "payout_ratio": 0.7
+              },
+              {
+                "grade": 5,
+                "payout_ratio": 0.6
+              },
+              {
+                "grade": 6,
+                "payout_ratio": 0.5
+              },
+              {
+                "grade": 7,
+                "payout_ratio": 0.4
+              },
+              {
+                "grade": 8,
+                "payout_ratio": 0.3
+              },
+              {
+                "grade": 9,
+                "payout_ratio": 0.2
+              },
+              {
+                "grade": 10,
+                "payout_ratio": 0.1
+              }
+            ],
+            "formula": {
+              "expression": "coverage.ACC_DEATH_DISAB.sum_insured.amount * disability_grade_table[claim.disability_grade].payout_ratio",
+              "output_field": "result.disability_payout"
+            },
+            "remark_template": "伤残{claim.disability_grade}级，给付比例{payout_ratio}，金额={result.disability_payout}"
+          }
+        },
+        "status": "EFFECTIVE",
+        "overridden_by": null,
+        "override_reason": null,
+        "tags": [
+          "触发",
+          "伤残",
+          "高频"
+        ],
+        "parsing_confidence": {
+          "overall": 0.99,
+          "condition_confidence": 0.99,
+          "action_confidence": 0.99,
+          "needs_human_review": false,
+          "review_hints": []
+        }
+      },
+      {
+        "rule_id": "R-E-TRIG-003",
+        "rule_name": "意外医疗-触发责任",
+        "description": "被保险人因意外伤害在符合条件的医院治疗，触发医疗费用报销",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "ADDITIONAL_CLAUSE",
+          "source_ref": "ZA-PA-ADD-MED-2021-189#Article2",
+          "source_text": "在保险期间内，被保险人因遭受意外伤害事故在保险人认可的医疗机构进行治疗，保险人就其实际支出的符合当地社会基本医疗保险主管部门规定可报销的合理且必要的医疗费用给付保险金。",
+          "clause_code": "ZA-PA-ADD-MED-2021-189"
+        },
+        "priority": {
+          "level": 2,
+          "level_label": "ADDITIONAL_CLAUSE",
+          "rank": 0
+        },
+        "category": "E_LIABILITY_TRIGGER",
+        "applies_to": {
+          "coverage_codes": [
+            "ACC_MEDICAL"
+          ]
+        },
+        "conditions": {
+          "logic": "AND",
+          "expressions": [
+            {
+              "field": "claim.cause_type",
+              "operator": "EQ",
+              "value": "ACCIDENT"
+            },
+            {
+              "field": "claim.result_type",
+              "operator": "EQ",
+              "value": "MEDICAL_TREATMENT"
+            },
+            {
+              "field": "policy.is_within_coverage_period",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "APPROVE_CLAIM",
+          "params": {
+            "remark_template": "意外医疗责任成立，进入定损域逐项审核费用明细"
+          }
+        },
+        "status": "EFFECTIVE",
+        "overridden_by": null,
+        "override_reason": null,
+        "tags": [
+          "触发",
+          "医疗",
+          "高频"
+        ],
+        "parsing_confidence": {
+          "overall": 0.99,
+          "condition_confidence": 0.99,
+          "action_confidence": 0.99,
+          "needs_human_review": false,
+          "review_hints": []
+        }
+      },
+      {
+        "rule_id": "R-E-TRIG-004",
+        "rule_name": "营运交通意外身故/伤残-触发责任",
+        "description": "以乘客身份乘坐营运交通工具期间遭受意外伤害致身故/伤残",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "STANDARD_CLAUSE",
+          "source_ref": "ZA-PA-TRANS-2021-151#Article3",
+          "source_text": "被保险人以乘客身份乘坐营运交通工具期间遭受意外伤害事故…保险人另行给付意外身故/伤残保险金。",
+          "clause_code": "ZA-PA-TRANS-2021-151"
+        },
+        "priority": {
+          "level": 1,
+          "level_label": "MAIN_CLAUSE",
+          "rank": 0
+        },
+        "category": "E_LIABILITY_TRIGGER",
+        "applies_to": {
+          "coverage_codes": [
+            "ACC_PUBLIC_TRANS"
+          ]
+        },
+        "conditions": {
+          "logic": "AND",
+          "expressions": [
+            {
+              "field": "claim.cause_type",
+              "operator": "EQ",
+              "value": "ACCIDENT"
+            },
+            {
+              "field": "claim.result_type",
+              "operator": "IN",
+              "value": [
+                "DEATH",
+                "DISABILITY"
+              ]
+            },
+            {
+              "field": "claim.scenario",
+              "operator": "EQ",
+              "value": "PUBLIC_TRANSPORT_PASSENGER"
+            },
+            {
+              "field": "claim.transport_type",
+              "operator": "IN",
+              "value": [
+                "BUS",
+                "LONG_DISTANCE_BUS",
+                "TRAIN",
+                "SUBWAY",
+                "FERRY",
+                "AIRCRAFT",
+                "TAXI"
+              ]
+            }
+          ]
+        },
+        "action": {
+          "action_type": "APPROVE_CLAIM",
+          "params": {
+            "remark_template": "营运交通乘客意外责任成立，交通工具={claim.transport_type}"
+          }
+        },
+        "status": "EFFECTIVE",
+        "overridden_by": null,
+        "override_reason": null,
+        "tags": [
+          "触发",
+          "交通",
+          "叠加赔付"
+        ],
+        "parsing_confidence": {
+          "overall": 0.98,
+          "condition_confidence": 0.97,
+          "action_confidence": 0.99,
+          "needs_human_review": false,
+          "review_hints": []
+        }
+      },
+      {
+        "rule_id": "R-E-TRIG-005",
+        "rule_name": "私家车乘客意外身故/伤残-触发责任",
+        "description": "以乘客身份乘坐非营运私家车期间遭受意外",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "STANDARD_CLAUSE",
+          "source_ref": "ZA-PA-DRIVE-2021-142#Article3",
+          "source_text": "被保险人以乘客身份乘坐非营运机动车辆（不含货车）期间遭受意外伤害事故…",
+          "clause_code": "ZA-PA-DRIVE-2021-142"
+        },
+        "priority": {
+          "level": 1,
+          "level_label": "MAIN_CLAUSE",
+          "rank": 0
+        },
+        "category": "E_LIABILITY_TRIGGER",
+        "applies_to": {
+          "coverage_codes": [
+            "ACC_PRIVATE_CAR"
+          ]
+        },
+        "conditions": {
+          "logic": "AND",
+          "expressions": [
+            {
+              "field": "claim.cause_type",
+              "operator": "EQ",
+              "value": "ACCIDENT"
+            },
+            {
+              "field": "claim.result_type",
+              "operator": "IN",
+              "value": [
+                "DEATH",
+                "DISABILITY"
+              ]
+            },
+            {
+              "field": "claim.scenario",
+              "operator": "EQ",
+              "value": "PRIVATE_CAR_PASSENGER"
+            },
+            {
+              "field": "claim.vehicle_is_non_commercial",
+              "operator": "IS_TRUE",
+              "value": null
+            },
+            {
+              "field": "claim.vehicle_is_truck",
+              "operator": "IS_FALSE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "APPROVE_CLAIM",
+          "params": {
+            "remark_template": "私家车乘客意外责任成立"
+          }
+        },
+        "status": "EFFECTIVE",
+        "overridden_by": null,
+        "override_reason": null,
+        "tags": [
+          "触发",
+          "驾乘",
+          "叠加赔付"
+        ],
+        "parsing_confidence": {
+          "overall": 0.93,
+          "condition_confidence": 0.9,
+          "action_confidence": 0.96,
+          "needs_human_review": true,
+          "review_hints": [
+            "条款限定'乘客'不含'驾驶人'，需核实被保险人事故时角色"
+          ]
+        }
+      },
+      {
+        "rule_id": "R-E-TRIG-006",
+        "rule_name": "救护车费用-触发责任",
+        "description": "使用120/999急救车且24小时内送医的",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "ADDITIONAL_CLAUSE",
+          "source_ref": "ZA-PA-ADD-AMB-2021-164#Article2",
+          "source_text": "被保险人因遭受意外伤害事故，在事故发生后24小时内使用120或999急救车的费用。",
+          "clause_code": "ZA-PA-ADD-AMB-2021-164"
+        },
+        "priority": {
+          "level": 2,
+          "level_label": "ADDITIONAL_CLAUSE",
+          "rank": 0
+        },
+        "category": "E_LIABILITY_TRIGGER",
+        "applies_to": {
+          "coverage_codes": [
+            "ACC_AMBULANCE"
+          ]
+        },
+        "conditions": {
+          "logic": "AND",
+          "expressions": [
+            {
+              "field": "claim.cause_type",
+              "operator": "EQ",
+              "value": "ACCIDENT"
+            },
+            {
+              "field": "claim.ambulance_type",
+              "operator": "IN",
+              "value": [
+                "120",
+                "999"
+              ]
+            },
+            {
+              "field": "claim.hours_accident_to_ambulance",
+              "operator": "LTE",
+              "value": 24,
+              "value_unit": "HOURS"
+            }
+          ]
+        },
+        "action": {
+          "action_type": "APPROVE_CLAIM",
+          "params": {
+            "remark_template": "救护车费用责任成立，{claim.ambulance_type}急救，限额200元"
+          }
+        },
+        "status": "EFFECTIVE",
+        "overridden_by": null,
+        "override_reason": null,
+        "tags": [
+          "触发",
+          "救护车"
+        ],
+        "parsing_confidence": {
+          "overall": 0.99,
+          "condition_confidence": 0.99,
+          "action_confidence": 0.99,
+          "needs_human_review": false,
+          "review_hints": []
+        }
+      },
+      {
+        "rule_id": "R-E-EXC-001",
+        "rule_name": "原因免责-投保人故意杀害伤害",
+        "description": "投保人对被保险人的故意杀害、故意伤害",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "STANDARD_CLAUSE",
+          "source_ref": "ZA-PA-MAIN-2021-129#Article5.Item1",
+          "source_text": "投保人对被保险人的故意杀害、故意伤害。",
+          "clause_code": "ZA-PA-MAIN-2021-129"
+        },
+        "priority": {
+          "level": 1,
+          "level_label": "MAIN_CLAUSE",
+          "rank": 100
+        },
+        "category": "E_EXCLUSION",
+        "applies_to": {
+          "coverage_codes": []
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.cause_sub_type",
+              "operator": "EQ",
+              "value": "APPLICANT_INTENT_HARM"
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "EXC_APPLICANT_INTENT",
+            "remark_template": "投保人故意杀害/伤害被保险人，属除外责任"
+          }
+        },
+        "status": "EFFECTIVE",
+        "overridden_by": null,
+        "override_reason": null,
+        "tags": [
+          "免责",
+          "投保人故意"
+        ],
+        "parsing_confidence": {
+          "overall": 0.99,
+          "condition_confidence": 0.99,
+          "action_confidence": 0.99,
+          "needs_human_review": false,
+          "review_hints": []
+        }
+      },
+      {
+        "rule_id": "R-E-EXC-002",
+        "rule_name": "原因免责-自致伤害或自杀",
+        "description": "被保险人故意自伤、自杀（2年内）",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "STANDARD_CLAUSE",
+          "source_ref": "ZA-PA-MAIN-2021-129#Article5.Item2",
+          "source_text": "被保险人故意自伤、自杀，但被保险人自杀时为无民事行为能力人的除外。",
+          "clause_code": "ZA-PA-MAIN-2021-129"
+        },
+        "priority": {
+          "level": 1,
+          "level_label": "MAIN_CLAUSE",
+          "rank": 100
+        },
+        "category": "E_EXCLUSION",
+        "applies_to": {
+          "coverage_codes": []
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.cause_sub_type",
+              "operator": "IN",
+              "value": [
+                "SELF_INFLICTED",
+                "SUICIDE"
+              ]
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "EXC_SELF_HARM",
+            "remark_template": "自致伤害/自杀属除外责任"
+          }
+        },
+        "status": "EFFECTIVE",
+        "overridden_by": null,
+        "override_reason": null,
+        "tags": [
+          "免责",
+          "自杀"
+        ],
+        "parsing_confidence": {
+          "overall": 0.99,
+          "condition_confidence": 0.99,
+          "action_confidence": 0.99,
+          "needs_human_review": false,
+          "review_hints": []
+        }
+      },
+      {
+        "rule_id": "R-E-EXC-003",
+        "rule_name": "原因免责-故意犯罪/打斗",
+        "description": "被保险人故意犯罪、抗拒依法采取的刑事强制措施或殴斗",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "STANDARD_CLAUSE",
+          "source_ref": "ZA-PA-MAIN-2021-129#Article5.Item3",
+          "source_text": "被保险人故意犯罪或者抗拒依法采取的刑事强制措施，被保险人挑衅或故意行为而导致的打斗、被袭击或被谋杀。",
+          "clause_code": "ZA-PA-MAIN-2021-129"
+        },
+        "priority": {
+          "level": 1,
+          "level_label": "MAIN_CLAUSE",
+          "rank": 100
+        },
+        "category": "E_EXCLUSION",
+        "applies_to": {
+          "coverage_codes": []
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.cause_sub_type",
+              "operator": "IN",
+              "value": [
+                "CRIME",
+                "RESIST_ARREST",
+                "PROVOKED_FIGHT"
+              ]
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "EXC_CRIME_FIGHT",
+            "remark_template": "故意犯罪/打斗属除外责任"
+          }
+        },
+        "status": "EFFECTIVE",
+        "overridden_by": null,
+        "override_reason": null,
+        "tags": [
+          "免责",
+          "犯罪"
+        ],
+        "parsing_confidence": {
+          "overall": 0.99,
+          "condition_confidence": 0.99,
+          "action_confidence": 0.99,
+          "needs_human_review": false,
+          "review_hints": []
+        }
+      },
+      {
+        "rule_id": "R-E-EXC-004",
+        "rule_name": "原因免责-醉酒/毒品",
+        "description": "被保险人醉酒、吸毒或滥用药物",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "STANDARD_CLAUSE",
+          "source_ref": "ZA-PA-MAIN-2021-129#Article5.Item4",
+          "source_text": "被保险人饮酒、醉酒、吸食或注射毒品、服用国家管制的精神药品或者麻醉药品。",
+          "clause_code": "ZA-PA-MAIN-2021-129"
+        },
+        "priority": {
+          "level": 1,
+          "level_label": "MAIN_CLAUSE",
+          "rank": 100
+        },
+        "category": "E_EXCLUSION",
+        "applies_to": {
+          "coverage_codes": []
+        },
+        "conditions": {
+          "logic": "OR",
+          "expressions": [
+            {
+              "field": "claim.insured_intoxicated",
+              "operator": "IS_TRUE",
+              "value": null
+            },
+            {
+              "field": "claim.insured_drug_use",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "EXC_INTOXICATION_DRUG",
+            "remark_template": "醉酒/毒品/管制药品属除外责任"
+          }
+        },
+        "status": "EFFECTIVE",
+        "overridden_by": null,
+        "override_reason": null,
+        "tags": [
+          "免责",
+          "醉酒",
+          "毒品"
+        ],
+        "parsing_confidence": {
+          "overall": 0.99,
+          "condition_confidence": 0.99,
+          "action_confidence": 0.99,
+          "needs_human_review": false,
+          "review_hints": []
+        }
+      },
+      {
+        "rule_id": "R-E-EXC-005",
+        "rule_name": "原因免责-疾病/猝死/中暑/高原反应",
+        "description": "非意外原因导致的疾病、猝死、中暑、高原反应",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "STANDARD_CLAUSE",
+          "source_ref": "ZA-PA-MAIN-2021-129#Article5.Item7",
+          "source_text": "被保险人因妊娠、流产、分娩、疾病、药物过敏、中暑、猝死、高原反应导致的伤害。",
+          "clause_code": "ZA-PA-MAIN-2021-129"
+        },
+        "priority": {
+          "level": 1,
+          "level_label": "MAIN_CLAUSE",
+          "rank": 100
+        },
+        "category": "E_EXCLUSION",
+        "applies_to": {
+          "coverage_codes": []
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.cause_sub_type",
+              "operator": "IN",
+              "value": [
+                "DISEASE",
+                "SUDDEN_DEATH",
+                "HEATSTROKE",
+                "ALTITUDE_SICKNESS",
+                "PREGNANCY",
+                "DRUG_ALLERGY"
+              ]
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "EXC_NON_ACCIDENT",
+            "remark_template": "事故原因={claim.cause_sub_type}，属疾病/非意外免责范围"
+          }
+        },
+        "status": "EFFECTIVE",
+        "overridden_by": null,
+        "override_reason": null,
+        "tags": [
+          "免责",
+          "疾病",
+          "猝死"
+        ],
+        "parsing_confidence": {
+          "overall": 0.9,
+          "condition_confidence": 0.88,
+          "action_confidence": 0.92,
+          "needs_human_review": true,
+          "review_hints": [
+            "猝死与意外因果关系常有争议，需结合尸检报告判定"
+          ]
+        }
+      },
+      {
+        "rule_id": "R-E-EXC-006",
+        "rule_name": "原因免责-高坠(>2米)（标准条款）",
+        "description": "被保险人从2米（含）以上高处坠落",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "STANDARD_CLAUSE",
+          "source_ref": "ZA-PA-MAIN-2021-129#Article5.Item10",
+          "source_text": "被保险人从距地面或永久建筑物2米（含）以上高处坠落。",
+          "clause_code": "ZA-PA-MAIN-2021-129"
+        },
+        "priority": {
+          "level": 1,
+          "level_label": "MAIN_CLAUSE",
+          "rank": 100
+        },
+        "category": "E_EXCLUSION",
+        "applies_to": {
+          "coverage_codes": []
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.fall_height_meters",
+              "operator": "GTE",
+              "value": 2,
+              "value_unit": "METERS"
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "EXC_HIGH_FALL",
+            "remark_template": "坠落高度{claim.fall_height_meters}米≥2米，标准条款除外"
+          }
+        },
+        "status": "OVERRIDDEN",
+        "overridden_by": "R-E-SA-001",
+        "override_reason": "特别约定将高坠纳入承保范围（高空作业除外）",
+        "tags": [
+          "免责",
+          "高坠"
+        ],
+        "parsing_confidence": {
+          "overall": 0.99,
+          "condition_confidence": 0.99,
+          "action_confidence": 0.99,
+          "needs_human_review": false,
+          "review_hints": []
+        }
+      },
+      {
+        "rule_id": "R-E-EXC-007",
+        "rule_name": "期间免责-酒后/无证驾驶",
+        "description": "酒后驾驶、无有效驾驶证、车辆无有效行驶证期间发生事故",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "STANDARD_CLAUSE",
+          "source_ref": "ZA-PA-MAIN-2021-129#Article5.Item11",
+          "source_text": "被保险人酒后驾驶、无合法有效驾驶证驾驶或驾驶无有效行驶证的机动车期间。",
+          "clause_code": "ZA-PA-MAIN-2021-129"
+        },
+        "priority": {
+          "level": 1,
+          "level_label": "MAIN_CLAUSE",
+          "rank": 100
+        },
+        "category": "E_EXCLUSION",
+        "applies_to": {
+          "coverage_codes": []
+        },
+        "conditions": {
+          "logic": "AND",
+          "expressions": [
+            {
+              "field": "claim.scenario",
+              "operator": "EQ",
+              "value": "DRIVING"
+            },
+            {
+              "logic": "OR",
+              "expressions": [
+                {
+                  "field": "claim.driver_bac_level",
+                  "operator": "GTE",
+                  "value": 20,
+                  "value_unit": "MG_PER_100ML"
+                },
+                {
+                  "field": "claim.driver_license_valid",
+                  "operator": "IS_FALSE",
+                  "value": null
+                },
+                {
+                  "field": "claim.vehicle_registration_valid",
+                  "operator": "IS_FALSE",
+                  "value": null
+                }
+              ]
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "EXC_DRIVING_VIOLATION",
+            "remark_template": "酒驾/无证/无行驶证期间事故，属除外责任"
+          }
+        },
+        "status": "EFFECTIVE",
+        "overridden_by": null,
+        "override_reason": null,
+        "tags": [
+          "免责",
+          "酒驾",
+          "无证"
+        ],
+        "parsing_confidence": {
+          "overall": 0.99,
+          "condition_confidence": 0.99,
+          "action_confidence": 0.99,
+          "needs_human_review": false,
+          "review_hints": []
+        }
+      },
+      {
+        "rule_id": "R-E-EXC-008",
+        "rule_name": "期间免责-高风险运动",
+        "description": "被保险人参加特定高风险运动期间发生事故",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "STANDARD_CLAUSE",
+          "source_ref": "ZA-PA-MAIN-2021-129#Article5.Item12",
+          "source_text": "被保险人参加潜水、跳伞、攀岩、驾驶滑翔机/滑翔伞、蹦极、探险、武术比赛、摔跤比赛、特技表演、赛马、赛车等高风险运动。",
+          "clause_code": "ZA-PA-MAIN-2021-129"
+        },
+        "priority": {
+          "level": 1,
+          "level_label": "MAIN_CLAUSE",
+          "rank": 100
+        },
+        "category": "E_EXCLUSION",
+        "applies_to": {
+          "coverage_codes": []
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.activity_during_accident",
+              "operator": "IN",
+              "value": [
+                "SCUBA_DIVING",
+                "SKYDIVING",
+                "ROCK_CLIMBING",
+                "GLIDER_PILOT",
+                "PARAGLIDING",
+                "BUNGEE_JUMPING",
+                "CAVING",
+                "MARTIAL_ARTS_COMPETITION",
+                "WRESTLING_MATCH",
+                "STUNT_PERFORMANCE",
+                "HORSE_RACING",
+                "MOTOR_RACING",
+                "MOUNTAINEERING_ABOVE_3500M",
+                "SKIING_EXTREME",
+                "SURFING_EXTREME",
+                "WHITEWATER_RAFTING",
+                "BASE_JUMPING"
+              ]
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "EXC_HIGH_RISK_SPORT",
+            "remark_template": "参加高风险运动{claim.activity_during_accident}期间事故，属除外责任"
+          }
+        },
+        "status": "EFFECTIVE",
+        "overridden_by": null,
+        "override_reason": null,
+        "tags": [
+          "免责",
+          "高风险运动"
+        ],
+        "parsing_confidence": {
+          "overall": 0.92,
+          "condition_confidence": 0.9,
+          "action_confidence": 0.94,
+          "needs_human_review": true,
+          "review_hints": [
+            "高风险运动清单为列举+兜底条款'等高风险运动'，边界案例需人工判定"
+          ]
+        }
+      },
+      {
+        "rule_id": "R-E-EXC-009",
+        "rule_name": "期间免责-违法犯罪/拘留",
+        "description": "被保险人违法犯罪活动中、被拘留/服刑期间",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "STANDARD_CLAUSE",
+          "source_ref": "ZA-PA-MAIN-2021-129#Article5.Item13",
+          "source_text": "被保险人从事违法犯罪活动期间或被依法拘留、服刑、在逃期间。",
+          "clause_code": "ZA-PA-MAIN-2021-129"
+        },
+        "priority": {
+          "level": 1,
+          "level_label": "MAIN_CLAUSE",
+          "rank": 100
+        },
+        "category": "E_EXCLUSION",
+        "applies_to": {
+          "coverage_codes": []
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.insured_legal_status",
+              "operator": "IN",
+              "value": [
+                "IN_CRIMINAL_ACTIVITY",
+                "DETAINED",
+                "IMPRISONED",
+                "FUGITIVE"
+              ]
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "EXC_CRIMINAL_CUSTODY",
+            "remark_template": "被保险人法律状态={claim.insured_legal_status}，属除外责任"
+          }
+        },
+        "status": "EFFECTIVE",
+        "overridden_by": null,
+        "override_reason": null,
+        "tags": [
+          "免责",
+          "犯罪",
+          "拘留"
+        ],
+        "parsing_confidence": {
+          "overall": 0.99,
+          "condition_confidence": 0.99,
+          "action_confidence": 0.99,
+          "needs_human_review": false,
+          "review_hints": []
+        }
+      },
+      {
+        "rule_id": "R-E-RED-001",
+        "rule_name": "单车事故/溺水-减额50%（标准条款）",
+        "description": "单方机动车事故或溺水事故，按保额50%给付",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "STANDARD_CLAUSE",
+          "source_ref": "ZA-PA-MAIN-2021-129#Article6",
+          "source_text": "被保险人因单方机动车交通事故或溺水导致身故或伤残的，保险人按本合同约定的保险金额的50%给付保险金。",
+          "clause_code": "ZA-PA-MAIN-2021-129"
+        },
+        "priority": {
+          "level": 1,
+          "level_label": "MAIN_CLAUSE",
+          "rank": 0
+        },
+        "category": "E_PAYOUT_RATIO",
+        "applies_to": {
+          "coverage_codes": [
+            "ACC_DEATH_DISAB"
+          ]
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.accident_sub_type",
+              "operator": "IN",
+              "value": [
+                "SINGLE_VEHICLE_ACCIDENT",
+                "DROWNING"
+              ]
+            }
+          ]
+        },
+        "action": {
+          "action_type": "SET_CLAIM_RATIO",
+          "params": {
+            "reduction_ratio": 0.5,
+            "remark_template": "单车事故/溺水，按标准条款减额至50%"
+          }
+        },
+        "status": "OVERRIDDEN",
+        "overridden_by": "R-E-SA-001",
+        "override_reason": "特别约定将单车/溺水/高坠均按100%赔付",
+        "tags": [
+          "减额",
+          "单车",
+          "溺水"
+        ],
+        "parsing_confidence": {
+          "overall": 0.99,
+          "condition_confidence": 0.99,
+          "action_confidence": 0.99,
+          "needs_human_review": false,
+          "review_hints": []
+        }
+      },
+      {
+        "rule_id": "R-E-SA-001",
+        "rule_name": "特约-单车/溺水/高坠按100%赔付",
+        "description": "特别约定将单车事故、溺水、2米以上坠落均按100%赔付（高空作业除外）",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "SPECIAL_AGREEMENT",
+          "source_ref": "POLICY-SA-ACC-001",
+          "source_text": "经双方协商，本合同对单方机动车事故、溺水、2米以上坠落导致的身故或伤残，按保险金额的100%给付保险金。但被保险人从事高空作业（高空作业定义参照GB/T 3608-2008）期间的高处坠落除外。",
+          "clause_code": null
+        },
+        "priority": {
+          "level": 3,
+          "level_label": "SPECIAL_AGREEMENT",
+          "rank": 0
+        },
+        "category": "E_PAYOUT_RATIO",
+        "applies_to": {
+          "coverage_codes": [
+            "ACC_DEATH_DISAB"
+          ]
+        },
+        "conditions": {
+          "logic": "AND",
+          "expressions": [
+            {
+              "field": "claim.accident_sub_type",
+              "operator": "IN",
+              "value": [
+                "SINGLE_VEHICLE_ACCIDENT",
+                "DROWNING",
+                "HIGH_FALL"
+              ]
+            },
+            {
+              "field": "claim.is_high_altitude_work",
+              "operator": "IS_FALSE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "SET_CLAIM_RATIO",
+          "params": {
+            "payout_ratio": 1,
+            "remark_template": "特约：单车/溺水/高坠按100%赔付（非高空作业）"
+          }
+        },
+        "status": "EFFECTIVE",
+        "overridden_by": null,
+        "override_reason": null,
+        "tags": [
+          "特约",
+          "全额赔付"
+        ],
+        "parsing_confidence": {
+          "overall": 0.92,
+          "condition_confidence": 0.88,
+          "action_confidence": 0.96,
+          "needs_human_review": true,
+          "review_hints": [
+            "'高空作业'边界模糊，如临时登梯维修是否算高空作业需人工判定"
+          ]
+        }
+      },
+      {
+        "rule_id": "R-E-OCC-003",
+        "rule_name": "职业变更-未通知且危险增加-比例赔付",
+        "description": "职业变更未通知且危险程度增加（但未至拒保范围），按原保费/新保费比例赔付",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "STANDARD_CLAUSE",
+          "source_ref": "ZA-PA-MAIN-2021-129#Article12.Section2",
+          "source_text": "被保险人变更后的职业或工种未在拒保范围但危险程度增加的，保险人按照原收保险费与变更后应收保险费的比例给付保险金。",
+          "clause_code": "ZA-PA-MAIN-2021-129"
+        },
+        "priority": {
+          "level": 1,
+          "level_label": "MAIN_CLAUSE",
+          "rank": 20
+        },
+        "category": "E_PAYOUT_RATIO",
+        "applies_to": {
+          "coverage_codes": []
+        },
+        "conditions": {
+          "logic": "AND",
+          "expressions": [
+            {
+              "field": "claim.insured_occupation_changed",
+              "operator": "IS_TRUE",
+              "value": null
+            },
+            {
+              "field": "claim.insured_occupation_change_notified",
+              "operator": "IS_FALSE",
+              "value": null
+            },
+            {
+              "field": "claim.insured_new_occupation_in_decline_list",
+              "operator": "IS_FALSE",
+              "value": null
+            },
+            {
+              "field": "claim.insured_occupation_risk_increased",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "SET_CLAIM_RATIO",
+          "params": {
+            "formula": {
+              "expression": "policy.original_premium / claim.hypothetical_new_premium",
+              "output_field": "result.occupation_change_ratio"
+            },
+            "remark_template": "职业变更未通知，按原保费/新保费比例={result.occupation_change_ratio}赔付"
+          }
+        },
+        "status": "EFFECTIVE",
+        "overridden_by": null,
+        "override_reason": null,
+        "tags": [
+          "职业",
+          "比例赔付"
+        ],
+        "parsing_confidence": {
+          "overall": 0.96,
+          "condition_confidence": 0.95,
+          "action_confidence": 0.97,
+          "needs_human_review": false,
+          "review_hints": []
+        }
+      },
+      {
+        "rule_id": "R-E-FRAUD-001",
+        "rule_name": "反欺诈-高额意外险多重投保预警",
+        "description": "多重投保模式异常时触发反欺诈预警",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "REGULATORY",
+          "source_ref": "INTERNAL-ANTIFRAUD-ACC-001",
+          "source_text": "被保险人同时持有3份及以上意外险保单，或意外身故保额合计超过300万的，触发反欺诈预警。",
+          "clause_code": null
+        },
+        "priority": {
+          "level": 4,
+          "level_label": "REGULATORY",
+          "rank": 100
+        },
+        "category": "E_ANTI_FRAUD",
+        "applies_to": {
+          "coverage_codes": []
+        },
+        "conditions": {
+          "logic": "OR",
+          "expressions": [
+            {
+              "field": "claim.insured_accident_policy_count",
+              "operator": "GTE",
+              "value": 3
+            },
+            {
+              "field": "claim.insured_total_accident_death_sum",
+              "operator": "GTE",
+              "value": 3000000,
+              "value_unit": "CNY"
+            },
+            {
+              "logic": "AND",
+              "expressions": [
+                {
+                  "field": "claim.insured_accident_policy_count",
+                  "operator": "GTE",
+                  "value": 3
+                },
+                {
+                  "field": "claim.newest_policy_inception_days",
+                  "operator": "LTE",
+                  "value": 90,
+                  "value_unit": "DAYS"
+                }
+              ]
+            }
+          ]
+        },
+        "action": {
+          "action_type": "FLAG_FRAUD",
+          "params": {
+            "fraud_risk_score": 80,
+            "route_reason": "多重意外险投保异常：保单{claim.insured_accident_policy_count}份/总保额{claim.insured_total_accident_death_sum}元"
+          }
+        },
+        "status": "EFFECTIVE",
+        "overridden_by": null,
+        "override_reason": null,
+        "tags": [
+          "反欺诈",
+          "多重投保"
+        ],
+        "parsing_confidence": {
+          "overall": 0.98,
+          "condition_confidence": 0.97,
+          "action_confidence": 0.99,
+          "needs_human_review": false,
+          "review_hints": []
+        }
+      },
+      {
+        "rule_id": "R-A-HOSP-001",
+        "rule_name": "医院资质校验-二级以上公立普通部",
+        "description": "就诊医院须为二级及以上公立医院普通部（不含VIP/特需/国际部）",
+        "execution": {
+          "domain": "ASSESSMENT",
+          "loop_over": "claim.expense_items",
+          "item_alias": "expense_item",
+          "item_action_on_reject": "ZERO_AMOUNT"
+        },
+        "source": {
+          "source_type": "ADDITIONAL_CLAUSE",
+          "source_ref": "ZA-PA-ADD-MED-2021-189#Article3",
+          "source_text": "本附加险合同所指的医院为经中华人民共和国卫生部门评审确定的二级及二级以上的公立医院普通部。",
+          "clause_code": "ZA-PA-ADD-MED-2021-189"
+        },
+        "priority": {
+          "level": 2,
+          "level_label": "ADDITIONAL_CLAUSE",
+          "rank": 0
+        },
+        "category": "A_PROVIDER_QUALIFY",
+        "applies_to": {
+          "coverage_codes": [
+            "ACC_MEDICAL"
+          ]
+        },
+        "conditions": {
+          "logic": "OR",
+          "expressions": [
+            {
+              "field": "expense_item.hospital_qualified",
+              "operator": "IS_FALSE",
+              "value": null
+            },
+            {
+              "field": "expense_item.department_type",
+              "operator": "IN",
+              "value": [
+                "VIP",
+                "SPECIAL_NEEDS",
+                "INTERNATIONAL"
+              ]
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_ITEM",
+          "params": {
+            "reject_reason_code": "HOSPITAL_UNQUALIFIED",
+            "remark_template": "就诊机构/科室不符合二级以上公立医院普通部要求，该笔费用{expense_item.item_name}{expense_item.amount}元不予赔付"
+          }
+        },
+        "status": "EFFECTIVE",
+        "overridden_by": null,
+        "override_reason": null,
+        "tags": [
+          "医院",
+          "资质"
+        ],
+        "parsing_confidence": {
+          "overall": 0.99,
+          "condition_confidence": 0.99,
+          "action_confidence": 0.99,
+          "needs_human_review": false,
+          "review_hints": []
+        }
+      },
+      {
+        "rule_id": "R-A-EXCL-001",
+        "rule_name": "费用排除-椎间盘突出/病理性骨折",
+        "description": "椎间盘突出、病理性骨折相关费用不予赔付（属既有疾病非意外所致）",
+        "execution": {
+          "domain": "ASSESSMENT",
+          "loop_over": "claim.expense_items",
+          "item_alias": "expense_item",
+          "item_action_on_reject": "ZERO_AMOUNT"
+        },
+        "source": {
+          "source_type": "ADDITIONAL_CLAUSE",
+          "source_ref": "ZA-PA-ADD-MED-2021-189#Article5.Item3",
+          "source_text": "椎间盘突出症、病理性骨折等非意外伤害所致的医疗费用。",
+          "clause_code": "ZA-PA-ADD-MED-2021-189"
+        },
+        "priority": {
+          "level": 2,
+          "level_label": "ADDITIONAL_CLAUSE",
+          "rank": 100
+        },
+        "category": "A_ITEM_EXCLUSION",
+        "applies_to": {
+          "coverage_codes": [
+            "ACC_MEDICAL"
+          ]
+        },
+        "conditions": {
+          "logic": "OR",
+          "expressions": [
+            {
+              "field": "expense_item.diagnosis_related",
+              "operator": "CONTAINS",
+              "value": "DISC_HERNIATION"
+            },
+            {
+              "field": "expense_item.is_pathological_fracture",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_ITEM",
+          "params": {
+            "reject_reason_code": "NON_ACCIDENT_CONDITION",
+            "remark_template": "{expense_item.item_name}与椎间盘突出/病理性骨折相关，属非意外伤害除外"
+          }
+        },
+        "status": "EFFECTIVE",
+        "overridden_by": null,
+        "override_reason": null,
+        "tags": [
+          "费用排除",
+          "既有疾病"
+        ],
+        "parsing_confidence": {
+          "overall": 0.88,
+          "condition_confidence": 0.85,
+          "action_confidence": 0.91,
+          "needs_human_review": true,
+          "review_hints": [
+            "外伤性椎间盘突出与退行性变因果关系需影像+时间线分析"
+          ]
+        }
+      },
+      {
+        "rule_id": "R-A-EXCL-002",
+        "rule_name": "费用排除-整容/康复器械/体检",
+        "description": "整容美容、康复辅助器械、体检预防保健不予赔付",
+        "execution": {
+          "domain": "ASSESSMENT",
+          "loop_over": "claim.expense_items",
+          "item_alias": "expense_item",
+          "item_action_on_reject": "ZERO_AMOUNT"
+        },
+        "source": {
+          "source_type": "ADDITIONAL_CLAUSE",
+          "source_ref": "ZA-PA-ADD-MED-2021-189#Article5.Item4",
+          "source_text": "整形、整容、美容手术费；康复辅助器械费；体检费、预防保健等非治疗性项目费用。",
+          "clause_code": "ZA-PA-ADD-MED-2021-189"
+        },
+        "priority": {
+          "level": 2,
+          "level_label": "ADDITIONAL_CLAUSE",
+          "rank": 100
+        },
+        "category": "A_ITEM_EXCLUSION",
+        "applies_to": {
+          "coverage_codes": [
+            "ACC_MEDICAL"
+          ]
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "expense_item.expense_category",
+              "operator": "IN",
+              "value": [
+                "COSMETIC",
+                "PLASTIC_SURGERY",
+                "REHABILITATION_DEVICE",
+                "HEALTH_CHECK",
+                "WELLNESS",
+                "PREVENTIVE_CARE"
+              ]
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_ITEM",
+          "params": {
+            "reject_reason_code": "NON_TREATMENT_ITEM",
+            "remark_template": "{expense_item.item_name}属{expense_item.expense_category}类别，非治疗性项目不予赔付"
+          }
+        },
+        "status": "EFFECTIVE",
+        "overridden_by": null,
+        "override_reason": null,
+        "tags": [
+          "费用排除",
+          "非治疗"
+        ],
+        "parsing_confidence": {
+          "overall": 0.98,
+          "condition_confidence": 0.98,
+          "action_confidence": 0.98,
+          "needs_human_review": false,
+          "review_hints": []
+        }
+      },
+      {
+        "rule_id": "R-A-SI-001",
+        "rule_name": "社保目录内费用-100%赔付",
+        "description": "社会基本医疗保险目录内的合理费用按100%赔付比例",
+        "execution": {
+          "domain": "ASSESSMENT",
+          "loop_over": "claim.expense_items",
+          "item_alias": "expense_item",
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "ADDITIONAL_CLAUSE",
+          "source_ref": "ZA-PA-ADD-MED-2021-189#Article2.Section2",
+          "source_text": "有社会基本医疗保险的被保险人，对于社会基本医疗保险范围内的医疗费用，赔付比例为100%。",
+          "clause_code": "ZA-PA-ADD-MED-2021-189"
+        },
+        "priority": {
+          "level": 2,
+          "level_label": "ADDITIONAL_CLAUSE",
+          "rank": 0
+        },
+        "category": "A_ITEM_SOCIAL_INSURANCE",
+        "applies_to": {
+          "coverage_codes": [
+            "ACC_MEDICAL"
+          ]
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "expense_item.is_social_insurance_covered",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "SET_ITEM_RATIO",
+          "params": {
+            "social_insurance_ratio": 1,
+            "formula": {
+              "expression": "expense_item.amount * 1.0",
+              "output_field": "expense_item.approved_amount"
+            },
+            "remark_template": "{expense_item.item_name}属社保目录内，按100%赔付，核定{expense_item.approved_amount}元"
+          }
+        },
+        "status": "EFFECTIVE",
+        "overridden_by": null,
+        "override_reason": null,
+        "tags": [
+          "社保",
+          "赔付比例"
+        ],
+        "parsing_confidence": {
+          "overall": 0.99,
+          "condition_confidence": 0.99,
+          "action_confidence": 0.99,
+          "needs_human_review": false,
+          "review_hints": []
+        }
+      },
+      {
+        "rule_id": "R-A-SI-002",
+        "rule_name": "社保目录外费用-80%赔付",
+        "description": "不在社会基本医疗保险目录内的合理费用按80%赔付比例",
+        "execution": {
+          "domain": "ASSESSMENT",
+          "loop_over": "claim.expense_items",
+          "item_alias": "expense_item",
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "ADDITIONAL_CLAUSE",
+          "source_ref": "ZA-PA-ADD-MED-2021-189#Article2.Section3",
+          "source_text": "不属于社会基本医疗保险范围内的医疗费用，赔付比例为80%。",
+          "clause_code": "ZA-PA-ADD-MED-2021-189"
+        },
+        "priority": {
+          "level": 2,
+          "level_label": "ADDITIONAL_CLAUSE",
+          "rank": 10
+        },
+        "category": "A_ITEM_SOCIAL_INSURANCE",
+        "applies_to": {
+          "coverage_codes": [
+            "ACC_MEDICAL"
+          ]
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "expense_item.is_social_insurance_covered",
+              "operator": "IS_FALSE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "SET_ITEM_RATIO",
+          "params": {
+            "non_social_insurance_ratio": 0.8,
+            "formula": {
+              "expression": "expense_item.amount * 0.8",
+              "output_field": "expense_item.approved_amount"
+            },
+            "remark_template": "{expense_item.item_name}属社保目录外，按80%赔付，核定{expense_item.approved_amount}元"
+          }
+        },
+        "status": "EFFECTIVE",
+        "overridden_by": null,
+        "override_reason": null,
+        "tags": [
+          "社保外",
+          "赔付比例"
+        ],
+        "parsing_confidence": {
+          "overall": 0.99,
+          "condition_confidence": 0.99,
+          "action_confidence": 0.99,
+          "needs_human_review": false,
+          "review_hints": []
+        }
+      },
+      {
+        "rule_id": "R-A-NEC-001",
+        "rule_name": "医疗必需合理性-住院天数DRG校验",
+        "description": "住院天数超出DRG标准上限的，超出部分费用需人工审核",
+        "execution": {
+          "domain": "ASSESSMENT",
+          "loop_over": "claim.expense_items",
+          "item_alias": "expense_item",
+          "item_action_on_reject": "FLAG_ITEM"
+        },
+        "source": {
+          "source_type": "REGULATORY",
+          "source_ref": "DRG-NHSA-2022#STANDARD_DAYS",
+          "source_text": "按国家医保局DRG分组标准，各诊断分组有对应的住院天数上限，超出部分需核实合理性。",
+          "clause_code": null
+        },
+        "priority": {
+          "level": 4,
+          "level_label": "REGULATORY",
+          "rank": 0
+        },
+        "category": "A_ITEM_NECESSITY",
+        "applies_to": {
+          "coverage_codes": [
+            "ACC_MEDICAL"
+          ]
+        },
+        "conditions": {
+          "logic": "AND",
+          "expressions": [
+            {
+              "field": "expense_item.expense_category",
+              "operator": "EQ",
+              "value": "BED"
+            },
+            {
+              "field": "expense_item.hospitalization_days",
+              "operator": "GT",
+              "value": 0
+            },
+            {
+              "field": "expense_item.hospitalization_days_exceeds_drg",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "FLAG_ITEM",
+          "params": {
+            "route_reason": "住院{expense_item.hospitalization_days}天，超出DRG标准{expense_item.drg_standard_days}天，需核实延期住院合理性",
+            "remark_template": "DRG超期预警：实际住院{expense_item.hospitalization_days}天 > DRG标准{expense_item.drg_standard_days}天"
+          }
+        },
+        "status": "EFFECTIVE",
+        "overridden_by": null,
+        "override_reason": null,
+        "tags": [
+          "医疗必需",
+          "DRG",
+          "住院天数"
+        ],
+        "parsing_confidence": {
+          "overall": 0.93,
+          "condition_confidence": 0.91,
+          "action_confidence": 0.95,
+          "needs_human_review": true,
+          "review_hints": [
+            "DRG标准天数仅作参考，实际需结合伤情严重程度和并发症综合判断"
+          ]
+        }
+      },
+      {
+        "rule_id": "R-A-NEC-002",
+        "rule_name": "医疗必需合理性-重复检查排除",
+        "description": "同一住院期间同一检查项目重复3次以上的，超出部分需人工审核",
+        "execution": {
+          "domain": "ASSESSMENT",
+          "loop_over": "claim.expense_items",
+          "item_alias": "expense_item",
+          "item_action_on_reject": "FLAG_ITEM"
+        },
+        "source": {
+          "source_type": "REGULATORY",
+          "source_ref": "INTERNAL-MEDICAL-AUDIT-002",
+          "source_text": "同一住院期间同一检查项目重复检查3次及以上的，需核实医学必要性。",
+          "clause_code": null
+        },
+        "priority": {
+          "level": 4,
+          "level_label": "REGULATORY",
+          "rank": 10
+        },
+        "category": "A_ITEM_NECESSITY",
+        "applies_to": {
+          "coverage_codes": [
+            "ACC_MEDICAL"
+          ]
+        },
+        "conditions": {
+          "logic": "AND",
+          "expressions": [
+            {
+              "field": "expense_item.expense_category",
+              "operator": "EQ",
+              "value": "EXAMINATION"
+            },
+            {
+              "field": "expense_item.is_duplicate_exam",
+              "operator": "IS_TRUE",
+              "value": null
+            },
+            {
+              "field": "expense_item.duplicate_count",
+              "operator": "GTE",
+              "value": 3
+            }
+          ]
+        },
+        "action": {
+          "action_type": "FLAG_ITEM",
+          "params": {
+            "route_reason": "检查项目{expense_item.item_name}重复{expense_item.duplicate_count}次，需核实合理性",
+            "remark_template": "重复检查预警：{expense_item.item_name}出现{expense_item.duplicate_count}次"
+          }
+        },
+        "status": "EFFECTIVE",
+        "overridden_by": null,
+        "override_reason": null,
+        "tags": [
+          "医疗必需",
+          "重复检查"
+        ],
+        "parsing_confidence": {
+          "overall": 0.95,
+          "condition_confidence": 0.94,
+          "action_confidence": 0.96,
+          "needs_human_review": false,
+          "review_hints": []
+        }
+      },
+      {
+        "rule_id": "R-A-NEC-003",
+        "rule_name": "医疗必需合理性-过度用药排除",
+        "description": "单日用药金额超出同诊断平均水平200%的，需人工审核",
+        "execution": {
+          "domain": "ASSESSMENT",
+          "loop_over": "claim.expense_items",
+          "item_alias": "expense_item",
+          "item_action_on_reject": "FLAG_ITEM"
+        },
+        "source": {
+          "source_type": "REGULATORY",
+          "source_ref": "INTERNAL-MEDICAL-AUDIT-003",
+          "source_text": "单日药费显著偏离同诊断同地区平均水平的，需核实用药合理性。",
+          "clause_code": null
+        },
+        "priority": {
+          "level": 4,
+          "level_label": "REGULATORY",
+          "rank": 20
+        },
+        "category": "A_ITEM_NECESSITY",
+        "applies_to": {
+          "coverage_codes": [
+            "ACC_MEDICAL"
+          ]
+        },
+        "conditions": {
+          "logic": "AND",
+          "expressions": [
+            {
+              "field": "expense_item.expense_category",
+              "operator": "EQ",
+              "value": "MEDICATION"
+            },
+            {
+              "field": "expense_item.daily_medication_exceeds_avg",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "FLAG_ITEM",
+          "params": {
+            "route_reason": "单日药费{expense_item.daily_medication_amount}元显著超出同诊断平均水平，需核实合理性",
+            "remark_template": "过度用药预警：单日药费{expense_item.daily_medication_amount}元 > 平均值200%"
+          }
+        },
+        "status": "EFFECTIVE",
+        "overridden_by": null,
+        "override_reason": null,
+        "tags": [
+          "医疗必需",
+          "过度用药"
+        ],
+        "parsing_confidence": {
+          "overall": 0.92,
+          "condition_confidence": 0.9,
+          "action_confidence": 0.94,
+          "needs_human_review": true,
+          "review_hints": [
+            "用药合理性受伤情严重程度、并发症等因素影响，需结合病历综合判断"
+          ]
+        }
+      },
+      {
+        "rule_id": "R-A-PRICE-001",
+        "rule_name": "费用合理性-药品单价校验",
+        "description": "药品单价与医保/市场指导价对比，超出合理范围的调整至指导价",
+        "execution": {
+          "domain": "ASSESSMENT",
+          "loop_over": "claim.expense_items",
+          "item_alias": "expense_item",
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "REGULATORY",
+          "source_ref": "NHSA-DRUG-DIR-2024#PRICE_STANDARD",
+          "source_text": "药品赔付金额参照国家医保药品目录规定的限价标准，超出限价部分不予赔付。",
+          "clause_code": null
+        },
+        "priority": {
+          "level": 4,
+          "level_label": "REGULATORY",
+          "rank": 0
+        },
+        "category": "A_ITEM_PRICING",
+        "applies_to": {
+          "coverage_codes": [
+            "ACC_MEDICAL"
+          ]
+        },
+        "conditions": {
+          "logic": "AND",
+          "expressions": [
+            {
+              "field": "expense_item.expense_category",
+              "operator": "EQ",
+              "value": "MEDICATION"
+            },
+            {
+              "field": "expense_item.unit_price_deviation_percent",
+              "operator": "GT",
+              "value": 30,
+              "value_unit": "PERCENT"
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ADJUST_ITEM_AMOUNT",
+          "params": {
+            "pricing_reference": {
+              "source": "NHSA_DRUG_PRICE_DB",
+              "tolerance_percent": 30
+            },
+            "formula": {
+              "expression": "expense_item.quantity * expense_item.reference_unit_price * 1.3",
+              "output_field": "expense_item.approved_amount"
+            },
+            "remark_template": "药品{expense_item.drug_name}单价{expense_item.unit_price}超出指导价{expense_item.reference_unit_price}的30%，核定按指导价×130%"
+          }
+        },
+        "status": "EFFECTIVE",
+        "overridden_by": null,
+        "override_reason": null,
+        "tags": [
+          "费用合理性",
+          "药品定价"
+        ],
+        "parsing_confidence": {
+          "overall": 0.95,
+          "condition_confidence": 0.94,
+          "action_confidence": 0.96,
+          "needs_human_review": false,
+          "review_hints": []
+        }
+      },
+      {
+        "rule_id": "R-A-PRICE-002",
+        "rule_name": "费用合理性-诊疗项目单价校验",
+        "description": "诊疗/手术/材料等费用单价超出当地物价标准的，按物价标准核定",
+        "execution": {
+          "domain": "ASSESSMENT",
+          "loop_over": "claim.expense_items",
+          "item_alias": "expense_item",
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "REGULATORY",
+          "source_ref": "INTERNAL-PRICING-MED-002",
+          "source_text": "诊疗项目、手术费、耗材费等应参照当地物价部门核定的收费标准，超标部分不予赔付。",
+          "clause_code": null
+        },
+        "priority": {
+          "level": 4,
+          "level_label": "REGULATORY",
+          "rank": 10
+        },
+        "category": "A_ITEM_PRICING",
+        "applies_to": {
+          "coverage_codes": [
+            "ACC_MEDICAL"
+          ]
+        },
+        "conditions": {
+          "logic": "AND",
+          "expressions": [
+            {
+              "field": "expense_item.expense_category",
+              "operator": "IN",
+              "value": [
+                "TREATMENT",
+                "SURGERY",
+                "MATERIAL",
+                "EXAMINATION"
+              ]
+            },
+            {
+              "field": "expense_item.unit_price_deviation_percent",
+              "operator": "GT",
+              "value": 50,
+              "value_unit": "PERCENT"
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ADJUST_ITEM_AMOUNT",
+          "params": {
+            "pricing_reference": {
+              "source": "LOCAL_MEDICAL_PRICE_DB",
+              "tolerance_percent": 50
+            },
+            "formula": {
+              "expression": "expense_item.reference_unit_price * expense_item.quantity * 1.5",
+              "output_field": "expense_item.approved_amount"
+            },
+            "remark_template": "项目{expense_item.item_name}单价{expense_item.unit_price}超出当地物价标准50%，按物价标准×150%核定"
+          }
+        },
+        "status": "EFFECTIVE",
+        "overridden_by": null,
+        "override_reason": null,
+        "tags": [
+          "费用合理性",
+          "物价标准"
+        ],
+        "parsing_confidence": {
+          "overall": 0.94,
+          "condition_confidence": 0.93,
+          "action_confidence": 0.95,
+          "needs_human_review": false,
+          "review_hints": []
+        }
+      },
+      {
+        "rule_id": "R-A-DED-001",
+        "rule_name": "免赔额适用",
+        "description": "本保单意外医疗0免赔额，此规则作为占位确保定损流程完整",
+        "execution": {
+          "domain": "ASSESSMENT",
+          "loop_over": "claim.expense_items",
+          "item_alias": "expense_item",
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "ADDITIONAL_CLAUSE",
+          "source_ref": "ZA-PA-ADD-MED-2021-189#Article2.Section1",
+          "source_text": "每次事故免赔额0元。",
+          "clause_code": "ZA-PA-ADD-MED-2021-189"
+        },
+        "priority": {
+          "level": 2,
+          "level_label": "ADDITIONAL_CLAUSE",
+          "rank": 0
+        },
+        "category": "A_ITEM_DEDUCTIBLE",
+        "applies_to": {
+          "coverage_codes": [
+            "ACC_MEDICAL"
+          ]
+        },
+        "conditions": {
+          "logic": "ALWAYS_TRUE",
+          "expressions": []
+        },
+        "action": {
+          "action_type": "ADD_REMARK",
+          "params": {
+            "deductible_amount": 0,
+            "remark_template": "本保单意外医疗0免赔额"
+          }
+        },
+        "status": "EFFECTIVE",
+        "overridden_by": null,
+        "override_reason": null,
+        "tags": [
+          "免赔额"
+        ],
+        "parsing_confidence": {
+          "overall": 0.99,
+          "condition_confidence": 0.99,
+          "action_confidence": 0.99,
+          "needs_human_review": false,
+          "review_hints": []
+        }
+      },
+      {
+        "rule_id": "R-P-COMP-001",
+        "rule_name": "补偿原则-已获补偿扣除",
+        "description": "被保险人已从社保、雇主、其他商业保险或第三方获得的补偿应予扣除",
+        "execution": {
+          "domain": "POST_PROCESS",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "ADDITIONAL_CLAUSE",
+          "source_ref": "ZA-PA-ADD-MED-2021-189#Article4",
+          "source_text": "被保险人如果已从其他途径获得补偿，保险人对剩余部分按本合同约定给付保险金，但给付金额以被保险人实际支出的医疗费用为限。",
+          "clause_code": "ZA-PA-ADD-MED-2021-189"
+        },
+        "priority": {
+          "level": 2,
+          "level_label": "ADDITIONAL_CLAUSE",
+          "rank": 0
+        },
+        "category": "P_COMPENSATION_DEDUCT",
+        "applies_to": {
+          "coverage_codes": [
+            "ACC_MEDICAL"
+          ]
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.other_reimbursement_received",
+              "operator": "GT",
+              "value": 0
+            }
+          ]
+        },
+        "action": {
+          "action_type": "APPLY_FORMULA",
+          "params": {
+            "formula": {
+              "expression": "max(0, result.medical_approved_total - claim.other_reimbursement_received)",
+              "output_field": "result.medical_after_compensation"
+            },
+            "remark_template": "已获其他补偿{claim.other_reimbursement_received}元，补偿后可赔={result.medical_after_compensation}元"
+          }
+        },
+        "status": "EFFECTIVE",
+        "overridden_by": null,
+        "override_reason": null,
+        "tags": [
+          "后处理",
+          "补偿原则"
+        ],
+        "parsing_confidence": {
+          "overall": 0.99,
+          "condition_confidence": 0.99,
+          "action_confidence": 0.99,
+          "needs_human_review": false,
+          "review_hints": []
+        }
+      },
+      {
+        "rule_id": "R-P-CAP-001",
+        "rule_name": "医疗费用累计限额封顶",
+        "description": "医疗费用赔付不超过保额（10000元），考虑累计已赔",
+        "execution": {
+          "domain": "POST_PROCESS",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "ADDITIONAL_CLAUSE",
+          "source_ref": "ZA-PA-ADD-MED-2021-189#Article2.Section1",
+          "source_text": "保险人对被保险人每次意外伤害事故所致的医疗费用，在扣除免赔额后在保险金额范围内给付保险金。",
+          "clause_code": "ZA-PA-ADD-MED-2021-189"
+        },
+        "priority": {
+          "level": 2,
+          "level_label": "ADDITIONAL_CLAUSE",
+          "rank": 0
+        },
+        "category": "P_CUMULATIVE_CAP",
+        "applies_to": {
+          "coverage_codes": [
+            "ACC_MEDICAL"
+          ]
+        },
+        "conditions": {
+          "logic": "ALWAYS_TRUE",
+          "expressions": []
+        },
+        "action": {
+          "action_type": "APPLY_CAP",
+          "params": {
+            "cap_field": "coverage.ACC_MEDICAL.sum_insured.amount",
+            "formula": {
+              "expression": "min(result.medical_after_compensation, coverage.ACC_MEDICAL.sum_insured.amount - result.cumulative_medical_paid)",
+              "output_field": "result.medical_payout"
+            },
+            "remark_template": "医疗保额{coverage.ACC_MEDICAL.sum_insured.amount}元，累计已赔{result.cumulative_medical_paid}元，本次赔付{result.medical_payout}元"
+          }
+        },
+        "status": "EFFECTIVE",
+        "overridden_by": null,
+        "override_reason": null,
+        "tags": [
+          "后处理",
+          "限额封顶"
+        ],
+        "parsing_confidence": {
+          "overall": 0.99,
+          "condition_confidence": 0.99,
+          "action_confidence": 0.99,
+          "needs_human_review": false,
+          "review_hints": []
+        }
+      },
+      {
+        "rule_id": "R-P-DEDUCT-001",
+        "rule_name": "身故前已付伤残金扣除",
+        "description": "已给付伤残保险金的，身故给付时应扣除已付伤残金",
+        "execution": {
+          "domain": "POST_PROCESS",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "STANDARD_CLAUSE",
+          "source_ref": "ZA-PA-MAIN-2021-129#Article3.Section3",
+          "source_text": "保险人已给付伤残保险金的，身故保险金应扣除已给付的伤残保险金。",
+          "clause_code": "ZA-PA-MAIN-2021-129"
+        },
+        "priority": {
+          "level": 1,
+          "level_label": "MAIN_CLAUSE",
+          "rank": 0
+        },
+        "category": "P_PRIOR_BENEFIT_DEDUCT",
+        "applies_to": {
+          "coverage_codes": [
+            "ACC_DEATH_DISAB"
+          ]
+        },
+        "conditions": {
+          "logic": "AND",
+          "expressions": [
+            {
+              "field": "claim.result_type",
+              "operator": "EQ",
+              "value": "DEATH"
+            },
+            {
+              "field": "result.prior_disability_paid",
+              "operator": "GT",
+              "value": 0
+            }
+          ]
+        },
+        "action": {
+          "action_type": "DEDUCT_PRIOR_BENEFIT",
+          "params": {
+            "formula": {
+              "expression": "coverage.ACC_DEATH_DISAB.sum_insured.amount - result.prior_disability_paid",
+              "output_field": "result.death_payout"
+            },
+            "remark_template": "身故保额{coverage.ACC_DEATH_DISAB.sum_insured.amount}元-已付伤残金{result.prior_disability_paid}元=本次给付{result.death_payout}元"
+          }
+        },
+        "status": "EFFECTIVE",
+        "overridden_by": null,
+        "override_reason": null,
+        "tags": [
+          "后处理",
+          "伤残扣除"
+        ],
+        "parsing_confidence": {
+          "overall": 0.99,
+          "condition_confidence": 0.99,
+          "action_confidence": 0.99,
+          "needs_human_review": false,
+          "review_hints": []
+        }
+      },
+      {
+        "rule_id": "R-P-MULTI-001",
+        "rule_name": "多险别叠加-交通/驾乘额外给付",
+        "description": "营运交通或驾乘责任成立时，额外给付对应保额（与基础意外叠加）",
+        "execution": {
+          "domain": "POST_PROCESS",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "STANDARD_CLAUSE",
+          "source_ref": "ZA-PA-TRANS-2021-151#Article3.Note",
+          "source_text": "营运交通工具乘客意外身故/伤残保险金在基本意外身故/伤残保险金基础上另行给付。",
+          "clause_code": "ZA-PA-TRANS-2021-151"
+        },
+        "priority": {
+          "level": 1,
+          "level_label": "MAIN_CLAUSE",
+          "rank": 0
+        },
+        "category": "P_MULTI_COVERAGE",
+        "applies_to": {
+          "coverage_codes": [
+            "ACC_PUBLIC_TRANS",
+            "ACC_PRIVATE_CAR"
+          ]
+        },
+        "conditions": {
+          "logic": "OR",
+          "expressions": [
+            {
+              "field": "result.public_transport_eligible",
+              "operator": "IS_TRUE",
+              "value": null
+            },
+            {
+              "field": "result.private_car_eligible",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "SUM_COVERAGES",
+          "params": {
+            "formula": {
+              "expression": "result.base_accident_payout + COALESCE(result.public_transport_payout, 0) + COALESCE(result.private_car_payout, 0)",
+              "output_field": "result.total_death_disability_payout"
+            },
+            "remark_template": "基础意外{result.base_accident_payout}+交通{result.public_transport_payout}+驾乘{result.private_car_payout}=总计{result.total_death_disability_payout}元"
+          }
+        },
+        "status": "EFFECTIVE",
+        "overridden_by": null,
+        "override_reason": null,
+        "tags": [
+          "后处理",
+          "叠加赔付"
+        ],
+        "parsing_confidence": {
+          "overall": 0.97,
+          "condition_confidence": 0.96,
+          "action_confidence": 0.98,
+          "needs_human_review": false,
+          "review_hints": []
+        }
+      }
+    ],
+    "override_chains": [
+      {
+        "chain_id": "OC-SINGLE-CAR-DROWNING-001",
+        "topic": "单车事故/溺水赔付比例",
+        "affected_domain": "ELIGIBILITY",
+        "chain": [
+          {
+            "rule_id": "R-E-RED-001",
+            "priority_level": 1,
+            "status": "OVERRIDDEN",
+            "summary": "标准条款：单车/溺水按50%给付"
+          },
+          {
+            "rule_id": "R-E-SA-001",
+            "priority_level": 3,
+            "status": "EFFECTIVE",
+            "summary": "特约：单车/溺水/高坠按100%给付（非高空作业）"
+          }
+        ],
+        "effective_rule_id": "R-E-SA-001",
+        "conflict_type": "OVERRIDE",
+        "resolution": null
+      },
+      {
+        "chain_id": "OC-HIGH-FALL-001",
+        "topic": "2米以上坠落免责范围",
+        "affected_domain": "ELIGIBILITY",
+        "chain": [
+          {
+            "rule_id": "R-E-EXC-006",
+            "priority_level": 1,
+            "status": "OVERRIDDEN",
+            "summary": "标准条款：2米以上坠落免责"
+          },
+          {
+            "rule_id": "R-E-SA-001",
+            "priority_level": 3,
+            "status": "EFFECTIVE",
+            "summary": "特约：高坠纳入承保范围（高空作业除外）"
+          }
+        ],
+        "effective_rule_id": "R-E-SA-001",
+        "conflict_type": "OVERRIDE",
+        "resolution": null
+      }
+    ],
+    "field_dictionary": {
+      "policy.is_within_coverage_period": {
+        "label": "是否在保险期间内",
+        "data_type": "BOOLEAN",
+        "scope": "POLICY_LEVEL",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source": "POLICY_SYSTEM"
+      },
+      "policy.payment_mode": {
+        "label": "缴费方式",
+        "data_type": "ENUM",
+        "scope": "POLICY_LEVEL",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "enum_values": [
+          {
+            "code": "ANNUAL",
+            "label": "年缴"
+          },
+          {
+            "code": "MONTHLY",
+            "label": "月缴"
+          },
+          {
+            "code": "SINGLE",
+            "label": "趸缴"
+          }
+        ],
+        "source": "POLICY_SYSTEM"
+      },
+      "policy.premium_overdue": {
+        "label": "是否保费逾期",
+        "data_type": "BOOLEAN",
+        "scope": "POLICY_LEVEL",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source": "POLICY_SYSTEM"
+      },
+      "policy.days_overdue": {
+        "label": "逾期天数",
+        "data_type": "NUMBER",
+        "scope": "POLICY_LEVEL",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source": "POLICY_SYSTEM"
+      },
+      "policy.original_premium": {
+        "label": "原保费",
+        "data_type": "NUMBER",
+        "scope": "POLICY_LEVEL",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source": "POLICY_SYSTEM"
+      },
+      "claim.cause_type": {
+        "label": "事故原因大类",
+        "data_type": "ENUM",
+        "scope": "CLAIM_LEVEL",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "enum_values": [
+          {
+            "code": "ACCIDENT",
+            "label": "意外"
+          },
+          {
+            "code": "DISEASE",
+            "label": "疾病"
+          },
+          {
+            "code": "OTHER",
+            "label": "其他"
+          }
+        ],
+        "source": "CLAIMS_SYSTEM"
+      },
+      "claim.cause_sub_type": {
+        "label": "事故原因细类",
+        "data_type": "ENUM",
+        "scope": "CLAIM_LEVEL",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "enum_values": [
+          {
+            "code": "APPLICANT_INTENT_HARM",
+            "label": "投保人故意"
+          },
+          {
+            "code": "SELF_INFLICTED",
+            "label": "自伤"
+          },
+          {
+            "code": "SUICIDE",
+            "label": "自杀"
+          },
+          {
+            "code": "CRIME",
+            "label": "犯罪"
+          },
+          {
+            "code": "RESIST_ARREST",
+            "label": "拒捕"
+          },
+          {
+            "code": "PROVOKED_FIGHT",
+            "label": "挑衅打斗"
+          },
+          {
+            "code": "DISEASE",
+            "label": "疾病"
+          },
+          {
+            "code": "SUDDEN_DEATH",
+            "label": "猝死"
+          },
+          {
+            "code": "HEATSTROKE",
+            "label": "中暑"
+          },
+          {
+            "code": "ALTITUDE_SICKNESS",
+            "label": "高原反应"
+          },
+          {
+            "code": "PREGNANCY",
+            "label": "妊娠"
+          },
+          {
+            "code": "DRUG_ALLERGY",
+            "label": "药物过敏"
+          }
+        ],
+        "source": "CLAIMS_SYSTEM"
+      },
+      "claim.result_type": {
+        "label": "事故结果",
+        "data_type": "ENUM",
+        "scope": "CLAIM_LEVEL",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "enum_values": [
+          {
+            "code": "DEATH",
+            "label": "身故"
+          },
+          {
+            "code": "DISABILITY",
+            "label": "伤残"
+          },
+          {
+            "code": "MEDICAL_TREATMENT",
+            "label": "医疗"
+          }
+        ],
+        "source": "CLAIMS_SYSTEM"
+      },
+      "claim.accident_sub_type": {
+        "label": "事故细分类型",
+        "data_type": "ENUM",
+        "scope": "CLAIM_LEVEL",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "enum_values": [
+          {
+            "code": "SINGLE_VEHICLE_ACCIDENT",
+            "label": "单车事故"
+          },
+          {
+            "code": "DROWNING",
+            "label": "溺水"
+          },
+          {
+            "code": "HIGH_FALL",
+            "label": "高坠"
+          },
+          {
+            "code": "ANIMAL_BITE",
+            "label": "动物咬伤"
+          },
+          {
+            "code": "BURN",
+            "label": "烧烫伤"
+          },
+          {
+            "code": "ELECTRIC_SHOCK",
+            "label": "触电"
+          },
+          {
+            "code": "TRAFFIC_MULTI_VEHICLE",
+            "label": "多车事故"
+          },
+          {
+            "code": "SLIP_FALL",
+            "label": "滑倒摔伤"
+          },
+          {
+            "code": "CUT_STAB",
+            "label": "切割刺伤"
+          },
+          {
+            "code": "CRUSH",
+            "label": "挤压撞击"
+          },
+          {
+            "code": "OTHER",
+            "label": "其他"
+          }
+        ],
+        "source": "CLAIMS_SYSTEM"
+      },
+      "claim.scenario": {
+        "label": "事故场景",
+        "data_type": "ENUM",
+        "scope": "CLAIM_LEVEL",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "enum_values": [
+          {
+            "code": "DAILY_LIFE",
+            "label": "日常生活"
+          },
+          {
+            "code": "WORKPLACE",
+            "label": "工作场所"
+          },
+          {
+            "code": "PUBLIC_TRANSPORT_PASSENGER",
+            "label": "营运交通乘客"
+          },
+          {
+            "code": "PRIVATE_CAR_PASSENGER",
+            "label": "私家车乘客"
+          },
+          {
+            "code": "DRIVING",
+            "label": "驾驶机动车"
+          },
+          {
+            "code": "SPORTS",
+            "label": "运动"
+          }
+        ],
+        "source": "CLAIMS_SYSTEM"
+      },
+      "claim.transport_type": {
+        "label": "交通工具类型",
+        "data_type": "ENUM",
+        "scope": "CLAIM_LEVEL",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "enum_values": [
+          {
+            "code": "BUS",
+            "label": "公交"
+          },
+          {
+            "code": "LONG_DISTANCE_BUS",
+            "label": "长途客车"
+          },
+          {
+            "code": "TRAIN",
+            "label": "火车/高铁"
+          },
+          {
+            "code": "SUBWAY",
+            "label": "地铁"
+          },
+          {
+            "code": "FERRY",
+            "label": "客轮"
+          },
+          {
+            "code": "AIRCRAFT",
+            "label": "飞机"
+          },
+          {
+            "code": "TAXI",
+            "label": "出租车"
+          }
+        ],
+        "source": "CLAIMS_SYSTEM"
+      },
+      "claim.days_from_accident_to_result": {
+        "label": "事故到结果天数",
+        "data_type": "NUMBER",
+        "scope": "CLAIM_LEVEL",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source": "CLAIMS_SYSTEM"
+      },
+      "claim.disability_grade": {
+        "label": "伤残等级(1-10)",
+        "data_type": "NUMBER",
+        "scope": "CLAIM_LEVEL",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source": "DISABILITY_ASSESSMENT"
+      },
+      "claim.fall_height_meters": {
+        "label": "坠落高度(米)",
+        "data_type": "NUMBER",
+        "scope": "CLAIM_LEVEL",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source": "INVESTIGATION"
+      },
+      "claim.is_high_altitude_work": {
+        "label": "是否高空作业",
+        "data_type": "BOOLEAN",
+        "scope": "CLAIM_LEVEL",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source": "INVESTIGATION"
+      },
+      "claim.activity_during_accident": {
+        "label": "事故时活动",
+        "data_type": "ENUM",
+        "scope": "CLAIM_LEVEL",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "enum_values": [
+          {
+            "code": "SCUBA_DIVING",
+            "label": "潜水"
+          },
+          {
+            "code": "SKYDIVING",
+            "label": "跳伞"
+          },
+          {
+            "code": "ROCK_CLIMBING",
+            "label": "攀岩"
+          },
+          {
+            "code": "GLIDER_PILOT",
+            "label": "滑翔机"
+          },
+          {
+            "code": "PARAGLIDING",
+            "label": "滑翔伞"
+          },
+          {
+            "code": "BUNGEE_JUMPING",
+            "label": "蹦极"
+          },
+          {
+            "code": "CAVING",
+            "label": "探险"
+          },
+          {
+            "code": "MARTIAL_ARTS_COMPETITION",
+            "label": "武术比赛"
+          },
+          {
+            "code": "WRESTLING_MATCH",
+            "label": "摔跤比赛"
+          },
+          {
+            "code": "STUNT_PERFORMANCE",
+            "label": "特技表演"
+          },
+          {
+            "code": "HORSE_RACING",
+            "label": "赛马"
+          },
+          {
+            "code": "MOTOR_RACING",
+            "label": "赛车"
+          },
+          {
+            "code": "MOUNTAINEERING_ABOVE_3500M",
+            "label": "3500米以上登山"
+          },
+          {
+            "code": "SKIING_EXTREME",
+            "label": "极限滑雪"
+          },
+          {
+            "code": "SURFING_EXTREME",
+            "label": "极限冲浪"
+          },
+          {
+            "code": "WHITEWATER_RAFTING",
+            "label": "漂流"
+          },
+          {
+            "code": "BASE_JUMPING",
+            "label": "低空跳伞"
+          }
+        ],
+        "source": "CLAIMS_SYSTEM"
+      },
+      "claim.driver_bac_level": {
+        "label": "驾驶人血液酒精含量",
+        "data_type": "NUMBER",
+        "scope": "CLAIM_LEVEL",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source": "POLICE_REPORT"
+      },
+      "claim.driver_license_valid": {
+        "label": "驾驶证是否有效",
+        "data_type": "BOOLEAN",
+        "scope": "CLAIM_LEVEL",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source": "TRAFFIC_AUTHORITY"
+      },
+      "claim.vehicle_registration_valid": {
+        "label": "行驶证是否有效",
+        "data_type": "BOOLEAN",
+        "scope": "CLAIM_LEVEL",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source": "TRAFFIC_AUTHORITY"
+      },
+      "claim.vehicle_is_non_commercial": {
+        "label": "是否非营运车辆",
+        "data_type": "BOOLEAN",
+        "scope": "CLAIM_LEVEL",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source": "CLAIMS_SYSTEM"
+      },
+      "claim.vehicle_is_truck": {
+        "label": "是否货车",
+        "data_type": "BOOLEAN",
+        "scope": "CLAIM_LEVEL",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source": "CLAIMS_SYSTEM"
+      },
+      "claim.ambulance_type": {
+        "label": "急救车类型",
+        "data_type": "ENUM",
+        "scope": "CLAIM_LEVEL",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "enum_values": [
+          {
+            "code": "120",
+            "label": "120急救"
+          },
+          {
+            "code": "999",
+            "label": "999急救"
+          }
+        ],
+        "source": "CLAIMS_SYSTEM"
+      },
+      "claim.hours_accident_to_ambulance": {
+        "label": "事故到急救时间(小时)",
+        "data_type": "NUMBER",
+        "scope": "CLAIM_LEVEL",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source": "CLAIMS_SYSTEM"
+      },
+      "claim.insured_intoxicated": {
+        "label": "被保险人是否醉酒",
+        "data_type": "BOOLEAN",
+        "scope": "CLAIM_LEVEL",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source": "INVESTIGATION"
+      },
+      "claim.insured_drug_use": {
+        "label": "被保险人是否吸毒",
+        "data_type": "BOOLEAN",
+        "scope": "CLAIM_LEVEL",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source": "INVESTIGATION"
+      },
+      "claim.insured_legal_status": {
+        "label": "被保险人法律状态",
+        "data_type": "ENUM",
+        "scope": "CLAIM_LEVEL",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "enum_values": [
+          {
+            "code": "NORMAL",
+            "label": "正常"
+          },
+          {
+            "code": "IN_CRIMINAL_ACTIVITY",
+            "label": "犯罪活动中"
+          },
+          {
+            "code": "DETAINED",
+            "label": "拘留"
+          },
+          {
+            "code": "IMPRISONED",
+            "label": "服刑"
+          },
+          {
+            "code": "FUGITIVE",
+            "label": "在逃"
+          }
+        ],
+        "source": "INVESTIGATION"
+      },
+      "claim.insured_occupation_class_at_accident": {
+        "label": "事故时职业类别",
+        "data_type": "NUMBER",
+        "scope": "CLAIM_LEVEL",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source": "INVESTIGATION"
+      },
+      "claim.insured_occupation_changed": {
+        "label": "职业是否变更",
+        "data_type": "BOOLEAN",
+        "scope": "CLAIM_LEVEL",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source": "INVESTIGATION"
+      },
+      "claim.insured_occupation_change_notified": {
+        "label": "职业变更是否已通知",
+        "data_type": "BOOLEAN",
+        "scope": "CLAIM_LEVEL",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source": "POLICY_SYSTEM"
+      },
+      "claim.insured_new_occupation_in_decline_list": {
+        "label": "新职业是否在拒保清单",
+        "data_type": "BOOLEAN",
+        "scope": "CLAIM_LEVEL",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source": "UNDERWRITING_DB"
+      },
+      "claim.insured_occupation_risk_increased": {
+        "label": "职业危险是否增加",
+        "data_type": "BOOLEAN",
+        "scope": "CLAIM_LEVEL",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source": "UNDERWRITING_DB"
+      },
+      "claim.hypothetical_new_premium": {
+        "label": "新职业假设保费",
+        "data_type": "NUMBER",
+        "scope": "CLAIM_LEVEL",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source": "CALCULATED"
+      },
+      "claim.insured_accident_policy_count": {
+        "label": "持有意外险保单数",
+        "data_type": "NUMBER",
+        "scope": "CLAIM_LEVEL",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source": "INDUSTRY_DB"
+      },
+      "claim.insured_total_accident_death_sum": {
+        "label": "意外身故保额合计",
+        "data_type": "NUMBER",
+        "scope": "CLAIM_LEVEL",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source": "INDUSTRY_DB"
+      },
+      "claim.newest_policy_inception_days": {
+        "label": "最近保单生效天数",
+        "data_type": "NUMBER",
+        "scope": "CLAIM_LEVEL",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source": "INDUSTRY_DB"
+      },
+      "claim.other_reimbursement_received": {
+        "label": "已获其他补偿金额",
+        "data_type": "NUMBER",
+        "scope": "CLAIM_LEVEL",
+        "applicable_domains": [
+          "POST_PROCESS"
+        ],
+        "source": "CLAIMS_SYSTEM"
+      },
+      "expense_item.item_name": {
+        "label": "费用项目名称",
+        "data_type": "STRING",
+        "scope": "ITEM_LEVEL",
+        "applicable_domains": [
+          "ASSESSMENT"
+        ],
+        "source": "MEDICAL_BILL"
+      },
+      "expense_item.amount": {
+        "label": "费用金额（元）",
+        "data_type": "NUMBER",
+        "scope": "ITEM_LEVEL",
+        "applicable_domains": [
+          "ASSESSMENT"
+        ],
+        "source": "MEDICAL_BILL"
+      },
+      "expense_item.expense_category": {
+        "label": "费用类别",
+        "data_type": "ENUM",
+        "scope": "ITEM_LEVEL",
+        "applicable_domains": [
+          "ASSESSMENT"
+        ],
+        "enum_values": [
+          {
+            "code": "EXAMINATION",
+            "label": "检查费"
+          },
+          {
+            "code": "TREATMENT",
+            "label": "治疗费"
+          },
+          {
+            "code": "SURGERY",
+            "label": "手术费"
+          },
+          {
+            "code": "MEDICATION",
+            "label": "药费"
+          },
+          {
+            "code": "BED",
+            "label": "床位费"
+          },
+          {
+            "code": "NURSING",
+            "label": "护理费"
+          },
+          {
+            "code": "MATERIAL",
+            "label": "材料费"
+          },
+          {
+            "code": "COSMETIC",
+            "label": "整容美容"
+          },
+          {
+            "code": "PLASTIC_SURGERY",
+            "label": "整形"
+          },
+          {
+            "code": "REHABILITATION_DEVICE",
+            "label": "康复器械"
+          },
+          {
+            "code": "HEALTH_CHECK",
+            "label": "体检"
+          },
+          {
+            "code": "WELLNESS",
+            "label": "保健"
+          },
+          {
+            "code": "PREVENTIVE_CARE",
+            "label": "预防"
+          },
+          {
+            "code": "AMBULANCE",
+            "label": "救护车"
+          }
+        ],
+        "source": "MEDICAL_BILL"
+      },
+      "expense_item.hospital_qualified": {
+        "label": "医院是否合格",
+        "data_type": "BOOLEAN",
+        "scope": "ITEM_LEVEL",
+        "applicable_domains": [
+          "ASSESSMENT"
+        ],
+        "source": "HOSPITAL_DB"
+      },
+      "expense_item.department_type": {
+        "label": "就诊科室类型",
+        "data_type": "ENUM",
+        "scope": "ITEM_LEVEL",
+        "applicable_domains": [
+          "ASSESSMENT"
+        ],
+        "enum_values": [
+          {
+            "code": "GENERAL",
+            "label": "普通部"
+          },
+          {
+            "code": "VIP",
+            "label": "VIP部"
+          },
+          {
+            "code": "SPECIAL_NEEDS",
+            "label": "特需部"
+          },
+          {
+            "code": "INTERNATIONAL",
+            "label": "国际部"
+          },
+          {
+            "code": "EMERGENCY",
+            "label": "急诊"
+          },
+          {
+            "code": "OUTPATIENT",
+            "label": "门诊"
+          }
+        ],
+        "source": "MEDICAL_BILL"
+      },
+      "expense_item.is_social_insurance_covered": {
+        "label": "是否社保目录内",
+        "data_type": "BOOLEAN",
+        "scope": "ITEM_LEVEL",
+        "applicable_domains": [
+          "ASSESSMENT"
+        ],
+        "source": "MEDICAL_AUDIT"
+      },
+      "expense_item.diagnosis_related": {
+        "label": "关联诊断",
+        "data_type": "STRING",
+        "scope": "ITEM_LEVEL",
+        "applicable_domains": [
+          "ASSESSMENT"
+        ],
+        "source": "MEDICAL_AUDIT"
+      },
+      "expense_item.is_pathological_fracture": {
+        "label": "是否病理性骨折",
+        "data_type": "BOOLEAN",
+        "scope": "ITEM_LEVEL",
+        "applicable_domains": [
+          "ASSESSMENT"
+        ],
+        "source": "MEDICAL_AUDIT"
+      },
+      "expense_item.approved_amount": {
+        "label": "核定金额（元）",
+        "data_type": "NUMBER",
+        "scope": "ITEM_LEVEL",
+        "applicable_domains": [
+          "ASSESSMENT"
+        ],
+        "source": "CALCULATED"
+      },
+      "result.disability_payout": {
+        "label": "伤残给付金额",
+        "data_type": "NUMBER",
+        "scope": "CALCULATED",
+        "applicable_domains": [
+          "POST_PROCESS"
+        ],
+        "source": "CALCULATED"
+      },
+      "result.medical_approved_total": {
+        "label": "医疗费用核定总额",
+        "data_type": "NUMBER",
+        "scope": "CALCULATED",
+        "applicable_domains": [
+          "POST_PROCESS"
+        ],
+        "source": "CALCULATED"
+      },
+      "result.medical_after_compensation": {
+        "label": "补偿扣除后医疗费",
+        "data_type": "NUMBER",
+        "scope": "CALCULATED",
+        "applicable_domains": [
+          "POST_PROCESS"
+        ],
+        "source": "CALCULATED"
+      },
+      "result.cumulative_medical_paid": {
+        "label": "累计已赔医疗费",
+        "data_type": "NUMBER",
+        "scope": "CALCULATED",
+        "applicable_domains": [
+          "POST_PROCESS"
+        ],
+        "source": "POLICY_SYSTEM"
+      },
+      "result.medical_payout": {
+        "label": "医疗最终赔付",
+        "data_type": "NUMBER",
+        "scope": "CALCULATED",
+        "applicable_domains": [
+          "POST_PROCESS"
+        ],
+        "source": "CALCULATED"
+      },
+      "result.prior_disability_paid": {
+        "label": "已付伤残保险金",
+        "data_type": "NUMBER",
+        "scope": "CALCULATED",
+        "applicable_domains": [
+          "POST_PROCESS"
+        ],
+        "source": "POLICY_SYSTEM"
+      },
+      "result.death_payout": {
+        "label": "身故给付金额",
+        "data_type": "NUMBER",
+        "scope": "CALCULATED",
+        "applicable_domains": [
+          "POST_PROCESS"
+        ],
+        "source": "CALCULATED"
+      },
+      "result.base_accident_payout": {
+        "label": "基础意外给付",
+        "data_type": "NUMBER",
+        "scope": "CALCULATED",
+        "applicable_domains": [
+          "POST_PROCESS"
+        ],
+        "source": "CALCULATED"
+      },
+      "result.public_transport_payout": {
+        "label": "营运交通额外给付",
+        "data_type": "NUMBER",
+        "scope": "CALCULATED",
+        "applicable_domains": [
+          "POST_PROCESS"
+        ],
+        "source": "CALCULATED"
+      },
+      "result.public_transport_eligible": {
+        "label": "营运交通责任是否成立",
+        "data_type": "BOOLEAN",
+        "scope": "CALCULATED",
+        "applicable_domains": [
+          "POST_PROCESS"
+        ],
+        "source": "CALCULATED"
+      },
+      "result.private_car_payout": {
+        "label": "驾乘额外给付",
+        "data_type": "NUMBER",
+        "scope": "CALCULATED",
+        "applicable_domains": [
+          "POST_PROCESS"
+        ],
+        "source": "CALCULATED"
+      },
+      "result.private_car_eligible": {
+        "label": "驾乘责任是否成立",
+        "data_type": "BOOLEAN",
+        "scope": "CALCULATED",
+        "applicable_domains": [
+          "POST_PROCESS"
+        ],
+        "source": "CALCULATED"
+      },
+      "result.total_death_disability_payout": {
+        "label": "身故/伤残总给付",
+        "data_type": "NUMBER",
+        "scope": "CALCULATED",
+        "applicable_domains": [
+          "POST_PROCESS"
+        ],
+        "source": "CALCULATED"
+      },
+      "expense_item.drug_name": {
+        "label": "药品名称",
+        "data_type": "STRING",
+        "scope": "ITEM_LEVEL",
+        "applicable_domains": [
+          "ASSESSMENT"
+        ],
+        "source": "MEDICAL_BILL"
+      },
+      "expense_item.drug_specification": {
+        "label": "药品规格",
+        "data_type": "STRING",
+        "scope": "ITEM_LEVEL",
+        "applicable_domains": [
+          "ASSESSMENT"
+        ],
+        "source": "MEDICAL_BILL"
+      },
+      "expense_item.quantity": {
+        "label": "数量",
+        "data_type": "NUMBER",
+        "scope": "ITEM_LEVEL",
+        "applicable_domains": [
+          "ASSESSMENT"
+        ],
+        "source": "MEDICAL_BILL"
+      },
+      "expense_item.unit_price": {
+        "label": "单价（元）",
+        "data_type": "NUMBER",
+        "scope": "ITEM_LEVEL",
+        "applicable_domains": [
+          "ASSESSMENT"
+        ],
+        "source": "MEDICAL_BILL"
+      },
+      "expense_item.reference_unit_price": {
+        "label": "指导价/限价（元）",
+        "data_type": "NUMBER",
+        "scope": "ITEM_LEVEL",
+        "applicable_domains": [
+          "ASSESSMENT"
+        ],
+        "source": "NHSA_DRUG_PRICE_DB"
+      },
+      "expense_item.unit_price_deviation_percent": {
+        "label": "单价偏差百分比",
+        "data_type": "NUMBER",
+        "scope": "ITEM_LEVEL",
+        "applicable_domains": [
+          "ASSESSMENT"
+        ],
+        "source": "CALCULATED"
+      },
+      "expense_item.is_duplicate_exam": {
+        "label": "是否重复检查",
+        "data_type": "BOOLEAN",
+        "scope": "ITEM_LEVEL",
+        "applicable_domains": [
+          "ASSESSMENT"
+        ],
+        "source": "MEDICAL_AUDIT"
+      },
+      "expense_item.duplicate_count": {
+        "label": "重复次数",
+        "data_type": "NUMBER",
+        "scope": "ITEM_LEVEL",
+        "applicable_domains": [
+          "ASSESSMENT"
+        ],
+        "source": "MEDICAL_AUDIT"
+      },
+      "expense_item.hospitalization_days": {
+        "label": "住院天数",
+        "data_type": "NUMBER",
+        "scope": "ITEM_LEVEL",
+        "applicable_domains": [
+          "ASSESSMENT"
+        ],
+        "source": "MEDICAL_BILL"
+      },
+      "expense_item.drg_standard_days": {
+        "label": "DRG标准住院天数",
+        "data_type": "NUMBER",
+        "scope": "ITEM_LEVEL",
+        "applicable_domains": [
+          "ASSESSMENT"
+        ],
+        "source": "DRG_DB"
+      },
+      "expense_item.hospitalization_days_exceeds_drg": {
+        "label": "住院天数是否超DRG标准",
+        "data_type": "BOOLEAN",
+        "scope": "ITEM_LEVEL",
+        "applicable_domains": [
+          "ASSESSMENT"
+        ],
+        "source": "CALCULATED"
+      },
+      "expense_item.treatment_reasonable_necessary": {
+        "label": "诊疗是否必需合理",
+        "data_type": "BOOLEAN",
+        "scope": "ITEM_LEVEL",
+        "applicable_domains": [
+          "ASSESSMENT"
+        ],
+        "source": "MEDICAL_AUDIT"
+      },
+      "expense_item.daily_medication_amount": {
+        "label": "单日药费金额",
+        "data_type": "NUMBER",
+        "scope": "ITEM_LEVEL",
+        "applicable_domains": [
+          "ASSESSMENT"
+        ],
+        "source": "CALCULATED"
+      },
+      "expense_item.daily_medication_exceeds_avg": {
+        "label": "单日药费是否超平均水平",
+        "data_type": "BOOLEAN",
+        "scope": "ITEM_LEVEL",
+        "applicable_domains": [
+          "ASSESSMENT"
+        ],
+        "source": "CALCULATED"
+      }
+    },
+    "metadata": {
+      "schema_version": "2.0.0",
+      "version": "2.1.0",
+      "generated_at": "2026-02-11T15:00:00+08:00",
+      "generated_by": "AI_PARSING",
+      "ai_model": "claude-sonnet-4-20250514",
+      "total_rules": 37,
+      "rules_by_domain": {
+        "eligibility": 22,
+        "assessment": 11,
+        "post_process": 4
+      },
+      "rules_by_status": {
+        "effective": 35,
+        "overridden": 2
+      },
+      "unresolved_conflicts": 0,
+      "low_confidence_rules": 7,
+      "audit_trail": [
+        {
+          "timestamp": "2026-02-11T14:00:00+08:00",
+          "action": "CREATED",
+          "user_id": "SYSTEM",
+          "details": "V2规则集初始化，从V1扁平分类重构为三域执行模型"
+        },
+        {
+          "timestamp": "2026-02-11T14:30:00+08:00",
+          "action": "AI_PARSED_MAIN_CLAUSE",
+          "user_id": "AI",
+          "details": "解析主险条款ZA-PA-MAIN-2021-129，生成18条ELIGIBILITY域规则"
+        },
+        {
+          "timestamp": "2026-02-11T14:40:00+08:00",
+          "action": "AI_PARSED_ADDITIONAL",
+          "user_id": "AI",
+          "details": "解析附加条款，生成5条ASSESSMENT域+2条POST_PROCESS域规则"
+        },
+        {
+          "timestamp": "2026-02-11T14:50:00+08:00",
+          "action": "AI_PARSED_SPECIAL",
+          "user_id": "AI",
+          "details": "解析特别约定，生成1条ELIGIBILITY域规则，覆盖2条标准条款"
+        },
+        {
+          "timestamp": "2026-02-11T15:00:00+08:00",
+          "action": "APPROVED",
+          "user_id": "U-MANAGER",
+          "details": "审批通过，5条低置信度规则已标记需人工复核"
+        },
+        {
+          "timestamp": "2026-02-11T16:00:00+08:00",
+          "action": "ENHANCED_ASSESSMENT",
+          "user_id": "AI",
+          "details": "补充ASSESSMENT域规则：新增A_ITEM_NECESSITY(3条)、A_ITEM_PRICING(2条)、A_ITEM_DEDUCTIBLE(1条)，定损域规则从5条增至11条；新增14个ITEM_LEVEL字段"
+        }
+      ]
+    }
   }
 ]

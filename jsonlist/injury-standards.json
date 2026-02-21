@@ -1,0 +1,323 @@
+{
+  "standard": "人身保险伤残评定标准（行业标准）",
+  "version": "1.0",
+  "lastUpdated": "2024-01-01",
+  "items": [
+    {
+      "code": "1.1",
+      "description": "颅脑损伤导致植物生存状态",
+      "grade": 1,
+      "keywords": ["植物", "昏迷", "颅脑", "意识丧失"]
+    },
+    {
+      "code": "1.2",
+      "description": "四肢完全缺失（双上肢、双下肢）",
+      "grade": 1,
+      "keywords": ["截肢", "四肢缺失", "双上肢", "双下肢"]
+    },
+    {
+      "code": "1.3",
+      "description": "双目失明",
+      "grade": 1,
+      "keywords": ["失明", "失视", "无光感", "双目"]
+    },
+    {
+      "code": "1.4",
+      "description": "双耳失聪",
+      "grade": 1,
+      "keywords": ["失聪", "失听", "双耳", "听力丧失"]
+    },
+    {
+      "code": "2.1",
+      "description": "一拇指指间关节离断",
+      "grade": 7,
+      "keywords": ["拇指", "离断", "指间关节", "断指"]
+    },
+    {
+      "code": "2.2",
+      "description": "一手指除拇指外，任何两指离断",
+      "grade": 7,
+      "keywords": ["手指", "离断", "断指"]
+    },
+    {
+      "code": "2.3",
+      "description": "一足第一趾骨完全缺失",
+      "grade": 7,
+      "keywords": ["足趾", "缺失", "第一趾骨"]
+    },
+    {
+      "code": "3.1",
+      "description": "一拇指缺失",
+      "grade": 7,
+      "keywords": ["拇指", "缺失"]
+    },
+    {
+      "code": "3.2",
+      "description": "一拇指功能完全丧失",
+      "grade": 7,
+      "keywords": ["拇指", "功能丧失"]
+    },
+    {
+      "code": "4.1",
+      "description": "一拇指粉碎性骨折",
+      "grade": 8,
+      "keywords": ["拇指", "粉碎性", "骨折"]
+    },
+    {
+      "code": "4.2",
+      "description": "一足第一趾骨粉碎性骨折",
+      "grade": 8,
+      "keywords": ["足趾", "粉碎性", "骨折"]
+    },
+    {
+      "code": "5.1",
+      "description": "一拇指近节指骨骨折",
+      "grade": 9,
+      "keywords": ["拇指", "近节", "骨折"]
+    },
+    {
+      "code": "5.2",
+      "description": "一手指除拇指外，任何一指近节指骨骨折",
+      "grade": 9,
+      "keywords": ["手指", "近节", "骨折"]
+    },
+    {
+      "code": "6.1",
+      "description": "一指除拇指外，任何一指远节指骨骨折",
+      "grade": 10,
+      "keywords": ["手指", "远节", "骨折"]
+    },
+    {
+      "code": "6.2",
+      "description": "一足除第一趾外，任何一趾骨折",
+      "grade": 10,
+      "keywords": ["足趾", "骨折"]
+    },
+    {
+      "code": "7.1",
+      "description": "一足第一趾间关节脱位",
+      "grade": 9,
+      "keywords": ["足趾", "脱位", "第一趾间"]
+    },
+    {
+      "code": "7.2",
+      "description": "一指除拇指外，任何一指间关节脱位",
+      "grade": 10,
+      "keywords": ["手指", "脱位", "间关节"]
+    },
+    {
+      "code": "8.1",
+      "description": "胸骨骨折",
+      "grade": 9,
+      "keywords": ["胸骨", "骨折"]
+    },
+    {
+      "code": "8.2",
+      "description": "肋骨骨折（2根以上）",
+      "grade": 9,
+      "keywords": ["肋骨", "骨折"]
+    },
+    {
+      "code": "8.3",
+      "description": "锁骨骨折",
+      "grade": 9,
+      "keywords": ["锁骨", "骨折"]
+    },
+    {
+      "code": "8.4",
+      "description": "肩胛骨骨折",
+      "grade": 9,
+      "keywords": ["肩胛骨", "骨折"]
+    },
+    {
+      "code": "9.1",
+      "description": "肱骨骨折",
+      "grade": 9,
+      "keywords": ["肱骨", "骨折"]
+    },
+    {
+      "code": "9.2",
+      "description": "尺骨骨折",
+      "grade": 9,
+      "keywords": ["尺骨", "骨折"]
+    },
+    {
+      "code": "9.3",
+      "description": "桡骨骨折",
+      "grade": 9,
+      "keywords": ["桡骨", "骨折"]
+    },
+    {
+      "code": "10.1",
+      "description": "股骨骨折",
+      "grade": 8,
+      "keywords": ["股骨", "骨折"]
+    },
+    {
+      "code": "10.2",
+      "description": "胫骨骨折",
+      "grade": 9,
+      "keywords": ["胫骨", "骨折"]
+    },
+    {
+      "code": "10.3",
+      "description": "腓骨骨折",
+      "grade": 9,
+      "keywords": ["腓骨", "骨折"]
+    },
+    {
+      "code": "11.1",
+      "description": "椎体压缩性骨折",
+      "grade": 8,
+      "keywords": ["椎体", "压缩性", "骨折"]
+    },
+    {
+      "code": "11.2",
+      "description": "椎间盘突出",
+      "grade": 9,
+      "keywords": ["椎间盘", "突出"]
+    },
+    {
+      "code": "11.3",
+      "description": "脊髓损伤（轻中度）",
+      "grade": 6,
+      "keywords": ["脊髓", "损伤", "轻中度"]
+    },
+    {
+      "code": "11.4",
+      "description": "脊髓损伤（重度）",
+      "grade": 4,
+      "keywords": ["脊髓", "损伤", "重度", "截瘫"]
+    },
+    {
+      "code": "12.1",
+      "description": "面部烧伤（面积5%以上）",
+      "grade": 8,
+      "keywords": ["面部", "烧伤", "烫伤"]
+    },
+    {
+      "code": "12.2",
+      "description": "上肢烧伤（面积10%以上）",
+      "grade": 8,
+      "keywords": ["上肢", "烧伤", "烫伤"]
+    },
+    {
+      "code": "12.3",
+      "description": "下肢烧伤（面积15%以上）",
+      "grade": 8,
+      "keywords": ["下肢", "烧伤", "烫伤"]
+    },
+    {
+      "code": "12.4",
+      "description": "躯干烧伤（面积15%以上）",
+      "grade": 8,
+      "keywords": ["躯干", "烧伤", "烫伤"]
+    },
+    {
+      "code": "13.1",
+      "description": "单目失明",
+      "grade": 4,
+      "keywords": ["单目", "失明", "失视"]
+    },
+    {
+      "code": "13.2",
+      "description": "单眼失明",
+      "grade": 4,
+      "keywords": ["单眼", "失明", "失视"]
+    },
+    {
+      "code": "13.3",
+      "description": "单耳失聪",
+      "grade": 5,
+      "keywords": ["单耳", "失聪", "失听"]
+    },
+    {
+      "code": "14.1",
+      "description": "肝脏破裂",
+      "grade": 6,
+      "keywords": ["肝脏", "破裂"]
+    },
+    {
+      "code": "14.2",
+      "description": "脾脏破裂",
+      "grade": 6,
+      "keywords": ["脾脏", "破裂"]
+    },
+    {
+      "code": "14.3",
+      "description": "肾脏破裂",
+      "grade": 6,
+      "keywords": ["肾脏", "破裂"]
+    },
+    {
+      "code": "15.1",
+      "description": "轻微软组织损伤（面积小、无功能障碍）",
+      "grade": 10,
+      "keywords": ["软组织", "损伤", "轻度"]
+    },
+    {
+      "code": "15.2",
+      "description": "中微软组织损伤",
+      "grade": 9,
+      "keywords": ["软组织", "损伤", "中度"]
+    },
+    {
+      "code": "15.3",
+      "description": "重微软组织损伤",
+      "grade": 8,
+      "keywords": ["软组织", "损伤", "重度"]
+    }
+  ],
+  "grade_mapping": {
+    "1": {
+      "description": "一级伤残",
+      "payout_ratio": 1.0,
+      "examples": ["颅脑损伤导致植物生存状态", "四肢完全缺失", "双目失明", "双耳失聪"]
+    },
+    "2": {
+      "description": "二级伤残",
+      "payout_ratio": 0.9,
+      "examples": ["双目失明（矫正后）", "双耳失聪（矫正后）"]
+    },
+    "3": {
+      "description": "三级伤残",
+      "payout_ratio": 0.8,
+      "examples": ["单眼失明且另眼视力受损"]
+    },
+    "4": {
+      "description": "四级伤残",
+      "payout_ratio": 0.7,
+      "examples": ["单目失明", "单耳失聪", "脊柱损伤导致轻中度瘫痪"]
+    },
+    "5": {
+      "description": "五级伤残",
+      "payout_ratio": 0.6,
+      "examples": ["单上肢功能完全丧失", "单眼失明"]
+    },
+    "6": {
+      "description": "六级伤残",
+      "payout_ratio": 0.5,
+      "examples": ["单耳失聪", "脊柱损伤（较轻）"]
+    },
+    "7": {
+      "description": "七级伤残",
+      "payout_ratio": 0.4,
+      "examples": ["一拇指缺失", "一拇指功能完全丧失", "拇指指间关节离断"]
+    },
+    "8": {
+      "description": "八级伤残",
+      "payout_ratio": 0.3,
+      "examples": ["一拇指粉碎性骨折", "面部烧伤", "椎体压缩性骨折"]
+    },
+    "9": {
+      "description": "九级伤残",
+      "payout_ratio": 0.2,
+      "examples": ["拇指近节指骨骨折", "胸骨骨折", "肋骨骨折"]
+    },
+    "10": {
+      "description": "十级伤残",
+      "payout_ratio": 0.1,
+      "examples": ["手指远节指骨骨折", "轻微软组织损伤"]
+    }
+  }
+}

@@ -41,6 +41,14 @@ export const REGULATORY_OPTIONS = [
       { code: '16000', name: '意外伤害保险' },
     ]
   },
+    {
+    code: '17000',
+    name: '车险',
+    children: [
+      { code: '17100', name: ' 交强险' },
+      { code: '17200', name: ' 商业险' },
+    ]
+  },
 ];
 
 export const MOCK_RESPONSIBILITIES: ResponsibilityItem[] = [
@@ -2345,6 +2353,10 @@ export const MAPPING_DATA: InsuranceCategoryMapping[] = [
     { antLevel3Code: 'E0202', antLevel1Name: '储蓄型', antLevel2Name: '增额终身寿', antLevel3Name: '增额终身寿', regLevel2Name: '增额终身寿', functionCategory: '储蓄' },
     { antLevel3Code: 'E0301', antLevel1Name: '储蓄型', antLevel2Name: '两全保险', antLevel3Name: '两全保险', regLevel2Name: '两全保险', functionCategory: '储蓄' },
     { antLevel3Code: 'F0101', antLevel1Name: '定期寿险', antLevel2Name: '定期寿险', antLevel3Name: '定期寿险', regLevel2Name: '定期寿险', functionCategory: '保障' },
+    { antLevel3Code: 'G0101', antLevel1Name: '车险', antLevel2Name: '交强险', antLevel3Name: '交强险', regLevel2Name: '机动车交通事故责任强制保险', functionCategory: '保障' },
+    { antLevel3Code: 'G0201', antLevel1Name: '车险', antLevel2Name: '商业险', antLevel3Name: '第三者责任险', regLevel2Name: '机动车商业保险', functionCategory: '保障' },
+    { antLevel3Code: 'G0202', antLevel1Name: '车险', antLevel2Name: '商业险', antLevel3Name: '车辆损失险', regLevel2Name: '机动车商业保险', functionCategory: '保障' },
+    { antLevel3Code: 'G0203', antLevel1Name: '车险', antLevel2Name: '商业险', antLevel3Name: '车上人员责任险', regLevel2Name: '机动车商业保险', functionCategory: '保障' },
 ];
 
 export const LEVEL_3_DATA: CategoryDefinition[] = [
@@ -2377,6 +2389,10 @@ export const LEVEL_3_DATA: CategoryDefinition[] = [
     { code: 'E0202', name: '增额终身寿', definition: '保额和现金价值按固定复利持续增长的终身寿险。', features: '收益确定，现价增长明确写入合同，具有较高的减保取现流动性。', function: '长期强制储蓄，资产配置，身故传承，或作为长期备用金。', audience: '注重资金安全性和确定性，有长期储蓄和传承需求的群体。', selectionPoints: '现价回本速度，减保规则的灵活性，有效保额增长率。', coreMetrics: '现价复利增长率，现金价值增长曲线，IRR，减保规则。' },
     { code: 'E0301', name: '两全保险', definition: '无论被保险人生存到期满或在期内身故，保险公司都会给付保险金。', features: '具备“有病治病，无病返本”的特点，迎合消费者“保费安全”的需求。', function: '结合了储蓄和身故保障，确保资金到期返还，实现资产保全。', audience: '偏爱保守型投资，希望保费安全返回的储蓄者。', selectionPoints: '保障期限，生存金或满期金的给付比例，IRR（通常较低）。', coreMetrics: '满期给付金额，身故保额，保障期限，IRR。' },
     { code: 'F0101', name: '定期寿险', definition: '在特定期限内，若被保险人身故或全残，给付保额。期满则合同终止。', features: '纯保障型产品，保费低廉，杠杆极高，投保门槛低。', function: '转移家庭经济支柱的死亡或全残风险，保障家人生活稳定和债务偿还。', audience: '承担家庭经济责任的成年人（有房贷、车贷等债务）。', selectionPoints: '保额充足性（覆盖负债+未来开支）、健康告知宽松度、免责条款。', coreMetrics: '保额、保障期限、保费（性价比）、健康告知、免责条款' },
+    { code: 'G0101', name: '交强险', definition: '法定强制保险，赔偿因交通事故造成的受害人的人身伤亡和财产损失。', features: '强制性、广覆盖、低保障，不赔本车和本车人员。', function: '保障交通事故受害人的基本权益，车辆年检必须凭证。', audience: '所有车主。', selectionPoints: '无（法定必须）。', coreMetrics: '责任限额。' },
+    { code: 'G0201', name: '第三者责任险', definition: '赔偿因交通事故致使第三者遭受人身伤亡或财产损失的经济赔偿责任。', features: '保额选择灵活（如100万、200万、300万），是交强险的重要补充。', function: '应对重大交通事故导致对他人的巨额赔偿风险，防止因事故致贫。', audience: '所有车主，建议高保额。', selectionPoints: '保额大小（建议200万起）。', coreMetrics: '赔偿限额。' },
+    { code: 'G0202', name: '车辆损失险', definition: '赔偿因自然灾害或意外事故造成的被保险车辆本身的损失。', features: '覆盖车辆碰撞、倾覆、火灾、爆炸等多种原因导致的车辆受损。', function: '承担车辆维修费用，减少车主的财产损失。', audience: '新车或价值较高的车辆车主。', selectionPoints: '保额（通常按车辆实际价值）。', coreMetrics: '车辆价值、保费。' },
+    { code: 'G0203', name: '车上人员责任险', definition: '赔偿因交通事故造成的本车驾驶员和乘客的人身伤亡。', features: '按座位投保，分为驾驶员座和乘客座。', function: '保障本车人员的安全风险，补充意外险的不足。', audience: '经常载人的车主。', selectionPoints: '每个座位的保额（如1万-10万）。', coreMetrics: '单座保额、座位数。' }
 ];
 
 export const LEVEL_2_DATA: CategoryDefinition[] = [
@@ -2522,6 +2538,26 @@ export const LEVEL_2_DATA: CategoryDefinition[] = [
     { code: 'E02', name: '增额终身寿', definition: '保额和现金价值按固定复利逐年增长的终身寿险，兼具保障和长期储蓄功能。', features: '收益明确写入合同，安全稳定；现金价值增长快，可通过减保灵活取用资金。', function: '长期财富增值、资产传承、养老补充和子女教育金规划，是灵活的家庭蓄水池。', audience: '追求资产安全稳健增值，有长期储蓄或财富传承需求的高净值人群。', selectionPoints: '有效保额增长率、现金价值回本速度、减保/保单贷款规则的灵活性。', coreMetrics: '有效保额增长率、现金价值、内部收益率(IRR)、减保灵活性' },
     { code: 'E03', name: '两全保险', definition: '保险期内身故给付身故金，期满生存则给付满期金。即“保生又保死”的保险。', features: '满足了“不出事能返本”的消费心理，兼具储蓄和基础保障功能，但收益率通常较低。', function: '强制储蓄，确保在约定时间点有一笔确定的资金，同时提供基础的身故保障。', audience: '风险偏好极低，储蓄习惯较差，希望保费能“返还”的保守型消费者。', selectionPoints: '满期金给付金额、保障期限、内部收益率（IRR）的真实水平。', coreMetrics: '满期金给付金额、身故保额、内部收益率(IRR)、保障期限' },
     { code: 'F01', name: '定期寿险', definition: '在约定保障期限内，若被保险人身故或全残，保险公司给付保额，期满无事则合同终止。', features: '纯保障型产品，保费极低，杠杆超高，是体现爱与责任的家庭保障基石。', function: '防止家庭经济支柱突然离世导致家庭陷入财务困境，用于偿还债务、保障家人生活。', audience: '家庭经济支柱，尤其是有房贷、车贷或子女抚养责任的成年人。', selectionPoints: '保额充足性（覆盖负债+未来开支）、**性价比**（费率）、健康告知宽松度、免责条款。', coreMetrics: '保额、保障期限、保费（性价比）、健康告知、免责条款' },
+    {
+        code: 'G01',
+        name: '交强险',
+        definition: '机动车交通事故责任强制保险，国家法律规定必须购买。',
+        features: '强制投保，基础保障，赔付限额较低，主要赔偿受害人（不包括本车人员和被保险人）。',
+        function: '满足车辆合法上路的基本要求，提供最基础的交通事故受害人赔偿。',
+        audience: '所有机动车车主（必买）。',
+        selectionPoints: '无法选择，统一标准。',
+        coreMetrics: '死亡伤残赔偿限额、医疗费用赔偿限额、财产损失赔偿限额'
+    },
+    {
+        code: 'G02',
+        name: '商业险',
+        definition: '车主根据需要自愿投保的汽车保险，作为交强险的补充。',
+        features: '保障范围广，保额可自定义，覆盖车辆损失、第三者责任及车上人员责任等。',
+        function: '提供更全面的车辆和人员保障，弥补交强险赔付限额不足的问题。',
+        audience: '希望获得全面车辆保障的车主。',
+        selectionPoints: '险种组合（车损+三者+座位）、三者险保额、附加险种（如医保外用药）。',
+        coreMetrics: '三者险保额、车损险保额、座位险保额、保费'
+    }
 ];
 
 export const LEVEL_1_DATA: CategoryDefinition[] = [
@@ -2531,6 +2567,7 @@ export const LEVEL_1_DATA: CategoryDefinition[] = [
     { code: 'D', name: '养老金', definition: '年轻时定期投入资金，达到约定退休年龄后，保险公司开始按期给付一笔稳定的现金流。', features: '安全稳定，提供与生命等长的确定性现金流，专款专用，有效对抗长寿风险。', function: '强制储蓄，提前规划退休生活，确保老年有稳定、体面的收入来源，实现品质养老。', audience: '有稳定收入，希望提前锁定未来养老收入，追求安全稳健理财方式的个人或家庭。', selectionPoints: '领取年龄和方式、**保证领取期限**、内部收益率（IRR）、现金价值增长情况。', coreMetrics: '保证领取年限、内部收益率(IRR)、领取金额、起领年龄' },
     { code: 'E', name: '储蓄型', definition: '以资产增值为主要目的，兼具身故保障功能，其保额和现金价值会随时间复利增长。', features: '收益明确写入合同，安全稳定；后期可通过减保、保单贷款等方式灵活取用资金。', function: '实现长期强制储蓄、规划养老/教育金、资产隔离与财富传承，是家庭的“蓄水池”。', audience: '有长期闲置资金，追求资产安全稳健增值，有财富传承或长期规划需求的家庭。', selectionPoints: '**现金价值增长速度**、回本时间、减保/保单贷款规则的灵活性、预定利率。', coreMetrics: '有效保额增长率、内部收益率(IRR)、现金价值、减保灵活性' },
     { code: 'F', name: '定期寿险', definition: '在约定保障期限内，若被保险人身故或全残，保险公司给付保额；期满则合同终止。', features: '纯保障型产品，保费极低，杠杆超高，用小成本转移家庭支柱倒下的巨大风险。', function: '核心功能是“**留爱不留债**”，防止家庭因经济支柱倒下而陷入财务危机，保障家人生活。', audience: '家庭经济支柱，尤其是有房贷、车贷或子女抚养责任的成年人。', selectionPoints: '保额充足性（覆盖负债+未来开支）、**性价比**（费率）、健康告知宽松度、免责条款。', coreMetrics: '保额、保障期限、保费（性价比）、健康告知、免责条款' },
+    { code: 'G', name: '车险', definition: '为机动车辆在行驶过程中可能发生的意外事故、损失及相关责任提供保障。', features: '包含强制性的交强险和可选的商业险，保障范围覆盖车辆损失、第三者责任及车上人员安全。', function: '转移因交通事故导致的巨额赔偿风险和车辆维修费用，满足法定上路要求。', audience: '所有机动车车主。', selectionPoints: '商业险险种搭配（车损、三者、座位）、三者险保额、增值服务（道路救援）。', coreMetrics: '三者险保额、车损险保额、座位险保额、保费' }
 ];
 
 export const MOCK_END_USERS: EndUser[] = [
@@ -4165,6 +4202,14 @@ export const INTAKE_VALIDATION_RULE_OPTIONS: { value: string; label: string }[] 
   { value: 'max_length_200', label: '最大200字' },
   { value: 'max_length_500', label: '最大500字' },
   { value: 'phone_number', label: '手机号格式' },
+];
+
+export const INTAKE_COMMON_PRESET: IntakeField[] = [
+  { field_id: 'accident_date', label: '事故日期', type: 'date', required: true, placeholder: '请选择事故发生日期', validation: { rule: 'lte_today_and_gte_policy_start', error_msg: '事故日期必须在保单有效期内且不晚于今天' } },
+  { field_id: 'accident_time', label: '事故时间', type: 'time', required: false, placeholder: '请选择事故发生时间（可选）' },
+  { field_id: 'accident_location', label: '事故地点', type: 'text', required: true, placeholder: '请输入事故发生的详细地点' },
+  { field_id: 'accident_description', label: '事故描述', type: 'textarea', required: true, placeholder: '请描述事故经过', validation: { rule: 'max_length_500', error_msg: '事故描述不能超过500字' } },
+  { field_id: 'accident_reason', label: '事故原因', type: 'enum', required: true, placeholder: '请选择事故原因', options: ['交通事故', '跌倒坠落', '物体打击', '机械伤害', '动物咬伤', '高温烫伤', '溺水', '中毒', '其他'] },
 ];
 
 export const INTAKE_FIELD_PRESETS: Record<string, IntakeField[]> = {

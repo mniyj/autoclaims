@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { type InsuranceProduct, type CoverageItem, type IntakeConfig } from '../../types';
+import { type InsuranceProduct, type CoverageItem } from '../../types';
 import { PRODUCT_STATUSES, PRIMARY_CATEGORIES, MAPPING_DATA, REGULATORY_OPTIONS } from '../../constants';
 import Input from '../ui/Input';
 import Select from '../ui/Select';
@@ -9,7 +9,6 @@ import FileUpload from '../ui/FileUpload';
 import MultiImageUpload from '../ui/MultiImageUpload';
 import TagEditor from './TagEditor';
 import Textarea from '../ui/Textarea';
-import IntakeFieldConfigEditor from './IntakeFieldConfigEditor';
 
 interface FormProps {
   product: InsuranceProduct;
@@ -17,6 +16,7 @@ interface FormProps {
 }
 
 const GeneralInfoForm: React.FC<FormProps> = ({ product, onFormChange }) => {
+  const [longImageUrl, setLongImageUrl] = React.useState('');
     
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     onFormChange(e.target.name as keyof InsuranceProduct, e.target.value);
@@ -30,16 +30,26 @@ const GeneralInfoForm: React.FC<FormProps> = ({ product, onFormChange }) => {
     onFormChange(field, value);
   }
 
+  const handleAddLongImageUrl = () => {
+    const raw = longImageUrl.trim();
+    if (!raw) return;
+    const urls = raw.split(/[\s,]+/).filter(Boolean);
+    if (urls.length === 0) return;
+    const current = product.productLongImage || [];
+    const merged = [...current];
+    urls.forEach(url => {
+      if (!merged.includes(url)) merged.push(url);
+    });
+    onFormChange('productLongImage', merged);
+    setLongImageUrl('');
+  };
+
   const handleTagsChange = (tags: string[]) => {
     onFormChange('tags', tags);
   };
 
   const handleTagStylesChange = (styles: Record<string, 'gold' | 'green' | 'red' | 'gray'>) => {
     onFormChange('tagStyles', styles);
-  };
-
-  const handleIntakeConfigChange = (config: IntakeConfig) => {
-    onFormChange('intakeConfig', config);
   };
 
   const handleAddAttachment = (file: File | null) => {
@@ -191,24 +201,67 @@ const GeneralInfoForm: React.FC<FormProps> = ({ product, onFormChange }) => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-200">
-                <FileUpload 
-                    label="产品卡片配图" 
-                    id="productCardImage" 
-                    value={product.productCardImage} 
-                    onChange={(value) => handleFileChange('productCardImage', value)}
-                    helpText="限定方形尺寸，如 400x400（用于产品卡片展示）"
-                    accept="image/png, image/jpeg, image/webp"
-                    required
-                />
-                <FileUpload 
-                    label="产品头图" 
-                    id="productHeroImage" 
+                <div className="space-y-3">
+                    <Input
+                      label="产品卡片配图URL"
+                      id="productCardImageUrl"
+                      name="productCardImage"
+                      type="url"
+                      value={product.productCardImage || ''}
+                      onChange={handleChange}
+                      placeholder="https://example.com/card.png"
+                    />
+                    <FileUpload 
+                        label="产品卡片配图" 
+                        id="productCardImage" 
+                        value={product.productCardImage} 
+                        onChange={(value) => handleFileChange('productCardImage', value)}
+                        helpText="限定方形尺寸，如 400x400（用于产品卡片展示）"
+                        accept="image/png, image/jpeg, image/webp"
+                        required={!product.productCardImage}
+                    />
+                </div>
+                <div className="space-y-3">
+                    <Input
+                      label="产品头图URL"
+                      id="productHeroImageUrl"
+                      name="productHeroImage"
+                      type="url"
+                      value={product.productHeroImage || ''}
+                      onChange={handleChange}
+                      placeholder="https://example.com/hero.png"
+                    />
+                    <FileUpload 
+                        label="产品头图" 
+                        id="productHeroImage" 
                         value={product.productHeroImage} 
                         onChange={(value) => handleFileChange('productHeroImage', value)}
                         helpText="建议上传方形图片，支持 PNG, JPG, WebP 格式"
                         accept="image/png, image/jpeg, image/webp"
-                        required
+                        required={!product.productHeroImage}
                     />
+                </div>
+                <div className="space-y-3 md:col-span-2">
+                    <div className="flex flex-col md:flex-row md:items-end gap-3">
+                      <div className="flex-1">
+                        <Input
+                          label="产品长图URL"
+                          id="productLongImageUrl"
+                          name="productLongImageUrl"
+                          type="url"
+                          value={longImageUrl}
+                          onChange={(e) => setLongImageUrl(e.target.value)}
+                          placeholder="https://example.com/long.png"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleAddLongImageUrl}
+                        className="h-9 px-4 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800"
+                      >
+                        添加URL
+                      </button>
+                    </div>
                     <MultiImageUpload 
                         label="产品长图" 
                         id="productLongImage" 
@@ -216,8 +269,9 @@ const GeneralInfoForm: React.FC<FormProps> = ({ product, onFormChange }) => {
                         onChange={(values) => handleFileChange('productLongImage', values)}
                         helpText="用于详情页展示，支持多张图片，按上传顺序展示"
                         accept="image/png, image/jpeg, image/webp"
-                        required
+                        required={!product.productLongImage || product.productLongImage.length === 0}
                     />
+                </div>
             </div>
             
             <div>
@@ -302,20 +356,6 @@ const GeneralInfoForm: React.FC<FormProps> = ({ product, onFormChange }) => {
          </div>
       </div>
 
-      {/* Claim Intake Configuration - only shown when online claim is supported */}
-      {product.supportsOnlineClaim && (
-        <div className="border-t border-gray-200 pt-8">
-          <h3 className="text-lg font-medium text-gray-900 mb-2">报案信息配置</h3>
-          <p className="text-sm text-gray-500 mb-4">
-            配置C端用户报案时需要填写的字段，系统将根据此配置动态生成报案表单。
-          </p>
-          <IntakeFieldConfigEditor
-            config={product.intakeConfig}
-            onChange={handleIntakeConfigChange}
-            productCategory={product.primaryCategory}
-          />
-        </div>
-      )}
     </div>
   );
 };
