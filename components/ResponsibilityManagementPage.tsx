@@ -36,10 +36,12 @@ const ResponsibilityManagementPage: React.FC = () => {
         loadData();
     }, []);
 
-    // Get all categories from insurance-types.json (using level3 names)
+    // Get all categories from insurance-types.json (using level2 names)
     const allCategories = useMemo(() => {
-        if (!insuranceTypes || !insuranceTypes.mappings) return [];
-        return insuranceTypes.mappings.map((item: any) => item.antLevel3Name);
+        if (!Array.isArray(insuranceTypes)) return [];
+        return insuranceTypes
+            .filter((item: any) => item.code && item.code.length === 3)
+            .map((item: any) => item.name);
     }, [insuranceTypes]);
 
     // Filter Logic
