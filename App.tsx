@@ -32,6 +32,7 @@ import InvoiceAuditPage from "./components/InvoiceAuditPage";
 import MedicalCatalogManagementPage from "./components/MedicalCatalogManagementPage";
 import HospitalManagementPage from "./components/HospitalManagementPage";
 import UserOperationLogsPage from "./components/UserOperationLogsPage";
+import SystemLogsPage from "./SystemLogsPage";
 import QuoteListPage from "./components/QuoteListPage";
 import QuoteDetailPage from "./components/QuoteDetailPage";
 import PolicyListPage from "./components/PolicyListPage";
@@ -226,6 +227,7 @@ type AppView =
   | "ruleset_management"
   | "formula_management"
   | "user_operation_logs"
+  | "system_logs"
   | "ai_test"
   | "quote_list"
   | "quote_detail"
@@ -271,14 +273,14 @@ const navItems: NavItemData[] = [
     icon: <ProductMgmtIcon />,
     children: [
       { name: "理赔员工作台", id: "claim_workbench" },
-      { name: "理赔材料管理", id: "claims_material_management" },
-      { name: "理赔项目配置", id: "claim_item_config" },
+      { name: "理赔项目及材料配置", id: "claim_item_config" },
       { name: "报案信息配置", id: "claim_intake_config" },
       { name: "赔案清单", id: "claim_case_list" },
       { name: "发票审核", id: "invoice_audit" },
       { name: "医保目录管理", id: "medical_catalog_management" },
       { name: "医院信息管理", id: "hospital_management" },
       { name: "公式配置", id: "formula_management" },
+      { name: "规则集管理", id: "ruleset_management" },
     ],
   },
   {
@@ -288,6 +290,7 @@ const navItems: NavItemData[] = [
       { name: "用户清单", id: "user_list" },
       { name: "数据看板", id: "data_dashboard" },
       { name: "用户操作日志", id: "user_operation_logs" },
+      { name: "系统日志", id: "system_logs" },
       { name: "账号设置", id: "system_settings" },
       { name: "AI 测试", id: "ai_test" },
     ],
@@ -327,7 +330,6 @@ const activeParentViews: Record<string, AppView[]> = {
   ],
   理赔管理: [
     "claim_workbench",
-    "claims_material_management",
     "claim_item_config",
     "claim_intake_config",
     "claim_case_list",
@@ -342,6 +344,7 @@ const activeParentViews: Record<string, AppView[]> = {
     "user_list",
     "data_dashboard",
     "user_operation_logs",
+    "system_logs",
     "ai_test",
     "formula_management",
   ],
@@ -762,10 +765,41 @@ const App: React.FC = () => {
   };
 
   const handleInitiateClaim = (policy: InsurancePolicy) => {
+    const product = products.find((p) => p.productCode === policy.productCode);
+
+    if (!product) {
+      alert(
+        `未找到保单 ${policy.policyNumber} 关联的产品（${policy.productCode}），请先在保单详情中选择关联产品。`,
+      );
+      return;
+    }
+
+    const intakeConfig = product.intakeConfig;
+    const hasConfig =
+      !!intakeConfig &&
+      (intakeConfig.fields.length > 0 || intakeConfig.voice_input?.enabled);
+
+    if (!hasConfig) {
+      alert(
+        `产品「${product.regulatoryName}」尚未配置报案信息，请先在“报案信息及理赔材料配置”中为该产品配置报案字段/材料。`,
+      );
+      return;
+    }
+
+    const fieldNames =
+      intakeConfig?.fields.map((f) => f.label).join("、") || "无";
+    const voiceEnabled = intakeConfig?.voice_input?.enabled ? "是" : "否";
+    const extraMaterialCount =
+      intakeConfig?.claimMaterials?.extraMaterialIds?.length || 0;
+
     alert(
-      `为保单 ${policy.policyNumber} 发起理赔功能待实现，将跳转到理赔创建页面`,
+      `保单 ${policy.policyNumber} 发起理赔\n\n` +
+        `关联产品：${product.regulatoryName}\n` +
+        `报案字段（${intakeConfig?.fields.length || 0}项）：${fieldNames}\n` +
+        `语音报案：${voiceEnabled}\n` +
+        `额外理赔材料：${extraMaterialCount}项\n\n` +
+        `（下一步：理赔创建页面/报案页接入该产品 intakeConfig）`,
     );
-    // TODO: Implement claim initiation with policy association
   };
 
   const renderContent = () => {
@@ -947,6 +981,8 @@ const App: React.FC = () => {
         return <SystemSettingsPage currentUser={currentUser || undefined} />;
       case "user_operation_logs":
         return <UserOperationLogsPage />;
+      case "system_logs":
+        return <SystemLogsPage />;
       case "quote_list":
         return (
           <QuoteListPage
@@ -1020,26 +1056,6 @@ const App: React.FC = () => {
           {renderContent()}
         </main>
       </div>
-      <button
-        onClick={() => setView("ai_test")}
-        className="fixed bottom-6 right-6 bg-blue-500 hover:bg-blue-600 text-white px-4 py-3 rounded-full shadow-lg flex items-center space-x-2 z-40 transition-all hover:scale-105"
-        title="AI 测试面板"
-      >
-        <svg
-          className="w-5 h-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-          />
-        </svg>
-        <span>AI 测试</span>
-      </button>
     </div>
   );
 };

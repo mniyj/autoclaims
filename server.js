@@ -47,6 +47,8 @@ if (BASE_PATH !== '/') {
   console.log(`Mounting app at ${cleanBasePath}`);
 
   app.use(cleanBasePath, express.static(distPath));
+  // Serve uploads directory
+  app.use(`${cleanBasePath}/uploads`, express.static(path.join(__dirname, 'uploads')));
 
   // 处理 SPA 路由重定向 (HTML5 History Mode)
    // 所有非静态资源的请求都返回 index.html
@@ -61,6 +63,8 @@ if (BASE_PATH !== '/') {
 
  } else {
    app.use(express.static(distPath));
+   // Serve uploads directory
+   app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
    // 处理 SPA 路由重定向
    app.get(/(.*)/, (req, res) => {

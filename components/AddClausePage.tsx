@@ -20,6 +20,7 @@ type NewClauseState = Partial<Clause> & {
     productDescriptionFile?: string;
     cashValueTableFile?: string;
     basicSumInsuredTableFile?: string;
+    selectedResponsibilities?: any[];
 };
 
 // Map the new L1/L2 names to the legacy PrimaryCategory enum for form logic
@@ -45,6 +46,7 @@ const getCategoryAbbr = (cat: PrimaryCategory): string => {
         [PrimaryCategory.TERM_LIFE]: 'TL',
         [PrimaryCategory.WHOLE_LIFE]: 'WL',
         [PrimaryCategory.ANNUITY]: 'AN',
+        [PrimaryCategory.CAR_INSURANCE]: 'CI', // Added to fix lint
     };
     return map[cat] || 'OT';
 };
@@ -68,10 +70,10 @@ const generateClauseCode = (companyCode: string | undefined, cat: PrimaryCategor
 
 const AddClausePage: React.FC<{ onBack: () => void; initialClause?: Clause; companyCode?: string }> = ({ onBack, initialClause, companyCode }) => {
     // State for 3-level category selection
-    const [selectedLevel1Name, setSelectedLevel1Name] = useState<string>(initialClause?.categoryLevel1Name || '');
-    const [selectedLevel1Code, setSelectedLevel1Code] = useState<string>(initialClause?.categoryLevel1Code || '');
-    const [selectedLevel2Code, setSelectedLevel2Code] = useState<string>(initialClause?.categoryLevel2Code || '');
-    const [selectedLevel3, setSelectedLevel3] = useState<string>(initialClause?.categoryLevel3Code || '');
+    const [selectedLevel1Name, setSelectedLevel1Name] = useState<string>(initialClause?.primaryCategory || '');
+    const [selectedLevel1Code, setSelectedLevel1Code] = useState<string>(initialClause?.primaryCategoryCode || '');
+    const [selectedLevel2Code, setSelectedLevel2Code] = useState<string>(initialClause?.secondaryCategoryCode || '');
+    const [selectedLevel3, setSelectedLevel3] = useState<string>(initialClause?.racewayId || initialClause?.categoryLevel3Code || '');
 
     const [newClause, setNewClause] = useState<NewClauseState | null>(initialClause ? { ...initialClause } as NewClauseState : null);
 
@@ -79,17 +81,45 @@ const AddClausePage: React.FC<{ onBack: () => void; initialClause?: Clause; comp
     const [insuranceTypes, setInsuranceTypes] = useState<any>({ level1: [], level2: [], mappings: [] });
     const [level2Options, setLevel2Options] = useState<{ code: string, name: string }[]>([]);
     const [level3Options, setLevel3Options] = useState<{ code: string, name: string }[]>([]);
+    const [companies, setCompanies] = useState<any[]>([]);
+    const [allResponsibilities, setAllResponsibilities] = useState<any[]>([]);
 
     useEffect(() => {
-        const fetchInsuranceTypes = async () => {
+        const fetchData = async () => {
             try {
-                const data = await api.insuranceTypes.list();
-                setInsuranceTypes(data || { level1: [], level2: [], mappings: [] });
+                const [typesData, companiesData, mappingData, responsibilitiesData] = await Promise.all([
+                    api.insuranceTypes.list().catch(() => null),
+                    api.companies.list().catch(() => []),
+                    api.mappingData.list().catch(() => []),
+                    api.responsibilities.list().catch(() => [])
+                ]);
+
+                // Merge mapping data into insurance types
+                const mergedTypes = {
+                    ...(typesData || { level1: [], level2: [] }),
+                    mappings: Array.isArray(mappingData) ? mappingData : (typesData?.mappings || [])
+                };
+                setInsuranceTypes(mergedTypes);
+
+                // Process companies data similar to CompanyManagementPage
+                const mappedCompanies = (companiesData || []).map((item: any) => {
+                    if (item.basicInfo) {
+                        return {
+                            code: item.code,
+                            fullName: item.basicInfo.companyName,
+                            shortName: item.shortName,
+                            status: '生效'
+                        };
+                    }
+                    return item;
+                });
+                setCompanies(mappedCompanies);
+                setAllResponsibilities(responsibilitiesData || []);
             } catch (error) {
-                console.error('Failed to fetch insurance types:', error);
+                console.error('Failed to fetch data:', error);
             }
         };
-        fetchInsuranceTypes();
+        fetchData();
     }, []);
 
     useEffect(() => {
@@ -104,9 +134,9 @@ const AddClausePage: React.FC<{ onBack: () => void; initialClause?: Clause; comp
     }, [selectedLevel1Code, insuranceTypes]);
 
     useEffect(() => {
-        if (selectedLevel2Code && insuranceTypes.mappings) {
+        if (selectedLevel2Code && insuranceTypes?.mappings) {
             const options = insuranceTypes.mappings
-                .filter((l3: any) => l3.antLevel3Code.slice(0, 3) === selectedLevel2Code)
+                .filter((l3: any) => l3?.antLevel3Code?.slice(0, 3) === selectedLevel2Code)
                 .map((l3: any) => ({ code: l3.antLevel3Code, name: l3.antLevel3Name }));
             setLevel3Options(options);
         } else {
@@ -137,9 +167,9 @@ const AddClausePage: React.FC<{ onBack: () => void; initialClause?: Clause; comp
         setSelectedLevel3(code);
 
         if (code) {
-            const l1Data = insuranceTypes.level1.find((l: any) => l.code === selectedLevel1Code);
-            const l2Data = insuranceTypes.level2.find((l: any) => l.code === selectedLevel2Code);
-            const l3Data = insuranceTypes.mappings.find((l: any) => l.antLevel3Code === code);
+            const l1Data = insuranceTypes.level1?.find((l: any) => l.code === selectedLevel1Code);
+            const l2Data = insuranceTypes.level2?.find((l: any) => l.code === selectedLevel2Code);
+            const l3Data = insuranceTypes.mappings?.find((l: any) => l.antLevel3Code === code);
 
             const legacyCategory = mapToLegacyCategory(l1Data?.name || '', l2Data?.name || '');
 
@@ -148,7 +178,7 @@ const AddClausePage: React.FC<{ onBack: () => void; initialClause?: Clause; comp
                 productCode: initialClause?.productCode || generateClauseCode(companyCode, legacyCategory),
                 regulatoryName: initialClause?.regulatoryName || '',
                 companyName: initialClause?.companyName || (
-                    companyCode ? (MOCK_COMPANY_LIST.find(c => c.code === companyCode)?.shortName || '') : (MOCK_COMPANY_LIST.find(c => c.status === '生效')?.shortName || '')
+                    companyCode ? (companies.find(c => c.code === companyCode)?.shortName || '') : (companies.find(c => c.status === '生效')?.shortName || '')
                 ),
                 status: initialClause?.status || ProductStatus.DRAFT,
                 clauseType: initialClause?.clauseType || ClauseType.MAIN,
@@ -172,6 +202,7 @@ const AddClausePage: React.FC<{ onBack: () => void; initialClause?: Clause; comp
                 productDescriptionFile: initialClause?.productDescriptionFile || '',
                 cashValueTableFile: initialClause?.cashValueTableFile || '',
                 basicSumInsuredTableFile: initialClause?.basicSumInsuredTableFile || '',
+                selectedResponsibilities: initialClause?.selectedResponsibilities || [],
             });
         } else {
             setNewClause(null);
@@ -189,6 +220,16 @@ const AddClausePage: React.FC<{ onBack: () => void; initialClause?: Clause; comp
         if (!newClause) return;
         setNewClause(prev => prev ? { ...prev, [field]: value } : null);
     }
+
+    const handleResponsibilityToggle = (resp: any) => {
+        if (!newClause) return;
+        const current = newClause.selectedResponsibilities || [];
+        const exists = current.find(r => r.id === resp.id);
+        const updated = exists
+            ? current.filter(r => r.id !== resp.id)
+            : [...current, resp];
+        setNewClause({ ...newClause, selectedResponsibilities: updated });
+    };
 
 
 
@@ -277,7 +318,8 @@ const AddClausePage: React.FC<{ onBack: () => void; initialClause?: Clause; comp
                             <Input label="条款代码" id="productCode" name="productCode" value={newClause?.productCode || ''} disabled />
                             <Input label="条款名称" id="regulatoryName" name="regulatoryName" value={newClause?.regulatoryName || ''} onChange={handleChange} placeholder="例如：新版健康医疗保险" required />
                             <Select label="保险公司名称" id="companyName" name="companyName" value={newClause?.companyName || ''} onChange={handleChange}>
-                                {MOCK_COMPANY_LIST.filter(c => c.status === '生效' && (!companyCode || c.code === companyCode)).map(c => (
+                                <option value="">-- 请选择 --</option>
+                                {companies.filter(c => c.status === '生效' && (!companyCode || c.code === companyCode)).map(c => (
                                     <option key={c.code} value={c.shortName}>{c.shortName}</option>
                                 ))}
                             </Select>
@@ -339,6 +381,45 @@ const AddClausePage: React.FC<{ onBack: () => void; initialClause?: Clause; comp
                                         helpText="上传基本保险金额表Excel文件"
                                         accept=".xls,.xlsx"
                                     />
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Responsibility Association Section */}
+                        <div className="space-y-6 pt-6 border-t border-gray-200">
+                            <h3 className="text-lg font-medium text-gray-900">责任关联</h3>
+                            <p className="text-sm text-gray-500">选择该条款包含的保障责任。已按险种分类为您筛选建议责任。</p>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 border border-gray-100 p-4 rounded-lg bg-gray-50 max-h-96 overflow-y-auto">
+                                {allResponsibilities
+                                    .filter(resp => !newClause.primaryCategory || resp.category === newClause.primaryCategory)
+                                    .map(resp => (
+                                        <div
+                                            key={resp.id}
+                                            className={`flex items-start p-3 rounded-md border transition-all cursor-pointer ${newClause.selectedResponsibilities?.find(r => r.id === resp.id)
+                                                    ? 'bg-brand-blue-50 border-brand-blue-200 ring-1 ring-brand-blue-200'
+                                                    : 'bg-white border-gray-200 hover:border-brand-blue-300'
+                                                }`}
+                                            onClick={() => handleResponsibilityToggle(resp)}
+                                        >
+                                            <div className="flex items-center h-5 mt-0.5">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={!!newClause.selectedResponsibilities?.find(r => r.id === resp.id)}
+                                                    onChange={() => { }} // Handled by div click
+                                                    className="h-4 w-4 text-brand-blue-600 border-gray-300 rounded focus:ring-brand-blue-500"
+                                                />
+                                            </div>
+                                            <div className="ml-3 text-sm">
+                                                <label className="font-medium text-gray-700">{resp.name}</label>
+                                                <p className="text-gray-500 text-xs line-clamp-1">{resp.description}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                {allResponsibilities.filter(resp => !newClause.primaryCategory || resp.category === newClause.primaryCategory).length === 0 && (
+                                    <div className="col-span-full py-8 text-center text-gray-400">
+                                        该险种下暂无可选责任
+                                    </div>
                                 )}
                             </div>
                         </div>

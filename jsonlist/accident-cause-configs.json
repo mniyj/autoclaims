@@ -1,0 +1,22 @@
+[
+  {
+    "id": "cause-1772387681973",
+    "name": "交通事故",
+    "description": "",
+    "materialIds": [
+      "mat-8"
+    ],
+    "materialRequiredMap": {
+      "mat-8": true
+    },
+    "updatedAt": "2026-03-01T17:54:50.239Z"
+  },
+  {
+    "id": "cause-1772389441077",
+    "name": "非交通事故",
+    "description": "",
+    "materialIds": [],
+    "materialRequiredMap": {},
+    "updatedAt": "2026-03-01T18:24:07.077Z"
+  }
+]

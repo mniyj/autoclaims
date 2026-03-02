@@ -4,7 +4,7 @@ interface FileUploadProps {
   label: string;
   id: string;
   value: string | undefined;
-  onChange: (value: string) => void;
+  onChange: (value: string, ossKey?: string) => void;
   helpText?: string;
   accept?: string;
   required?: boolean;
@@ -21,10 +21,10 @@ const FileUpload: React.FC<FileUploadProps> = ({ label, id, value, onChange, hel
       setUploading(true);
       try {
         const { uploadToOSS } = await import('../../services/ossService');
-        const { url } = await uploadToOSS(file);
-        console.log('[DEBUG] Uploaded to OSS, URL:', url);
+        const { url, objectKey } = await uploadToOSS(file);
+        console.log('[DEBUG] Uploaded to OSS, URL:', url, 'Key:', objectKey);
         alert('上传成功！URL: ' + url);
-        onChange(url);
+        onChange(url, objectKey);
       } catch (error) {
         console.error('Upload to OSS failed:', error);
         alert('文件上传失败，请重试');

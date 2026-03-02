@@ -25,7 +25,7 @@ const ResponsibilityManagementPage: React.FC = () => {
                 ]);
 
                 setInsuranceTypes(insuranceData);
-                
+
                 if (Array.isArray(responsibilitiesData) && responsibilitiesData.length > 0) {
                     setResponsibilities(responsibilitiesData);
                 }
@@ -36,13 +36,25 @@ const ResponsibilityManagementPage: React.FC = () => {
         loadData();
     }, []);
 
-    // Get all categories from insurance-types.json (using level2 names)
+    // Get only level 1 categories from insurance-types.json
     const allCategories = useMemo(() => {
-        if (!Array.isArray(insuranceTypes)) return [];
-        return insuranceTypes
-            .filter((item: any) => item.code && item.code.length === 3)
-            .map((item: any) => item.name);
-    }, [insuranceTypes]);
+        let categories: string[] = [];
+
+        if (Array.isArray(insuranceTypes)) {
+            // Handle legacy array format - typically level 1 has code length 1
+            categories = insuranceTypes
+                .filter((item: any) => item.code && item.code.length === 1)
+                .map((item: any) => item.name);
+        } else if (insuranceTypes && typeof insuranceTypes === 'object') {
+            // Handle new object format (level1)
+            categories = Array.isArray(insuranceTypes.level1) ? insuranceTypes.level1.map((item: any) => item.name) : [];
+        }
+
+        // Add categories from existing responsibilities to ensure they are selectable even if not in type list
+        // Filter out non-level1 if we can identify them (for now just include trimmed unique names)
+        const existingCats = responsibilities.map(r => r.category?.trim()).filter(Boolean);
+        return [...new Set([...categories, ...existingCats])].sort();
+    }, [insuranceTypes, responsibilities]);
 
     // Filter Logic
     const filteredData = useMemo(() => {

@@ -21,6 +21,7 @@ const ClauseManagementPage: React.FC<ClauseManagementPageProps> = ({ onAddClause
     const fetchClauses = async () => {
       try {
         const data = await api.clauses.list();
+        console.log('Fetched clauses:', data);
         setClauses(data);
       } catch (error) {
         console.error('Failed to fetch clauses:', error);
@@ -80,12 +81,22 @@ const ClauseManagementPage: React.FC<ClauseManagementPageProps> = ({ onAddClause
   };
 
   const filteredClauses = useMemo(() => {
+    console.log('Filtering clauses with:', { activeFilters, companyCode, clausesCount: clauses.length });
     return clauses.filter(clause => {
       const matchName = clause.regulatoryName.toLowerCase().includes(activeFilters.name.toLowerCase());
       const matchCategory = activeFilters.category ? clause.primaryCategory === activeFilters.category : true;
       const matchType = activeFilters.type ? clause.clauseType === activeFilters.type : true;
       const targetCompany = companyCode ? MOCK_COMPANY_LIST.find(c => c.code === companyCode)?.shortName : undefined;
       const matchCompany = targetCompany ? clause.companyName === targetCompany : true;
+      
+      if (!matchCompany) {
+        console.log('Clause filtered out by company:', { 
+          clauseCompany: clause.companyName, 
+          targetCompany, 
+          companyCode 
+        });
+      }
+      
       return matchName && matchCategory && matchType && matchCompany;
     });
   }, [clauses, activeFilters, companyCode]);

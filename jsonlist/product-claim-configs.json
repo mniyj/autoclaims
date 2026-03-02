@@ -9,5 +9,60 @@
         ]
       }
     ]
+  },
+  {
+    "productCode": "PROD001",
+    "responsibilityConfigs": [
+      {
+        "responsibilityId": "resp-1",
+        "claimItemIds": [
+          "mat-1",
+          "mat-6",
+          "mat-13",
+          "mat-20",
+          "mat-21"
+        ]
+      }
+    ]
+  },
+  {
+    "productCode": "PROD002",
+    "responsibilityConfigs": [
+      {
+        "responsibilityId": "resp-1",
+        "claimItemIds": [
+          "mat-1",
+          "mat-6",
+          "mat-12",
+          "mat-13",
+          "mat-20",
+          "mat-21"
+        ]
+      }
+    ]
+  },
+  {
+    "productCode": "zhongan2026PAC814",
+    "responsibilityConfigs": [
+      {
+        "responsibilityId": "resp-12",
+        "claimItemIds": [
+          "item-2"
+        ]
+      },
+      {
+        "responsibilityId": "resp-13",
+        "claimItemIds": [
+          "item-2"
+        ]
+      },
+      {
+        "responsibilityId": "resp-14",
+        "claimItemIds": [
+          "item-1772389335809",
+          "item-1772389395943"
+        ]
+      }
+    ]
   }
 ]

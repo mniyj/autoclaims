@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
-import { type IntakeConfig, type IntakeField, type IntakeFieldType } from '../../types';
+import React, { useState, useEffect } from 'react';
+import { type IntakeConfig, type IntakeField, type IntakeFieldType, type AccidentCauseMaterialConfig, type ClaimItem, type ProductClaimConfig, type ResponsibilityItem } from '../../types';
 import { INTAKE_FIELD_TYPE_OPTIONS, INTAKE_VALIDATION_RULE_OPTIONS, INTAKE_FIELD_PRESETS } from '../../constants';
+import { api } from '../../services/api';
 
 interface IntakeFieldConfigEditorProps {
   config?: IntakeConfig;
   onChange: (config: IntakeConfig) => void;
   productCategory?: string;
+  productCode?: string; // 产品代码，用于加载索赔项目
 }
 
 const DEFAULT_CONFIG: IntakeConfig = {
@@ -15,9 +17,92 @@ const DEFAULT_CONFIG: IntakeConfig = {
 
 const NEEDS_OPTIONS_TYPES: IntakeFieldType[] = ['enum', 'enum_with_other', 'multi_select'];
 
-const IntakeFieldConfigEditor: React.FC<IntakeFieldConfigEditorProps> = ({ config, onChange, productCategory }) => {
+const IntakeFieldConfigEditor: React.FC<IntakeFieldConfigEditorProps> = ({ config, onChange, productCategory, productCode }) => {
   const currentConfig = config || DEFAULT_CONFIG;
   const [expandedFieldId, setExpandedFieldId] = useState<string | null>(null);
+  const [accidentCauses, setAccidentCauses] = useState<AccidentCauseMaterialConfig[]>([]);
+  const [isLoadingAccidentCauses, setIsLoadingAccidentCauses] = useState(false);
+  const [claimItems, setClaimItems] = useState<Array<ClaimItem & { responsibilityName?: string }>>([]);
+  const [isLoadingClaimItems, setIsLoadingClaimItems] = useState(false);
+
+  // 加载事故原因配置
+  useEffect(() => {
+    const fetchAccidentCauses = async () => {
+      setIsLoadingAccidentCauses(true);
+      try {
+        const data = await api.accidentCauseConfigs.list() as AccidentCauseMaterialConfig[];
+        setAccidentCauses(data || []);
+      } catch (error) {
+        console.error('Failed to fetch accident causes:', error);
+        setAccidentCauses([]);
+      } finally {
+        setIsLoadingAccidentCauses(false);
+      }
+    };
+    fetchAccidentCauses();
+  }, []);
+
+  // 加载索赔项目
+  useEffect(() => {
+    const fetchClaimItems = async () => {
+      if (!productCode) {
+        setClaimItems([]);
+        return;
+      }
+
+      setIsLoadingClaimItems(true);
+      try {
+        const [
+          allClaimItems,
+          productClaimConfigs,
+          responsibilities,
+        ] = await Promise.all([
+          api.claimItems.list(),
+          api.productClaimConfigs.list(),
+          api.responsibilities.list(),
+        ]);
+
+        const claimItemsData = allClaimItems as ClaimItem[];
+        const configsData = productClaimConfigs as ProductClaimConfig[];
+        const responsibilitiesData = responsibilities as ResponsibilityItem[];
+
+        // 找到该产品的配置
+        const productConfig = configsData.find((c) => c.productCode === productCode);
+        
+        if (!productConfig) {
+          setClaimItems([]);
+          setIsLoadingClaimItems(false);
+          return;
+        }
+
+        // 收集该产品关联的所有索赔项目
+        const itemsWithResponsibility: Array<ClaimItem & { responsibilityName?: string }> = [];
+        
+        productConfig.responsibilityConfigs.forEach((respConfig) => {
+          const responsibility = responsibilitiesData.find((r) => r.id === respConfig.responsibilityId);
+          
+          respConfig.claimItemIds.forEach((itemId) => {
+            const item = claimItemsData.find((ci) => ci.id === itemId);
+            if (item) {
+              itemsWithResponsibility.push({
+                ...item,
+                responsibilityName: responsibility?.name || respConfig.responsibilityId,
+              });
+            }
+          });
+        });
+
+        setClaimItems(itemsWithResponsibility);
+      } catch (error) {
+        console.error('Failed to fetch claim items:', error);
+        setClaimItems([]);
+      } finally {
+        setIsLoadingClaimItems(false);
+      }
+    };
+
+    fetchClaimItems();
+  }, [productCode]);
 
   const updateFields = (fields: IntakeField[]) => {
     onChange({ ...currentConfig, fields });
@@ -97,6 +182,14 @@ const IntakeFieldConfigEditor: React.FC<IntakeFieldConfigEditorProps> = ({ confi
   // Options editor for enum types
   const renderOptionsEditor = (field: IntakeField) => {
     const options = field.options || [];
+    // 检测是否是事故原因字段
+    const isAccidentReasonField = field.field_id.includes('accident_reason') || 
+                                   field.label.includes('事故原因') || 
+                                   field.label.includes('出险原因');
+    // 检测是否是索赔项目字段
+    const isClaimItemField = field.field_id.includes('claim_item') || 
+                              field.label.includes('索赔项目') || 
+                              field.label.includes('理赔项目');
 
     const addOption = () => {
       handleUpdateField(field.field_id, { options: [...options, ''] });
@@ -112,9 +205,71 @@ const IntakeFieldConfigEditor: React.FC<IntakeFieldConfigEditorProps> = ({ confi
       handleUpdateField(field.field_id, { options: options.filter((_, i) => i !== idx) });
     };
 
+    // 从事故原因配置加载选项
+    const loadFromAccidentCauses = () => {
+      if (accidentCauses.length === 0) {
+        alert('暂无事故原因配置，请先在「理赔项目及材料配置」→「事故原因及索赔材料关联」中添加事故原因');
+        return;
+      }
+      const loadedOptions = accidentCauses.map(cause => cause.name);
+      handleUpdateField(field.field_id, { options: loadedOptions });
+    };
+
+    // 从索赔项目配置加载选项
+    const loadFromClaimItems = () => {
+      if (!productCode) {
+        alert('无法获取产品信息，请确保已选择产品');
+        return;
+      }
+      if (claimItems.length === 0) {
+        alert('该产品暂无索赔项目配置，请先在「理赔项目及材料配置」中为该产品配置责任和索赔项目');
+        return;
+      }
+      const loadedOptions = claimItems.map(item => item.name);
+      handleUpdateField(field.field_id, { options: loadedOptions });
+    };
+
     return (
       <div className="mt-3 p-3 bg-blue-50 rounded-lg">
-        <label className="block text-xs font-medium text-gray-600 mb-2">选项列表</label>
+        <div className="flex items-center justify-between mb-2">
+          <label className="block text-xs font-medium text-gray-600">选项列表</label>
+          {isAccidentReasonField && (
+            <button
+              type="button"
+              onClick={loadFromAccidentCauses}
+              disabled={isLoadingAccidentCauses}
+              className="text-xs text-amber-600 hover:text-amber-800 disabled:text-gray-400 flex items-center gap-1"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              {isLoadingAccidentCauses ? '加载中...' : '从事故原因配置加载'}
+            </button>
+          )}
+          {isClaimItemField && (
+            <button
+              type="button"
+              onClick={loadFromClaimItems}
+              disabled={isLoadingClaimItems || !productCode}
+              className="text-xs text-green-600 hover:text-green-800 disabled:text-gray-400 flex items-center gap-1"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              {isLoadingClaimItems ? '加载中...' : '从索赔项目配置加载'}
+            </button>
+          )}
+        </div>
+        {isAccidentReasonField && accidentCauses.length > 0 && (
+          <div className="mb-2 text-xs text-amber-600 bg-amber-50 border border-amber-100 rounded px-2 py-1.5">
+            当前有 {accidentCauses.length} 个配置的事故原因，点击上方按钮可一键加载所有选项
+          </div>
+        )}
+        {isClaimItemField && claimItems.length > 0 && (
+          <div className="mb-2 text-xs text-green-600 bg-green-50 border border-green-100 rounded px-2 py-1.5">
+            当前产品有 {claimItems.length} 个索赔项目，点击上方按钮可一键加载所有选项
+          </div>
+        )}
         <div className="space-y-1.5">
           {options.map((opt, idx) => (
             <div key={idx} className="flex items-center space-x-2">
@@ -215,14 +370,36 @@ const IntakeFieldConfigEditor: React.FC<IntakeFieldConfigEditorProps> = ({ confi
         <div className="flex items-center justify-between">
           <h4 className="text-md font-medium text-gray-800">报案信息字段配置</h4>
           {productCategory && INTAKE_FIELD_PRESETS[productCategory] && (
-            <button
-              type="button"
-              onClick={handleLoadPreset}
-              className="flex items-center space-x-1 text-sm text-blue-600 hover:text-blue-800"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-              <span>加载预设模板</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleLoadPreset}
+                className="flex items-center space-x-1 text-sm text-blue-600 hover:text-blue-800"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                <span>加载预设模板</span>
+              </button>
+              <div className="group relative">
+                <svg
+                  className="w-4 h-4 text-gray-400 cursor-help hover:text-gray-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <div className="absolute right-0 top-6 w-64 p-3 bg-white border border-gray-200 rounded-lg shadow-lg text-xs text-gray-600 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+                  <p className="font-medium text-gray-800 mb-1">加载预设模板</p>
+                  <p>根据当前产品险种（{productCategory}）加载专业字段模板。</p>
+                  <p className="mt-1 text-gray-400">提示：如需加载通用字段，请使用上方「一键加载常用字段」按钮。</p>
+                </div>
+              </div>
+            </div>
           )}
         </div>
 
@@ -333,15 +510,29 @@ const IntakeFieldConfigEditor: React.FC<IntakeFieldConfigEditorProps> = ({ confi
 
                       {/* Data source for text_with_search */}
                       {field.type === 'text_with_search' && (
-                        <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">数据源标识</label>
-                          <input
-                            type="text"
-                            value={field.data_source || ''}
-                            onChange={(e) => handleUpdateField(field.field_id, { data_source: e.target.value || undefined })}
-                            className="w-full text-sm border border-gray-300 rounded px-3 py-1.5 font-mono"
-                            placeholder="如：hospital_db"
-                          />
+                        <div className="space-y-2">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">数据源标识</label>
+                            <select
+                              value={field.data_source || ''}
+                              onChange={(e) => handleUpdateField(field.field_id, { data_source: e.target.value || undefined })}
+                              className="w-full text-sm border border-gray-300 rounded px-3 py-1.5"
+                            >
+                              <option value="">无数据源（手动输入）</option>
+                              <option value="hospital_db">医院信息管理</option>
+                            </select>
+                          </div>
+                          {field.data_source === 'hospital_db' && (
+                            <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-100 rounded-lg">
+                              <svg className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              <div className="text-xs text-blue-700">
+                                <p className="font-medium mb-1">数据源：医院信息管理</p>
+                                <p className="text-blue-600">用户填写报案信息时，可以从「医院信息管理」模块中搜索和选择医院。系统会自动显示医院的等级、类型和理赔合规状态，帮助用户快速选择符合理赔要求的医院。</p>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
 

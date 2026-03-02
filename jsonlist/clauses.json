@@ -2665,5 +2665,50 @@
         ]
       }
     ]
+  },
+  {
+    "productCode": "GEN2026CAC001",
+    "regulatoryName": "众安无忧保综合意外险(2022升级版)",
+    "companyName": "众安",
+    "status": "生效",
+    "clauseType": "主险",
+    "effectiveDate": "2026-03-01",
+    "discontinuationDate": "2031-03-01",
+    "categoryLevel1Code": "C",
+    "categoryLevel1Name": "意外险",
+    "categoryLevel2Code": "C01",
+    "categoryLevel2Name": "综合意外",
+    "categoryLevel3Code": "C0101",
+    "categoryLevel3Name": "成人综合意外",
+    "primaryCategory": "意外保险",
+    "secondaryCategory": "综合意外",
+    "clauseTextFile": "http://drools-purplespark.oss-cn-beijing.aliyuncs.com/claims/1772387485842-%E6%97%A0%E5%BF%A7%E4%BF%9D%E7%BB%BC%E5%90%88%E6%84%8F%E5%A4%96%E9%99%A9-%E7%94%B5%E5%AD%90%E4%BF%9D%E5%8D%95-%E8%84%B1%E6%95%8F.pdf?OSSAccessKeyId=LTAI5tFnto3xoZD6Km6GRK76&Expires=1772391089&Signature=eT%2FSAHcxjDh3JUiDV1djQXxTnN8%3D",
+    "rateTableFile": "http://drools-purplespark.oss-cn-beijing.aliyuncs.com/claims/1772387492057-%E6%97%A0%E5%BF%A7%E4%BF%9D%E7%BB%BC%E5%90%88%E6%84%8F%E5%A4%96%E9%99%A9-%E7%94%B5%E5%AD%90%E4%BF%9D%E5%8D%95-%E8%84%B1%E6%95%8F.pdf?OSSAccessKeyId=LTAI5tFnto3xoZD6Km6GRK76&Expires=1772391094&Signature=cG7h4awaUx3eLXnm7A5QtXgIG%2FE%3D",
+    "productDescriptionFile": "",
+    "cashValueTableFile": "",
+    "basicSumInsuredTableFile": "",
+    "selectedResponsibilities": [
+      {
+        "id": "resp-12",
+        "code": "ACCIDENT_DEATH",
+        "name": "意外身故",
+        "category": "意外保险",
+        "description": "发生意外导致身故给付保险金"
+      },
+      {
+        "id": "resp-13",
+        "code": "ACCIDENT_DISABILITY",
+        "name": "意外伤残",
+        "category": "意外保险",
+        "description": "意外伤残按等级给付保险金"
+      },
+      {
+        "id": "resp-14",
+        "code": "ACCIDENT_MEDICAL",
+        "name": "意外医疗",
+        "category": "意外保险",
+        "description": "意外导致的门诊、住院医疗费用报销"
+      }
+    ]
   }
 ]

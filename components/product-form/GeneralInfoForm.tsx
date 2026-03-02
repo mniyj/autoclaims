@@ -66,13 +66,13 @@ const GeneralInfoForm: React.FC<FormProps> = ({ product, onFormChange }) => {
 
   // Derive Classification Information
   const mapping = MAPPING_DATA.find(m => 
-    (product.categoryLevel3Code && m.antLevel3Code === product.categoryLevel3Code) ||
-    (product.categoryLevel2Name && m.antLevel2Name === product.categoryLevel2Name) 
+    (product.racewayId && m.antLevel3Code === product.racewayId) ||
+    (product.secondaryCategory && m.antLevel2Name === product.secondaryCategory) 
   );
 
-  const antL1 = product.categoryLevel1Name || mapping?.antLevel1Name || '-';
-  const antL2 = product.categoryLevel2Name || mapping?.antLevel2Name || '-';
-  const antL3 = product.categoryLevel3Name || mapping?.antLevel3Name || '-';
+  const antL1 = mapping?.antLevel1Name || '-';
+  const antL2 = mapping?.antLevel2Name || '-';
+  const antL3 = mapping?.antLevel3Name || product.racewayName || '-';
 
   const regL2Name = mapping?.regLevel2Name || '-';
   let regL1Name = '-';

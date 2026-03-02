@@ -43,7 +43,7 @@ export const getAIResponse = async (
 ) => {
   const ai = getAI();
   // Using gemini-2.5-flash for maps grounding support
-  const model = 'gemini-2.5-flash';
+  const model = 'gemini-1.5-flash';
 
   const prompt = `
     Current Claim State: ${JSON.stringify(state)}
@@ -103,7 +103,7 @@ export const getAIResponse = async (
 
 export const transcribeAudio = async (base64Audio: string): Promise<string> => {
   const ai = getAI();
-  const model = 'gemini-3-flash-preview';
+  const model = 'gemini-1.5-flash';
   const response = await ai.models.generateContent({
     model,
     contents: {
@@ -118,7 +118,7 @@ export const transcribeAudio = async (base64Audio: string): Promise<string> => {
 
 export const fetchPolicyTerms = async (incidentType: string): Promise<PolicyTerm[]> => {
   const ai = getAI();
-  const model = 'gemini-3-flash-preview';
+  const model = 'gemini-1.5-flash';
   const prompt = `
     Generate a list of 3-4 insurance policy terms and conditions specifically for the incident type: ${incidentType}.
     Each term should have a title and a formal-sounding legal content snippet in Chinese.
@@ -158,7 +158,7 @@ export const quickAnalyze = async (base64: string, mimeType: string): Promise<{ 
   });
 
   const ai = getAI();
-  const model = 'gemini-2.5-flash';
+  const model = 'gemini-1.5-flash';
 
   const promptText = "快速识别文档类型，返回JSON: {\"category\": \"类型(身份证/医疗发票/出院小结/诊断证明/现场照片/银行卡等)\", \"needsDeepAnalysis\": true/false}";
   const startTime = Date.now();
@@ -198,7 +198,7 @@ export const quickAnalyze = async (base64: string, mimeType: string): Promise<{ 
 
 export const analyzeDocument = async (base64: string, mimeType: string, state: ClaimState, ossUrl: string): Promise<{ analysis: DocumentAnalysis; aiLog: AIInteractionLog }> => {
   const ai = getAI();
-  const model = 'gemini-2.5-flash';
+  const model = 'gemini-1.5-flash';
 
   const dischargeSchema = {
     "document_type": "string (Fixed: '出院小结')",
@@ -274,7 +274,7 @@ export const analyzeDocument = async (base64: string, mimeType: string, state: C
 
 export const performFinalAssessment = async (state: ClaimState) => {
   const ai = getAI();
-  const model = 'gemini-3-pro-preview';
+  const model = 'gemini-1.5-pro';
   const prompt = `
     FINAL CLAIM ASSESSMENT REQUEST:
     Claim Type: ${state.incidentType}
@@ -311,7 +311,7 @@ export const performFinalAssessment = async (state: ClaimState) => {
 export const connectLive = (callbacks: any) => {
   const ai = getAI();
   return ai.live.connect({
-    model: 'gemini-2.5-flash-native-audio-preview-12-2025',
+    model: 'gemini-1.5-flash-002',
     callbacks,
     config: {
       responseModalities: [Modality.AUDIO],

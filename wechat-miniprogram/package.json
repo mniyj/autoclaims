@@ -1,0 +1,44 @@
+{
+  "name": "wechat-miniprogram",
+  "version": "1.0.0",
+  "description": "智能理赔微信小程序",
+  "main": "index.js",
+  "scripts": {
+    "build:weapp": "taro build --type weapp",
+    "build:weapp:prod": "taro build --type weapp --prod",
+    "dev:weapp": "npm run build:weapp -- --watch",
+    "dev:weapp:prod": "npm run build:weapp:prod -- --watch"
+  },
+  "dependencies": {
+    "@tarojs/components": "^4.1.11",
+    "@tarojs/helper": "^4.1.11",
+    "@tarojs/plugin-framework-react": "^4.1.11",
+    "@tarojs/plugin-platform-weapp": "^4.1.11",
+    "@tarojs/runtime": "^4.1.11",
+    "@tarojs/taro": "^4.1.11",
+    "@tarojs/react": "^4.1.11",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "react-markdown": "^9.0.0",
+    "@tarojs/taro-html-loader": "^4.1.11",
+    "@google/genai": "^1.37.0",
+    "ali-oss": "^6.23.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.26.10",
+    "@babel/runtime": "^7.26.10",
+    "@babel/plugin-proposal-class-properties": "^7.26.10",
+    "@babel/plugin-proposal-object-rest-spread": "^7.26.10",
+    "@babel/plugin-transform-runtime": "^7.26.10",
+    "@babel/preset-env": "^7.26.10",
+    "@babel/preset-react": "^7.26.10",
+    "@tarojs/cli": "^4.1.11",
+    "@tarojs/webpack5-runner": "^4.1.11",
+    "@types/react": "^19.2.3",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^5.8.2",
+    "webpack": "^5.96.1"
+  },
+  "author": "",
+  "license": "MIT"
+}

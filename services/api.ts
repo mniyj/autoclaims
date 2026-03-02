@@ -68,6 +68,8 @@ export const api = {
   claimCases: buildResource("claim-cases"),
   rulesets: buildResource("rulesets"),
   productClaimConfigs: buildResource("product-claim-configs"),
+  categoryMaterialConfigs: buildResource("category-material-configs"),
+  accidentCauseConfigs: buildResource("accident-cause-configs"),
   endUsers: buildResource("end-users"),
   users: buildResource("users"),
   mappingData: buildResource("mapping-data"),

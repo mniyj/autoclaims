@@ -1,0 +1,78 @@
+/* 报案页面样式 */
+.report-page {
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+.report-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  background-color: #fff;
+  border-bottom: 1px solid #eee;
+  height: 88px;
+}
+
+.header-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.report-form {
+  padding: 20px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-label {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.form-input,
+.form-textarea {
+  width: 100%;
+  height: 44px;
+  padding: 10px 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #fff;
+  font-size: 14px;
+}
+
+.form-textarea {
+  height: 100px;
+}
+
+.form-actions {
+  margin-top: 30px;
+}
+
+.submit-btn {
+  width: 100%;
+  height: 44px;
+  background-color: #07c160;
+  color: #fff;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+/* 选择器样式 */
+.picker-item {
+  text-align: center;
+  padding: 10px;
+  border: 1px solid #eee;
+  background-color: #fff;
+}
+
+/* 安全区域适配 */
+.safe-area-inset-bottom {
+  padding-bottom: constant(safe-area-inset-bottom, 34px);
+}

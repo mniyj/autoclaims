@@ -21,5 +21,36 @@
       "mat-1",
       "mat-3"
     ]
+  },
+  {
+    "id": "item-1772389335809",
+    "name": "门诊费",
+    "description": "",
+    "materialIds": [
+      "mat-20",
+      "mat-21",
+      "mat-11"
+    ],
+    "responsibilityIds": [
+      "resp-14"
+    ]
+  },
+  {
+    "id": "item-1772389395943",
+    "name": "住院费",
+    "description": "",
+    "materialIds": [
+      "mat-12",
+      "mat-13",
+      "mat-20",
+      "mat-21"
+    ],
+    "responsibilityIds": [
+      "resp-14"
+    ],
+    "materialRequiredMap": {
+      "mat-12": true,
+      "mat-20": true
+    }
   }
 ]

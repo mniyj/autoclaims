@@ -175,5 +175,143 @@
         "description": "雇主证明缺少公章。"
       }
     ]
+  },
+  {
+    "id": "CLM047507",
+    "reportNumber": "R202603011800474WHQ",
+    "reporter": "1",
+    "reportTime": "3/2/2026, 2:00:47 AM",
+    "accidentTime": "2026-03-02",
+    "accidentReason": "交通事故",
+    "accidentLocation": "shai",
+    "productCode": "zhongan2026PAC814",
+    "productName": "无忧保综合意外险(2022升级版)",
+    "policyNumber": "PM157CG240579335929704",
+    "status": "已报案",
+    "operator": "1",
+    "intakeFormData": {
+      "accident_date": "2026-03-02",
+      "accident_location": "shai",
+      "accident_description": "1",
+      "accident_reason": "交通事故"
+    },
+    "selectedClaimItems": [],
+    "selectedAccidentCauseId": "交通事故",
+    "requiredMaterials": []
+  },
+  {
+    "id": "CLM337307",
+    "reportNumber": "R20260301180537TR51",
+    "reporter": "1",
+    "reportTime": "3/2/2026, 2:05:37 AM",
+    "accidentTime": "2026-03-02",
+    "accidentReason": "交通事故",
+    "accidentLocation": "1",
+    "productCode": "zhongan2026PAC814",
+    "productName": "无忧保综合意外险(2022升级版)",
+    "policyNumber": "PM157CG240579335929704",
+    "status": "已报案",
+    "operator": "1",
+    "intakeFormData": {
+      "accident_date": "2026-03-02",
+      "accident_location": "1",
+      "accident_description": "1",
+      "accident_reason": "交通事故"
+    },
+    "selectedClaimItems": [],
+    "selectedAccidentCauseId": "交通事故",
+    "requiredMaterials": []
+  },
+  {
+    "id": "CLM376876",
+    "reportNumber": "R20260301180616ECQ4",
+    "reporter": "1",
+    "reportTime": "3/2/2026, 2:06:16 AM",
+    "accidentTime": "2026-03-02",
+    "accidentReason": "交通事故",
+    "accidentLocation": "1",
+    "productCode": "zhongan2026PAC814",
+    "productName": "无忧保综合意外险(2022升级版)",
+    "policyNumber": "PM157CG240579335929704",
+    "status": "已报案",
+    "operator": "1",
+    "intakeFormData": {
+      "accident_date": "2026-03-02",
+      "accident_location": "1",
+      "accident_description": "1",
+      "accident_reason": "交通事故"
+    },
+    "selectedClaimItems": [],
+    "selectedAccidentCauseId": "交通事故",
+    "requiredMaterials": []
+  },
+  {
+    "id": "CLM737481",
+    "reportNumber": "R20260301181217HGCN",
+    "reporter": "1",
+    "reportTime": "3/2/2026, 2:12:17 AM",
+    "accidentTime": "2026-03-02",
+    "accidentReason": "交通事故",
+    "accidentLocation": "1",
+    "productCode": "zhongan2026PAC814",
+    "productName": "无忧保综合意外险(2022升级版)",
+    "policyNumber": "PM157CG240579335929704",
+    "status": "已报案",
+    "operator": "1",
+    "intakeFormData": {
+      "accident_date": "2026-03-02",
+      "accident_location": "1",
+      "accident_description": "1",
+      "accident_reason": "交通事故"
+    },
+    "selectedClaimItems": [],
+    "selectedAccidentCauseId": "交通事故",
+    "requiredMaterials": []
+  },
+  {
+    "id": "CLM081381",
+    "reportNumber": "R20260301183441ZU5G",
+    "reporter": "1",
+    "reportTime": "3/2/2026, 2:34:41 AM",
+    "accidentTime": "2026-03-02",
+    "accidentReason": "交通事故",
+    "accidentLocation": "1",
+    "productCode": "zhongan2026PAC814",
+    "productName": "无忧保综合意外险(2022升级版)",
+    "policyNumber": "PM157CG240579335929704",
+    "status": "已报案",
+    "operator": "1",
+    "intakeFormData": {
+      "accident_date": "2026-03-02",
+      "accident_location": "1",
+      "accident_description": "1",
+      "accident_reason": "交通事故"
+    },
+    "selectedClaimItems": [],
+    "selectedAccidentCauseId": "交通事故",
+    "requiredMaterials": []
+  },
+  {
+    "id": "CLM971016",
+    "reportNumber": "R20260301184931LGRN",
+    "reporter": "1",
+    "reportTime": "3/2/2026, 2:49:31 AM",
+    "accidentTime": "2026-03-02",
+    "accidentReason": "交通事故",
+    "accidentLocation": "1",
+    "productCode": "zhongan2026PAC814",
+    "productName": "无忧保综合意外险(2022升级版)",
+    "policyNumber": "PM157CG240579335929704",
+    "status": "已报案",
+    "operator": "1",
+    "intakeFormData": {
+      "accident_date": "2026-03-02",
+      "accident_location": "1",
+      "accident_description": "1",
+      "accident_reason": "交通事故"
+    },
+    "selectedClaimItems": [],
+    "selectedAccidentCauseId": "交通事故",
+    "requiredMaterials": []
   }
 ]

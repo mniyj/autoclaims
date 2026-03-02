@@ -1,23 +1,22 @@
-
 export enum ProductStatus {
-  DRAFT = '草稿',
-  ACTIVE = '生效',
-  INACTIVE = '失效',
+  DRAFT = "草稿",
+  ACTIVE = "生效",
+  INACTIVE = "失效",
 }
 
 export enum PrimaryCategory {
-  HEALTH = '医疗保险',
-  ACCIDENT = '意外保险',
-  CRITICAL_ILLNESS = '重大疾病保险',
-  TERM_LIFE = '定期寿险',
-  WHOLE_LIFE = '终身寿险',
-  ANNUITY = '年金保险',
-  CAR_INSURANCE = '车险',
+  HEALTH = "医疗保险",
+  ACCIDENT = "意外保险",
+  CRITICAL_ILLNESS = "重大疾病保险",
+  TERM_LIFE = "定期寿险",
+  WHOLE_LIFE = "终身寿险",
+  ANNUITY = "年金保险",
+  CAR_INSURANCE = "车险",
 }
 
 export enum ClauseType {
-  MAIN = '主险',
-  RIDER = '附加险',
+  MAIN = "主险",
+  RIDER = "附加险",
 }
 
 export interface CoverageItem {
@@ -74,7 +73,7 @@ export interface BaseProduct {
   effectiveDate: string;
   discontinuationDate: string;
   status: ProductStatus;
-  
+
   // Legacy Categories (kept for backward compatibility with form logic)
   primaryCategory: PrimaryCategory;
   secondaryCategory: string;
@@ -84,6 +83,10 @@ export interface BaseProduct {
   secondaryCategoryCode?: string;
   racewayId?: string;
   racewayName?: string;
+
+  // Alternative 3-Level Classification field names (used by some JSON-stored products)
+  categoryLevel3Code?: string;
+  categoryLevel3Name?: string;
 
   salesUrl?: string;
   coverageDetails?: CoverageItem[];
@@ -106,7 +109,7 @@ export interface BaseProduct {
 
   // New fields for enhanced product card display
   tags?: string[];
-  tagStyles?: Record<string, 'gold' | 'green' | 'red' | 'gray'>;
+  tagStyles?: Record<string, "gold" | "green" | "red" | "gray">;
   promoTag?: string;
   cardMetric1Label?: string;
   cardMetric1Value?: string;
@@ -126,10 +129,16 @@ export interface BaseProduct {
   productDescriptionFile?: string;
   cashValueTableFile?: string;
   basicSumInsuredTableFile?: string;
-  }
+  
+  // Responsibilities associated with this clause/product
+  selectedResponsibilities?: ResponsibilityItem[];
+}
 
 export interface HealthAccidentCriticalIllnessProduct extends BaseProduct {
-  primaryCategory: PrimaryCategory.HEALTH | PrimaryCategory.ACCIDENT | PrimaryCategory.CRITICAL_ILLNESS;
+  primaryCategory:
+    | PrimaryCategory.HEALTH
+    | PrimaryCategory.ACCIDENT
+    | PrimaryCategory.CRITICAL_ILLNESS;
   coverageArea: string;
   hospitalScope: string;
   claimScope: string;
@@ -186,11 +195,11 @@ export type InsuranceProduct =
 
 // Type for the clause data fetched from the "database"
 export type Clause =
-  | Omit<HealthAccidentCriticalIllnessProduct, 'marketingName' | 'salesUrl'>
-  | Omit<TermLifeProduct, 'marketingName' | 'salesUrl'>
-  | Omit<WholeLifeProduct, 'marketingName' | 'salesUrl'>
-  | Omit<AnnuityProduct, 'marketingName' | 'salesUrl'>
-  | Omit<CarInsuranceProduct, 'marketingName' | 'salesUrl'>;
+  | Omit<HealthAccidentCriticalIllnessProduct, "marketingName" | "salesUrl">
+  | Omit<TermLifeProduct, "marketingName" | "salesUrl">
+  | Omit<WholeLifeProduct, "marketingName" | "salesUrl">
+  | Omit<AnnuityProduct, "marketingName" | "salesUrl">
+  | Omit<CarInsuranceProduct, "marketingName" | "salesUrl">;
 
 // --- START: Types for Strategy Management ---
 export interface DecisionRule {
@@ -305,7 +314,7 @@ export interface CompanyListItem {
   hotline: string;
   website: string;
   registeredCapital: string;
-  status: '生效' | '失效';
+  status: "生效" | "失效";
 }
 // --- END: Types for Company Management ---
 
@@ -428,9 +437,10 @@ export interface ClaimsMaterial {
   name: string;
   description: string;
   sampleUrl?: string;
+  ossKey?: string; // OSS object key for generating fresh signed URLs
   jsonSchema: string; // JSON string representing the schema to extract
-  required: boolean;
   aiAuditPrompt?: string;
+  confidenceThreshold?: number; // 转人工置信度阈值 [0, 1]，低于此值需人工复核，默认 0.9
 }
 
 export interface ClaimItem {
@@ -438,6 +448,7 @@ export interface ClaimItem {
   name: string;
   description: string;
   materialIds: string[]; // IDs of ClaimsMaterial associated with this claim item
+  materialRequiredMap?: Record<string, boolean>; // per-context required override: materialId → isRequired
   responsibilityIds?: string[];
 }
 
@@ -451,13 +462,33 @@ export interface ResponsibilityClaimConfig {
   claimItemIds: string[]; // IDs of ClaimItem associated with this responsibility
 }
 
+// 险种通用索赔材料配置
+export interface CategoryMaterialConfig {
+  categoryCode: string; // 三级险种代码，如 'C0101' (成人综合意外)
+  categoryName: string; // 三级险种名称，如 '成人综合意外'
+  materialIds: string[]; // 通用索赔材料ID列表
+  materialRequiredMap?: Record<string, boolean>; // per-context required override: materialId → isRequired
+  updatedAt?: string;
+  updatedBy?: string;
+}
+
+// 事故原因及索赔材料关联配置
+export interface AccidentCauseMaterialConfig {
+  id: string; // 唯一ID，如 'cause-1'
+  name: string; // 事故原因名称，如 '交通事故'
+  description?: string; // 可选说明
+  materialIds: string[]; // 关联的索赔材料ID列表
+  materialRequiredMap?: Record<string, boolean>; // materialId → isRequired
+  updatedAt?: string;
+}
+
 export enum ClaimStatus {
-  REPORTED = '已报案',
-  PROCESSING = '处理中',
-  PENDING_INFO = '待补传',
-  APPROVED = '已结案-给付',
-  REJECTED = '已结案-拒赔',
-  CANCELLED = '已撤案',
+  REPORTED = "已报案",
+  PROCESSING = "处理中",
+  PENDING_INFO = "待补传",
+  APPROVED = "已结案-给付",
+  REJECTED = "已结案-拒赔",
+  CANCELLED = "已撤案",
 }
 
 export interface ClaimCalculationItem {
@@ -477,7 +508,7 @@ export interface ClaimFileCategory {
 }
 
 export interface ClaimRiskIndicator {
-  type: 'danger' | 'warning';
+  type: "danger" | "warning";
   title: string;
   description: string;
 }
@@ -496,7 +527,7 @@ export interface ClaimCase {
   productName: string;
   status: ClaimStatus;
   operator: string;
-  
+
   // Detailed fields
   policyholder?: string;
   insured?: string;
@@ -505,8 +536,57 @@ export interface ClaimCase {
   calculationItems?: ClaimCalculationItem[];
   fileCategories?: ClaimFileCategory[];
   risks?: ClaimRiskIndicator[];
+
+  // 动态材料清单相关字段
+  selectedClaimItems?: string[]; // 用户选择的索赔项目IDs
+  selectedAccidentCauseId?: string; // 用户选择的事故原因ID（可能是预设或自定义）
+  requiredMaterials?: Array<{
+    materialId: string;
+    materialName: string;
+    materialDescription?: string;
+    required: boolean;
+    source: string; // 'category' | 'claim_item' | 'accident_cause' | 'extra'
+    sourceDetails: string;
+    uploaded?: boolean; // 是否已上传
+  }>;
+  intakeFormData?: Record<string, any>; // 报案表单原始数据
 }
 // --- END: Types for Claims Management ---
+
+// --- START: Types for Offline Material Import ---
+export interface ProcessedFile {
+  documentId: string;
+  fileName: string;
+  fileType: string;
+  ossUrl?: string;
+  extractedText?: string;
+  structuredData?: Record<string, unknown>;
+  classification: {
+    materialId: string;
+    materialName: string;
+    confidence: number;
+  };
+  status: "processing" | "completed" | "failed";
+  errorMessage?: string;
+}
+
+export interface CompletenessResult {
+  isComplete: boolean;
+  score: number;
+  requiredMaterials: string[];
+  providedMaterials: string[];
+  missingMaterials: string[];
+  warnings: string[];
+}
+
+export interface OfflineMaterialImportResult {
+  success: boolean;
+  importedFiles: ProcessedFile[];
+  completeness: CompletenessResult;
+  warnings: string[];
+  summary?: string;
+}
+// --- END: Types for Offline Material Import ---
 
 export interface EndUser {
   id: string;
@@ -540,8 +620,17 @@ export interface IntakeFollowUp {
   extra_fields: string[];
 }
 
-export type IntakeFieldType = 'text' | 'date' | 'time' | 'number' | 'textarea'
-  | 'enum' | 'enum_with_other' | 'multi_select' | 'text_with_search' | 'boolean';
+export type IntakeFieldType =
+  | "text"
+  | "date"
+  | "time"
+  | "number"
+  | "textarea"
+  | "enum"
+  | "enum_with_other"
+  | "multi_select"
+  | "text_with_search"
+  | "boolean";
 
 export interface IntakeField {
   field_id: string;
@@ -558,7 +647,7 @@ export interface IntakeField {
 
 export interface IntakeVoiceInput {
   enabled: boolean;
-  mode: 'realtime_or_record';
+  mode: "realtime_or_record";
   slot_filling_prompt?: string;
 }
 
@@ -568,98 +657,120 @@ export interface IntakeConfig {
   fields: IntakeField[];
   voice_input: IntakeVoiceInput;
   claimMaterials?: {
-    extraMaterialIds: string[];
+    extraMaterialIds: string[]; // Legacy: selected material IDs for backward compat
+    materialOverrides?: Record<
+      string,
+      { selected: boolean; required: boolean }
+    >; // Per-material selection and required flag
+    // 动态材料清单计算配置
+    enableDynamicCalculation?: boolean; // 是否启用动态计算
+    claimItemFieldId?: string; // 索赔项目字段ID，默认 'claim_item'
+    accidentCauseFieldId?: string; // 事故原因字段ID，默认 'accident_reason'
   };
+  // 事故原因配置：报案时可选的事故原因列表
+  accidentCauses?: Array<{
+    id: string; // 预设原因使用 AccidentCauseMaterialConfig.id，自定义原因使用 'custom-' 前缀
+    name: string;
+    isCustom?: boolean; // true = 用户手动添加，非预设
+  }>;
+  // 索赔项目列表：该产品关联的所有条款下关联的所有责任下关联的所有索赔项目
+  claimItems?: Array<{
+    id: string; // 索赔项目ID
+    name: string; // 索赔项目名称
+    responsibilityId: string; // 所属责任ID
+    responsibilityName: string; // 所属责任名称
+    selected: boolean; // 是否启用
+  }>;
 }
 // --- END: Types for Claim Intake Configuration ---
 
 // --- START: Types for Ruleset Management ---
 export enum RulesetProductLine {
-  ACCIDENT = 'ACCIDENT',
-  HEALTH = 'HEALTH',
-  CRITICAL_ILLNESS = 'CRITICAL_ILLNESS',
-  TERM_LIFE = 'TERM_LIFE',
-  WHOLE_LIFE = 'WHOLE_LIFE',
-  ANNUITY = 'ANNUITY',
+  ACCIDENT = "ACCIDENT",
+  HEALTH = "HEALTH",
+  CRITICAL_ILLNESS = "CRITICAL_ILLNESS",
+  TERM_LIFE = "TERM_LIFE",
+  WHOLE_LIFE = "WHOLE_LIFE",
+  ANNUITY = "ANNUITY",
 }
 
 export enum ExecutionDomain {
-  ELIGIBILITY = 'ELIGIBILITY',
-  ASSESSMENT = 'ASSESSMENT',
-  POST_PROCESS = 'POST_PROCESS',
+  ELIGIBILITY = "ELIGIBILITY",
+  ASSESSMENT = "ASSESSMENT",
+  POST_PROCESS = "POST_PROCESS",
 }
 
 export enum RuleStatus {
-  EFFECTIVE = 'EFFECTIVE',
-  DISABLED = 'DISABLED',
-  DRAFT = 'DRAFT',
+  EFFECTIVE = "EFFECTIVE",
+  DISABLED = "DISABLED",
+  DRAFT = "DRAFT",
 }
 
 export enum RuleActionType {
-  APPROVE_CLAIM = 'APPROVE_CLAIM',
-  REJECT_CLAIM = 'REJECT_CLAIM',
-  SET_CLAIM_RATIO = 'SET_CLAIM_RATIO',
-  ROUTE_CLAIM_MANUAL = 'ROUTE_CLAIM_MANUAL',
-  FLAG_FRAUD = 'FLAG_FRAUD',
-  TERMINATE_CONTRACT = 'TERMINATE_CONTRACT',
-  APPROVE_ITEM = 'APPROVE_ITEM',
-  REJECT_ITEM = 'REJECT_ITEM',
-  ADJUST_ITEM_AMOUNT = 'ADJUST_ITEM_AMOUNT',
-  SET_ITEM_RATIO = 'SET_ITEM_RATIO',
-  FLAG_ITEM = 'FLAG_ITEM',
-  APPLY_FORMULA = 'APPLY_FORMULA',
-  APPLY_CAP = 'APPLY_CAP',
-  APPLY_DEDUCTIBLE = 'APPLY_DEDUCTIBLE',
-  SUM_COVERAGES = 'SUM_COVERAGES',
-  DEDUCT_PRIOR_BENEFIT = 'DEDUCT_PRIOR_BENEFIT',
-  ADD_REMARK = 'ADD_REMARK',
+  APPROVE_CLAIM = "APPROVE_CLAIM",
+  REJECT_CLAIM = "REJECT_CLAIM",
+  SET_CLAIM_RATIO = "SET_CLAIM_RATIO",
+  ROUTE_CLAIM_MANUAL = "ROUTE_CLAIM_MANUAL",
+  FLAG_FRAUD = "FLAG_FRAUD",
+  TERMINATE_CONTRACT = "TERMINATE_CONTRACT",
+  APPROVE_ITEM = "APPROVE_ITEM",
+  REJECT_ITEM = "REJECT_ITEM",
+  ADJUST_ITEM_AMOUNT = "ADJUST_ITEM_AMOUNT",
+  SET_ITEM_RATIO = "SET_ITEM_RATIO",
+  FLAG_ITEM = "FLAG_ITEM",
+  APPLY_FORMULA = "APPLY_FORMULA",
+  APPLY_CAP = "APPLY_CAP",
+  APPLY_DEDUCTIBLE = "APPLY_DEDUCTIBLE",
+  SUM_COVERAGES = "SUM_COVERAGES",
+  DEDUCT_PRIOR_BENEFIT = "DEDUCT_PRIOR_BENEFIT",
+  ADD_REMARK = "ADD_REMARK",
 }
 
 export enum RuleCategory {
-  COVERAGE_SCOPE = 'COVERAGE_SCOPE',
-  EXCLUSION = 'EXCLUSION',
-  WAITING_PERIOD = 'WAITING_PERIOD',
-  CLAIM_TIMELINE = 'CLAIM_TIMELINE',
-  COVERAGE_PERIOD = 'COVERAGE_PERIOD',
-  POLICY_STATUS = 'POLICY_STATUS',
-  ITEM_CLASSIFICATION = 'ITEM_CLASSIFICATION',
-  PRICING_REASONABILITY = 'PRICING_REASONABILITY',
-  DISABILITY_ASSESSMENT = 'DISABILITY_ASSESSMENT',
-  DEPRECIATION = 'DEPRECIATION',
-  PROPORTIONAL_LIABILITY = 'PROPORTIONAL_LIABILITY',
-  DEDUCTIBLE = 'DEDUCTIBLE',
-  SUB_LIMIT = 'SUB_LIMIT',
-  SOCIAL_INSURANCE = 'SOCIAL_INSURANCE',
-  BENEFIT_OFFSET = 'BENEFIT_OFFSET',
-  AGGREGATE_CAP = 'AGGREGATE_CAP',
-  POST_ADJUSTMENT = 'POST_ADJUSTMENT',
+  COVERAGE_SCOPE = "COVERAGE_SCOPE",
+  EXCLUSION = "EXCLUSION",
+  WAITING_PERIOD = "WAITING_PERIOD",
+  CLAIM_TIMELINE = "CLAIM_TIMELINE",
+  COVERAGE_PERIOD = "COVERAGE_PERIOD",
+  POLICY_STATUS = "POLICY_STATUS",
+  ITEM_CLASSIFICATION = "ITEM_CLASSIFICATION",
+  PRICING_REASONABILITY = "PRICING_REASONABILITY",
+  DISABILITY_ASSESSMENT = "DISABILITY_ASSESSMENT",
+  DEPRECIATION = "DEPRECIATION",
+  PROPORTIONAL_LIABILITY = "PROPORTIONAL_LIABILITY",
+  DEDUCTIBLE = "DEDUCTIBLE",
+  SUB_LIMIT = "SUB_LIMIT",
+  SOCIAL_INSURANCE = "SOCIAL_INSURANCE",
+  BENEFIT_OFFSET = "BENEFIT_OFFSET",
+  AGGREGATE_CAP = "AGGREGATE_CAP",
+  POST_ADJUSTMENT = "POST_ADJUSTMENT",
 }
 
 export enum ConditionOperator {
-  EQ = 'EQ',
-  NE = 'NE',
-  GT = 'GT',
-  GTE = 'GTE',
-  LT = 'LT',
-  LTE = 'LTE',
-  IN = 'IN',
-  NOT_IN = 'NOT_IN',
-  CONTAINS = 'CONTAINS',
-  NOT_CONTAINS = 'NOT_CONTAINS',
-  STARTS_WITH = 'STARTS_WITH',
-  BETWEEN = 'BETWEEN',
-  IS_NULL = 'IS_NULL',
-  IS_NOT_NULL = 'IS_NOT_NULL',
-  IS_TRUE = 'IS_TRUE',
-  IS_FALSE = 'IS_FALSE',
-  MATCHES_REGEX = 'MATCHES_REGEX',
+  EQ = "EQ",
+  NE = "NE",
+  GT = "GT",
+  GTE = "GTE",
+  LT = "LT",
+  LTE = "LTE",
+  IN = "IN",
+  NOT_IN = "NOT_IN",
+  CONTAINS = "CONTAINS",
+  NOT_CONTAINS = "NOT_CONTAINS",
+  STARTS_WITH = "STARTS_WITH",
+  BETWEEN = "BETWEEN",
+  IS_NULL = "IS_NULL",
+  IS_NOT_NULL = "IS_NOT_NULL",
+  IS_TRUE = "IS_TRUE",
+  IS_FALSE = "IS_FALSE",
+  MATCHES_REGEX = "MATCHES_REGEX",
 }
 
 export enum ConditionLogic {
-  AND = 'AND',
-  OR = 'OR',
-  NOT = 'NOT',
-  ALWAYS_TRUE = 'ALWAYS_TRUE',
+  AND = "AND",
+  OR = "OR",
+  NOT = "NOT",
+  ALWAYS_TRUE = "ALWAYS_TRUE",
 }
 
 export interface LeafCondition {
@@ -670,7 +781,7 @@ export interface LeafCondition {
 }
 
 export interface GroupCondition {
-  logic: 'AND' | 'OR' | 'NOT';
+  logic: "AND" | "OR" | "NOT";
   expressions: (LeafCondition | GroupCondition)[];
 }
 
@@ -700,18 +811,22 @@ export interface RuleActionParams {
   social_insurance_ratio?: number;
   non_social_insurance_ratio?: number;
   disability_grade_table?: { grade: number; payout_ratio: number }[];
-  depreciation_table?: { age_from_months: number; age_to_months: number; monthly_rate_percent: number }[];
+  depreciation_table?: {
+    age_from_months: number;
+    age_to_months: number;
+    monthly_rate_percent: number;
+  }[];
 }
 
 export interface RuleExecution {
   domain: ExecutionDomain;
   loop_over: string | null;
   item_alias: string | null;
-  item_action_on_reject: 'ZERO_AMOUNT' | 'SKIP_ITEM' | 'FLAG_ITEM' | null;
+  item_action_on_reject: "ZERO_AMOUNT" | "SKIP_ITEM" | "FLAG_ITEM" | null;
 }
 
 export interface RuleSource {
-  source_type: 'CLAUSE' | 'POLICY' | 'REGULATION' | 'AI_GENERATED' | 'MANUAL';
+  source_type: "CLAUSE" | "POLICY" | "REGULATION" | "AI_GENERATED" | "MANUAL";
   source_ref: string;
   clause_code: string | null;
   source_text: string;
@@ -807,7 +922,7 @@ export interface RulesetMetadata {
   schema_version: string;
   version: string;
   generated_at: string;
-  generated_by: 'AI_PARSING' | 'MANUAL_ENTRY' | 'HYBRID';
+  generated_by: "AI_PARSING" | "MANUAL_ENTRY" | "HYBRID";
   ai_model?: string;
   total_rules: number;
   rules_by_domain?: {
@@ -839,27 +954,27 @@ export interface InsuranceRuleset {
 
 // --- START: Types for Medical Invoice Audit & Insurance Catalog ---
 // Import MedicalInvoiceData from smartclaim-ai-agent
-import type { MedicalInvoiceData } from './smartclaim-ai-agent/types';
+import type { MedicalInvoiceData } from "./smartclaim-ai-agent/types";
 
 // 医保目录相关类型
 export interface MedicalInsuranceCatalogItem {
   id: string;
   province: string; // 省份代码，如 "beijing", "shanghai", "national"（国家目录）
-  category: 'drug' | 'treatment' | 'material'; // 药品/诊疗项目/耗材
+  category: "drug" | "treatment" | "material"; // 药品/诊疗项目/耗材
   code: string; // 医保编码
   name: string; // 标准名称（通用名）
-  type: 'A' | 'B' | 'C' | 'excluded'; // 甲乙丙类或不在目录
+  type: "A" | "B" | "C" | "excluded"; // 甲乙丙类或不在目录
   reimbursementRatio?: number; // 报销比例（0-100）
   restrictions?: string; // 使用限制说明
   effectiveDate: string; // 生效日期
   expiryDate?: string; // 失效日期
 
   // 名称兼容化字段 - 用于处理发票名称与目录名称不一致
-  aliases?: string[];           // 别名列表（商品名、曾用名、常见缩写等）
-  genericName?: string;         // 药品通用名（国际非专利药名对应的中文名）
-  specifications?: string;      // 规格型号
-  dosageForm?: string;          // 剂型
-  manufacturer?: string;        // 生产厂家
+  aliases?: string[]; // 别名列表（商品名、曾用名、常见缩写等）
+  genericName?: string; // 药品通用名（国际非专利药名对应的中文名）
+  specifications?: string; // 规格型号
+  dosageForm?: string; // 剂型
+  manufacturer?: string; // 生产厂家
 }
 
 // 医院等级数据
@@ -868,8 +983,15 @@ export interface HospitalInfo {
   name: string; // 医院名称
   province: string;
   city: string;
-  level: '三级甲等' | '三级乙等' | '二级甲等' | '二级乙等' | '一级' | '未定级' | '民营';
-  type: '公立' | '民营';
+  level:
+    | "三级甲等"
+    | "三级乙等"
+    | "二级甲等"
+    | "二级乙等"
+    | "一级"
+    | "未定级"
+    | "民营";
+  type: "公立" | "民营";
   address?: string;
   qualifiedForInsurance: boolean; // 是否符合保险理赔要求（公立二级及以上）
 }
@@ -883,16 +1005,25 @@ export interface AIInteractionLog {
   timestamp: string;
   usageMetadata?: any;
   timing?: {
-    ocrDuration?: number;      // OCR 识别耗时 (ms)
-    parsingDuration?: number;  // 大模型格式化耗时 (ms)
-    totalDuration?: number;    // 总耗时 (ms)
+    ocrDuration?: number; // OCR 识别耗时 (ms)
+    parsingDuration?: number; // 大模型格式化耗时 (ms)
+    totalDuration?: number; // 总耗时 (ms)
   };
-  errorMessage?: string;       // 错误信息（如果失败）
-  statusCode?: number;         // HTTP 状态码
+  errorMessage?: string; // 错误信息（如果失败）
+  statusCode?: number; // HTTP 状态码
 }
 
 export interface StepLog {
-  step: 'ocr' | 'hospital' | 'catalog' | 'summary' | 'upload' | 'catalog_fetch' | 'catalog_sync' | 'catalog_ai' | 'saving';
+  step:
+    | "ocr"
+    | "hospital"
+    | "catalog"
+    | "summary"
+    | "upload"
+    | "catalog_fetch"
+    | "catalog_sync"
+    | "catalog_ai"
+    | "saving";
   input: any;
   output: any;
   duration: number;
@@ -901,23 +1032,23 @@ export interface StepLog {
 
 /** 审核子步骤耗时记录（用于前端展示） */
 export interface StepTiming {
-  step: string;       // 步骤标识，与 AuditStep 对应
-  label: string;      // 中文显示名称
-  startTime: number;  // Date.now() 开始时间戳
-  endTime?: number;   // Date.now() 结束时间戳（undefined 表示进行中）
-  duration?: number;  // 耗时毫秒（endTime - startTime）
-  detail?: string;    // 额外描述（如 "3/5 张图片"）
+  step: string; // 步骤标识，与 AuditStep 对应
+  label: string; // 中文显示名称
+  startTime: number; // Date.now() 开始时间戳
+  endTime?: number; // Date.now() 结束时间戳（undefined 表示进行中）
+  duration?: number; // 耗时毫秒（endTime - startTime）
+  detail?: string; // 额外描述（如 "3/5 张图片"）
 }
 
 /** 单张图片的 OCR 识别结果（多图模式下使用） */
 export interface InvoiceImageOcrResult {
-  imageIndex: number;           // 图片在上传组中的序号（0-based）
-  ossUrl: string;               // 图片 OSS URL
-  ossKey: string;               // 图片 OSS Key
-  fileName: string;             // 原始文件名
-  documentType: 'summary_invoice' | 'detail_list' | 'single_invoice';
-  ocrData: MedicalInvoiceData;  // 该图片的 OCR 识别结果
-  aiLog?: AIInteractionLog;     // 该图片的 AI 交互日志
+  imageIndex: number; // 图片在上传组中的序号（0-based）
+  ossUrl: string; // 图片 OSS URL
+  ossKey: string; // 图片 OSS Key
+  fileName: string; // 原始文件名
+  documentType: "summary_invoice" | "detail_list" | "single_invoice";
+  ocrData: MedicalInvoiceData; // 该图片的 OCR 识别结果
+  aiLog?: AIInteractionLog; // 该图片的 AI 交互日志
 }
 
 // 审核记录中增加 AI 日志字段
@@ -950,10 +1081,10 @@ export interface InvoiceAuditResult {
   };
 
   // Status
-  auditStatus: 'processing' | 'completed' | 'failed';
+  auditStatus: "processing" | "completed" | "failed";
   auditTime?: string;
   errorMessage?: string;
-  
+
   // AI Log
   aiLog?: AIInteractionLog;
   // Step Logs
@@ -962,10 +1093,11 @@ export interface InvoiceAuditResult {
   validationWarnings?: ValidationWarning[];
 
   // 多图支持
-  imageCount?: number;                                         // 图片数量（1=单图，>1=多图）
-  imageOcrResults?: InvoiceImageOcrResult[];                    // 每张图片的独立 OCR 结果
-  summaryChargeItems?: MedicalInvoiceData['chargeItems'];      // 汇总发票大类项目（仅参考，不参与审核）
-  crossValidation?: {                                          // 汇总 vs 明细金额交叉验证
+  imageCount?: number; // 图片数量（1=单图，>1=多图）
+  imageOcrResults?: InvoiceImageOcrResult[]; // 每张图片的独立 OCR 结果
+  summaryChargeItems?: MedicalInvoiceData["chargeItems"]; // 汇总发票大类项目（仅参考，不参与审核）
+  crossValidation?: {
+    // 汇总 vs 明细金额交叉验证
     summaryTotal: number;
     detailItemsTotal: number;
     difference: number;
@@ -979,8 +1111,8 @@ export interface InvoiceAuditResult {
 /** 通用材料审核结果（非发票类材料使用） */
 export interface MaterialAuditResult {
   auditId: string;
-  materialType: string;       // 材料类型 ID（如 "mat-1"）
-  materialName: string;       // 材料名称（如 "身份证正面"）
+  materialType: string; // 材料类型 ID（如 "mat-1"）
+  materialName: string; // 材料名称（如 "身份证正面"）
   ossUrl: string;
   ossKey: string;
   uploadTime: string;
@@ -989,8 +1121,8 @@ export interface MaterialAuditResult {
   extractedData: Record<string, any>;
 
   // AI 审核结论
-  auditConclusion: string;    // AI 给出的审核结论文本
-  auditStatus: 'completed' | 'failed';
+  auditConclusion: string; // AI 给出的审核结论文本
+  auditStatus: "completed" | "failed";
   errorMessage?: string;
 
   // 日志
@@ -1000,15 +1132,21 @@ export interface MaterialAuditResult {
 
 // OCR 后置验证警告
 export interface ValidationWarning {
-  type: 'duplicate_item' | 'amount_mismatch' | 'total_mismatch' | 'insurance_balance' | 'abnormal_value' | 'summary_detail_mismatch';
-  severity: 'info' | 'warning' | 'error';
+  type:
+    | "duplicate_item"
+    | "amount_mismatch"
+    | "total_mismatch"
+    | "insurance_balance"
+    | "abnormal_value"
+    | "summary_detail_mismatch";
+  severity: "info" | "warning" | "error";
   message: string;
   details?: {
     field?: string;
     expected?: number;
     actual?: number;
     difference?: number;
-    items?: string[];  // 涉及的项目名称
+    items?: string[]; // 涉及的项目名称
   };
 }
 
@@ -1023,7 +1161,7 @@ export interface InvoiceItemAudit {
     matched: boolean;
     matchedItem?: MedicalInsuranceCatalogItem;
     matchConfidence: number; // 匹配置信度 0-100
-    matchMethod: 'exact' | 'alias' | 'fuzzy' | 'ai' | 'manual' | 'none';
+    matchMethod: "exact" | "alias" | "fuzzy" | "ai" | "manual" | "none";
   };
 
   // 审核结论
@@ -1040,38 +1178,38 @@ export { MedicalInvoiceData };
 
 // 询价单状态
 export enum QuoteStatus {
-  DRAFT = '草稿',
-  PENDING = '待报价',
-  QUOTED = '已报价',
-  ACCEPTED = '已接受',
-  REJECTED = '已拒绝',
-  EXPIRED = '已过期',
-  CONVERTED = '已转保单',
+  DRAFT = "草稿",
+  PENDING = "待报价",
+  QUOTED = "已报价",
+  ACCEPTED = "已接受",
+  REJECTED = "已拒绝",
+  EXPIRED = "已过期",
+  CONVERTED = "已转保单",
 }
 
 // 保单状态
 export enum PolicyStatus {
-  DRAFT = '草稿',
-  PENDING_PAYMENT = '待支付',
-  EFFECTIVE = '生效中',
-  LAPSED = '失效',
-  SURRENDERED = '已退保',
-  EXPIRED = '已满期',
-  CANCELLED = '已注销',
+  DRAFT = "草稿",
+  PENDING_PAYMENT = "待支付",
+  EFFECTIVE = "生效中",
+  LAPSED = "失效",
+  SURRENDERED = "已退保",
+  EXPIRED = "已满期",
+  CANCELLED = "已注销",
 }
 
 // 询价类型
 export enum QuoteType {
-  INDIVIDUAL = '个人询价',
-  GROUP = '团体询价',
+  INDIVIDUAL = "个人询价",
+  GROUP = "团体询价",
 }
 
 // 投保人信息
 export interface QuotePolicyholder {
   name: string;
-  idType: '身份证' | '护照' | '港澳通行证' | '其他';
+  idType: "身份证" | "护照" | "港澳通行证" | "其他";
   idNumber: string;
-  gender: '男' | '女';
+  gender: "男" | "女";
   birthDate: string;
   phone: string;
   email?: string;
@@ -1082,11 +1220,11 @@ export interface QuotePolicyholder {
 export interface QuoteInsured {
   id: string;
   name: string;
-  idType: '身份证' | '护照' | '港澳通行证' | '其他';
+  idType: "身份证" | "护照" | "港澳通行证" | "其他";
   idNumber: string;
-  gender: '男' | '女';
+  gender: "男" | "女";
   birthDate: string;
-  relationship: '本人' | '配偶' | '子女' | '父母' | '其他';
+  relationship: "本人" | "配偶" | "子女" | "父母" | "其他";
   occupation?: string;
   phone?: string;
 }
@@ -1095,7 +1233,7 @@ export interface QuoteInsured {
 export interface QuotePlanClause {
   clauseCode: string;
   clauseName: string;
-  clauseType: '主险' | '附加险';
+  clauseType: "主险" | "附加险";
   sumInsured: number;
   premium: number;
   deductible?: string;
@@ -1139,10 +1277,10 @@ export interface QuoteRequest {
 export interface PolicyClause {
   clauseCode: string;
   clauseName: string;
-  clauseType: '主险' | '附加险';
+  clauseType: "主险" | "附加险";
   sumInsured: number;
   premium: number;
-  paymentFrequency: '年缴' | '半年缴' | '季缴' | '月缴';
+  paymentFrequency: "年缴" | "半年缴" | "季缴" | "月缴";
   deductible?: string;
   coverageDetails?: CoverageItem[];
   waitingPeriod?: string;
@@ -1153,7 +1291,7 @@ export interface SpecialAgreement {
   id: string;
   title: string;
   content: string;
-  category: '扩展责任' | '限制责任' | '特约事项' | '其他';
+  category: "扩展责任" | "限制责任" | "特约事项" | "其他";
   effectiveDate?: string;
   expiryDate?: string;
 }
@@ -1162,11 +1300,11 @@ export interface SpecialAgreement {
 export interface DeductionRule {
   id: string;
   name: string;
-  type: '绝对免赔额' | '相对免赔额' | '比例免赔' | '累积免赔';
+  type: "绝对免赔额" | "相对免赔额" | "比例免赔" | "累积免赔";
   value: number;
-  unit: '元' | '%' | '次';
+  unit: "元" | "%" | "次";
   description: string;
-  applicableScope: '每次事故' | '年度累积' | '保单期间';
+  applicableScope: "每次事故" | "年度累积" | "保单期间";
 }
 
 // 保单明细表项
@@ -1225,7 +1363,7 @@ export interface InsurancePolicy {
 
   // 金额信息
   totalPremium: number;
-  paymentFrequency: '年缴' | '半年缴' | '季缴' | '月缴';
+  paymentFrequency: "年缴" | "半年缴" | "季缴" | "月缴";
   paidPremium?: number;
 
   // 理赔统计
@@ -1270,61 +1408,61 @@ export interface QuoteListItem {
 // --- START: Types for User Operation Logs ---
 // 用户操作类型枚举（涵盖所有C端用户操作）
 export enum UserOperationType {
-  LOGIN = 'LOGIN',                          // 用户登录
-  LOGOUT = 'LOGOUT',                        // 用户登出
-  REPORT_CLAIM = 'REPORT_CLAIM',            // 提交报案
-  UPLOAD_FILE = 'UPLOAD_FILE',              // 上传文件
-  DELETE_FILE = 'DELETE_FILE',              // 删除文件
-  VIEW_FILE = 'VIEW_FILE',                  // 查看文件
-  SEND_MESSAGE = 'SEND_MESSAGE',            // 发送消息
-  RECEIVE_MESSAGE = 'RECEIVE_MESSAGE',      // 接收消息
-  VIEW_PROGRESS = 'VIEW_PROGRESS',          // 查看进度
-  VIEW_CLAIM_DETAIL = 'VIEW_CLAIM_DETAIL',  // 查看赔案详情
-  SUBMIT_FORM = 'SUBMIT_FORM',              // 提交表单
-  UPDATE_PROFILE = 'UPDATE_PROFILE',        // 更新资料
-  ANALYZE_DOCUMENT = 'ANALYZE_DOCUMENT',    // 文档分析
-  QUICK_ANALYZE = 'QUICK_ANALYZE',          // 快速分析
-  VOICE_TRANSCRIPTION = 'VOICE_TRANSCRIPTION', // 语音转写
-  LIVE_AUDIO_SESSION = 'LIVE_AUDIO_SESSION',   // 实时语音会话
+  LOGIN = "LOGIN", // 用户登录
+  LOGOUT = "LOGOUT", // 用户登出
+  REPORT_CLAIM = "REPORT_CLAIM", // 提交报案
+  UPLOAD_FILE = "UPLOAD_FILE", // 上传文件
+  DELETE_FILE = "DELETE_FILE", // 删除文件
+  VIEW_FILE = "VIEW_FILE", // 查看文件
+  SEND_MESSAGE = "SEND_MESSAGE", // 发送消息
+  RECEIVE_MESSAGE = "RECEIVE_MESSAGE", // 接收消息
+  VIEW_PROGRESS = "VIEW_PROGRESS", // 查看进度
+  VIEW_CLAIM_DETAIL = "VIEW_CLAIM_DETAIL", // 查看赔案详情
+  SUBMIT_FORM = "SUBMIT_FORM", // 提交表单
+  UPDATE_PROFILE = "UPDATE_PROFILE", // 更新资料
+  ANALYZE_DOCUMENT = "ANALYZE_DOCUMENT", // 文档分析
+  QUICK_ANALYZE = "QUICK_ANALYZE", // 快速分析
+  VOICE_TRANSCRIPTION = "VOICE_TRANSCRIPTION", // 语音转写
+  LIVE_AUDIO_SESSION = "LIVE_AUDIO_SESSION", // 实时语音会话
 }
 
 // 用户操作日志主类型
 export interface UserOperationLog {
-  logId: string;                    // 格式: log-YYYYMMDDHHMMSS-random
-  timestamp: string;                // ISO时间戳
+  logId: string; // 格式: log-YYYYMMDDHHMMSS-random
+  timestamp: string; // ISO时间戳
 
   // 用户标识
-  userName: string;                 // 用户名（来自登录）
-  userGender?: string;              // 用户性别
-  sessionId?: string;               // 浏览器会话ID（用于追踪匿名用户）
+  userName: string; // 用户名（来自登录）
+  userGender?: string; // 用户性别
+  sessionId?: string; // 浏览器会话ID（用于追踪匿名用户）
 
   // 操作详情
   operationType: UserOperationType; // 操作类型
-  operationLabel: string;           // 操作描述（中文）
+  operationLabel: string; // 操作描述（中文）
 
   // 关联上下文
-  claimId?: string;                 // 关联的理赔案件ID
-  claimReportNumber?: string;       // 理赔报案号
-  currentStatus?: string;           // 案件当前状态
+  claimId?: string; // 关联的理赔案件ID
+  claimReportNumber?: string; // 理赔报案号
+  currentStatus?: string; // 案件当前状态
 
   // 数据记录
-  inputData?: Record<string, any>;  // 输入数据（表单、参数等）
+  inputData?: Record<string, any>; // 输入数据（表单、参数等）
   outputData?: Record<string, any>; // 输出数据（结果、响应等）
 
   // AI交互（如果涉及AI调用）
   aiInteractions?: AIInteractionLog[]; // AI调用记录数组
 
   // 性能指标
-  duration?: number;                // 操作总耗时（毫秒）
-  success: boolean;                 // 操作是否成功
-  errorMessage?: string;            // 错误信息（如果失败）
+  duration?: number; // 操作总耗时（毫秒）
+  success: boolean; // 操作是否成功
+  errorMessage?: string; // 错误信息（如果失败）
 
   // 技术信息
-  userAgent?: string;               // 浏览器UA
-  deviceType?: 'mobile' | 'desktop' | 'tablet';
+  userAgent?: string; // 浏览器UA
+  deviceType?: "mobile" | "desktop" | "tablet";
 
   // 扩展字段
-  metadata?: Record<string, any>;   // 其他元数据
+  metadata?: Record<string, any>; // 其他元数据
 }
 // --- END: Types for User Operation Logs ---
 
@@ -1332,173 +1470,467 @@ export interface UserOperationLog {
 
 /** 文件类型分类 */
 export type FileTypeCategory =
-  | 'image_invoice'      // 发票图片
-  | 'image_report'       // 检查报告图片
-  | 'image_scene'        // 现场照片
-  | 'image_id'           // 身份证件
-  | 'image_other'        // 其他图片
-  | 'pdf_clause'         // 条款 PDF
-  | 'pdf_report'         // 报告 PDF
-  | 'pdf_invoice'        // 发票 PDF
-  | 'pdf_other'          // 其他 PDF
-  | 'video_scene'        // 事故现场视频
-  | 'video_surveillance' // 监控视频
-  | 'excel_expense'      // 费用清单 Excel
-  | 'excel_other'        // 其他 Excel
-  | 'word_diagnosis'     // 诊断证明 Word
-  | 'word_other'         // 其他 Word
-  | 'other';             // 其他类型
+  | "image_invoice" // 发票图片
+  | "image_report" // 检查报告图片
+  | "image_scene" // 现场照片
+  | "image_id" // 身份证件
+  | "image_other" // 其他图片
+  | "pdf_clause" // 条款 PDF
+  | "pdf_report" // 报告 PDF
+  | "pdf_invoice" // 发票 PDF
+  | "pdf_other" // 其他 PDF
+  | "video_scene" // 事故现场视频
+  | "video_surveillance" // 监控视频
+  | "excel_expense" // 费用清单 Excel
+  | "excel_other" // 其他 Excel
+  | "word_diagnosis" // 诊断证明 Word
+  | "word_other" // 其他 Word
+  | "other"; // 其他类型
 
 /** 解析状态 */
-export type ParseStatus = 'pending' | 'processing' | 'completed' | 'failed';
+export type ParseStatus = "pending" | "processing" | "completed" | "failed";
 
 /** 视频关键帧 */
 export interface KeyFrame {
-  timestamp: number;        // 时间戳（毫秒）
-  imageData: string;        // Base64 图像数据
-  description?: string;     // AI 描述
+  timestamp: number; // 时间戳（毫秒）
+  imageData: string; // Base64 图像数据
+  description?: string; // AI 描述
 }
 
 /** 视频元数据 */
 export interface VideoMetadata {
-  duration: number;         // 时长（秒）
-  width?: number;           // 宽度
-  height?: number;          // 高度
-  keyFrames: KeyFrame[];    // 关键帧
+  duration: number; // 时长（秒）
+  width?: number; // 宽度
+  height?: number; // 高度
+  keyFrames: KeyFrame[]; // 关键帧
   audioTranscript?: string; // 语音转写文本
-  format?: string;          // 视频格式
-  size?: number;            // 文件大小（字节）
+  format?: string; // 视频格式
+  size?: number; // 文件大小（字节）
 }
 
 /** PDF 元数据 */
 export interface PDFMetadata {
-  pageCount: number;        // 页数
-  hasText: boolean;         // 是否包含可提取文本
-  hasImages: boolean;       // 是否包含图片
-  needsOCR: boolean;        // 是否需要 OCR
+  pageCount: number; // 页数
+  hasText: boolean; // 是否包含可提取文本
+  hasImages: boolean; // 是否包含图片
+  needsOCR: boolean; // 是否需要 OCR
 }
 
 /** 文档 AI 分析结果 */
 export interface DocumentAnalysisResult {
-  documentType: string;              // 文档类型
-  confidence: number;                // 整体置信度 0-100
-  extractedFields: Record<string, any>;  // 提取的字段
-  summary?: string;                  // 文档摘要
-  warnings?: string[];               // 警告信息
-  anomalies?: string[];              // 异常发现
+  documentType: string; // 文档类型
+  confidence: number; // 整体置信度 0-100
+  extractedFields: Record<string, any>; // 提取的字段
+  summary?: string; // 文档摘要
+  warnings?: string[]; // 警告信息
+  anomalies?: string[]; // 异常发现
 }
 
 /** 解析后的文档 */
 export interface ParsedDocument {
-  documentId: string;                    // 文档 ID
-  fileName: string;                      // 原始文件名
-  fileType: FileTypeCategory;            // 文件类型分类
-  mimeType: string;                      // MIME 类型
-  ossKey: string;                        // OSS 存储路径
-  ossUrl: string;                        // OSS 访问 URL
-  parseStatus: ParseStatus;              // 解析状态
+  documentId: string; // 文档 ID
+  fileName: string; // 原始文件名
+  fileType: FileTypeCategory; // 文件类型分类
+  mimeType: string; // MIME 类型
+  ossKey: string; // OSS 存储路径
+  ossUrl: string; // OSS 访问 URL
+  parseStatus: ParseStatus; // 解析状态
 
   // 解析结果
-  extractedText?: string;                // 提取的文本
-  structuredData?: Record<string, any>;  // 结构化数据
-  ocrData?: MedicalInvoiceData;          // OCR 识别数据（发票等）
+  extractedText?: string; // 提取的文本
+  structuredData?: Record<string, any>; // 结构化数据
+  ocrData?: MedicalInvoiceData; // OCR 识别数据（发票等）
 
   // 类型特定元数据
-  videoMetadata?: VideoMetadata;         // 视频专用
-  pdfMetadata?: PDFMetadata;             // PDF 专用
+  videoMetadata?: VideoMetadata; // 视频专用
+  pdfMetadata?: PDFMetadata; // PDF 专用
 
   // AI 分析结果
-  aiAnalysis?: DocumentAnalysisResult;   // AI 分析
-  confidence: number;                    // 整体置信度
+  aiAnalysis?: DocumentAnalysisResult; // AI 分析
+  confidence: number; // 整体置信度
 
   // 处理信息
-  parseTime?: string;                    // 解析时间
-  parseDuration?: number;                // 解析耗时（毫秒）
-  errorMessage?: string;                 // 错误信息
+  parseTime?: string; // 解析时间
+  parseDuration?: number; // 解析耗时（毫秒）
+  errorMessage?: string; // 错误信息
 }
 
 /** 交叉验证类型 */
 export type CrossValidationType =
-  | 'amount_consistency'     // 金额一致性
-  | 'date_consistency'       // 日期一致性
-  | 'identity'               // 身份一致性
-  | 'timeline';              // 时间线合理性
+  | "amount_consistency" // 金额一致性
+  | "date_consistency" // 日期一致性
+  | "identity" // 身份一致性
+  | "timeline"; // 时间线合理性
 
 /** 交叉验证严重程度 */
-export type CrossValidationSeverity = 'info' | 'warning' | 'error';
+export type CrossValidationSeverity = "info" | "warning" | "error";
 
 /** 交叉验证结果 */
 export interface CrossValidationResult {
-  type: CrossValidationType;             // 验证类型
-  passed: boolean;                       // 是否通过
-  severity: CrossValidationSeverity;     // 严重程度
-  message: string;                       // 验证消息
+  type: CrossValidationType; // 验证类型
+  passed: boolean; // 是否通过
+  severity: CrossValidationSeverity; // 严重程度
+  message: string; // 验证消息
   details: {
-    field?: string;                      // 涉及字段
-    expected?: number | string;          // 期望值
-    actual?: number | string;            // 实际值
-    difference?: number;                 // 差异
-    relatedDocuments?: string[];         // 相关文档 ID
+    field?: string; // 涉及字段
+    expected?: number | string; // 期望值
+    actual?: number | string; // 实际值
+    difference?: number; // 差异
+    relatedDocuments?: string[]; // 相关文档 ID
   };
 }
 
 /** 材料完整性检查结果 */
 export interface DocumentCompletenessResult {
-  isComplete: boolean;                   // 是否完整
-  completenessScore: number;             // 完整度评分 0-100
-  requiredMaterials: string[];           // 必需材料列表
-  providedMaterials: string[];           // 已提供材料列表
-  missingMaterials: string[];            // 缺失材料列表
-  optionalMaterials: string[];           // 可选材料列表
-  warnings?: string[];                   // 警告信息
+  isComplete: boolean; // 是否完整
+  completenessScore: number; // 完整度评分 0-100
+  requiredMaterials: string[]; // 必需材料列表
+  providedMaterials: string[]; // 已提供材料列表
+  missingMaterials: string[]; // 缺失材料列表
+  optionalMaterials: string[]; // 可选材料列表
+  warnings?: string[]; // 警告信息
 }
 
 /** 人工介入点类型 */
 export type InterventionType =
-  | 'document_incomplete'    // 材料不完整
-  | 'eligibility_doubt'      // 责任存疑
-  | 'amount_anomaly'         // 金额异常
-  | 'high_risk'              // 高风险
-  | 'fraud_suspected'        // 欺诈嫌疑
-  | 'manual_request';        // 用户请求人工
+  | "document_incomplete" // 材料不完整
+  | "eligibility_doubt" // 责任存疑
+  | "amount_anomaly" // 金额异常
+  | "high_risk" // 高风险
+  | "fraud_suspected" // 欺诈嫌疑
+  | "manual_request"; // 用户请求人工
 
 /** 人工介入点 */
 export interface InterventionPoint {
-  id: string;                            // 介入点 ID
-  type: InterventionType;                // 介入类型
-  reason: string;                        // 介入原因
-  timestamp: string;                     // 时间戳
-  requiredAction: string;                // 需要的操作
-  resolved: boolean;                     // 是否已解决
-  resolvedBy?: string;                   // 解决人
-  resolvedAt?: string;                   // 解决时间
-  resolution?: string;                   // 解决方案
+  id: string; // 介入点 ID
+  type: InterventionType; // 介入类型
+  reason: string; // 介入原因
+  timestamp: string; // 时间戳
+  requiredAction: string; // 需要的操作
+  resolved: boolean; // 是否已解决
+  resolvedBy?: string; // 解决人
+  resolvedAt?: string; // 解决时间
+  resolution?: string; // 解决方案
 }
 
 /** 多文件处理请求 */
 export interface MultiFileProcessRequest {
-  claimCaseId: string;                   // 案件 ID
-  productCode: string;                   // 产品代码
+  claimCaseId: string; // 案件 ID
+  productCode: string; // 产品代码
   documents: Array<{
-    ossKey: string;                      // OSS 路径
-    fileName: string;                    // 文件名
-    mimeType: string;                    // MIME 类型
+    ossKey: string; // OSS 路径
+    fileName: string; // 文件名
+    mimeType: string; // MIME 类型
   }>;
   options?: {
-    skipOCR?: boolean;                   // 跳过 OCR
-    skipAI?: boolean;                    // 跳过 AI 分析
-    language?: string;                   // 语言
+    skipOCR?: boolean; // 跳过 OCR
+    skipAI?: boolean; // 跳过 AI 分析
+    language?: string; // 语言
   };
 }
 
 /** 多文件处理响应 */
 export interface MultiFileProcessResponse {
-  claimCaseId: string;                   // 案件 ID
-  documents: ParsedDocument[];           // 解析后的文档
-  crossValidation: CrossValidationResult[];  // 交叉验证结果
-  completeness: DocumentCompletenessResult;  // 完整性检查
-  interventionPoints: InterventionPoint[];   // 人工介入点
-  processingTime: number;                // 总处理时间（毫秒）
+  claimCaseId: string; // 案件 ID
+  documents: ParsedDocument[]; // 解析后的文档
+  crossValidation: CrossValidationResult[]; // 交叉验证结果
+  completeness: DocumentCompletenessResult; // 完整性检查
+  interventionPoints: InterventionPoint[]; // 人工介入点
+  processingTime: number; // 总处理时间（毫秒）
 }
 
 // --- END: Types for Multi-File Processing ---
+
+// --- START: Types for Injury Case Processing ---
+
+/**
+ * 源文件锚点 - 记录 AI 提取结果在原始文件中的位置
+ * 用于人工审核时一键跳转到源文件对应位置
+ */
+export interface SourceAnchor {
+  /** 文件页码，0-based */
+  pageIndex: number;
+  /** OCR 原始文本片段，用于 L2 文本搜索高亮 */
+  rawText?: string;
+  /**
+   * 归一化坐标 [x0, y0, x1, y1]，值域 0-1
+   * 仅 PaddleOCR / GLM layout_parsing 返回此坐标
+   */
+  bbox?: [number, number, number, number];
+  /** 高亮级别：precise=精确框选，text_search=文本搜索，page_only=仅页面定位 */
+  highlightLevel: "precise" | "text_search" | "page_only";
+}
+
+/** 人工复核标记 */
+export interface ReviewFlag {
+  type:
+    | "blurry"
+    | "missing_signature"
+    | "date_inconsistent"
+    | "amount_unclear"
+    | "low_confidence";
+  description: string;
+  pageIndex: number;
+}
+
+/** 扩展的已处理文件（在 ProcessedFile 基础上增加溯源和批次信息） */
+export interface ProcessedFileExtended extends ProcessedFile {
+  /** 所属导入批次 */
+  batchId?: string;
+  /** 文件总页数 */
+  pageCount?: number;
+  /** 每页缩略图 URL 列表 */
+  thumbnailUrls?: string[];
+  /** 文档中最早日期 */
+  dateFrom?: string;
+  /** 文档中最晚日期 */
+  dateTo?: string;
+  /** 出具机构名称 */
+  institution?: string;
+  /** OCR 质量评分 0-1 */
+  ocrQualityScore?: number;
+  /** 需要人工复核的标记列表 */
+  reviewFlags?: ReviewFlag[];
+  /** SHA-256 内容哈希，用于精确去重 */
+  sha256?: string;
+  /** 感知哈希，用于相似图片去重 */
+  pHash?: string;
+  /** 文件来源容器（压缩包/邮件） */
+  sourceContainer?: {
+    type: "zip" | "rar" | "eml" | "msg";
+    containerFileName: string;
+    emailSubject?: string;
+    emailFrom?: string;
+    emailDate?: string;
+    /** 在压缩包中的相对路径 */
+    entryPath?: string;
+  };
+  /** 是否为修订版本 */
+  isRevision?: boolean;
+  /** 被本文件替代的旧文件 ID */
+  supersedesDocumentId?: string;
+  /** 是否已被更新版本替代 */
+  superseded?: boolean;
+  /** 类型化结构化摘要 */
+  documentSummary?: DocumentSummaryBase;
+}
+
+// --- 文档类型化摘要 ---
+
+/** 所有文档摘要的公共基类 */
+export interface DocumentSummaryBase {
+  docId: string;
+  summaryType: string;
+  extractedAt: string;
+  /** AI 提取整体置信度 0-1 */
+  confidence: number;
+  /**
+   * 字段到源锚点的映射
+   * key 为字段名（如 "accidentDate"），value 为该字段在源文件中的位置
+   */
+  sourceAnchors: Record<string, SourceAnchor>;
+}
+
+/** 交警责任认定书摘要 */
+export interface AccidentLiabilitySummary extends DocumentSummaryBase {
+  summaryType: "accident_liability";
+  accidentDate?: string;
+  accidentLocation?: string;
+  parties: Array<{
+    role: string;
+    name: string;
+    /** 责任比例 0-100 */
+    liabilityPct: number;
+  }>;
+  liabilityBasis?: string;
+  documentNumber?: string;
+}
+
+/** 住院病历摘要 */
+export interface InpatientRecordSummary extends DocumentSummaryBase {
+  summaryType: "inpatient_record";
+  admissionDate?: string;
+  dischargeDate?: string;
+  hospitalizationDays?: number;
+  diagnoses: Array<{ name: string; icdCode?: string }>;
+  surgeries: Array<{ name: string; date?: string }>;
+  dischargeCondition?: string;
+  attendingDoctor?: string;
+  ward?: string;
+}
+
+/** 费用发票/清单摘要 */
+export interface ExpenseInvoiceSummary extends DocumentSummaryBase {
+  summaryType: "expense_invoice";
+  invoiceNumber?: string;
+  invoiceDate?: string;
+  totalAmount?: number;
+  institution?: string;
+  breakdown: Array<{
+    /** 费用大类，来自 expenseClassifier */
+    category: string;
+    itemName: string;
+    amount: number;
+  }>;
+}
+
+/** 伤残鉴定报告摘要 */
+export interface DisabilityAssessmentSummary extends DocumentSummaryBase {
+  summaryType: "disability_assessment";
+  /** 伤残等级，如"十级伤残" */
+  disabilityLevel?: string;
+  disabilityBasis?: string;
+  assessmentDate?: string;
+  assessmentInstitution?: string;
+  nursingDependencyLevel?: string;
+}
+
+/** 误工/收入证明摘要 */
+export interface IncomeLostSummary extends DocumentSummaryBase {
+  summaryType: "income_lost";
+  /** 月收入（元） */
+  monthlyIncome?: number;
+  incomeType?: "salary" | "self_employed" | "average";
+  /** 建议误工天数 */
+  lostWorkDays?: number;
+  employer?: string;
+}
+
+/** 诊断证明书摘要 */
+export interface DiagnosisProofSummary extends DocumentSummaryBase {
+  summaryType: "diagnosis_proof";
+  diagnoses: Array<{ name: string; icdCode?: string }>;
+  issueDate?: string;
+  issuingDoctor?: string;
+  institution?: string;
+  restDays?: number;
+}
+
+export type AnyDocumentSummary =
+  | AccidentLiabilitySummary
+  | InpatientRecordSummary
+  | ExpenseInvoiceSummary
+  | DisabilityAssessmentSummary
+  | IncomeLostSummary
+  | DiagnosisProofSummary;
+
+// --- 批次导入 ---
+
+/** 单次批量导入的批次记录 */
+export interface ImportBatch {
+  batchId: string;
+  claimCaseId: string;
+  importedAt: string;
+  importedBy: string;
+  fileCount: number;
+  successCount: number;
+  failCount: number;
+  status: "processing" | "completed" | "partial_failed";
+  sourceType: "manual" | "folder" | "zip" | "email";
+}
+
+// --- 案件聚合与定损 ---
+
+/** 跨文档矛盾检测项 */
+export interface ConflictItem {
+  type:
+    | "date_mismatch"
+    | "amount_mismatch"
+    | "identity_mismatch"
+    | "institution_mismatch";
+  description: string;
+  /** 两份存在矛盾的文件 ID */
+  docIds: [string, string];
+  severity: "warning" | "error";
+}
+
+/** 案件伤情概况（由病历/鉴定报告聚合） */
+export interface InjuryProfile {
+  injuryDescription: string;
+  disabilityLevel?: string;
+  hospitalizationDays: number;
+  treatmentTimeline: Array<{
+    date: string;
+    event: string;
+    sourceDocId: string;
+  }>;
+}
+
+/** 定责结果 */
+export interface LiabilityResult {
+  /** 伤者/被保险人责任比例 0-100 */
+  claimantLiabilityPct: number;
+  /** 第三方责任比例 0-100 */
+  thirdPartyLiabilityPct: number;
+  basis: string;
+  /** 来源文件（认定书） */
+  sourceDocId: string;
+}
+
+/** 费用聚合结果 */
+export interface ExpenseAggregation {
+  medicalTotal: number;
+  nursingDays: number;
+  lostWorkDays: number;
+  /** 月收入（元） */
+  monthlyIncome: number;
+  transportationTotal: number;
+  assessmentFees: number;
+  /** 各项聚合结果来自的文件 ID */
+  sourceDocIds: string[];
+}
+
+/** 定损报告中单项赔偿条目 */
+export interface DamageItem {
+  id: string;
+  category: string;
+  itemName: string;
+  originalAmount: number;
+  approvedAmount: number;
+  formula: string;
+  basis: string;
+  /** 每项赔偿对应的源文件 */
+  sourceDocIds: string[];
+  sourceAnchors?: SourceAnchor[];
+}
+
+/** 完整定损报告 */
+export interface DamageReport {
+  reportId: string;
+  claimCaseId: string;
+  generatedAt: string;
+  generatedBy: "ai" | "manual";
+  items: DamageItem[];
+  subTotal: number;
+  liabilityAdjustment: number;
+  finalAmount: number;
+  calculationFormula: string;
+  regionalStandards: string;
+  reportHtml?: string;
+  status: "draft" | "confirmed";
+}
+
+/** 人伤案件扩展（在 ClaimCase 基础上增加自动化处理结果） */
+export interface ClaimCaseInjury extends ClaimCase {
+  injuryProfile?: InjuryProfile;
+  liabilityResult?: LiabilityResult;
+  expenseAggregation?: ExpenseAggregation;
+  conflictsDetected?: ConflictItem[];
+  damageReport?: DamageReport;
+  importBatches?: ImportBatch[];
+}
+
+/** 重复文件检测结果 */
+export interface DuplicateCheckResult {
+  isDuplicate: boolean;
+  duplicateType?: "exact" | "similar";
+  /** 相似度 0-1 */
+  similarity?: number;
+  existingDocumentId?: string;
+  existingFileName?: string;
+  existingBatchId?: string;
+  existingImportedAt?: string;
+  message?: string;
+}
+
+// --- END: Types for Injury Case Processing ---

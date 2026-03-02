@@ -50,6 +50,35 @@ const ViewClausePage: React.FC<{ clause: Clause; onBack: () => void; }> = ({ cla
                     </div>
 
                     <div className="space-y-6 pt-6 border-t border-gray-200">
+                         <h3 className="text-lg font-medium text-gray-900">关联责任</h3>
+                         {clause.selectedResponsibilities && clause.selectedResponsibilities.length > 0 ? (
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                 {clause.selectedResponsibilities.map((resp) => (
+                                     <div key={resp.id} className="p-4 border border-gray-200 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                                         <div className="flex items-start justify-between mb-2">
+                                             <div className="flex-1">
+                                                 <h4 className="text-sm font-bold text-gray-800">{resp.name}</h4>
+                                                 <p className="text-xs text-gray-500 mt-0.5">代码: {resp.code}</p>
+                                             </div>
+                                             <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded font-medium">
+                                                 {resp.category}
+                                             </span>
+                                         </div>
+                                         {resp.description && (
+                                             <p className="text-xs text-gray-600 leading-relaxed">{resp.description}</p>
+                                         )}
+                                     </div>
+                                 ))}
+                             </div>
+                         ) : (
+                             <div className="text-center py-8 text-gray-400 text-sm border border-dashed border-gray-200 rounded-lg">
+                                 <i className="fas fa-inbox text-2xl mb-2"></i>
+                                 <p>该条款暂未关联任何责任</p>
+                             </div>
+                         )}
+                    </div>
+
+                    <div className="space-y-6 pt-6 border-t border-gray-200">
                          <h3 className="text-lg font-medium text-gray-900">已上传文件</h3>
                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <FileDisplay label="条款原文" fileName={clause.clauseTextFile} />

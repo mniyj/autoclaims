@@ -1,8 +1,20 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { ClaimStatus, Message, ClaimState, ClaimDocument, HistoricalClaim, Policy, Attachment, MedicalInvoiceData, OCRData, DischargeSummaryData } from './types';
+import { ClaimStatus, Message, ClaimState, ClaimDocument, HistoricalClaim, Policy, Attachment, MedicalInvoiceData, OCRData, DischargeSummaryData, IntakeConfig, IntakeField, CalculatedMaterial } from './types';
 import { MOCK_HISTORICAL_CLAIMS } from './constants';
+
+// --- Hospital Info Type ---
+interface HospitalInfo {
+  id: string;
+  name: string;
+  province: string;
+  city: string;
+  level: string;
+  type: string;
+  address?: string;
+  qualifiedForInsurance: boolean;
+}
 import { getAIResponse, analyzeDocument, quickAnalyze, connectLive, transcribeAudio } from './geminiService';
 import { getSignedUrl } from './ossService';
 import { logUserOperation } from './logService';
@@ -82,7 +94,8 @@ const fetchPoliciesFromBackend = async (): Promise<Policy[]> => {
     insuredName: policy.insureds?.[0]?.name || policy.policyholder?.name || '',
     type: policy.productName || policy.productCode || '未知险种',
     validFrom: policy.effectiveDate || policy.issueDate || '',
-    validUntil: policy.expiryDate || ''
+    validUntil: policy.expiryDate || '',
+    productCode: policy.productCode || ''
   })).filter(p => p.id);
 };
 
@@ -367,6 +380,143 @@ const GenericOCRDisplay = ({ data }: { data: OCRData }) => {
   )
 }
 
+// Materials List Card in Conversation
+const MaterialsMessageCard = ({
+  materials,
+  caseNumber,
+  onUpload,
+  onViewSample,
+  onBatchUpload
+}: {
+  materials: CalculatedMaterial[],
+  caseNumber?: string,
+  onUpload: (id: string) => void,
+  onViewSample: (url: string) => void,
+  onBatchUpload: () => void
+}) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const requiredCount = materials.filter(m => m.required).length;
+
+  const displayMaterials = isExpanded ? materials : materials.slice(0, 3);
+  const hasMore = materials.length > 3;
+
+  return (
+    <div className="mt-4 w-full max-w-sm sm:max-w-md animate-enter">
+      <div className="bg-white/90 backdrop-blur-xl rounded-[24px] shadow-xl border border-white/60 overflow-hidden flex flex-col">
+        {/* Header - Success State */}
+        <div className="px-5 py-4 bg-gradient-to-br from-emerald-50 to-white border-b border-emerald-100/50">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-500 shadow-lg shadow-emerald-500/20 flex items-center justify-center text-white text-lg">
+              <i className="fas fa-check-circle"></i>
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-slate-800">报案成功</h3>
+              {caseNumber && (
+                <p className="text-[10px] font-mono text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md mt-1 inline-block border border-emerald-100">
+                  #{caseNumber}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Summary Banner */}
+        <div className="px-5 py-3 bg-blue-50/50 border-b border-blue-100/30">
+          <div className="flex items-center justify-between text-[11px]">
+            <span className="text-blue-700 font-bold flex items-center gap-1.5">
+              <i className="fas fa-clipboard-list text-blue-500"></i>
+              待传: {requiredCount} 份必填 / 共 {materials.length} 份
+            </span>
+            <div className="flex gap-1">
+              {[...Array(materials.length)].map((_, i) => (
+                <div key={i} className={`w-1.5 h-1.5 rounded-full ${i < requiredCount ? 'bg-red-400' : 'bg-blue-300'}`}></div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Materials Scroll Area */}
+        <div className="p-4 space-y-2.5 overflow-hidden">
+          {displayMaterials.map((mat, idx) => (
+            <div
+              key={mat.materialId}
+              className={`group p-3 rounded-2xl border transition-all duration-300 ${mat.required
+                ? 'bg-red-50/30 border-red-100 hover:border-red-200'
+                : 'bg-slate-50/50 border-slate-100 hover:border-slate-200'
+                }`}
+            >
+              <div className="flex items-start gap-3">
+                <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold shrink-0 shadow-sm ${mat.required ? 'bg-red-500 text-white' : 'bg-slate-200 text-slate-500'
+                  }`}>
+                  {idx + 1}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-700 truncate">{mat.materialName}</span>
+                    {mat.required && (
+                      <span className="text-[9px] font-black text-red-500 uppercase tracking-tighter">Required</span>
+                    )}
+                  </div>
+                  {mat.materialDescription && (
+                    <p className="text-[10px] text-slate-500 mt-1 line-clamp-1 group-hover:line-clamp-none transition-all cursor-default">
+                      {mat.materialDescription}
+                    </p>
+                  )}
+                  <div className="flex items-center gap-3 mt-2.5">
+                    {mat.sampleUrl && (
+                      <button
+                        onClick={() => onViewSample(mat.sampleUrl!)}
+                        className="text-[10px] text-blue-600 font-bold hover:text-blue-700 flex items-center gap-1 active:scale-95 transition-transform"
+                      >
+                        <i className="fas fa-eye text-[9px]"></i> 示例图
+                      </button>
+                    )}
+                    <button
+                      onClick={() => onUpload(mat.materialId)}
+                      className="text-[10px] text-blue-500 font-bold hover:text-blue-600 flex items-center gap-1 active:scale-95 transition-transform ml-auto bg-blue-50 px-2 py-1 rounded-md"
+                    >
+                      <i className="fas fa-arrow-up-from-bracket text-[9px]"></i> 点击上传
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {hasMore && (
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="w-full py-2.5 text-[11px] font-bold text-slate-500 hover:text-blue-600 hover:bg-blue-50 border border-slate-100 rounded-xl transition-all flex items-center justify-center gap-2"
+            >
+              {isExpanded ? (
+                <><i className="fas fa-chevron-up"></i> 收起材料列表</>
+              ) : (
+                <><i className="fas fa-chevron-down"></i> 查看其余 {materials.length - 3} 份材料</>
+              )}
+            </button>
+          )}
+        </div>
+
+        {/* Action Footer */}
+        <div className="p-4 pt-1 bg-white flex flex-col gap-2">
+          <button
+            onClick={onBatchUpload}
+            className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold text-xs shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+          >
+            <i className="fas fa-wand-magic-sparkles"></i> 批量上传（智能自动分类）
+          </button>
+          <button
+            onClick={() => { }}
+            className="w-full py-2.5 text-[11px] font-bold text-slate-400 hover:text-slate-600 transition-colors"
+          >
+            稍后在“理赔历史”中补充
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Image Previewer Component
 const ImagePreview = ({ attachment }: { attachment: Attachment }) => {
   const [scale, setScale] = useState(1);
@@ -407,6 +557,185 @@ const ImagePreview = ({ attachment }: { attachment: Attachment }) => {
     </div>
   )
 }
+
+// Hospital Select Field Component
+interface HospitalSelectFieldProps {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  hospitals: HospitalInfo[];
+  isLoading: boolean;
+  error?: string;
+}
+
+const HospitalSelectField: React.FC<HospitalSelectFieldProps> = ({
+  value,
+  onChange,
+  placeholder = '请选择或搜索医院',
+  hospitals,
+  isLoading,
+  error
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState(value || '');
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setSearchQuery(value || '');
+  }, [value]);
+
+  // 点击外部关闭下拉列表
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // 筛选医院
+  const filteredHospitals = hospitals.filter((hospital) => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      hospital.name.toLowerCase().includes(query) ||
+      hospital.city.toLowerCase().includes(query) ||
+      hospital.province.toLowerCase().includes(query) ||
+      (hospital.address && hospital.address.toLowerCase().includes(query))
+    );
+  });
+
+  // 优先显示合规医院
+  const sortedHospitals = [...filteredHospitals].sort((a, b) => {
+    if (a.qualifiedForInsurance === b.qualifiedForInsurance) return 0;
+    return a.qualifiedForInsurance ? -1 : 1;
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setSearchQuery(newValue);
+    onChange(newValue);
+    setIsOpen(true);
+  };
+
+  const handleSelectHospital = (hospital: HospitalInfo) => {
+    setSearchQuery(hospital.name);
+    onChange(hospital.name);
+    setIsOpen(false);
+  };
+
+  const handleInputFocus = () => {
+    setIsOpen(true);
+  };
+
+  const getProvinceLabel = (provinceCode: string): string => {
+    const provinceMap: Record<string, string> = {
+      beijing: '北京', tianjin: '天津', hebei: '河北', shanxi: '山西',
+      neimenggu: '内蒙古', liaoning: '辽宁', jilin: '吉林', heilongjiang: '黑龙江',
+      shanghai: '上海', jiangsu: '江苏', zhejiang: '浙江', anhui: '安徽',
+      fujian: '福建', jiangxi: '江西', shandong: '山东', henan: '河南',
+      hubei: '湖北', hunan: '湖南', guangdong: '广东', guangxi: '广西',
+      hainan: '海南', chongqing: '重庆', sichuan: '四川', guizhou: '贵州',
+      yunnan: '云南', xizang: '西藏', shaanxi: '陕西', gansu: '甘肃',
+      qinghai: '青海', ningxia: '宁夏', xinjiang: '新疆',
+    };
+    return provinceMap[provinceCode] || provinceCode;
+  };
+
+  const inputClass = `w-full px-4 py-3 rounded-xl bg-white/50 border outline-none text-slate-700 font-medium transition-colors ${
+    error ? 'border-red-300 bg-red-50/30' : 'border-white/60 focus:border-blue-400'
+  }`;
+
+  return (
+    <div ref={containerRef} className="relative">
+      <div className="relative">
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={handleInputChange}
+          onFocus={handleInputFocus}
+          placeholder={placeholder}
+          className={inputClass}
+        />
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+          {isLoading ? (
+            <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+          ) : (
+            <i className="fas fa-hospital text-xs"></i>
+          )}
+        </div>
+      </div>
+
+      {/* 下拉列表 */}
+      {isOpen && !isLoading && (
+        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-64 overflow-y-auto">
+          {sortedHospitals.length > 0 ? (
+            <div className="py-1">
+              {sortedHospitals.slice(0, 50).map((hospital) => (
+                <button
+                  key={hospital.id}
+                  type="button"
+                  onClick={() => handleSelectHospital(hospital)}
+                  className="w-full px-4 py-2.5 text-left hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="font-medium text-sm text-slate-700 truncate">
+                          {hospital.name}
+                        </span>
+                        {hospital.qualifiedForInsurance ? (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-50 text-green-700 border border-green-100 shrink-0">
+                            合规
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-50 text-red-600 border border-red-100 shrink-0">
+                            不合规
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <span>{getProvinceLabel(hospital.province)}</span>
+                        <span>·</span>
+                        <span>{hospital.city}</span>
+                        <span>·</span>
+                        <span>{hospital.level}</span>
+                        <span>·</span>
+                        <span>{hospital.type}</span>
+                      </div>
+                      {hospital.address && (
+                        <div className="text-xs text-gray-400 mt-0.5 truncate">
+                          {hospital.address}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </button>
+              ))}
+              {sortedHospitals.length > 50 && (
+                <div className="px-4 py-2 text-xs text-gray-400 text-center border-t border-gray-100">
+                  显示前50条结果，请输入更多关键词缩小范围
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="px-4 py-6 text-center text-sm text-gray-500">
+              <div className="mx-auto h-8 w-8 text-gray-300 mb-2 flex items-center justify-center">
+                <i className="fas fa-hospital text-2xl"></i>
+              </div>
+              <p className="text-gray-600 mb-1">未找到匹配的医院</p>
+              <p className="text-xs text-gray-400">
+                {searchQuery ? '您可以直接输入医院名称' : '请输入关键词搜索医院'}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
 // Auth Component
 const AuthScreen = ({ onLogin }: { onLogin: (name: string, gender: string) => void }) => {
@@ -577,6 +906,37 @@ export const App: React.FC = () => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
 
+  // Dynamic Intake Form State
+  const [selectedIntakeConfig, setSelectedIntakeConfig] = useState<IntakeConfig | null>(null);
+  const [selectedPolicyForForm, setSelectedPolicyForForm] = useState<Policy | null>(null);
+  const [dynamicFormValues, setDynamicFormValues] = useState<Record<string, any>>({});
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
+  // 动态材料清单状态
+  const [calculatedMaterials, setCalculatedMaterials] = useState<Array<{
+    materialId: string;
+    materialName: string;
+    materialDescription?: string;
+    sampleUrl?: string;
+    ossKey?: string;
+    required: boolean;
+    source: string;
+    sourceDetails: string;
+  }> | null>(null);
+  const [isMaterialsLoading, setIsMaterialsLoading] = useState(false);
+  const [showMaterialsList, setShowMaterialsList] = useState(true);
+
+  // 报案后材料清单弹窗状态
+  const [submittedClaimId, setSubmittedClaimId] = useState<string | null>(null);
+  const [submittedMaterials, setSubmittedMaterials] = useState<CalculatedMaterial[]>([]);
+  const [previewSampleUrl, setPreviewSampleUrl] = useState<string | null>(null);
+  const materialUploadInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingMaterialId, setUploadingMaterialId] = useState<string | null>(null);
+
+  // 医院数据状态
+  const [hospitals, setHospitals] = useState<HospitalInfo[]>([]);
+  const [isLoadingHospitals, setIsLoadingHospitals] = useState(false);
+
   // Refs
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -635,6 +995,86 @@ export const App: React.FC = () => {
       setExpandedDocIndex(null);
     }
   }, [fileInspectData]);
+
+  // 加载医院数据
+  useEffect(() => {
+    const fetchHospitals = async () => {
+      setIsLoadingHospitals(true);
+      try {
+        const response = await fetch('/api/hospital-info');
+        if (response.ok) {
+          const data = await response.json();
+          setHospitals(data || []);
+        } else {
+          console.warn('Failed to fetch hospitals:', response.status);
+          setHospitals([]);
+        }
+      } catch (error) {
+        console.error('Error fetching hospitals:', error);
+        setHospitals([]);
+      } finally {
+        setIsLoadingHospitals(false);
+      }
+    };
+    fetchHospitals();
+  }, []);
+
+  // 动态计算理赔材料清单
+  useEffect(() => {
+    const calculateMaterials = async () => {
+      if (!selectedIntakeConfig?.claimMaterials?.enableDynamicCalculation) {
+        setCalculatedMaterials(null);
+        return;
+      }
+      if (!selectedPolicyForForm) return;
+
+      const claimItemFieldId = selectedIntakeConfig.claimMaterials.claimItemFieldId || 'claim_item';
+      const accidentCauseFieldId = selectedIntakeConfig.claimMaterials.accidentCauseFieldId || 'accident_reason';
+
+      const claimItemValue = dynamicFormValues[claimItemFieldId];
+      const accidentCauseValue = dynamicFormValues[accidentCauseFieldId];
+
+      if (!claimItemValue) {
+        setCalculatedMaterials(null);
+        return;
+      }
+
+      setIsMaterialsLoading(true);
+      try {
+        const claimItemIds = Array.isArray(claimItemValue) ? claimItemValue : [claimItemValue];
+
+        const productResponse = await fetch(`/api/products/${encodeURIComponent(selectedPolicyForForm.productCode)}`);
+        const product = productResponse.ok ? await productResponse.json() : null;
+        const categoryCode = product?.racewayId || product?.categoryLevel3Code || '';
+
+        const response = await fetch('/api/claim-materials/calculate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            productCode: selectedPolicyForForm.productCode,
+            categoryCode,
+            claimItemIds,
+            accidentCauseId: accidentCauseValue || undefined
+          })
+        });
+
+        const result = await response.json();
+        if (result.success && result.materials) {
+          setCalculatedMaterials(result.materials);
+        } else {
+          setCalculatedMaterials(null);
+        }
+      } catch (error) {
+        console.error('Failed to calculate materials:', error);
+        setCalculatedMaterials(null);
+      } finally {
+        setIsMaterialsLoading(false);
+      }
+    };
+
+    const timer = setTimeout(calculateMaterials, 300);
+    return () => clearTimeout(timer);
+  }, [dynamicFormValues, selectedIntakeConfig, selectedPolicyForForm]);
 
   const handleViewAttachments = (attachments: Attachment[], context: string) => {
     setFileInspectData(attachments);
@@ -1344,8 +1784,9 @@ export const App: React.FC = () => {
     }
   };
 
-  const handlePolicySelect = (policy: Policy) => {
+  const handlePolicySelect = async (policy: Policy) => {
     setClaimState(prev => ({ ...prev, selectedPolicyId: policy.id }));
+    setSelectedPolicyForForm(policy);
 
     // 1. Add User Message
     const userMsg: Message = {
@@ -1357,24 +1798,45 @@ export const App: React.FC = () => {
     setMessages(prev => [...prev, userMsg]);
     setIsLoading(true);
 
-    // 2. Add Assistant Message with Choice
-    setTimeout(() => {
-      const aiMsg: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: `收到，已为您锁定保单 **${policy.type}** (${policy.id})。✅\n\n为了更准确地记录事故信息，您可以选择以下方式继续：`,
-        timestamp: Date.now() + 1,
-        reportingChoice: true
-      };
-      setMessages(prev => [...prev, aiMsg]);
-      setIsLoading(false);
-    }, 600);
+    // 2. Fetch product intakeConfig by productCode
+    let intakeConfig: IntakeConfig | null = null;
+    if (policy.productCode) {
+      try {
+        const res = await fetch(`/api/products/${encodeURIComponent(policy.productCode)}`);
+        if (res.ok) {
+          const product = await res.json();
+          if (product?.intakeConfig?.fields?.length > 0) {
+            intakeConfig = product.intakeConfig as IntakeConfig;
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to fetch intakeConfig:', err);
+      }
+    }
+    setSelectedIntakeConfig(intakeConfig);
+    setDynamicFormValues({});
+    setFormErrors({});
+
+    // 3. Add Assistant Message with Choice (conditionally show “在线填单”)
+    const hasIntakeFields = !!intakeConfig;
+    const aiMsg: Message = {
+      id: (Date.now() + 1).toString(),
+      role: 'assistant',
+      content: hasIntakeFields
+        ? `收到，已为您锁定保单 **${policy.type}** (${policy.id})。✅\n\n为了更准确地记录事故信息，您可以选择以下方式继续：`
+        : `收到，已为您锁定保单 **${policy.type}** (${policy.id})。✅\n\n请通过语音描述您的事故情况：`,
+      timestamp: Date.now() + 1,
+      reportingChoice: true
+    };
+    setMessages(prev => [...prev, aiMsg]);
+    setIsLoading(false);
+
     logUserOperation({
       operationType: UserOperationType.SUBMIT_FORM,
       operationLabel: '选择保单',
       userName,
       userGender,
-      inputData: { policyId: policy.id, policyType: policy.type }
+      inputData: { policyId: policy.id, policyType: policy.type, hasIntakeConfig: hasIntakeFields }
     });
   };
 
@@ -1390,9 +1852,67 @@ export const App: React.FC = () => {
     });
   };
 
-  const handleFormSubmit = () => {
+  // Check if a follow_up-controlled field should be visible
+  const isFieldVisible = (field: IntakeField): boolean => {
+    if (!selectedIntakeConfig) return false;
+    // Check if any boolean field's follow_up hides this field
+    for (const parentField of selectedIntakeConfig.fields) {
+      if (parentField.type === 'boolean' && parentField.follow_up) {
+        if (parentField.follow_up.extra_fields.includes(field.field_id)) {
+          const parentValue = dynamicFormValues[parentField.field_id];
+          const conditionMet = parentField.follow_up.condition === 'true' ? parentValue === true : parentValue === false;
+          return conditionMet;
+        }
+      }
+    }
+    return true;
+  };
+
+  // Check if a field is a follow_up dependent (hidden by default until parent triggers)
+  const isFollowUpField = (fieldId: string): boolean => {
+    if (!selectedIntakeConfig) return false;
+    return selectedIntakeConfig.fields.some(
+      f => f.type === 'boolean' && f.follow_up?.extra_fields.includes(fieldId)
+    );
+  };
+
+  const validateDynamicForm = (): boolean => {
+    if (!selectedIntakeConfig) return false;
+    const errors: Record<string, string> = {};
+    for (const field of selectedIntakeConfig.fields) {
+      if (isFollowUpField(field.field_id) && !isFieldVisible(field)) continue;
+      if (field.required) {
+        const val = dynamicFormValues[field.field_id];
+        if (val === undefined || val === null || val === '' || (Array.isArray(val) && val.length === 0)) {
+          errors[field.field_id] = `请填写${field.label}`;
+        }
+      }
+    }
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleDynamicFormChange = (fieldId: string, value: any) => {
+    setDynamicFormValues(prev => ({ ...prev, [fieldId]: value }));
+    setFormErrors(prev => {
+      const next = { ...prev };
+      delete next[fieldId];
+      return next;
+    });
+  };
+
+  const handleFormSubmit = async () => {
+    if (!validateDynamicForm()) return;
+
     const reportStart = Date.now();
     const newClaimId = 'CLM' + Date.now().toString().slice(-6);
+    const reportNumber = 'R' + new Date().toISOString().replace(/[-T:.Z]/g, '').slice(0, 14) + Math.random().toString(36).slice(2, 6).toUpperCase();
+    const productName = selectedPolicyForForm?.type || formType;
+    const productCode = selectedPolicyForForm?.productCode || '';
+    const policyNumber = selectedPolicyForForm?.id || '';
+
+    // Build description from dynamic values
+    const description = dynamicFormValues['accident_description'] || dynamicFormValues['injury_description'] || dynamicFormValues['diagnosis_result'] || '';
 
     // Map pending files if any
     const initialDocs: ClaimDocument[] = pendingFiles.map((file, index) => ({
@@ -1410,17 +1930,124 @@ export const App: React.FC = () => {
       analysis: file.analysis
     }));
 
+    // Update local historicalClaims
     setClaimState(prev => ({
       ...prev,
       historicalClaims: [{
-        id: newClaimId, date: new Date().toISOString().split('T')[0], type: formType, status: ClaimStatus.DOCUMENTING,
-        incidentReason: formDescription, documents: initialDocs, timeline: []
+        id: newClaimId, date: new Date().toISOString().split('T')[0], type: productName, status: ClaimStatus.DOCUMENTING,
+        incidentReason: description, documents: initialDocs, timeline: [
+          { date: new Date().toLocaleString(), label: '报案登记', description: '用户通过在线填单提交报案', status: 'completed' }
+        ]
       }, ...(prev.historicalClaims || [])]
     }));
 
-    setPendingFiles([]); // Clear pending
+    // 准备索赔项目IDs
+    const claimItemFieldId = selectedIntakeConfig?.claimMaterials?.claimItemFieldId || 'claim_item';
+    const accidentCauseFieldId = selectedIntakeConfig?.claimMaterials?.accidentCauseFieldId || 'accident_reason';
+    const claimItemValue = dynamicFormValues[claimItemFieldId];
+    const selectedClaimItems = claimItemValue ? (Array.isArray(claimItemValue) ? claimItemValue : [claimItemValue]) : [];
+    const selectedAccidentCauseId = dynamicFormValues[accidentCauseFieldId] || undefined;
+
+    // Create backend claim case record
+    try {
+      await fetch('/api/claim-cases', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: newClaimId,
+          reportNumber,
+          reporter: userName,
+          reportTime: new Date().toLocaleString(),
+          accidentTime: dynamicFormValues['accident_date'] || '',
+          accidentReason: dynamicFormValues['accident_reason'] || dynamicFormValues['death_reason'] || description,
+          accidentLocation: dynamicFormValues['accident_location'] || '',
+          productCode,
+          productName,
+          policyNumber,
+          status: '已报案',
+          operator: userName,
+          intakeFormData: dynamicFormValues,
+          // 动态材料清单相关字段
+          selectedClaimItems,
+          selectedAccidentCauseId,
+          requiredMaterials: calculatedMaterials?.map(m => ({
+            ...m,
+            uploaded: false
+          })) || []
+        })
+      });
+    } catch (err) {
+      console.warn('Failed to create backend claim case:', err);
+    }
+
+    setPendingFiles([]);
     setShowReportingForm(false);
-    handleSend('立案已提交');
+    setDynamicFormValues({});
+    setFormErrors({});
+
+    // 报案后主动调用API获取材料清单
+    try {
+      // 获取产品信息以取得 categoryCode
+      let categoryCode = '';
+      if (productCode) {
+        const productResponse = await fetch(`/api/products/${encodeURIComponent(productCode)}`);
+        if (productResponse.ok) {
+          const product = await productResponse.json();
+          categoryCode = product?.racewayId || product?.categoryLevel3Code || '';
+        }
+      }
+
+      // 调用材料计算 API
+      const materialsResponse = await fetch('/api/claim-materials/calculate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productCode,
+          categoryCode,
+          claimItemIds: selectedClaimItems,
+          accidentCauseId: selectedAccidentCauseId
+        })
+      });
+
+      const materialsResult = await materialsResponse.json();
+
+      if (materialsResponse.ok && materialsResult.success && materialsResult.materials && materialsResult.materials.length > 0) {
+        // 关闭表单
+        setShowReportingForm(false);
+        setSubmittedClaimId(newClaimId);
+        setSubmittedMaterials(materialsResult.materials);
+
+        // 添加报案成功和材料列表消息
+        setMessages(prev => [...prev, {
+          id: Date.now().toString(),
+          role: 'assistant',
+          content: `报案成功！案件编号: **${newClaimId}**\n\n为了尽快为您处理理赔，请按下方清单上传相关证明材料。`,
+          timestamp: Date.now(),
+          reportSuccess: { caseNumber: newClaimId },
+          calculatedMaterials: materialsResult.materials
+        }]);
+      } else {
+        // 没有材料清单或后端返回错误，直接显示报案成功消息
+        setShowReportingForm(false);
+        const errorDetail = materialsResult.error ? `\n(错误详情: ${materialsResult.error})` : "";
+        setMessages(prev => [...prev, {
+          id: Date.now().toString(),
+          role: 'assistant',
+          content: `报案成功！案件编号: **${newClaimId}**\n\n您的报案已提交。${materialsResult.success === false ? "但计算材料清单时遇到了一些问题，请稍后在理赔详情中查看或上传。" : "请上传相关理赔材料以便我们尽快处理您的索赔。"}${errorDetail}`,
+          timestamp: Date.now()
+        }]);
+      }
+    } catch (err) {
+      console.warn('Failed to fetch materials:', err);
+      // API调用失败，仍然显示报案成功消息
+      setMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: `报案成功！案件编号: **${newClaimId}**\n\n您的报案已提交，由于网络连接问题，无法立即显示材料清单，请稍后在理赔历史中查询需要上传的材料。`,
+        timestamp: Date.now()
+      }]);
+    }
+
     logUserOperation({
       operationType: UserOperationType.REPORT_CLAIM,
       operationLabel: '提交报案',
@@ -1428,13 +2055,68 @@ export const App: React.FC = () => {
       userGender,
       claimId: newClaimId,
       inputData: {
-        formType,
-        descriptionLength: formDescription.trim().length,
+        formType: productName,
+        dynamicFields: Object.keys(dynamicFormValues).length,
         pendingFileCount: pendingFiles.length
       },
-      outputData: { claimId: newClaimId },
+      outputData: { claimId: newClaimId, reportNumber },
       duration: Date.now() - reportStart
     });
+  };
+
+
+  // 批量上传材料（系统自动分类）
+  const handleBatchMaterialUpload = () => {
+    fileInputRef.current?.click();
+    logUserOperation({
+      operationType: UserOperationType.UPLOAD_FILE,
+      operationLabel: '批量上传材料',
+      userName,
+      userGender,
+      inputData: { claimId: submittedClaimId }
+    });
+  };
+
+  // 按材料类型手动上传
+  const handleMaterialUploadForType = (materialId: string) => {
+    setUploadingMaterialId(materialId);
+    materialUploadInputRef.current?.click();
+    logUserOperation({
+      operationType: UserOperationType.UPLOAD_FILE,
+      operationLabel: '按类型上传材料',
+      userName,
+      userGender,
+      inputData: { claimId: submittedClaimId, materialId }
+    });
+  };
+
+  // 处理材料类型上传
+  const handleMaterialTypeFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0 || !uploadingMaterialId) return;
+
+    // 复用现有的文件上传逻辑，但带上材料类型ID
+    const fileArray = Array.from(files);
+    const material = submittedMaterials.find(m => m.materialId === uploadingMaterialId);
+
+    // 调用现有的文件处理流程
+    handleFileUpload(e);
+
+    logUserOperation({
+      operationType: UserOperationType.UPLOAD_FILE,
+      operationLabel: '上传指定类型材料',
+      userName,
+      userGender,
+      inputData: {
+        claimId: submittedClaimId,
+        materialId: uploadingMaterialId,
+        materialName: material?.materialName,
+        fileCount: fileArray.length
+      }
+    });
+
+    setUploadingMaterialId(null);
+    e.target.value = '';
   };
 
   // --- Render ---
@@ -1549,18 +2231,11 @@ export const App: React.FC = () => {
                             </div>
                           </div>
                           <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs shadow-sm ${isError ? 'bg-red-500 text-white animate-pulse' : 'bg-green-500 text-white'}`}>
-                            <i className={`fas ${isError ? 'fa-exclamation' : 'fa-check'}`}></i>
+                            <i className={`fas ${isError ? 'fa-circle-exclamation' : 'fa-check'}`}></i>
                           </div>
                         </div>
                       );
                     })()}
-
-                    {/* View All Button if > 1 result */}
-                    {msg.analysisResults.length > 1 && (
-                      <button onClick={() => handleViewAttachments(msg.analysisResults!, '分析结果')} className="w-full py-2.5 bg-white/40 hover:bg-white/60 rounded-lg text-xs font-bold text-slate-600 transition-colors border border-white/40 flex items-center justify-center gap-2">
-                        查看全部 {msg.analysisResults.length} 个结果 <i className="fas fa-chevron-right text-[10px]"></i>
-                      </button>
-                    )}
                   </div>
                 )}
 
@@ -1583,9 +2258,11 @@ export const App: React.FC = () => {
                     <button onClick={toggleVoiceMode} className="glass-btn px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2">
                       <i className="fas fa-microphone text-blue-500"></i> 语音报案
                     </button>
-                    <button onClick={handleOpenReportingForm} className="glass-btn px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2">
-                      <i className="fas fa-pen-to-square text-cyan-500"></i> 在线填单
-                    </button>
+                    {selectedIntakeConfig && (
+                      <button onClick={handleOpenReportingForm} className="glass-btn px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2">
+                        <i className="fas fa-pen-to-square text-cyan-500"></i> 在线填单
+                      </button>
+                    )}
                   </div>
                 )}
 
@@ -1593,6 +2270,87 @@ export const App: React.FC = () => {
                   <div className="flex flex-col gap-2">
                     <button onClick={() => handleIntentChoice('new')} className="glass-btn w-full py-3 rounded-xl text-sm font-bold text-left px-4">🆕 发起新理赔</button>
                     <button onClick={() => handleIntentChoice('supplement')} className="glass-btn w-full py-3 rounded-xl text-sm font-bold text-left px-4">📎 补充至旧案</button>
+                  </div>
+                )}
+
+                {msg.calculatedMaterials && msg.calculatedMaterials.length > 0 && (
+                  <div className="bg-blue-50/50 border border-blue-200 rounded-xl p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                        <i className="fas fa-clipboard-list text-blue-500"></i>
+                        所需理赔材料（{msg.calculatedMaterials.filter(m => m.required).length}份必传 / 共{msg.calculatedMaterials.length}份）
+                      </h4>
+                    </div>
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {msg.calculatedMaterials.map((material) => (
+                        <div
+                          key={material.materialId}
+                          className={`p-3 rounded-lg border transition-all ${
+                            material.required
+                              ? 'bg-white border-blue-200 shadow-sm'
+                              : 'bg-white/60 border-slate-200'
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0 ${
+                              material.required
+                                ? 'bg-blue-100 text-blue-600'
+                                : 'bg-slate-100 text-slate-500'
+                            }`}>
+                              <i className={`fas ${material.required ? 'fa-star' : 'fa-file-lines'}`}></i>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-sm font-bold text-slate-700">{material.materialName}</span>
+                                {material.required && (
+                                  <span className="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-bold">
+                                    必传
+                                  </span>
+                                )}
+                              </div>
+                              {material.materialDescription && (
+                                <p className="text-xs text-slate-500 leading-relaxed mb-2">{material.materialDescription}</p>
+                              )}
+                              {material.sampleUrl && (
+                                <button
+                                  onClick={() => handleViewAttachments([{
+                                    url: material.sampleUrl,
+                                    type: 'image/jpeg',
+                                    name: `${material.materialName}样例`
+                                  }], '材料样例')}
+                                  className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 transition-colors"
+                                >
+                                  <i className="fas fa-image text-[10px]"></i>
+                                  查看样例
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="pt-3 border-t border-blue-200 space-y-3">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => fileInputRef.current?.click()}
+                          className="flex-1 py-2.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold flex items-center justify-center gap-2 transition-colors shadow-sm"
+                        >
+                          <i className="fas fa-file-arrow-up"></i>
+                          批量上传
+                        </button>
+                        <button
+                          onClick={openCamera}
+                          className="flex-1 py-2.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 text-sm font-bold flex items-center justify-center gap-2 transition-colors border border-slate-200 shadow-sm"
+                        >
+                          <i className="fas fa-camera"></i>
+                          拍照上传
+                        </button>
+                      </div>
+                      <p className="text-xs text-slate-500 flex items-center gap-1">
+                        <i className="fas fa-info-circle text-blue-500"></i>
+                        上传的材料将自动识别分类，请确保照片清晰完整
+                      </p>
+                    </div>
                   </div>
                 )}
 
@@ -1863,353 +2621,586 @@ export const App: React.FC = () => {
 
       <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleFileUpload} />
       <input ref={policyUploadRef} type="file" accept=".pdf" className="hidden" onChange={handlePolicyUpload} />
+      <input ref={materialUploadInputRef} type="file" multiple className="hidden" onChange={handleMaterialTypeFileChange} />
 
       {/* --- Overlays --- */}
 
-      {/* Upload Guide Modal */}
-      {showUploadGuide && (
-        <div className="absolute inset-0 z-50 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 animate-enter" onClick={handleCloseUploadGuide}>
-          <div className="bg-white/90 backdrop-blur-xl p-6 rounded-2xl shadow-2xl max-w-sm w-full border border-white/50" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                <i className="fas fa-cloud-arrow-up"></i>
-              </div>
-              <div>
-                <h3 className="font-bold text-slate-800">上传材料指引</h3>
-                <p className="text-xs text-slate-500">SmartClaim AI 智能识别</p>
-              </div>
-            </div>
-
-            <div className="space-y-3 mb-6">
-              <div className="flex gap-3 text-sm text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100">
-                <i className="fas fa-robot mt-1 text-blue-500"></i>
-                <p className="leading-relaxed text-xs">文件上传后，系统将自动进行 <strong>OCR 识别</strong>，提取关键字段（如金额、日期、诊断）并归档。</p>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-xs text-slate-500">
-                  <i className="fas fa-check text-green-500"></i>
-                  <span>支持格式：JPG, PNG, PDF</span>
-                </div>
-                <div className="flex items-center gap-2 text-xs text-slate-500">
-                  <i className="fas fa-check text-green-500"></i>
-                  <span>大小限制：单文件不超过 10MB</span>
-                </div>
-                <div className="flex items-center gap-2 text-xs text-slate-500">
-                  <i className="fas fa-triangle-exclamation text-yellow-500"></i>
-                  <span>请确保图片光线充足，文字清晰可辨</span>
-                </div>
+      {/* Sample Image Preview Modal */}
+      {
+        previewSampleUrl && (
+          <div
+            className="absolute inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-enter"
+            onClick={() => setPreviewSampleUrl(null)}
+          >
+            <div className="relative max-w-2xl max-h-[80vh] w-full" onClick={e => e.stopPropagation()}>
+              <button
+                onClick={() => setPreviewSampleUrl(null)}
+                className="absolute -top-3 -right-3 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center text-slate-600 hover:bg-slate-100 transition-colors z-10"
+              >
+                <i className="fas fa-xmark"></i>
+              </button>
+              <img
+                src={previewSampleUrl}
+                alt="材料样例"
+                className="w-full h-full object-contain rounded-2xl shadow-2xl bg-white"
+              />
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-black/60 text-white text-xs rounded-full">
+                材料样例图片
               </div>
             </div>
-
-            <button
-              onClick={handleUploadGuideChooseFile}
-              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-600/30 transition-all active:scale-95 flex items-center justify-center gap-2"
-            >
-              <i className="fas fa-plus"></i> 选择文件
-            </button>
           </div>
-        </div>
-      )}
+        )
+      }
 
-      {/* Reporting Form Modal */}
-      {showReportingForm && (
-        <div className="absolute inset-0 z-50 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 animate-enter" onClick={handleCloseReportingForm}>
-          <div className="glass-panel w-full max-w-md p-6 rounded-[32px] shadow-2xl" onClick={e => e.stopPropagation()}>
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-slate-800">在线报案</h3>
-              <button onClick={handleCloseReportingForm} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500"><i className="fas fa-xmark"></i></button>
+      {/* Upload Guide Modal */}
+      {
+        showUploadGuide && (
+          <div className="absolute inset-0 z-50 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 animate-enter" onClick={handleCloseUploadGuide}>
+            <div className="bg-white/90 backdrop-blur-xl p-6 rounded-2xl shadow-2xl max-w-sm w-full border border-white/50" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                  <i className="fas fa-cloud-arrow-up"></i>
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-800">上传材料指引</h3>
+                  <p className="text-xs text-slate-500">SmartClaim AI 智能识别</p>
+                </div>
+              </div>
+
+              <div className="space-y-3 mb-6">
+                <div className="flex gap-3 text-sm text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                  <i className="fas fa-robot mt-1 text-blue-500"></i>
+                  <p className="leading-relaxed text-xs">文件上传后，系统将自动进行 <strong>OCR 识别</strong>，提取关键字段（如金额、日期、诊断）并归档。</p>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-xs text-slate-500">
+                    <i className="fas fa-check text-green-500"></i>
+                    <span>支持格式：JPG, PNG, PDF</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-slate-500">
+                    <i className="fas fa-check text-green-500"></i>
+                    <span>大小限制：单文件不超过 10MB</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-slate-500">
+                    <i className="fas fa-triangle-exclamation text-yellow-500"></i>
+                    <span>请确保图片光线充足，文字清晰可辨</span>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={handleUploadGuideChooseFile}
+                className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-600/30 transition-all active:scale-95 flex items-center justify-center gap-2"
+              >
+                <i className="fas fa-plus"></i> 选择文件
+              </button>
             </div>
+          </div>
+        )
+      }
 
-            <div className="space-y-4">
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-400 ml-1">险种类型</label>
-                <select
-                  value={formType}
-                  onChange={(e) => setFormType(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-white/50 border border-white/60 outline-none text-slate-700 font-medium appearance-none"
-                >
-                  <option>车辆理赔</option>
-                  <option>医疗理赔</option>
-                  <option>财产理赔</option>
-                  <option>意外理赔</option>
-                </select>
+      {/* Reporting Form Modal - Dynamic */}
+      {
+        showReportingForm && selectedIntakeConfig && (
+          <div className="absolute inset-0 z-50 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 animate-enter" onClick={handleCloseReportingForm}>
+            <div className="glass-panel w-full max-w-md max-h-[85vh] rounded-[32px] shadow-2xl flex flex-col" onClick={e => e.stopPropagation()}>
+              <div className="flex justify-between items-center p-6 pb-3 shrink-0">
+                <div>
+                  <h3 className="text-xl font-bold text-slate-800">在线报案</h3>
+                  {selectedPolicyForForm && (
+                    <p className="text-xs text-slate-400 mt-0.5">{selectedPolicyForForm.type}</p>
+                  )}
+                </div>
+                <button onClick={handleCloseReportingForm} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500"><i className="fas fa-xmark"></i></button>
               </div>
 
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-400 ml-1">事故描述</label>
-                <textarea
-                  value={formDescription}
-                  onChange={(e) => setFormDescription(e.target.value)}
-                  placeholder="请简要描述事故经过..."
-                  className="w-full px-4 py-3 rounded-xl bg-white/50 border border-white/60 outline-none text-slate-700 h-32 resize-none"
-                ></textarea>
+              <div className="flex-1 overflow-y-auto px-6 pb-2 space-y-4">
+                {selectedIntakeConfig.fields.map((field) => {
+                  // Handle follow_up visibility
+                  if (isFollowUpField(field.field_id) && !isFieldVisible(field)) return null;
+
+                  const value = dynamicFormValues[field.field_id];
+                  const error = formErrors[field.field_id];
+                  const inputClass = `w-full px-4 py-3 rounded-xl bg-white/50 border outline-none text-slate-700 font-medium transition-colors ${error ? 'border-red-300 bg-red-50/30' : 'border-white/60 focus:border-blue-400'}`;
+
+                  return (
+                    <div key={field.field_id} className="space-y-1">
+                      <label className="text-xs font-bold text-slate-400 ml-1">
+                        {field.label}
+                        {field.required && <span className="text-red-400 ml-0.5">*</span>}
+                      </label>
+
+                      {/* text */}
+                      {field.type === 'text' && (
+                        <input type="text" value={value || ''} onChange={e => handleDynamicFormChange(field.field_id, e.target.value)} placeholder={field.placeholder} className={inputClass} />
+                      )}
+
+                      {/* text_with_search */}
+                      {field.type === 'text_with_search' && field.data_source === 'hospital_db' ? (
+                        <HospitalSelectField
+                          value={value || ''}
+                          onChange={(val) => handleDynamicFormChange(field.field_id, val)}
+                          placeholder={field.placeholder}
+                          hospitals={hospitals}
+                          isLoading={isLoadingHospitals}
+                          error={error}
+                        />
+                      ) : field.type === 'text_with_search' ? (
+                        <input type="text" value={value || ''} onChange={e => handleDynamicFormChange(field.field_id, e.target.value)} placeholder={field.placeholder} className={inputClass} />
+                      ) : null}
+
+                      {/* date */}
+                      {field.type === 'date' && (
+                        <input type="date" value={value || ''} onChange={e => handleDynamicFormChange(field.field_id, e.target.value)} className={inputClass} />
+                      )}
+
+                      {/* time */}
+                      {field.type === 'time' && (
+                        <input type="time" value={value || ''} onChange={e => handleDynamicFormChange(field.field_id, e.target.value)} className={inputClass} />
+                      )}
+
+                      {/* number */}
+                      {field.type === 'number' && (
+                        <input type="number" value={value ?? ''} onChange={e => handleDynamicFormChange(field.field_id, e.target.value)} placeholder={field.placeholder} className={inputClass} />
+                      )}
+
+                      {/* textarea */}
+                      {field.type === 'textarea' && (
+                        <textarea value={value || ''} onChange={e => handleDynamicFormChange(field.field_id, e.target.value)} placeholder={field.placeholder} className={`${inputClass} h-24 resize-none`} />
+                      )}
+
+                      {/* enum */}
+                      {field.type === 'enum' && (
+                        <select value={value || ''} onChange={e => handleDynamicFormChange(field.field_id, e.target.value)} className={`${inputClass} appearance-none`}>
+                          <option value="">{field.placeholder || '请选择'}</option>
+                          {field.options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                        </select>
+                      )}
+
+                      {/* enum_with_other */}
+                      {field.type === 'enum_with_other' && (
+                        <>
+                          <select
+                            value={value === '__other__' ? '__other__' : (field.options?.includes(value) ? value : (value ? '__other__' : ''))}
+                            onChange={e => {
+                              if (e.target.value === '__other__') handleDynamicFormChange(field.field_id, '__other__');
+                              else handleDynamicFormChange(field.field_id, e.target.value);
+                            }}
+                            className={`${inputClass} appearance-none`}
+                          >
+                            <option value="">{field.placeholder || '请选择'}</option>
+                            {field.options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                            <option value="__other__">其他</option>
+                          </select>
+                          {(value === '__other__' || (value && !field.options?.includes(value))) && (
+                            <input
+                              type="text"
+                              value={value === '__other__' ? '' : value}
+                              onChange={e => handleDynamicFormChange(field.field_id, e.target.value || '__other__')}
+                              placeholder="请输入..."
+                              className={`${inputClass} mt-2`}
+                            />
+                          )}
+                        </>
+                      )}
+
+                      {/* multi_select */}
+                      {field.type === 'multi_select' && (
+                        <div className="flex flex-wrap gap-2 pt-1">
+                          {field.options?.map(opt => {
+                            const selected = Array.isArray(value) && value.includes(opt);
+                            return (
+                              <button
+                                key={opt}
+                                type="button"
+                                onClick={() => {
+                                  const current = Array.isArray(value) ? value : [];
+                                  const next = selected ? current.filter((v: string) => v !== opt) : [...current, opt];
+                                  handleDynamicFormChange(field.field_id, next);
+                                }}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${selected ? 'bg-blue-500 text-white border-blue-500 shadow-sm' : 'bg-white/40 border-white/60 text-slate-600 hover:bg-white/60'
+                                  }`}
+                              >
+                                {selected && <i className="fas fa-check mr-1 text-[10px]"></i>}{opt}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* boolean */}
+                      {field.type === 'boolean' && (
+                        <div className="grid grid-cols-2 gap-2">
+                          {[{ label: '是', val: true }, { label: '否', val: false }].map(({ label, val }) => (
+                            <button
+                              key={label}
+                              type="button"
+                              onClick={() => handleDynamicFormChange(field.field_id, val)}
+                              className={`py-2.5 rounded-xl text-sm font-bold border transition-all ${value === val ? 'bg-blue-500 text-white border-blue-500 shadow-lg shadow-blue-500/30' : 'bg-white/40 border-white/60 text-slate-500 hover:bg-white/60'
+                                }`}
+                            >
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Error Message */}
+                      {error && (
+                        <div className="text-red-500 text-xs font-medium ml-1 flex items-center gap-1">
+                          <i className="fas fa-circle-exclamation text-[10px]"></i> {error}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {/* 动态材料清单展示 */}
+                {calculatedMaterials && calculatedMaterials.length > 0 && (
+                  <div className="bg-blue-50/50 border border-blue-200 rounded-xl p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                        <i className="fas fa-clipboard-list text-blue-500"></i>
+                        所需理赔材料（{calculatedMaterials.filter(m => m.required).length}份必传 / 共{calculatedMaterials.length}份）
+                      </h4>
+                      <button
+                        onClick={() => setShowMaterialsList(!showMaterialsList)}
+                        className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+                      >
+                        {showMaterialsList ? (
+                          <>
+                            收起 <i className="fas fa-chevron-up text-[10px]"></i>
+                          </>
+                        ) : (
+                          <>
+                            展开 <i className="fas fa-chevron-down text-[10px]"></i>
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    {isMaterialsLoading && (
+                      <div className="flex items-center justify-center py-4">
+                        <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                        <span className="ml-2 text-sm text-slate-500">计算中...</span>
+                      </div>
+                    )}
+
+                    {!isMaterialsLoading && showMaterialsList && (
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {calculatedMaterials.map((material) => (
+                          <div
+                            key={material.materialId}
+                            className={`flex items-start gap-2 p-3 rounded-lg transition-all ${material.required
+                              ? 'bg-red-50 border border-red-200 hover:border-red-300'
+                              : 'bg-white border border-gray-200 hover:border-gray-300'
+                              }`}
+                          >
+                            <i className={`fas fa-${material.required ? 'exclamation-circle text-red-500' : 'info-circle text-gray-400'
+                              } mt-0.5 text-sm`}></i>
+                            <div className="flex-1">
+                              <div className="font-medium text-sm text-slate-800">
+                                {material.materialName}
+                                {material.required && <span className="text-red-500 ml-1">*</span>}
+                              </div>
+                              {material.materialDescription && (
+                                <div className="text-xs text-slate-500 mt-1">
+                                  {material.materialDescription}
+                                </div>
+                              )}
+                              <div className="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                                <i className="fas fa-tag text-[10px]"></i>
+                                来源: {material.sourceDetails}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {!isMaterialsLoading && !showMaterialsList && (
+                      <div className="text-xs text-center text-slate-500">
+                        点击“展开”查看所需材料清单
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
-              <div className="pt-2">
+              <div className="p-6 pt-3 shrink-0">
                 <button
                   onClick={handleFormSubmit}
-                  disabled={!formDescription.trim()}
-                  className="w-full py-3.5 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-600/30 disabled:opacity-50 disabled:shadow-none"
+                  className="w-full py-3.5 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-600/30 active:scale-95 transition-transform"
                 >
                   提交报案
                 </button>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Camera */}
-      {isCameraOpen && (
-        <div className="absolute inset-0 bg-black z-50 flex flex-col">
-          <div className="relative flex-1 bg-black">
-            <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover"></video>
-            <button onClick={closeCamera} className="absolute top-6 right-6 w-10 h-10 bg-black/50 text-white rounded-full flex items-center justify-center"><i className="fas fa-xmark"></i></button>
+      {
+        isCameraOpen && (
+          <div className="absolute inset-0 bg-black z-50 flex flex-col">
+            <div className="relative flex-1 bg-black">
+              <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover"></video>
+              <button onClick={closeCamera} className="absolute top-6 right-6 w-10 h-10 bg-black/50 text-white rounded-full flex items-center justify-center"><i className="fas fa-xmark"></i></button>
+            </div>
+            <div className="h-32 bg-black flex items-center justify-center gap-8">
+              <button onClick={capturePhoto} className="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center"><div className="w-16 h-16 bg-white rounded-full active:scale-90 transition-transform"></div></button>
+            </div>
           </div>
-          <div className="h-32 bg-black flex items-center justify-center gap-8">
-            <button onClick={capturePhoto} className="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center"><div className="w-16 h-16 bg-white rounded-full active:scale-90 transition-transform"></div></button>
-          </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Voice Mode */}
-      {isVoiceMode && (
-        <div className="absolute inset-0 bg-white/90 backdrop-blur-xl z-40 flex flex-col items-center justify-center animate-enter">
-          <div className="relative w-40 h-40 flex items-center justify-center">
-            <div className="absolute inset-0 bg-blue-500/20 rounded-full animate-ping"></div>
-            <div className="w-32 h-32 bg-gradient-to-tr from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-white text-4xl shadow-2xl">
-              <i className="fas fa-microphone"></i>
-            </div>
-          </div>
-          <h3 className="mt-8 text-2xl font-bold text-slate-800">正在聆听...</h3>
-          <p className="text-slate-500 mt-2">请直接描述您的事故情况</p>
-          <button onClick={toggleVoiceMode} className="mt-12 w-16 h-16 rounded-full bg-red-100 text-red-500 flex items-center justify-center text-xl hover:bg-red-200 transition-colors">
-            <i className="fas fa-phone-slash"></i>
-          </button>
-        </div>
-      )}
-
-      {/* Detail View */}
-      {selectedDetailClaim && (
-        <div className="absolute inset-0 z-50 bg-white/50 backdrop-blur-lg flex items-center justify-center p-4">
-          <div className="glass-panel w-full max-w-lg max-h-[85vh] rounded-[32px] overflow-hidden flex flex-col shadow-2xl animate-enter">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white/50">
-              <h2 className="text-xl font-bold text-slate-800">案件详情</h2>
-              <button onClick={handleCloseClaimDetail} className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-slate-200 transition-colors"><i className="fas fa-xmark"></i></button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-6 space-y-8 scroll-smooth">
-              {/* Status Section */}
-              <div className="p-5 bg-gradient-to-br from-blue-50 to-white rounded-2xl border border-blue-100 shadow-sm">
-                <div className="text-xs font-bold text-blue-500 uppercase tracking-wider mb-2">Current Status</div>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-lg font-bold text-slate-800">{getStatusLabel(selectedDetailClaim.status)}</span>
-                  <span className="text-2xl text-blue-500">
-                    <i className={`fas ${selectedDetailClaim.status === ClaimStatus.PAID ? 'fa-circle-check' :
-                      selectedDetailClaim.status === ClaimStatus.REJECTED ? 'fa-circle-xmark' : 'fa-spinner fa-spin'
-                      }`}></i>
-                  </span>
-                </div>
-                {selectedDetailClaim.assessment && (
-                  <div className="text-sm text-slate-600 bg-white/60 p-3 rounded-lg border border-blue-50/50">
-                    {selectedDetailClaim.assessment.reasoning}
-                  </div>
-                )}
-              </div>
-
-              {/* Timeline Section */}
-              {selectedDetailClaim.timeline && selectedDetailClaim.timeline.length > 0 && (
-                <div>
-                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-                    <i className="fas fa-clock-rotate-left"></i> 理赔进度
-                  </h4>
-                  <div className="relative pl-2">
-                    {/* Vertical Connector Line */}
-                    <div className="absolute left-[7px] top-2 bottom-4 w-0.5 bg-slate-100"></div>
-
-                    <div className="space-y-6">
-                      {selectedDetailClaim.timeline.map((event, idx) => (
-                        <div key={idx} className="relative flex gap-4 group">
-                          <div className={`w-4 h-4 rounded-full mt-1 shrink-0 z-10 ring-4 ring-white transition-all duration-500 ${event.status === 'completed' ? 'bg-blue-500 shadow-lg shadow-blue-500/30' :
-                            event.status === 'active' ? 'bg-green-500 animate-pulse shadow-lg shadow-green-500/30' :
-                              'bg-slate-200'
-                            }`}></div>
-                          <div className={`${event.status === 'pending' ? 'opacity-50' : 'opacity-100'}`}>
-                            <div className="text-[10px] font-bold text-slate-400 font-mono tracking-wide mb-0.5 uppercase">{event.date}</div>
-                            <div className={`text-sm font-bold mb-1 ${event.status === 'active' ? 'text-green-600' : 'text-slate-700'}`}>{event.label}</div>
-                            <div className="text-xs text-slate-500 leading-relaxed max-w-[280px]">{event.description}</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Documents Section */}
-              <div>
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-                  <i className="fas fa-folder-open"></i> 关联材料
-                </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {selectedDetailClaim.documents?.map((d, i) => (
-                    <div
-                      key={i}
-                      onClick={() => handleDocumentClick(d)}
-                      className="p-3 bg-white rounded-xl border border-slate-100 flex items-center gap-3 hover:shadow-md transition-shadow cursor-pointer active:scale-95"
-                    >
-                      <div className="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 shrink-0"><i className={`fas ${getDocIcon(d.name)}`}></i></div>
-                      <div className="overflow-hidden min-w-0">
-                        <div className="text-sm font-bold text-slate-700 truncate">{d.name}</div>
-                        <div className="text-xs text-slate-400 flex items-center gap-1">
-                          <i className="fas fa-check-circle text-green-500 text-[10px]"></i> 已验证
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  {(!selectedDetailClaim.documents?.length) && <div className="text-sm text-slate-400 italic py-4 text-center w-full bg-slate-50/50 rounded-xl border border-dashed border-slate-200">暂无关联文件</div>}
-                </div>
+      {
+        isVoiceMode && (
+          <div className="absolute inset-0 bg-white/90 backdrop-blur-xl z-40 flex flex-col items-center justify-center animate-enter">
+            <div className="relative w-40 h-40 flex items-center justify-center">
+              <div className="absolute inset-0 bg-blue-500/20 rounded-full animate-ping"></div>
+              <div className="w-32 h-32 bg-gradient-to-tr from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-white text-4xl shadow-2xl">
+                <i className="fas fa-microphone"></i>
               </div>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* File Inspector Modal (List View) */}
-      {fileInspectData && (
-        <div className="absolute inset-0 z-[100] bg-black/50 backdrop-blur-md flex items-end sm:items-center justify-center sm:p-4 animate-enter">
-          <div className="w-full sm:max-w-lg bg-white h-[90vh] sm:h-auto sm:max-h-[80vh] sm:rounded-[32px] rounded-t-[32px] shadow-2xl overflow-hidden flex flex-col">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white z-10">
-              <h3 className="text-lg font-bold text-slate-800">文件详情 ({fileInspectData.length})</h3>
-              <button onClick={handleCloseFileInspect} className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-slate-200"><i className="fas fa-xmark"></i></button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50">
-              {fileInspectData.map((doc, i) => {
-                const isError = hasMissingFields(doc);
-                const imgSrc = doc.url || (doc.base64 ? `data:${doc.type};base64,${doc.base64}` : '');
-                return (
-                  <div key={i} className={`p-4 rounded-xl shadow-sm border flex gap-4 animate-enter ${isError ? 'bg-red-50 border-red-200' : 'bg-white border-slate-100'}`} style={{ animationDelay: `${i * 50}ms` }}>
-                    <div
-                      className="w-20 h-20 rounded-lg bg-slate-100 shrink-0 overflow-hidden border border-slate-100 relative group cursor-pointer"
-                      onClick={() => handlePreviewAttachment(doc, '文件列表')}
-                    >
-                      {doc.type.includes('image') && imgSrc ? (
-                        <img src={imgSrc} className={`w-full h-full object-cover transition-transform group-hover:scale-110 ${isError ? 'opacity-80' : ''}`} />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-slate-400 text-2xl"><i className={`fas ${getDocIcon(doc.name)}`}></i></div>
-                      )}
-
-                      {/* Zoom Hint Overlay */}
-                      <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <i className="fas fa-magnifying-glass-plus text-white text-lg"></i>
-                      </div>
-
-                      {isError && (
-                        <div className="absolute inset-0 bg-red-500/10 flex items-center justify-center pointer-events-none">
-                          <i className="fas fa-triangle-exclamation text-red-500 text-2xl drop-shadow-sm"></i>
-                        </div>
-                      )}
-                    </div>
-                    <div
-                      className="flex-1 min-w-0 flex flex-col justify-center cursor-pointer"
-                      onClick={() => setExpandedDocIndex(expandedDocIndex === i ? null : i)}
-                    >
-                      <div className="flex justify-between items-start">
-                        <h4 className="font-bold text-slate-800 text-sm truncate mb-1">{doc.name}</h4>
-                        {isError && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleReplaceFileClick();
-                            }}
-                            className="text-[10px] bg-red-100 hover:bg-red-200 text-red-600 px-2 py-1 rounded-full font-bold transition-colors"
-                          >
-                            更换文件
-                          </button>
-                        )}
-                      </div>
-                      <div className="flex flex-wrap gap-2 mb-2">
-                        {isError ? (
-                          <span className="bg-red-100 text-red-600 text-[10px] px-2 py-0.5 rounded-md font-bold border border-red-200 flex items-center gap-1">
-                            <i className="fas fa-times-circle"></i> 缺失信息: {doc.analysis?.missingFields?.join('、')}
-                          </span>
-                        ) : (
-                          <span className="bg-blue-50 text-blue-600 text-[10px] px-2 py-0.5 rounded-md font-semibold border border-blue-100">
-                            {doc.analysis?.category || '分析中...'}
-                          </span>
-                        )}
-
-                        {!isError && doc.analysis?.clarityScore && (
-                          <span className="bg-green-50 text-green-600 text-[10px] px-2 py-0.5 rounded-md border border-green-100">
-                            清晰度 {doc.analysis.clarityScore}%
-                          </span>
-                        )}
-                      </div>
-                      {doc.analysis?.summary && (
-                        <p className={`text-xs line-clamp-2 leading-relaxed p-2 rounded-lg ${isError ? 'text-red-500 bg-red-100/50' : 'text-slate-500 bg-slate-50'}`}>
-                          {doc.analysis.summary}
-                        </p>
-                      )}
-
-                      <div className="mt-2 flex items-center gap-1 text-blue-500 text-xs font-bold select-none">
-                        {expandedDocIndex === i ? '收起详情' : '查看识别详情'}
-                        <i className={`fas fa-chevron-${expandedDocIndex === i ? 'up' : 'down'} transition-transform`}></i>
-                      </div>
-
-                      {expandedDocIndex === i && doc.analysis && (
-                        <div onClick={e => e.stopPropagation()} className="cursor-auto animate-enter origin-top">
-                          {doc.analysis.medicalData ? (
-                            <MedicalDataDisplay data={doc.analysis.medicalData} />
-                          ) : doc.analysis.dischargeSummaryData ? (
-                            <DischargeSummaryDisplay data={doc.analysis.dischargeSummaryData} />
-                          ) : (
-                            <GenericOCRDisplay data={doc.analysis.ocr} />
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="p-4 border-t border-slate-100 bg-white">
-              <button onClick={handleCloseFileInspect} className="w-full py-3.5 rounded-xl bg-slate-900 text-white font-bold shadow-lg shadow-slate-900/20 active:scale-95 transition-all">确认</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Preview Modal (Full Screen) */}
-      {previewAttachment && (
-        <div className="fixed inset-0 z-[200] flex flex-col animate-enter">
-          {/* Top Bar */}
-          <div className="h-16 bg-black/95 text-white flex items-center justify-between px-6 border-b border-white/10 shrink-0">
-            <h3 className="font-bold truncate max-w-md">{previewAttachment.name}</h3>
-            <button onClick={handleClosePreview} className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
-              <i className="fas fa-xmark text-lg"></i>
+            <h3 className="mt-8 text-2xl font-bold text-slate-800">正在聆听...</h3>
+            <p className="text-slate-500 mt-2">请直接描述您的事故情况</p>
+            <button onClick={toggleVoiceMode} className="mt-12 w-16 h-16 rounded-full bg-red-100 text-red-500 flex items-center justify-center text-xl hover:bg-red-200 transition-colors">
+              <i className="fas fa-phone-slash"></i>
             </button>
           </div>
+        )
+      }
 
-          {/* Content Area */}
-          <div className="flex-1 bg-black/90 relative overflow-hidden">
-            {previewAttachment.type.includes('image') && (previewAttachment.base64 || previewAttachment.url) ? (
-              <ImagePreview attachment={previewAttachment} />
-            ) : previewAttachment.type.includes('pdf') && previewAttachment.base64 ? (
-              <iframe
-                src={`data:application/pdf;base64,${previewAttachment.base64}`}
-                className="w-full h-full bg-white"
-                title={previewAttachment.name}
-              ></iframe>
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-white/50 flex-col gap-4">
-                <i className="fas fa-file-circle-question text-6xl"></i>
-                <p>无法预览此文件类型或文件内容未加载</p>
+      {/* Detail View */}
+      {
+        selectedDetailClaim && (
+          <div className="absolute inset-0 z-50 bg-white/50 backdrop-blur-lg flex items-center justify-center p-4">
+            <div className="glass-panel w-full max-w-lg max-h-[85vh] rounded-[32px] overflow-hidden flex flex-col shadow-2xl animate-enter">
+              <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white/50">
+                <h2 className="text-xl font-bold text-slate-800">案件详情</h2>
+                <button onClick={handleCloseClaimDetail} className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-slate-200 transition-colors"><i className="fas fa-xmark"></i></button>
               </div>
-            )}
-          </div>
-        </div>
-      )}
+              <div className="flex-1 overflow-y-auto p-6 space-y-8 scroll-smooth">
+                {/* Status Section */}
+                <div className="p-5 bg-gradient-to-br from-blue-50 to-white rounded-2xl border border-blue-100 shadow-sm">
+                  <div className="text-xs font-bold text-blue-500 uppercase tracking-wider mb-2">Current Status</div>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-lg font-bold text-slate-800">{getStatusLabel(selectedDetailClaim.status)}</span>
+                    <span className="text-2xl text-blue-500">
+                      <i className={`fas ${selectedDetailClaim.status === ClaimStatus.PAID ? 'fa-circle-check' :
+                        selectedDetailClaim.status === ClaimStatus.REJECTED ? 'fa-circle-xmark' : 'fa-spinner fa-spin'
+                        }`}></i>
+                    </span>
+                  </div>
+                  {selectedDetailClaim.assessment && (
+                    <div className="text-sm text-slate-600 bg-white/60 p-3 rounded-lg border border-blue-50/50">
+                      {selectedDetailClaim.assessment.reasoning}
+                    </div>
+                  )}
+                </div>
 
-    </div>
+                {/* Timeline Section */}
+                {selectedDetailClaim.timeline && selectedDetailClaim.timeline.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                      <i className="fas fa-clock-rotate-left"></i> 理赔进度
+                    </h4>
+                    <div className="relative pl-2">
+                      {/* Vertical Connector Line */}
+                      <div className="absolute left-[7px] top-2 bottom-4 w-0.5 bg-slate-100"></div>
+
+                      <div className="space-y-6">
+                        {selectedDetailClaim.timeline.map((event, idx) => (
+                          <div key={idx} className="relative flex gap-4 group">
+                            <div className={`w-4 h-4 rounded-full mt-1 shrink-0 z-10 ring-4 ring-white transition-all duration-500 ${event.status === 'completed' ? 'bg-blue-500 shadow-lg shadow-blue-500/30' :
+                              event.status === 'active' ? 'bg-green-500 animate-pulse shadow-lg shadow-green-500/30' :
+                                'bg-slate-200'
+                              }`}></div>
+                            <div className={`${event.status === 'pending' ? 'opacity-50' : 'opacity-100'}`}>
+                              <div className="text-[10px] font-bold text-slate-400 font-mono tracking-wide mb-0.5 uppercase">{event.date}</div>
+                              <div className={`text-sm font-bold mb-1 ${event.status === 'active' ? 'text-green-600' : 'text-slate-700'}`}>{event.label}</div>
+                              <div className="text-xs text-slate-500 leading-relaxed max-w-[280px]">{event.description}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Documents Section */}
+                <div>
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                    <i className="fas fa-folder-open"></i> 关联材料
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {selectedDetailClaim.documents?.map((d, i) => (
+                      <div
+                        key={i}
+                        onClick={() => handleDocumentClick(d)}
+                        className="p-3 bg-white rounded-xl border border-slate-100 flex items-center gap-3 hover:shadow-md transition-shadow cursor-pointer active:scale-95"
+                      >
+                        <div className="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 shrink-0"><i className={`fas ${getDocIcon(d.name)}`}></i></div>
+                        <div className="overflow-hidden min-w-0">
+                          <div className="text-sm font-bold text-slate-700 truncate">{d.name}</div>
+                          <div className="text-xs text-slate-400 flex items-center gap-1">
+                            <i className="fas fa-check-circle text-green-500 text-[10px]"></i> 已验证
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {(!selectedDetailClaim.documents?.length) && <div className="text-sm text-slate-400 italic py-4 text-center w-full bg-slate-50/50 rounded-xl border border-dashed border-slate-200">暂无关联文件</div>}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      }
+
+      {/* File Inspector Modal (List View) */}
+      {
+        fileInspectData && (
+          <div className="absolute inset-0 z-[100] bg-black/50 backdrop-blur-md flex items-end sm:items-center justify-center sm:p-4 animate-enter">
+            <div className="w-full sm:max-w-lg bg-white h-[90vh] sm:h-auto sm:max-h-[80vh] sm:rounded-[32px] rounded-t-[32px] shadow-2xl overflow-hidden flex flex-col">
+              <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white z-10">
+                <h3 className="text-lg font-bold text-slate-800">文件详情 ({fileInspectData.length})</h3>
+                <button onClick={handleCloseFileInspect} className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-slate-200"><i className="fas fa-xmark"></i></button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50">
+                {fileInspectData.map((doc, i) => {
+                  const isError = hasMissingFields(doc);
+                  const imgSrc = doc.url || (doc.base64 ? `data:${doc.type};base64,${doc.base64}` : '');
+                  return (
+                    <div key={i} className={`p-4 rounded-xl shadow-sm border flex gap-4 animate-enter ${isError ? 'bg-red-50 border-red-200' : 'bg-white border-slate-100'}`} style={{ animationDelay: `${i * 50}ms` }}>
+                      <div
+                        className="w-20 h-20 rounded-lg bg-slate-100 shrink-0 overflow-hidden border border-slate-100 relative group cursor-pointer"
+                        onClick={() => handlePreviewAttachment(doc, '文件列表')}
+                      >
+                        {doc.type.includes('image') && imgSrc ? (
+                          <img src={imgSrc} className={`w-full h-full object-cover transition-transform group-hover:scale-110 ${isError ? 'opacity-80' : ''}`} />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-slate-400 text-2xl"><i className={`fas ${getDocIcon(doc.name)}`}></i></div>
+                        )}
+
+                        {/* Zoom Hint Overlay */}
+                        <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <i className="fas fa-magnifying-glass-plus text-white text-lg"></i>
+                        </div>
+
+                        {isError && (
+                          <div className="absolute inset-0 bg-red-500/10 flex items-center justify-center pointer-events-none">
+                            <i className="fas fa-triangle-exclamation text-red-500 text-2xl drop-shadow-sm"></i>
+                          </div>
+                        )}
+                      </div>
+                      <div
+                        className="flex-1 min-w-0 flex flex-col justify-center cursor-pointer"
+                        onClick={() => setExpandedDocIndex(expandedDocIndex === i ? null : i)}
+                      >
+                        <div className="flex justify-between items-start">
+                          <h4 className="font-bold text-slate-800 text-sm truncate mb-1">{doc.name}</h4>
+                          {isError && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleReplaceFileClick();
+                              }}
+                              className="text-[10px] bg-red-100 hover:bg-red-200 text-red-600 px-2 py-1 rounded-full font-bold transition-colors"
+                            >
+                              更换文件
+                            </button>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap gap-2 mb-2">
+                          {isError ? (
+                            <span className="bg-red-100 text-red-600 text-[10px] px-2 py-0.5 rounded-md font-bold border border-red-200 flex items-center gap-1">
+                              <i className="fas fa-times-circle"></i> 缺失信息: {doc.analysis?.missingFields?.join('、')}
+                            </span>
+                          ) : (
+                            <span className="bg-blue-50 text-blue-600 text-[10px] px-2 py-0.5 rounded-md font-semibold border border-blue-100">
+                              {doc.analysis?.category || '分析中...'}
+                            </span>
+                          )}
+
+                          {!isError && doc.analysis?.clarityScore && (
+                            <span className="bg-green-50 text-green-600 text-[10px] px-2 py-0.5 rounded-md border border-green-100">
+                              清晰度 {doc.analysis.clarityScore}%
+                            </span>
+                          )}
+                        </div>
+                        {doc.analysis?.summary && (
+                          <p className={`text-xs line-clamp-2 leading-relaxed p-2 rounded-lg ${isError ? 'text-red-500 bg-red-100/50' : 'text-slate-500 bg-slate-50'}`}>
+                            {doc.analysis.summary}
+                          </p>
+                        )}
+
+                        <div className="mt-2 flex items-center gap-1 text-blue-500 text-xs font-bold select-none">
+                          {expandedDocIndex === i ? '收起详情' : '查看识别详情'}
+                          <i className={`fas fa-chevron-${expandedDocIndex === i ? 'up' : 'down'} transition-transform`}></i>
+                        </div>
+
+                        {expandedDocIndex === i && doc.analysis && (
+                          <div onClick={e => e.stopPropagation()} className="cursor-auto animate-enter origin-top">
+                            {doc.analysis.medicalData ? (
+                              <MedicalDataDisplay data={doc.analysis.medicalData} />
+                            ) : doc.analysis.dischargeSummaryData ? (
+                              <DischargeSummaryDisplay data={doc.analysis.dischargeSummaryData} />
+                            ) : (
+                              <GenericOCRDisplay data={doc.analysis.ocr} />
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="p-4 border-t border-slate-100 bg-white">
+                <button onClick={handleCloseFileInspect} className="w-full py-3.5 rounded-xl bg-slate-900 text-white font-bold shadow-lg shadow-slate-900/20 active:scale-95 transition-all">确认</button>
+              </div>
+            </div>
+          </div>
+        )
+      }
+
+      {/* Preview Modal (Full Screen) */}
+      {
+        previewAttachment && (
+          <div className="fixed inset-0 z-[200] flex flex-col animate-enter">
+            {/* Top Bar */}
+            <div className="h-16 bg-black/95 text-white flex items-center justify-between px-6 border-b border-white/10 shrink-0">
+              <h3 className="font-bold truncate max-w-md">{previewAttachment.name}</h3>
+              <button onClick={handleClosePreview} className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
+                <i className="fas fa-xmark text-lg"></i>
+              </button>
+            </div>
+
+            {/* Content Area */}
+            <div className="flex-1 bg-black/90 relative overflow-hidden">
+              {previewAttachment.type.includes('image') && (previewAttachment.base64 || previewAttachment.url) ? (
+                <ImagePreview attachment={previewAttachment} />
+              ) : previewAttachment.type.includes('pdf') && previewAttachment.base64 ? (
+                <iframe
+                  src={`data:application/pdf;base64,${previewAttachment.base64}`}
+                  className="w-full h-full bg-white"
+                  title={previewAttachment.name}
+                ></iframe>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-white/50 flex-col gap-4">
+                  <i className="fas fa-file-circle-question text-6xl"></i>
+                  <p>无法预览此文件类型或文件内容未加载</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )
+      }
+
+    </div >
   );
 };

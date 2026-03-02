@@ -1,0 +1,17 @@
+[
+  {
+    "categoryCode": "C0101",
+    "categoryName": "成人综合意外",
+    "materialIds": [
+      "mat-1",
+      "mat-2",
+      "mat-6"
+    ],
+    "materialRequiredMap": {
+      "mat-1": true,
+      "mat-6": true,
+      "mat-2": true
+    },
+    "updatedAt": "2026-03-01T18:23:58.510Z"
+  }
+]

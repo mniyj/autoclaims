@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { type InsurancePolicy, PolicyStatus } from '../types';
+import { type InsurancePolicy, type InsuranceProduct, PolicyStatus } from '../types';
 import Pagination from './ui/Pagination';
 import Select from './ui/Select';
 import Input from './ui/Input';
@@ -13,21 +13,35 @@ interface PolicyListPageProps {
 
 const PolicyListPage: React.FC<PolicyListPageProps> = ({ onViewDetail, onCreatePolicy, onInitiateClaim }) => {
   const [policies, setPolicies] = useState<InsurancePolicy[]>([]);
+  const [products, setProducts] = useState<InsuranceProduct[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchPolicies = async () => {
+    const fetchData = async () => {
       try {
-        const data = await api.policies.list();
-        setPolicies(data as InsurancePolicy[]);
+        const [policiesData, productsData] = await Promise.all([
+          api.policies.list(),
+          api.products.list(),
+        ]);
+        setPolicies(policiesData as InsurancePolicy[]);
+        setProducts(productsData as InsuranceProduct[]);
       } catch (error) {
-        console.error('Failed to fetch policies:', error);
+        console.error('Failed to fetch data:', error);
       } finally {
         setLoading(false);
       }
     };
-    fetchPolicies();
+    fetchData();
   }, []);
+
+  const getLinkedProduct = (productCode: string) => {
+    return products.find(p => p.productCode === productCode);
+  };
+
+  const hasIntakeConfig = (productCode: string) => {
+    const product = getLinkedProduct(productCode);
+    return product?.intakeConfig && (product.intakeConfig.fields.length > 0 || product.intakeConfig.voice_input?.enabled);
+  };
 
   // Filter States
   const [policyNumber, setPolicyNumber] = useState('');
@@ -227,7 +241,20 @@ const PolicyListPage: React.FC<PolicyListPageProps> = ({ onViewDetail, onCreateP
                     {p.policyNumber}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{p.policyholder.name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{p.productName}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                    <div className="flex items-center space-x-2">
+                      <span>{p.productName}</span>
+                      {getLinkedProduct(p.productCode) ? (
+                        hasIntakeConfig(p.productCode) ? (
+                          <span className="px-1.5 py-0.5 text-xs rounded bg-green-50 text-green-700 border border-green-100">报案已配置</span>
+                        ) : (
+                          <span className="px-1.5 py-0.5 text-xs rounded bg-gray-50 text-gray-400 border border-gray-100">报案未配置</span>
+                        )
+                      ) : (
+                        <span className="px-1.5 py-0.5 text-xs rounded bg-yellow-50 text-yellow-600 border border-yellow-100">未关联产品</span>
+                      )}
+                    </div>
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{p.companyName}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{p.effectiveDate}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{p.expiryDate}</td>

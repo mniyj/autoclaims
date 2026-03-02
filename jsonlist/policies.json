@@ -303,9 +303,9 @@
     "id": "policy-004",
     "policyNumber": "PM157CG240579335929704",
     "status": "生效中",
-    "productCode": "PROD004",
-    "productName": "无忧保综合意外险(2022升级版)计划一",
-    "companyName": "众安保险",
+    "productCode": "zhongan2026PAC814",
+    "productName": "无忧保综合意外险(2022升级版)",
+    "companyName": "众安",
     "policyholder": {
       "name": "杨三",
       "idType": "身份证",
@@ -329,82 +329,16 @@
       }
     ],
     "mainClause": {
-      "clauseCode": "CL007",
-      "clauseName": "个人意外伤害保险",
+      "clauseCode": "zhongan2026PAC814",
+      "clauseName": "无忧保综合意外险(2022升级版)",
       "clauseType": "主险",
-      "sumInsured": 100000,
-      "premium": 27.36,
-      "paymentFrequency": "月缴",
-      "coverageDetails": [
-        {
-          "item": "意外身故",
-          "amount": 100000
-        },
-        {
-          "item": "意外伤残",
-          "amount": 100000
-        }
-      ]
+      "sumInsured": 0,
+      "premium": 1,
+      "paymentFrequency": "年缴",
+      "waitingPeriod": "1",
+      "coverageDetails": []
     },
-    "riderClauses": [
-      {
-        "clauseCode": "CL008",
-        "clauseName": "附加意外伤害医疗费用保险",
-        "clauseType": "附加险",
-        "sumInsured": 10000,
-        "premium": 0,
-        "paymentFrequency": "月缴",
-        "deductible": "0免赔，社保内100%赔，社保外80%赔",
-        "coverageDetails": [
-          {
-            "item": "意外医疗",
-            "amount": 10000
-          }
-        ]
-      },
-      {
-        "clauseCode": "CL009",
-        "clauseName": "营运交通工具乘客意外伤害保险",
-        "clauseType": "附加险",
-        "sumInsured": 100000,
-        "premium": 0.96,
-        "paymentFrequency": "月缴",
-        "coverageDetails": [
-          {
-            "item": "营运交通工具乘客意外身故残疾",
-            "amount": 100000
-          }
-        ]
-      },
-      {
-        "clauseCode": "CL010",
-        "clauseName": "驾乘人员意外伤害保险",
-        "clauseType": "附加险",
-        "sumInsured": 100000,
-        "premium": 2.04,
-        "paymentFrequency": "月缴",
-        "coverageDetails": [
-          {
-            "item": "乘坐非营私家车意外身故残疾",
-            "amount": 100000
-          }
-        ]
-      },
-      {
-        "clauseCode": "CL011",
-        "clauseName": "附加意外伤害救护车费用保险",
-        "clauseType": "附加险",
-        "sumInsured": 200,
-        "premium": 0,
-        "paymentFrequency": "月缴",
-        "coverageDetails": [
-          {
-            "item": "意外救护车费用",
-            "amount": 200
-          }
-        ]
-      }
-    ],
+    "riderClauses": [],
     "specialAgreements": [
       {
         "id": "agreement-004-1",
@@ -511,7 +445,7 @@
     "claimCount": 0,
     "totalClaimAmount": 0,
     "createdAt": "2024-05-17T08:00:00Z",
-    "updatedAt": "2026-02-17T03:25:28.865Z",
+    "updatedAt": "2026-03-01T17:54:02.906Z",
     "operator": "admin",
     "notes": "月缴保费2.53元*12期；仅承保1-3类职业；宽限期30天"
   },

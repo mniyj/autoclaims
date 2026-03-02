@@ -1,0 +1,27 @@
+{
+  "name": "adjuster-workbench",
+  "version": "1.0.0",
+  "description": "智能理赔员工作台 - 独立管理系统",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "@ant-design/icons": "^5.2.6",
+    "antd": "^5.22.0",
+    "dayjs": "^1.11.10"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.1",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "typescript": "~5.8.2",
+    "vite": "^6.0.1"
+  },
+  "author": "",
+  "license": "MIT"
+}

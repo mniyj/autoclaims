@@ -408,5 +408,57 @@
         }
       ]
     }
+  },
+  {
+    "code": "za",
+    "shortName": "众安",
+    "hotline": "99999",
+    "basicInfo": {
+      "companyName": "众安财产保险股份有限公司",
+      "companyType": [
+        "民企"
+      ],
+      "registeredCapital": {
+        "value": 10,
+        "unit": "亿"
+      },
+      "address": "黄浦区",
+      "website": "http://www.za.cn"
+    },
+    "solvency": {
+      "rating": "1",
+      "comprehensiveSolvencyRatio": 1,
+      "coreSolvencyRatio": 1,
+      "riskRating": "1",
+      "totalAssets": {
+        "value": 1,
+        "unit": "亿元"
+      },
+      "reportDate": "1",
+      "dividendRealizationRate": "",
+      "financialInvestmentYield": {
+        "annual": 0,
+        "recentThreeYears": 0
+      },
+      "comprehensiveInvestmentYield": {
+        "annual": 0,
+        "recentThreeYears": 0
+      },
+      "sarmraScore": 0
+    },
+    "serviceCapability": {
+      "qualityIndex": 1,
+      "complaintsPer10kPolicies": 1,
+      "complaintsPer100mPremium": 0.998,
+      "complaintsPer10kCustomers": 1,
+      "ratingDate": "1",
+      "complaintDataUpdateDate": "1"
+    },
+    "branchDistribution": {
+      "provinces": []
+    },
+    "shareholders": {
+      "list": []
+    }
   }
 ]

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { type InsurancePolicy, type SpecialAgreement, type DeductionRule, type PolicySchedule, PolicyStatus } from '../types';
+import { type InsurancePolicy, type InsuranceProduct, type Clause, type PolicyClause, type CoverageItem, type SpecialAgreement, type DeductionRule, type PolicySchedule, PolicyStatus } from '../types';
 import Input from './ui/Input';
 import Select from './ui/Select';
 import Modal from './ui/Modal';
@@ -17,11 +17,92 @@ const PolicyDetailPage: React.FC<PolicyDetailPageProps> = ({ policy, onBack, onS
   const [isEditing, setIsEditing] = useState(!policy);
   const [activeTab, setActiveTab] = useState<PolicyTab>('basic');
 
+  // 产品列表 & 条款列表
+  const [products, setProducts] = useState<InsuranceProduct[]>([]);
+  const [clauses, setClauses] = useState<Clause[]>([]);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [productsData, clausesData] = await Promise.all([
+          api.products.list(),
+          api.clauses.list(),
+        ]);
+        setProducts(productsData as InsuranceProduct[]);
+        setClauses(clausesData as Clause[]);
+      } catch (error) {
+        console.error('Failed to fetch products/clauses:', error);
+      }
+    };
+    fetchData();
+  }, []);
+
   const [policyNumber] = useState(policy?.policyNumber || `POL${Date.now()}`);
   const [status, setStatus] = useState<PolicyStatus>(policy?.status || PolicyStatus.DRAFT);
   const [productCode, setProductCode] = useState(policy?.productCode || '');
   const [productName, setProductName] = useState(policy?.productName || '');
   const [companyName, setCompanyName] = useState(policy?.companyName || '');
+
+  // 解析保额字符串为数值（如 "200万" → 2000000, "100000" → 100000）
+  const parseSumInsured = (amount?: string): number => {
+    if (!amount) return 0;
+    const num = parseFloat(amount.replace(/[^\d.]/g, ''));
+    if (isNaN(num)) return 0;
+    if (amount.includes('万')) return num * 10000;
+    if (amount.includes('亿')) return num * 100000000;
+    return num;
+  };
+
+  // 从条款/产品记录构建 PolicyClause
+  const buildPolicyClause = (record: Clause | InsuranceProduct, clauseType: '主险' | '附加险'): PolicyClause => {
+    const coverageDetails: CoverageItem[] = record.coverageDetails || [];
+    const totalSumInsured = coverageDetails.reduce((sum, item) => sum + parseSumInsured(item.amount), 0);
+    const annualPremium = 'annualPremium' in record ? (record as any).annualPremium : 0;
+    const deductible = 'deductible' in record ? (record as any).deductible : undefined;
+
+    return {
+      clauseCode: record.productCode,
+      clauseName: record.regulatoryName,
+      clauseType,
+      sumInsured: totalSumInsured,
+      premium: annualPremium || 0,
+      paymentFrequency: '年缴',
+      waitingPeriod: record.waitingPeriod || undefined,
+      deductible: deductible || undefined,
+      coverageDetails,
+    };
+  };
+
+  const handleProductSelect = (selectedProductCode: string) => {
+    const product = products.find(p => p.productCode === selectedProductCode);
+    if (product) {
+      setProductCode(product.productCode);
+      setProductName(product.regulatoryName);
+      setCompanyName(product.companyName);
+
+      // 自动带入主险条款（优先使用 clauses 数据，字段更完整）
+      const clauseRecord = clauses.find(c => c.productCode === product.productCode);
+      const mainSource = clauseRecord || product;
+      setMainClause(buildPolicyClause(mainSource, '主险'));
+
+      // 自动带入附加险条款（通过产品的 clausesCode 引用）
+      const riderCodes = product.clausesCode || [];
+      if (riderCodes.length > 0) {
+        const riders: PolicyClause[] = riderCodes
+          .map(code => clauses.find(c => c.productCode === code))
+          .filter((c): c is Clause => !!c)
+          .map(c => buildPolicyClause(c, '附加险'));
+        setRiderClauses(riders);
+      } else {
+        setRiderClauses([]);
+      }
+    } else {
+      setProductCode('');
+      setProductName('');
+      setCompanyName('');
+      setMainClause({ clauseCode: '', clauseName: '', clauseType: '主险', sumInsured: 0, premium: 0, paymentFrequency: '年缴' });
+      setRiderClauses([]);
+    }
+  };
 
   // 当事人信息
   const [policyholder, setPolicyholder] = useState(policy?.policyholder || {
@@ -232,8 +313,16 @@ const PolicyDetailPage: React.FC<PolicyDetailPageProps> = ({ policy, onBack, onS
             options={Object.values(PolicyStatus).map(s => ({ label: s, value: s }))}
             disabled={!isEditing}
           />
-          <Input label="产品名称" value={productName} onChange={(e) => isEditing && setProductName(e.target.value)} disabled={!isEditing} />
-          <Input label="保险公司" value={companyName} onChange={(e) => isEditing && setCompanyName(e.target.value)} disabled={!isEditing} />
+          <Select
+            label="关联产品"
+            value={productCode}
+            onChange={(value) => isEditing && handleProductSelect(value)}
+            options={products.map(p => ({ label: `${p.regulatoryName}（${p.companyName}）`, value: p.productCode }))}
+            placeholder="请选择关联产品"
+            disabled={!isEditing}
+          />
+          <Input label="产品名称" value={productName} onChange={() => {}} disabled />
+          <Input label="保险公司" value={companyName} onChange={() => {}} disabled />
           <Input label="生效日期" type="date" value={effectiveDate} onChange={(e) => isEditing && setEffectiveDate(e.target.value)} disabled={!isEditing} />
           <Input label="失效日期" type="date" value={expiryDate} onChange={(e) => isEditing && setExpiryDate(e.target.value)} disabled={!isEditing} />
           <Input label="出单日期" type="date" value={issueDate} onChange={(e) => isEditing && setIssueDate(e.target.value)} disabled={!isEditing} />

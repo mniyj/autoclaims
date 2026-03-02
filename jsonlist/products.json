@@ -147,5 +147,336 @@
     "isOnline": true,
     "salesUrl": "",
     "productAttachments": []
+  },
+  {
+    "productCode": "PROD001",
+    "regulatoryName": "众民保·全民普惠医疗险",
+    "marketingName": "众民保·全民普惠医疗险",
+    "companyName": "众安保险",
+    "version": "1.0",
+    "salesRegions": "全国",
+    "effectiveDate": "2024-01-01",
+    "status": "生效",
+    "primaryCategory": "健康保险",
+    "secondaryCategory": "普惠医疗",
+    "primaryCategoryCode": "A",
+    "secondaryCategoryCode": "A01",
+    "racewayId": "A0101",
+    "racewayName": "短期百万医疗",
+    "clauseType": "主险",
+    "operator": "admin",
+    "coverageDetails": [
+      {
+        "mandatory": true,
+        "id": "1",
+        "name": "基本医疗保险金",
+        "amount": "200万",
+        "details": "含住院、特殊门诊、外购药等费用。"
+      }
+    ],
+    "supportsOnlineClaim": true,
+    "isOnline": true
+  },
+  {
+    "productCode": "PROD002",
+    "regulatoryName": "百万医疗险Pro",
+    "marketingName": "百万医疗险Pro-旗舰版",
+    "companyName": "中国人保",
+    "version": "2024",
+    "salesRegions": "全国",
+    "effectiveDate": "2024-01-01",
+    "status": "生效",
+    "primaryCategory": "健康保险",
+    "secondaryCategory": "住院医疗",
+    "primaryCategoryCode": "A",
+    "secondaryCategoryCode": "A01",
+    "racewayId": "A0101",
+    "racewayName": "短期百万医疗",
+    "clauseType": "主险",
+    "operator": "admin",
+    "coverageDetails": [
+      {
+        "mandatory": true,
+        "id": "1",
+        "name": "一般医疗保险金",
+        "amount": "300万",
+        "details": "含住院、特殊门诊等。"
+      },
+      {
+        "mandatory": true,
+        "id": "2",
+        "name": "重大疾病医疗保险金",
+        "amount": "600万",
+        "details": "含120种重疾医疗。"
+      }
+    ],
+    "supportsOnlineClaim": true,
+    "isOnline": true
+  },
+  {
+    "productCode": "zhongan2026PAC814",
+    "regulatoryName": "无忧保综合意外险(2022升级版)",
+    "companyName": "众安",
+    "status": "生效",
+    "clauseType": "主险",
+    "effectiveDate": "2026-03-01",
+    "discontinuationDate": "2031-03-01",
+    "categoryLevel1Code": "C",
+    "categoryLevel1Name": "意外险",
+    "categoryLevel2Code": "C01",
+    "categoryLevel2Name": "综合意外",
+    "categoryLevel3Code": "C0101",
+    "categoryLevel3Name": "成人综合意外",
+    "primaryCategory": "意外保险",
+    "secondaryCategory": "综合意外",
+    "clauseTextFile": "http://drools-purplespark.oss-cn-beijing.aliyuncs.com/claims/1772387485842-%E6%97%A0%E5%BF%A7%E4%BF%9D%E7%BB%BC%E5%90%88%E6%84%8F%E5%A4%96%E9%99%A9-%E7%94%B5%E5%AD%90%E4%BF%9D%E5%8D%95-%E8%84%B1%E6%95%8F.pdf?OSSAccessKeyId=LTAI5tFnto3xoZD6Km6GRK76&Expires=1772391089&Signature=eT%2FSAHcxjDh3JUiDV1djQXxTnN8%3D",
+    "rateTableFile": "http://drools-purplespark.oss-cn-beijing.aliyuncs.com/claims/1772387492057-%E6%97%A0%E5%BF%A7%E4%BF%9D%E7%BB%BC%E5%90%88%E6%84%8F%E5%A4%96%E9%99%A9-%E7%94%B5%E5%AD%90%E4%BF%9D%E5%8D%95-%E8%84%B1%E6%95%8F.pdf?OSSAccessKeyId=LTAI5tFnto3xoZD6Km6GRK76&Expires=1772391094&Signature=cG7h4awaUx3eLXnm7A5QtXgIG%2FE%3D",
+    "productDescriptionFile": "",
+    "cashValueTableFile": "",
+    "basicSumInsuredTableFile": "",
+    "marketingName": "无忧保综合意外险(2022升级版) - 市场版",
+    "salesUrl": "",
+    "productAttachments": [
+      "http://drools-purplespark.oss-cn-beijing.aliyuncs.com/claims/1772387485842-%E6%97%A0%E5%BF%A7%E4%BF%9D%E7%BB%BC%E5%90%88%E6%84%8F%E5%A4%96%E9%99%A9-%E7%94%B5%E5%AD%90%E4%BF%9D%E5%8D%95-%E8%84%B1%E6%95%8F.pdf?OSSAccessKeyId=LTAI5tFnto3xoZD6Km6GRK76&Expires=1772391089&Signature=eT%2FSAHcxjDh3JUiDV1djQXxTnN8%3D",
+      "http://drools-purplespark.oss-cn-beijing.aliyuncs.com/claims/1772387492057-%E6%97%A0%E5%BF%A7%E4%BF%9D%E7%BB%BC%E5%90%88%E6%84%8F%E5%A4%96%E9%99%A9-%E7%94%B5%E5%AD%90%E4%BF%9D%E5%8D%95-%E8%84%B1%E6%95%8F.pdf?OSSAccessKeyId=LTAI5tFnto3xoZD6Km6GRK76&Expires=1772391094&Signature=cG7h4awaUx3eLXnm7A5QtXgIG%2FE%3D"
+    ],
+    "coverageDetails": [],
+    "valueAddedServices": [
+      {
+        "id": "1772387605173",
+        "name": "1",
+        "description": "1"
+      }
+    ],
+    "productHeroImage": "https://pic1.imgdb.cn/item/69311d3fa11464095f88537e.webp",
+    "productCardImage": "https://pic1.imgdb.cn/item/692dd43cc2ca2fe15cf17332.webp",
+    "productLongImage": [
+      "https://pic1.imgdb.cn/item/69313be6a11464095f8a12dd.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d8.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d7.jpg"
+    ],
+    "productSummary": "1",
+    "version": "1",
+    "salesRegions": "1",
+    "supportsOnlineClaim": true,
+    "isOnline": true,
+    "underwritingAge": "1",
+    "coveragePeriod": "1",
+    "waitingPeriod": "1",
+    "cardMetric1Label": "1",
+    "cardMetric2Label": "1",
+    "cardMetric3Label": "1",
+    "cardMetric3Value": "1",
+    "cardMetric2Value": "1",
+    "cardMetric1Value": "1",
+    "tags": [
+      "1"
+    ],
+    "coverageArea": "1",
+    "hospitalScope": "1",
+    "occupationScope": "1",
+    "claimScope": "1",
+    "hesitationPeriod": "1",
+    "policyEffectiveDate": "1",
+    "annualPremium": 1,
+    "purchaseLimit": 1,
+    "operator": "admin",
+    "intakeConfig": {
+      "fields": [
+        {
+          "field_id": "accident_date",
+          "label": "事故日期",
+          "type": "date",
+          "required": true,
+          "placeholder": "请选择事故发生日期",
+          "validation": {
+            "rule": "lte_today_and_gte_policy_start",
+            "error_msg": "事故日期必须在保单有效期内且不晚于今天"
+          }
+        },
+        {
+          "field_id": "accident_location",
+          "label": "事故地点",
+          "type": "text",
+          "required": true,
+          "placeholder": "请输入事故发生的详细地点"
+        },
+        {
+          "field_id": "accident_reason",
+          "label": "出险原因",
+          "type": "enum",
+          "required": true,
+          "placeholder": "请选择出险原因",
+          "options": []
+        },
+        {
+          "field_id": "claim_item",
+          "label": "索赔项目",
+          "type": "enum",
+          "required": true,
+          "placeholder": "请选择索赔项目",
+          "data_source": "claim_items_db",
+          "options": [
+            "门诊费",
+            "住院费"
+          ]
+        },
+        {
+          "field_id": "injury_description",
+          "label": "伤情描述",
+          "type": "textarea",
+          "required": true,
+          "placeholder": "请详细描述受伤情况",
+          "validation": {
+            "rule": "max_length_500",
+            "error_msg": "伤情描述不能超过500字"
+          }
+        },
+        {
+          "field_id": "treatment_type",
+          "label": "治疗方式",
+          "type": "enum",
+          "required": true,
+          "placeholder": "请选择治疗方式",
+          "options": [
+            "门诊",
+            "住院",
+            "手术",
+            "康复治疗"
+          ]
+        },
+        {
+          "field_id": "hospital_name",
+          "label": "就诊医院",
+          "type": "text_with_search",
+          "required": true,
+          "placeholder": "请搜索或输入就诊医院名称",
+          "data_source": "hospital_db"
+        },
+        {
+          "field_id": "treatment_status",
+          "label": "治疗状态",
+          "type": "enum",
+          "required": true,
+          "placeholder": "请选择当前治疗状态",
+          "options": [
+            "治疗中",
+            "已出院",
+            "已痊愈"
+          ]
+        },
+        {
+          "field_id": "involves_third_party",
+          "label": "是否涉及第三方",
+          "type": "boolean",
+          "required": true,
+          "follow_up": {
+            "condition": "true",
+            "extra_fields": [
+              "third_party_info"
+            ]
+          }
+        },
+        {
+          "field_id": "third_party_info",
+          "label": "第三方信息",
+          "type": "textarea",
+          "required": false,
+          "placeholder": "请描述第三方相关信息"
+        }
+      ],
+      "voice_input": {
+        "enabled": false,
+        "mode": "realtime_or_record"
+      },
+      "claimMaterials": {
+        "extraMaterialIds": [
+          "mat-1",
+          "mat-3",
+          "mat-20",
+          "mat-21",
+          "mat-11",
+          "mat-12",
+          "mat-13",
+          "mat-2",
+          "mat-6",
+          "mat-8"
+        ],
+        "materialOverrides": {
+          "mat-1": {
+            "selected": true,
+            "required": true
+          },
+          "mat-3": {
+            "selected": true,
+            "required": false
+          },
+          "mat-20": {
+            "selected": true,
+            "required": true
+          },
+          "mat-21": {
+            "selected": true,
+            "required": false
+          },
+          "mat-11": {
+            "selected": true,
+            "required": false
+          },
+          "mat-12": {
+            "selected": true,
+            "required": true
+          },
+          "mat-13": {
+            "selected": true,
+            "required": false
+          },
+          "mat-2": {
+            "selected": true,
+            "required": true
+          },
+          "mat-6": {
+            "selected": true,
+            "required": true
+          },
+          "mat-8": {
+            "selected": true,
+            "required": true
+          }
+        }
+      },
+      "accidentCauses": [
+        {
+          "id": "cause-1772387681973",
+          "name": "交通事故",
+          "isCustom": false
+        }
+      ]
+    },
+    "intakeConfigUpdatedAt": "2026-03-01T18:50:49.078Z",
+    "intakeConfigOperator": "admin",
+    "selectedResponsibilities": [
+      {
+        "id": "resp-12",
+        "code": "ACCIDENT_DEATH",
+        "name": "意外身故",
+        "category": "意外保险",
+        "description": "发生意外导致身故给付保险金"
+      },
+      {
+        "id": "resp-13",
+        "code": "ACCIDENT_DISABILITY",
+        "name": "意外伤残",
+        "category": "意外保险",
+        "description": "意外伤残按等级给付保险金"
+      },
+      {
+        "id": "resp-14",
+        "code": "ACCIDENT_MEDICAL",
+        "name": "意外医疗",
+        "category": "意外保险",
+        "description": "意外导致的门诊、住院医疗费用报销"
+      }
+    ]
   }
 ]

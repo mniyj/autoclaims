@@ -1,24 +1,29 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { MOCK_CLAIMS_MATERIALS } from '../constants';
-import { type ClaimsMaterial } from '../types';
-import Pagination from './ui/Pagination';
-import Modal from './ui/Modal';
-import Input from './ui/Input';
-import Textarea from './ui/Textarea';
-import FileUpload from './ui/FileUpload';
-import { api } from '../services/api';
+import React, { useState, useMemo, useEffect } from "react";
+import { MOCK_CLAIMS_MATERIALS } from "../constants";
+import { type ClaimsMaterial } from "../types";
+import Pagination from "./ui/Pagination";
+import Modal from "./ui/Modal";
+import Input from "./ui/Input";
+import Textarea from "./ui/Textarea";
+import FileUpload from "./ui/FileUpload";
+import { api } from "../services/api";
+import { getSignedUrl } from "../services/ossService";
 
 const ClaimsMaterialManagementPage: React.FC = () => {
   const [materials, setMaterials] = useState<ClaimsMaterial[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingMaterial, setEditingMaterial] = useState<Partial<ClaimsMaterial> | null>(null);
+  const [editingMaterial, setEditingMaterial] =
+    useState<Partial<ClaimsMaterial> | null>(null);
 
   // Search State
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
+
+  // Sample preview state
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchMaterials = async () => {
@@ -32,7 +37,7 @@ const ClaimsMaterialManagementPage: React.FC = () => {
           setMaterials(MOCK_CLAIMS_MATERIALS);
         }
       } catch (error) {
-        console.error('Failed to fetch claims materials:', error);
+        console.error("Failed to fetch claims materials:", error);
         setMaterials(MOCK_CLAIMS_MATERIALS);
       }
     };
@@ -42,9 +47,10 @@ const ClaimsMaterialManagementPage: React.FC = () => {
   const filteredMaterials = useMemo(() => {
     if (!searchQuery) return materials;
     const lowerQuery = searchQuery.toLowerCase();
-    return materials.filter(m =>
-      m.name.toLowerCase().includes(lowerQuery) ||
-      m.description.toLowerCase().includes(lowerQuery)
+    return materials.filter(
+      (m) =>
+        m.name.toLowerCase().includes(lowerQuery) ||
+        m.description.toLowerCase().includes(lowerQuery),
     );
   }, [materials, searchQuery]);
 
@@ -58,12 +64,12 @@ const ClaimsMaterialManagementPage: React.FC = () => {
   const handleAdd = () => {
     setEditingMaterial({
       id: `mat-${Date.now()}`,
-      name: '',
-      description: '',
-      sampleUrl: '',
+      name: "",
+      description: "",
+      sampleUrl: "",
+      ossKey: "",
       jsonSchema: '{\n  "type": "object",\n  "properties": {}\n}',
-      required: true,
-      aiAuditPrompt: ''
+      aiAuditPrompt: "",
     });
     setIsModalOpen(true);
   };
@@ -74,34 +80,64 @@ const ClaimsMaterialManagementPage: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm('确定要删除这个理赔材料吗？')) {
-      const newMaterials = materials.filter(m => m.id !== id);
+    if (window.confirm("确定要删除这个理赔材料吗？")) {
+      const newMaterials = materials.filter((m) => m.id !== id);
       try {
         await api.claimsMaterials.saveAll(newMaterials);
         setMaterials(newMaterials);
       } catch (error) {
-        console.error('Failed to delete material:', error);
-        alert('删除失败');
+        console.error("Failed to delete material:", error);
+        alert("删除失败");
       }
+    }
+  };
+
+  const handleViewSample = async (material: ClaimsMaterial) => {
+    try {
+      let url = material.sampleUrl;
+
+      // If we have an ossKey, generate a fresh signed URL
+      if (material.ossKey) {
+        url = await getSignedUrl(material.ossKey);
+      }
+
+      if (url) {
+        // Test if the URL is accessible by trying to load it
+        const testImg = new Image();
+        testImg.onload = () => {
+          setPreviewImageUrl(url);
+        };
+        testImg.onerror = () => {
+          alert("样例图片不存在或已被删除，请重新上传样例图片");
+        };
+        testImg.src = url;
+      } else {
+        alert("无样例图片");
+      }
+    } catch (error) {
+      console.error("Failed to get signed URL:", error);
+      alert("样例图片不存在或已被删除，请重新上传样例图片");
     }
   };
 
   const handleSave = async () => {
     if (!editingMaterial?.name) {
-      alert('请输入材料名称');
+      alert("请输入材料名称");
       return;
     }
 
     try {
-      JSON.parse(editingMaterial.jsonSchema || '{}');
+      JSON.parse(editingMaterial.jsonSchema || "{}");
     } catch (e) {
-      alert('JSON Schema 格式错误');
+      alert("JSON Schema 格式错误");
       return;
     }
 
     let newMaterials = [...materials];
-    if (materials.find(m => m.id === editingMaterial.id)) {
-      newMaterials = materials.map(m => m.id === editingMaterial.id ? editingMaterial as ClaimsMaterial : m);
+    if (materials.find((m) => m.id === editingMaterial.id)) {
+      newMaterials = materials.map((m) =>
+        m.id === editingMaterial.id ? (editingMaterial as ClaimsMaterial) : m,
+      );
     } else {
       newMaterials = [...materials, editingMaterial as ClaimsMaterial];
     }
@@ -112,8 +148,8 @@ const ClaimsMaterialManagementPage: React.FC = () => {
       setIsModalOpen(false);
       setEditingMaterial(null);
     } catch (error) {
-      console.error('Failed to save material:', error);
-      alert('保存失败');
+      console.error("Failed to save material:", error);
+      alert("保存失败");
     }
   };
 
@@ -132,7 +168,12 @@ const ClaimsMaterialManagementPage: React.FC = () => {
       {/* Search Module */}
       <div className="bg-white p-6 rounded-md shadow-sm border border-gray-200">
         <div className="max-w-md">
-          <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1">搜索材料</label>
+          <label
+            htmlFor="search"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            搜索材料
+          </label>
           <div className="flex space-x-2">
             <input
               id="search"
@@ -143,7 +184,7 @@ const ClaimsMaterialManagementPage: React.FC = () => {
               className="flex-1 h-9 px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 text-sm"
             />
             <button
-              onClick={() => setSearchQuery('')}
+              onClick={() => setSearchQuery("")}
               className="h-9 px-4 bg-gray-100 text-gray-600 text-sm font-medium rounded-md hover:bg-gray-200 transition"
             >
               重置
@@ -158,29 +199,61 @@ const ClaimsMaterialManagementPage: React.FC = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">材料名称</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">必传</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">说明</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">样例</th>
-                <th className="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">操作</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  材料名称
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  说明
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  转人工置信度
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  样例
+                </th>
+                <th className="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  操作
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {paginatedMaterials.length > 0 ? (
                 paginatedMaterials.map((material) => (
-                  <tr key={material.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{material.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {material.required ? (
-                        <span className="px-2 py-0.5 bg-red-50 text-red-600 text-xs rounded-full border border-red-100">是</span>
+                  <tr
+                    key={material.id}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {material.name}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600 max-w-xs truncate">
+                      {material.description}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      {material.confidenceThreshold !== undefined ? (
+                        <span
+                          className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
+                            material.confidenceThreshold >= 0.8
+                              ? "bg-green-50 text-green-700"
+                              : material.confidenceThreshold >= 0.6
+                                ? "bg-yellow-50 text-yellow-700"
+                                : "bg-red-50 text-red-700"
+                          }`}
+                        >
+                          {(material.confidenceThreshold * 100).toFixed(0)}%
+                        </span>
                       ) : (
-                        <span className="px-2 py-0.5 bg-gray-50 text-gray-500 text-xs rounded-full border border-gray-100">否</span>
+                        <span className="text-gray-400">未设置</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600 max-w-xs truncate">{material.description}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {material.sampleUrl ? (
-                        <a href={material.sampleUrl} target="_blank" rel="noopener noreferrer" className="text-brand-blue-600 hover:underline">查看样例</a>
+                      {material.sampleUrl || material.ossKey ? (
+                        <button
+                          onClick={() => handleViewSample(material)}
+                          className="text-brand-blue-600 hover:underline"
+                        >
+                          查看样例
+                        </button>
                       ) : (
                         <span className="text-gray-400">无</span>
                       )}
@@ -203,7 +276,10 @@ const ClaimsMaterialManagementPage: React.FC = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={4} className="px-6 py-8 text-center text-sm text-gray-500">
+                  <td
+                    colSpan={5}
+                    className="px-6 py-8 text-center text-sm text-gray-500"
+                  >
                     暂无符合条件的材料数据
                   </td>
                 </tr>
@@ -226,7 +302,12 @@ const ClaimsMaterialManagementPage: React.FC = () => {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={editingMaterial?.id?.startsWith('mat-') && !materials.find(m => m.id === editingMaterial.id) ? '新增理赔材料' : '修改理赔材料'}
+        title={
+          editingMaterial?.id?.startsWith("mat-") &&
+          !materials.find((m) => m.id === editingMaterial.id)
+            ? "新增理赔材料"
+            : "修改理赔材料"
+        }
         footer={
           <div className="flex justify-end space-x-3">
             <button
@@ -245,32 +326,27 @@ const ClaimsMaterialManagementPage: React.FC = () => {
         }
       >
         <div className="space-y-4">
-          <div className="flex justify-between items-start space-x-4">
-            <div className="flex-1">
-              <Input
-                label="材料名称"
-                value={editingMaterial?.name || ''}
-                onChange={(e) => setEditingMaterial(prev => ({ ...prev!, name: e.target.value }))}
-                placeholder="请输入材料名称"
-                required
-              />
-            </div>
-            <div className="pt-7">
-              <label className="flex items-center space-x-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={editingMaterial?.required || false}
-                  onChange={(e) => setEditingMaterial(prev => ({ ...prev!, required: e.target.checked }))}
-                  className="rounded border-gray-300 text-brand-blue-600 focus:ring-brand-blue-500"
-                />
-                <span className="text-sm font-medium text-gray-700">是否必传</span>
-              </label>
-            </div>
-          </div>
+          <Input
+            label="材料名称"
+            value={editingMaterial?.name || ""}
+            onChange={(e) =>
+              setEditingMaterial((prev) => ({
+                ...prev!,
+                name: e.target.value,
+              }))
+            }
+            placeholder="请输入材料名称"
+            required
+          />
           <Textarea
             label="材料说明"
-            value={editingMaterial?.description || ''}
-            onChange={(e) => setEditingMaterial(prev => ({ ...prev!, description: e.target.value }))}
+            value={editingMaterial?.description || ""}
+            onChange={(e) =>
+              setEditingMaterial((prev) => ({
+                ...prev!,
+                description: e.target.value,
+              }))
+            }
             placeholder="请输入材料说明"
             rows={3}
           />
@@ -278,29 +354,111 @@ const ClaimsMaterialManagementPage: React.FC = () => {
             label="材料样例"
             id="sample-upload"
             value={editingMaterial?.sampleUrl}
-            onChange={(val) => setEditingMaterial(prev => ({ ...prev!, sampleUrl: val }))}
+            onChange={(url, ossKey) =>
+              setEditingMaterial((prev) => ({
+                ...prev!,
+                sampleUrl: url,
+                ossKey: ossKey || prev?.ossKey,
+              }))
+            }
             accept="image/*"
             helpText="上传材料样例图片，支持 jpg, png, webp 等格式"
           />
           <Textarea
             label="AI 审核 Prompt"
-            value={editingMaterial?.aiAuditPrompt || ''}
-            onChange={(e) => setEditingMaterial(prev => ({ ...prev!, aiAuditPrompt: e.target.value }))}
+            value={editingMaterial?.aiAuditPrompt || ""}
+            onChange={(e) =>
+              setEditingMaterial((prev) => ({
+                ...prev!,
+                aiAuditPrompt: e.target.value,
+              }))
+            }
             placeholder="用于指示 AI 审核该材料的规则、要点和输出格式"
             rows={8}
           />
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700">JSON Schema</label>
+            <label className="block text-sm font-medium text-gray-700">
+              转人工置信度阈值（%）
+            </label>
+            <div className="flex items-center space-x-2">
+              <input
+                type="number"
+                min={0}
+                max={100}
+                step={1}
+                value={
+                  editingMaterial?.confidenceThreshold != null
+                    ? Math.round(editingMaterial.confidenceThreshold * 100)
+                    : ""
+                }
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setEditingMaterial((prev) => ({
+                    ...prev!,
+                    confidenceThreshold:
+                      val === "" ? undefined : Number(val) / 100,
+                  }));
+                }}
+                placeholder="如：80"
+                className="w-32 h-9 px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 text-sm"
+              />
+              <span className="text-sm text-gray-500">%</span>
+            </div>
+            <p className="text-xs text-gray-500">
+              当 AI
+              识别结果的置信度低于此值时，该材料将自动转人工复核。留空表示不启用此规则。
+            </p>
+          </div>
+          <div className="space-y-1">
+            <label className="block text-sm font-medium text-gray-700">
+              JSON Schema
+            </label>
             <textarea
               className="w-full h-48 px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 text-sm font-mono"
-              value={editingMaterial?.jsonSchema || ''}
-              onChange={(e) => setEditingMaterial(prev => ({ ...prev!, jsonSchema: e.target.value }))}
+              value={editingMaterial?.jsonSchema || ""}
+              onChange={(e) =>
+                setEditingMaterial((prev) => ({
+                  ...prev!,
+                  jsonSchema: e.target.value,
+                }))
+              }
               placeholder='{ "type": "object", ... }'
             />
-            <p className="text-xs text-gray-500">用于 OCR 提取信息的 JSON Schema 结构</p>
+            <p className="text-xs text-gray-500">
+              用于 OCR 提取信息的 JSON Schema 结构
+            </p>
           </div>
         </div>
       </Modal>
+
+      {/* Sample Image Preview Modal */}
+      {previewImageUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4"
+          onClick={() => setPreviewImageUrl(null)}
+        >
+          <div
+            className="relative max-w-4xl max-h-[90vh] w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setPreviewImageUrl(null)}
+              className="absolute -top-10 right-0 text-white hover:text-gray-300 text-2xl font-bold"
+            >
+              ✕
+            </button>
+            <img
+              src={previewImageUrl}
+              alt="材料样例"
+              className="w-full h-full object-contain rounded-lg"
+              onError={() => {
+                alert("图片加载失败");
+                setPreviewImageUrl(null);
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

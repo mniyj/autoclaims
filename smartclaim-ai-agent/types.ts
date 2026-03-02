@@ -15,6 +15,45 @@ export interface Policy {
   type: string;
   validUntil: string;
   validFrom: string;
+  productCode?: string;
+}
+
+// --- Intake Config Types (mirrored from parent project) ---
+export type IntakeFieldType =
+  | 'text'
+  | 'date'
+  | 'time'
+  | 'number'
+  | 'textarea'
+  | 'enum'
+  | 'enum_with_other'
+  | 'multi_select'
+  | 'text_with_search'
+  | 'boolean';
+
+export interface IntakeField {
+  field_id: string;
+  label: string;
+  type: IntakeFieldType;
+  required: boolean;
+  placeholder?: string;
+  options?: string[];
+  validation?: { rule: string; error_msg: string };
+  follow_up?: { condition: string; extra_fields: string[] };
+  data_source?: string;
+}
+
+export interface IntakeConfig {
+  fields: IntakeField[];
+  voice_input: { enabled: boolean; mode: string; slot_filling_prompt?: string };
+  claimMaterials?: {
+    extraMaterialIds: string[];
+    materialOverrides?: Record<string, { selected: boolean; required: boolean }>;
+    // 动态材料清单计算配置
+    enableDynamicCalculation?: boolean;
+    claimItemFieldId?: string;
+    accidentCauseFieldId?: string;
+  };
 }
 
 export interface ClaimEvent {
@@ -56,6 +95,16 @@ export interface Attachment {
   analysis?: DocumentAnalysis;
 }
 
+export interface CalculatedMaterial {
+  materialId: string;
+  materialName: string;
+  materialDescription?: string;
+  sampleUrl?: string;
+  required: boolean;
+  source: string;
+  sourceDetails: string;
+}
+
 export interface Message {
   id: string;
   role: 'user' | 'assistant';
@@ -63,12 +112,16 @@ export interface Message {
   timestamp: number;
   attachments?: Attachment[]; // Support multiple files
   analysisResults?: Attachment[]; // Structured analysis results
-  claimsList?: HistoricalClaim[]; 
+  claimsList?: HistoricalClaim[];
   reportingChoice?: boolean;
   policySelection?: boolean;
   intentChoice?: boolean;
   policies?: Policy[];
   groundingLinks?: { uri: string; title: string }[];
+  calculatedMaterials?: CalculatedMaterial[];
+  reportSuccess?: {
+    caseNumber: string;
+  };
 }
 
 export interface MedicalInvoiceData {

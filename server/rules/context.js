@@ -1,32 +1,5 @@
-/**
- * 执行上下文构建器
- * 整合案件数据、保单数据、OCR数据等，构建规则执行所需的上下文
- */
+import { readData } from '../utils/fileStore.js';
 
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const projectRoot = path.resolve(__dirname, '../..');
-const dataDir = path.join(projectRoot, 'jsonlist');
-
-/**
- * 读取 JSON 数据文件
- * @param {string} resource - 资源名称
- * @returns {any[]} 数据数组
- */
-function readData(resource) {
-  const filePath = path.join(dataDir, `${resource}.json`);
-  if (!fs.existsSync(filePath)) return [];
-  try {
-    return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-  } catch (err) {
-    console.error(`Error reading ${resource}:`, err);
-    return [];
-  }
-}
 
 /**
  * 根据案件ID获取案件数据
@@ -91,17 +64,17 @@ export function buildContext({ claimCaseId, productCode, ocrData = {}, invoiceIt
   if (!claimCase && !productCode) {
     throw new Error(`未找到案件: ${claimCaseId}`);
   }
-  
+
   // 确定产品代码
   const effectiveProductCode = productCode || claimCase?.productCode;
-  
+
   // 获取产品和规则集
   const product = effectiveProductCode ? getProduct(effectiveProductCode) : null;
   const ruleset = effectiveProductCode ? getRuleset(effectiveProductCode) : null;
-  
+
   // 构建保单上下文（从规则集的policy_info获取）
   const policyInfo = ruleset?.policy_info || {};
-  
+
   // 构建理赔上下文
   const claimContext = {
     ...claimCase,
@@ -112,7 +85,7 @@ export function buildContext({ claimCaseId, productCode, ocrData = {}, invoiceIt
     // 计算总金额
     total_claimed_amount: calculateTotalAmount(invoiceItems.length > 0 ? invoiceItems : (ocrData.chargeItems || []))
   };
-  
+
   // 从 OCR 数据提取关键字段
   if (ocrData.basicInfo) {
     claimContext.patient_name = ocrData.basicInfo.name;
@@ -122,24 +95,24 @@ export function buildContext({ claimCaseId, productCode, ocrData = {}, invoiceIt
     claimContext.diagnosis = ocrData.basicInfo.dischargeDiagnosis;
     claimContext.department = ocrData.basicInfo.department;
   }
-  
+
   if (ocrData.invoiceInfo) {
     claimContext.hospital_name = ocrData.invoiceInfo.hospitalName;
     claimContext.invoice_date = ocrData.invoiceInfo.issueDate;
   }
-  
+
   if (ocrData.insurancePayment) {
     claimContext.social_insurance_paid = ocrData.insurancePayment.governmentFundPayment || 0;
     claimContext.personal_payment = ocrData.insurancePayment.personalPayment || 0;
     claimContext.personal_self_pay = ocrData.insurancePayment.personalSelfPayment || 0;
     claimContext.personal_self_expense = ocrData.insurancePayment.personalSelfExpense || 0;
   }
-  
+
   // 构建完整上下文
   const context = {
     // 理赔数据
     claim: claimContext,
-    
+
     // 保单数据
     policy: {
       policy_no: policyInfo.policy_no,
@@ -152,26 +125,26 @@ export function buildContext({ claimCaseId, productCode, ocrData = {}, invoiceIt
       // 产品详情
       ...product
     },
-    
+
     // 规则集元数据
     ruleset: {
       ruleset_id: ruleset?.ruleset_id,
       product_line: ruleset?.product_line,
       rules: ruleset?.rules || []
     },
-    
+
     // 辅助数据
     medical_catalog: getMedicalCatalog(),
-    
+
     // 当前时间（用于时间比较）
     now: new Date().toISOString().split('T')[0]
   };
-  
+
   // 如果有医院名称，补充医院信息
   if (claimContext.hospital_name) {
     context.hospital = getHospitalInfo(claimContext.hospital_name);
   }
-  
+
   return context;
 }
 
@@ -207,8 +180,8 @@ export function getCoverageConfig(productCode, coverageCode) {
  */
 export function checkMedicalCatalog(drugName) {
   const catalog = getMedicalCatalog();
-  return catalog.find(item => 
-    item.name === drugName || 
+  return catalog.find(item =>
+    item.name === drugName ||
     item.name?.includes(drugName) ||
     drugName?.includes(item.name)
   ) || null;

@@ -163,7 +163,7 @@ const ProductDetail: React.FC<{ product: InsuranceProduct }> = ({ product }) => 
         </div>
 
         <div className="px-3 relative z-20 space-y-3">
-          {(product as any).coveragePlans && (product as any).coveragePlans.length > 0 && (
+          {(product as any).coveragePlans && (product as any).coveragePlans.length > 0 && (product as any).coveragePlans[activePlanIdx] && (
             <Section 
                 title="保障计划"
                 icon={
@@ -184,20 +184,21 @@ const ProductDetail: React.FC<{ product: InsuranceProduct }> = ({ product }) => 
                         onClick={() => setActivePlanIdx(i)} 
                         className={`text-[13px] font-medium transition-colors relative pb-1 ${activePlanIdx === i ? 'text-blue-600' : 'text-gray-500'}`}
                     >
-                      {p.planType || `方案${i + 1}`}
+                      {p?.planType || `方案${i + 1}`}
                       {activePlanIdx === i && <span className="absolute bottom-[-9px] left-0 right-0 h-[2px] bg-blue-600 rounded-t-full"></span>}
                     </button>
                   ))}
                 </div>
                 )}
                 {(() => {
-                  const p = (product as any).coveragePlans[activePlanIdx] || {};
+                  const p = (product as any).coveragePlans[activePlanIdx];
+                  if (!p) return null;
                   return (
                     <div className="rounded-md">
                       {p?.coverageDetails && p.coverageDetails.length > 0 && (
                         <div className="space-y-3">
                           {p.coverageDetails.map((d: any, di: number) => (
-                            d.item_name ? (
+                            d?.item_name ? (
                               <div key={di} className="flex items-start justify-between gap-2 text-[13px]">
                                 <div className="flex items-center gap-2 flex-shrink-0">
                                   <span className="text-gray-800 font-medium">{d.item_name}</span>
@@ -208,10 +209,10 @@ const ProductDetail: React.FC<{ product: InsuranceProduct }> = ({ product }) => 
                             ) : (
                               <div key={di} className="flex items-start justify-between gap-2 text-[13px]">
                                 <div className="flex items-center gap-2 flex-shrink-0">
-                                  <span className="text-gray-800 font-medium">{d.name}</span>
-                                  <span className={`px-1 text-[10px] rounded border ${(d as any).mandatory ? 'border-blue-300 text-blue-500' : 'border-gray-300 text-gray-500'}`}>{(d as any).mandatory ? '必选' : '可选'}</span>
+                                  <span className="text-gray-800 font-medium">{d?.name || '-'}</span>
+                                  <span className={`px-1 text-[10px] rounded border ${(d as any)?.mandatory ? 'border-blue-300 text-blue-500' : 'border-gray-300 text-gray-500'}`}>{(d as any)?.mandatory ? '必选' : '可选'}</span>
                                 </div>
-                                {d.details && <span className="text-xs text-gray-400 text-right flex-1 ml-4 leading-tight">{d.details}</span>}
+                                {d?.details && <span className="text-xs text-gray-400 text-right flex-1 ml-4 leading-tight">{d.details}</span>}
                               </div>
                             )
                           ))}

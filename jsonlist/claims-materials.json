@@ -6,7 +6,8 @@
     "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"name\": {\n      \"type\": \"string\",\n      \"description\": \"姓名\"\n    },\n    \"gender\": {\n      \"type\": \"string\",\n      \"description\": \"性别\"\n    },\n    \"ethnicity\": {\n      \"type\": \"string\",\n      \"description\": \"民族\"\n    },\n    \"birth_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"出生日期\"\n    },\n    \"address\": {\n      \"type\": \"string\",\n      \"description\": \"住址\"\n    },\n    \"id_number\": {\n      \"type\": \"string\",\n      \"description\": \"身份证号码\"\n    }\n  },\n  \"required\": [\n    \"name\",\n    \"id_number\"\n  ]\n}",
     "required": true,
     "aiAuditPrompt": "请从身份证正面提取姓名、性别、民族、出生日期、住址和身份证号码。校验要点：1）身份证号码必须为18位，校验最后一位校验码是否正确；2）比对姓名是否与保单上的被保险人/受益人一致；3）检查出生日期与身份证号中的出生日期编码是否一致。若有信息模糊无法识别，请标注具体字段。",
-    "sampleUrl": "http://drools-purplespark.oss-cn-beijing.aliyuncs.com/claims/1771387763921-%E5%B1%85%E5%AE%B6%E5%85%BB%E8%80%81.jpg?OSSAccessKeyId=LTAI5tFnto3xoZD6Km6GRK76&Expires=1771391367&Signature=dPE2XWl%2BZq50H%2BldXfGnxXYU85M%3D"
+    "sampleUrl": "http://drools-purplespark.oss-cn-beijing.aliyuncs.com/claims/1772436435759-%E8%BA%AB%E4%BB%BD%E8%AF%81%E6%AD%A3%E9%9D%A2.webp?OSSAccessKeyId=LTAI5tFnto3xoZD6Km6GRK76&Expires=1772440037&Signature=xuDuBnPnl9UIM0EpL%2BR07TXffY4%3D",
+    "ossKey": "claims/1772436435759-身份证正面.webp"
   },
   {
     "id": "mat-2",
@@ -14,7 +15,9 @@
     "description": "被保险人或受益人的身份证反面照片，包含签发机关和有效期限。",
     "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"issuing_authority\": {\n      \"type\": \"string\",\n      \"description\": \"签发机关\"\n    },\n    \"valid_from\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"有效期起始日期\"\n    },\n    \"valid_until\": {\n      \"type\": \"string\",\n      \"description\": \"有效期截止日期（可能为\\\"长期\\\"）\"\n    }\n  },\n  \"required\": [\n    \"valid_from\",\n    \"valid_until\"\n  ]\n}",
     "required": true,
-    "aiAuditPrompt": "请从身份证反面提取签发机关、有效期起始日期和截止日期。校验要点：1）有效期截止日期是否晚于事故发生日/就诊日期，若已过期则标记为\"证件已过期\"；2）若截止日期为\"长期\"则视为有效。"
+    "aiAuditPrompt": "请从身份证反面提取签发机关、有效期起始日期和截止日期。校验要点：1）有效期截止日期是否晚于事故发生日/就诊日期，若已过期则标记为\"证件已过期\"；2）若截止日期为\"长期\"则视为有效。",
+    "sampleUrl": "http://drools-purplespark.oss-cn-beijing.aliyuncs.com/claims/1772436446468-%E8%BA%AB%E4%BB%BD%E8%AF%81%E5%8F%8D%E9%9D%A2.png?OSSAccessKeyId=LTAI5tFnto3xoZD6Km6GRK76&Expires=1772440048&Signature=J3KWk4%2F1vc3bYunb9MsWoFA6mrM%3D",
+    "ossKey": "claims/1772436446468-身份证反面.png"
   },
   {
     "id": "mat-3",
@@ -22,7 +25,9 @@
     "description": "机动车驾驶人的驾驶证正页及副页，用于交通事故理赔时核实驾驶资质。",
     "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"name\": {\n      \"type\": \"string\",\n      \"description\": \"姓名\"\n    },\n    \"license_number\": {\n      \"type\": \"string\",\n      \"description\": \"驾驶证号码\"\n    },\n    \"vehicle_class\": {\n      \"type\": \"string\",\n      \"description\": \"准驾车型\"\n    },\n    \"valid_period\": {\n      \"type\": \"string\",\n      \"description\": \"有效期限\"\n    },\n    \"issue_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"初次领证日期\"\n    },\n    \"file_number\": {\n      \"type\": \"string\",\n      \"description\": \"档案编号\"\n    }\n  },\n  \"required\": [\n    \"name\",\n    \"license_number\",\n    \"vehicle_class\"\n  ]\n}",
     "required": false,
-    "aiAuditPrompt": "请从驾驶证正页和副页提取姓名、驾驶证号、准驾车型、有效期限和初次领证日期。校验要点：1）驾驶证有效期是否覆盖事故发生日期；2）准驾车型是否与事故中驾驶的车辆类型匹配（如C1不能驾驶大型车辆）；3）是否存在扣分或违章记录标注。"
+    "aiAuditPrompt": "请从驾驶证正页和副页提取姓名、驾驶证号、准驾车型、有效期限和初次领证日期。校验要点：1）驾驶证有效期是否覆盖事故发生日期；2）准驾车型是否与事故中驾驶的车辆类型匹配（如C1不能驾驶大型车辆）；3）是否存在扣分或违章记录标注。",
+    "sampleUrl": "http://drools-purplespark.oss-cn-beijing.aliyuncs.com/claims/1772436498218-%E9%A9%BE%E9%A9%B6%E8%AF%81%EF%BC%88%E5%90%AB%E5%89%AF%E9%A1%B5%EF%BC%89.webp?OSSAccessKeyId=LTAI5tFnto3xoZD6Km6GRK76&Expires=1772440099&Signature=LYb9AsrRr3QqwGZ171MheCDq3tQ%3D",
+    "ossKey": "claims/1772436498218-驾驶证（含副页）.webp"
   },
   {
     "id": "mat-4",
@@ -30,7 +35,9 @@
     "description": "机动车行驶证正页及副页，用于核实车辆信息和年检状态。",
     "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"plate_number\": {\n      \"type\": \"string\",\n      \"description\": \"号牌号码\"\n    },\n    \"vehicle_type\": {\n      \"type\": \"string\",\n      \"description\": \"车辆类型\"\n    },\n    \"owner\": {\n      \"type\": \"string\",\n      \"description\": \"所有人\"\n    },\n    \"vin\": {\n      \"type\": \"string\",\n      \"description\": \"车辆识别代号（VIN）\"\n    },\n    \"engine_number\": {\n      \"type\": \"string\",\n      \"description\": \"发动机号码\"\n    },\n    \"register_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"注册日期\"\n    },\n    \"inspection_valid_until\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"检验有效期至\"\n    }\n  },\n  \"required\": [\n    \"plate_number\",\n    \"vehicle_type\",\n    \"owner\"\n  ]\n}",
     "required": false,
-    "aiAuditPrompt": "请从行驶证正页和副页提取号牌号码、车辆类型、所有人、VIN码、发动机号、注册日期和检验有效期。校验要点：1）检验有效期是否覆盖事故发生日期，若已过期则标记；2）车辆类型与驾驶证准驾车型是否匹配。"
+    "aiAuditPrompt": "请从行驶证正页和副页提取号牌号码、车辆类型、所有人、VIN码、发动机号、注册日期和检验有效期。校验要点：1）检验有效期是否覆盖事故发生日期，若已过期则标记；2）车辆类型与驾驶证准驾车型是否匹配。",
+    "sampleUrl": "http://drools-purplespark.oss-cn-beijing.aliyuncs.com/claims/1772436899704-%E8%A1%8C%E9%A9%B6%E8%AF%81%EF%BC%88%E5%90%AB%E5%89%AF%E9%A1%B5%EF%BC%89.jpg?OSSAccessKeyId=LTAI5tFnto3xoZD6Km6GRK76&Expires=1772440501&Signature=Ri0KrWOnv7i8r7S042e1zcHF2n4%3D",
+    "ossKey": "claims/1772436899704-行驶证（含副页）.jpg"
   },
   {
     "id": "mat-5",
@@ -100,7 +107,6 @@
     "id": "mat-13",
     "name": "诊断证明书",
     "description": "医院出具的正式诊断证明文件，是理赔审核的核心医疗材料。",
-    "sampleUrl": "https://pic1.imgdb.cn/item/69313be6a11464095f8a12dd.jpg",
     "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"hospital_name\": {\n      \"type\": \"string\",\n      \"description\": \"医院名称\"\n    },\n    \"patient_name\": {\n      \"type\": \"string\",\n      \"description\": \"患者姓名\"\n    },\n    \"diagnosis\": {\n      \"type\": \"string\",\n      \"description\": \"诊断结果\"\n    },\n    \"diagnosis_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"诊断日期\"\n    },\n    \"doctor_name\": {\n      \"type\": \"string\",\n      \"description\": \"诊断医生\"\n    },\n    \"treatment_advice\": {\n      \"type\": \"string\",\n      \"description\": \"治疗建议\"\n    },\n    \"rest_days\": {\n      \"type\": \"number\",\n      \"description\": \"建议休息天数\"\n    },\n    \"has_hospital_seal\": {\n      \"type\": \"boolean\",\n      \"description\": \"是否有医院公章\"\n    }\n  },\n  \"required\": [\n    \"hospital_name\",\n    \"diagnosis\",\n    \"diagnosis_date\"\n  ]\n}",
     "required": true,
     "aiAuditPrompt": "请从诊断证明书中提取医院名称、患者姓名、诊断结果、诊断日期、诊断医生、治疗建议和建议休息天数。校验要点：1）诊断结果与事故伤情是否存在因果关系；2）医院是否为二级及以上医疗机构；3）是否有医院诊断专用章；4）建议休息天数与伤情严重程度是否匹配。若信息缺失，请指出具体缺失项。"
@@ -165,7 +171,6 @@
     "id": "mat-21",
     "name": "费用明细清单",
     "description": "医院出具的住院/门诊费用逐项明细清单。",
-    "sampleUrl": "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d8.jpg",
     "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"hospital_name\": {\n      \"type\": \"string\",\n      \"description\": \"医院名称\"\n    },\n    \"patient_name\": {\n      \"type\": \"string\",\n      \"description\": \"患者姓名\"\n    },\n    \"items\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"item_name\": {\n            \"type\": \"string\",\n            \"description\": \"项目名称\"\n          },\n          \"category\": {\n            \"type\": \"string\",\n            \"description\": \"费用类别\"\n          },\n          \"quantity\": {\n            \"type\": \"number\",\n            \"description\": \"数量\"\n          },\n          \"unit_price\": {\n            \"type\": \"number\",\n            \"description\": \"单价\"\n          },\n          \"total_price\": {\n            \"type\": \"number\",\n            \"description\": \"金额\"\n          }\n        }\n      },\n      \"description\": \"费用明细项目列表\"\n    },\n    \"total_amount\": {\n      \"type\": \"number\",\n      \"description\": \"费用总额\"\n    }\n  },\n  \"required\": [\n    \"hospital_name\",\n    \"items\",\n    \"total_amount\"\n  ]\n}",
     "required": true,
     "aiAuditPrompt": "请从费用明细清单中提取医院名称、患者姓名、所有费用明细项（项目名称、类别、数量、单价、金额）和费用总额。校验要点：1）各项费用金额=单价×数量；2）所有项目金额之和是否等于总额；3）与医疗费发票的总金额是否一致；4）是否存在异常高价项目。"
@@ -336,7 +341,7 @@
     "description": "证明被扶养人确无劳动能力和收入来源的证明文件。",
     "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"dependent_name\": {\n      \"type\": \"string\",\n      \"description\": \"被扶养人姓名\"\n    },\n    \"id_number\": {\n      \"type\": \"string\",\n      \"description\": \"身份证号\"\n    },\n    \"has_income\": {\n      \"type\": \"boolean\",\n      \"description\": \"是否有收入（应为false）\"\n    },\n    \"reason_no_income\": {\n      \"type\": \"string\",\n      \"description\": \"无收入原因（残疾/年幼/年迈等）\"\n    },\n    \"issuing_authority\": {\n      \"type\": \"string\",\n      \"description\": \"出具机关\"\n    },\n    \"issue_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"开具日期\"\n    }\n  },\n  \"required\": [\n    \"dependent_name\",\n    \"reason_no_income\"\n  ]\n}",
     "required": false,
-    "aiAuditPrompt": "请提取被扶养人无收入证明中的被扶养人姓名、身份证号、无收入原因和出具机关。校验要点：1）无收入原因是否合理（未成年、在校学生、残疾人、年迈丧失劳动能力等）；2）确认被扶养人确实丧失劳动能力或无其他生活来源；3）证明是否由相关部门或社区出具并盖章。"
+    "aiAuditPrompt": "请提取被扶养人无收入证明中的被扶养人姓名、身份证号、无收入原因和出具机关。校验要点：1）无收入原因是否合理（未成年、在校学生、残疾人、年迈丧失劳动能力等）；2）确认被扶养人确实丧失劳动能力或无其他生活来源；3）证明是否由相关部门���社区出具并盖章。"
   },
   {
     "id": "mat-43",
