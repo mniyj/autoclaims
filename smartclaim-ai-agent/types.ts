@@ -100,6 +100,7 @@ export interface CalculatedMaterial {
   materialName: string;
   materialDescription?: string;
   sampleUrl?: string;
+  ossKey?: string;
   required: boolean;
   source: string;
   sourceDetails: string;
@@ -122,6 +123,15 @@ export interface Message {
   reportSuccess?: {
     caseNumber: string;
   };
+  /** 意图识别结果 */
+  intentResult?: {
+    intent: IntentType;
+    confidence: number;
+  };
+  /** 工具执行返回的UI组件类型 */
+  uiComponent?: UIComponentType;
+  /** UI组件所需数据 */
+  uiData?: any;
 }
 
 export interface MedicalInvoiceData {
@@ -310,4 +320,123 @@ export interface ClaimState {
   payment?: PaymentInfo;
   policyTerms?: PolicyTerm[];
   historicalClaims?: HistoricalClaim[];
+}
+
+// ============================================================================
+// 意图识别相关类型
+// ============================================================================
+
+/** 用户意图类型 */
+export enum IntentType {
+  /** 查询理赔进度 */
+  QUERY_PROGRESS = 'QUERY_PROGRESS',
+  /** 查询理赔材料清单 */
+  QUERY_MATERIALS_LIST = 'QUERY_MATERIALS_LIST',
+  /** 查询缺失材料 */
+  QUERY_MISSING_MATERIALS = 'QUERY_MISSING_MATERIALS',
+  /** 查询保费影响 */
+  QUERY_PREMIUM_IMPACT = 'QUERY_PREMIUM_IMPACT',
+  /** 普通对话 */
+  GENERAL_CHAT = 'GENERAL_CHAT'
+}
+
+/** 意图识别结果 */
+export interface IntentRecognitionResult {
+  /** 识别的意图类型 */
+  intent: IntentType;
+  /** 置信度 (0-1) */
+  confidence: number;
+  /** 提取的实体参数 */
+  entities: IntentEntities;
+  /** 原始用户输入 */
+  originalText: string;
+}
+
+/** 意图实体参数 */
+export interface IntentEntities {
+  /** 案件ID */
+  claimId?: string;
+  /** 保单ID */
+  policyId?: string;
+  /** 理赔类型 */
+  claimType?: string;
+  /** 产品代码 */
+  productCode?: string;
+  /** 其他参数 */
+  [key: string]: any;
+}
+
+/** 工具调用结果 */
+export interface ToolResponse {
+  /** 是否执行成功 */
+  success: boolean;
+  /** 返回数据 */
+  data: any;
+  /** 给用户的自然语言回复 */
+  message: string;
+  /** 需要渲染的UI组件类型 */
+  uiComponent?: UIComponentType;
+  /** UI组件所需数据 */
+  uiData?: any;
+}
+
+/** UI组件类型 */
+export enum UIComponentType {
+  /** 理赔进度卡片 */
+  CLAIM_PROGRESS = 'CLAIM_PROGRESS',
+  /** 材料清单 */
+  MATERIALS_LIST = 'MATERIALS_LIST',
+  /** 缺失材料提醒 */
+  MISSING_MATERIALS = 'MISSING_MATERIALS',
+  /** 保费影响说明 */
+  PREMIUM_IMPACT = 'PREMIUM_IMPACT'
+}
+
+/** 理赔进度信息 */
+export interface ClaimProgressInfo {
+  claimId: string;
+  status: ClaimStatus;
+  statusLabel: string;
+  progress: number;
+  currentStage: string;
+  estimatedCompletion?: string;
+  timeline: ClaimEvent[];
+}
+
+/** 材料清单信息 */
+export interface MaterialsListInfo {
+  claimType: string;
+  materials: MaterialItem[];
+}
+
+/** 单个材料项 */
+export interface MaterialItem {
+  id: string;
+  name: string;
+  description: string;
+  required: boolean;
+  sampleUrl?: string;
+  uploaded: boolean;
+  documentId?: string;
+}
+
+/** 缺失材料信息 */
+export interface MissingMaterialsInfo {
+  claimId: string;
+  missingItems: MaterialItem[];
+  deadline?: string;
+  urgency: 'low' | 'medium' | 'high';
+}
+
+/** 保费影响信息 */
+export interface PremiumImpactInfo {
+  currentNCD: number;
+  nextYearNCD: number;
+  premiumChange: {
+    amount: number;
+    percentage: number;
+    direction: 'increase' | 'decrease' | 'no_change';
+  };
+  explanation: string;
+  suggestions: string[];
 }

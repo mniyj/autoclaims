@@ -33,6 +33,9 @@ import MedicalCatalogManagementPage from "./components/MedicalCatalogManagementP
 import HospitalManagementPage from "./components/HospitalManagementPage";
 import UserOperationLogsPage from "./components/UserOperationLogsPage";
 import SystemLogsPage from "./SystemLogsPage";
+import IntakeFieldPresetsManager from "./components/IntakeFieldPresetsManager";
+import MessageCenter from "./components/MessageCenter";
+import { MessageBell } from "./components/MessageBell";
 import QuoteListPage from "./components/QuoteListPage";
 import QuoteDetailPage from "./components/QuoteDetailPage";
 import PolicyListPage from "./components/PolicyListPage";
@@ -218,6 +221,7 @@ type AppView =
   | "claims_material_management"
   | "claim_item_config"
   | "claim_intake_config"
+  | "intake_field_presets"
   | "claim_case_list"
   | "claim_case_detail"
   | "claim_workbench"
@@ -236,7 +240,8 @@ type AppView =
   | "policy_list"
   | "policy_detail"
   | "policy_create"
-  | "policy_edit";
+  | "policy_edit"
+  | "message_center";
 
 type NavSubItemData = { name: string; id: AppView };
 type NavItemData = {
@@ -275,6 +280,7 @@ const navItems: NavItemData[] = [
       { name: "理赔员工作台", id: "claim_workbench" },
       { name: "理赔项目及材料配置", id: "claim_item_config" },
       { name: "报案信息配置", id: "claim_intake_config" },
+      { name: "报案字段预设管理", id: "intake_field_presets" },
       { name: "赔案清单", id: "claim_case_list" },
       { name: "发票审核", id: "invoice_audit" },
       { name: "医保目录管理", id: "medical_catalog_management" },
@@ -332,6 +338,7 @@ const activeParentViews: Record<string, AppView[]> = {
     "claim_workbench",
     "claim_item_config",
     "claim_intake_config",
+    "intake_field_presets",
     "claim_case_list",
     "claim_case_detail",
     "invoice_audit",
@@ -462,9 +469,10 @@ const Sidebar: React.FC<{
   );
 };
 
-const Header: React.FC<{ onLogout: () => void }> = ({ onLogout }) => (
+const Header: React.FC<{ onLogout: () => void; onMessageClick: () => void }> = ({ onLogout, onMessageClick }) => (
   <header className="bg-transparent h-16 px-6 flex items-center justify-end">
     <div className="flex items-center space-x-5">
+      <MessageBell />
       <div className="flex items-center space-x-3">
         <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden">
           <img src="https://i.pravatar.cc/40?u=test" alt="User Avatar" />
@@ -950,6 +958,8 @@ const App: React.FC = () => {
             onUpdateProducts={setProducts}
           />
         );
+      case "intake_field_presets":
+        return <IntakeFieldPresetsManager />;
       case "claim_case_list":
         return <ClaimCaseListPage onViewDetail={handleViewClaim} />;
       case "claim_case_detail":
@@ -1031,6 +1041,8 @@ const App: React.FC = () => {
             <AITestPanel onClose={() => setView("system_settings")} />
           </div>
         );
+      case "message_center":
+        return <MessageCenter />;
       default:
         return (
           <ProductListPage
@@ -1051,7 +1063,7 @@ const App: React.FC = () => {
       <Sidebar currentView={view} onViewChange={handleViewChange} />
       <div className="flex-1 flex flex-col overflow-hidden relative">
         <div className="absolute top-0 left-0 w-full h-[200px] bg-gradient-to-b from-[#e6f4ff] to-[#f0f2f5] pointer-events-none" />
-        <Header onLogout={handleLogout} />
+        <Header onLogout={handleLogout} onMessageClick={() => setView("message_center")} />
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-transparent px-6 pb-6 relative">
           {renderContent()}
         </main>

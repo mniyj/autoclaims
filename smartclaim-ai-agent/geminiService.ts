@@ -1,8 +1,9 @@
 
 import { GoogleGenAI, Type, GenerateContentResponse, Modality } from "@google/genai";
-import { ClaimState, ClaimStatus, PolicyTerm, DocumentAnalysis } from "./types";
+import { ClaimState, ClaimStatus, PolicyTerm, DocumentAnalysis, ToolResponse, IntentRecognitionResult } from "./types";
 import { AIInteractionLog } from "../types";
 import { uploadToOSS } from "./ossService";
+import { recognizeIntent, executeIntentTool, quickIntentDetection } from "./intentService";
 
 const getAI = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
 
@@ -43,7 +44,7 @@ export const getAIResponse = async (
 ) => {
   const ai = getAI();
   // Using gemini-2.5-flash for maps grounding support
-  const model = 'gemini-1.5-flash';
+  const model = 'gemini-2.5-flash';
 
   const prompt = `
     Current Claim State: ${JSON.stringify(state)}
@@ -103,7 +104,7 @@ export const getAIResponse = async (
 
 export const transcribeAudio = async (base64Audio: string): Promise<string> => {
   const ai = getAI();
-  const model = 'gemini-1.5-flash';
+  const model = 'gemini-2.5-flash';
   const response = await ai.models.generateContent({
     model,
     contents: {
@@ -118,7 +119,7 @@ export const transcribeAudio = async (base64Audio: string): Promise<string> => {
 
 export const fetchPolicyTerms = async (incidentType: string): Promise<PolicyTerm[]> => {
   const ai = getAI();
-  const model = 'gemini-1.5-flash';
+  const model = 'gemini-2.5-flash';
   const prompt = `
     Generate a list of 3-4 insurance policy terms and conditions specifically for the incident type: ${incidentType}.
     Each term should have a title and a formal-sounding legal content snippet in Chinese.
@@ -158,7 +159,7 @@ export const quickAnalyze = async (base64: string, mimeType: string): Promise<{ 
   });
 
   const ai = getAI();
-  const model = 'gemini-1.5-flash';
+  const model = 'gemini-2.5-flash';
 
   const promptText = "快速识别文档类型，返回JSON: {\"category\": \"类型(身份证/医疗发票/出院小结/诊断证明/现场照片/银行卡等)\", \"needsDeepAnalysis\": true/false}";
   const startTime = Date.now();
@@ -198,7 +199,7 @@ export const quickAnalyze = async (base64: string, mimeType: string): Promise<{ 
 
 export const analyzeDocument = async (base64: string, mimeType: string, state: ClaimState, ossUrl: string): Promise<{ analysis: DocumentAnalysis; aiLog: AIInteractionLog }> => {
   const ai = getAI();
-  const model = 'gemini-1.5-flash';
+  const model = 'gemini-2.5-flash';
 
   const dischargeSchema = {
     "document_type": "string (Fixed: '出院小结')",
@@ -274,7 +275,7 @@ export const analyzeDocument = async (base64: string, mimeType: string, state: C
 
 export const performFinalAssessment = async (state: ClaimState) => {
   const ai = getAI();
-  const model = 'gemini-1.5-pro';
+  const model = 'gemini-2.5-flash';
   const prompt = `
     FINAL CLAIM ASSESSMENT REQUEST:
     Claim Type: ${state.incidentType}
@@ -311,7 +312,7 @@ export const performFinalAssessment = async (state: ClaimState) => {
 export const connectLive = (callbacks: any) => {
   const ai = getAI();
   return ai.live.connect({
-    model: 'gemini-1.5-flash-002',
+    model: 'gemini-2.5-flash',
     callbacks,
     config: {
       responseModalities: [Modality.AUDIO],
@@ -323,4 +324,143 @@ export const connectLive = (callbacks: any) => {
       outputAudioTranscription: {}
     },
   });
+};
+
+
+// ============================================================================
+// 意图识别集成
+// ============================================================================
+
+/**
+ * 带意图识别的 AI 响应
+ * 先进行意图识别，如果是特定意图则执行工具，否则走普通对话
+ * @param userInput 用户输入
+ * @param messages 对话历史
+ * @param state 理赔状态
+ * @param userLocation 用户位置
+ * @returns 响应结果，包含可能的工具执行结果
+ */
+export const getAIResponseWithIntent = async (
+  userInput: string,
+  messages: { role: string; content: string }[],
+  state: ClaimState,
+  userLocation?: { latitude: number; longitude: number }
+): Promise<{
+  text: string;
+  groundingLinks?: { uri: string; title: string }[];
+  aiLog: AIInteractionLog;
+  /** 意图识别结果 */
+  intentResult?: IntentRecognitionResult;
+  /** 工具执行结果 */
+  toolResponse?: ToolResponse;
+  /** 是否使用了意图工具 */
+  usedIntentTool: boolean;
+}> => {
+  const startTime = Date.now();
+  
+  // 1. 快速意图检测（轻量级关键词匹配）
+  const quickIntent = quickIntentDetection(userInput);
+  
+  // 如果没有匹配到关键词，直接走普通对话流程
+  if (!quickIntent) {
+    const normalResponse = await getAIResponse(messages, state, userLocation);
+    return {
+      ...normalResponse,
+      usedIntentTool: false
+    };
+  }
+
+  // 2. 进行 AI 意图识别
+  try {
+    const intentResult = await recognizeIntent(userInput, messages, state);
+    
+    // 3. 如果识别为普通对话，走普通 AI 流程
+    if (intentResult.intent === 'GENERAL_CHAT') {
+      const normalResponse = await getAIResponse(messages, state, userLocation);
+      return {
+        ...normalResponse,
+        intentResult,
+        usedIntentTool: false
+      };
+    }
+
+    // 4. 执行意图对应的工具
+    const toolResponse = await executeIntentTool(intentResult, state);
+
+    // 5. 如果工具有返回消息，直接返回工具结果
+    if (toolResponse.message) {
+      const aiLog: AIInteractionLog = {
+        model: 'intent-recognition',
+        prompt: userInput,
+        response: JSON.stringify({ intent: intentResult.intent, toolResponse }),
+        duration: Date.now() - startTime,
+        timestamp: new Date().toISOString(),
+        usageMetadata: undefined
+      };
+
+      return {
+        text: toolResponse.message,
+        intentResult,
+        toolResponse,
+        usedIntentTool: true,
+        aiLog
+      };
+    }
+
+    // 6. 工具返回空消息（GENERAL_CHAT 情况），走普通 AI 流程
+    const normalResponse = await getAIResponse(messages, state, userLocation);
+    return {
+      ...normalResponse,
+      intentResult,
+      toolResponse,
+      usedIntentTool: false
+    };
+
+  } catch (error) {
+    console.error('[Intent Recognition Error]', error);
+    // 出错时降级为普通 AI 响应
+    const normalResponse = await getAIResponse(messages, state, userLocation);
+    return {
+      ...normalResponse,
+      usedIntentTool: false
+    };
+  }
+};
+
+/**
+ * 智能路由 - 根据用户输入自动选择处理方式
+ * @param userInput 用户输入
+ * @param messages 对话历史
+ * @param state 理赔状态
+ * @param options 选项
+ * @returns 响应结果
+ */
+export const smartChat = async (
+  userInput: string,
+  messages: { role: string; content: string }[],
+  state: ClaimState,
+  options?: {
+    userLocation?: { latitude: number; longitude: number };
+    /** 强制使用普通对话，跳过意图识别 */
+    forceNormalChat?: boolean;
+  }
+): Promise<{
+  text: string;
+  groundingLinks?: { uri: string; title: string }[];
+  aiLog: AIInteractionLog;
+  intentResult?: IntentRecognitionResult;
+  toolResponse?: ToolResponse;
+  usedIntentTool: boolean;
+}> => {
+  // 如果强制普通对话，跳过意图识别
+  if (options?.forceNormalChat) {
+    const normalResponse = await getAIResponse(messages, state, options.userLocation);
+    return {
+      ...normalResponse,
+      usedIntentTool: false
+    };
+  }
+
+  // 否则使用意图识别流程
+  return getAIResponseWithIntent(userInput, messages, state, options?.userLocation);
 };

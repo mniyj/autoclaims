@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { type IntakeConfig, type IntakeField, type IntakeFieldType, type AccidentCauseMaterialConfig, type ClaimItem, type ProductClaimConfig, type ResponsibilityItem } from '../../types';
-import { INTAKE_FIELD_TYPE_OPTIONS, INTAKE_VALIDATION_RULE_OPTIONS, INTAKE_FIELD_PRESETS } from '../../constants';
+import { INTAKE_FIELD_TYPE_OPTIONS, INTAKE_VALIDATION_RULE_OPTIONS } from '../../constants';
 import { api } from '../../services/api';
 
 interface IntakeFieldConfigEditorProps {
@@ -17,6 +17,13 @@ const DEFAULT_CONFIG: IntakeConfig = {
 
 const NEEDS_OPTIONS_TYPES: IntakeFieldType[] = ['enum', 'enum_with_other', 'multi_select'];
 
+interface IntakeFieldPreset {
+  id: string;
+  name: string;
+  description: string;
+  fields: IntakeField[];
+}
+
 const IntakeFieldConfigEditor: React.FC<IntakeFieldConfigEditorProps> = ({ config, onChange, productCategory, productCode }) => {
   const currentConfig = config || DEFAULT_CONFIG;
   const [expandedFieldId, setExpandedFieldId] = useState<string | null>(null);
@@ -24,6 +31,8 @@ const IntakeFieldConfigEditor: React.FC<IntakeFieldConfigEditorProps> = ({ confi
   const [isLoadingAccidentCauses, setIsLoadingAccidentCauses] = useState(false);
   const [claimItems, setClaimItems] = useState<Array<ClaimItem & { responsibilityName?: string }>>([]);
   const [isLoadingClaimItems, setIsLoadingClaimItems] = useState(false);
+  const [presets, setPresets] = useState<Record<string, IntakeFieldPreset>>({});
+  const [isLoadingPresets, setIsLoadingPresets] = useState(false);
 
   // 加载事故原因配置
   useEffect(() => {
@@ -40,6 +49,27 @@ const IntakeFieldConfigEditor: React.FC<IntakeFieldConfigEditorProps> = ({ confi
       }
     };
     fetchAccidentCauses();
+  }, []);
+
+  // 加载预设模板
+  useEffect(() => {
+    const fetchPresets = async () => {
+      setIsLoadingPresets(true);
+      try {
+        const data = await api.intakeFieldPresets.list() as IntakeFieldPreset[];
+        const presetsMap: Record<string, IntakeFieldPreset> = {};
+        data.forEach((preset: IntakeFieldPreset) => {
+          presetsMap[preset.id] = preset;
+        });
+        setPresets(presetsMap);
+      } catch (error) {
+        console.error('Failed to fetch presets:', error);
+        setPresets({});
+      } finally {
+        setIsLoadingPresets(false);
+      }
+    };
+    fetchPresets();
   }, []);
 
   // 加载索赔项目
@@ -157,12 +187,12 @@ const IntakeFieldConfigEditor: React.FC<IntakeFieldConfigEditorProps> = ({ confi
 
   const handleLoadPreset = () => {
     if (!productCategory) return;
-    const preset = INTAKE_FIELD_PRESETS[productCategory];
+    const preset = presets[productCategory];
     if (!preset) return;
     if (currentConfig.fields.length > 0) {
       if (!confirm('加载预设模板将覆盖当前配置的字段，是否继续？')) return;
     }
-    updateFields(preset.map(f => ({ ...f })));
+    updateFields(preset.fields.map((f: IntakeField) => ({ ...f })));
   };
 
   const handleVoiceToggle = (enabled: boolean) => {
@@ -369,7 +399,7 @@ const IntakeFieldConfigEditor: React.FC<IntakeFieldConfigEditorProps> = ({ confi
       <div className="space-y-4 rounded-md border border-gray-200 p-4">
         <div className="flex items-center justify-between">
           <h4 className="text-md font-medium text-gray-800">报案信息字段配置</h4>
-          {productCategory && INTAKE_FIELD_PRESETS[productCategory] && (
+          {productCategory && presets[productCategory] && !isLoadingPresets && (
             <div className="flex items-center gap-2">
               <button
                 type="button"

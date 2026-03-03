@@ -7,7 +7,8 @@
     "required": true,
     "aiAuditPrompt": "请从身份证正面提取姓名、性别、民族、出生日期、住址和身份证号码。校验要点：1）身份证号码必须为18位，校验最后一位校验码是否正确；2）比对姓名是否与保单上的被保险人/受益人一致；3）检查出生日期与身份证号中的出生日期编码是否一致。若有信息模糊无法识别，请标注具体字段。",
     "sampleUrl": "http://drools-purplespark.oss-cn-beijing.aliyuncs.com/claims/1772436435759-%E8%BA%AB%E4%BB%BD%E8%AF%81%E6%AD%A3%E9%9D%A2.webp?OSSAccessKeyId=LTAI5tFnto3xoZD6Km6GRK76&Expires=1772440037&Signature=xuDuBnPnl9UIM0EpL%2BR07TXffY4%3D",
-    "ossKey": "claims/1772436435759-身份证正面.webp"
+    "ossKey": "claims/1772436435759-身份证正面.webp",
+    "confidenceThreshold": 1
   },
   {
     "id": "mat-2",
@@ -69,7 +70,10 @@
     "description": "交警部门出具的交通事故责任认定文书，明确各方事故责任比例。",
     "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"document_number\": {\n      \"type\": \"string\",\n      \"description\": \"文书编号\"\n    },\n    \"accident_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"事故发生日期\"\n    },\n    \"accident_time\": {\n      \"type\": \"string\",\n      \"description\": \"事故发生时间\"\n    },\n    \"accident_location\": {\n      \"type\": \"string\",\n      \"description\": \"事故发生地点\"\n    },\n    \"parties\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"name\": {\n            \"type\": \"string\",\n            \"description\": \"当事人姓名\"\n          },\n          \"vehicle_info\": {\n            \"type\": \"string\",\n            \"description\": \"车辆信息\"\n          },\n          \"responsibility\": {\n            \"type\": \"string\",\n            \"description\": \"责任认定（全责/主责/同责/次责/无责）\"\n          }\n        }\n      },\n      \"description\": \"当事人及责任划分\"\n    },\n    \"accident_summary\": {\n      \"type\": \"string\",\n      \"description\": \"事故经过摘要\"\n    },\n    \"issuing_authority\": {\n      \"type\": \"string\",\n      \"description\": \"出具机关\"\n    }\n  },\n  \"required\": [\n    \"accident_date\",\n    \"accident_location\",\n    \"parties\"\n  ]\n}",
     "required": false,
-    "aiAuditPrompt": "请从交通事故责任认定书中提取文书编号、事故日期时间、地点、各方当事人信息和责任划分、事故经过摘要。校验要点：1）明确各方责任比例（全责100%、主责70%、同责50%、次责30%、无责0%）；2）事故日期应在保险有效期内；3）被保险人在事故中的角色和责任。"
+    "aiAuditPrompt": "请从交通事故责任认定书中提取文书编号、事故日期时间、地点、各方当事人信息和责任划分、事故经过摘要。校验要点：1）明确各方责任比例（全责100%、主责70%、同责50%、次责30%、无责0%）；2）事故日期应在保险有效期内；3）被保险人在事故中的角色和责任。",
+    "sampleUrl": "http://drools-purplespark.oss-cn-beijing.aliyuncs.com/claims/1772452344325-%E4%BA%A4%E9%80%9A%E4%BA%8B%E6%95%85%E8%B4%A3%E4%BB%BB%E8%AE%A4%E5%AE%9A%E4%B9%A6%20.webp?OSSAccessKeyId=LTAI5tFnto3xoZD6Km6GRK76&Expires=1772455946&Signature=YmWoYf1q23VbP585Y59NXU9Goc0%3D",
+    "ossKey": "claims/1772452344325-交通事故责任认定书 .webp",
+    "confidenceThreshold": 1
   },
   {
     "id": "mat-9",

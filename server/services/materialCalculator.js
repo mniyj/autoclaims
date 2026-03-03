@@ -83,7 +83,9 @@ export async function calculateMaterials({ productCode, categoryCode, claimItemI
 
     // 4. 收集事故原因关联材料
     if (accidentCauseId) {
-      const causeConfig = accidentCauseConfigs.find(c => c.id === accidentCauseId);
+      const causeConfig = accidentCauseConfigs.find(c => 
+        c.id === accidentCauseId || c.name === accidentCauseId
+      );
       if (causeConfig && causeConfig.materialIds) {
         causeConfig.materialIds.forEach(matId => {
           const material = allMaterials.find(m => m.id === matId);

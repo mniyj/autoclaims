@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { ClaimStatus, Message, ClaimState, ClaimDocument, HistoricalClaim, Policy, Attachment, MedicalInvoiceData, OCRData, DischargeSummaryData, IntakeConfig, IntakeField, CalculatedMaterial } from './types';
+import { ClaimStatus, Message, ClaimState, ClaimDocument, HistoricalClaim, Policy, Attachment, MedicalInvoiceData, OCRData, DischargeSummaryData, IntakeConfig, IntakeField, CalculatedMaterial, IntentType, UIComponentType, ClaimProgressInfo, MaterialsListInfo, MissingMaterialsInfo, PremiumImpactInfo } from './types';
 import { MOCK_HISTORICAL_CLAIMS } from './constants';
 
 // --- Hospital Info Type ---
@@ -15,7 +15,8 @@ interface HospitalInfo {
   address?: string;
   qualifiedForInsurance: boolean;
 }
-import { getAIResponse, analyzeDocument, quickAnalyze, connectLive, transcribeAudio } from './geminiService';
+import { getAIResponse, analyzeDocument, quickAnalyze, connectLive, transcribeAudio, smartChat } from './geminiService';
+import { getIntentLabel } from './intentService';
 import { getSignedUrl } from './ossService';
 import { logUserOperation } from './logService';
 import { UserOperationType } from '../types';
@@ -380,6 +381,252 @@ const GenericOCRDisplay = ({ data }: { data: OCRData }) => {
   )
 }
 
+// ============================================================================
+// 意图识别 UI 组件
+// ============================================================================
+
+/** 理赔进度卡片 */
+const ClaimProgressCard = ({ data }: { data: ClaimProgressInfo }) => {
+  const getStatusColor = (status: ClaimStatus) => {
+    switch (status) {
+      case ClaimStatus.PAID: return 'text-green-500';
+      case ClaimStatus.REJECTED: return 'text-red-500';
+      case ClaimStatus.REVIEWING: return 'text-blue-500';
+      default: return 'text-orange-500';
+    }
+  };
+
+  return (
+    <div className="mt-3 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-slate-100">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <i className="fas fa-chart-line text-blue-500"></i>
+            <span className="font-bold text-slate-700">理赔进度</span>
+          </div>
+          <span className={`text-sm font-bold ${getStatusColor(data.status)}`}>{data.statusLabel}</span>
+        </div>
+      </div>
+      
+      <div className="p-4">
+        {/* 进度条 */}
+        <div className="mb-4">
+          <div className="flex justify-between text-xs text-slate-500 mb-1">
+            <span>处理进度</span>
+            <span>{data.progress}%</span>
+          </div>
+          <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-500"
+              style={{ width: `${data.progress}%` }}
+            />
+          </div>
+        </div>
+
+        {/* 当前阶段 */}
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+          <span className="text-sm text-slate-600">当前阶段：<span className="font-medium text-slate-800">{data.currentStage}</span></span>
+        </div>
+
+        {/* 时间线 */}
+        {data.timeline && data.timeline.length > 0 && (
+          <div className="mt-3 space-y-2 max-h-32 overflow-y-auto">
+            {data.timeline.slice(-3).map((event, idx) => (
+              <div key={idx} className="flex items-start gap-2 text-xs">
+                <div className={`w-1.5 h-1.5 rounded-full mt-1 ${event.status === 'completed' ? 'bg-green-500' : event.status === 'active' ? 'bg-blue-500' : 'bg-slate-300'}`}></div>
+                <div className="flex-1">
+                  <div className="font-medium text-slate-700">{event.label}</div>
+                  <div className="text-slate-500">{event.description}</div>
+                  <div className="text-slate-400 text-[10px]">{event.date}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/** 材料清单卡片 */
+const MaterialsListCard = ({ data }: { data: MaterialsListInfo }) => {
+  const [showAll, setShowAll] = useState(false);
+  const requiredMaterials = data.materials.filter(m => m.required);
+  const optionalMaterials = data.materials.filter(m => !m.required);
+  const displayMaterials = showAll ? data.materials : data.materials.slice(0, 5);
+
+  return (
+    <div className="mt-3 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="px-4 py-3 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-slate-100">
+        <div className="flex items-center gap-2">
+          <i className="fas fa-clipboard-check text-emerald-500"></i>
+          <span className="font-bold text-slate-700">{data.claimType} - 材料清单</span>
+        </div>
+      </div>
+      
+      <div className="p-4">
+        {/* 必需材料 */}
+        <div className="mb-3">
+          <div className="text-xs font-bold text-slate-500 mb-2">必需材料 ({requiredMaterials.length}项)</div>
+          <div className="space-y-2">
+            {displayMaterials.filter(m => m.required).map((material, idx) => (
+              <div key={idx} className="flex items-center gap-2 p-2 bg-red-50 rounded-lg border border-red-100">
+                <div className="w-5 h-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-bold">
+                  {idx + 1}
+                </div>
+                <div className="flex-1">
+                  <div className="text-sm font-medium text-slate-700">{material.name}</div>
+                  {material.description && (
+                    <div className="text-xs text-slate-500">{material.description}</div>
+                  )}
+                </div>
+                {material.sampleUrl && (
+                  <button className="text-xs text-blue-500 hover:text-blue-600">
+                    <i className="fas fa-eye"></i> 示例
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 可选材料 */}
+        {optionalMaterials.length > 0 && (
+          <div className="mb-3">
+            <div className="text-xs font-bold text-slate-500 mb-2">补充材料 ({optionalMaterials.length}项)</div>
+            <div className="space-y-1">
+              {displayMaterials.filter(m => !m.required).map((material, idx) => (
+                <div key={idx} className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg">
+                  <i className="fas fa-circle text-[6px] text-slate-400"></i>
+                  <span className="text-sm text-slate-600">{material.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 展开/收起按钮 */}
+        {data.materials.length > 5 && (
+          <button 
+            onClick={() => setShowAll(!showAll)}
+            className="w-full py-2 text-xs text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+          >
+            {showAll ? '收起' : `查看全部 ${data.materials.length} 项材料`}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/** 缺失材料卡片 */
+const MissingMaterialsCard = ({ data }: { data: MissingMaterialsInfo }) => {
+  const getUrgencyColor = (urgency: string) => {
+    switch (urgency) {
+      case 'high': return 'bg-red-50 border-red-200 text-red-700';
+      case 'medium': return 'bg-orange-50 border-orange-200 text-orange-700';
+      default: return 'bg-yellow-50 border-yellow-200 text-yellow-700';
+    }
+  };
+
+  return (
+    <div className={`mt-3 rounded-xl shadow-sm border overflow-hidden ${getUrgencyColor(data.urgency)}`}>
+      <div className="px-4 py-3 border-b border-current/10">
+        <div className="flex items-center gap-2">
+          <i className="fas fa-exclamation-triangle"></i>
+          <span className="font-bold">还缺 {data.missingItems.length} 项材料</span>
+        </div>
+      </div>
+      
+      <div className="p-4">
+        <div className="space-y-2">
+          {data.missingItems.map((item, idx) => (
+            <div key={idx} className="flex items-center gap-2">
+              <div className="w-5 h-5 rounded-full bg-current/20 text-current text-xs flex items-center justify-center font-bold">
+                {idx + 1}
+              </div>
+              <div className="flex-1">
+                <div className="font-medium">{item.name}</div>
+                <div className="text-xs opacity-80">{item.description}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {data.deadline && (
+          <div className="mt-3 pt-3 border-t border-current/10 text-sm">
+            <i className="fas fa-clock mr-1"></i>
+            补交截止：<span className="font-bold">{data.deadline}</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/** 保费影响卡片 */
+const PremiumImpactCard = ({ data }: { data: PremiumImpactInfo }) => {
+  const isIncrease = data.premiumChange.direction === 'increase';
+  const isDecrease = data.premiumChange.direction === 'decrease';
+
+  return (
+    <div className="mt-3 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="px-4 py-3 bg-gradient-to-r from-purple-50 to-pink-50 border-b border-slate-100">
+        <div className="flex items-center gap-2">
+          <i className="fas fa-calculator text-purple-500"></i>
+          <span className="font-bold text-slate-700">保费影响预估</span>
+        </div>
+      </div>
+      
+      <div className="p-4">
+        {/* NCD 变化 */}
+        <div className="flex items-center justify-between mb-4 p-3 bg-slate-50 rounded-lg">
+          <div className="text-center">
+            <div className="text-xs text-slate-500 mb-1">当前 NCD</div>
+            <div className="text-xl font-bold text-slate-700">{data.currentNCD}</div>
+          </div>
+          <i className="fas fa-arrow-right text-slate-400"></i>
+          <div className="text-center">
+            <div className="text-xs text-slate-500 mb-1">下年 NCD</div>
+            <div className="text-xl font-bold text-slate-700">{data.nextYearNCD}</div>
+          </div>
+        </div>
+
+        {/* 保费变化 */}
+        <div className={`p-3 rounded-lg mb-3 ${isIncrease ? 'bg-red-50 border border-red-100' : isDecrease ? 'bg-green-50 border border-green-100' : 'bg-slate-50'}`}>
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-slate-600">预估保费变化</span>
+            <span className={`text-lg font-bold ${isIncrease ? 'text-red-500' : isDecrease ? 'text-green-500' : 'text-slate-600'}`}>
+              {isIncrease ? '+' : ''}{data.premiumChange.amount}元 ({isIncrease ? '+' : ''}{data.premiumChange.percentage}%)
+            </span>
+          </div>
+        </div>
+
+        {/* 说明 */}
+        <div className="text-xs text-slate-500 mb-3">
+          {data.explanation}
+        </div>
+
+        {/* 建议 */}
+        {data.suggestions.length > 0 && (
+          <div className="mt-3 pt-3 border-t border-slate-100">
+            <div className="text-xs font-bold text-slate-500 mb-2">建议</div>
+            <ul className="space-y-1">
+              {data.suggestions.map((suggestion, idx) => (
+                <li key={idx} className="text-xs text-slate-600 flex items-start gap-1">
+                  <i className="fas fa-lightbulb text-yellow-500 mt-0.5"></i>
+                  <span>{suggestion}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // Materials List Card in Conversation
 const MaterialsMessageCard = ({
   materials,
@@ -512,6 +759,135 @@ const MaterialsMessageCard = ({
             稍后在“理赔历史”中补充
           </button>
         </div>
+      </div>
+    </div>
+  );
+};
+
+// File Inspector Item Component - handles signed URL fetching for thumbnails
+const FileInspectorItem = ({
+  doc,
+  index,
+  isError,
+  failedImages,
+  setFailedImages,
+  onPreview,
+  onToggleExpand,
+  isExpanded,
+  onReplaceFile
+}: {
+  doc: Attachment;
+  index: number;
+  isError: boolean;
+  failedImages: Set<number>;
+  setFailedImages: React.Dispatch<React.SetStateAction<Set<number>>>;
+  onPreview: (doc: Attachment) => void;
+  onToggleExpand: (index: number) => void;
+  isExpanded: boolean;
+  onReplaceFile: () => void;
+}) => {
+  const [signedUrl, setSignedUrl] = useState<string>('');
+  const [isLoadingUrl, setIsLoadingUrl] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    if (doc.ossKey && !doc.url) {
+      setIsLoadingUrl(true);
+      getSignedUrl(doc.ossKey)
+        .then(url => {
+          if (active) setSignedUrl(url);
+        })
+        .catch(() => {
+          if (active) setSignedUrl('');
+        })
+        .finally(() => {
+          if (active) setIsLoadingUrl(false);
+        });
+    }
+    return () => { active = false; };
+  }, [doc.ossKey, doc.url]);
+
+  const imgSrc = signedUrl || doc.url || (doc.base64 ? `data:${doc.type};base64,${doc.base64}` : '');
+  const showImage = doc.type?.includes('image') && imgSrc && !failedImages.has(index);
+
+  return (
+    <div className={`p-4 rounded-xl shadow-sm border flex gap-4 animate-enter ${isError ? 'bg-red-50 border-red-200' : 'bg-white border-slate-100'}`} style={{ animationDelay: `${index * 50}ms` }}>
+      <div
+        className="w-20 h-20 rounded-lg bg-slate-100 shrink-0 overflow-hidden border border-slate-100 relative group cursor-pointer"
+        onClick={() => onPreview(doc)}
+      >
+        {showImage ? (
+          <img
+            src={imgSrc}
+            className={`w-full h-full object-cover transition-transform group-hover:scale-110 ${isError ? 'opacity-80' : ''}`}
+            onError={() => setFailedImages(prev => new Set(prev).add(index))}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-slate-400 text-2xl">
+            {isLoadingUrl ? (
+              <i className="fas fa-spinner fa-spin"></i>
+            ) : (
+              <i className={`fas ${getDocIcon(doc.name)}`}></i>
+            )}
+          </div>
+        )}
+
+        {/* Zoom Hint Overlay */}
+        <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+          <i className="fas fa-magnifying-glass-plus text-white text-lg"></i>
+        </div>
+
+        {isError && (
+          <div className="absolute inset-0 bg-red-500/10 flex items-center justify-center pointer-events-none">
+            <i className="fas fa-triangle-exclamation text-red-500 text-2xl drop-shadow-sm"></i>
+          </div>
+        )}
+      </div>
+      <div
+        className="flex-1 min-w-0 flex flex-col justify-center cursor-pointer"
+        onClick={() => onToggleExpand(index)}
+      >
+        <div className="flex justify-between items-start">
+          <h4 className="font-bold text-slate-800 text-sm truncate mb-1">{doc.name}</h4>
+          {isError && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onReplaceFile();
+              }}
+              className="text-[10px] bg-red-100 hover:bg-red-200 text-red-600 px-2 py-1 rounded-full font-bold transition-colors"
+            >
+              更换文件
+            </button>
+          )}
+        </div>
+        <div className="flex flex-wrap gap-2 mb-2">
+          {isError ? (
+            <span className="bg-red-100 text-red-600 text-[10px] px-2 py-0.5 rounded-md font-bold border border-red-200 flex items-center gap-1">
+              <i className="fas fa-times-circle"></i> 缺失信息
+            </span>
+          ) : (
+            <span className="bg-blue-50 text-blue-600 text-[10px] px-2 py-0.5 rounded-md font-semibold border border-blue-100">
+              {doc.analysis?.category || '分析中...'}
+            </span>
+          )}
+        </div>
+        <div className="mt-2 flex items-center gap-1 text-blue-500 text-xs font-bold select-none">
+          {isExpanded ? '收起详情' : '查看识别详情'}
+          <i className={`fas fa-chevron-${isExpanded ? 'up' : 'down'} transition-transform`}></i>
+        </div>
+
+        {isExpanded && doc.analysis && (
+          <div onClick={e => e.stopPropagation()} className="cursor-auto animate-enter origin-top">
+            {doc.analysis.medicalData ? (
+              <MedicalDataDisplay data={doc.analysis.medicalData} />
+            ) : doc.analysis.dischargeSummaryData ? (
+              <DischargeSummaryDisplay data={doc.analysis.dischargeSummaryData} />
+            ) : (
+              <GenericOCRDisplay data={doc.analysis.ocr} />
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -832,7 +1208,7 @@ const AuthScreen = ({ onLogin }: { onLogin: (name: string, gender: string) => vo
 
           <button
             onClick={handleSubmit}
-            className="w-full py-4 mt-4 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-xl font-bold text-lg shadow-xl shadow-blue-500/20 active:scale-95 transition-transform hover:shadow-2xl hover:shadow-blue-500/30"
+            className="w-full py-4 mt-4 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-bold text-lg shadow-xl shadow-blue-500/20 active:scale-95 transition-transform hover:shadow-2xl hover:shadow-blue-500/30"
           >
             进入体验 <i className="fas fa-arrow-right ml-2 text-sm"></i>
           </button>
@@ -884,6 +1260,7 @@ export const App: React.FC = () => {
   const [fileInspectData, setFileInspectData] = useState<Attachment[] | null>(null);
   const [previewAttachment, setPreviewAttachment] = useState<Attachment | null>(null);
   const [expandedDocIndex, setExpandedDocIndex] = useState<number | null>(null);
+  const [failedImages, setFailedImages] = useState<Set<number>>(new Set());
   const [showUploadGuide, setShowUploadGuide] = useState(false);
 
   // Policy Selection State
@@ -1078,6 +1455,7 @@ export const App: React.FC = () => {
 
   const handleViewAttachments = (attachments: Attachment[], context: string) => {
     setFileInspectData(attachments);
+    setFailedImages(new Set());
     logUserOperation({
       operationType: UserOperationType.VIEW_FILE,
       operationLabel: '查看材料',
@@ -1347,46 +1725,63 @@ export const App: React.FC = () => {
       return;
     }
 
-    if (textToSend.includes('进度') || textToSend.includes('记录')) {
-      setTimeout(() => {
-        setIsClaimsExpanded(false);
-        setClaimSearchTerm(''); // Reset search term
-        setMessages(prev => [...prev, {
-          id: Date.now().toString(),
-          role: 'assistant',
-          content: `这是您的理赔记录：`,
-          timestamp: Date.now(),
-          claimsList: claimState.historicalClaims
-        }]);
-        setIsLoading(false);
-      }, 600);
-      logUserOperation({
-        operationType: UserOperationType.VIEW_PROGRESS,
-        operationLabel: '查看理赔进度',
-        userName,
-        userGender,
-        inputData: { message: messagePreview, messageLength: textToSend.length },
-        outputData: { claimCount: claimState.historicalClaims.length },
-        duration: Date.now() - operationStart
-      });
-      return;
-    }
-
     try {
-      const { text, groundingLinks, aiLog } = await getAIResponse(
+      // 使用智能聊天，自动进行意图识别
+      const { text, groundingLinks, aiLog, intentResult, toolResponse, usedIntentTool } = await smartChat(
+        textToSend,
         messages.concat(userMsg).map(m => ({ role: m.role, content: m.content })),
         claimState,
-        userLocation
+        { userLocation }
       );
 
-      // Inject car insurance checklist image if applicable
+      // 如果有工具执行结果，显示特殊 UI
+      let uiComponent: UIComponentType | undefined;
+      let uiData: any;
       let responseAttachments: Attachment[] | undefined;
-      if (textToSend.includes('车') || textToSend.includes('机动车')) {
-        responseAttachments = [{
-          name: '车险理赔材料清单',
-          type: 'image/jpeg',
-          url: 'https://pic1.imgdb.cn/item/693fab0b4a4e4213d0058351.jpg'
-        }];
+
+      if (usedIntentTool && toolResponse) {
+        uiComponent = toolResponse.uiComponent;
+        uiData = toolResponse.uiData;
+        
+        // 记录意图识别操作
+        logUserOperation({
+          operationType: UserOperationType.VIEW_PROGRESS,
+          operationLabel: `意图识别: ${intentResult ? getIntentLabel(intentResult.intent) : '未知'}`,
+          userName,
+          userGender,
+          inputData: { 
+            message: messagePreview, 
+            intent: intentResult?.intent,
+            confidence: intentResult?.confidence
+          },
+          outputData: { 
+            usedIntentTool,
+            uiComponent,
+            toolSuccess: toolResponse.success 
+          },
+          aiInteractions: aiLog ? [aiLog] : undefined,
+          duration: Date.now() - operationStart
+        });
+      } else {
+        // Inject car insurance checklist image if applicable
+        if (textToSend.includes('车') || textToSend.includes('机动车')) {
+          responseAttachments = [{
+            name: '车险理赔材料清单',
+            type: 'image/jpeg',
+            url: 'https://pic1.imgdb.cn/item/693fab0b4a4e4213d0058351.jpg'
+          }];
+        }
+
+        logUserOperation({
+          operationType: UserOperationType.SEND_MESSAGE,
+          operationLabel: '发送消息',
+          userName,
+          userGender,
+          inputData: { message: messagePreview, messageLength: textToSend.length },
+          outputData: { responseLength: text.length, groundingLinkCount: groundingLinks?.length || 0 },
+          aiInteractions: aiLog ? [aiLog] : undefined,
+          duration: Date.now() - operationStart
+        });
       }
 
       setMessages(prev => [...prev, {
@@ -1395,20 +1790,23 @@ export const App: React.FC = () => {
         content: text,
         timestamp: Date.now(),
         groundingLinks,
-        attachments: responseAttachments
+        attachments: responseAttachments,
+        intentResult: intentResult ? {
+          intent: intentResult.intent,
+          confidence: intentResult.confidence
+        } : undefined,
+        uiComponent,
+        uiData
       }]);
-      logUserOperation({
-        operationType: UserOperationType.SEND_MESSAGE,
-        operationLabel: '发送消息',
-        userName,
-        userGender,
-        inputData: { message: messagePreview, messageLength: textToSend.length },
-        outputData: { responseLength: text.length, groundingLinkCount: groundingLinks?.length || 0 },
-        aiInteractions: aiLog ? [aiLog] : undefined,
-        duration: Date.now() - operationStart
-      });
+
     } catch (error) {
-      setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: "网络连接似乎有些问题，请稍后再试。", timestamp: Date.now() }]);
+      console.error('[Smart Chat Error]', error);
+      setMessages(prev => [...prev, { 
+        id: Date.now().toString(), 
+        role: 'assistant', 
+        content: "网络连接似乎有些问题，请稍后再试。", 
+        timestamp: Date.now() 
+      }]);
       logUserOperation({
         operationType: UserOperationType.SEND_MESSAGE,
         operationLabel: '发送消息',
@@ -1949,8 +2347,9 @@ export const App: React.FC = () => {
     const selectedAccidentCauseId = dynamicFormValues[accidentCauseFieldId] || undefined;
 
     // Create backend claim case record
+    let claimCaseCreated = false;
     try {
-      await fetch('/api/claim-cases', {
+      const response = await fetch('/api/claim-cases', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1966,8 +2365,8 @@ export const App: React.FC = () => {
           policyNumber,
           status: '已报案',
           operator: userName,
+          claimAmount: 0,
           intakeFormData: dynamicFormValues,
-          // 动态材料清单相关字段
           selectedClaimItems,
           selectedAccidentCauseId,
           requiredMaterials: calculatedMaterials?.map(m => ({
@@ -1976,8 +2375,16 @@ export const App: React.FC = () => {
           })) || []
         })
       });
+
+      if (response.ok) {
+        claimCaseCreated = true;
+        console.log('[Claim] Backend claim case created successfully:', newClaimId);
+      } else {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('[Claim] Failed to create backend claim case:', errorData);
+      }
     } catch (err) {
-      console.warn('Failed to create backend claim case:', err);
+      console.error('[Claim] Network error creating backend claim case:', err);
     }
 
     setPendingFiles([]);
@@ -2239,6 +2646,28 @@ export const App: React.FC = () => {
                   </div>
                 )}
 
+                {/* Intent-based UI Components */}
+                {msg.uiComponent && msg.uiData && (
+                  <div className="mt-3">
+                    {/* 理赔进度卡片 */}
+                    {msg.uiComponent === UIComponentType.CLAIM_PROGRESS && (
+                      <ClaimProgressCard data={msg.uiData as ClaimProgressInfo} />
+                    )}
+                    {/* 材料清单 */}
+                    {msg.uiComponent === UIComponentType.MATERIALS_LIST && (
+                      <MaterialsListCard data={msg.uiData as MaterialsListInfo} />
+                    )}
+                    {/* 缺失材料提醒 */}
+                    {msg.uiComponent === UIComponentType.MISSING_MATERIALS && (
+                      <MissingMaterialsCard data={msg.uiData as MissingMaterialsInfo} />
+                    )}
+                    {/* 保费影响说明 */}
+                    {msg.uiComponent === UIComponentType.PREMIUM_IMPACT && (
+                      <PremiumImpactCard data={msg.uiData as PremiumImpactInfo} />
+                    )}
+                  </div>
+                )}
+
                 {/* Grounding Links */}
                 {msg.groundingLinks && (
                   <div className="mt-3 pt-3 border-t border-dashed border-current/20 flex flex-wrap gap-2">
@@ -2316,7 +2745,8 @@ export const App: React.FC = () => {
                                   onClick={() => handleViewAttachments([{
                                     url: material.sampleUrl,
                                     type: 'image/jpeg',
-                                    name: `${material.materialName}样例`
+                                    name: `${material.materialName}样例`,
+                                    ossKey: material.ossKey
                                   }], '材料样例')}
                                   className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 transition-colors"
                                 >
@@ -3072,93 +3502,20 @@ export const App: React.FC = () => {
                 <button onClick={handleCloseFileInspect} className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-slate-200"><i className="fas fa-xmark"></i></button>
               </div>
               <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50">
-                {fileInspectData.map((doc, i) => {
-                  const isError = hasMissingFields(doc);
-                  const imgSrc = doc.url || (doc.base64 ? `data:${doc.type};base64,${doc.base64}` : '');
-                  return (
-                    <div key={i} className={`p-4 rounded-xl shadow-sm border flex gap-4 animate-enter ${isError ? 'bg-red-50 border-red-200' : 'bg-white border-slate-100'}`} style={{ animationDelay: `${i * 50}ms` }}>
-                      <div
-                        className="w-20 h-20 rounded-lg bg-slate-100 shrink-0 overflow-hidden border border-slate-100 relative group cursor-pointer"
-                        onClick={() => handlePreviewAttachment(doc, '文件列表')}
-                      >
-                        {doc.type.includes('image') && imgSrc ? (
-                          <img src={imgSrc} className={`w-full h-full object-cover transition-transform group-hover:scale-110 ${isError ? 'opacity-80' : ''}`} />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-slate-400 text-2xl"><i className={`fas ${getDocIcon(doc.name)}`}></i></div>
-                        )}
-
-                        {/* Zoom Hint Overlay */}
-                        <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <i className="fas fa-magnifying-glass-plus text-white text-lg"></i>
-                        </div>
-
-                        {isError && (
-                          <div className="absolute inset-0 bg-red-500/10 flex items-center justify-center pointer-events-none">
-                            <i className="fas fa-triangle-exclamation text-red-500 text-2xl drop-shadow-sm"></i>
-                          </div>
-                        )}
-                      </div>
-                      <div
-                        className="flex-1 min-w-0 flex flex-col justify-center cursor-pointer"
-                        onClick={() => setExpandedDocIndex(expandedDocIndex === i ? null : i)}
-                      >
-                        <div className="flex justify-between items-start">
-                          <h4 className="font-bold text-slate-800 text-sm truncate mb-1">{doc.name}</h4>
-                          {isError && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleReplaceFileClick();
-                              }}
-                              className="text-[10px] bg-red-100 hover:bg-red-200 text-red-600 px-2 py-1 rounded-full font-bold transition-colors"
-                            >
-                              更换文件
-                            </button>
-                          )}
-                        </div>
-                        <div className="flex flex-wrap gap-2 mb-2">
-                          {isError ? (
-                            <span className="bg-red-100 text-red-600 text-[10px] px-2 py-0.5 rounded-md font-bold border border-red-200 flex items-center gap-1">
-                              <i className="fas fa-times-circle"></i> 缺失信息: {doc.analysis?.missingFields?.join('、')}
-                            </span>
-                          ) : (
-                            <span className="bg-blue-50 text-blue-600 text-[10px] px-2 py-0.5 rounded-md font-semibold border border-blue-100">
-                              {doc.analysis?.category || '分析中...'}
-                            </span>
-                          )}
-
-                          {!isError && doc.analysis?.clarityScore && (
-                            <span className="bg-green-50 text-green-600 text-[10px] px-2 py-0.5 rounded-md border border-green-100">
-                              清晰度 {doc.analysis.clarityScore}%
-                            </span>
-                          )}
-                        </div>
-                        {doc.analysis?.summary && (
-                          <p className={`text-xs line-clamp-2 leading-relaxed p-2 rounded-lg ${isError ? 'text-red-500 bg-red-100/50' : 'text-slate-500 bg-slate-50'}`}>
-                            {doc.analysis.summary}
-                          </p>
-                        )}
-
-                        <div className="mt-2 flex items-center gap-1 text-blue-500 text-xs font-bold select-none">
-                          {expandedDocIndex === i ? '收起详情' : '查看识别详情'}
-                          <i className={`fas fa-chevron-${expandedDocIndex === i ? 'up' : 'down'} transition-transform`}></i>
-                        </div>
-
-                        {expandedDocIndex === i && doc.analysis && (
-                          <div onClick={e => e.stopPropagation()} className="cursor-auto animate-enter origin-top">
-                            {doc.analysis.medicalData ? (
-                              <MedicalDataDisplay data={doc.analysis.medicalData} />
-                            ) : doc.analysis.dischargeSummaryData ? (
-                              <DischargeSummaryDisplay data={doc.analysis.dischargeSummaryData} />
-                            ) : (
-                              <GenericOCRDisplay data={doc.analysis.ocr} />
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+                {fileInspectData.map((doc, i) => (
+                  <FileInspectorItem
+                    key={i}
+                    doc={doc}
+                    index={i}
+                    isError={hasMissingFields(doc)}
+                    failedImages={failedImages}
+                    setFailedImages={setFailedImages}
+                    isExpanded={expandedDocIndex === i}
+                    onPreview={(d) => handlePreviewAttachment(d, '文件列表')}
+                    onToggleExpand={(idx) => setExpandedDocIndex(expandedDocIndex === idx ? null : idx)}
+                    onReplaceFile={handleReplaceFileClick}
+                  />
+                ))}
               </div>
               <div className="p-4 border-t border-slate-100 bg-white">
                 <button onClick={handleCloseFileInspect} className="w-full py-3.5 rounded-xl bg-slate-900 text-white font-bold shadow-lg shadow-slate-900/20 active:scale-95 transition-all">确认</button>

@@ -313,5 +313,101 @@
     "selectedClaimItems": [],
     "selectedAccidentCauseId": "交通事故",
     "requiredMaterials": []
+  },
+  {
+    "id": "CLM327493",
+    "reportNumber": "R202603030235278AXB",
+    "reporter": "1",
+    "reportTime": "3/3/2026, 10:35:27 AM",
+    "accidentTime": "2026-03-03",
+    "accidentReason": "交通事故",
+    "accidentLocation": "1",
+    "productCode": "zhongan2026PAC814",
+    "productName": "无忧保综合意外险(2022升级版)",
+    "policyNumber": "PM157CG240579335929704",
+    "status": "已报案",
+    "operator": "1",
+    "intakeFormData": {
+      "accident_date": "2026-03-03",
+      "accident_location": "1",
+      "accident_reason": "交通事故",
+      "claim_item": "门诊费",
+      "injury_description": "1",
+      "treatment_type": "住院",
+      "hospital_name": "北京协和医院",
+      "treatment_status": "治疗中",
+      "involves_third_party": false
+    },
+    "selectedClaimItems": [
+      "门诊费"
+    ],
+    "selectedAccidentCauseId": "交通事故",
+    "requiredMaterials": []
+  },
+  {
+    "id": "CLM683240",
+    "reportNumber": "R20260303090443XRP7",
+    "reporter": "1",
+    "reportTime": "3/3/2026, 5:04:43 PM",
+    "accidentTime": "2026-03-03",
+    "accidentReason": "交通事故",
+    "accidentLocation": "1",
+    "productCode": "zhongan2026PAC814",
+    "productName": "无忧保综合意外险(2022升级版)",
+    "policyNumber": "PM157CG240579335929704",
+    "status": "已报案",
+    "operator": "1",
+    "claimAmount": 0,
+    "intakeFormData": {
+      "accident_date": "2026-03-03",
+      "accident_time": "17:04",
+      "accident_location": "1",
+      "accident_description": "1",
+      "accident_reason": "交通事故",
+      "claim_item": [
+        "门诊费",
+        "住院费"
+      ],
+      "claim_amount": "1000"
+    },
+    "selectedClaimItems": [
+      "门诊费",
+      "住院费"
+    ],
+    "selectedAccidentCauseId": "交通事故",
+    "requiredMaterials": []
+  },
+  {
+    "id": "CLM785528",
+    "reportNumber": "R20260303093945AJ71",
+    "reporter": "1",
+    "reportTime": "3/3/2026, 5:39:45 PM",
+    "accidentTime": "2026-03-03",
+    "accidentReason": "交通事故",
+    "accidentLocation": "上海",
+    "productCode": "zhongan2026PAC814",
+    "productName": "无忧保综合意外险(2022升级版)",
+    "policyNumber": "PM157CG240579335929704",
+    "status": "已报案",
+    "operator": "1",
+    "claimAmount": 0,
+    "intakeFormData": {
+      "accident_date": "2026-03-03",
+      "accident_time": "17:39",
+      "accident_location": "上海",
+      "accident_description": "摔跤",
+      "accident_reason": "交通事故",
+      "claim_item": [
+        "门诊费",
+        "住院费"
+      ],
+      "claim_amount": "1000"
+    },
+    "selectedClaimItems": [
+      "门诊费",
+      "住院费"
+    ],
+    "selectedAccidentCauseId": "交通事故",
+    "requiredMaterials": []
   }
 ]

@@ -231,9 +231,9 @@ async function extractSummaryWithGemini({ docId, summaryType, extractedText, bas
   }
 
   const contents = [];
+  const hasImage = base64Data && mimeType?.startsWith("image/");
 
-  // 如果有图片数据，使用多模态（图片 + 文字）
-  if (base64Data && mimeType?.startsWith("image/")) {
+  if (hasImage) {
     contents.push({
       parts: [
         {
@@ -246,43 +246,48 @@ async function extractSummaryWithGemini({ docId, summaryType, extractedText, bas
       ],
     });
   } else if (extractedText && extractedText.length > 20) {
-    // 纯文本模式
     contents.push({
       parts: [{ text: `${prompt}\n\n文档内容：\n${extractedText}` }],
     });
   } else {
-    return null; // 没有可处理的内容
-  }
-
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents,
-      config: {
-        responseMimeType: "application/json",
-        temperature: 0.1,
-      },
-    });
-
-    const text = response.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
-    const parsed = JSON.parse(text);
-
-    // 补充公共字段
-    return {
-      docId,
-      summaryType,
-      extractedAt: new Date().toISOString(),
-      confidence: parsed.confidence || 0.5,
-      sourceAnchors: parsed.sourceAnchors || {},
-      ...parsed,
-      // 移除冗余字段
-      confidence: parsed.confidence || 0.5,
-      sourceAnchors: parsed.sourceAnchors || {},
-    };
-  } catch (error) {
-    console.error(`[summaryExtractor] Failed to extract ${summaryType} for ${docId}:`, error.message);
     return null;
   }
+
+  const modelCandidates = hasImage
+    ? ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.0-flash"]
+    : ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.0-flash"];
+
+  let lastError;
+  for (const model of modelCandidates) {
+    try {
+      const response = await ai.models.generateContent({
+        model,
+        contents,
+        config: {
+          responseMimeType: "application/json",
+          temperature: 0.1,
+        },
+      });
+
+      const text = response.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+      const parsed = JSON.parse(text);
+
+      return {
+        docId,
+        summaryType,
+        extractedAt: new Date().toISOString(),
+        ...parsed,
+        confidence: parsed.confidence || 0.5,
+        sourceAnchors: parsed.sourceAnchors || {},
+      };
+    } catch (error) {
+      lastError = error;
+      console.warn(`[summaryExtractor] Model ${model} failed:`, error.message);
+    }
+  }
+
+  console.error(`[summaryExtractor] All models failed for ${summaryType}:`, lastError?.message);
+  return null;
 }
 
 /**

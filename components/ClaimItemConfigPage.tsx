@@ -538,12 +538,12 @@ const ClaimItemConfigPage: React.FC = () => {
   const handleViewSample = async (material: ClaimsMaterial) => {
     try {
       let url = material.sampleUrl;
-      
+
       // If we have an ossKey, generate a fresh signed URL
       if (material.ossKey) {
         url = await getSignedUrl(material.ossKey);
       }
-      
+
       if (url) {
         // Test if the URL is accessible by trying to load it
         const testImg = new Image();
@@ -551,15 +551,15 @@ const ClaimItemConfigPage: React.FC = () => {
           setPreviewImageUrl(url);
         };
         testImg.onerror = () => {
-          alert('样例图片不存在或已被删除，请重新上传样例图片');
+          alert("样例图片不存在或已被删除，请重新上传样例图片");
         };
         testImg.src = url;
       } else {
-        alert('无样例图片');
+        alert("无样例图片");
       }
     } catch (error) {
-      console.error('Failed to get signed URL:', error);
-      alert('样例图片不存在或已被删除，请重新上传样例图片');
+      console.error("Failed to get signed URL:", error);
+      alert("样例图片不存在或已被删除，请重新上传样例图片");
     }
   };
 
@@ -808,6 +808,9 @@ const ClaimItemConfigPage: React.FC = () => {
                       说明
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      转人工置信度
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                       样例
                     </th>
                     <th className="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -827,6 +830,23 @@ const ClaimItemConfigPage: React.FC = () => {
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-600 max-w-xs truncate">
                           {material.description}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                          {material.confidenceThreshold != null ? (
+                            <span
+                              className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
+                                material.confidenceThreshold >= 0.8
+                                  ? "bg-green-50 text-green-700"
+                                  : material.confidenceThreshold >= 0.6
+                                    ? "bg-yellow-50 text-yellow-700"
+                                    : "bg-red-50 text-red-700"
+                              }`}
+                            >
+                              {(material.confidenceThreshold * 100).toFixed(0)}%
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">未设置</span>
+                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                           {material.sampleUrl || material.ossKey ? (
@@ -859,7 +879,7 @@ const ClaimItemConfigPage: React.FC = () => {
                   ) : (
                     <tr>
                       <td
-                        colSpan={4}
+                        colSpan={5}
                         className="px-6 py-8 text-center text-sm text-gray-500"
                       >
                         暂无符合条件的材料数据
@@ -2080,12 +2100,50 @@ const ClaimItemConfigPage: React.FC = () => {
             placeholder="请输入材料说明"
             rows={3}
           />
+          <div className="space-y-1">
+            <label className="block text-sm font-medium text-gray-700">
+              转人工置信度阈值（%）
+            </label>
+            <div className="flex items-center space-x-2">
+              <input
+                type="number"
+                min={0}
+                max={100}
+                step={1}
+                value={
+                  editingMaterial?.confidenceThreshold != null
+                    ? Math.round(editingMaterial.confidenceThreshold * 100)
+                    : ""
+                }
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setEditingMaterial((prev) => ({
+                    ...prev!,
+                    confidenceThreshold:
+                      val === "" ? undefined : Number(val) / 100,
+                  }));
+                }}
+                placeholder="如：80"
+                className="w-32 h-9 px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 text-sm"
+              />
+              <span className="text-sm text-gray-500">%</span>
+            </div>
+            <p className="text-xs text-gray-500">
+              当 AI
+              识别结果的置信度低于此值时，该材料将自动转人工复核。留空表示不启用此规则。
+            </p>
+          </div>
           <FileUpload
             label="材料样例"
             id="sample-upload"
             value={editingMaterial?.sampleUrl}
+            ossKey={editingMaterial?.ossKey}
             onChange={(url, ossKey) =>
-              setEditingMaterial((prev) => ({ ...prev!, sampleUrl: url, ossKey: ossKey || prev?.ossKey }))
+              setEditingMaterial((prev) => ({
+                ...prev!,
+                sampleUrl: url,
+                ossKey: ossKey || prev?.ossKey,
+              }))
             }
             accept="image/*"
             helpText="上传材料样例图片，支持 jpg, png, webp 等格式"
@@ -2130,7 +2188,10 @@ const ClaimItemConfigPage: React.FC = () => {
           className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4"
           onClick={() => setPreviewImageUrl(null)}
         >
-          <div className="relative max-w-4xl max-h-[90vh] w-full" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="relative max-w-4xl max-h-[90vh] w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               onClick={() => setPreviewImageUrl(null)}
               className="absolute -top-10 right-0 text-white hover:text-gray-300 text-2xl font-bold"
@@ -2142,7 +2203,7 @@ const ClaimItemConfigPage: React.FC = () => {
               alt="材料样例"
               className="w-full h-full object-contain rounded-lg"
               onError={() => {
-                alert('图片加载失败');
+                alert("图片加载失败");
                 setPreviewImageUrl(null);
               }}
             />

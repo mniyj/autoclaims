@@ -1,0 +1,19 @@
+[
+  {
+    "id": "rt-1772458732606-ndirlo",
+    "claimCaseId": "claim-1",
+    "reportNumber": "R202405010001",
+    "materialId": "mat-4",
+    "materialName": "行驶证（含副页）",
+    "documentId": "doc-1772458732600-ufds3s",
+    "ossUrl": null,
+    "taskType": "置信度不足",
+    "priority": "紧急",
+    "aiConfidence": 0.01,
+    "threshold": 0.9,
+    "aiExtractedData": {},
+    "createdBy": "system",
+    "status": "待处理",
+    "createdAt": "2026-03-02T13:38:52.606Z"
+  }
+]

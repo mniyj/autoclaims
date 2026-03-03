@@ -70,6 +70,7 @@ const ClaimsMaterialManagementPage: React.FC = () => {
       ossKey: "",
       jsonSchema: '{\n  "type": "object",\n  "properties": {}\n}',
       aiAuditPrompt: "",
+      confidenceThreshold: 0.9, // 默认值
     });
     setIsModalOpen(true);
   };
@@ -133,13 +134,26 @@ const ClaimsMaterialManagementPage: React.FC = () => {
       return;
     }
 
+    // 置信度边界验证和默认值
+    let confidence = editingMaterial.confidenceThreshold;
+    if (confidence === undefined || confidence === null || isNaN(confidence)) {
+      confidence = 0.9;
+    } else {
+      confidence = Math.max(0, Math.min(1, confidence));
+    }
+
+    const materialToSave: ClaimsMaterial = {
+      ...editingMaterial,
+      confidenceThreshold: confidence,
+    } as ClaimsMaterial;
+
     let newMaterials = [...materials];
-    if (materials.find((m) => m.id === editingMaterial.id)) {
+    if (materials.find((m) => m.id === materialToSave.id)) {
       newMaterials = materials.map((m) =>
-        m.id === editingMaterial.id ? (editingMaterial as ClaimsMaterial) : m,
+        m.id === materialToSave.id ? materialToSave : m,
       );
     } else {
-      newMaterials = [...materials, editingMaterial as ClaimsMaterial];
+      newMaterials = [...materials, materialToSave];
     }
 
     try {
@@ -350,10 +364,38 @@ const ClaimsMaterialManagementPage: React.FC = () => {
             placeholder="请输入材料说明"
             rows={3}
           />
+          <div className="space-y-1">
+            <label className="block text-sm font-medium text-gray-700">
+              转人工置信度阈值
+            </label>
+            <div className="flex items-center space-x-4">
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.01}
+                value={editingMaterial?.confidenceThreshold ?? 0.9}
+                onChange={(e) =>
+                  setEditingMaterial((prev) => ({
+                    ...prev!,
+                    confidenceThreshold: parseFloat(e.target.value),
+                  }))
+                }
+                className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-brand-blue-600"
+              />
+              <span className="w-16 text-right text-sm font-medium text-gray-700">
+                {((editingMaterial?.confidenceThreshold ?? 0.9) * 100).toFixed(0)}%
+              </span>
+            </div>
+            <p className="text-xs text-gray-500">
+              当 AI 识别结果的置信度低于此阈值时，该材料将自动转人工复核。默认值：0.9 (90%)
+            </p>
+          </div>
           <FileUpload
             label="材料样例"
             id="sample-upload"
             value={editingMaterial?.sampleUrl}
+            ossKey={editingMaterial?.ossKey}
             onChange={(url, ossKey) =>
               setEditingMaterial((prev) => ({
                 ...prev!,
@@ -376,39 +418,6 @@ const ClaimsMaterialManagementPage: React.FC = () => {
             placeholder="用于指示 AI 审核该材料的规则、要点和输出格式"
             rows={8}
           />
-          <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700">
-              转人工置信度阈值（%）
-            </label>
-            <div className="flex items-center space-x-2">
-              <input
-                type="number"
-                min={0}
-                max={100}
-                step={1}
-                value={
-                  editingMaterial?.confidenceThreshold != null
-                    ? Math.round(editingMaterial.confidenceThreshold * 100)
-                    : ""
-                }
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setEditingMaterial((prev) => ({
-                    ...prev!,
-                    confidenceThreshold:
-                      val === "" ? undefined : Number(val) / 100,
-                  }));
-                }}
-                placeholder="如：80"
-                className="w-32 h-9 px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 text-sm"
-              />
-              <span className="text-sm text-gray-500">%</span>
-            </div>
-            <p className="text-xs text-gray-500">
-              当 AI
-              识别结果的置信度低于此值时，该材料将自动转人工复核。留空表示不启用此规则。
-            </p>
-          </div>
           <div className="space-y-1">
             <label className="block text-sm font-medium text-gray-700">
               JSON Schema

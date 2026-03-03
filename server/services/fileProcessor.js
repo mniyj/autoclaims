@@ -50,15 +50,17 @@ const FILE_TYPE_MAPPINGS = {
  * @returns {string} 文件类型分类
  */
 export function getFileCategory(mimeType, fileName = '') {
+  const safeMimeType = mimeType || '';
+  
   // 先根据 MIME 类型判断
-  if (FILE_TYPE_MAPPINGS[mimeType]) {
-    return FILE_TYPE_MAPPINGS[mimeType];
+  if (FILE_TYPE_MAPPINGS[safeMimeType]) {
+    return FILE_TYPE_MAPPINGS[safeMimeType];
   }
 
   // 根据 MIME 类型前缀判断
-  if (mimeType.startsWith('image/')) return 'image';
-  if (mimeType.startsWith('video/')) return 'video';
-  if (mimeType.startsWith('text/')) return 'text';
+  if (safeMimeType.startsWith('image/')) return 'image';
+  if (safeMimeType.startsWith('video/')) return 'video';
+  if (safeMimeType.startsWith('text/')) return 'text';
 
   // 根据文件扩展名判断
   const ext = fileName.split('.').pop()?.toLowerCase();
@@ -155,19 +157,31 @@ export async function processImageWithAI(base64Data, mimeType, prompt, options =
       contents: {
         parts: [
           { inlineData: { mimeType, data: base64Data } },
-          { text: prompt || '请识别并提取图片中的所有文字信息。' }
+          { text: prompt || '请识别并提取图片中的所有文字信息，以纯文本格式返回。' }
         ]
       },
       config: {
-        responseMimeType: 'application/json',
+        responseMimeType: 'text/plain',
         temperature: options.temperature || 0.1
       }
     });
 
+    const extractedText = response.text || '';
+    
+    // 尝试解析为结构化数据（如果返回的是JSON）
+    let structuredData = {};
+    try {
+      if (extractedText.trim().startsWith('{')) {
+        structuredData = JSON.parse(extractedText);
+      }
+    } catch {
+      // 不是JSON格式，保持为空对象
+    }
+
     return {
       success: true,
-      text: response.text || '',
-      structuredData: response.text ? JSON.parse(response.text) : {},
+      text: extractedText,
+      structuredData,
       usageMetadata: response.usageMetadata,
     };
   } catch (error) {

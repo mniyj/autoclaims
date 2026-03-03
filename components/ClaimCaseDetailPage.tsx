@@ -1079,12 +1079,18 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
                           </div>
                           <span
                             className={`text-[10px] px-1.5 py-0.5 rounded flex-shrink-0 ${
-                              doc.status === "completed"
-                                ? "bg-green-100 text-green-700"
-                                : "bg-red-100 text-red-700"
+                              doc.status !== "completed"
+                                ? "bg-red-100 text-red-700"
+                                : doc.classification?.materialId === "unknown"
+                                  ? "bg-gray-100 text-gray-600"
+                                  : "bg-green-100 text-green-700"
                             }`}
                           >
-                            {doc.status === "completed" ? "已识别" : "失败"}
+                            {doc.status !== "completed"
+                              ? "失败"
+                              : doc.classification?.materialId === "unknown"
+                                ? "未识别"
+                                : "已识别"}
                           </span>
                         </div>
                       ))}

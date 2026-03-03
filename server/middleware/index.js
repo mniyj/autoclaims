@@ -343,10 +343,59 @@ function summarizeOutput(output) {
 
 /**
  * 读取审计日志
- * @param {string} date - 日期 YYYY-MM-DD
+ * @param {string} date - 日期 YYYY-MM-DD，传入 'all' 读取全部
  * @param {object} filters - 过滤条件
  */
 export function readAuditLogs(date, filters = {}) {
+  // 读取所有日志文件
+  if (date === 'all') {
+    try {
+      const files = fs.readdirSync(logsDir);
+      const auditFiles = files.filter(f => f.startsWith('audit-') && f.endsWith('.jsonl'));
+      
+      let allLogs = [];
+      for (const file of auditFiles) {
+        const logFile = path.join(logsDir, file);
+        try {
+          const content = fs.readFileSync(logFile, 'utf-8');
+          const lines = content.trim().split('\n').filter(Boolean);
+          
+          const logs = lines.map(line => {
+            try {
+              return JSON.parse(line);
+            } catch {
+              return null;
+            }
+          }).filter(Boolean);
+          
+          allLogs.push(...logs);
+        } catch (e) {
+          console.error(`[Audit Log] Failed to read ${file}:`, e.message);
+        }
+      }
+      
+      // 应用过滤器
+      if (filters.type) {
+        allLogs = allLogs.filter(log => log.type === filters.type);
+      }
+      if (filters.claimCaseId) {
+        allLogs = allLogs.filter(log => log.claimCaseId === filters.claimCaseId);
+      }
+      if (filters.success !== undefined) {
+        allLogs = allLogs.filter(log => log.success === filters.success);
+      }
+      
+      // 按时间排序（最新的在前）
+      allLogs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      
+      return allLogs;
+    } catch (error) {
+      console.error('[Audit Log] Read all failed:', error.message);
+      return [];
+    }
+  }
+  
+  // 读取指定日期的日志文件
   const logFile = path.join(logsDir, `audit-${date}.jsonl`);
   
   if (!fs.existsSync(logFile)) {

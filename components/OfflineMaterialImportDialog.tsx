@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { type ProcessedFile, type CompletenessResult } from '../types';
 
 interface OfflineMaterialImportDialogProps {
@@ -46,10 +46,13 @@ const OfflineMaterialImportDialog: React.FC<OfflineMaterialImportDialogProps> = 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleClose = () => {
-    if (importing) return;
+    if (importing && taskStatus !== 'completed' && taskStatus !== 'failed' && taskStatus !== 'partial_success') return;
     setFiles([]);
     setCompleteness(null);
     setError(null);
+    setTaskId(null);
+    setTaskStatus('pending');
+    setTaskProgress({ total: 0, completed: 0, failed: 0 });
     onClose();
   };
 
@@ -208,6 +211,56 @@ const OfflineMaterialImportDialog: React.FC<OfflineMaterialImportDialogProps> = 
     }
   };
 
+  const [taskId, setTaskId] = useState<string | null>(null);
+  const [taskStatus, setTaskStatus] = useState<'pending' | 'processing' | 'completed' | 'failed' | 'partial_success'>('pending');
+  const [taskProgress, setTaskProgress] = useState({ total: 0, completed: 0, failed: 0 });
+
+  const pollTaskStatus = useCallback(async (id: string) => {
+    try {
+      const response = await fetch(`/api/tasks/${id}`);
+      if (!response.ok) return;
+      
+      const result = await response.json();
+      if (!result.success) return;
+
+      const task = result.data;
+      setTaskStatus(task.status);
+      setTaskProgress(task.progress);
+
+      if (task.status === 'completed' || task.status === 'failed' || task.status === 'partial_success') {
+        onImportComplete?.({
+          documents: task.files?.map((f: any) => ({
+            documentId: `${id}-${f.index}`,
+            fileName: f.fileName,
+            fileType: f.mimeType,
+            status: f.status,
+            classification: f.result?.classification || { materialId: 'unknown', materialName: '未识别', confidence: 0 },
+            extractedText: f.result?.extractedText || '',
+            structuredData: f.result?.structuredData || {},
+          })) || [],
+          completeness: {
+            isComplete: task.status === 'completed',
+            score: task.progress.completed / (task.progress.total || 1),
+            requiredMaterials: [],
+            providedMaterials: [],
+            missingMaterials: [],
+            warnings: [],
+          },
+        });
+        setImporting(false);
+        setTimeout(() => handleClose(), 1500);
+      }
+    } catch {}
+  }, [onImportComplete]);
+
+  useEffect(() => {
+    if (!taskId) return;
+
+    pollTaskStatus(taskId);
+    const interval = setInterval(() => pollTaskStatus(taskId), 2000);
+    return () => clearInterval(interval);
+  }, [taskId, pollTaskStatus]);
+
   const handleImport = async () => {
     const classifiedFiles = files.filter(f => f.status === 'classified');
     if (classifiedFiles.length === 0) return;
@@ -216,7 +269,6 @@ const OfflineMaterialImportDialog: React.FC<OfflineMaterialImportDialogProps> = 
     setError(null);
 
     try {
-      // Build file data for the import API
       const fileDataPromises = classifiedFiles.map(async f => ({
         fileName: f.file.name,
         mimeType: f.file.type,
@@ -239,23 +291,16 @@ const OfflineMaterialImportDialog: React.FC<OfflineMaterialImportDialogProps> = 
       }
 
       const result = await response.json();
-
-      onImportComplete?.({
-        documents: result.documents || [],
-        completeness: result.completeness || {
-          isComplete: false,
-          score: 0,
-          requiredMaterials: [],
-          providedMaterials: [],
-          missingMaterials: [],
-          warnings: [],
-        },
-      });
-
-      handleClose();
+      
+      if (result.success && result.taskId) {
+        setTaskId(result.taskId);
+        setTaskProgress({ total: result.totalFiles || 0, completed: 0, failed: 0 });
+        setTaskStatus('pending');
+      } else {
+        throw new Error('创建任务失败');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : '导入失败，请重试');
-    } finally {
       setImporting(false);
     }
   };
@@ -494,25 +539,64 @@ const OfflineMaterialImportDialog: React.FC<OfflineMaterialImportDialogProps> = 
             >
               取消
             </button>
-            <button
-              onClick={handleImport}
-              disabled={classifiedCount === 0 || processingCount > 0 || importing}
-              className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-md text-sm font-medium hover:from-indigo-700 hover:to-purple-700 shadow-sm transition-colors disabled:opacity-50 flex items-center"
-            >
-              {importing ? (
-                <>
-                  <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  导入中...
-                </>
-              ) : (
-                <>
-                  <svg className="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                  </svg>
-                  确认导入 ({classifiedCount})
-                </>
-              )}
-            </button>
+            {taskId ? (
+              <div className="flex items-center space-x-3">
+                <div className="text-sm">
+                  {taskStatus === 'pending' && (
+                    <span className="text-amber-600">等待处理...</span>
+                  )}
+                  {taskStatus === 'processing' && (
+                    <span className="text-blue-600">
+                      处理中 {taskProgress.completed}/{taskProgress.total}
+                    </span>
+                  )}
+                  {taskStatus === 'completed' && (
+                    <span className="text-green-600">✓ 处理完成</span>
+                  )}
+                  {taskStatus === 'partial_success' && (
+                    <span className="text-amber-600">
+                      部分完成 ({taskProgress.completed}/{taskProgress.total})
+                    </span>
+                  )}
+                  {taskStatus === 'failed' && (
+                    <span className="text-red-600">✗ 处理失败</span>
+                  )}
+                </div>
+                <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full transition-all duration-500 ${
+                      taskStatus === 'completed' ? 'bg-green-500' :
+                      taskStatus === 'failed' ? 'bg-red-500' :
+                      taskStatus === 'partial_success' ? 'bg-amber-500' :
+                      'bg-blue-500'
+                    }`}
+                    style={{ 
+                      width: `${taskProgress.total > 0 ? (taskProgress.completed / taskProgress.total) * 100 : 0}%` 
+                    }}
+                  />
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={handleImport}
+                disabled={classifiedCount === 0 || processingCount > 0 || importing}
+                className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-md text-sm font-medium hover:from-indigo-700 hover:to-purple-700 shadow-sm transition-colors disabled:opacity-50 flex items-center"
+              >
+                {importing ? (
+                  <>
+                    <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    创建任务...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                    确认导入 ({classifiedCount})
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </div>
       </div>

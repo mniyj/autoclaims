@@ -74,7 +74,7 @@ const AccidentCauseSelector: React.FC<AccidentCauseSelectorProps> = ({
       >
         <option value="">{placeholder}</option>
         {accidentCauses.map((cause) => (
-          <option key={cause.id} value={cause.name}>
+          <option key={cause.id} value={cause.id}>
             {cause.name}
             {cause.description && ` - ${cause.description}`}
           </option>

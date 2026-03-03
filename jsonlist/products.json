@@ -295,6 +295,13 @@
           }
         },
         {
+          "field_id": "accident_time",
+          "label": "事故时间",
+          "type": "time",
+          "required": false,
+          "placeholder": "请选择事故发生时间（可选）"
+        },
+        {
           "field_id": "accident_location",
           "label": "事故地点",
           "type": "text",
@@ -302,87 +309,51 @@
           "placeholder": "请输入事故发生的详细地点"
         },
         {
+          "field_id": "accident_description",
+          "label": "事故描述",
+          "type": "textarea",
+          "required": true,
+          "placeholder": "请描述事故经过",
+          "validation": {
+            "rule": "max_length_500",
+            "error_msg": "事故描述不能超过500字"
+          }
+        },
+        {
           "field_id": "accident_reason",
-          "label": "出险原因",
+          "label": "事故原因",
           "type": "enum",
           "required": true,
-          "placeholder": "请选择出险原因",
-          "options": []
+          "placeholder": "请选择事故原因",
+          "data_source": "accident_cause_db",
+          "options": [
+            "交通事故",
+            "非交通事故"
+          ]
         },
         {
           "field_id": "claim_item",
           "label": "索赔项目",
-          "type": "enum",
+          "type": "multi_select",
           "required": true,
           "placeholder": "请选择索赔项目",
-          "data_source": "claim_items_db",
           "options": [
+            "意外伤残理赔",
+            "意外伤残理赔",
             "门诊费",
             "住院费"
           ]
         },
         {
-          "field_id": "injury_description",
-          "label": "伤情描述",
-          "type": "textarea",
+          "field_id": "claim_amount",
+          "label": "索赔金额",
+          "type": "number",
           "required": true,
-          "placeholder": "请详细描述受伤情况",
+          "placeholder": "请输入索赔金额（CNY）",
           "validation": {
-            "rule": "max_length_500",
-            "error_msg": "伤情描述不能超过500字"
+            "rule": "gte_0_and_decimal_2",
+            "error_msg": "索赔金额必须大于等于0，最多保留两位小数"
           }
-        },
-        {
-          "field_id": "treatment_type",
-          "label": "治疗方式",
-          "type": "enum",
-          "required": true,
-          "placeholder": "请选择治疗方式",
-          "options": [
-            "门诊",
-            "住院",
-            "手术",
-            "康复治疗"
-          ]
-        },
-        {
-          "field_id": "hospital_name",
-          "label": "就诊医院",
-          "type": "text_with_search",
-          "required": true,
-          "placeholder": "请搜索或输入就诊医院名称",
-          "data_source": "hospital_db"
-        },
-        {
-          "field_id": "treatment_status",
-          "label": "治疗状态",
-          "type": "enum",
-          "required": true,
-          "placeholder": "请选择当前治疗状态",
-          "options": [
-            "治疗中",
-            "已出院",
-            "已痊愈"
-          ]
-        },
-        {
-          "field_id": "involves_third_party",
-          "label": "是否涉及第三方",
-          "type": "boolean",
-          "required": true,
-          "follow_up": {
-            "condition": "true",
-            "extra_fields": [
-              "third_party_info"
-            ]
-          }
-        },
-        {
-          "field_id": "third_party_info",
-          "label": "第三方信息",
-          "type": "textarea",
-          "required": false,
-          "placeholder": "请描述第三方相关信息"
         }
       ],
       "voice_input": {
@@ -453,7 +424,7 @@
         }
       ]
     },
-    "intakeConfigUpdatedAt": "2026-03-01T18:50:49.078Z",
+    "intakeConfigUpdatedAt": "2026-03-03T09:36:08.525Z",
     "intakeConfigOperator": "admin",
     "selectedResponsibilities": [
       {

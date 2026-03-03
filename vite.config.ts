@@ -12,6 +12,16 @@ export default defineConfig(({ mode }) => {
   if (env.ALIYUN_OSS_ACCESS_KEY_SECRET) process.env.ALIYUN_OSS_ACCESS_KEY_SECRET = env.ALIYUN_OSS_ACCESS_KEY_SECRET;
   if (env.ALIYUN_OSS_BUCKET) process.env.ALIYUN_OSS_BUCKET = env.ALIYUN_OSS_BUCKET;
   if (env.GEMINI_API_KEY) process.env.GEMINI_API_KEY = env.GEMINI_API_KEY;
+  
+  // Start task scheduler in dev mode
+  if (mode === 'development') {
+    import('./server/taskQueue/scheduler.js').then(({ startScheduler }) => {
+      startScheduler();
+      console.log('[Vite] Task scheduler started in development mode');
+    }).catch(err => {
+      console.error('[Vite] Failed to start task scheduler:', err);
+    });
+  }
 
   const devPort = Number(env.DEV_PORT || 3000);
   const previewPort = Number(env.PREVIEW_PORT || 4173);

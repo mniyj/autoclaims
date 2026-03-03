@@ -1377,5 +1377,865 @@
     "errorMessage": "{\"error\":{\"code\":404,\"message\":\"models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.\",\"status\":\"NOT_FOUND\"}}",
     "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36 Edg/145.0.0.0",
     "deviceType": "mobile"
+  },
+  {
+    "logId": "log-20260302100356-q3pgwj",
+    "timestamp": "2026-03-02T10:03:56.641Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "SUBMIT_FORM",
+    "operationLabel": "选择保单",
+    "inputData": {
+      "policyId": "POL1771386925231",
+      "policyType": "众民保·全民普惠医疗险",
+      "hasIntakeConfig": false
+    },
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "mobile"
+  },
+  {
+    "logId": "log-20260302100410-lsdbbp",
+    "timestamp": "2026-03-02T10:04:10.948Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "REPORT_CLAIM",
+    "operationLabel": "发起报案",
+    "inputData": {
+      "message": "我要报案",
+      "messageLength": 4
+    },
+    "outputData": {
+      "policyCount": 5
+    },
+    "duration": 68,
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "mobile"
+  },
+  {
+    "logId": "log-20260302100412-q9fdbq",
+    "timestamp": "2026-03-02T10:04:12.420Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "SUBMIT_FORM",
+    "operationLabel": "展开保单列表",
+    "inputData": {
+      "total": 5
+    },
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "mobile"
+  },
+  {
+    "logId": "log-20260302100415-bmnv1a",
+    "timestamp": "2026-03-02T10:04:15.552Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "SUBMIT_FORM",
+    "operationLabel": "选择保单",
+    "inputData": {
+      "policyId": "PM157CG240579335929704",
+      "policyType": "无忧保综合意外险(2022升级版)",
+      "hasIntakeConfig": true
+    },
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "mobile"
+  },
+  {
+    "logId": "log-20260302100422-gg92e3",
+    "timestamp": "2026-03-02T10:04:22.355Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "SUBMIT_FORM",
+    "operationLabel": "打开报案表单",
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "mobile"
+  },
+  {
+    "logId": "log-20260302100430-x8o0kv",
+    "timestamp": "2026-03-02T10:04:30.554Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "LOGIN",
+    "operationLabel": "索赔人登录",
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "mobile"
+  },
+  {
+    "logId": "log-20260302100432-y715r2",
+    "timestamp": "2026-03-02T10:04:32.220Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "REPORT_CLAIM",
+    "operationLabel": "发起报案",
+    "inputData": {
+      "message": "我要报案",
+      "messageLength": 4
+    },
+    "outputData": {
+      "policyCount": 5
+    },
+    "duration": 90,
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "mobile"
+  },
+  {
+    "logId": "log-20260302100433-q7jo28",
+    "timestamp": "2026-03-02T10:04:33.789Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "SUBMIT_FORM",
+    "operationLabel": "展开保单列表",
+    "inputData": {
+      "total": 5
+    },
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "mobile"
+  },
+  {
+    "logId": "log-20260302100435-c6d5x4",
+    "timestamp": "2026-03-02T10:04:35.482Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "SUBMIT_FORM",
+    "operationLabel": "选择保单",
+    "inputData": {
+      "policyId": "PM157CG240579335929704",
+      "policyType": "无忧保综合意外险(2022升级版)",
+      "hasIntakeConfig": true
+    },
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "mobile"
+  },
+  {
+    "logId": "log-20260302100436-hn1red",
+    "timestamp": "2026-03-02T10:04:36.971Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "SUBMIT_FORM",
+    "operationLabel": "打开报案表单",
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "mobile"
+  },
+  {
+    "logId": "log-20260303022451-mwxh68",
+    "timestamp": "2026-03-03T02:24:51.168Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "LOGIN",
+    "operationLabel": "索赔人登录",
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "mobile"
+  },
+  {
+    "logId": "log-20260303022510-u3xiks",
+    "timestamp": "2026-03-03T02:25:10.693Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "SEND_MESSAGE",
+    "operationLabel": "发送消息",
+    "inputData": {
+      "message": "出事故了",
+      "messageLength": 4
+    },
+    "duration": 8116,
+    "success": false,
+    "errorMessage": "{\"error\":{\"code\":404,\"message\":\"models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.\",\"status\":\"NOT_FOUND\"}}",
+    "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "mobile"
+  },
+  {
+    "logId": "log-20260303022512-tho5h4",
+    "timestamp": "2026-03-03T02:25:12.948Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "REPORT_CLAIM",
+    "operationLabel": "发起报案",
+    "inputData": {
+      "message": "我要报案",
+      "messageLength": 4
+    },
+    "outputData": {
+      "policyCount": 5
+    },
+    "duration": 33,
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "mobile"
+  },
+  {
+    "logId": "log-20260303022520-tueb5y",
+    "timestamp": "2026-03-03T02:25:20.027Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "REPORT_CLAIM",
+    "operationLabel": "发起报案",
+    "inputData": {
+      "message": "我要报案",
+      "messageLength": 4
+    },
+    "outputData": {
+      "policyCount": 5
+    },
+    "duration": 37,
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "mobile"
+  },
+  {
+    "logId": "log-20260303022602-pc5his",
+    "timestamp": "2026-03-03T02:26:02.341Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "SEND_MESSAGE",
+    "operationLabel": "发送消息",
+    "inputData": {
+      "message": "你好",
+      "messageLength": 2
+    },
+    "duration": 1781,
+    "success": false,
+    "errorMessage": "{\"error\":{\"code\":404,\"message\":\"models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.\",\"status\":\"NOT_FOUND\"}}",
+    "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "mobile"
+  },
+  {
+    "logId": "log-20260303023131-eb3i1h",
+    "timestamp": "2026-03-03T02:31:31.753Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "LOGIN",
+    "operationLabel": "索赔人登录",
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "mobile"
+  },
+  {
+    "logId": "log-20260303023134-ce6zmp",
+    "timestamp": "2026-03-03T02:31:34.190Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "UPLOAD_FILE",
+    "operationLabel": "打开上传指引",
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "mobile"
+  },
+  {
+    "logId": "log-20260303023136-1lpwlo",
+    "timestamp": "2026-03-03T02:31:36.319Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "UPLOAD_FILE",
+    "operationLabel": "关闭上传指引",
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "mobile"
+  },
+  {
+    "logId": "log-20260303023142-27nhcc",
+    "timestamp": "2026-03-03T02:31:42.250Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "SEND_MESSAGE",
+    "operationLabel": "发送消息",
+    "inputData": {
+      "message": "进度查询",
+      "messageLength": 4
+    },
+    "duration": 3894,
+    "success": false,
+    "errorMessage": "{\"error\":{\"code\":404,\"message\":\"models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.\",\"status\":\"NOT_FOUND\"}}",
+    "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "mobile"
+  },
+  {
+    "logId": "log-20260303023144-86j8nw",
+    "timestamp": "2026-03-03T02:31:44.705Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "REPORT_CLAIM",
+    "operationLabel": "发起报案",
+    "inputData": {
+      "message": "我要报案",
+      "messageLength": 4
+    },
+    "outputData": {
+      "policyCount": 5
+    },
+    "duration": 82,
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "mobile"
+  },
+  {
+    "logId": "log-20260303023146-1tjstf",
+    "timestamp": "2026-03-03T02:31:46.774Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "SUBMIT_FORM",
+    "operationLabel": "展开保单列表",
+    "inputData": {
+      "total": 5
+    },
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "mobile"
+  },
+  {
+    "logId": "log-20260303023420-ph4b9z",
+    "timestamp": "2026-03-03T02:34:20.728Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "SUBMIT_FORM",
+    "operationLabel": "选择保单",
+    "inputData": {
+      "policyId": "PM157CG240579335929704",
+      "policyType": "无忧保综合意外险(2022升级版)",
+      "hasIntakeConfig": true
+    },
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "mobile"
+  },
+  {
+    "logId": "log-20260303023423-3s9onv",
+    "timestamp": "2026-03-03T02:34:23.003Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "SUBMIT_FORM",
+    "operationLabel": "打开报案表单",
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "mobile"
+  },
+  {
+    "logId": "log-20260303023527-ux1lx6",
+    "timestamp": "2026-03-03T02:35:27.709Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "REPORT_CLAIM",
+    "operationLabel": "提交报案",
+    "claimId": "CLM327493",
+    "inputData": {
+      "formType": "无忧保综合意外险(2022升级版)",
+      "dynamicFields": 9,
+      "pendingFileCount": 0
+    },
+    "outputData": {
+      "claimId": "CLM327493",
+      "reportNumber": "R202603030235278AXB"
+    },
+    "duration": 216,
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "mobile"
+  },
+  {
+    "logId": "log-20260303023535-yyos0z",
+    "timestamp": "2026-03-03T02:35:35.961Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "VIEW_FILE",
+    "operationLabel": "查看材料",
+    "inputData": {
+      "context": "材料样例",
+      "count": 1,
+      "names": [
+        "交通事故责任认定书样例"
+      ]
+    },
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "mobile"
+  },
+  {
+    "logId": "log-20260303023537-yeoyhw",
+    "timestamp": "2026-03-03T02:35:37.980Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "VIEW_FILE",
+    "operationLabel": "预览材料",
+    "inputData": {
+      "context": "文件列表",
+      "name": "交通事故责任认定书样例",
+      "type": "image/jpeg"
+    },
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "mobile"
+  },
+  {
+    "logId": "log-20260303023749-16ojjz",
+    "timestamp": "2026-03-03T02:37:49.366Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "VIEW_FILE",
+    "operationLabel": "关闭材料预览",
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "mobile"
+  },
+  {
+    "logId": "log-20260303023751-862pei",
+    "timestamp": "2026-03-03T02:37:51.273Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "VIEW_FILE",
+    "operationLabel": "关闭文件列表",
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "mobile"
+  },
+  {
+    "logId": "log-20260303085653-s2s4qe",
+    "timestamp": "2026-03-03T08:56:53.027Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "LOGIN",
+    "operationLabel": "索赔人登录",
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260303085654-ockl26",
+    "timestamp": "2026-03-03T08:56:54.926Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "REPORT_CLAIM",
+    "operationLabel": "发起报案",
+    "inputData": {
+      "message": "我要报案",
+      "messageLength": 4
+    },
+    "outputData": {
+      "policyCount": 5
+    },
+    "duration": 32,
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260303085656-f72eas",
+    "timestamp": "2026-03-03T08:56:56.527Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "SUBMIT_FORM",
+    "operationLabel": "展开保单列表",
+    "inputData": {
+      "total": 5
+    },
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260303085657-khptwt",
+    "timestamp": "2026-03-03T08:56:57.747Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "SUBMIT_FORM",
+    "operationLabel": "选择保单",
+    "inputData": {
+      "policyId": "PM157CG240579335929704",
+      "policyType": "无忧保综合意外险(2022升级版)",
+      "hasIntakeConfig": true
+    },
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260303085659-1ga8wa",
+    "timestamp": "2026-03-03T08:56:59.126Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "SUBMIT_FORM",
+    "operationLabel": "打开报案表单",
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260303090414-2a4feh",
+    "timestamp": "2026-03-03T09:04:14.189Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "LOGIN",
+    "operationLabel": "索赔人登录",
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260303090415-29stxg",
+    "timestamp": "2026-03-03T09:04:15.907Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "REPORT_CLAIM",
+    "operationLabel": "发起报案",
+    "inputData": {
+      "message": "我要报案",
+      "messageLength": 4
+    },
+    "outputData": {
+      "policyCount": 5
+    },
+    "duration": 35,
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260303090417-9qz9h7",
+    "timestamp": "2026-03-03T09:04:17.258Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "SUBMIT_FORM",
+    "operationLabel": "展开保单列表",
+    "inputData": {
+      "total": 5
+    },
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260303090418-35tsf3",
+    "timestamp": "2026-03-03T09:04:18.860Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "SUBMIT_FORM",
+    "operationLabel": "选择保单",
+    "inputData": {
+      "policyId": "PM157CG240579335929704",
+      "policyType": "无忧保综合意外险(2022升级版)",
+      "hasIntakeConfig": true
+    },
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260303090420-xtwc4i",
+    "timestamp": "2026-03-03T09:04:20.189Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "SUBMIT_FORM",
+    "operationLabel": "打开报案表单",
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260303090444-381331",
+    "timestamp": "2026-03-03T09:04:44.445Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "REPORT_CLAIM",
+    "operationLabel": "提交报案",
+    "claimId": "CLM683240",
+    "inputData": {
+      "formType": "无忧保综合意外险(2022升级版)",
+      "dynamicFields": 7,
+      "pendingFileCount": 0
+    },
+    "outputData": {
+      "claimId": "CLM683240",
+      "reportNumber": "R20260303090443XRP7"
+    },
+    "duration": 1205,
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260303093659-5r7h9n",
+    "timestamp": "2026-03-03T09:36:59.427Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "REPORT_CLAIM",
+    "operationLabel": "发起报案",
+    "inputData": {
+      "message": "我要报案",
+      "messageLength": 4
+    },
+    "outputData": {
+      "policyCount": 5
+    },
+    "duration": 224,
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260303093858-2wcol4",
+    "timestamp": "2026-03-03T09:38:58.595Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "LOGIN",
+    "operationLabel": "索赔人登录",
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260303093901-44rrsd",
+    "timestamp": "2026-03-03T09:39:01.439Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "REPORT_CLAIM",
+    "operationLabel": "发起报案",
+    "inputData": {
+      "message": "我要报案",
+      "messageLength": 4
+    },
+    "outputData": {
+      "policyCount": 5
+    },
+    "duration": 346,
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260303093903-f3wj20",
+    "timestamp": "2026-03-03T09:39:03.648Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "SUBMIT_FORM",
+    "operationLabel": "展开保单列表",
+    "inputData": {
+      "total": 5
+    },
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260303093905-t4vih2",
+    "timestamp": "2026-03-03T09:39:05.418Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "SUBMIT_FORM",
+    "operationLabel": "选择保单",
+    "inputData": {
+      "policyId": "PM157CG240579335929704",
+      "policyType": "无忧保综合意外险(2022升级版)",
+      "hasIntakeConfig": true
+    },
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260303093906-oncxo7",
+    "timestamp": "2026-03-03T09:39:06.898Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "SUBMIT_FORM",
+    "operationLabel": "打开报案表单",
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260303093958-34vubr",
+    "timestamp": "2026-03-03T09:39:58.723Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "REPORT_CLAIM",
+    "operationLabel": "提交报案",
+    "claimId": "CLM785528",
+    "inputData": {
+      "formType": "无忧保综合意外险(2022升级版)",
+      "dynamicFields": 7,
+      "pendingFileCount": 0
+    },
+    "outputData": {
+      "claimId": "CLM785528",
+      "reportNumber": "R20260303093945AJ71"
+    },
+    "duration": 13193,
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260303094007-d0tu2d",
+    "timestamp": "2026-03-03T09:40:07.659Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "VIEW_FILE",
+    "operationLabel": "查看材料",
+    "inputData": {
+      "context": "材料样例",
+      "count": 1,
+      "names": [
+        "交通事故责任认定书样例"
+      ]
+    },
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260303094010-8j3cqw",
+    "timestamp": "2026-03-03T09:40:10.119Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "VIEW_FILE",
+    "operationLabel": "预览材料",
+    "inputData": {
+      "context": "文件列表",
+      "name": "交通事故责任认定书样例",
+      "type": "image/jpeg"
+    },
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260303094016-e6mko9",
+    "timestamp": "2026-03-03T09:40:16.468Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "VIEW_FILE",
+    "operationLabel": "关闭材料预览",
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260303094109-31c4ci",
+    "timestamp": "2026-03-03T09:41:09.892Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "VIEW_FILE",
+    "operationLabel": "关闭文件列表",
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260303094114-22z7rr",
+    "timestamp": "2026-03-03T09:41:14.210Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "VIEW_FILE",
+    "operationLabel": "查看材料",
+    "inputData": {
+      "context": "材料样例",
+      "count": 1,
+      "names": [
+        "身份证反面样例"
+      ]
+    },
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260303094133-xtv9z3",
+    "timestamp": "2026-03-03T09:41:33.057Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "VIEW_FILE",
+    "operationLabel": "预览材料",
+    "inputData": {
+      "context": "文件列表",
+      "name": "身份证反面样例",
+      "type": "image/jpeg"
+    },
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260303094139-bxv98o",
+    "timestamp": "2026-03-03T09:41:39.891Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "VIEW_FILE",
+    "operationLabel": "关闭材料预览",
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260303094141-qbfugv",
+    "timestamp": "2026-03-03T09:41:41.959Z",
+    "userName": "1",
+    "userGender": "先生",
+    "sessionId": "session-1772428679576-78x3wz8w",
+    "operationType": "VIEW_FILE",
+    "operationLabel": "关闭文件列表",
+    "success": true,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
   }
 ]

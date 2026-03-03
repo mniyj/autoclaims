@@ -2,6 +2,7 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { handleApiRequest } from './server/apiHandler.js';
+import { startScheduler, stopScheduler } from './server/taskQueue/scheduler.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -77,4 +78,18 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`Environment: Production`);
   console.log(`Serving static files from: ${distPath}`);
   console.log(`API routes: /api/* → JSON file storage`);
+  
+  startScheduler();
+});
+
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully');
+  stopScheduler();
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT received, shutting down gracefully');
+  stopScheduler();
+  process.exit(0);
 });

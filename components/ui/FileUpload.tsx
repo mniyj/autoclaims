@@ -8,12 +8,47 @@ interface FileUploadProps {
   helpText?: string;
   accept?: string;
   required?: boolean;
+  ossKey?: string; // OSS 对象 key，用于在 URL 过期时重新生成签名 URL
 }
 
-const FileUpload: React.FC<FileUploadProps> = ({ label, id, value, onChange, helpText, accept, required }) => {
+const FileUpload: React.FC<FileUploadProps> = ({ label, id, value, onChange, helpText, accept, required, ossKey }) => {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const [uploading, setUploading] = React.useState(false);
+  const [displayUrl, setDisplayUrl] = React.useState<string | undefined>(value);
+  const [hasAttemptedRefresh, setHasAttemptedRefresh] = React.useState(false);
+
+  // 当外部 value 变化时更新 displayUrl
+  React.useEffect(() => {
+    setDisplayUrl(value);
+    setHasAttemptedRefresh(false);
+  }, [value]);
+
+  // 处理图片加载错误，尝试使用 ossKey 重新生成签名 URL
+  const handleImageError = React.useCallback(async (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = e.target as HTMLImageElement;
+    
+    // 如果已经有 ossKey 且还没有尝试过刷新，则尝试重新生成签名 URL
+    if (ossKey && !hasAttemptedRefresh) {
+      setHasAttemptedRefresh(true);
+      try {
+        const { getSignedUrl } = await import('../../services/ossService');
+        const freshUrl = await getSignedUrl(ossKey);
+        setDisplayUrl(freshUrl);
+        return; // 成功获取新 URL，不显示错误
+      } catch (error) {
+        console.error('[FileUpload] Failed to refresh signed URL:', error);
+      }
+    }
+    
+    // 显示错误状态
+    img.style.display = 'none';
+    img.parentElement?.classList.add('bg-red-50');
+    const errDiv = document.createElement('div');
+    errDiv.className = 'absolute inset-0 flex items-center justify-center text-xs text-red-400 p-2 text-center';
+    errDiv.innerText = '图片加载失败，请重新上传';
+    img.parentElement?.appendChild(errDiv);
+  }, [ossKey, hasAttemptedRefresh]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -67,21 +102,14 @@ const FileUpload: React.FC<FileUploadProps> = ({ label, id, value, onChange, hel
             </div>
           ) : value ? (
             <div className="w-full flex flex-col items-center">
-              {(accept?.includes('image') || value.match(/\.(jpeg|jpg|gif|png|webp)$/i) || value.startsWith('http')) ? (
+              {(accept?.includes('image') || displayUrl?.match(/\.(jpeg|jpg|gif|png|webp)$/i) || displayUrl?.startsWith('http')) ? (
                 <div className="relative w-full h-32 mb-2 group flex justify-center bg-gray-50 rounded-md overflow-hidden">
                   <img
-                    src={value}
+                    src={displayUrl}
                     alt="Preview"
                     className="h-full w-full object-contain"
                     referrerPolicy="no-referrer"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                      e.currentTarget.parentElement?.classList.add('bg-red-50');
-                      const errDiv = document.createElement('div');
-                      errDiv.className = 'absolute inset-0 flex items-center justify-center text-xs text-red-400 p-2 text-center';
-                      errDiv.innerText = '图片加载失败';
-                      e.currentTarget.parentElement?.appendChild(errDiv);
-                    }}
+                    onError={handleImageError}
                   />
                 </div>
               ) : (

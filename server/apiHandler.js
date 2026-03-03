@@ -8,14 +8,14 @@ import {
   calculateAmount,
   executeFullReview,
 } from "./rules/engine.js";
-import { executeSmartReview } from "./ai/agent.js";
 import {
-  readAuditLogs,
-  writeAuditLog,
   logAIReview,
   AuditLogType,
   aiCostTracker,
+  writeAuditLog,
+  readAuditLogs,
 } from "./middleware/index.js";
+import { reviewTaskService } from "./services/reviewTaskService.js";
 
 // 导入多文件处理服务
 import {
@@ -57,6 +57,26 @@ import {
 import { checkDuplicatesBatch } from "./services/duplicateDetector.js";
 import { extractDocumentSummaries } from "./services/summaryExtractors/index.js";
 import { aggregateCase } from "./services/caseAggregator.js";
+
+// 导入任务队列和消息中心
+import {
+  createTask,
+  getTask,
+  getUserTasks,
+  updateTask,
+  resetFileForRetry,
+  deleteTask,
+  getQueueStats,
+} from "./taskQueue/queue.js";
+import {
+  createTaskCompleteMessage,
+  getMessages,
+  getUnreadCount,
+  markAsRead,
+  markAllAsRead,
+  deleteMessage,
+  deleteAllRead,
+} from "./messageCenter/messageService.js";
 import { generateDamageReport } from "./services/reportGenerator.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -263,6 +283,83 @@ const callGemini = async ({ model, contents, temperature = 0.1 }) => {
   throw new Error(`Gemini request failed: ${formatErrorMessage(lastError)}`);
 };
 
+/**
+ * 使用 AI 对材料进行分类
+ * @param {object} result - processFile 的结果
+ * @param {string} fileName - 文件名
+ * @returns {Promise<object>} 分类结果
+ */
+async function classifyMaterial(result, fileName) {
+  if (result.parseStatus !== "completed") {
+    return {
+      materialId: "unknown",
+      materialName: "未识别",
+      confidence: 0,
+    };
+  }
+
+  try {
+    const materials = readData("claims-materials");
+    if (materials.length === 0) {
+      return {
+        materialId: "unknown",
+        materialName: "未识别",
+        confidence: 0,
+      };
+    }
+
+    // 构建紧凑目录（避免 prompt 过长）
+    const catalog = materials
+      .map((m) => `${m.id}|${m.name}|${m.description.slice(0, 60)}`)
+      .join("\n");
+
+    const ocrText = result.extractedText || "";
+    const prompt = [
+      {
+        role: "user",
+        parts: [
+          {
+            text: `你是保险理赔材料分类专家。请根据以下 OCR 文字内容，从材料目录中选出最匹配的材料类型。\n\n【OCR 文字】\n${ocrText.slice(0, 1200)}\n\n【文件名参考】${fileName}\n\n【材料目录（格式: id|名称|说明摘要）】\n${catalog}\n\n请返回 JSON：{"materialId":"...","materialName":"...","confidence":0.0到1.0之间的小数,"reason":"简短说明"}。若无匹配则 materialId 填 "unknown"，materialName 填 "未识别"，confidence 填 0。`,
+          },
+        ],
+      },
+    ];
+
+    const response = await callGemini({
+      model: "gemini-2.0-flash",
+      contents: prompt,
+      temperature: 0.1,
+    });
+
+    const raw =
+      response.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+    let parsed = {};
+    try {
+      parsed = JSON.parse(raw.replace(/```json|```/g, "").trim());
+    } catch {
+      // JSON 解析失败则保持 unknown
+    }
+
+    const classification = {
+      materialId: parsed.materialId || "unknown",
+      materialName: parsed.materialName || "未识别",
+      confidence:
+        typeof parsed.confidence === "number" ? parsed.confidence : 0,
+    };
+    console.log(
+      `[classify] ${fileName} → ${classification.materialName} (${(classification.confidence * 100).toFixed(0)}%)`,
+    );
+    return classification;
+  } catch (classifyErr) {
+    console.warn("[classify] 分类失败，跳过:", classifyErr.message);
+    return {
+      materialId: "unknown",
+      materialName: "未识别",
+      confidence: 0,
+    };
+  }
+}
+
 // Supported resources
 const allowedResources = [
   "products",
@@ -282,15 +379,17 @@ const allowedResources = [
   "end-users",
   "users",
   "mapping-data",
-  "medical-insurance-catalog", // 医保目录
-  "hospital-info", // 医院信息
-  "invoice-audits", // 发票审核记录
-  "user-operation-logs", // 用户操作日志
-  "quotes", // 询价单
-  "policies", // 保单
-  "claim-documents", // 赔案导入材料
-  "system-logs", // 系统审计日志
-  "ai", // AI 相关 API (smart-review, review-state 等)
+  "medical-insurance-catalog",
+  "hospital-info",
+  "invoice-audits",
+  "user-operation-logs",
+  "quotes",
+  "policies",
+  "claim-documents",
+  "system-logs",
+  "review-tasks",
+  "ai",
+  "intake-field-presets",
 ];
 
 export const handleApiRequest = async (req, res) => {
@@ -1152,55 +1251,7 @@ ${schemaText}
 
       // 如果要求分类且 OCR 成功，调用 AI 对照 claims-materials 目录进行材料类型识别
       if (options?.classify && result.parseStatus === "completed") {
-        try {
-          const materials = readData("claims-materials");
-          if (materials.length > 0) {
-            // 构建紧凑目录（避免 prompt 过长）
-            const catalog = materials
-              .map((m) => `${m.id}|${m.name}|${m.description.slice(0, 60)}`)
-              .join("\n");
-
-            const ocrText = result.extractedText || "";
-            const prompt = [
-              {
-                role: "user",
-                parts: [
-                  {
-                    text: `你是保险理赔材料分类专家。请根据以下 OCR 文字内容，从材料目录中选出最匹配的材料类型。\n\n【OCR 文字】\n${ocrText.slice(0, 1200)}\n\n【文件名参考】${fileName}\n\n【材料目录（格式: id|名称|说明摘要）】\n${catalog}\n\n请返回 JSON：{"materialId":"...","materialName":"...","confidence":0.0到1.0之间的小数,"reason":"简短说明"}。若无匹配则 materialId 填 "unknown"，materialName 填 "未识别"，confidence 填 0。`,
-                  },
-                ],
-              },
-            ];
-
-            const response = await callGemini({
-              model: "gemini-2.0-flash",
-              contents: prompt,
-              temperature: 0.1,
-            });
-
-            const raw =
-              response.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
-            let parsed = {};
-            try {
-              parsed = JSON.parse(raw.replace(/```json|```/g, "").trim());
-            } catch {
-              // JSON 解析失败则保持 unknown
-            }
-
-            result.classification = {
-              materialId: parsed.materialId || "unknown",
-              materialName: parsed.materialName || "未识别",
-              confidence:
-                typeof parsed.confidence === "number" ? parsed.confidence : 0,
-            };
-            console.log(
-              `[classify] ${fileName} → ${result.classification.materialName} (${(result.classification.confidence * 100).toFixed(0)}%)`,
-            );
-          }
-        } catch (classifyErr) {
-          console.warn("[classify] 分类失败，跳过:", classifyErr.message);
-          // 不影响主流程，result.classification 保持未设置
-        }
+        result.classification = await classifyMaterial(result, fileName);
       }
 
       // 写审计日志
@@ -1374,8 +1425,269 @@ ${schemaText}
     return;
   }
 
-  // 离线材料导入 API
+  // ==================== 任务队列 API ====================
+
+  if (resource === "tasks" && req.method === "POST") {
+    try {
+      const { claimCaseId, productCode, files } = await parseBody(req);
+
+      if (!claimCaseId) {
+        res.statusCode = 400;
+        res.end(JSON.stringify({ error: "Missing claimCaseId" }));
+        return;
+      }
+
+      if (!files || !Array.isArray(files) || files.length === 0) {
+        res.statusCode = 400;
+        res.end(JSON.stringify({ error: "Missing or empty files array" }));
+        return;
+      }
+
+      const userId = req.headers["x-user-id"] || "anonymous";
+      const task = await createTask(claimCaseId, productCode, files, userId);
+
+      writeAuditLog({
+        type: "TASK_CREATE",
+        taskId: task.id,
+        claimCaseId,
+        userId,
+        fileCount: files.length,
+        timestamp: new Date().toISOString(),
+      });
+
+      res.setHeader("Content-Type", "application/json");
+      res.end(
+        JSON.stringify({
+          success: true,
+          taskId: task.id,
+          message: "任务已创建，正在后台处理",
+          totalFiles: files.length,
+        }),
+      );
+    } catch (error) {
+      console.error("[API] Create task error:", error);
+      res.statusCode = 500;
+      res.end(JSON.stringify({ error: error.message }));
+    }
+    return;
+  }
+
+  if (resource === "tasks" && id && req.method === "GET") {
+    try {
+      const task = await getTask(id);
+      if (!task) {
+        res.statusCode = 404;
+        res.end(JSON.stringify({ error: "Task not found" }));
+        return;
+      }
+
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({ success: true, data: task }));
+    } catch (error) {
+      console.error("[API] Get task error:", error);
+      res.statusCode = 500;
+      res.end(JSON.stringify({ error: error.message }));
+    }
+    return;
+  }
+
+  if (resource === "tasks" && id && req.method === "POST") {
+    try {
+      const body = await parseBody(req);
+      const { action, fileIndex } = body;
+
+      if (action === "retry" && fileIndex !== undefined) {
+        const task = await resetFileForRetry(id, fileIndex);
+        if (!task) {
+          res.statusCode = 404;
+          res.end(JSON.stringify({ error: "Task or file not found" }));
+          return;
+        }
+
+        writeAuditLog({
+          type: "TASK_RETRY",
+          taskId: id,
+          fileIndex,
+          timestamp: new Date().toISOString(),
+        });
+
+        res.setHeader("Content-Type", "application/json");
+        res.end(JSON.stringify({ success: true, data: task }));
+        return;
+      }
+
+      res.statusCode = 400;
+      res.end(JSON.stringify({ error: "Invalid action" }));
+    } catch (error) {
+      console.error("[API] Task action error:", error);
+      res.statusCode = 500;
+      res.end(JSON.stringify({ error: error.message }));
+    }
+    return;
+  }
+
+  // ==================== 消息中心 API ====================
+
+  if (resource === "messages" && req.method === "GET" && !id) {
+    try {
+      const userId = req.headers["x-user-id"] || "anonymous";
+      const url = new URL(req.url, `http://${req.headers.host}`);
+      const isRead = url.searchParams.get("isRead");
+      const limit = parseInt(url.searchParams.get("limit") || "20");
+      const offset = parseInt(url.searchParams.get("offset") || "0");
+
+      const result = await getMessages(userId, {
+        isRead: isRead === null ? undefined : isRead === "true",
+        limit,
+        offset,
+      });
+
+      res.setHeader("Content-Type", "application/json");
+      res.end(
+        JSON.stringify({
+          success: true,
+          data: result.messages,
+          meta: {
+            total: result.total,
+            limit: result.limit,
+            offset: result.offset,
+            hasMore: result.hasMore,
+          },
+        }),
+      );
+    } catch (error) {
+      console.error("[API] Get messages error:", error);
+      res.statusCode = 500;
+      res.end(JSON.stringify({ error: error.message }));
+    }
+    return;
+  }
+
+  if (resource === "messages" && id === "unread-count" && req.method === "GET") {
+    try {
+      const userId = req.headers["x-user-id"] || "anonymous";
+      const count = await getUnreadCount(userId);
+
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({ success: true, data: { count } }));
+    } catch (error) {
+      console.error("[API] Get unread count error:", error);
+      res.statusCode = 500;
+      res.end(JSON.stringify({ error: error.message }));
+    }
+    return;
+  }
+
+  if (resource === "messages" && id && req.method === "POST") {
+    try {
+      const body = await parseBody(req);
+      const userId = req.headers["x-user-id"] || "anonymous";
+
+      if (body.action === "read-all") {
+        const result = await markAllAsRead(userId);
+        res.setHeader("Content-Type", "application/json");
+        res.end(JSON.stringify({ success: true, data: result }));
+        return;
+      }
+
+      const message = await markAsRead(id);
+      if (!message) {
+        res.statusCode = 404;
+        res.end(JSON.stringify({ error: "Message not found" }));
+        return;
+      }
+
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({ success: true, data: message }));
+    } catch (error) {
+      console.error("[API] Mark read error:", error);
+      res.statusCode = 500;
+      res.end(JSON.stringify({ error: error.message }));
+    }
+    return;
+  }
+
+  if (resource === "messages" && id && req.method === "DELETE") {
+    try {
+      const success = await deleteMessage(id);
+      if (!success) {
+        res.statusCode = 404;
+        res.end(JSON.stringify({ error: "Message not found" }));
+        return;
+      }
+
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({ success: true }));
+    } catch (error) {
+      console.error("[API] Delete message error:", error);
+      res.statusCode = 500;
+      res.end(JSON.stringify({ error: error.message }));
+    }
+    return;
+  }
+
+  // ==================== 离线材料导入 API (异步模式) ====================
+
   if (resource === "import-offline-materials") {
+    if (req.method !== "POST") {
+      res.statusCode = 405;
+      res.end(JSON.stringify({ error: "Method Not Allowed" }));
+      return;
+    }
+
+    try {
+      const {
+        claimCaseId,
+        productCode,
+        files: uploadedFiles,
+      } = await parseBody(req);
+
+      if (!claimCaseId) {
+        res.statusCode = 400;
+        res.end(JSON.stringify({ error: "Missing claimCaseId" }));
+        return;
+      }
+
+      if (
+        !uploadedFiles ||
+        !Array.isArray(uploadedFiles) ||
+        uploadedFiles.length === 0
+      ) {
+        res.statusCode = 400;
+        res.end(JSON.stringify({ error: "Missing or empty files array" }));
+        return;
+      }
+
+      const userId = req.headers["x-user-id"] || "anonymous";
+      const task = await createTask(claimCaseId, productCode, uploadedFiles, userId);
+      
+      writeAuditLog({
+        type: "IMPORT_TASK_CREATE",
+        taskId: task.id,
+        claimCaseId,
+        userId,
+        fileCount: uploadedFiles.length,
+        timestamp: new Date().toISOString(),
+      });
+
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({
+        success: true,
+        taskId: task.id,
+        message: "任务已创建，正在后台处理",
+        totalFiles: uploadedFiles.length,
+      }));
+
+    } catch (error) {
+      console.error("[import-offline-materials] Error:", error);
+      res.statusCode = 500;
+      res.end(JSON.stringify({ error: error.message }));
+    }
+    return;
+  }
+
+  // ==================== 遗留：同步导入 API (保留兼容) ====================
+  if (resource === "import-offline-materials-sync") {
     if (req.method !== "POST") {
       res.statusCode = 405;
       res.end(JSON.stringify({ error: "Method Not Allowed" }));
@@ -1417,9 +1729,11 @@ ${schemaText}
             options: {
               base64Data: file.base64Data,
               extractText: true,
-              classify: true,
             },
           });
+
+          // 使用 AI 进行材料分类
+          const classification = await classifyMaterial(result, file.fileName);
 
           documents.push({
             documentId: `doc-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -1428,11 +1742,7 @@ ${schemaText}
             ossUrl: result.ossUrl || null,
             extractedText: result.extractedText || "",
             structuredData: result.structuredData || {},
-            classification: result.classification || {
-              materialId: result.documentType?.id || "unknown",
-              materialName: result.documentType?.name || "未识别",
-              confidence: result.documentType?.confidence || 0,
-            },
+            classification,
             status: "completed",
           });
         } catch (fileError) {
@@ -1481,7 +1791,54 @@ ${schemaText}
 
       const processingTime = Date.now() - startTime;
 
-      // 3. Persist documents to claim-documents.json
+      // 3. 检查置信度并创建人工复核工单
+      const claimCase = readData("claim-cases").find(c => c.id === claimCaseId);
+      const reportNumber = claimCase?.reportNumber || claimCaseId;
+      const createdReviewTasks = [];
+      
+      // 获取材料配置以检查置信度阈值
+      const materialsConfig = readData("claims-materials");
+      
+      for (const doc of documents) {
+        if (doc.status !== "completed" || !doc.classification?.materialId) continue;
+        
+        const materialConfig = materialsConfig.find(m => m.id === doc.classification.materialId);
+        const threshold = materialConfig?.confidenceThreshold ?? 0.9;
+        const aiConfidence = (doc.classification?.confidence || 0) / 100; // 转换为0-1范围
+        
+        // 如果置信度低于阈值，创建工单
+        if (aiConfidence < threshold) {
+          try {
+            const task = await reviewTaskService.checkAndCreateTask({
+              claimCaseId,
+              reportNumber,
+              materialId: doc.classification.materialId,
+              materialName: doc.classification.materialName || materialConfig?.name || "未知材料",
+              documentId: doc.documentId,
+              ossUrl: doc.ossUrl,
+              ossKey: doc.ossKey,
+              aiConfidence,
+              threshold,
+              aiExtractedData: doc.structuredData,
+              createdBy: "system",
+            });
+            
+            if (task) {
+              createdReviewTasks.push({
+                taskId: task.id,
+                documentId: doc.documentId,
+                materialName: task.materialName,
+                aiConfidence,
+                threshold,
+              });
+            }
+          } catch (taskError) {
+            console.error("[import-offline-materials] Failed to create review task:", taskError);
+          }
+        }
+      }
+
+      // 4. Persist documents to claim-documents.json
       const allClaimDocs = readData("claim-documents");
       const importRecord = {
         id: `import-${Date.now()}`,
@@ -1490,20 +1847,24 @@ ${schemaText}
         importedAt: new Date().toISOString(),
         documents: documents.map((d) => ({
           ...d,
-          // Don't store extractedText in the list (too large); keep it on demand
           extractedText: undefined,
         })),
         completeness,
+        reviewTasks: createdReviewTasks.map(t => t.taskId),
       };
       allClaimDocs.push(importRecord);
       writeData("claim-documents", allClaimDocs);
 
-      // 4. Build summary
+      // 5. Build summary
       const successCount = documents.filter(
         (d) => d.status === "completed",
       ).length;
       const failCount = documents.filter((d) => d.status === "failed").length;
-      const summary = `成功处理 ${successCount} 个文件${failCount > 0 ? `，${failCount} 个失败` : ""}，耗时 ${processingTime}ms`;
+      let summary = `成功处理 ${successCount} 个文件${failCount > 0 ? `，${failCount} 个失败` : ""}，耗时 ${processingTime}ms`;
+      
+      if (createdReviewTasks.length > 0) {
+        summary += `。已创建 ${createdReviewTasks.length} 个人工复核工单`;
+      }
 
       res.setHeader("Content-Type", "application/json");
       res.end(
@@ -1512,6 +1873,7 @@ ${schemaText}
           claimCaseId,
           documents,
           completeness,
+          reviewTasks: createdReviewTasks,
           summary,
           processingTime,
         }),
@@ -2136,23 +2498,27 @@ ${schemaText}
       return;
     }
 
-    // GET /api/system-logs?date=YYYY-MM-DD&type=...&claimCaseId=...
-    const date = params.get("date") || new Date().toISOString().split("T")[0];
+    // GET /api/system-logs?date=YYYY-MM-DD|all&type=...&claimCaseId=...
+    // date='all' 表示读取全部日期的日志
+    const dateParam = params.get("date") || "all";
+    const date = dateParam === "all" ? "all" : dateParam;
     const type = params.get("type") || null;
     const claimCaseId = params.get("claimCaseId") || null;
-    const limit = Math.min(parseInt(params.get("limit") || "200", 10), 500);
+    const limit = Math.min(parseInt(params.get("limit") || "500", 10), 1000);
 
     const filters = {};
     if (type) filters.type = type;
     if (claimCaseId) filters.claimCaseId = claimCaseId;
 
     const logs = readAuditLogs(date, filters);
-    const limited = logs.slice(-limit).reverse(); // 最新的在前
+    const limited = date === "all" 
+      ? logs.slice(0, limit) // 全部日志已按时间排序
+      : logs.slice(-limit).reverse(); // 单天日志最新的在前
 
     res.setHeader("Content-Type", "application/json");
     res.end(
       JSON.stringify({
-        date,
+        date: date === "all" ? "all" : date,
         total: logs.length,
         returned: limited.length,
         filters: { type, claimCaseId },
@@ -2320,6 +2686,152 @@ ${schemaText}
       const standards = getInjuryStandards();
       res.setHeader("Content-Type", "application/json");
       res.end(JSON.stringify(standards));
+    } catch (error) {
+      res.statusCode = 500;
+      res.end(JSON.stringify({ error: formatErrorMessage(error) }));
+    }
+    return;
+  }
+
+  if (resource === "review-tasks") {
+    res.setHeader("Content-Type", "application/json");
+    try {
+      if (req.method === "GET") {
+        if (id) {
+          const task = await reviewTaskService.getById(id);
+          if (!task) {
+            res.statusCode = 404;
+            res.end(JSON.stringify({ error: "Task not found" }));
+          } else {
+            res.end(JSON.stringify(task));
+          }
+        } else {
+          const url = new URL(req.url, `http://${req.headers.host}`);
+          const filters = {};
+          if (url.searchParams.get("status")) filters.status = url.searchParams.get("status");
+          if (url.searchParams.get("claimCaseId")) filters.claimCaseId = url.searchParams.get("claimCaseId");
+          if (url.searchParams.get("priority")) filters.priority = url.searchParams.get("priority");
+          if (url.searchParams.get("reviewerId")) filters.reviewerId = url.searchParams.get("reviewerId");
+          
+          const tasks = await reviewTaskService.list(filters);
+          res.end(JSON.stringify(tasks));
+        }
+      } else if (req.method === "POST") {
+        const body = await parseBody(req);
+        
+        if (body.action === "check-and-create") {
+          const task = await reviewTaskService.checkAndCreateTask(body);
+          res.statusCode = 201;
+          res.end(JSON.stringify({ success: true, data: task }));
+        } else if (body.action === "stats") {
+          const stats = await reviewTaskService.getStats();
+          res.end(JSON.stringify(stats));
+        } else {
+          const task = await reviewTaskService.create(body);
+          res.statusCode = 201;
+          res.end(JSON.stringify({ success: true, data: task }));
+        }
+      } else if (req.method === "PUT" && id) {
+        const body = await parseBody(req);
+        const task = await reviewTaskService.update(id, body);
+        if (!task) {
+          res.statusCode = 404;
+          res.end(JSON.stringify({ error: "Task not found" }));
+        } else {
+          res.end(JSON.stringify({ success: true, data: task }));
+        }
+      } else if (req.method === "DELETE" && id) {
+        const success = await reviewTaskService.delete(id);
+        if (!success) {
+          res.statusCode = 404;
+          res.end(JSON.stringify({ error: "Task not found" }));
+        } else {
+          res.end(JSON.stringify({ success: true }));
+        }
+      } else {
+        res.statusCode = 405;
+        res.end(JSON.stringify({ error: "Method Not Allowed" }));
+      }
+    } catch (error) {
+      res.statusCode = 500;
+      res.end(JSON.stringify({ error: formatErrorMessage(error) }));
+    }
+    return;
+  }
+
+  // 报案字段预设模板管理（对象结构，不是数组）
+  if (resource === "intake-field-presets") {
+    res.setHeader("Content-Type", "application/json");
+    try {
+      if (req.method === "GET") {
+        // 返回整个预设对象或单个预设
+        const data = readData(resource);
+        if (id) {
+          // 返回特定预设
+          if (data[id]) {
+            res.end(JSON.stringify(data[id]));
+          } else {
+            res.statusCode = 404;
+            res.end(JSON.stringify({ error: "Preset not found" }));
+          }
+        } else {
+          // 返回所有预设（转换为数组格式便于前端使用）
+          const presetsArray = Object.values(data);
+          res.end(JSON.stringify(presetsArray));
+        }
+      } else if (req.method === "PUT") {
+        const payload = await parseBody(req);
+        const data = readData(resource);
+        
+        if (id) {
+          // 更新单个预设
+          if (!data[id]) {
+            res.statusCode = 404;
+            res.end(JSON.stringify({ error: "Preset not found" }));
+            return;
+          }
+          data[id] = { ...data[id], ...payload };
+          writeData(resource, data);
+          res.end(JSON.stringify({ success: true, data: data[id] }));
+        } else {
+          // 批量更新所有预设（对象格式）
+          writeData(resource, payload);
+          res.end(JSON.stringify({ success: true, count: Object.keys(payload).length }));
+        }
+      } else if (req.method === "POST") {
+        // 创建新预设
+        const newItem = await parseBody(req);
+        const data = readData(resource);
+        
+        if (!newItem.id) {
+          res.statusCode = 400;
+          res.end(JSON.stringify({ error: "Preset id is required" }));
+          return;
+        }
+        
+        data[newItem.id] = newItem;
+        writeData(resource, data);
+        res.statusCode = 201;
+        res.end(JSON.stringify({ success: true, data: newItem }));
+      } else if (req.method === "DELETE") {
+        if (!id) {
+          res.statusCode = 400;
+          res.end(JSON.stringify({ error: "DELETE requires an ID" }));
+          return;
+        }
+        const data = readData(resource);
+        if (!data[id]) {
+          res.statusCode = 404;
+          res.end(JSON.stringify({ error: "Preset not found" }));
+        } else {
+          delete data[id];
+          writeData(resource, data);
+          res.end(JSON.stringify({ success: true }));
+        }
+      } else {
+        res.statusCode = 405;
+        res.end(JSON.stringify({ error: "Method Not Allowed" }));
+      }
     } catch (error) {
       res.statusCode = 500;
       res.end(JSON.stringify({ error: formatErrorMessage(error) }));

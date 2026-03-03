@@ -1,0 +1,398 @@
+{
+  "common": {
+    "id": "common",
+    "name": "常用字段模板",
+    "description": "通用报案字段预设，适用于所有产品",
+    "fields": [
+      {
+        "field_id": "accident_date",
+        "label": "事故日期",
+        "type": "date",
+        "required": true,
+        "placeholder": "请选择事故发生日期",
+        "validation": {
+          "rule": "lte_today_and_gte_policy_start",
+          "error_msg": "事故日期必须在保单有效期内且不晚于今天"
+        }
+      },
+      {
+        "field_id": "accident_time",
+        "label": "事故时间",
+        "type": "time",
+        "required": false,
+        "placeholder": "请选择事故发生时间（可选）"
+      },
+      {
+        "field_id": "accident_location",
+        "label": "事故地点",
+        "type": "text",
+        "required": true,
+        "placeholder": "请输入事故发生的详细地点"
+      },
+      {
+        "field_id": "accident_description",
+        "label": "事故描述",
+        "type": "textarea",
+        "required": true,
+        "placeholder": "请描述事故经过",
+        "validation": {
+          "rule": "max_length_500",
+          "error_msg": "事故描述不能超过500字"
+        }
+      },
+      {
+        "field_id": "accident_reason",
+        "label": "事故原因",
+        "type": "enum",
+        "required": true,
+        "placeholder": "请选择事故原因",
+        "data_source": "accident_cause_db"
+      },
+      {
+        "field_id": "claim_item",
+        "label": "索赔项目",
+        "type": "multi_select",
+        "required": true,
+        "placeholder": "请选择索赔项目"
+      },
+      {
+        "field_id": "claim_amount",
+        "label": "索赔金额",
+        "type": "number",
+        "required": true,
+        "placeholder": "请输入索赔金额（CNY）",
+        "validation": {
+          "rule": "gte_0_and_decimal_2",
+          "error_msg": "索赔金额必须大于等于0，最多保留两位小数"
+        }
+      }
+    ]
+  },
+  "ACCIDENT": {
+    "id": "ACCIDENT",
+    "name": "意外险模板",
+    "description": "适用于意外险产品的报案字段模板",
+    "fields": [
+      {
+        "field_id": "accident_date",
+        "label": "事故日期",
+        "type": "date",
+        "required": true,
+        "placeholder": "请选择事故发生日期",
+        "validation": {
+          "rule": "lte_today_and_gte_policy_start",
+          "error_msg": "事故日期必须在保单有效期内且不晚于今天"
+        }
+      },
+      {
+        "field_id": "accident_time",
+        "label": "事故时间",
+        "type": "time",
+        "required": false,
+        "placeholder": "请选择事故发生时间（可选）"
+      },
+      {
+        "field_id": "accident_location",
+        "label": "事故地点",
+        "type": "text",
+        "required": true,
+        "placeholder": "请输入事故发生的详细地点"
+      },
+      {
+        "field_id": "accident_reason",
+        "label": "出险原因",
+        "type": "enum",
+        "required": true,
+        "placeholder": "请选择出险原因",
+        "options": []
+      },
+      {
+        "field_id": "claim_item",
+        "label": "索赔项目",
+        "type": "enum",
+        "required": true,
+        "placeholder": "请选择索赔项目",
+        "data_source": "claim_items_db"
+      },
+      {
+        "field_id": "injury_description",
+        "label": "伤情描述",
+        "type": "textarea",
+        "required": true,
+        "placeholder": "请详细描述受伤情况",
+        "validation": {
+          "rule": "max_length_500",
+          "error_msg": "伤情描述不能超过500字"
+        }
+      },
+      {
+        "field_id": "treatment_type",
+        "label": "治疗方式",
+        "type": "enum",
+        "required": true,
+        "placeholder": "请选择治疗方式",
+        "options": [
+          "门诊",
+          "住院",
+          "手术",
+          "康复治疗"
+        ]
+      },
+      {
+        "field_id": "hospital_name",
+        "label": "就诊医院",
+        "type": "text_with_search",
+        "required": true,
+        "placeholder": "请搜索或输入就诊医院名称",
+        "data_source": "hospital_db"
+      },
+      {
+        "field_id": "treatment_status",
+        "label": "治疗状态",
+        "type": "enum",
+        "required": true,
+        "placeholder": "请选择当前治疗状态",
+        "options": [
+          "治疗中",
+          "已出院",
+          "已痊愈"
+        ]
+      },
+      {
+        "field_id": "involves_third_party",
+        "label": "是否涉及第三方",
+        "type": "boolean",
+        "required": true,
+        "follow_up": {
+          "condition": "true",
+          "extra_fields": [
+            "third_party_info"
+          ]
+        }
+      },
+      {
+        "field_id": "third_party_info",
+        "label": "第三方信息",
+        "type": "textarea",
+        "required": false,
+        "placeholder": "请描述第三方相关信息"
+      }
+    ]
+  },
+  "HEALTH": {
+    "id": "HEALTH",
+    "name": "健康险模板",
+    "description": "适用于健康险产品的报案字段模板",
+    "fields": [
+      {
+        "field_id": "diagnosis_date",
+        "label": "确诊日期",
+        "type": "date",
+        "required": true,
+        "placeholder": "请选择确诊日期",
+        "validation": {
+          "rule": "lte_today_and_gte_policy_start",
+          "error_msg": "确诊日期必须在保单有效期内"
+        }
+      },
+      {
+        "field_id": "hospital_name",
+        "label": "就诊医院",
+        "type": "text_with_search",
+        "required": true,
+        "placeholder": "请搜索或输入就诊医院名称",
+        "data_source": "hospital_db"
+      },
+      {
+        "field_id": "diagnosis_result",
+        "label": "诊断结果",
+        "type": "textarea",
+        "required": true,
+        "placeholder": "请输入诊断结果"
+      },
+      {
+        "field_id": "treatment_type",
+        "label": "治疗类型",
+        "type": "multi_select",
+        "required": true,
+        "placeholder": "请选择治疗类型",
+        "options": [
+          "门诊",
+          "住院",
+          "日间手术",
+          "特殊门诊",
+          "住院前后门急诊"
+        ]
+      },
+      {
+        "field_id": "total_expense",
+        "label": "费用总额(元)",
+        "type": "number",
+        "required": true,
+        "placeholder": "请输入医疗费用总额",
+        "validation": {
+          "rule": "gt_zero",
+          "error_msg": "费用总额必须大于零"
+        }
+      }
+    ]
+  },
+  "CRITICAL_ILLNESS": {
+    "id": "CRITICAL_ILLNESS",
+    "name": "重疾险模板",
+    "description": "适用于重疾险产品的报案字段模板",
+    "fields": [
+      {
+        "field_id": "diagnosis_date",
+        "label": "确诊日期",
+        "type": "date",
+        "required": true,
+        "placeholder": "请选择确诊日期",
+        "validation": {
+          "rule": "lte_today_and_gte_policy_start",
+          "error_msg": "确诊日期必须在保单有效期内"
+        }
+      },
+      {
+        "field_id": "diagnosis_hospital",
+        "label": "确诊医院",
+        "type": "text_with_search",
+        "required": true,
+        "placeholder": "请搜索或输入确诊医院",
+        "data_source": "hospital_db"
+      },
+      {
+        "field_id": "disease_name",
+        "label": "疾病名称",
+        "type": "text_with_search",
+        "required": true,
+        "placeholder": "请搜索或输入疾病名称",
+        "data_source": "disease_db"
+      },
+      {
+        "field_id": "claim_item",
+        "label": "索赔项目",
+        "type": "enum",
+        "required": true,
+        "placeholder": "请选择索赔项目",
+        "data_source": "claim_items_db"
+      },
+      {
+        "field_id": "severity_level",
+        "label": "疾病严重程度",
+        "type": "enum",
+        "required": true,
+        "placeholder": "请选择严重程度",
+        "options": [
+          "重度",
+          "中度",
+          "轻度"
+        ]
+      }
+    ]
+  },
+  "TERM_LIFE": {
+    "id": "TERM_LIFE",
+    "name": "定期寿险模板",
+    "description": "适用于定期寿险产品的报案字段模板",
+    "fields": [
+      {
+        "field_id": "death_date",
+        "label": "身故日期",
+        "type": "date",
+        "required": true,
+        "placeholder": "请选择身故日期",
+        "validation": {
+          "rule": "lte_today_and_gte_policy_start",
+          "error_msg": "身故日期必须在保单有效期内"
+        }
+      },
+      {
+        "field_id": "death_reason",
+        "label": "身故原因",
+        "type": "enum",
+        "required": true,
+        "placeholder": "请选择身故原因",
+        "options": [
+          "疾病",
+          "意外",
+          "自然"
+        ]
+      },
+      {
+        "field_id": "death_location",
+        "label": "身故地点",
+        "type": "text",
+        "required": true,
+        "placeholder": "请输入身故地点"
+      }
+    ]
+  },
+  "WHOLE_LIFE": {
+    "id": "WHOLE_LIFE",
+    "name": "终身寿险模板",
+    "description": "适用于终身寿险产品的报案字段模板",
+    "fields": [
+      {
+        "field_id": "death_date",
+        "label": "身故日期",
+        "type": "date",
+        "required": true,
+        "placeholder": "请选择身故日期",
+        "validation": {
+          "rule": "lte_today_and_gte_policy_start",
+          "error_msg": "身故日期必须在保单有效期内"
+        }
+      },
+      {
+        "field_id": "death_reason",
+        "label": "身故原因",
+        "type": "enum",
+        "required": true,
+        "placeholder": "请选择身故原因",
+        "options": [
+          "疾病",
+          "意外",
+          "自然"
+        ]
+      },
+      {
+        "field_id": "death_location",
+        "label": "身故地点",
+        "type": "text",
+        "required": true,
+        "placeholder": "请输入身故地点"
+      }
+    ]
+  },
+  "ANNUITY": {
+    "id": "ANNUITY",
+    "name": "年金险模板",
+    "description": "适用于年金险产品的报案字段模板",
+    "fields": [
+      {
+        "field_id": "claim_date",
+        "label": "申请日期",
+        "type": "date",
+        "required": true,
+        "placeholder": "请选择申请日期",
+        "validation": {
+          "rule": "lte_today",
+          "error_msg": "申请日期不能晚于今天"
+        }
+      },
+      {
+        "field_id": "payout_method",
+        "label": "领取方式",
+        "type": "enum",
+        "required": true,
+        "placeholder": "请选择领取方式",
+        "options": [
+          "年领",
+          "月领",
+          "一次性领取"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,202 @@
+[
+  {
+    "id": "1",
+    "name": "北京协和医院",
+    "province": "beijing",
+    "city": "北京市",
+    "level": "三级甲等",
+    "type": "公立",
+    "address": "北京市东城区帅府园一号",
+    "qualifiedForInsurance": true
+  },
+  {
+    "id": "2",
+    "name": "中国人民解放军总医院",
+    "province": "beijing",
+    "city": "北京市",
+    "level": "三级甲等",
+    "type": "公立",
+    "address": "北京市海淀区复兴路28号",
+    "qualifiedForInsurance": true
+  },
+  {
+    "id": "3",
+    "name": "北京大学第一医院",
+    "province": "beijing",
+    "city": "北京市",
+    "level": "三级甲等",
+    "type": "公立",
+    "address": "北京市西城区西什库大街8号",
+    "qualifiedForInsurance": true
+  },
+  {
+    "id": "4",
+    "name": "北京朝阳医院",
+    "province": "beijing",
+    "city": "北京市",
+    "level": "三级甲等",
+    "type": "公立",
+    "address": "北京市朝阳区工人体育场南路8号",
+    "qualifiedForInsurance": true
+  },
+  {
+    "id": "5",
+    "name": "北京市海淀区中心医院",
+    "province": "beijing",
+    "city": "北京市",
+    "level": "二级甲等",
+    "type": "公立",
+    "address": "北京市海淀区中关村南大街12号",
+    "qualifiedForInsurance": true
+  },
+  {
+    "id": "6",
+    "name": "北京某社区卫生服务中心",
+    "province": "beijing",
+    "city": "北京市",
+    "level": "一级",
+    "type": "公立",
+    "address": "北京市朝阳区某街道",
+    "qualifiedForInsurance": false
+  },
+  {
+    "id": "7",
+    "name": "北京某民营医院",
+    "province": "beijing",
+    "city": "北京市",
+    "level": "民营",
+    "type": "民营",
+    "address": "北京市海淀区某路",
+    "qualifiedForInsurance": false
+  },
+  {
+    "id": "8",
+    "name": "复旦大学附属华山医院",
+    "province": "shanghai",
+    "city": "上海市",
+    "level": "三级甲等",
+    "type": "公立",
+    "address": "上海市静安区乌鲁木齐中路12号",
+    "qualifiedForInsurance": true
+  },
+  {
+    "id": "9",
+    "name": "上海交通大学医学院附属瑞金医院",
+    "province": "shanghai",
+    "city": "上海市",
+    "level": "三级甲等",
+    "type": "公立",
+    "address": "上海市黄浦区瑞金二路197号",
+    "qualifiedForInsurance": true
+  },
+  {
+    "id": "10",
+    "name": "上海市第六人民医院",
+    "province": "shanghai",
+    "city": "上海市",
+    "level": "三级甲等",
+    "type": "公立",
+    "address": "上海市徐汇区宜山路600号",
+    "qualifiedForInsurance": true
+  },
+  {
+    "id": "11",
+    "name": "上海市普陀区中心医院",
+    "province": "shanghai",
+    "city": "上海市",
+    "level": "二级甲等",
+    "type": "公立",
+    "address": "上海市普陀区兰溪路164号",
+    "qualifiedForInsurance": true
+  },
+  {
+    "id": "12",
+    "name": "上海某社区卫生服务中心",
+    "province": "shanghai",
+    "city": "上海市",
+    "level": "一级",
+    "type": "公立",
+    "address": "上海市浦东新区某路",
+    "qualifiedForInsurance": false
+  },
+  {
+    "id": "13",
+    "name": "中山大学附属第一医院",
+    "province": "guangdong",
+    "city": "广州市",
+    "level": "三级甲等",
+    "type": "公立",
+    "address": "广州市中山二路58号",
+    "qualifiedForInsurance": true
+  },
+  {
+    "id": "14",
+    "name": "广东省人民医院",
+    "province": "guangdong",
+    "city": "广州市",
+    "level": "三级甲等",
+    "type": "公立",
+    "address": "广州市越秀区中山二路106号",
+    "qualifiedForInsurance": true
+  },
+  {
+    "id": "15",
+    "name": "深圳市人民医院",
+    "province": "guangdong",
+    "city": "深圳市",
+    "level": "三级甲等",
+    "type": "公立",
+    "address": "深圳市罗湖区东门北路1017号",
+    "qualifiedForInsurance": true
+  },
+  {
+    "id": "16",
+    "name": "广州市番禺区中心医院",
+    "province": "guangdong",
+    "city": "广州市",
+    "level": "二级甲等",
+    "type": "公立",
+    "address": "广州市番禺区桥南街福愉东路8号",
+    "qualifiedForInsurance": true
+  },
+  {
+    "id": "17",
+    "name": "广州市天河区某社区医院",
+    "province": "guangdong",
+    "city": "广州市",
+    "level": "一级",
+    "type": "公立",
+    "address": "广州市天河区某路",
+    "qualifiedForInsurance": false
+  },
+  {
+    "id": "18",
+    "name": "深圳某民营专科医院",
+    "province": "guangdong",
+    "city": "深圳市",
+    "level": "民营",
+    "type": "民营",
+    "address": "深圳市南山区某路",
+    "qualifiedForInsurance": false
+  },
+  {
+    "id": "hosp-1771124990174",
+    "name": "上海市东方医院",
+    "province": "shanghai",
+    "city": "上海",
+    "level": "三级甲等",
+    "type": "公立",
+    "address": "",
+    "qualifiedForInsurance": true
+  },
+  {
+    "id": "hosp-1771141808591",
+    "name": "无锡市人民医院",
+    "province": "jiangsu",
+    "city": "无锡",
+    "level": "三级甲等",
+    "type": "公立",
+    "address": "",
+    "qualifiedForInsurance": true
+  }
+]

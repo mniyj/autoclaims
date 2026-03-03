@@ -1172,6 +1172,88 @@ export interface InvoiceItemAudit {
 }
 
 export { MedicalInvoiceData };
+
+// --- START: Types for Review Task (Manual Review Work Order) ---
+
+export enum ReviewTaskStatus {
+  PENDING = "待处理",
+  IN_PROGRESS = "处理中",
+  COMPLETED = "已完成",
+  CANCELLED = "已取消",
+}
+
+export enum ReviewTaskPriority {
+  LOW = "低",
+  MEDIUM = "中",
+  HIGH = "高",
+  URGENT = "紧急",
+}
+
+export enum ReviewTaskType {
+  LOW_CONFIDENCE = "置信度不足",
+  AI_ERROR = "AI识别失败",
+  MANUAL_REQUEST = "人工请求",
+  COMPLIANCE_CHECK = "合规检查",
+}
+
+export interface ReviewTask {
+  id: string;
+  claimCaseId: string;
+  reportNumber: string;
+  materialId: string;
+  materialName: string;
+  documentId: string;
+  ossUrl: string;
+  ossKey: string;
+
+  taskType: ReviewTaskType;
+  priority: ReviewTaskPriority;
+  status: ReviewTaskStatus;
+
+  aiConfidence: number;
+  threshold: number;
+  aiExtractedData?: Record<string, any>;
+  aiErrorMessage?: string;
+
+  manualInputData?: Record<string, any>;
+  manualReviewNotes?: string;
+  reviewerId?: string;
+  reviewerName?: string;
+
+  createdAt: string;
+  assignedAt?: string;
+  completedAt?: string;
+
+  createdBy: string;
+}
+
+export interface ReviewTaskCreateInput {
+  claimCaseId: string;
+  reportNumber: string;
+  materialId: string;
+  materialName: string;
+  documentId: string;
+  ossUrl: string;
+  ossKey: string;
+  taskType: ReviewTaskType;
+  priority?: ReviewTaskPriority;
+  aiConfidence: number;
+  threshold: number;
+  aiExtractedData?: Record<string, any>;
+  aiErrorMessage?: string;
+  createdBy: string;
+}
+
+export interface ReviewTaskUpdateInput {
+  status?: ReviewTaskStatus;
+  manualInputData?: Record<string, any>;
+  manualReviewNotes?: string;
+  reviewerId?: string;
+  reviewerName?: string;
+}
+
+// --- END: Types for Review Task ---
+
 // --- END: Types for Medical Invoice Audit & Insurance Catalog ---
 
 // --- START: Types for Quote and Policy Management ---
@@ -1934,3 +2016,80 @@ export interface DuplicateCheckResult {
 }
 
 // --- END: Types for Injury Case Processing ---
+
+// ============================================
+// OCR Document Review Types
+// ============================================
+
+/** OCR 提取字段值结构 - 包含值、置信度和溯源信息 */
+export interface OCRFieldValue {
+  value: string | number | boolean | null;
+  confidence: number;           // 置信度 0-1
+  anchor?: SourceAnchor;        // 溯源锚点（指向原始文件位置）
+  reviewFlag?: ReviewFlag;      // 人工复核标记
+  approved?: boolean;           // 是否已通过人工审核
+}
+
+/** OCR 识别结果 */
+export interface OCRResult {
+  documentId: string;           // 文档ID
+  materialType: string;         // 材料类型ID（如 "mat-1"）
+  extractedData: Record<string, OCRFieldValue>;  // 提取的字段数据
+  overallConfidence: number;    // 整体置信度
+  extractedAt: string;          // 提取时间
+  model: string;                // 使用的AI模型
+  rawOcrText?: string;          // 原始OCR文本（可选）
+}
+
+/** 修正记录 - 保存每次人工修正的历史 */
+export interface CorrectionRecord {
+  id: string;
+  documentId: string;
+  fieldKey: string;             // 字段名
+  originalValue: string;        // 原始值
+  correctedValue: string;       // 修正后的值
+  originalConfidence: number;   // 原始置信度
+  correctedBy: string;          // 修正人ID
+  correctedAt: string;          // 修正时间
+  reason?: string;              // 修正原因（可选）
+}
+
+/** Schema 解析后的字段定义 */
+export interface ParsedSchemaField {
+  key: string;                  // 字段键名
+  label: string;                // 字段显示名称
+  type: 'string' | 'number' | 'boolean' | 'date';  // 字段类型
+  required: boolean;            // 是否必填
+  format?: string;              // 格式（如 date, email）
+  description?: string;         // 字段描述
+  group?: string;               // 所属分组
+}
+
+/** 校验规则函数类型 */
+export type ValidationRule = (value: any) => string | null;
+
+/** 校验规则集合 */
+export interface ValidationRules {
+  [key: string]: ValidationRule;
+}
+
+/** OCR 审核页面状态 */
+export interface ReviewPageState {
+  // 数据
+  document: ClaimCase | null;
+  ocrResult: OCRResult | null;
+  materialConfig: ClaimsMaterial | null;
+  correctionHistory: CorrectionRecord[];
+  parsedFields: ParsedSchemaField[];
+
+  // 表单状态
+  formData: Record<string, OCRFieldValue>;
+  validationErrors: Record<string, string>;
+
+  // UI状态
+  activeField: string | null;
+  expandedGroups: string[];
+  previewZoom: number;
+  isCorrectionDrawerOpen: boolean;
+  isSubmitting: boolean;
+}

@@ -12,7 +12,7 @@ import {
 import Modal from "./ui/Modal";
 import Select from "./ui/Select";
 import IntakeFieldConfigEditor from "./product-form/IntakeFieldConfigEditor";
-import { INTAKE_COMMON_PRESET } from "../constants";
+
 import { api } from "../services/api";
 
 interface ClaimIntakeConfigPageProps {
@@ -66,7 +66,20 @@ const ClaimIntakeConfigPage: React.FC<ClaimIntakeConfigPageProps> = ({
   const [materialsLoading, setMaterialsLoading] = useState(true);
   // Local edit state for step 2 material overrides
   const [step2Overrides, setStep2Overrides] = useState<MaterialOverrides>({});
+  const [commonPreset, setCommonPreset] = useState<IntakeConfig['fields']>([]);
 
+  useEffect(() => {
+    const fetchCommonPreset = async () => {
+      try {
+        const data = await api.intakeFieldPresets.getById('common') as { fields: IntakeConfig['fields'] };
+        setCommonPreset(data.fields || []);
+      } catch (error) {
+        console.error('Failed to fetch common preset:', error);
+        setCommonPreset([]);
+      }
+    };
+    fetchCommonPreset();
+  }, []);
 
   const hasConfig = (config?: IntakeConfig) =>
     !!config &&
@@ -460,7 +473,7 @@ const ClaimIntakeConfigPage: React.FC<ClaimIntakeConfigPageProps> = ({
     }
     setEditingConfig((prev) => ({
       ...prev,
-      fields: INTAKE_COMMON_PRESET.map((field) => ({ ...field })),
+      fields: commonPreset.map((field) => ({ ...field })),
     }));
   };
 

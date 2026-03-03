@@ -127,7 +127,7 @@ export const deepAnalyze = async (
   state: ClaimState
 ): Promise<any> => {
   const ai = getAI();
-  const model = 'gemini-3-flash-preview';
+  const model = 'gemini-2.5-flash';
   
   let schema = {};
   if (category === '医疗发票') {

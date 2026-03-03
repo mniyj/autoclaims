@@ -125,8 +125,7 @@ function LogDetail({ log }: { log: AuditLogEntry }) {
 }
 
 const SystemLogsPage: React.FC = () => {
-  const today = new Date().toISOString().split("T")[0];
-  const [date, setDate] = useState(today);
+  const [date, setDate] = useState("all");
   const [typeFilter, setTypeFilter] = useState("");
   const [claimIdFilter, setClaimIdFilter] = useState("");
   const [logsData, setLogsData] = useState<LogsResponse | null>(null);
@@ -207,12 +206,23 @@ const SystemLogsPage: React.FC = () => {
           <div className="flex items-center gap-3 flex-wrap">
             <div className="flex items-center gap-2">
               <label className="text-sm text-gray-500">日期</label>
-              <input
-                type="date"
+              <select
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 className="text-sm border border-gray-300 rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-400"
-              />
+              >
+                <option value="all">全部日期</option>
+                {Array.from({ length: 30 }, (_, i) => {
+                  const d = new Date();
+                  d.setDate(d.getDate() - i);
+                  const dateStr = d.toISOString().split("T")[0];
+                  return (
+                    <option key={dateStr} value={dateStr}>
+                      {dateStr}
+                    </option>
+                  );
+                })}
+              </select>
             </div>
 
             <div className="flex items-center gap-2">

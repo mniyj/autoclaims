@@ -7831,6 +7831,17 @@ export const INTAKE_COMMON_PRESET: IntakeField[] = [
     placeholder: "请选择索赔项目",
     data_source: "claim_items_db",
   },
+  {
+    field_id: "claim_amount",
+    label: "索赔金额",
+    type: "number",
+    required: true,
+    placeholder: "请输入索赔金额（CNY）",
+    validation: {
+      rule: "gte_0_and_decimal_2",
+      error_msg: "索赔金额必须大于等于0，最多保留两位小数",
+    },
+  },
 ];
 
 export const INTAKE_FIELD_PRESETS: Record<string, IntakeField[]> = {

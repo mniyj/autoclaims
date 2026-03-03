@@ -80,6 +80,8 @@ export const api = {
   // 询价及保单管理
   quotes: buildResource("quotes"),
   policies: buildResource("policies"),
+  // 报案字段预设模板
+  intakeFieldPresets: buildResource("intake-field-presets"),
   // Utils
   getUploadToken: async () => {
     const response = await fetch("/api/upload-token");

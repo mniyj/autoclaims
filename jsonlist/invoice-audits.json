@@ -21325,5 +21325,68 @@
         "startTime": 1771179395712
       }
     ]
+  },
+  {
+    "auditId": "MAT-1772458831839-02nrx5",
+    "materialType": "mat-4",
+    "materialName": "行驶证（含副页）",
+    "ossUrl": "http://drools-purplespark.oss-cn-beijing.aliyuncs.com/materials/1772458831868-%E8%A1%8C%E9%A9%B6%E8%AF%81.jpg?OSSAccessKeyId=LTAI5tFnto3xoZD6Km6GRK76&Expires=1772462435&Signature=YJqd9L6xgsR%2B%2B4CwA3HBYosv64w%3D",
+    "ossKey": "materials/1772458831868-行驶证.jpg",
+    "uploadTime": "2026-03-02T13:40:31.839Z",
+    "extractedData": {
+      "plate_number": "豫C298D6",
+      "vehicle_type": "小型轿车",
+      "owner": "王予晖",
+      "vin": "LSGHD5289FD175845",
+      "engine_number": "150313356",
+      "register_date": "2015-05-29",
+      "inspection_valid_until": ""
+    },
+    "auditConclusion": "行驶证信息提取如下：号牌号码为豫C298D6，车辆类型为小型轿车，所有人为王予晖，车辆识别代号（VIN）为LSGHD5289FD175845，发动机号码为150313356，注册日期为2015-05-29。检验有效期至字段在当前图片中不可见，无法提取。审核校验：1) 检验有效期至字段缺失，无法判断是否覆盖事故发生日期。2) 缺少驾驶证准驾车型信息，无法校验车辆类型与驾驶证准驾车型是否匹配。",
+    "auditStatus": "completed",
+    "aiLog": {
+      "model": "gemini",
+      "prompt": "你是一个专业的保险理赔材料审核系统。请对上传的「行驶证（含副页）」进行 OCR 识别和审核。\n\n## 提取要求\n请严格根据图片中可见的文字内容提取信息，按以下 JSON Schema 结构提取：\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"plate_number\": {\n      \"type\": \"string\",\n      \"description\": \"号牌号码\"\n    },\n    \"vehicle_type\": {\n      \"type\": \"string\",\n      \"description\": \"车辆类型\"\n    },\n    \"owner\": {\n      \"type\": \"string\",\n      \"description\": \"所有人\"\n    },\n    \"vin\": {\n      \"type\": \"string\",\n      \"description\": \"车辆识别代号（VIN）\"\n    },\n    \"engine_number\": {\n      \"type\": \"string\",\n      \"description\": \"发动机号码\"\n    },\n    \"register_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"注册日期\"\n    },\n    \"inspection_valid_until\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"检验有效期至\"\n    }\n  },\n  \"required\": [\n    \"plate_number\",\n    \"vehicle_type\",\n    \"owner\"\n  ]\n}\n\n## 审核要求\n请从行驶证正页和副页提取号牌号码、车辆类型、所有人、VIN码、发动机号、注册日期和检验有效期。校验要点：1）检验有效期是否覆盖事故发生日期，若已过期则标记；2）车辆类型与驾驶证准驾车型是否匹配。\n\n## 重要规则\n1. 只提取图片中**明确可见**的文字和数字，严禁补充、推测或编造任何信息\n2. 如果某个区域模糊不清或被遮挡，对应字段返回空字符串，**不要猜测**\n3. 数字必须严格按图片显示提取\n4. 日期格式统一为 YYYY-MM-DD\n5. 无法识别的字段：字符串用空字符串 \"\"，数字用 0\n\n## 输出格式\n请严格返回以下 JSON 格式（不要包含 markdown 代码块标记）：\n{\n  \"extractedData\": { ... 按 schema 提取的字段 },\n  \"auditConclusion\": \"审核结论文本，包含提取摘要和校验结果\"\n}",
+      "response": "{\n  \"extractedData\": {\n    \"plate_number\": \"豫C298D6\",\n    \"vehicle_type\": \"小型轿车\",\n    \"owner\": \"王予晖\",\n    \"vin\": \"LSGHD5289FD175845\",\n    \"engine_number\": \"150313356\",\n    \"register_date\": \"2015-05-29\",\n    \"inspection_valid_until\": \"\"\n  },\n  \"auditConclusion\": \"行驶证信息提取如下：号牌号码为豫C298D6，车辆类型为小型轿车，所有人为王予晖，车辆识别代号（VIN）为LSGHD5289FD175845，发动机号码为150313356，注册日期为2015-05-29。检验有效期至字段在当前图片中不可见，无法提取。审核校验：1) 检验有效期至字段缺失，无法判断是否覆盖事故发生日期。2) 缺少驾驶证准驾车型信息，无法校验车辆类型与驾驶证准驾车型是否匹配。\"\n}",
+      "duration": 7668,
+      "timestamp": "2026-03-02T13:40:43.159Z",
+      "usageMetadata": {
+        "promptTokenCount": 803,
+        "candidatesTokenCount": 265,
+        "totalTokenCount": 1584,
+        "promptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 545
+          },
+          {
+            "modality": "IMAGE",
+            "tokenCount": 258
+          }
+        ],
+        "thoughtsTokenCount": 516
+      }
+    },
+    "stepTimings": [
+      {
+        "step": "upload",
+        "label": "图片上传",
+        "startTime": 1772458831839,
+        "endTime": 1772458835482,
+        "duration": 3643
+      },
+      {
+        "step": "ocr",
+        "label": "OCR 识别",
+        "startTime": 1772458835482,
+        "endTime": 1772458843159,
+        "duration": 7677
+      },
+      {
+        "step": "saving",
+        "label": "保存结果",
+        "startTime": 1772458843159
+      }
+    ]
   }
 ]
