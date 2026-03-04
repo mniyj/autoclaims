@@ -288,10 +288,221 @@ const UserOperationLogsPage: React.FC = () => {
               <pre className="bg-gray-50 border border-gray-200 rounded-md p-3 text-xs text-gray-700 overflow-auto max-h-40">{stringify(logDetails.inputData)}</pre>
             </div>
 
-            <div>
-              <div className="text-gray-500 mb-1">输出数据</div>
-              <pre className="bg-gray-50 border border-gray-200 rounded-md p-3 text-xs text-gray-700 overflow-auto max-h-40">{stringify(logDetails.outputData)}</pre>
-            </div>
+            {/* 文件导入类型操作的详细展示 */}
+            {(logDetails.operationType === UserOperationType.UPLOAD_FILE || 
+              logDetails.operationType === UserOperationType.IMPORT_MATERIALS) && 
+              logDetails.outputData?.files && (
+              <div className="border border-gray-200 rounded-lg p-4 bg-gray-50/50">
+                <div className="text-gray-900 font-medium mb-3 flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  文件解析详情
+                </div>
+                
+                {/* 统计摘要 */}
+                {logDetails.outputData?.statusSummary && (
+                  <div className="flex gap-4 mb-4 text-xs">
+                    <span className="px-2 py-1 bg-green-100 text-green-700 rounded">
+                      成功: {logDetails.outputData.statusSummary.completed}
+                    </span>
+                    {logDetails.outputData.statusSummary.failed > 0 && (
+                      <span className="px-2 py-1 bg-red-100 text-red-700 rounded">
+                        失败: {logDetails.outputData.statusSummary.failed}
+                      </span>
+                    )}
+                    {logDetails.outputData.statusSummary.processing > 0 && (
+                      <span className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded">
+                        处理中: {logDetails.outputData.statusSummary.processing}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* 文件列表 */}
+                <div className="space-y-2 max-h-60 overflow-auto">
+                  {logDetails.outputData.files.map((file: any, index: number) => (
+                    <div 
+                      key={file.documentId || index} 
+                      className={`border rounded-md p-3 text-xs ${
+                        file.status === 'completed' ? 'bg-white border-gray-200' : 
+                        file.status === 'failed' ? 'bg-red-50 border-red-200' : 
+                        'bg-yellow-50 border-yellow-200'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="font-medium text-gray-900 truncate flex-1" title={file.fileName}>
+                          {index + 1}. {file.fileName}
+                        </div>
+                        <span className={`px-1.5 py-0.5 rounded text-xs ml-2 ${
+                          file.status === 'completed' ? 'bg-green-100 text-green-700' : 
+                          file.status === 'failed' ? 'bg-red-100 text-red-700' : 
+                          'bg-yellow-100 text-yellow-700'
+                        }`}>
+                          {file.status === 'completed' ? '成功' : 
+                           file.status === 'failed' ? '失败' : '处理中'}
+                        </span>
+                      </div>
+                      
+                      {/* 分类信息 */}
+                      {file.classification && (
+                        <div className="mb-2">
+                          <span className="text-gray-500">分类结果:</span>
+                          <span className="ml-1 font-medium text-indigo-600">
+                            {file.classification.materialName}
+                          </span>
+                          {file.classification.confidence !== undefined && (
+                            <span className="ml-2 text-gray-400">
+                              (置信度: {(file.classification.confidence * 100).toFixed(1)}%)
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {/* 提取的结构化数据 */}
+                      {file.extractedData && Object.keys(file.extractedData).length > 0 && (
+                        <div className="mt-2 pt-2 border-t border-gray-100">
+                          <div className="text-gray-500 mb-1">提取数据:</div>
+                          <pre className="bg-gray-50 rounded p-2 text-xs overflow-auto max-h-24">
+                            {JSON.stringify(file.extractedData, null, 2)}
+                          </pre>
+                        </div>
+                      )}
+
+                      {/* 错误信息 */}
+                      {file.errorMessage && (
+                        <div className="mt-2 text-red-600">
+                          错误: {file.errorMessage}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* 完整性检查结果 */}
+                {logDetails.outputData?.completeness && (
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <div className="text-gray-900 font-medium mb-2">完整性检查</div>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <span className="text-gray-500">完整度:</span>
+                        <span className={`ml-1 font-medium ${
+                          logDetails.outputData.completeness.isComplete ? 'text-green-600' : 'text-yellow-600'
+                        }`}>
+                          {logDetails.outputData.completeness.score}%
+                          {logDetails.outputData.completeness.isComplete ? ' (完整)' : ' (不完整)'}
+                        </span>
+                      </div>
+                      {logDetails.outputData.completeness.missingMaterials?.length > 0 && (
+                        <div className="col-span-2">
+                          <span className="text-gray-500">缺失材料:</span>
+                          <span className="ml-1 text-red-600">
+                            {logDetails.outputData.completeness.missingMaterials.join(', ')}
+                          </span>
+                        </div>
+                      )}
+                      {logDetails.outputData.completeness.warnings?.length > 0 && (
+                        <div className="col-span-2 mt-1">
+                          <span className="text-gray-500">警告:</span>
+                          {logDetails.outputData.completeness.warnings.map((warning: string, i: number) => (
+                            <div key={i} className="ml-1 text-yellow-600 text-xs">
+                              • {warning}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* 材料分类统计 */}
+                {logDetails.outputData?.classificationSummary && (
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <div className="text-gray-900 font-medium mb-2">材料分类统计</div>
+                    <div className="flex flex-wrap gap-2">
+                      {Object.entries(logDetails.outputData.classificationSummary as Record<string, number>).map(([name, count]) => (
+                        <span key={name} className="px-2 py-1 bg-indigo-50 text-indigo-700 rounded text-xs">
+                          {name}: {count}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* AI 审核操作的详细展示 */}
+            {(logDetails.operationType === UserOperationType.ANALYZE_DOCUMENT || 
+              logDetails.operationType === UserOperationType.QUICK_ANALYZE) && 
+              logDetails.outputData && (
+              <div className="border border-gray-200 rounded-lg p-4 bg-gray-50/50">
+                <div className="text-gray-900 font-medium mb-3 flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                  AI 审核结果
+                </div>
+                
+                {logDetails.outputData.decision && (
+                  <div className="mb-3">
+                    <span className="text-gray-500">审核结论:</span>
+                    <span className={`ml-2 px-2 py-1 rounded text-sm font-medium ${
+                      logDetails.outputData.decision === 'APPROVE' ? 'bg-green-100 text-green-700' :
+                      logDetails.outputData.decision === 'REJECT' ? 'bg-red-100 text-red-700' :
+                      'bg-yellow-100 text-yellow-700'
+                    }`}>
+                      {logDetails.outputData.decision === 'APPROVE' ? '✓ 通过' :
+                       logDetails.outputData.decision === 'REJECT' ? '✗ 拒赔' :
+                       '⚠ 需人工复核'}
+                    </span>
+                  </div>
+                )}
+
+                {logDetails.outputData.amount !== undefined && logDetails.outputData.amount !== null && (
+                  <div className="mb-3">
+                    <span className="text-gray-500">建议金额:</span>
+                    <span className="ml-2 text-lg font-bold text-indigo-600">
+                      ¥{Number(logDetails.outputData.amount).toLocaleString()}
+                    </span>
+                  </div>
+                )}
+
+                {logDetails.outputData.reasoning && (
+                  <div className="mb-3">
+                    <div className="text-gray-500 mb-1">审核意见:</div>
+                    <div className="bg-white border border-gray-200 rounded p-3 text-sm text-gray-700 whitespace-pre-wrap max-h-32 overflow-auto">
+                      {logDetails.outputData.reasoning}
+                    </div>
+                  </div>
+                )}
+
+                {/* 其他字段以 JSON 展示 */}
+                {Object.keys(logDetails.outputData).some(k => !['decision', 'amount', 'reasoning'].includes(k)) && (
+                  <div>
+                    <div className="text-gray-500 mb-1">详细信息:</div>
+                    <pre className="bg-white border border-gray-200 rounded p-3 text-xs overflow-auto max-h-32">
+                      {JSON.stringify(
+                        Object.fromEntries(
+                          Object.entries(logDetails.outputData).filter(([k]) => 
+                            !['decision', 'amount', 'reasoning'].includes(k)
+                          )
+                        ), null, 2)}
+                    </pre>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 其他操作的输出数据 */}
+            {!(logDetails.operationType === UserOperationType.UPLOAD_FILE || 
+               logDetails.operationType === UserOperationType.IMPORT_MATERIALS ||
+               logDetails.operationType === UserOperationType.ANALYZE_DOCUMENT || 
+               logDetails.operationType === UserOperationType.QUICK_ANALYZE) && (
+              <div>
+                <div className="text-gray-500 mb-1">输出数据</div>
+                <pre className="bg-gray-50 border border-gray-200 rounded-md p-3 text-xs text-gray-700 overflow-auto max-h-40">{stringify(logDetails.outputData)}</pre>
+              </div>
+            )}
 
             <div>
               <div className="text-gray-500 mb-1">AI交互记录</div>

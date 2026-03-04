@@ -10,7 +10,7 @@ import {
   updateTask,
   getQueueStats,
 } from './queue.js';
-import { processFileWithRetry } from './worker.js';
+import { processFileWithRetry } from './worker-new.js';
 import { writeAuditLog } from '../middleware/index.js';
 import { createTaskCompleteMessage } from '../messageCenter/messageService.js';
 import {

@@ -1,3 +1,5 @@
+import type { MaterialCategory } from "./types/material-review";
+
 export enum ProductStatus {
   DRAFT = "草稿",
   ACTIVE = "生效",
@@ -441,6 +443,54 @@ export interface ClaimsMaterial {
   jsonSchema: string; // JSON string representing the schema to extract
   aiAuditPrompt?: string;
   confidenceThreshold?: number; // 转人工置信度阈值 [0, 1]，低于此值需人工复核，默认 0.9
+  category?: MaterialCategory;
+  processingStrategy?: ProcessingStrategy;
+  extractionConfig?: ExtractionConfig;
+}
+
+// Processing and extraction related types for claims materials
+export type ProcessingStrategy = 'invoice' | 'structured_doc' | 'general_doc' | 'image_only';
+
+export interface ExtractionConfig {
+  jsonSchema: Record<string, any>;
+  aiAuditPrompt: string;
+  validationRules?: ValidationRule[];
+}
+
+export interface ClassificationResult {
+  materialId?: string;
+  name?: string;
+  category?: MaterialCategory;
+  confidence?: number;
+}
+
+export interface AiClassification {
+  results?: ClassificationResult[];
+  overallConfidence?: number;
+  details?: string;
+}
+
+export interface MaterialAuditConclusion {
+  checklist?: AuditChecklistItem[];
+  issues?: AuditIssue[];
+  classification?: AiClassification;
+  timestamp?: string;
+  summary?: string;
+}
+
+export interface AuditChecklistItem {
+  id?: string;
+  text: string;
+  passed?: boolean;
+  details?: string;
+}
+
+export interface AuditIssue {
+  id?: string;
+  code?: string;
+  description: string;
+  severity?: "info" | "low" | "medium" | "high" | "critical";
+  relatedItemId?: string;
 }
 
 export interface ClaimItem {
@@ -504,7 +554,7 @@ export interface ClaimCalculationItem {
 
 export interface ClaimFileCategory {
   name: string;
-  files: { name: string; url: string }[];
+  files: { name: string; url: string; ossKey?: string }[];
 }
 
 export interface ClaimRiskIndicator {
@@ -550,6 +600,16 @@ export interface ClaimCase {
     uploaded?: boolean; // 是否已上传
   }>;
   intakeFormData?: Record<string, any>; // 报案表单原始数据
+  
+  // 文件解析结果存储（键：分类名-文件名，值：解析结果）
+  fileParseResults?: Record<string, {
+    extractedData: Record<string, any>;
+    auditConclusion?: string;
+    confidence?: number;
+    materialName: string;
+    materialId?: string;
+    parsedAt: string;
+  }>;
 }
 // --- END: Types for Claims Management ---
 
@@ -565,6 +625,7 @@ export interface ProcessedFile {
     materialId: string;
     materialName: string;
     confidence: number;
+    source?: 'ai' | 'manual';
   };
   status: "processing" | "completed" | "failed";
   errorMessage?: string;
@@ -1506,6 +1567,11 @@ export enum UserOperationType {
   QUICK_ANALYZE = "QUICK_ANALYZE", // 快速分析
   VOICE_TRANSCRIPTION = "VOICE_TRANSCRIPTION", // 语音转写
   LIVE_AUDIO_SESSION = "LIVE_AUDIO_SESSION", // 实时语音会话
+  GENERATE_REPORT = "GENERATE_REPORT", // 生成报告
+  CLAIM_ACTION = "CLAIM_ACTION", // 案件操作（通过/拒赔等）
+  IMPORT_MATERIALS = "IMPORT_MATERIALS", // 批量导入材料
+  TASK_CREATE = "TASK_CREATE", // 创建处理任务
+  SYSTEM_CALL = "SYSTEM_CALL", // 系统调用
 }
 
 // 用户操作日志主类型
@@ -1630,6 +1696,14 @@ export interface ParsedDocument {
   // AI 分析结果
   aiAnalysis?: DocumentAnalysisResult; // AI 分析
   confidence: number; // 整体置信度
+
+  // 材料分类信息
+  classification?: {
+    materialId: string;
+    materialName: string;
+    confidence: number;
+    source?: 'ai' | 'manual';
+  };
 
   // 处理信息
   parseTime?: string; // 解析时间

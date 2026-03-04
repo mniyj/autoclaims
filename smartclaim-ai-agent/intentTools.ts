@@ -26,11 +26,52 @@ type ToolHandler = (
 
 /** 工具注册表 */
 const TOOL_REGISTRY: Record<IntentType, ToolHandler> = {
+  // ---- 报案类 ----
+  [IntentType.REPORT_NEW_CLAIM]: handleUnimplemented,
+  [IntentType.RESUME_CLAIM_REPORT]: handleUnimplemented,
+  [IntentType.MODIFY_CLAIM_REPORT]: handleUnimplemented,
+  [IntentType.CANCEL_CLAIM]: handleUnimplemented,
+
+  // ---- 材料上传类 ----
+  [IntentType.UPLOAD_DOCUMENT]: handleUnimplemented,
+  [IntentType.SUPPLEMENT_DOCUMENT]: handleUnimplemented,
+  [IntentType.VIEW_UPLOADED_DOCUMENTS]: handleUnimplemented,
+  [IntentType.REPLACE_DOCUMENT]: handleUnimplemented,
+
+  // ---- 查询类 ----
   [IntentType.QUERY_PROGRESS]: handleQueryProgress,
   [IntentType.QUERY_MATERIALS_LIST]: handleQueryMaterialsList,
   [IntentType.QUERY_MISSING_MATERIALS]: handleQueryMissingMaterials,
   [IntentType.QUERY_PREMIUM_IMPACT]: handleQueryPremiumImpact,
-  [IntentType.GENERAL_CHAT]: handleGeneralChat
+  [IntentType.QUERY_SETTLEMENT_AMOUNT]: handleUnimplemented,
+  [IntentType.QUERY_SETTLEMENT_DETAIL]: handleUnimplemented,
+  [IntentType.QUERY_POLICY_INFO]: handleUnimplemented,
+  [IntentType.QUERY_CLAIM_HISTORY]: handleUnimplemented,
+  [IntentType.QUERY_PAYMENT_STATUS]: handleUnimplemented,
+
+  // ---- 协助类 ----
+  [IntentType.GUIDE_CLAIM_PROCESS]: handleUnimplemented,
+  [IntentType.GUIDE_DOCUMENT_PHOTO]: handleUnimplemented,
+  [IntentType.QUERY_CLAIM_TIMELINE]: handleUnimplemented,
+  [IntentType.QUERY_COVERAGE]: handleUnimplemented,
+  [IntentType.QUERY_FAQ]: handleUnimplemented,
+
+  // ---- 沟通类 ----
+  [IntentType.TRANSFER_TO_AGENT]: handleUnimplemented,
+  [IntentType.FILE_COMPLAINT]: handleUnimplemented,
+  [IntentType.EXPEDITE_CLAIM]: handleUnimplemented,
+  [IntentType.LEAVE_MESSAGE]: handleUnimplemented,
+
+  // ---- 操作类 ----
+  [IntentType.UPDATE_BANK_INFO]: handleUnimplemented,
+  [IntentType.CONFIRM_SETTLEMENT]: handleUnimplemented,
+  [IntentType.REJECT_SETTLEMENT]: handleUnimplemented,
+  [IntentType.SIGN_AGREEMENT]: handleUnimplemented,
+
+  // ---- 兜底类 ----
+  [IntentType.GENERAL_CHAT]: handleGeneralChat,
+  [IntentType.UNCLEAR_INTENT]: handleGeneralChat,
+  [IntentType.OUT_OF_SCOPE]: handleUnimplemented
 };
 
 /**
@@ -304,6 +345,21 @@ function handleGeneralChat(
     success: true,
     data: null,
     message: "", // 空消息表示需要走普通 AI 回复流程
+    uiComponent: undefined
+  };
+}
+
+/**
+ * 未实现的功能
+ */
+function handleUnimplemented(
+  entities: IntentEntities,
+  claimState: ClaimState
+): ToolResponse {
+  return {
+    success: false,
+    data: null,
+    message: "抱歉，此功能暂未实现，请联系人工客服获取帮助。",
     uiComponent: undefined
   };
 }

@@ -88,7 +88,7 @@ async function aiAssistedJudgment(diagnosisText, injuryDescription) {
 
   try {
     const genai = new GoogleGenAI({ apiKey });
-    const model = genai.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+    const model = genai.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     const prompt = `请根据以下诊断和伤害描述，判断适用的伤残等级（1-10级，1级最高，10级最低）：
 

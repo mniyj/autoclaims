@@ -21388,5 +21388,67 @@
         "startTime": 1772458843159
       }
     ]
+  },
+  {
+    "auditId": "MAT-1772627856857-20k2px",
+    "materialType": "mat-3",
+    "materialName": "驾驶证（含副页）",
+    "ossUrl": "http://drools-purplespark.oss-cn-beijing.aliyuncs.com/materials/1772627857010-WechatIMG29.jpg?OSSAccessKeyId=LTAI5tFnto3xoZD6Km6GRK76&Expires=1772631460&Signature=QI3fC4a%2B2JQtYVCdg%2F%2BfC9QWbfI%3D",
+    "ossKey": "materials/1772627857010-WechatIMG29.jpg",
+    "uploadTime": "2026-03-04T12:37:36.857Z",
+    "extractedData": {
+      "name": "文又又",
+      "license_number": "130223198812225522",
+      "vehicle_class": "C1",
+      "valid_period": "2024-11-07 至 长期",
+      "issue_date": "2008-11-07",
+      "file_number": "130200850415"
+    },
+    "auditConclusion": "驾驶证信息已成功提取。\n姓名：文又又，驾驶证号码：130223198812225522，准驾车型：C1，有效期限：2024-11-07 至 长期，初次领证日期：2008-11-07，档案编号：130200850415。\n审核结果：\n1. 驾驶证有效期覆盖事故发生日期：由于未提供事故发生日期，无法进行此项校验。\n2. 准驾车型与事故中驾驶的车辆类型匹配：由于未提供事故中驾驶的车辆类型，无法进行此项校验。\n3. 扣分或违章记录标注：图片中未显示任何扣分或违章记录标注。",
+    "auditStatus": "completed",
+    "aiLog": {
+      "model": "gemini",
+      "prompt": "你是一个专业的保险理赔材料审核系统。请对上传的「驾驶证（含副页）」进行 OCR 识别和审核。\n\n## 提取要求\n请严格根据图片中可见的文字内容提取信息，按以下 JSON Schema 结构提取：\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"name\": {\n      \"type\": \"string\",\n      \"description\": \"姓名\"\n    },\n    \"license_number\": {\n      \"type\": \"string\",\n      \"description\": \"驾驶证号码\"\n    },\n    \"vehicle_class\": {\n      \"type\": \"string\",\n      \"description\": \"准驾车型\"\n    },\n    \"valid_period\": {\n      \"type\": \"string\",\n      \"description\": \"有效期限\"\n    },\n    \"issue_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"初次领证日期\"\n    },\n    \"file_number\": {\n      \"type\": \"string\",\n      \"description\": \"档案编号\"\n    }\n  },\n  \"required\": [\n    \"name\",\n    \"license_number\",\n    \"vehicle_class\"\n  ]\n}\n\n## 审核要求\n请从驾驶证正页和副页提取姓名、驾驶证号、准驾车型、有效期限和初次领证日期。校验要点：1）驾驶证有效期是否覆盖事故发生日期；2）准驾车型是否与事故中驾驶的车辆类型匹配（如C1不能驾驶大型车辆）；3）是否存在扣分或违章记录标注。\n\n## 重要规则\n1. 只提取图片中**明确可见**的文字和数字，严禁补充、推测或编造任何信息\n2. 如果某个区域模糊不清或被遮挡，对应字段返回空字符串，**不要猜测**\n3. 数字必须严格按图片显示提取\n4. 日期格式统一为 YYYY-MM-DD\n5. 无法识别的字段：字符串用空字符串 \"\"，数字用 0\n\n## 输出格式\n请严格返回以下 JSON 格式（不要包含 markdown 代码块标记）：\n{\n  \"extractedData\": { ... 按 schema 提取的字段 },\n  \"auditConclusion\": \"审核结论文本，包含提取摘要和校验结果\"\n}",
+      "response": "{\n  \"extractedData\": {\n    \"name\": \"文又又\",\n    \"license_number\": \"130223198812225522\",\n    \"vehicle_class\": \"C1\",\n    \"valid_period\": \"2024-11-07 至 长期\",\n    \"issue_date\": \"2008-11-07\",\n    \"file_number\": \"130200850415\"\n  },\n  \"auditConclusion\": \"驾驶证信息已成功提取。\\n姓名：文又又，驾驶证号码：130223198812225522，准驾车型：C1，有效期限：2024-11-07 至 长期，初次领证日期：2008-11-07，档案编号：130200850415。\\n审核结果：\\n1. 驾驶证有效期覆盖事故发生日期：由于未提供事故发生日期，无法进行此项校验。\\n2. 准驾车型与事故中驾驶的车辆类型匹配：由于未提供事故中驾驶的车辆类型，无法进行此项校验。\\n3. 扣分或违章记录标注：图片中未显示任何扣分或违章记录标注。\"\n}",
+      "duration": 8855,
+      "timestamp": "2026-03-04T12:37:49.031Z",
+      "usageMetadata": {
+        "promptTokenCount": 779,
+        "candidatesTokenCount": 311,
+        "totalTokenCount": 2011,
+        "promptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 521
+          },
+          {
+            "modality": "IMAGE",
+            "tokenCount": 258
+          }
+        ],
+        "thoughtsTokenCount": 921
+      }
+    },
+    "stepTimings": [
+      {
+        "step": "upload",
+        "label": "图片上传",
+        "startTime": 1772627856858,
+        "endTime": 1772627860132,
+        "duration": 3274
+      },
+      {
+        "step": "ocr",
+        "label": "OCR 识别",
+        "startTime": 1772627860132,
+        "endTime": 1772627869037,
+        "duration": 8905
+      },
+      {
+        "step": "saving",
+        "label": "保存结果",
+        "startTime": 1772627869037
+      }
+    ]
   }
 ]

@@ -42,6 +42,7 @@ import PolicyListPage from "./components/PolicyListPage";
 import PolicyDetailPage from "./components/PolicyDetailPage";
 import { AITestPanel } from "./services/ai/AITestPanel";
 import { aiService } from "./services/ai/aiService";
+import { VoiceClaimPage } from "./pages/VoiceClaimPage";
 import { GeminiProvider } from "./services/ai/providers/geminiProvider";
 import { ClaudeProvider } from "./services/ai/providers/claudeProvider";
 import {
@@ -55,8 +56,6 @@ import {
   type InsurancePolicy,
 } from "./types";
 
-aiService.registerProvider(new GeminiProvider());
-aiService.registerProvider(new ClaudeProvider());
 import {
   SANITIZED_MOCK_CLAUSES as MOCK_CLAUSES,
   MOCK_CLAIM_CASES,
@@ -74,6 +73,10 @@ import {
   MAPPING_DATA,
 } from "./constants";
 import { api } from "./services/api";
+
+// 注册 AI 提供商
+aiService.registerProvider(new GeminiProvider());
+aiService.registerProvider(new ClaudeProvider());
 
 // --- Icon Components ---
 const IconWrapper: React.FC<{
@@ -241,7 +244,8 @@ type AppView =
   | "policy_detail"
   | "policy_create"
   | "policy_edit"
-  | "message_center";
+  | "message_center"
+  | "voice_claim";
 
 type NavSubItemData = { name: string; id: AppView };
 type NavItemData = {
@@ -278,6 +282,7 @@ const navItems: NavItemData[] = [
     icon: <ProductMgmtIcon />,
     children: [
       { name: "理赔员工作台", id: "claim_workbench" },
+      { name: "语音报案", id: "voice_claim" },
       { name: "理赔项目及材料配置", id: "claim_item_config" },
       { name: "报案信息配置", id: "claim_intake_config" },
       { name: "报案字段预设管理", id: "intake_field_presets" },
@@ -336,6 +341,7 @@ const activeParentViews: Record<string, AppView[]> = {
   ],
   理赔管理: [
     "claim_workbench",
+    "voice_claim",
     "claim_item_config",
     "claim_intake_config",
     "intake_field_presets",
@@ -469,7 +475,10 @@ const Sidebar: React.FC<{
   );
 };
 
-const Header: React.FC<{ onLogout: () => void; onMessageClick: () => void }> = ({ onLogout, onMessageClick }) => (
+const Header: React.FC<{
+  onLogout: () => void;
+  onMessageClick: () => void;
+}> = ({ onLogout, onMessageClick }) => (
   <header className="bg-transparent h-16 px-6 flex items-center justify-end">
     <div className="flex items-center space-x-5">
       <MessageBell />
@@ -750,6 +759,19 @@ const App: React.FC = () => {
     setView("policy_detail");
   };
 
+  const handleViewPolicyByNumber = async (policyNumber: string) => {
+    try {
+      const policies = (await api.policies.list()) as InsurancePolicy[];
+      const matched = policies.find((p) => p.policyNumber === policyNumber);
+      if (matched) {
+        setSelectedPolicy(matched);
+        setView("policy_detail");
+      }
+    } catch (error) {
+      console.error("Failed to load policy:", error);
+    }
+  };
+
   const handleCreatePolicy = () => {
     setSelectedPolicy(null);
     setView("policy_create");
@@ -968,11 +990,14 @@ const App: React.FC = () => {
             <ClaimCaseDetailPage
               claim={selectedClaim}
               onBack={() => setView("claim_case_list")}
+              onViewPolicy={handleViewPolicyByNumber}
             />
           )
         );
       case "claim_workbench":
         return <ClaimWorkbenchPage onViewClaim={handleViewClaim} />;
+      case "voice_claim":
+        return <VoiceClaimPage />;
       case "invoice_audit":
         return <InvoiceAuditPage />;
       case "medical_catalog_management":
@@ -1063,7 +1088,10 @@ const App: React.FC = () => {
       <Sidebar currentView={view} onViewChange={handleViewChange} />
       <div className="flex-1 flex flex-col overflow-hidden relative">
         <div className="absolute top-0 left-0 w-full h-[200px] bg-gradient-to-b from-[#e6f4ff] to-[#f0f2f5] pointer-events-none" />
-        <Header onLogout={handleLogout} onMessageClick={() => setView("message_center")} />
+        <Header
+          onLogout={handleLogout}
+          onMessageClick={() => setView("message_center")}
+        />
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-transparent px-6 pb-6 relative">
           {renderContent()}
         </main>
