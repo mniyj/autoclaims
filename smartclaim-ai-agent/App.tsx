@@ -1,8 +1,28 @@
-import React, { useState, useRef, useEffect } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import { ClaimStatus, Message, ClaimState, ClaimDocument, HistoricalClaim, Policy, Attachment, MedicalInvoiceData, OCRData, DischargeSummaryData, IntakeConfig, IntakeField, CalculatedMaterial, IntentType, UIComponentType, ClaimProgressInfo, MaterialsListInfo, MissingMaterialsInfo, PremiumImpactInfo } from './types';
-import { MOCK_HISTORICAL_CLAIMS } from './constants';
+import React, { useState, useRef, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import {
+  ClaimStatus,
+  Message,
+  ClaimState,
+  ClaimDocument,
+  HistoricalClaim,
+  Policy,
+  Attachment,
+  MedicalInvoiceData,
+  OCRData,
+  DischargeSummaryData,
+  IntakeConfig,
+  IntakeField,
+  CalculatedMaterial,
+  IntentType,
+  UIComponentType,
+  ClaimProgressInfo,
+  MaterialsListInfo,
+  MissingMaterialsInfo,
+  PremiumImpactInfo,
+} from "./types";
+import { MOCK_HISTORICAL_CLAIMS } from "./constants";
 
 // --- Hospital Info Type ---
 interface HospitalInfo {
@@ -15,16 +35,24 @@ interface HospitalInfo {
   address?: string;
   qualifiedForInsurance: boolean;
 }
-import { getAIResponse, analyzeDocument, quickAnalyze, connectLive, transcribeAudio, smartChat } from './geminiService';
-import { getIntentLabel } from './intentService';
-import { getSignedUrl } from './ossService';
-import { logUserOperation } from './logService';
-import { UserOperationType } from '../types';
-import type { AIInteractionLog } from '../types';
+import {
+  getAIResponse,
+  analyzeDocument,
+  quickAnalyze,
+  connectLive,
+  transcribeAudio,
+  smartChat,
+} from "./geminiService";
+import { getIntentLabel } from "./intentService";
+import { executeTool } from "./intentTools";
+import { getSignedUrl } from "./ossService";
+import { logUserOperation } from "./logService";
+import { UserOperationType } from "../types";
+import type { AIInteractionLog } from "../types";
 
 // --- Helpers ---
 function encode(bytes: Uint8Array) {
-  let binary = '';
+  let binary = "";
   const len = bytes.byteLength;
   for (let i = 0; i < len; i++) {
     binary += String.fromCharCode(bytes[i]);
@@ -69,7 +97,7 @@ function createBlob(data: Float32Array): any {
   }
   return {
     data: encode(new Uint8Array(int16.buffer)),
-    mimeType: 'audio/pcm;rate=16000',
+    mimeType: "audio/pcm;rate=16000",
   };
 }
 
@@ -86,40 +114,64 @@ type BackendPolicy = {
 };
 
 const fetchPoliciesFromBackend = async (): Promise<Policy[]> => {
-  const response = await fetch('/api/policies');
-  if (!response.ok) throw new Error('Failed to load policies');
+  const response = await fetch("/api/policies");
+  if (!response.ok) throw new Error("Failed to load policies");
   const data = await response.json();
   const policies = Array.isArray(data) ? data : [];
-  return policies.map((policy: BackendPolicy) => ({
-    id: policy.policyNumber || policy.id || '',
-    insuredName: policy.insureds?.[0]?.name || policy.policyholder?.name || '',
-    type: policy.productName || policy.productCode || '未知险种',
-    validFrom: policy.effectiveDate || policy.issueDate || '',
-    validUntil: policy.expiryDate || '',
-    productCode: policy.productCode || ''
-  })).filter(p => p.id);
+  return policies
+    .map((policy: BackendPolicy) => ({
+      id: policy.policyNumber || policy.id || "",
+      policyholderName: policy.policyholder?.name || "",
+      insuredName:
+        policy.insureds?.[0]?.name || policy.policyholder?.name || "",
+      type: policy.productName || policy.productCode || "未知险种",
+      validFrom: policy.effectiveDate || policy.issueDate || "",
+      validUntil: policy.expiryDate || "",
+      productCode: policy.productCode || "",
+    }))
+    .filter((p) => p.id);
 };
 
 const getDocIcon = (name: string) => {
   const lowerName = name.toLowerCase();
-  if (lowerName.endsWith('.pdf')) return 'fa-file-pdf';
-  if (lowerName.includes('身份') || lowerName.includes('证')) return 'fa-id-card';
-  if (lowerName.includes('票') || lowerName.includes('凭证') || lowerName.includes('清单')) return 'fa-receipt';
-  if (lowerName.includes('小结') || lowerName.includes('出院') || lowerName.includes('记录')) return 'fa-file-waveform';
-  if (lowerName.includes('照片') || lowerName.includes('现场')) return 'fa-camera-retro';
-  if (lowerName.includes('诊断') || lowerName.includes('报告')) return 'fa-file-medical';
-  return 'fa-file-lines';
+  if (lowerName.endsWith(".pdf")) return "fa-file-pdf";
+  if (lowerName.includes("身份") || lowerName.includes("证"))
+    return "fa-id-card";
+  if (
+    lowerName.includes("票") ||
+    lowerName.includes("凭证") ||
+    lowerName.includes("清单")
+  )
+    return "fa-receipt";
+  if (
+    lowerName.includes("小结") ||
+    lowerName.includes("出院") ||
+    lowerName.includes("记录")
+  )
+    return "fa-file-waveform";
+  if (lowerName.includes("照片") || lowerName.includes("现场"))
+    return "fa-camera-retro";
+  if (lowerName.includes("诊断") || lowerName.includes("报告"))
+    return "fa-file-medical";
+  return "fa-file-lines";
 };
 
 const getStatusLabel = (status: ClaimStatus) => {
   switch (status) {
-    case ClaimStatus.REPORTING: return '报案登记';
-    case ClaimStatus.DOCUMENTING: return '补充材料';
-    case ClaimStatus.REVIEWING: return '智能审核';
-    case ClaimStatus.SETTLED: return '审核完成';
-    case ClaimStatus.PAID: return '已打款';
-    case ClaimStatus.REJECTED: return '已拒赔';
-    default: return '处理中';
+    case ClaimStatus.REPORTING:
+      return "报案登记";
+    case ClaimStatus.DOCUMENTING:
+      return "补充材料";
+    case ClaimStatus.REVIEWING:
+      return "智能审核";
+    case ClaimStatus.SETTLED:
+      return "审核完成";
+    case ClaimStatus.PAID:
+      return "已打款";
+    case ClaimStatus.REJECTED:
+      return "已拒赔";
+    default:
+      return "处理中";
   }
 };
 
@@ -127,54 +179,76 @@ const hasMissingFields = (doc: Attachment) => {
   return doc.analysis?.missingFields && doc.analysis.missingFields.length > 0;
 };
 
-const STORAGE_KEY = 'smartclaim_v9_history';
+const STORAGE_KEY = "smartclaim_v9_history";
 const MAX_FILES_PER_UPLOAD = 20;
 const MAX_CONCURRENT_ANALYSIS = 10;
 const MAX_IMAGE_DIMENSION = 1600;
 const IMAGE_QUALITY = 0.82;
 
-const readFileAsDataUrl = (file: File) => new Promise<string>((resolve, reject) => {
-  const reader = new FileReader();
-  reader.onload = () => resolve(reader.result as string);
-  reader.onerror = () => reject(new Error('file_read_failed'));
-  reader.readAsDataURL(file);
-});
+const readFileAsDataUrl = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error("file_read_failed"));
+    reader.readAsDataURL(file);
+  });
 
-const createImageAttachment = (file: File) => new Promise<Attachment>((resolve) => {
-  const url = URL.createObjectURL(file);
-  const image = new Image();
-  image.onload = () => {
-    const scale = Math.min(1, MAX_IMAGE_DIMENSION / Math.max(image.width, image.height));
-    const canvas = document.createElement('canvas');
-    canvas.width = Math.max(1, Math.round(image.width * scale));
-    canvas.height = Math.max(1, Math.round(image.height * scale));
-    const ctx = canvas.getContext('2d');
-    if (!ctx) {
-      resolve({ base64: '', type: file.type, name: file.name, url });
-      return;
-    }
-    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-    const dataUrl = canvas.toDataURL('image/jpeg', IMAGE_QUALITY);
-    resolve({ base64: dataUrl.split(',')[1], type: 'image/jpeg', name: file.name, url });
-  };
-  image.onerror = async () => {
-    const dataUrl = await readFileAsDataUrl(file);
-    resolve({ base64: dataUrl.split(',')[1], type: file.type, name: file.name, url });
-  };
-  image.src = url;
-});
+const createImageAttachment = (file: File) =>
+  new Promise<Attachment>((resolve) => {
+    const url = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => {
+      const scale = Math.min(
+        1,
+        MAX_IMAGE_DIMENSION / Math.max(image.width, image.height),
+      );
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(image.width * scale));
+      canvas.height = Math.max(1, Math.round(image.height * scale));
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        resolve({ base64: "", type: file.type, name: file.name, url });
+        return;
+      }
+      ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL("image/jpeg", IMAGE_QUALITY);
+      resolve({
+        base64: dataUrl.split(",")[1],
+        type: "image/jpeg",
+        name: file.name,
+        url,
+      });
+    };
+    image.onerror = async () => {
+      const dataUrl = await readFileAsDataUrl(file);
+      resolve({
+        base64: dataUrl.split(",")[1],
+        type: file.type,
+        name: file.name,
+        url,
+      });
+    };
+    image.src = url;
+  });
 
 const createFileAttachment = async (file: File): Promise<Attachment> => {
   const dataUrl = await readFileAsDataUrl(file);
-  return { base64: dataUrl.split(',')[1], type: file.type, name: file.name };
+  return { base64: dataUrl.split(",")[1], type: file.type, name: file.name };
 };
 
 // --- Components ---
 
 // Simple Card
-const Card: React.FC<{ children: React.ReactNode; className?: string; onClick?: () => void }> = ({ children, className = "", onClick }) => {
+const Card: React.FC<{
+  children: React.ReactNode;
+  className?: string;
+  onClick?: () => void;
+}> = ({ children, className = "", onClick }) => {
   return (
-    <div onClick={onClick} className={`glass-card p-4 relative overflow-hidden ${onClick ? 'cursor-pointer hover:shadow-lg active:scale-95' : ''} ${className}`}>
+    <div
+      onClick={onClick}
+      className={`glass-card p-4 relative overflow-hidden ${onClick ? "cursor-pointer hover:shadow-lg active:scale-95" : ""} ${className}`}
+    >
       {children}
     </div>
   );
@@ -186,47 +260,87 @@ const MedicalDataDisplay = ({ data }: { data: MedicalInvoiceData }) => {
     <div className="mt-3 bg-slate-50 rounded-xl p-4 text-xs space-y-4 border border-slate-100 shadow-inner">
       {/* Header Info */}
       <div className="grid grid-cols-2 gap-y-2 gap-x-4">
-        <div><span className="text-slate-400">医院:</span> <span className="font-bold text-slate-700 ml-1">{data.invoiceInfo?.hospitalName || '-'}</span></div>
-        <div><span className="text-slate-400">姓名:</span> <span className="font-bold text-slate-700 ml-1">{data.basicInfo?.name || '-'}</span></div>
-        <div><span className="text-slate-400">科室:</span> <span className="text-slate-600 ml-1">{data.basicInfo?.department || '-'}</span></div>
-        <div><span className="text-slate-400">时间:</span> <span className="text-slate-600 ml-1">{data.invoiceInfo?.issueDate || '-'}</span></div>
+        <div>
+          <span className="text-slate-400">医院:</span>{" "}
+          <span className="font-bold text-slate-700 ml-1">
+            {data.invoiceInfo?.hospitalName || "-"}
+          </span>
+        </div>
+        <div>
+          <span className="text-slate-400">姓名:</span>{" "}
+          <span className="font-bold text-slate-700 ml-1">
+            {data.basicInfo?.name || "-"}
+          </span>
+        </div>
+        <div>
+          <span className="text-slate-400">科室:</span>{" "}
+          <span className="text-slate-600 ml-1">
+            {data.basicInfo?.department || "-"}
+          </span>
+        </div>
+        <div>
+          <span className="text-slate-400">时间:</span>{" "}
+          <span className="text-slate-600 ml-1">
+            {data.invoiceInfo?.issueDate || "-"}
+          </span>
+        </div>
       </div>
 
       {/* Amounts */}
       <div className="bg-white rounded-lg p-3 border border-slate-100 flex justify-between items-center">
         <div className="flex flex-col">
           <span className="text-slate-400 scale-90 origin-left">总金额</span>
-          <span className="text-base font-bold text-slate-800">¥{data.totalAmount || 0}</span>
+          <span className="text-base font-bold text-slate-800">
+            ¥{data.totalAmount || 0}
+          </span>
         </div>
         <div className="h-8 w-px bg-slate-100"></div>
         <div className="flex flex-col items-end">
           <span className="text-slate-400 scale-90 origin-right">医保支付</span>
-          <span className="text-slate-600">¥{data.insurancePayment?.governmentFundPayment || 0}</span>
+          <span className="text-slate-600">
+            ¥{data.insurancePayment?.governmentFundPayment || 0}
+          </span>
         </div>
         <div className="h-8 w-px bg-slate-100"></div>
         <div className="flex flex-col items-end">
           <span className="text-slate-400 scale-90 origin-right">个人支付</span>
-          <span className="text-blue-600 font-bold">¥{data.insurancePayment?.personalPayment || 0}</span>
+          <span className="text-blue-600 font-bold">
+            ¥{data.insurancePayment?.personalPayment || 0}
+          </span>
         </div>
       </div>
 
       {/* Items List */}
       {data.chargeItems && data.chargeItems.length > 0 && (
         <div>
-          <div className="text-slate-400 mb-2 font-bold scale-90 origin-left">收费明细</div>
+          <div className="text-slate-400 mb-2 font-bold scale-90 origin-left">
+            收费明细
+          </div>
           <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
             {data.chargeItems.map((item, idx) => (
-              <div key={idx} className="flex justify-between items-center border-b border-dashed border-slate-200 pb-1 last:border-0">
-                <div className="flex-1 truncate mr-2 text-slate-600" title={item.itemName}>{item.itemName}</div>
-                <div className="text-slate-400 scale-90 whitespace-nowrap">{item.quantity} x {item.unitPrice}</div>
-                <div className="w-16 text-right font-medium text-slate-700">¥{item.totalPrice}</div>
+              <div
+                key={idx}
+                className="flex justify-between items-center border-b border-dashed border-slate-200 pb-1 last:border-0"
+              >
+                <div
+                  className="flex-1 truncate mr-2 text-slate-600"
+                  title={item.itemName}
+                >
+                  {item.itemName}
+                </div>
+                <div className="text-slate-400 scale-90 whitespace-nowrap">
+                  {item.quantity} x {item.unitPrice}
+                </div>
+                <div className="w-16 text-right font-medium text-slate-700">
+                  ¥{item.totalPrice}
+                </div>
               </div>
             ))}
           </div>
         </div>
       )}
     </div>
-  )
+  );
 };
 
 // Discharge Summary Data Display Component
@@ -235,64 +349,127 @@ const DischargeSummaryDisplay = ({ data }: { data: DischargeSummaryData }) => {
     <div className="mt-3 bg-slate-50 rounded-xl p-4 text-xs space-y-4 border border-slate-100 shadow-inner animate-enter">
       {/* Hospital Header */}
       <div className="text-center border-b border-slate-200 pb-2 mb-2">
-        <div className="font-bold text-base text-slate-800">{data.hospital_info?.hospital_name}</div>
-        <div className="text-slate-500 mt-0.5">{data.hospital_info?.department} - {data.document_type}</div>
+        <div className="font-bold text-base text-slate-800">
+          {data.hospital_info?.hospital_name}
+        </div>
+        <div className="text-slate-500 mt-0.5">
+          {data.hospital_info?.department} - {data.document_type}
+        </div>
       </div>
 
       {/* Patient Info Grid */}
       <div className="grid grid-cols-2 gap-2 bg-white p-2 rounded border border-slate-100">
-        <div><span className="text-slate-400">姓名:</span> <span className="font-bold ml-1">{data.patient_info?.name}</span></div>
-        <div><span className="text-slate-400">性别/年龄:</span> <span className="ml-1">{data.patient_info?.gender} / {data.patient_info?.age}岁</span></div>
-        <div><span className="text-slate-400">入院:</span> <span className="ml-1">{data.admission_details?.admission_date?.split(' ')[0]}</span></div>
-        <div><span className="text-slate-400">出院:</span> <span className="ml-1">{data.discharge_details?.discharge_date?.split(' ')[0]} ({data.discharge_details?.hospital_stay_days}天)</span></div>
+        <div>
+          <span className="text-slate-400">姓名:</span>{" "}
+          <span className="font-bold ml-1">{data.patient_info?.name}</span>
+        </div>
+        <div>
+          <span className="text-slate-400">性别/年龄:</span>{" "}
+          <span className="ml-1">
+            {data.patient_info?.gender} / {data.patient_info?.age}岁
+          </span>
+        </div>
+        <div>
+          <span className="text-slate-400">入院:</span>{" "}
+          <span className="ml-1">
+            {data.admission_details?.admission_date?.split(" ")[0]}
+          </span>
+        </div>
+        <div>
+          <span className="text-slate-400">出院:</span>{" "}
+          <span className="ml-1">
+            {data.discharge_details?.discharge_date?.split(" ")[0]} (
+            {data.discharge_details?.hospital_stay_days}天)
+          </span>
+        </div>
       </div>
 
       {/* Admission Details */}
-      {(data.admission_details?.main_symptoms_on_admission || data.admission_details?.admission_condition_summary) && (
+      {(data.admission_details?.main_symptoms_on_admission ||
+        data.admission_details?.admission_condition_summary) && (
         <div>
-          <div className="font-bold text-slate-700 mb-1 flex items-center gap-1"><i className="fas fa-right-to-bracket text-blue-500"></i> 入院情况</div>
+          <div className="font-bold text-slate-700 mb-1 flex items-center gap-1">
+            <i className="fas fa-right-to-bracket text-blue-500"></i> 入院情况
+          </div>
           <div className="bg-white p-2 rounded border border-slate-100 leading-relaxed text-slate-600">
-            {data.admission_details?.main_symptoms_on_admission && <div className="mb-1"><span className="text-slate-400">主诉:</span> {data.admission_details.main_symptoms_on_admission}</div>}
-            {data.admission_details?.admission_condition_summary && <div><span className="text-slate-400">查体:</span> {data.admission_details.admission_condition_summary}</div>}
+            {data.admission_details?.main_symptoms_on_admission && (
+              <div className="mb-1">
+                <span className="text-slate-400">主诉:</span>{" "}
+                {data.admission_details.main_symptoms_on_admission}
+              </div>
+            )}
+            {data.admission_details?.admission_condition_summary && (
+              <div>
+                <span className="text-slate-400">查体:</span>{" "}
+                {data.admission_details.admission_condition_summary}
+              </div>
+            )}
           </div>
         </div>
       )}
 
       {/* Diagnoses */}
       <div>
-        <div className="font-bold text-slate-700 mb-1 flex items-center gap-1"><i className="fas fa-stethoscope text-blue-500"></i> 诊断信息</div>
+        <div className="font-bold text-slate-700 mb-1 flex items-center gap-1">
+          <i className="fas fa-stethoscope text-blue-500"></i> 诊断信息
+        </div>
         <div className="space-y-1">
           {data.diagnoses?.map((d, i) => (
-            <div key={i} className="flex flex-col bg-white p-2 rounded border border-slate-100">
+            <div
+              key={i}
+              className="flex flex-col bg-white p-2 rounded border border-slate-100"
+            >
               <div className="flex justify-between items-start">
-                <span className="font-medium text-slate-700">{d.diagnosis_name}</span>
-                <span className="text-slate-400 text-[10px] px-1.5 py-0.5 bg-slate-100 rounded whitespace-nowrap">{d.diagnosis_type}</span>
+                <span className="font-medium text-slate-700">
+                  {d.diagnosis_name}
+                </span>
+                <span className="text-slate-400 text-[10px] px-1.5 py-0.5 bg-slate-100 rounded whitespace-nowrap">
+                  {d.diagnosis_type}
+                </span>
               </div>
-              {d.notes && <div className="text-[10px] text-slate-400 mt-1">Note: {d.notes}</div>}
+              {d.notes && (
+                <div className="text-[10px] text-slate-400 mt-1">
+                  Note: {d.notes}
+                </div>
+              )}
             </div>
           ))}
         </div>
       </div>
 
       {/* Treatments & Surgery */}
-      {data.main_treatments_during_hospitalization && data.main_treatments_during_hospitalization.length > 0 && (
-        <div>
-          <div className="font-bold text-slate-700 mb-1 flex items-center gap-1"><i className="fas fa-syringe text-blue-500"></i> 诊疗操作</div>
-          <div className="space-y-1">
-            {data.main_treatments_during_hospitalization.map((t, i) => (
-              <div key={i} className="bg-white p-2 rounded border border-slate-100">
-                <div className="font-medium text-slate-700">{t.treatment_name}</div>
-                {t.description && <div className="text-slate-500 text-[10px] mt-0.5">{t.description}</div>}
-              </div>
-            ))}
+      {data.main_treatments_during_hospitalization &&
+        data.main_treatments_during_hospitalization.length > 0 && (
+          <div>
+            <div className="font-bold text-slate-700 mb-1 flex items-center gap-1">
+              <i className="fas fa-syringe text-blue-500"></i> 诊疗操作
+            </div>
+            <div className="space-y-1">
+              {data.main_treatments_during_hospitalization.map((t, i) => (
+                <div
+                  key={i}
+                  className="bg-white p-2 rounded border border-slate-100"
+                >
+                  <div className="font-medium text-slate-700">
+                    {t.treatment_name}
+                  </div>
+                  {t.description && (
+                    <div className="text-slate-500 text-[10px] mt-0.5">
+                      {t.description}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* Course Summary */}
       {data.hospitalization_course_summary && (
         <div>
-          <div className="font-bold text-slate-700 mb-1 flex items-center gap-1"><i className="fas fa-file-waveform text-blue-500"></i> 住院经过</div>
+          <div className="font-bold text-slate-700 mb-1 flex items-center gap-1">
+            <i className="fas fa-file-waveform text-blue-500"></i> 住院经过
+          </div>
           <p className="bg-white p-2 rounded border border-slate-100 leading-relaxed text-slate-600">
             {data.hospitalization_course_summary}
           </p>
@@ -302,7 +479,10 @@ const DischargeSummaryDisplay = ({ data }: { data: DischargeSummaryData }) => {
       {/* Discharge Condition */}
       {data.condition_at_discharge && (
         <div>
-          <div className="font-bold text-slate-700 mb-1 flex items-center gap-1"><i className="fas fa-person-walking-arrow-right text-blue-500"></i> 出院情况</div>
+          <div className="font-bold text-slate-700 mb-1 flex items-center gap-1">
+            <i className="fas fa-person-walking-arrow-right text-blue-500"></i>{" "}
+            出院情况
+          </div>
           <p className="bg-white p-2 rounded border border-slate-100 leading-relaxed text-slate-600">
             {data.condition_at_discharge}
           </p>
@@ -310,61 +490,85 @@ const DischargeSummaryDisplay = ({ data }: { data: DischargeSummaryData }) => {
       )}
 
       {/* Discharge Orders (Meds) */}
-      {data.discharge_instructions?.medications && data.discharge_instructions.medications.length > 0 && (
-        <div>
-          <div className="font-bold text-slate-700 mb-1 flex items-center gap-1"><i className="fas fa-pills text-blue-500"></i> 出院带药</div>
-          <div className="bg-white rounded border border-slate-100 overflow-hidden">
-            <table className="w-full text-left">
-              <thead className="bg-slate-50 text-slate-500 text-[10px]">
-                <tr>
-                  <th className="p-2 font-normal">药品</th>
-                  <th className="p-2 font-normal">用法</th>
-                  <th className="p-2 font-normal">总量</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-xs">
-                {data.discharge_instructions.medications.map((m, i) => (
-                  <tr key={i}>
-                    <td className="p-2 font-medium text-slate-700">
-                      {m.med_name}
-                      {m.notes && <div className="text-[10px] text-slate-400 font-normal">{m.notes}</div>}
-                    </td>
-                    <td className="p-2 text-slate-500">{m.frequency} {m.route}</td>
-                    <td className="p-2 text-slate-500">{m.dosage} x {m.duration}</td>
+      {data.discharge_instructions?.medications &&
+        data.discharge_instructions.medications.length > 0 && (
+          <div>
+            <div className="font-bold text-slate-700 mb-1 flex items-center gap-1">
+              <i className="fas fa-pills text-blue-500"></i> 出院带药
+            </div>
+            <div className="bg-white rounded border border-slate-100 overflow-hidden">
+              <table className="w-full text-left">
+                <thead className="bg-slate-50 text-slate-500 text-[10px]">
+                  <tr>
+                    <th className="p-2 font-normal">药品</th>
+                    <th className="p-2 font-normal">用法</th>
+                    <th className="p-2 font-normal">总量</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* Advice */}
-      <div className="space-y-2">
-        {data.discharge_instructions?.lifestyle_recommendations && data.discharge_instructions.lifestyle_recommendations.length > 0 && (
-          <div className="bg-yellow-50 p-2.5 rounded text-yellow-800 border border-yellow-100 text-[10px]">
-            <div className="font-bold mb-1"><i className="fas fa-triangle-exclamation mr-1"></i>医嘱/生活建议</div>
-            <ul className="list-disc pl-4 space-y-0.5">
-              {data.discharge_instructions.lifestyle_recommendations.map((r, i) => <li key={i}>{r}</li>)}
-            </ul>
-          </div>
-        )}
-
-        {data.discharge_instructions?.follow_up_appointments && data.discharge_instructions.follow_up_appointments.length > 0 && (
-          <div className="bg-blue-50 p-2.5 rounded text-blue-800 border border-blue-100 flex gap-2">
-            <i className="fas fa-calendar-check mt-0.5"></i>
-            <div>
-              <div className="font-bold mb-1">复诊建议</div>
-              {data.discharge_instructions.follow_up_appointments.map((f, i) => (
-                <div key={i}>{f.date_or_interval} - {f.department} {f.notes}</div>
-              ))}
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-xs">
+                  {data.discharge_instructions.medications.map((m, i) => (
+                    <tr key={i}>
+                      <td className="p-2 font-medium text-slate-700">
+                        {m.med_name}
+                        {m.notes && (
+                          <div className="text-[10px] text-slate-400 font-normal">
+                            {m.notes}
+                          </div>
+                        )}
+                      </td>
+                      <td className="p-2 text-slate-500">
+                        {m.frequency} {m.route}
+                      </td>
+                      <td className="p-2 text-slate-500">
+                        {m.dosage} x {m.duration}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         )}
+
+      {/* Advice */}
+      <div className="space-y-2">
+        {data.discharge_instructions?.lifestyle_recommendations &&
+          data.discharge_instructions.lifestyle_recommendations.length > 0 && (
+            <div className="bg-yellow-50 p-2.5 rounded text-yellow-800 border border-yellow-100 text-[10px]">
+              <div className="font-bold mb-1">
+                <i className="fas fa-triangle-exclamation mr-1"></i>
+                医嘱/生活建议
+              </div>
+              <ul className="list-disc pl-4 space-y-0.5">
+                {data.discharge_instructions.lifestyle_recommendations.map(
+                  (r, i) => (
+                    <li key={i}>{r}</li>
+                  ),
+                )}
+              </ul>
+            </div>
+          )}
+
+        {data.discharge_instructions?.follow_up_appointments &&
+          data.discharge_instructions.follow_up_appointments.length > 0 && (
+            <div className="bg-blue-50 p-2.5 rounded text-blue-800 border border-blue-100 flex gap-2">
+              <i className="fas fa-calendar-check mt-0.5"></i>
+              <div>
+                <div className="font-bold mb-1">复诊建议</div>
+                {data.discharge_instructions.follow_up_appointments.map(
+                  (f, i) => (
+                    <div key={i}>
+                      {f.date_or_interval} - {f.department} {f.notes}
+                    </div>
+                  ),
+                )}
+              </div>
+            </div>
+          )}
       </div>
     </div>
-  )
-}
+  );
+};
 
 // Generic OCR Data Display Component
 const GenericOCRDisplay = ({ data }: { data: OCRData }) => {
@@ -372,14 +576,21 @@ const GenericOCRDisplay = ({ data }: { data: OCRData }) => {
   return (
     <div className="mt-3 bg-slate-50 rounded-xl p-3 text-xs border border-slate-100 shadow-inner grid grid-cols-2 gap-2">
       {Object.entries(data).map(([k, v]) => (
-        <div key={k} className="flex flex-col bg-white p-2 rounded border border-slate-50">
-          <span className="text-slate-400 uppercase scale-90 origin-left mb-0.5">{k}</span>
-          <span className="font-bold text-slate-700 truncate" title={String(v)}>{String(v)}</span>
+        <div
+          key={k}
+          className="flex flex-col bg-white p-2 rounded border border-slate-50"
+        >
+          <span className="text-slate-400 uppercase scale-90 origin-left mb-0.5">
+            {k}
+          </span>
+          <span className="font-bold text-slate-700 truncate" title={String(v)}>
+            {String(v)}
+          </span>
         </div>
       ))}
     </div>
-  )
-}
+  );
+};
 
 // ============================================================================
 // 意图识别 UI 组件
@@ -389,10 +600,14 @@ const GenericOCRDisplay = ({ data }: { data: OCRData }) => {
 const ClaimProgressCard = ({ data }: { data: ClaimProgressInfo }) => {
   const getStatusColor = (status: ClaimStatus) => {
     switch (status) {
-      case ClaimStatus.PAID: return 'text-green-500';
-      case ClaimStatus.REJECTED: return 'text-red-500';
-      case ClaimStatus.REVIEWING: return 'text-blue-500';
-      default: return 'text-orange-500';
+      case ClaimStatus.PAID:
+        return "text-green-500";
+      case ClaimStatus.REJECTED:
+        return "text-red-500";
+      case ClaimStatus.REVIEWING:
+        return "text-blue-500";
+      default:
+        return "text-orange-500";
     }
   };
 
@@ -404,10 +619,12 @@ const ClaimProgressCard = ({ data }: { data: ClaimProgressInfo }) => {
             <i className="fas fa-chart-line text-blue-500"></i>
             <span className="font-bold text-slate-700">理赔进度</span>
           </div>
-          <span className={`text-sm font-bold ${getStatusColor(data.status)}`}>{data.statusLabel}</span>
+          <span className={`text-sm font-bold ${getStatusColor(data.status)}`}>
+            {data.statusLabel}
+          </span>
         </div>
       </div>
-      
+
       <div className="p-4">
         {/* 进度条 */}
         <div className="mb-4">
@@ -416,7 +633,7 @@ const ClaimProgressCard = ({ data }: { data: ClaimProgressInfo }) => {
             <span>{data.progress}%</span>
           </div>
           <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-            <div 
+            <div
               className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-500"
               style={{ width: `${data.progress}%` }}
             />
@@ -426,7 +643,12 @@ const ClaimProgressCard = ({ data }: { data: ClaimProgressInfo }) => {
         {/* 当前阶段 */}
         <div className="flex items-center gap-2 mb-3">
           <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-          <span className="text-sm text-slate-600">当前阶段：<span className="font-medium text-slate-800">{data.currentStage}</span></span>
+          <span className="text-sm text-slate-600">
+            当前阶段：
+            <span className="font-medium text-slate-800">
+              {data.currentStage}
+            </span>
+          </span>
         </div>
 
         {/* 时间线 */}
@@ -434,9 +656,13 @@ const ClaimProgressCard = ({ data }: { data: ClaimProgressInfo }) => {
           <div className="mt-3 space-y-2 max-h-32 overflow-y-auto">
             {data.timeline.slice(-3).map((event, idx) => (
               <div key={idx} className="flex items-start gap-2 text-xs">
-                <div className={`w-1.5 h-1.5 rounded-full mt-1 ${event.status === 'completed' ? 'bg-green-500' : event.status === 'active' ? 'bg-blue-500' : 'bg-slate-300'}`}></div>
+                <div
+                  className={`w-1.5 h-1.5 rounded-full mt-1 ${event.status === "completed" ? "bg-green-500" : event.status === "active" ? "bg-blue-500" : "bg-slate-300"}`}
+                ></div>
                 <div className="flex-1">
-                  <div className="font-medium text-slate-700">{event.label}</div>
+                  <div className="font-medium text-slate-700">
+                    {event.label}
+                  </div>
                   <div className="text-slate-500">{event.description}</div>
                   <div className="text-slate-400 text-[10px]">{event.date}</div>
                 </div>
@@ -450,69 +676,104 @@ const ClaimProgressCard = ({ data }: { data: ClaimProgressInfo }) => {
 };
 
 /** 材料清单卡片 */
-const MaterialsListCard = ({ data }: { data: MaterialsListInfo }) => {
+const MaterialsListCard = ({
+  data,
+  onViewSample,
+}: {
+  data: MaterialsListInfo;
+  onViewSample?: (url: string, name: string) => void;
+}) => {
   const [showAll, setShowAll] = useState(false);
-  const requiredMaterials = data.materials.filter(m => m.required);
-  const optionalMaterials = data.materials.filter(m => !m.required);
-  const displayMaterials = showAll ? data.materials : data.materials.slice(0, 5);
+  const requiredMaterials = data.materials.filter((m) => m.required);
+  const optionalMaterials = data.materials.filter((m) => !m.required);
+  const displayMaterials = showAll
+    ? data.materials
+    : data.materials.slice(0, 5);
 
   return (
     <div className="mt-3 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
       <div className="px-4 py-3 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-slate-100">
         <div className="flex items-center gap-2">
           <i className="fas fa-clipboard-check text-emerald-500"></i>
-          <span className="font-bold text-slate-700">{data.claimType} - 材料清单</span>
+          <span className="font-bold text-slate-700">
+            {data.claimType} - 材料清单
+          </span>
         </div>
       </div>
-      
+
       <div className="p-4">
         {/* 必需材料 */}
         <div className="mb-3">
-          <div className="text-xs font-bold text-slate-500 mb-2">必需材料 ({requiredMaterials.length}项)</div>
+          <div className="text-xs font-bold text-slate-500 mb-2">
+            必需材料 ({requiredMaterials.length}项)
+          </div>
           <div className="space-y-2">
-            {displayMaterials.filter(m => m.required).map((material, idx) => (
-              <div key={idx} className="flex items-center gap-2 p-2 bg-red-50 rounded-lg border border-red-100">
-                <div className="w-5 h-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-bold">
-                  {idx + 1}
-                </div>
-                <div className="flex-1">
-                  <div className="text-sm font-medium text-slate-700">{material.name}</div>
-                  {material.description && (
-                    <div className="text-xs text-slate-500">{material.description}</div>
+            {displayMaterials
+              .filter((m) => m.required)
+              .map((material, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center gap-2 p-2 bg-red-50 rounded-lg border border-red-100"
+                >
+                  <div className="w-5 h-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-bold">
+                    {idx + 1}
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm font-medium text-slate-700">
+                      {material.name}
+                    </div>
+                    {material.description && (
+                      <div className="text-xs text-slate-500">
+                        {material.description}
+                      </div>
+                    )}
+                  </div>
+                  {material.sampleUrl && (
+                    <button
+                      onClick={() =>
+                        onViewSample?.(material.sampleUrl!, material.name)
+                      }
+                      className="text-xs text-blue-500 hover:text-blue-600"
+                    >
+                      <i className="fas fa-eye"></i> 示例
+                    </button>
                   )}
                 </div>
-                {material.sampleUrl && (
-                  <button className="text-xs text-blue-500 hover:text-blue-600">
-                    <i className="fas fa-eye"></i> 示例
-                  </button>
-                )}
-              </div>
-            ))}
+              ))}
           </div>
         </div>
 
         {/* 可选材料 */}
         {optionalMaterials.length > 0 && (
           <div className="mb-3">
-            <div className="text-xs font-bold text-slate-500 mb-2">补充材料 ({optionalMaterials.length}项)</div>
+            <div className="text-xs font-bold text-slate-500 mb-2">
+              补充材料 ({optionalMaterials.length}项)
+            </div>
             <div className="space-y-1">
-              {displayMaterials.filter(m => !m.required).map((material, idx) => (
-                <div key={idx} className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg">
-                  <i className="fas fa-circle text-[6px] text-slate-400"></i>
-                  <span className="text-sm text-slate-600">{material.name}</span>
-                </div>
-              ))}
+              {displayMaterials
+                .filter((m) => !m.required)
+                .map((material, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg"
+                  >
+                    <i className="fas fa-circle text-[6px] text-slate-400"></i>
+                    <span className="text-sm text-slate-600">
+                      {material.name}
+                    </span>
+                  </div>
+                ))}
             </div>
           </div>
         )}
 
         {/* 展开/收起按钮 */}
         {data.materials.length > 5 && (
-          <button 
+          <button
             onClick={() => setShowAll(!showAll)}
             className="w-full py-2 text-xs text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
           >
-            {showAll ? '收起' : `查看全部 ${data.materials.length} 项材料`}
+            {showAll ? "收起" : `查看全部 ${data.materials.length} 项材料`}
           </button>
         )}
       </div>
@@ -524,21 +785,28 @@ const MaterialsListCard = ({ data }: { data: MaterialsListInfo }) => {
 const MissingMaterialsCard = ({ data }: { data: MissingMaterialsInfo }) => {
   const getUrgencyColor = (urgency: string) => {
     switch (urgency) {
-      case 'high': return 'bg-red-50 border-red-200 text-red-700';
-      case 'medium': return 'bg-orange-50 border-orange-200 text-orange-700';
-      default: return 'bg-yellow-50 border-yellow-200 text-yellow-700';
+      case "high":
+        return "bg-red-50 border-red-200 text-red-700";
+      case "medium":
+        return "bg-orange-50 border-orange-200 text-orange-700";
+      default:
+        return "bg-yellow-50 border-yellow-200 text-yellow-700";
     }
   };
 
   return (
-    <div className={`mt-3 rounded-xl shadow-sm border overflow-hidden ${getUrgencyColor(data.urgency)}`}>
+    <div
+      className={`mt-3 rounded-xl shadow-sm border overflow-hidden ${getUrgencyColor(data.urgency)}`}
+    >
       <div className="px-4 py-3 border-b border-current/10">
         <div className="flex items-center gap-2">
           <i className="fas fa-exclamation-triangle"></i>
-          <span className="font-bold">还缺 {data.missingItems.length} 项材料</span>
+          <span className="font-bold">
+            还缺 {data.missingItems.length} 项材料
+          </span>
         </div>
       </div>
-      
+
       <div className="p-4">
         <div className="space-y-2">
           {data.missingItems.map((item, idx) => (
@@ -567,8 +835,8 @@ const MissingMaterialsCard = ({ data }: { data: MissingMaterialsInfo }) => {
 
 /** 保费影响卡片 */
 const PremiumImpactCard = ({ data }: { data: PremiumImpactInfo }) => {
-  const isIncrease = data.premiumChange.direction === 'increase';
-  const isDecrease = data.premiumChange.direction === 'decrease';
+  const isIncrease = data.premiumChange.direction === "increase";
+  const isDecrease = data.premiumChange.direction === "decrease";
 
   return (
     <div className="mt-3 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
@@ -578,35 +846,43 @@ const PremiumImpactCard = ({ data }: { data: PremiumImpactInfo }) => {
           <span className="font-bold text-slate-700">保费影响预估</span>
         </div>
       </div>
-      
+
       <div className="p-4">
         {/* NCD 变化 */}
         <div className="flex items-center justify-between mb-4 p-3 bg-slate-50 rounded-lg">
           <div className="text-center">
             <div className="text-xs text-slate-500 mb-1">当前 NCD</div>
-            <div className="text-xl font-bold text-slate-700">{data.currentNCD}</div>
+            <div className="text-xl font-bold text-slate-700">
+              {data.currentNCD}
+            </div>
           </div>
           <i className="fas fa-arrow-right text-slate-400"></i>
           <div className="text-center">
             <div className="text-xs text-slate-500 mb-1">下年 NCD</div>
-            <div className="text-xl font-bold text-slate-700">{data.nextYearNCD}</div>
+            <div className="text-xl font-bold text-slate-700">
+              {data.nextYearNCD}
+            </div>
           </div>
         </div>
 
         {/* 保费变化 */}
-        <div className={`p-3 rounded-lg mb-3 ${isIncrease ? 'bg-red-50 border border-red-100' : isDecrease ? 'bg-green-50 border border-green-100' : 'bg-slate-50'}`}>
+        <div
+          className={`p-3 rounded-lg mb-3 ${isIncrease ? "bg-red-50 border border-red-100" : isDecrease ? "bg-green-50 border border-green-100" : "bg-slate-50"}`}
+        >
           <div className="flex items-center justify-between">
             <span className="text-sm text-slate-600">预估保费变化</span>
-            <span className={`text-lg font-bold ${isIncrease ? 'text-red-500' : isDecrease ? 'text-green-500' : 'text-slate-600'}`}>
-              {isIncrease ? '+' : ''}{data.premiumChange.amount}元 ({isIncrease ? '+' : ''}{data.premiumChange.percentage}%)
+            <span
+              className={`text-lg font-bold ${isIncrease ? "text-red-500" : isDecrease ? "text-green-500" : "text-slate-600"}`}
+            >
+              {isIncrease ? "+" : ""}
+              {data.premiumChange.amount}元 ({isIncrease ? "+" : ""}
+              {data.premiumChange.percentage}%)
             </span>
           </div>
         </div>
 
         {/* 说明 */}
-        <div className="text-xs text-slate-500 mb-3">
-          {data.explanation}
-        </div>
+        <div className="text-xs text-slate-500 mb-3">{data.explanation}</div>
 
         {/* 建议 */}
         {data.suggestions.length > 0 && (
@@ -614,7 +890,10 @@ const PremiumImpactCard = ({ data }: { data: PremiumImpactInfo }) => {
             <div className="text-xs font-bold text-slate-500 mb-2">建议</div>
             <ul className="space-y-1">
               {data.suggestions.map((suggestion, idx) => (
-                <li key={idx} className="text-xs text-slate-600 flex items-start gap-1">
+                <li
+                  key={idx}
+                  className="text-xs text-slate-600 flex items-start gap-1"
+                >
                   <i className="fas fa-lightbulb text-yellow-500 mt-0.5"></i>
                   <span>{suggestion}</span>
                 </li>
@@ -633,16 +912,16 @@ const MaterialsMessageCard = ({
   caseNumber,
   onUpload,
   onViewSample,
-  onBatchUpload
+  onBatchUpload,
 }: {
-  materials: CalculatedMaterial[],
-  caseNumber?: string,
-  onUpload: (id: string) => void,
-  onViewSample: (url: string) => void,
-  onBatchUpload: () => void
+  materials: CalculatedMaterial[];
+  caseNumber?: string;
+  onUpload: (id: string) => void;
+  onViewSample: (url: string) => void;
+  onBatchUpload: () => void;
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const requiredCount = materials.filter(m => m.required).length;
+  const requiredCount = materials.filter((m) => m.required).length;
 
   const displayMaterials = isExpanded ? materials : materials.slice(0, 3);
   const hasMore = materials.length > 3;
@@ -676,7 +955,10 @@ const MaterialsMessageCard = ({
             </span>
             <div className="flex gap-1">
               {[...Array(materials.length)].map((_, i) => (
-                <div key={i} className={`w-1.5 h-1.5 rounded-full ${i < requiredCount ? 'bg-red-400' : 'bg-blue-300'}`}></div>
+                <div
+                  key={i}
+                  className={`w-1.5 h-1.5 rounded-full ${i < requiredCount ? "bg-red-400" : "bg-blue-300"}`}
+                ></div>
               ))}
             </div>
           </div>
@@ -687,21 +969,31 @@ const MaterialsMessageCard = ({
           {displayMaterials.map((mat, idx) => (
             <div
               key={mat.materialId}
-              className={`group p-3 rounded-2xl border transition-all duration-300 ${mat.required
-                ? 'bg-red-50/30 border-red-100 hover:border-red-200'
-                : 'bg-slate-50/50 border-slate-100 hover:border-slate-200'
-                }`}
+              className={`group p-3 rounded-2xl border transition-all duration-300 ${
+                mat.required
+                  ? "bg-red-50/30 border-red-100 hover:border-red-200"
+                  : "bg-slate-50/50 border-slate-100 hover:border-slate-200"
+              }`}
             >
               <div className="flex items-start gap-3">
-                <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold shrink-0 shadow-sm ${mat.required ? 'bg-red-500 text-white' : 'bg-slate-200 text-slate-500'
-                  }`}>
+                <div
+                  className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold shrink-0 shadow-sm ${
+                    mat.required
+                      ? "bg-red-500 text-white"
+                      : "bg-slate-200 text-slate-500"
+                  }`}
+                >
                   {idx + 1}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-700 truncate">{mat.materialName}</span>
+                    <span className="text-xs font-bold text-slate-700 truncate">
+                      {mat.materialName}
+                    </span>
                     {mat.required && (
-                      <span className="text-[9px] font-black text-red-500 uppercase tracking-tighter">Required</span>
+                      <span className="text-[9px] font-black text-red-500 uppercase tracking-tighter">
+                        Required
+                      </span>
                     )}
                   </div>
                   {mat.materialDescription && (
@@ -722,7 +1014,8 @@ const MaterialsMessageCard = ({
                       onClick={() => onUpload(mat.materialId)}
                       className="text-[10px] text-blue-500 font-bold hover:text-blue-600 flex items-center gap-1 active:scale-95 transition-transform ml-auto bg-blue-50 px-2 py-1 rounded-md"
                     >
-                      <i className="fas fa-arrow-up-from-bracket text-[9px]"></i> 点击上传
+                      <i className="fas fa-arrow-up-from-bracket text-[9px]"></i>{" "}
+                      点击上传
                     </button>
                   </div>
                 </div>
@@ -736,9 +1029,14 @@ const MaterialsMessageCard = ({
               className="w-full py-2.5 text-[11px] font-bold text-slate-500 hover:text-blue-600 hover:bg-blue-50 border border-slate-100 rounded-xl transition-all flex items-center justify-center gap-2"
             >
               {isExpanded ? (
-                <><i className="fas fa-chevron-up"></i> 收起材料列表</>
+                <>
+                  <i className="fas fa-chevron-up"></i> 收起材料列表
+                </>
               ) : (
-                <><i className="fas fa-chevron-down"></i> 查看其余 {materials.length - 3} 份材料</>
+                <>
+                  <i className="fas fa-chevron-down"></i> 查看其余{" "}
+                  {materials.length - 3} 份材料
+                </>
               )}
             </button>
           )}
@@ -750,10 +1048,11 @@ const MaterialsMessageCard = ({
             onClick={onBatchUpload}
             className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold text-xs shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
           >
-            <i className="fas fa-wand-magic-sparkles"></i> 批量上传（智能自动分类）
+            <i className="fas fa-wand-magic-sparkles"></i>{" "}
+            批量上传（智能自动分类）
           </button>
           <button
-            onClick={() => { }}
+            onClick={() => {}}
             className="w-full py-2.5 text-[11px] font-bold text-slate-400 hover:text-slate-600 transition-colors"
           >
             稍后在“理赔历史”中补充
@@ -774,7 +1073,7 @@ const FileInspectorItem = ({
   onPreview,
   onToggleExpand,
   isExpanded,
-  onReplaceFile
+  onReplaceFile,
 }: {
   doc: Attachment;
   index: number;
@@ -786,7 +1085,7 @@ const FileInspectorItem = ({
   isExpanded: boolean;
   onReplaceFile: () => void;
 }) => {
-  const [signedUrl, setSignedUrl] = useState<string>('');
+  const [signedUrl, setSignedUrl] = useState<string>("");
   const [isLoadingUrl, setIsLoadingUrl] = useState(false);
 
   useEffect(() => {
@@ -794,24 +1093,33 @@ const FileInspectorItem = ({
     if (doc.ossKey && !doc.url) {
       setIsLoadingUrl(true);
       getSignedUrl(doc.ossKey)
-        .then(url => {
+        .then((url) => {
           if (active) setSignedUrl(url);
         })
         .catch(() => {
-          if (active) setSignedUrl('');
+          if (active) setSignedUrl("");
         })
         .finally(() => {
           if (active) setIsLoadingUrl(false);
         });
     }
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [doc.ossKey, doc.url]);
 
-  const imgSrc = signedUrl || doc.url || (doc.base64 ? `data:${doc.type};base64,${doc.base64}` : '');
-  const showImage = doc.type?.includes('image') && imgSrc && !failedImages.has(index);
+  const imgSrc =
+    signedUrl ||
+    doc.url ||
+    (doc.base64 ? `data:${doc.type};base64,${doc.base64}` : "");
+  const showImage =
+    doc.type?.includes("image") && imgSrc && !failedImages.has(index);
 
   return (
-    <div className={`p-4 rounded-xl shadow-sm border flex gap-4 animate-enter ${isError ? 'bg-red-50 border-red-200' : 'bg-white border-slate-100'}`} style={{ animationDelay: `${index * 50}ms` }}>
+    <div
+      className={`p-4 rounded-xl shadow-sm border flex gap-4 animate-enter ${isError ? "bg-red-50 border-red-200" : "bg-white border-slate-100"}`}
+      style={{ animationDelay: `${index * 50}ms` }}
+    >
       <div
         className="w-20 h-20 rounded-lg bg-slate-100 shrink-0 overflow-hidden border border-slate-100 relative group cursor-pointer"
         onClick={() => onPreview(doc)}
@@ -819,8 +1127,8 @@ const FileInspectorItem = ({
         {showImage ? (
           <img
             src={imgSrc}
-            className={`w-full h-full object-cover transition-transform group-hover:scale-110 ${isError ? 'opacity-80' : ''}`}
-            onError={() => setFailedImages(prev => new Set(prev).add(index))}
+            className={`w-full h-full object-cover transition-transform group-hover:scale-110 ${isError ? "opacity-80" : ""}`}
+            onError={() => setFailedImages((prev) => new Set(prev).add(index))}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-slate-400 text-2xl">
@@ -848,7 +1156,9 @@ const FileInspectorItem = ({
         onClick={() => onToggleExpand(index)}
       >
         <div className="flex justify-between items-start">
-          <h4 className="font-bold text-slate-800 text-sm truncate mb-1">{doc.name}</h4>
+          <h4 className="font-bold text-slate-800 text-sm truncate mb-1">
+            {doc.name}
+          </h4>
           {isError && (
             <button
               onClick={(e) => {
@@ -868,21 +1178,28 @@ const FileInspectorItem = ({
             </span>
           ) : (
             <span className="bg-blue-50 text-blue-600 text-[10px] px-2 py-0.5 rounded-md font-semibold border border-blue-100">
-              {doc.analysis?.category || '分析中...'}
+              {doc.analysis?.category || "分析中..."}
             </span>
           )}
         </div>
         <div className="mt-2 flex items-center gap-1 text-blue-500 text-xs font-bold select-none">
-          {isExpanded ? '收起详情' : '查看识别详情'}
-          <i className={`fas fa-chevron-${isExpanded ? 'up' : 'down'} transition-transform`}></i>
+          {isExpanded ? "收起详情" : "查看识别详情"}
+          <i
+            className={`fas fa-chevron-${isExpanded ? "up" : "down"} transition-transform`}
+          ></i>
         </div>
 
         {isExpanded && doc.analysis && (
-          <div onClick={e => e.stopPropagation()} className="cursor-auto animate-enter origin-top">
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="cursor-auto animate-enter origin-top"
+          >
             {doc.analysis.medicalData ? (
               <MedicalDataDisplay data={doc.analysis.medicalData} />
             ) : doc.analysis.dischargeSummaryData ? (
-              <DischargeSummaryDisplay data={doc.analysis.dischargeSummaryData} />
+              <DischargeSummaryDisplay
+                data={doc.analysis.dischargeSummaryData}
+              />
             ) : (
               <GenericOCRDisplay data={doc.analysis.ocr} />
             )}
@@ -896,43 +1213,348 @@ const FileInspectorItem = ({
 // Image Previewer Component
 const ImagePreview = ({ attachment }: { attachment: Attachment }) => {
   const [scale, setScale] = useState(1);
-  const [signedUrl, setSignedUrl] = useState('');
+  const [signedUrl, setSignedUrl] = useState("");
 
   useEffect(() => {
     let active = true;
     if (attachment.ossKey) {
       getSignedUrl(attachment.ossKey)
-        .then(url => { if (active) setSignedUrl(url); })
-        .catch(() => { if (active) setSignedUrl(''); });
+        .then((url) => {
+          if (active) setSignedUrl(url);
+        })
+        .catch(() => {
+          if (active) setSignedUrl("");
+        });
     }
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [attachment.ossKey]);
 
-  const src = signedUrl || attachment.url || (attachment.base64 ? `data:${attachment.type};base64,${attachment.base64}` : '');
+  const src =
+    signedUrl ||
+    attachment.url ||
+    (attachment.base64
+      ? `data:${attachment.type};base64,${attachment.base64}`
+      : "");
 
   return (
     <div className="relative w-full h-full flex flex-col bg-black/95">
       {/* Controls */}
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-4 bg-white/10 backdrop-blur-md px-6 py-2 rounded-full border border-white/20">
-        <button onClick={() => setScale(s => Math.max(0.1, s - 0.1))} className="text-white hover:scale-110 transition"><i className="fas fa-minus"></i></button>
-        <span className="text-white font-mono text-sm w-12 text-center">{Math.round(scale * 100)}%</span>
-        <button onClick={() => setScale(s => Math.min(5, s + 0.1))} className="text-white hover:scale-110 transition"><i className="fas fa-plus"></i></button>
+        <button
+          onClick={() => setScale((s) => Math.max(0.1, s - 0.1))}
+          className="text-white hover:scale-110 transition"
+        >
+          <i className="fas fa-minus"></i>
+        </button>
+        <span className="text-white font-mono text-sm w-12 text-center">
+          {Math.round(scale * 100)}%
+        </span>
+        <button
+          onClick={() => setScale((s) => Math.min(5, s + 0.1))}
+          className="text-white hover:scale-110 transition"
+        >
+          <i className="fas fa-plus"></i>
+        </button>
         <div className="w-px h-4 bg-white/20 mx-2"></div>
-        <button onClick={() => setScale(1)} className="text-xs text-white/70 hover:text-white uppercase font-bold tracking-wider">Reset</button>
+        <button
+          onClick={() => setScale(1)}
+          className="text-xs text-white/70 hover:text-white uppercase font-bold tracking-wider"
+        >
+          Reset
+        </button>
       </div>
 
       {/* Scroll Container */}
       <div className="flex-1 overflow-auto flex items-center justify-center p-4">
         <img
           src={src}
-          style={{ transform: `scale(${scale})`, transition: 'transform 0.1s ease-out' }}
+          style={{
+            transform: `scale(${scale})`,
+            transition: "transform 0.1s ease-out",
+          }}
           className="max-w-full max-h-full object-contain"
           alt={attachment.name}
         />
       </div>
     </div>
-  )
+  );
+};
+
+// File Type Detection Utility
+type FileType = "image" | "pdf" | "word" | "unknown";
+
+const detectFileType = (url: string): FileType => {
+  const lowerUrl = url.toLowerCase();
+  const extension = lowerUrl.split("?")[0].split("#")[0].split(".").pop() || "";
+
+  // Image formats
+  if (/\.(jpg|jpeg|png|gif|bmp|webp|svg|tiff?)$/i.test(extension)) {
+    return "image";
+  }
+
+  // PDF
+  if (/\.pdf$/i.test(extension)) {
+    return "pdf";
+  }
+
+  // Word documents
+  if (/\.(doc|docx)$/i.test(extension)) {
+    return "word";
+  }
+
+  // Check URL patterns for common file hosting services
+  if (lowerUrl.includes("/pdf/") || lowerUrl.includes(".pdf?")) {
+    return "pdf";
+  }
+
+  return "unknown";
+};
+
+const getFileIcon = (fileType: FileType): string => {
+  switch (fileType) {
+    case "image":
+      return "fa-image";
+    case "pdf":
+      return "fa-file-pdf";
+    case "word":
+      return "fa-file-word";
+    default:
+      return "fa-file";
+  }
+};
+
+const getFileTypeLabel = (fileType: FileType): string => {
+  switch (fileType) {
+    case "image":
+      return "图片";
+    case "pdf":
+      return "PDF文档";
+    case "word":
+      return "Word文档";
+    default:
+      return "文件";
+  }
+};
+
+// Sample Preview Modal Component
+interface SamplePreviewModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  sampleUrl: string;
+  sampleName: string;
 }
+
+const SamplePreviewModal: React.FC<SamplePreviewModalProps> = ({
+  isOpen,
+  onClose,
+  sampleUrl,
+  sampleName,
+}) => {
+  const [signedUrl, setSignedUrl] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const fileType = detectFileType(sampleUrl);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    setIsLoading(true);
+    setLoadError(null);
+
+    // If it's an OSS URL that needs signing, handle it
+    if (sampleUrl.includes("oss-") || sampleUrl.includes("aliyuncs")) {
+      // Extract ossKey from URL if possible
+      const ossKeyMatch = sampleUrl.match(/\/([^/]+\.(?:jpg|jpeg|png|gif|pdf|doc|docx))$/i);
+      if (ossKeyMatch) {
+        getSignedUrl(ossKeyMatch[1])
+          .then((url) => {
+            setSignedUrl(url);
+            setIsLoading(false);
+          })
+          .catch(() => {
+            setSignedUrl(sampleUrl);
+            setIsLoading(false);
+          });
+      } else {
+        setSignedUrl(sampleUrl);
+        setIsLoading(false);
+      }
+    } else {
+      setSignedUrl(sampleUrl);
+      setIsLoading(false);
+    }
+  }, [isOpen, sampleUrl]);
+
+  // Handle escape key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    if (isOpen) {
+      document.addEventListener("keydown", handleEscape);
+      return () => document.removeEventListener("keydown", handleEscape);
+    }
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  const renderPreview = () => {
+    const url = signedUrl || sampleUrl;
+
+    switch (fileType) {
+      case "image":
+        return (
+          <div className="relative w-full h-full flex items-center justify-center bg-black/50">
+            <img
+              src={url}
+              alt={sampleName}
+              className="max-w-full max-h-full object-contain"
+              onLoad={() => setIsLoading(false)}
+              onError={() => {
+                setIsLoading(false);
+                setLoadError("图片加载失败");
+              }}
+            />
+          </div>
+        );
+
+      case "pdf":
+        return (
+          <div className="w-full h-full bg-white">
+            <iframe
+              src={`${url}#toolbar=1&navpanes=1`}
+              className="w-full h-full border-0"
+              title={sampleName}
+              onLoad={() => setIsLoading(false)}
+              onError={() => {
+                setIsLoading(false);
+                setLoadError("PDF加载失败");
+              }}
+            />
+          </div>
+        );
+
+      case "word":
+        // Use Microsoft Office Online Viewer for Word documents
+        const encodedUrl = encodeURIComponent(url);
+        const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodedUrl}`;
+        return (
+          <div className="w-full h-full bg-white">
+            <iframe
+              src={officeViewerUrl}
+              className="w-full h-full border-0"
+              title={sampleName}
+              onLoad={() => setIsLoading(false)}
+              onError={() => {
+                setIsLoading(false);
+                setLoadError("文档加载失败");
+              }}
+            />
+          </div>
+        );
+
+      default:
+        return (
+          <div className="w-full h-full flex flex-col items-center justify-center text-white/80 p-8">
+            <i className="fas fa-file-circle-question text-6xl mb-4"></i>
+            <p className="text-lg mb-2">无法预览此文件类型</p>
+            <p className="text-sm text-white/60 mb-4">
+              该文件格式不支持在线预览，请下载后查看
+            </p>
+            <a
+              href={url}
+              download
+              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-colors flex items-center gap-2"
+            >
+              <i className="fas fa-download"></i>
+              下载文件
+            </a>
+          </div>
+        );
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-[200] bg-black/90 flex flex-col animate-enter"
+      onClick={onClose}
+    >
+      {/* Header */}
+      <div className="h-16 bg-black/80 text-white flex items-center justify-between px-6 border-b border-white/10 shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+            <i className={`fas ${getFileIcon(fileType)} text-lg`}></i>
+          </div>
+          <div>
+            <h3 className="font-bold truncate max-w-md">{sampleName}</h3>
+            <p className="text-xs text-white/60">{getFileTypeLabel(fileType)}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <a
+            href={signedUrl || sampleUrl}
+            download
+            className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <i className="fas fa-download"></i>
+            下载
+          </a>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose();
+            }}
+            className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+          >
+            <i className="fas fa-xmark text-lg"></i>
+          </button>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div
+        className="flex-1 relative overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {isLoading && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-white/60 z-10">
+            <div className="w-12 h-12 border-4 border-white/20 border-t-blue-500 rounded-full animate-spin mb-4"></div>
+            <p>加载中...</p>
+          </div>
+        )}
+
+        {loadError ? (
+          <div className="w-full h-full flex flex-col items-center justify-center text-white/80 p-8">
+            <i className="fas fa-triangle-exclamation text-5xl text-yellow-500 mb-4"></i>
+            <p className="text-lg mb-2">{loadError}</p>
+            <p className="text-sm text-white/60 mb-4">
+              无法加载该文件，请尝试下载后查看
+            </p>
+            <a
+              href={signedUrl || sampleUrl}
+              download
+              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-colors flex items-center gap-2"
+            >
+              <i className="fas fa-download"></i>
+              下载文件
+            </a>
+          </div>
+        ) : (
+          renderPreview()
+        )}
+      </div>
+
+      {/* Footer with tips */}
+      <div className="h-12 bg-black/80 text-white/60 flex items-center justify-center px-6 border-t border-white/10 shrink-0 text-xs">
+        <i className="fas fa-info-circle mr-2"></i>
+        支持预览图片、PDF 和 Word 文档格式
+      </div>
+    </div>
+  );
+};
 
 // Hospital Select Field Component
 interface HospitalSelectFieldProps {
@@ -947,28 +1569,31 @@ interface HospitalSelectFieldProps {
 const HospitalSelectField: React.FC<HospitalSelectFieldProps> = ({
   value,
   onChange,
-  placeholder = '请选择或搜索医院',
+  placeholder = "请选择或搜索医院",
   hospitals,
   isLoading,
-  error
+  error,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState(value || '');
+  const [searchQuery, setSearchQuery] = useState(value || "");
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setSearchQuery(value || '');
+    setSearchQuery(value || "");
   }, [value]);
 
   // 点击外部关闭下拉列表
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   // 筛选医院
@@ -1008,20 +1633,45 @@ const HospitalSelectField: React.FC<HospitalSelectFieldProps> = ({
 
   const getProvinceLabel = (provinceCode: string): string => {
     const provinceMap: Record<string, string> = {
-      beijing: '北京', tianjin: '天津', hebei: '河北', shanxi: '山西',
-      neimenggu: '内蒙古', liaoning: '辽宁', jilin: '吉林', heilongjiang: '黑龙江',
-      shanghai: '上海', jiangsu: '江苏', zhejiang: '浙江', anhui: '安徽',
-      fujian: '福建', jiangxi: '江西', shandong: '山东', henan: '河南',
-      hubei: '湖北', hunan: '湖南', guangdong: '广东', guangxi: '广西',
-      hainan: '海南', chongqing: '重庆', sichuan: '四川', guizhou: '贵州',
-      yunnan: '云南', xizang: '西藏', shaanxi: '陕西', gansu: '甘肃',
-      qinghai: '青海', ningxia: '宁夏', xinjiang: '新疆',
+      beijing: "北京",
+      tianjin: "天津",
+      hebei: "河北",
+      shanxi: "山西",
+      neimenggu: "内蒙古",
+      liaoning: "辽宁",
+      jilin: "吉林",
+      heilongjiang: "黑龙江",
+      shanghai: "上海",
+      jiangsu: "江苏",
+      zhejiang: "浙江",
+      anhui: "安徽",
+      fujian: "福建",
+      jiangxi: "江西",
+      shandong: "山东",
+      henan: "河南",
+      hubei: "湖北",
+      hunan: "湖南",
+      guangdong: "广东",
+      guangxi: "广西",
+      hainan: "海南",
+      chongqing: "重庆",
+      sichuan: "四川",
+      guizhou: "贵州",
+      yunnan: "云南",
+      xizang: "西藏",
+      shaanxi: "陕西",
+      gansu: "甘肃",
+      qinghai: "青海",
+      ningxia: "宁夏",
+      xinjiang: "新疆",
     };
     return provinceMap[provinceCode] || provinceCode;
   };
 
   const inputClass = `w-full px-4 py-3 rounded-xl bg-white/50 border outline-none text-slate-700 font-medium transition-colors ${
-    error ? 'border-red-300 bg-red-50/30' : 'border-white/60 focus:border-blue-400'
+    error
+      ? "border-red-300 bg-red-50/30"
+      : "border-white/60 focus:border-blue-400"
   }`;
 
   return (
@@ -1103,7 +1753,9 @@ const HospitalSelectField: React.FC<HospitalSelectFieldProps> = ({
               </div>
               <p className="text-gray-600 mb-1">未找到匹配的医院</p>
               <p className="text-xs text-gray-400">
-                {searchQuery ? '您可以直接输入医院名称' : '请输入关键词搜索医院'}
+                {searchQuery
+                  ? "您可以直接输入医院名称"
+                  : "请输入关键词搜索医院"}
               </p>
             </div>
           )}
@@ -1114,25 +1766,29 @@ const HospitalSelectField: React.FC<HospitalSelectFieldProps> = ({
 };
 
 // Auth Component
-const AuthScreen = ({ onLogin }: { onLogin: (name: string, gender: string) => void }) => {
-  const [code, setCode] = useState('');
-  const [name, setName] = useState('');
-  const [gender, setGender] = useState('先生');
-  const [error, setError] = useState('');
+const AuthScreen = ({
+  onLogin,
+}: {
+  onLogin: (name: string, gender: string) => void;
+}) => {
+  const [code, setCode] = useState("");
+  const [name, setName] = useState("");
+  const [gender, setGender] = useState("先生");
+  const [error, setError] = useState("");
   const [shake, setShake] = useState(false);
 
   const handleSubmit = () => {
-    setError('');
+    setError("");
 
-    if (code.trim() !== 'ant') {
-      setError('邀请码无效，请重试');
+    if (code.trim() !== "ant") {
+      setError("邀请码无效，请重试");
       setShake(true);
       setTimeout(() => setShake(false), 500);
       return;
     }
 
     if (!name.trim()) {
-      setError('请输入您的姓名');
+      setError("请输入您的姓名");
       setShake(true);
       setTimeout(() => setShake(false), 500);
       return;
@@ -1143,21 +1799,31 @@ const AuthScreen = ({ onLogin }: { onLogin: (name: string, gender: string) => vo
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative z-50">
-      <div className={`glass-panel max-w-sm w-full p-8 rounded-[32px] flex flex-col items-center shadow-2xl transition-transform ${shake ? 'animate-[shake_0.5s_ease-in-out]' : ''}`}>
-
+      <div
+        className={`glass-panel max-w-sm w-full p-8 rounded-[32px] flex flex-col items-center shadow-2xl transition-transform ${shake ? "animate-[shake_0.5s_ease-in-out]" : ""}`}
+      >
         {/* Logo */}
         <div className="w-20 h-20 rounded-2xl bg-white shadow-lg flex items-center justify-center mb-6 overflow-hidden">
-          <img src="https://gw.alipayobjects.com/mdn/rms/afts/img/A*BAhDQLCn3-wAAAAAAAAAAAAAARQnAQ" alt="Logo" className="w-full h-full object-cover" />
+          <img
+            src="https://gw.alipayobjects.com/mdn/rms/afts/img/A*BAhDQLCn3-wAAAAAAAAAAAAAARQnAQ"
+            alt="Logo"
+            className="w-full h-full object-cover"
+          />
         </div>
 
-        <h1 className="text-2xl font-bold text-slate-800 mb-1">SmartClaim AI</h1>
-        <p className="text-sm text-slate-500 mb-8 font-medium">蚂蚁数科｜保险科技</p>
+        <h1 className="text-2xl font-bold text-slate-800 mb-1">
+          SmartClaim AI
+        </h1>
+        <p className="text-sm text-slate-500 mb-8 font-medium">
+          蚂蚁数科｜保险科技
+        </p>
 
         {/* Form */}
         <div className="w-full space-y-4">
-
           <div className="space-y-1">
-            <label className="text-xs font-bold text-slate-400 ml-1">邀请码</label>
+            <label className="text-xs font-bold text-slate-400 ml-1">
+              邀请码
+            </label>
             <div className="relative">
               <input
                 type="text"
@@ -1168,17 +1834,23 @@ const AuthScreen = ({ onLogin }: { onLogin: (name: string, gender: string) => vo
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
                 {code ? (
                   <span className="text-xl tracking-widest filter drop-shadow-sm">
-                    {Array.from(code).map(() => '😊').join('')}
+                    {Array.from(code)
+                      .map(() => "😊")
+                      .join("")}
                   </span>
                 ) : (
-                  <span className="text-slate-400 font-medium">请输入邀请码</span>
+                  <span className="text-slate-400 font-medium">
+                    请输入邀请码
+                  </span>
                 )}
               </div>
             </div>
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-bold text-slate-400 ml-1">姓名</label>
+            <label className="text-xs font-bold text-slate-400 ml-1">
+              姓名
+            </label>
             <input
               type="text"
               value={name}
@@ -1189,11 +1861,11 @@ const AuthScreen = ({ onLogin }: { onLogin: (name: string, gender: string) => vo
           </div>
 
           <div className="grid grid-cols-2 gap-3 pt-2">
-            {['先生', '女士'].map((g) => (
+            {["先生", "女士"].map((g) => (
               <button
                 key={g}
                 onClick={() => setGender(g)}
-                className={`py-2.5 rounded-xl text-sm font-bold border transition-all ${gender === g ? 'bg-blue-500 text-white border-blue-500 shadow-lg shadow-blue-500/30' : 'bg-white/40 border-white/40 text-slate-500 hover:bg-white/60'}`}
+                className={`py-2.5 rounded-xl text-sm font-bold border transition-all ${gender === g ? "bg-blue-500 text-white border-blue-500 shadow-lg shadow-blue-500/30" : "bg-white/40 border-white/40 text-slate-500 hover:bg-white/60"}`}
               >
                 {g}
               </button>
@@ -1230,24 +1902,26 @@ const AuthScreen = ({ onLogin }: { onLogin: (name: string, gender: string) => vo
 export const App: React.FC = () => {
   // --- Auth State ---
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userName, setUserName] = useState('');
-  const [userGender, setUserGender] = useState('');
+  const [userName, setUserName] = useState("");
+  const [userGender, setUserGender] = useState("");
 
   // --- State ---
   const [messages, setMessages] = useState<Message[]>([
     {
-      id: '1',
-      role: 'assistant',
-      content: '您好！我是 **SmartClaim AI**。✨\n\n请告诉我您遇到了什么问题，或者点击下方按钮快速开始。',
-      timestamp: Date.now()
-    }
+      id: "1",
+      role: "assistant",
+      content:
+        "您好！我是 **SmartClaim AI**。✨\n\n请告诉我您遇到了什么问题，或者点击下方按钮快速开始。",
+      timestamp: Date.now(),
+    },
   ]);
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isVoiceMode, setIsVoiceMode] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [showReportingForm, setShowReportingForm] = useState(false);
-  const [selectedDetailClaim, setSelectedDetailClaim] = useState<HistoricalClaim | null>(null);
+  const [selectedDetailClaim, setSelectedDetailClaim] =
+    useState<HistoricalClaim | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<{
     total: number;
@@ -1256,20 +1930,26 @@ export const App: React.FC = () => {
     active: number;
     currentFile?: string;
   }>({ total: 0, completed: 0, failed: 0, active: 0 });
-  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | undefined>();
-  const [fileInspectData, setFileInspectData] = useState<Attachment[] | null>(null);
-  const [previewAttachment, setPreviewAttachment] = useState<Attachment | null>(null);
+  const [userLocation, setUserLocation] = useState<
+    { latitude: number; longitude: number } | undefined
+  >();
+  const [fileInspectData, setFileInspectData] = useState<Attachment[] | null>(
+    null,
+  );
+  const [previewAttachment, setPreviewAttachment] = useState<Attachment | null>(
+    null,
+  );
   const [expandedDocIndex, setExpandedDocIndex] = useState<number | null>(null);
   const [failedImages, setFailedImages] = useState<Set<number>>(new Set());
   const [showUploadGuide, setShowUploadGuide] = useState(false);
 
   // Policy Selection State
-  const [policySearchTerm, setPolicySearchTerm] = useState('');
+  const [policySearchTerm, setPolicySearchTerm] = useState("");
   const [isPolicyExpanded, setIsPolicyExpanded] = useState(false);
   const [isClaimsExpanded, setIsClaimsExpanded] = useState(false);
 
   // Claim Selection State
-  const [claimSearchTerm, setClaimSearchTerm] = useState('');
+  const [claimSearchTerm, setClaimSearchTerm] = useState("");
 
   // Camera State
   const [isCameraOpen, setIsCameraOpen] = useState(false);
@@ -1277,16 +1957,20 @@ export const App: React.FC = () => {
   const cameraStreamRef = useRef<MediaStream | null>(null);
 
   // Form State
-  const [formDescription, setFormDescription] = useState('');
-  const [formType, setFormType] = useState('车辆理赔');
+  const [formDescription, setFormDescription] = useState("");
+  const [formType, setFormType] = useState("车辆理赔");
   const [isRecordingForm, setIsRecordingForm] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
 
   // Dynamic Intake Form State
-  const [selectedIntakeConfig, setSelectedIntakeConfig] = useState<IntakeConfig | null>(null);
-  const [selectedPolicyForForm, setSelectedPolicyForForm] = useState<Policy | null>(null);
-  const [dynamicFormValues, setDynamicFormValues] = useState<Record<string, any>>({});
+  const [selectedIntakeConfig, setSelectedIntakeConfig] =
+    useState<IntakeConfig | null>(null);
+  const [selectedPolicyForForm, setSelectedPolicyForForm] =
+    useState<Policy | null>(null);
+  const [dynamicFormValues, setDynamicFormValues] = useState<
+    Record<string, any>
+  >({});
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   // 动态材料清单状态
@@ -1305,10 +1989,19 @@ export const App: React.FC = () => {
 
   // 报案后材料清单弹窗状态
   const [submittedClaimId, setSubmittedClaimId] = useState<string | null>(null);
-  const [submittedMaterials, setSubmittedMaterials] = useState<CalculatedMaterial[]>([]);
+  const [submittedMaterials, setSubmittedMaterials] = useState<
+    CalculatedMaterial[]
+  >([]);
   const [previewSampleUrl, setPreviewSampleUrl] = useState<string | null>(null);
+  const [samplePreviewData, setSamplePreviewData] = useState<{
+    isOpen: boolean;
+    url: string;
+    name: string;
+  }>({ isOpen: false, url: "", name: "" });
   const materialUploadInputRef = useRef<HTMLInputElement>(null);
-  const [uploadingMaterialId, setUploadingMaterialId] = useState<string | null>(null);
+  const [uploadingMaterialId, setUploadingMaterialId] = useState<string | null>(
+    null,
+  );
 
   // 医院数据状态
   const [hospitals, setHospitals] = useState<HospitalInfo[]>([]);
@@ -1338,14 +2031,17 @@ export const App: React.FC = () => {
       reportInfo: {},
       requiredDocs: [],
       documents: [],
-      historicalClaims: initialHistory
+      historicalClaims: initialHistory,
     };
   });
 
   // --- Effects ---
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(claimState.historicalClaims));
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(claimState.historicalClaims),
+      );
     } catch {
       null;
     }
@@ -1354,15 +2050,22 @@ export const App: React.FC = () => {
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (pos) => setUserLocation({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
-        (err) => console.warn("Location access denied", err)
+        (pos) =>
+          setUserLocation({
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+          }),
+        (err) => console.warn("Location access denied", err),
       );
     }
   }, []);
 
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+      scrollRef.current.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: "smooth",
+      });
     }
   }, [messages, isAnalyzing, isLoading]);
 
@@ -1378,16 +2081,16 @@ export const App: React.FC = () => {
     const fetchHospitals = async () => {
       setIsLoadingHospitals(true);
       try {
-        const response = await fetch('/api/hospital-info');
+        const response = await fetch("/api/hospital-info");
         if (response.ok) {
           const data = await response.json();
           setHospitals(data || []);
         } else {
-          console.warn('Failed to fetch hospitals:', response.status);
+          console.warn("Failed to fetch hospitals:", response.status);
           setHospitals([]);
         }
       } catch (error) {
-        console.error('Error fetching hospitals:', error);
+        console.error("Error fetching hospitals:", error);
         setHospitals([]);
       } finally {
         setIsLoadingHospitals(false);
@@ -1405,8 +2108,11 @@ export const App: React.FC = () => {
       }
       if (!selectedPolicyForForm) return;
 
-      const claimItemFieldId = selectedIntakeConfig.claimMaterials.claimItemFieldId || 'claim_item';
-      const accidentCauseFieldId = selectedIntakeConfig.claimMaterials.accidentCauseFieldId || 'accident_reason';
+      const claimItemFieldId =
+        selectedIntakeConfig.claimMaterials.claimItemFieldId || "claim_item";
+      const accidentCauseFieldId =
+        selectedIntakeConfig.claimMaterials.accidentCauseFieldId ||
+        "accident_reason";
 
       const claimItemValue = dynamicFormValues[claimItemFieldId];
       const accidentCauseValue = dynamicFormValues[accidentCauseFieldId];
@@ -1418,21 +2124,28 @@ export const App: React.FC = () => {
 
       setIsMaterialsLoading(true);
       try {
-        const claimItemIds = Array.isArray(claimItemValue) ? claimItemValue : [claimItemValue];
+        const claimItemIds = Array.isArray(claimItemValue)
+          ? claimItemValue
+          : [claimItemValue];
 
-        const productResponse = await fetch(`/api/products/${encodeURIComponent(selectedPolicyForForm.productCode)}`);
-        const product = productResponse.ok ? await productResponse.json() : null;
-        const categoryCode = product?.racewayId || product?.categoryLevel3Code || '';
+        const productResponse = await fetch(
+          `/api/products/${encodeURIComponent(selectedPolicyForForm.productCode)}`,
+        );
+        const product = productResponse.ok
+          ? await productResponse.json()
+          : null;
+        const categoryCode =
+          product?.racewayId || product?.categoryLevel3Code || "";
 
-        const response = await fetch('/api/claim-materials/calculate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const response = await fetch("/api/claim-materials/calculate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             productCode: selectedPolicyForForm.productCode,
             categoryCode,
             claimItemIds,
-            accidentCauseId: accidentCauseValue || undefined
-          })
+            accidentCauseId: accidentCauseValue || undefined,
+          }),
         });
 
         const result = await response.json();
@@ -1442,7 +2155,7 @@ export const App: React.FC = () => {
           setCalculatedMaterials(null);
         }
       } catch (error) {
-        console.error('Failed to calculate materials:', error);
+        console.error("Failed to calculate materials:", error);
         setCalculatedMaterials(null);
       } finally {
         setIsMaterialsLoading(false);
@@ -1453,19 +2166,22 @@ export const App: React.FC = () => {
     return () => clearTimeout(timer);
   }, [dynamicFormValues, selectedIntakeConfig, selectedPolicyForForm]);
 
-  const handleViewAttachments = (attachments: Attachment[], context: string) => {
+  const handleViewAttachments = (
+    attachments: Attachment[],
+    context: string,
+  ) => {
     setFileInspectData(attachments);
     setFailedImages(new Set());
     logUserOperation({
       operationType: UserOperationType.VIEW_FILE,
-      operationLabel: '查看材料',
+      operationLabel: "查看材料",
       userName,
       userGender,
       inputData: {
         context,
         count: attachments.length,
-        names: attachments.slice(0, 5).map(item => item.name)
-      }
+        names: attachments.slice(0, 5).map((item) => item.name),
+      },
     });
   };
 
@@ -1473,14 +2189,14 @@ export const App: React.FC = () => {
     setPreviewAttachment(attachment);
     logUserOperation({
       operationType: UserOperationType.VIEW_FILE,
-      operationLabel: '预览材料',
+      operationLabel: "预览材料",
       userName,
       userGender,
       inputData: {
         context,
         name: attachment.name,
-        type: attachment.type
-      }
+        type: attachment.type,
+      },
     });
   };
 
@@ -1488,9 +2204,9 @@ export const App: React.FC = () => {
     setMessages([]);
     logUserOperation({
       operationType: UserOperationType.SUBMIT_FORM,
-      operationLabel: '重置对话',
+      operationLabel: "重置对话",
       userName,
-      userGender
+      userGender,
     });
   };
 
@@ -1498,10 +2214,10 @@ export const App: React.FC = () => {
     setIsPolicyExpanded(nextExpanded);
     logUserOperation({
       operationType: UserOperationType.SUBMIT_FORM,
-      operationLabel: nextExpanded ? '展开保单列表' : '收起保单列表',
+      operationLabel: nextExpanded ? "展开保单列表" : "收起保单列表",
       userName,
       userGender,
-      inputData: { total }
+      inputData: { total },
     });
   };
 
@@ -1509,10 +2225,10 @@ export const App: React.FC = () => {
     setIsClaimsExpanded(nextExpanded);
     logUserOperation({
       operationType: UserOperationType.SUBMIT_FORM,
-      operationLabel: nextExpanded ? '展开案件列表' : '收起案件列表',
+      operationLabel: nextExpanded ? "展开案件列表" : "收起案件列表",
       userName,
       userGender,
-      inputData: { total }
+      inputData: { total },
     });
   };
 
@@ -1520,9 +2236,9 @@ export const App: React.FC = () => {
     setShowUploadGuide(true);
     logUserOperation({
       operationType: UserOperationType.UPLOAD_FILE,
-      operationLabel: '打开上传指引',
+      operationLabel: "打开上传指引",
       userName,
-      userGender
+      userGender,
     });
   };
 
@@ -1530,9 +2246,9 @@ export const App: React.FC = () => {
     setShowUploadGuide(false);
     logUserOperation({
       operationType: UserOperationType.UPLOAD_FILE,
-      operationLabel: '关闭上传指引',
+      operationLabel: "关闭上传指引",
       userName,
-      userGender
+      userGender,
     });
   };
 
@@ -1541,9 +2257,9 @@ export const App: React.FC = () => {
     fileInputRef.current?.click();
     logUserOperation({
       operationType: UserOperationType.UPLOAD_FILE,
-      operationLabel: '上传指引选择文件',
+      operationLabel: "上传指引选择文件",
       userName,
-      userGender
+      userGender,
     });
   };
 
@@ -1551,9 +2267,9 @@ export const App: React.FC = () => {
     policyUploadRef.current?.click();
     logUserOperation({
       operationType: UserOperationType.UPLOAD_FILE,
-      operationLabel: '选择上传保单',
+      operationLabel: "选择上传保单",
       userName,
-      userGender
+      userGender,
     });
   };
 
@@ -1561,9 +2277,9 @@ export const App: React.FC = () => {
     fileInputRef.current?.click();
     logUserOperation({
       operationType: UserOperationType.UPLOAD_FILE,
-      operationLabel: '更换文件',
+      operationLabel: "更换文件",
       userName,
-      userGender
+      userGender,
     });
   };
 
@@ -1571,9 +2287,9 @@ export const App: React.FC = () => {
     setFileInspectData(null);
     logUserOperation({
       operationType: UserOperationType.VIEW_FILE,
-      operationLabel: '关闭文件列表',
+      operationLabel: "关闭文件列表",
       userName,
-      userGender
+      userGender,
     });
   };
 
@@ -1581,19 +2297,23 @@ export const App: React.FC = () => {
     setPreviewAttachment(null);
     logUserOperation({
       operationType: UserOperationType.VIEW_FILE,
-      operationLabel: '关闭材料预览',
+      operationLabel: "关闭材料预览",
       userName,
-      userGender
+      userGender,
     });
   };
 
   const handleOpenReportingForm = () => {
+    console.log(
+      "[DEBUG] Opening reporting form, pendingFiles:",
+      pendingFiles.length,
+    );
     setShowReportingForm(true);
     logUserOperation({
       operationType: UserOperationType.SUBMIT_FORM,
-      operationLabel: '打开报案表单',
+      operationLabel: "打开报案表单",
       userName,
-      userGender
+      userGender,
     });
   };
 
@@ -1601,9 +2321,9 @@ export const App: React.FC = () => {
     setShowReportingForm(false);
     logUserOperation({
       operationType: UserOperationType.SUBMIT_FORM,
-      operationLabel: '关闭报案表单',
+      operationLabel: "关闭报案表单",
       userName,
-      userGender
+      userGender,
     });
   };
 
@@ -1611,9 +2331,9 @@ export const App: React.FC = () => {
     setSelectedDetailClaim(null);
     logUserOperation({
       operationType: UserOperationType.VIEW_CLAIM_DETAIL,
-      operationLabel: '关闭案件详情',
+      operationLabel: "关闭案件详情",
       userName,
-      userGender
+      userGender,
     });
   };
 
@@ -1625,16 +2345,18 @@ export const App: React.FC = () => {
     setIsAuthenticated(true);
 
     // Update the welcome message with user name
-    setMessages(prev => [{
-      ...prev[0],
-      content: `您好，**${name}${gender}**！我是 **SmartClaim AI**。✨\n\n请告诉我您遇到了什么问题，或者点击下方按钮快速开始。`
-    }]);
+    setMessages((prev) => [
+      {
+        ...prev[0],
+        content: `您好，**${name}${gender}**！我是 **SmartClaim AI**。✨\n\n请告诉我您遇到了什么问题，或者点击下方按钮快速开始。`,
+      },
+    ]);
 
     logUserOperation({
       operationType: UserOperationType.LOGIN,
-      operationLabel: '索赔人登录',
+      operationLabel: "索赔人登录",
       userName: name,
-      userGender: gender
+      userGender: gender,
     });
   };
 
@@ -1642,30 +2364,30 @@ export const App: React.FC = () => {
     const attachment: Attachment = {
       name: doc.name,
       type: doc.type,
-      base64: doc.base64 || '',
+      base64: doc.base64 || "",
       url: doc.url,
       ossKey: doc.ossKey,
       analysis: doc.analysis || {
-        category: doc.category || '未分类',
+        category: doc.category || "未分类",
         isRelevant: true,
-        relevanceReasoning: '历史记录',
+        relevanceReasoning: "历史记录",
         clarityScore: 0,
         completenessScore: 0,
-        summary: '历史归档文件',
+        summary: "历史归档文件",
         missingFields: [],
         ocr: doc.ocrData || {},
         medicalData: doc.medicalData,
-        dischargeSummaryData: doc.dischargeSummaryData
-      }
+        dischargeSummaryData: doc.dischargeSummaryData,
+      },
     };
     setFileInspectData([attachment]);
     setExpandedDocIndex(0);
     logUserOperation({
       operationType: UserOperationType.VIEW_FILE,
-      operationLabel: '查看历史材料',
+      operationLabel: "查看历史材料",
       userName,
       userGender,
-      inputData: { name: attachment.name, type: attachment.type }
+      inputData: { name: attachment.name, type: attachment.type },
     });
   };
 
@@ -1675,49 +2397,66 @@ export const App: React.FC = () => {
 
     const messagePreview = textToSend.slice(0, 200);
     const operationStart = Date.now();
-    const userMsg: Message = { id: Date.now().toString(), role: 'user', content: textToSend, timestamp: Date.now() };
-    setMessages(prev => [...prev, userMsg]);
-    setInput('');
+    const userMsg: Message = {
+      id: Date.now().toString(),
+      role: "user",
+      content: textToSend,
+      timestamp: Date.now(),
+    };
+    setMessages((prev) => [...prev, userMsg]);
+    setInput("");
     setIsLoading(true);
 
-    if (textToSend.includes('报案') && claimState.status === ClaimStatus.REPORTING) {
+    if (
+      textToSend.includes("报案") &&
+      claimState.status === ClaimStatus.REPORTING
+    ) {
       try {
-        setPolicySearchTerm('');
+        setPolicySearchTerm("");
         setIsPolicyExpanded(false);
         const policies = await fetchPoliciesFromBackend();
-        setMessages(prev => [...prev, {
-          id: Date.now().toString(),
-          role: 'assistant',
-          content: `为您找到 ${policies.length} 份保单。请选择：`,
-          timestamp: Date.now(),
-          policySelection: true,
-          policies
-        }]);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now().toString(),
+            role: "assistant",
+            content: `为您找到 ${policies.length} 份保单。请选择：`,
+            timestamp: Date.now(),
+            policySelection: true,
+            policies,
+          },
+        ]);
         logUserOperation({
           operationType: UserOperationType.REPORT_CLAIM,
-          operationLabel: '发起报案',
+          operationLabel: "发起报案",
           userName,
           userGender,
-          inputData: { message: messagePreview, messageLength: textToSend.length },
+          inputData: {
+            message: messagePreview,
+            messageLength: textToSend.length,
+          },
           outputData: { policyCount: policies.length },
-          duration: Date.now() - operationStart
+          duration: Date.now() - operationStart,
         });
       } catch (error) {
-        setMessages(prev => [...prev, {
-          id: Date.now().toString(),
-          role: 'assistant',
-          content: '暂未获取到保单数据，请稍后重试或上传保单 PDF。',
-          timestamp: Date.now(),
-          policySelection: true,
-          policies: []
-        }]);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now().toString(),
+            role: "assistant",
+            content: "暂未获取到保单数据，请稍后重试或上传保单 PDF。",
+            timestamp: Date.now(),
+            policySelection: true,
+            policies: [],
+          },
+        ]);
         logUserOperation({
           operationType: UserOperationType.REPORT_CLAIM,
-          operationLabel: '发起报案失败',
+          operationLabel: "发起报案失败",
           userName,
           userGender,
           success: false,
-          errorMessage: String(error)
+          errorMessage: String(error),
         });
       } finally {
         setIsLoading(false);
@@ -1727,11 +2466,20 @@ export const App: React.FC = () => {
 
     try {
       // 使用智能聊天，自动进行意图识别
-      const { text, groundingLinks, aiLog, intentResult, toolResponse, usedIntentTool } = await smartChat(
+      const {
+        text,
+        groundingLinks,
+        aiLog,
+        intentResult,
+        toolResponse,
+        usedIntentTool,
+      } = await smartChat(
         textToSend,
-        messages.concat(userMsg).map(m => ({ role: m.role, content: m.content })),
+        messages
+          .concat(userMsg)
+          .map((m) => ({ role: m.role, content: m.content })),
         claimState,
-        { userLocation }
+        { userLocation },
       );
 
       // 如果有工具执行结果，显示特殊 UI
@@ -1742,98 +2490,127 @@ export const App: React.FC = () => {
       if (usedIntentTool && toolResponse) {
         uiComponent = toolResponse.uiComponent;
         uiData = toolResponse.uiData;
-        
+
         // 记录意图识别操作
         logUserOperation({
           operationType: UserOperationType.VIEW_PROGRESS,
-          operationLabel: `意图识别: ${intentResult ? getIntentLabel(intentResult.intent) : '未知'}`,
+          operationLabel: `意图识别: ${intentResult ? getIntentLabel(intentResult.intent) : "未知"}`,
           userName,
           userGender,
-          inputData: { 
-            message: messagePreview, 
+          inputData: {
+            message: messagePreview,
             intent: intentResult?.intent,
-            confidence: intentResult?.confidence
+            confidence: intentResult?.confidence,
           },
-          outputData: { 
+          outputData: {
             usedIntentTool,
             uiComponent,
-            toolSuccess: toolResponse.success 
+            toolSuccess: toolResponse.success,
           },
           aiInteractions: aiLog ? [aiLog] : undefined,
-          duration: Date.now() - operationStart
+          duration: Date.now() - operationStart,
         });
       } else {
         // Inject car insurance checklist image if applicable
-        if (textToSend.includes('车') || textToSend.includes('机动车')) {
-          responseAttachments = [{
-            name: '车险理赔材料清单',
-            type: 'image/jpeg',
-            url: 'https://pic1.imgdb.cn/item/693fab0b4a4e4213d0058351.jpg'
-          }];
+        if (textToSend.includes("车") || textToSend.includes("机动车")) {
+          responseAttachments = [
+            {
+              name: "车险理赔材料清单",
+              type: "image/jpeg",
+              url: "https://pic1.imgdb.cn/item/693fab0b4a4e4213d0058351.jpg",
+            },
+          ];
         }
 
         logUserOperation({
           operationType: UserOperationType.SEND_MESSAGE,
-          operationLabel: '发送消息',
+          operationLabel: "发送消息",
           userName,
           userGender,
-          inputData: { message: messagePreview, messageLength: textToSend.length },
-          outputData: { responseLength: text.length, groundingLinkCount: groundingLinks?.length || 0 },
+          inputData: {
+            message: messagePreview,
+            messageLength: textToSend.length,
+          },
+          outputData: {
+            responseLength: text.length,
+            groundingLinkCount: groundingLinks?.length || 0,
+          },
           aiInteractions: aiLog ? [aiLog] : undefined,
-          duration: Date.now() - operationStart
+          duration: Date.now() - operationStart,
         });
       }
 
-      setMessages(prev => [...prev, {
-        id: Date.now().toString(),
-        role: 'assistant',
-        content: text,
-        timestamp: Date.now(),
-        groundingLinks,
-        attachments: responseAttachments,
-        intentResult: intentResult ? {
-          intent: intentResult.intent,
-          confidence: intentResult.confidence
-        } : undefined,
-        uiComponent,
-        uiData
-      }]);
-
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          role: "assistant",
+          content: text,
+          timestamp: Date.now(),
+          groundingLinks,
+          attachments: responseAttachments,
+          intentResult: intentResult
+            ? {
+                intent: intentResult.intent,
+                confidence: intentResult.confidence,
+              }
+            : undefined,
+          uiComponent,
+          uiData,
+        },
+      ]);
     } catch (error) {
-      console.error('[Smart Chat Error]', error);
-      setMessages(prev => [...prev, { 
-        id: Date.now().toString(), 
-        role: 'assistant', 
-        content: "网络连接似乎有些问题，请稍后再试。", 
-        timestamp: Date.now() 
-      }]);
+      console.error("[Smart Chat Error]", error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          role: "assistant",
+          content: "网络连接似乎有些问题，请稍后再试。",
+          timestamp: Date.now(),
+        },
+      ]);
       logUserOperation({
         operationType: UserOperationType.SEND_MESSAGE,
-        operationLabel: '发送消息',
+        operationLabel: "发送消息",
         userName,
         userGender,
-        inputData: { message: messagePreview, messageLength: textToSend.length },
+        inputData: {
+          message: messagePreview,
+          messageLength: textToSend.length,
+        },
         success: false,
         errorMessage: error instanceof Error ? error.message : String(error),
-        duration: Date.now() - operationStart
+        duration: Date.now() - operationStart,
       });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const processFiles = async (files: FileList | File[], source: 'file' | 'camera' | 'policy' = 'file') => {
+  const processFiles = async (
+    files: FileList | File[],
+    source: "file" | "camera" | "policy" = "file",
+    postClaimMeta?: {
+      claimId: string;
+      materialId: string;
+      materialName: string;
+    },
+  ) => {
     setIsLoading(true);
     const uploadStart = Date.now();
     const fileArray = Array.from(files);
     const limitedFiles = fileArray.slice(0, MAX_FILES_PER_UPLOAD);
     if (fileArray.length > MAX_FILES_PER_UPLOAD) {
-      setMessages(prev => [...prev, {
-        id: Date.now().toString(),
-        role: 'assistant',
-        content: `单次最多处理 ${MAX_FILES_PER_UPLOAD} 份文件，已自动取前 ${MAX_FILES_PER_UPLOAD} 份。`,
-        timestamp: Date.now()
-      }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          role: "assistant",
+          content: `单次最多处理 ${MAX_FILES_PER_UPLOAD} 份文件，已自动取前 ${MAX_FILES_PER_UPLOAD} 份。`,
+          timestamp: Date.now(),
+        },
+      ]);
     }
     if (limitedFiles.length === 0) {
       setIsLoading(false);
@@ -1841,7 +2618,9 @@ export const App: React.FC = () => {
     }
 
     const fileReadPromises = limitedFiles.map((file) =>
-      file.type.startsWith('image/') ? createImageAttachment(file) : createFileAttachment(file)
+      file.type.startsWith("image/")
+        ? createImageAttachment(file)
+        : createFileAttachment(file),
     );
 
     const newAttachments = await Promise.all(fileReadPromises);
@@ -1849,208 +2628,389 @@ export const App: React.FC = () => {
     // 2. Add User Message with thumbnails immediately
     const userMsg: Message = {
       id: `upload-${Date.now()}`,
-      role: 'user',
-      content: newAttachments.length > 1 ? `已上传 ${newAttachments.length} 份文件` : `上传文件`,
+      role: "user",
+      content:
+        newAttachments.length > 1
+          ? `已上传 ${newAttachments.length} 份文件`
+          : `上传文件`,
       timestamp: Date.now(),
-      attachments: newAttachments
+      attachments: newAttachments,
     };
-    setMessages(prev => [...prev, userMsg]);
+    setMessages((prev) => [...prev, userMsg]);
 
-    setUploadProgress({ total: newAttachments.length, completed: 0, failed: 0, active: 0 });
-    setIsAnalyzing('准备批量分析...');
+    setUploadProgress({
+      total: newAttachments.length,
+      completed: 0,
+      failed: 0,
+      active: 0,
+    });
+    setIsAnalyzing("准备批量分析...");
 
     let completedCount = 0;
     let failedCount = 0;
     const aiLogs: AIInteractionLog[] = [];
 
-    const results: Array<Attachment & { status: 'success' | 'failed'; error?: string }> = new Array(newAttachments.length);
+    const results: Array<
+      Attachment & { status: "success" | "failed"; error?: string }
+    > = new Array(newAttachments.length);
     let nextIndex = 0;
     const worker = async () => {
       while (true) {
         const current = nextIndex++;
         if (current >= newAttachments.length) return;
         const att = newAttachments[current];
-        setUploadProgress(prev => ({
+        setUploadProgress((prev) => ({
           ...prev,
           currentFile: att.name,
-          active: prev.active + 1
+          active: prev.active + 1,
         }));
         setIsAnalyzing(att.name);
         try {
           const analysisResult = await quickAnalyze(att.base64!, att.type);
           aiLogs.push(analysisResult.aiLog);
           const mappedAnalysis = {
-            category: analysisResult.category || '未知类型',
+            category: analysisResult.category || "未知类型",
             isRelevant: true,
-            relevanceReasoning: '快速识别',
+            relevanceReasoning: "快速识别",
             clarityScore: 0,
             completenessScore: 0,
-            summary: '快速识别结果',
+            summary: "快速识别结果",
             missingFields: [],
-            ocr: {}
+            ocr: {},
           };
           completedCount++;
-          setUploadProgress(prev => ({
+          setUploadProgress((prev) => ({
             ...prev,
             completed: completedCount,
             currentFile: undefined,
-            active: Math.max(0, prev.active - 1)
+            active: Math.max(0, prev.active - 1),
           }));
-          results[current] = { ...att, analysis: mappedAnalysis, status: 'success', url: analysisResult.ossUrl || att.url, ossKey: analysisResult.ossKey || att.ossKey };
+          results[current] = {
+            ...att,
+            analysis: mappedAnalysis,
+            status: "success",
+            url: analysisResult.ossUrl || att.url,
+            ossKey: analysisResult.ossKey || att.ossKey,
+          };
         } catch (err) {
           console.error(`Analysis failed for ${att.name}:`, err);
           failedCount++;
-          setUploadProgress(prev => ({
+          setUploadProgress((prev) => ({
             ...prev,
             failed: failedCount,
             currentFile: undefined,
-            active: Math.max(0, prev.active - 1)
+            active: Math.max(0, prev.active - 1),
           }));
-          results[current] = { ...att, status: 'failed', error: String(err) };
+          results[current] = { ...att, status: "failed", error: String(err) };
         }
       }
     };
-    const workerCount = Math.min(MAX_CONCURRENT_ANALYSIS, newAttachments.length);
+    const workerCount = Math.min(
+      MAX_CONCURRENT_ANALYSIS,
+      newAttachments.length,
+    );
     await Promise.all(Array.from({ length: workerCount }, () => worker()));
     const analyzedAttachments = results.filter(Boolean);
-    const cleanedAttachments = analyzedAttachments.map(att => {
-      if (att.type.includes('pdf')) return att;
+    const cleanedAttachments = analyzedAttachments.map((att) => {
+      if (att.type.includes("pdf")) return att;
       // Only clear base64 if we have a valid URL for preview
-      if (att.type.includes('image') && att.url) return { ...att, base64: undefined };
+      if (att.type.includes("image") && att.url)
+        return { ...att, base64: undefined };
       // Keep base64 if no URL is available (needed for preview)
       return att;
     });
 
     setIsAnalyzing(null);
     setPendingFiles(cleanedAttachments);
+    console.log(
+      "[DEBUG] processFiles completed, setPendingFiles with:",
+      cleanedAttachments.length,
+      "files",
+    );
+    cleanedAttachments.forEach((att, i) => {
+      console.log(
+        `[DEBUG] File ${i}: name=${att.name}, hasUrl=${!!att.url}, hasOssKey=${!!att.ossKey}`,
+      );
+    });
 
     // 4. Update User Message to show analysis is done (optional visual update)
-    setMessages(prev => prev.map(m => m.id === userMsg.id ? { ...m, attachments: cleanedAttachments } : m));
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === userMsg.id ? { ...m, attachments: cleanedAttachments } : m,
+      ),
+    );
 
     // 5. Generate Summary String for Assistant Message
-    const categoryCounts = cleanedAttachments.reduce((acc, curr) => {
-      const cat = curr.analysis?.category || '未知类型';
-      acc[cat] = (acc[cat] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    const categoryCounts = cleanedAttachments.reduce(
+      (acc, curr) => {
+        const cat = curr.analysis?.category || "未知类型";
+        acc[cat] = (acc[cat] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
 
     const summaryStr = Object.entries(categoryCounts)
       .map(([cat, count]) => `${cat} x${count}`)
-      .join('，');
+      .join("，");
 
     // Check for errors to adjust message tone
     const hasErrors = cleanedAttachments.some(hasMissingFields);
-    const contentPrefix = hasErrors ? `⚠️ 发现 ${cleanedAttachments.length} 份文件，但部分文件缺失关键信息，请检查：` : `✅ 已完成 ${cleanedAttachments.length} 份文件的智能识别 (${summaryStr})，详情如下：`;
+    const contentPrefix = hasErrors
+      ? `⚠️ 发现 ${cleanedAttachments.length} 份文件，但部分文件缺失关键信息，请检查：`
+      : `✅ 已完成 ${cleanedAttachments.length} 份文件的智能识别 (${summaryStr})，详情如下：`;
 
     // 6. Create Assistant Message with Aggregated Results (Single Card + List Modal)
-    setMessages(prev => [...prev, {
-      id: `analysis-${Date.now()}`,
-      role: 'assistant',
-      content: contentPrefix,
-      timestamp: Date.now(),
-      analysisResults: cleanedAttachments,
-      intentChoice: !hasErrors // Only show intent choices if no errors
-    }]);
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `analysis-${Date.now()}`,
+        role: "assistant",
+        content: contentPrefix,
+        timestamp: Date.now(),
+        analysisResults: cleanedAttachments,
+        intentChoice: !hasErrors, // Only show intent choices if no errors
+      },
+    ]);
 
     // Reset upload progress after completion
     setUploadProgress({ total: 0, completed: 0, failed: 0, active: 0 });
 
+    // 报案后追加材料：同步到后台（按材料类型上传 or 批量上传均适用）
+    const claimIdToSync = postClaimMeta?.claimId ?? submittedClaimId;
+    if (claimIdToSync) {
+      try {
+        const existingResp = await fetch(`/api/claim-cases/${claimIdToSync}`);
+        const existingClaim = existingResp.ok ? await existingResp.json() : {};
+        const existingCategories: {
+          name: string;
+          files: { name: string; url: string; ossKey?: string }[];
+        }[] = existingClaim.fileCategories || [];
+
+        const validFiles = cleanedAttachments.filter(
+          (att) =>
+            att.url &&
+            (att.url.startsWith("/uploads/") || att.url.startsWith("http")),
+        );
+
+        if (validFiles.length === 0) {
+          console.warn(
+            "[Claim] No valid URLs to save (all blob URLs filtered out), skipping PUT",
+          );
+          return;
+        }
+
+        // 按分类分组：指定材料类型上传 → 用 materialName；批量上传 → 用 AI 识别类别
+        const grouped = new Map<
+          string,
+          { name: string; url: string; ossKey?: string }[]
+        >();
+        validFiles.forEach((att) => {
+          const catName =
+            postClaimMeta?.materialName ||
+            att.analysis?.category ||
+            "其他材料";
+          if (!grouped.has(catName)) grouped.set(catName, []);
+          grouped
+            .get(catName)!
+            .push({ name: att.name, url: att.url!, ossKey: att.ossKey || "" });
+        });
+
+        // 合并到现有 fileCategories
+        let updatedCategories = [...existingCategories];
+        grouped.forEach((files, catName) => {
+          const idx = updatedCategories.findIndex((c) => c.name === catName);
+          if (idx >= 0) {
+            updatedCategories = updatedCategories.map((cat, i) =>
+              i === idx ? { ...cat, files: [...cat.files, ...files] } : cat,
+            );
+          } else {
+            updatedCategories = [...updatedCategories, { name: catName, files }];
+          }
+        });
+
+        await fetch(`/api/claim-cases/${claimIdToSync}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fileCategories: updatedCategories }),
+        });
+        console.log(
+          "[Claim] Post-claim files saved to backend:",
+          claimIdToSync,
+          validFiles.length,
+          "files",
+        );
+      } catch (err) {
+        console.error("[Claim] Failed to save post-claim files:", err);
+      }
+    }
+
     setIsLoading(false);
     logUserOperation({
       operationType: UserOperationType.UPLOAD_FILE,
-      operationLabel: '上传材料',
+      operationLabel: "上传材料",
       userName,
       userGender,
       inputData: {
         source,
         totalFiles: fileArray.length,
         limitedFiles: limitedFiles.length,
-        fileTypes: Array.from(new Set(limitedFiles.map(file => file.type)))
+        fileTypes: Array.from(new Set(limitedFiles.map((file) => file.type))),
       },
       outputData: {
         successCount: completedCount,
         failedCount,
-        categories: categoryCounts
+        categories: categoryCounts,
       },
       aiInteractions: aiLogs.length > 0 ? aiLogs : undefined,
       duration: Date.now() - uploadStart,
-      success: failedCount === 0
+      success: failedCount === 0,
     });
   };
 
   const handlePolicyUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      processFiles(e.target.files, 'policy');
+      processFiles(e.target.files, "policy");
     }
-    if (policyUploadRef.current) policyUploadRef.current.value = '';
-  }
+    if (policyUploadRef.current) policyUploadRef.current.value = "";
+  };
 
-  const handleClaimClick = (claim: HistoricalClaim) => {
+  const handleClaimClick = async (claim: HistoricalClaim) => {
+    // 检查是否是案件选择组件的点击
+    const lastAssistantMessage = [...messages]
+      .reverse()
+      .find((m) => m.role === "assistant");
+    if (lastAssistantMessage?.uiComponent === UIComponentType.CLAIM_SELECTION) {
+      // 获取原始意图（如果有）
+      const originalIntent = lastAssistantMessage.uiData?.intent as
+        | IntentType
+        | undefined;
+
+      if (originalIntent) {
+        // 有直接可用的意图类型，直接执行工具函数
+        console.log(
+          `[Claim Selection] Retriggering intent: ${originalIntent} for claim: ${claim.id}`,
+        );
+
+        setIsLoading(true);
+        try {
+          const toolResponse = await executeTool(
+            originalIntent,
+            { claimId: claim.id },
+            claimState,
+          );
+
+          // 添加用户选择消息
+          const userMessage: Message = {
+            id: Date.now().toString(),
+            role: "user",
+            content: `选择案件：${claim.id}`,
+            timestamp: Date.now(),
+          };
+
+          // 添加 AI 响应消息
+          const assistantMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            role: "assistant",
+            content: toolResponse.message,
+            timestamp: Date.now(),
+            uiComponent: toolResponse.uiComponent,
+            uiData: toolResponse.uiData,
+          };
+
+          setMessages((prev) => [...prev, userMessage, assistantMessage]);
+        } catch (error) {
+          console.error("[Claim Selection Error]", error);
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: Date.now().toString(),
+              role: "assistant",
+              content: "处理请求时出现错误，请稍后重试。",
+              timestamp: Date.now(),
+            },
+          ]);
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        // 兼容旧逻辑：没有 intent 时使用自然语言查询进度
+        handleSend(`查询案件 ${claim.id} 的进度`);
+      }
+      return;
+    }
+
     if (pendingFiles.length > 0) {
       const attachStart = Date.now();
       const newDocs: ClaimDocument[] = pendingFiles.map((file, index) => ({
         id: `DOC-${Date.now()}-${index}`,
         name: file.name,
         type: file.type,
-        status: 'pending',
+        status: "pending",
         base64: file.base64,
         url: file.url,
         ossKey: file.ossKey,
-        category: file.analysis?.category || '未分类',
+        category: file.analysis?.category || "未分类",
         ocrData: file.analysis?.ocr,
         medicalData: file.analysis?.medicalData,
         dischargeSummaryData: file.analysis?.dischargeSummaryData,
         missingFields: file.analysis?.missingFields,
-        analysis: file.analysis
+        analysis: file.analysis,
       }));
 
-      const updatedClaims = (claimState.historicalClaims || []).map(c => {
+      const updatedClaims = (claimState.historicalClaims || []).map((c) => {
         if (c.id === claim.id) {
           return {
             ...c,
             documents: [...(c.documents || []), ...newDocs],
-            status: c.status === ClaimStatus.REPORTING ? ClaimStatus.DOCUMENTING : c.status
+            status:
+              c.status === ClaimStatus.REPORTING
+                ? ClaimStatus.DOCUMENTING
+                : c.status,
           };
         }
         return c;
       });
 
-      setClaimState(prev => ({
+      setClaimState((prev) => ({
         ...prev,
-        historicalClaims: updatedClaims
+        historicalClaims: updatedClaims,
       }));
 
       setPendingFiles([]);
 
-      setMessages(prev => [...prev, {
-        id: Date.now().toString(),
-        role: 'assistant',
-        content: `✅ 已将 **${newDocs.length}** 份新材料关联至案件 **${claim.id}**。`,
-        timestamp: Date.now()
-      }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          role: "assistant",
+          content: `✅ 已将 **${newDocs.length}** 份新材料关联至案件 **${claim.id}**。**`,
+          timestamp: Date.now(),
+        },
+      ]);
 
-      const updatedClaim = updatedClaims.find(c => c.id === claim.id);
+      const updatedClaim = updatedClaims.find((c) => c.id === claim.id);
       if (updatedClaim) {
         setSelectedDetailClaim(updatedClaim);
       }
       logUserOperation({
         operationType: UserOperationType.SUBMIT_FORM,
-        operationLabel: '关联材料至案件',
+        operationLabel: "关联材料至案件",
         userName,
         userGender,
         claimId: claim.id,
         inputData: { attachCount: newDocs.length },
         outputData: { claimId: claim.id },
-        duration: Date.now() - attachStart
+        duration: Date.now() - attachStart,
       });
     } else {
       setSelectedDetailClaim(claim);
       logUserOperation({
         operationType: UserOperationType.VIEW_CLAIM_DETAIL,
-        operationLabel: '查看案件详情',
+        operationLabel: "查看案件详情",
         userName,
         userGender,
-        claimId: claim.id
+        claimId: claim.id,
       });
     }
   };
@@ -2058,79 +3018,96 @@ export const App: React.FC = () => {
   // Camera & Voice Functions
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      processFiles(e.target.files, 'file');
+      processFiles(e.target.files, "file");
     }
-    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const openCamera = async () => {
     const cameraStart = Date.now();
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+      });
       cameraStreamRef.current = stream;
       if (videoRef.current) videoRef.current.srcObject = stream;
       setIsCameraOpen(true);
       logUserOperation({
         operationType: UserOperationType.UPLOAD_FILE,
-        operationLabel: '打开相机',
+        operationLabel: "打开相机",
         userName,
         userGender,
-        duration: Date.now() - cameraStart
+        duration: Date.now() - cameraStart,
       });
     } catch (err) {
       console.error(err);
       logUserOperation({
         operationType: UserOperationType.UPLOAD_FILE,
-        operationLabel: '打开相机失败',
+        operationLabel: "打开相机失败",
         userName,
         userGender,
         success: false,
-        errorMessage: String(err)
+        errorMessage: String(err),
       });
     }
   };
 
   const closeCamera = () => {
-    cameraStreamRef.current?.getTracks().forEach(t => t.stop());
+    cameraStreamRef.current?.getTracks().forEach((t) => t.stop());
     setIsCameraOpen(false);
     logUserOperation({
       operationType: UserOperationType.UPLOAD_FILE,
-      operationLabel: '关闭相机',
+      operationLabel: "关闭相机",
       userName,
-      userGender
+      userGender,
     });
   };
 
   const capturePhoto = () => {
     if (!videoRef.current) return;
-    const canvas = document.createElement('canvas');
+    const canvas = document.createElement("canvas");
     canvas.width = videoRef.current.videoWidth;
     canvas.height = videoRef.current.videoHeight;
-    canvas.getContext('2d')?.drawImage(videoRef.current, 0, 0);
-    const base64 = canvas.toDataURL('image/jpeg').split(',')[1];
+    canvas.getContext("2d")?.drawImage(videoRef.current, 0, 0);
+    const base64 = canvas.toDataURL("image/jpeg").split(",")[1];
     closeCamera();
-    processFiles([new File([decode(base64)], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' })], 'camera');
+    processFiles(
+      [
+        new File([decode(base64)], `photo_${Date.now()}.jpg`, {
+          type: "image/jpeg",
+        }),
+      ],
+      "camera",
+    );
   };
 
   const toggleVoiceMode = async () => {
     if (isVoiceMode) {
       liveSessionRef.current?.close();
-      mediaStreamRef.current?.getTracks().forEach((t: MediaStreamTrack) => t.stop());
+      mediaStreamRef.current
+        ?.getTracks()
+        .forEach((t: MediaStreamTrack) => t.stop());
       setIsVoiceMode(false);
       logUserOperation({
         operationType: UserOperationType.LIVE_AUDIO_SESSION,
-        operationLabel: '结束语音会话',
+        operationLabel: "结束语音会话",
         userName,
-        userGender
+        userGender,
       });
     } else {
       const voiceStart = Date.now();
       try {
         setIsVoiceMode(true);
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        });
         mediaStreamRef.current = stream;
-        const inputCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
-        const outputCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+        const inputCtx = new (
+          window.AudioContext || (window as any).webkitAudioContext
+        )({ sampleRate: 16000 });
+        const outputCtx = new (
+          window.AudioContext || (window as any).webkitAudioContext
+        )({ sampleRate: 24000 });
         outputAudioContextRef.current = outputCtx;
 
         const sessionPromise = connectLive({
@@ -2140,67 +3117,80 @@ export const App: React.FC = () => {
             scriptProcessor.onaudioprocess = (e) => {
               const inputData = e.inputBuffer.getChannelData(0);
               const pcmBlob = createBlob(inputData);
-              sessionPromise.then((session: any) => session.sendRealtimeInput({ media: pcmBlob }));
+              sessionPromise.then((session: any) =>
+                session.sendRealtimeInput({ media: pcmBlob }),
+              );
             };
             source.connect(scriptProcessor);
             scriptProcessor.connect(inputCtx.destination);
           },
           onmessage: async (msg: any) => {
-            const base64Audio = msg.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
+            const base64Audio =
+              msg.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
             if (base64Audio) {
-              const buffer = await decodeAudioData(decode(base64Audio), outputCtx, 24000, 1);
+              const buffer = await decodeAudioData(
+                decode(base64Audio),
+                outputCtx,
+                24000,
+                1,
+              );
               const source = outputCtx.createBufferSource();
               source.buffer = buffer;
               source.connect(outputCtx.destination);
-              nextStartTimeRef.current = Math.max(nextStartTimeRef.current, outputCtx.currentTime);
+              nextStartTimeRef.current = Math.max(
+                nextStartTimeRef.current,
+                outputCtx.currentTime,
+              );
               source.start(nextStartTimeRef.current);
               nextStartTimeRef.current += buffer.duration;
             }
           },
           onerror: () => setIsVoiceMode(false),
-          onclose: () => setIsVoiceMode(false)
+          onclose: () => setIsVoiceMode(false),
         });
         liveSessionRef.current = await sessionPromise;
         logUserOperation({
           operationType: UserOperationType.LIVE_AUDIO_SESSION,
-          operationLabel: '开始语音会话',
+          operationLabel: "开始语音会话",
           userName,
           userGender,
-          duration: Date.now() - voiceStart
+          duration: Date.now() - voiceStart,
         });
       } catch (err) {
         setIsVoiceMode(false);
         logUserOperation({
           operationType: UserOperationType.LIVE_AUDIO_SESSION,
-          operationLabel: '开始语音会话失败',
+          operationLabel: "开始语音会话失败",
           userName,
           userGender,
           success: false,
-          errorMessage: String(err)
+          errorMessage: String(err),
         });
       }
     }
   };
 
   const handlePolicySelect = async (policy: Policy) => {
-    setClaimState(prev => ({ ...prev, selectedPolicyId: policy.id }));
+    setClaimState((prev) => ({ ...prev, selectedPolicyId: policy.id }));
     setSelectedPolicyForForm(policy);
 
     // 1. Add User Message
     const userMsg: Message = {
       id: Date.now().toString(),
-      role: 'user',
+      role: "user",
       content: `已选保单: ${policy.type}`,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
-    setMessages(prev => [...prev, userMsg]);
+    setMessages((prev) => [...prev, userMsg]);
     setIsLoading(true);
 
     // 2. Fetch product intakeConfig by productCode
     let intakeConfig: IntakeConfig | null = null;
     if (policy.productCode) {
       try {
-        const res = await fetch(`/api/products/${encodeURIComponent(policy.productCode)}`);
+        const res = await fetch(
+          `/api/products/${encodeURIComponent(policy.productCode)}`,
+        );
         if (res.ok) {
           const product = await res.json();
           if (product?.intakeConfig?.fields?.length > 0) {
@@ -2208,7 +3198,7 @@ export const App: React.FC = () => {
           }
         }
       } catch (err) {
-        console.warn('Failed to fetch intakeConfig:', err);
+        console.warn("Failed to fetch intakeConfig:", err);
       }
     }
     setSelectedIntakeConfig(intakeConfig);
@@ -2219,34 +3209,48 @@ export const App: React.FC = () => {
     const hasIntakeFields = !!intakeConfig;
     const aiMsg: Message = {
       id: (Date.now() + 1).toString(),
-      role: 'assistant',
+      role: "assistant",
       content: hasIntakeFields
         ? `收到，已为您锁定保单 **${policy.type}** (${policy.id})。✅\n\n为了更准确地记录事故信息，您可以选择以下方式继续：`
         : `收到，已为您锁定保单 **${policy.type}** (${policy.id})。✅\n\n请通过语音描述您的事故情况：`,
       timestamp: Date.now() + 1,
-      reportingChoice: true
+      reportingChoice: true,
     };
-    setMessages(prev => [...prev, aiMsg]);
+    setMessages((prev) => [...prev, aiMsg]);
     setIsLoading(false);
 
     logUserOperation({
       operationType: UserOperationType.SUBMIT_FORM,
-      operationLabel: '选择保单',
+      operationLabel: "选择保单",
       userName,
       userGender,
-      inputData: { policyId: policy.id, policyType: policy.type, hasIntakeConfig: hasIntakeFields }
+      inputData: {
+        policyId: policy.id,
+        policyType: policy.type,
+        hasIntakeConfig: hasIntakeFields,
+      },
     });
   };
 
-  const handleIntentChoice = (choice: 'new' | 'supplement') => {
-    if (choice === 'new') handleSend('我要新报案');
-    else setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: '请选择关联的案件：', timestamp: Date.now(), claimsList: claimState.historicalClaims }]);
+  const handleIntentChoice = (choice: "new" | "supplement") => {
+    if (choice === "new") handleSend("我要新报案");
+    else
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          role: "assistant",
+          content: "请选择关联的案件：",
+          timestamp: Date.now(),
+          claimsList: claimState.historicalClaims,
+        },
+      ]);
     logUserOperation({
       operationType: UserOperationType.SUBMIT_FORM,
-      operationLabel: '选择报案方式',
+      operationLabel: "选择报案方式",
       userName,
       userGender,
-      inputData: { choice }
+      inputData: { choice },
     });
   };
 
@@ -2255,10 +3259,13 @@ export const App: React.FC = () => {
     if (!selectedIntakeConfig) return false;
     // Check if any boolean field's follow_up hides this field
     for (const parentField of selectedIntakeConfig.fields) {
-      if (parentField.type === 'boolean' && parentField.follow_up) {
+      if (parentField.type === "boolean" && parentField.follow_up) {
         if (parentField.follow_up.extra_fields.includes(field.field_id)) {
           const parentValue = dynamicFormValues[parentField.field_id];
-          const conditionMet = parentField.follow_up.condition === 'true' ? parentValue === true : parentValue === false;
+          const conditionMet =
+            parentField.follow_up.condition === "true"
+              ? parentValue === true
+              : parentValue === false;
           return conditionMet;
         }
       }
@@ -2270,7 +3277,8 @@ export const App: React.FC = () => {
   const isFollowUpField = (fieldId: string): boolean => {
     if (!selectedIntakeConfig) return false;
     return selectedIntakeConfig.fields.some(
-      f => f.type === 'boolean' && f.follow_up?.extra_fields.includes(fieldId)
+      (f) =>
+        f.type === "boolean" && f.follow_up?.extra_fields.includes(fieldId),
     );
   };
 
@@ -2281,7 +3289,12 @@ export const App: React.FC = () => {
       if (isFollowUpField(field.field_id) && !isFieldVisible(field)) continue;
       if (field.required) {
         const val = dynamicFormValues[field.field_id];
-        if (val === undefined || val === null || val === '' || (Array.isArray(val) && val.length === 0)) {
+        if (
+          val === undefined ||
+          val === null ||
+          val === "" ||
+          (Array.isArray(val) && val.length === 0)
+        ) {
           errors[field.field_id] = `请填写${field.label}`;
         }
       }
@@ -2291,8 +3304,8 @@ export const App: React.FC = () => {
   };
 
   const handleDynamicFormChange = (fieldId: string, value: any) => {
-    setDynamicFormValues(prev => ({ ...prev, [fieldId]: value }));
-    setFormErrors(prev => {
+    setDynamicFormValues((prev) => ({ ...prev, [fieldId]: value }));
+    setFormErrors((prev) => {
       const next = { ...prev };
       delete next[fieldId];
       return next;
@@ -2300,91 +3313,171 @@ export const App: React.FC = () => {
   };
 
   const handleFormSubmit = async () => {
+    console.log(
+      "[DEBUG] handleFormSubmit called, pendingFiles:",
+      pendingFiles.length,
+      pendingFiles,
+    );
     if (!validateDynamicForm()) return;
 
     const reportStart = Date.now();
-    const newClaimId = 'CLM' + Date.now().toString().slice(-6);
-    const reportNumber = 'R' + new Date().toISOString().replace(/[-T:.Z]/g, '').slice(0, 14) + Math.random().toString(36).slice(2, 6).toUpperCase();
+    const newClaimId = "CLM" + Date.now().toString().slice(-6);
+    const reportNumber =
+      "R" +
+      new Date()
+        .toISOString()
+        .replace(/[-T:.Z]/g, "")
+        .slice(0, 14) +
+      Math.random().toString(36).slice(2, 6).toUpperCase();
     const productName = selectedPolicyForForm?.type || formType;
-    const productCode = selectedPolicyForForm?.productCode || '';
-    const policyNumber = selectedPolicyForForm?.id || '';
+    const productCode = selectedPolicyForForm?.productCode || "";
+    const policyNumber = selectedPolicyForForm?.id || "";
 
     // Build description from dynamic values
-    const description = dynamicFormValues['accident_description'] || dynamicFormValues['injury_description'] || dynamicFormValues['diagnosis_result'] || '';
+    const description =
+      dynamicFormValues["accident_description"] ||
+      dynamicFormValues["injury_description"] ||
+      dynamicFormValues["diagnosis_result"] ||
+      "";
 
     // Map pending files if any
     const initialDocs: ClaimDocument[] = pendingFiles.map((file, index) => ({
       id: `DOC-${Date.now()}-${index}`,
       name: file.name,
       type: file.type,
-      status: 'pending',
+      status: "pending",
       base64: file.base64,
       url: file.url,
-      category: file.analysis?.category || '未分类',
+      ossKey: file.ossKey,
+      category: file.analysis?.category || "未分类",
       ocrData: file.analysis?.ocr,
       medicalData: file.analysis?.medicalData,
       dischargeSummaryData: file.analysis?.dischargeSummaryData,
       missingFields: file.analysis?.missingFields,
-      analysis: file.analysis
+      analysis: file.analysis,
     }));
 
     // Update local historicalClaims
-    setClaimState(prev => ({
+    setClaimState((prev) => ({
       ...prev,
-      historicalClaims: [{
-        id: newClaimId, date: new Date().toISOString().split('T')[0], type: productName, status: ClaimStatus.DOCUMENTING,
-        incidentReason: description, documents: initialDocs, timeline: [
-          { date: new Date().toLocaleString(), label: '报案登记', description: '用户通过在线填单提交报案', status: 'completed' }
-        ]
-      }, ...(prev.historicalClaims || [])]
+      historicalClaims: [
+        {
+          id: newClaimId,
+          date: new Date().toISOString().split("T")[0],
+          type: productName,
+          status: ClaimStatus.DOCUMENTING,
+          incidentReason: description,
+          documents: initialDocs,
+          timeline: [
+            {
+              date: new Date().toLocaleString(),
+              label: "报案登记",
+              description: "用户通过在线填单提交报案",
+              status: "completed",
+            },
+          ],
+        },
+        ...(prev.historicalClaims || []),
+      ],
     }));
 
     // 准备索赔项目IDs
-    const claimItemFieldId = selectedIntakeConfig?.claimMaterials?.claimItemFieldId || 'claim_item';
-    const accidentCauseFieldId = selectedIntakeConfig?.claimMaterials?.accidentCauseFieldId || 'accident_reason';
+    const claimItemFieldId =
+      selectedIntakeConfig?.claimMaterials?.claimItemFieldId || "claim_item";
+    const accidentCauseFieldId =
+      selectedIntakeConfig?.claimMaterials?.accidentCauseFieldId ||
+      "accident_reason";
     const claimItemValue = dynamicFormValues[claimItemFieldId];
-    const selectedClaimItems = claimItemValue ? (Array.isArray(claimItemValue) ? claimItemValue : [claimItemValue]) : [];
-    const selectedAccidentCauseId = dynamicFormValues[accidentCauseFieldId] || undefined;
+    const selectedClaimItems = claimItemValue
+      ? Array.isArray(claimItemValue)
+        ? claimItemValue
+        : [claimItemValue]
+      : [];
+    const selectedAccidentCauseId =
+      dynamicFormValues[accidentCauseFieldId] || undefined;
+
+    // Convert pendingFiles to fileCategories format
+    console.log(
+      "[DEBUG] Creating fileCategories from pendingFiles:",
+      pendingFiles.length,
+    );
+    const fileCategoriesMap = new Map<
+      string,
+      { name: string; url: string; ossKey?: string }[]
+    >();
+    pendingFiles.forEach((file) => {
+      const category = file.analysis?.category || "其他材料";
+      if (!fileCategoriesMap.has(category)) {
+        fileCategoriesMap.set(category, []);
+      }
+      fileCategoriesMap.get(category)!.push({
+        name: file.name,
+        url: file.url || file.base64 || "",
+        ossKey: file.ossKey,
+      });
+    });
+    const fileCategories = Array.from(fileCategoriesMap.entries()).map(
+      ([name, files]) => ({ name, files }),
+    );
+    console.log(
+      "[DEBUG] fileCategories created:",
+      JSON.stringify(fileCategories, null, 2),
+    );
 
     // Create backend claim case record
     let claimCaseCreated = false;
     try {
-      const response = await fetch('/api/claim-cases', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/claim-cases", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id: newClaimId,
           reportNumber,
           reporter: userName,
           reportTime: new Date().toLocaleString(),
-          accidentTime: dynamicFormValues['accident_date'] || '',
-          accidentReason: dynamicFormValues['accident_reason'] || dynamicFormValues['death_reason'] || description,
-          accidentLocation: dynamicFormValues['accident_location'] || '',
+          accidentTime: dynamicFormValues["accident_date"] || "",
+          accidentReason:
+            dynamicFormValues["accident_reason"] ||
+            dynamicFormValues["death_reason"] ||
+            description,
+          accidentLocation: dynamicFormValues["accident_location"] || "",
           productCode,
           productName,
           policyNumber,
-          status: '已报案',
+          policyholder: selectedPolicyForForm?.policyholderName || "",
+          insured: selectedPolicyForForm?.insuredName || "",
+          status: "已报案",
           operator: userName,
-          claimAmount: 0,
+          claimAmount: dynamicFormValues["claim_amount"] || 0,
           intakeFormData: dynamicFormValues,
           selectedClaimItems,
           selectedAccidentCauseId,
-          requiredMaterials: calculatedMaterials?.map(m => ({
-            ...m,
-            uploaded: false
-          })) || []
-        })
+          requiredMaterials:
+            calculatedMaterials?.map((m) => ({
+              ...m,
+              uploaded: false,
+            })) || [],
+          fileCategories,
+        }),
       });
 
       if (response.ok) {
         claimCaseCreated = true;
-        console.log('[Claim] Backend claim case created successfully:', newClaimId);
+        console.log(
+          "[Claim] Backend claim case created successfully:",
+          newClaimId,
+        );
       } else {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        console.error('[Claim] Failed to create backend claim case:', errorData);
+        const errorData = await response
+          .json()
+          .catch(() => ({ error: "Unknown error" }));
+        console.error(
+          "[Claim] Failed to create backend claim case:",
+          errorData,
+        );
       }
     } catch (err) {
-      console.error('[Claim] Network error creating backend claim case:', err);
+      console.error("[Claim] Network error creating backend claim case:", err);
     }
 
     setPendingFiles([]);
@@ -2395,92 +3488,110 @@ export const App: React.FC = () => {
     // 报案后主动调用API获取材料清单
     try {
       // 获取产品信息以取得 categoryCode
-      let categoryCode = '';
+      let categoryCode = "";
       if (productCode) {
-        const productResponse = await fetch(`/api/products/${encodeURIComponent(productCode)}`);
+        const productResponse = await fetch(
+          `/api/products/${encodeURIComponent(productCode)}`,
+        );
         if (productResponse.ok) {
           const product = await productResponse.json();
-          categoryCode = product?.racewayId || product?.categoryLevel3Code || '';
+          categoryCode =
+            product?.racewayId || product?.categoryLevel3Code || "";
         }
       }
 
       // 调用材料计算 API
-      const materialsResponse = await fetch('/api/claim-materials/calculate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const materialsResponse = await fetch("/api/claim-materials/calculate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           productCode,
           categoryCode,
           claimItemIds: selectedClaimItems,
-          accidentCauseId: selectedAccidentCauseId
-        })
+          accidentCauseId: selectedAccidentCauseId,
+        }),
       });
 
       const materialsResult = await materialsResponse.json();
 
-      if (materialsResponse.ok && materialsResult.success && materialsResult.materials && materialsResult.materials.length > 0) {
+      if (
+        materialsResponse.ok &&
+        materialsResult.success &&
+        materialsResult.materials &&
+        materialsResult.materials.length > 0
+      ) {
         // 关闭表单
         setShowReportingForm(false);
         setSubmittedClaimId(newClaimId);
         setSubmittedMaterials(materialsResult.materials);
 
         // 添加报案成功和材料列表消息
-        setMessages(prev => [...prev, {
-          id: Date.now().toString(),
-          role: 'assistant',
-          content: `报案成功！案件编号: **${newClaimId}**\n\n为了尽快为您处理理赔，请按下方清单上传相关证明材料。`,
-          timestamp: Date.now(),
-          reportSuccess: { caseNumber: newClaimId },
-          calculatedMaterials: materialsResult.materials
-        }]);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now().toString(),
+            role: "assistant",
+            content: `报案成功！案件编号: **${newClaimId}**\n\n为了尽快为您处理理赔，请按下方清单上传相关证明材料。`,
+            timestamp: Date.now(),
+            reportSuccess: { caseNumber: newClaimId },
+            calculatedMaterials: materialsResult.materials,
+          },
+        ]);
       } else {
         // 没有材料清单或后端返回错误，直接显示报案成功消息
         setShowReportingForm(false);
-        const errorDetail = materialsResult.error ? `\n(错误详情: ${materialsResult.error})` : "";
-        setMessages(prev => [...prev, {
-          id: Date.now().toString(),
-          role: 'assistant',
-          content: `报案成功！案件编号: **${newClaimId}**\n\n您的报案已提交。${materialsResult.success === false ? "但计算材料清单时遇到了一些问题，请稍后在理赔详情中查看或上传。" : "请上传相关理赔材料以便我们尽快处理您的索赔。"}${errorDetail}`,
-          timestamp: Date.now()
-        }]);
+        const errorDetail = materialsResult.error
+          ? `\n(错误详情: ${materialsResult.error})`
+          : "";
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now().toString(),
+            role: "assistant",
+            content: `报案成功！案件编号: **${newClaimId}**\n\n您的报案已提交。${materialsResult.success === false ? "但计算材料清单时遇到了一些问题，请稍后在理赔详情中查看或上传。" : "请上传相关理赔材料以便我们尽快处理您的索赔。"}${errorDetail}`,
+            timestamp: Date.now(),
+          },
+        ]);
       }
     } catch (err) {
-      console.warn('Failed to fetch materials:', err);
+      console.warn("Failed to fetch materials:", err);
       // API调用失败，仍然显示报案成功消息
-      setMessages(prev => [...prev, {
-        id: Date.now().toString(),
-        role: 'assistant',
-        content: `报案成功！案件编号: **${newClaimId}**\n\n您的报案已提交，由于网络连接问题，无法立即显示材料清单，请稍后在理赔历史中查询需要上传的材料。`,
-        timestamp: Date.now()
-      }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          role: "assistant",
+          content: `报案成功！案件编号: **${newClaimId}**\n\n您的报案已提交，由于网络连接问题，无法立即显示材料清单，请稍后在理赔历史中查询需要上传的材料。`,
+          timestamp: Date.now(),
+        },
+      ]);
     }
 
     logUserOperation({
       operationType: UserOperationType.REPORT_CLAIM,
-      operationLabel: '提交报案',
+      operationLabel: "提交报案",
       userName,
       userGender,
       claimId: newClaimId,
       inputData: {
         formType: productName,
         dynamicFields: Object.keys(dynamicFormValues).length,
-        pendingFileCount: pendingFiles.length
+        pendingFileCount: pendingFiles.length,
       },
       outputData: { claimId: newClaimId, reportNumber },
-      duration: Date.now() - reportStart
+      duration: Date.now() - reportStart,
     });
   };
-
 
   // 批量上传材料（系统自动分类）
   const handleBatchMaterialUpload = () => {
     fileInputRef.current?.click();
     logUserOperation({
       operationType: UserOperationType.UPLOAD_FILE,
-      operationLabel: '批量上传材料',
+      operationLabel: "批量上传材料",
       userName,
       userGender,
-      inputData: { claimId: submittedClaimId }
+      inputData: { claimId: submittedClaimId },
     });
   };
 
@@ -2490,40 +3601,62 @@ export const App: React.FC = () => {
     materialUploadInputRef.current?.click();
     logUserOperation({
       operationType: UserOperationType.UPLOAD_FILE,
-      operationLabel: '按类型上传材料',
+      operationLabel: "按类型上传材料",
       userName,
       userGender,
-      inputData: { claimId: submittedClaimId, materialId }
+      inputData: { claimId: submittedClaimId, materialId },
     });
   };
 
   // 处理材料类型上传
-  const handleMaterialTypeFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMaterialTypeFileChange = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const files = e.target.files;
+    console.log("[DEBUG] handleMaterialTypeFileChange called, files:", files?.length, "uploadingMaterialId:", uploadingMaterialId, "submittedClaimId:", submittedClaimId);
     if (!files || files.length === 0 || !uploadingMaterialId) return;
 
-    // 复用现有的文件上传逻辑，但带上材料类型ID
     const fileArray = Array.from(files);
-    const material = submittedMaterials.find(m => m.materialId === uploadingMaterialId);
+    const material = submittedMaterials.find(
+      (m) => m.materialId === uploadingMaterialId,
+    );
 
-    // 调用现有的文件处理流程
-    handleFileUpload(e);
+    // 在 setUploadingMaterialId(null) 之前捕获，因为 processFiles 是异步的
+    const capturedMaterialId = uploadingMaterialId;
+    const capturedMaterialName = material?.materialName || "其他材料";
+
+    console.log("[DEBUG] About to call processFiles with postClaimMeta:", {
+      claimId: submittedClaimId,
+      materialId: capturedMaterialId,
+      materialName: capturedMaterialName,
+    });
+
+    // 若已提交报案，传入 postClaimMeta 以在上传完成后同步到后台
+    if (submittedClaimId) {
+      processFiles(files, "file", {
+        claimId: submittedClaimId,
+        materialId: capturedMaterialId,
+        materialName: capturedMaterialName,
+      });
+    } else {
+      processFiles(files, "file");
+    }
 
     logUserOperation({
       operationType: UserOperationType.UPLOAD_FILE,
-      operationLabel: '上传指定类型材料',
+      operationLabel: "上传指定类型材料",
       userName,
       userGender,
       inputData: {
         claimId: submittedClaimId,
-        materialId: uploadingMaterialId,
-        materialName: material?.materialName,
-        fileCount: fileArray.length
-      }
+        materialId: capturedMaterialId,
+        materialName: capturedMaterialName,
+        fileCount: fileArray.length,
+      },
     });
 
     setUploadingMaterialId(null);
-    e.target.value = '';
+    e.target.value = "";
   };
 
   // --- Render ---
@@ -2535,35 +3668,54 @@ export const App: React.FC = () => {
 
   return (
     <div className="flex flex-col h-screen relative bg-transparent font-sans">
-
       {/* Header */}
       <header className="flex items-center justify-between px-6 py-4 z-20 shrink-0 bg-white/30 backdrop-blur-md border-b border-white/50 sticky top-0">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl overflow-hidden shadow-md">
-            <img src="https://gw.alipayobjects.com/mdn/rms/afts/img/A*BAhDQLCn3-wAAAAAAAAAAAAAARQnAQ" alt="Logo" className="w-full h-full object-cover" />
+            <img
+              src="https://gw.alipayobjects.com/mdn/rms/afts/img/A*BAhDQLCn3-wAAAAAAAAAAAAAARQnAQ"
+              alt="Logo"
+              className="w-full h-full object-cover"
+            />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-slate-800 leading-tight">SmartClaim</h1>
+            <h1 className="text-lg font-bold text-slate-800 leading-tight">
+              SmartClaim
+            </h1>
             <div className="flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-              <span className="text-[10px] font-semibold text-slate-500 tracking-wide">蚂蚁数科｜保险科技</span>
+              <span className="text-[10px] font-semibold text-slate-500 tracking-wide">
+                蚂蚁数科｜保险科技
+              </span>
             </div>
           </div>
         </div>
-        <button onClick={handleResetChat} className="w-10 h-10 rounded-full glass-btn flex items-center justify-center text-slate-600">
+        <button
+          onClick={handleResetChat}
+          className="w-10 h-10 rounded-full glass-btn flex items-center justify-center text-slate-600"
+        >
           <i className="fas fa-rotate-right"></i>
         </button>
       </header>
 
       {/* Chat Area */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-6 scroll-smooth pb-36">
+      <div
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto px-4 py-6 scroll-smooth pb-36"
+      >
         <div className="max-w-3xl mx-auto space-y-6">
           {messages.map((msg) => (
-            <div key={msg.id} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'} animate-enter`}>
-
-              <div className={`p-4 max-w-[85%] sm:max-w-[75%] ${msg.role === 'assistant' ? 'msg-bubble-ai' : 'msg-bubble-user'}`}>
+            <div
+              key={msg.id}
+              className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"} animate-enter`}
+            >
+              <div
+                className={`p-4 max-w-[85%] sm:max-w-[75%] ${msg.role === "assistant" ? "msg-bubble-ai" : "msg-bubble-user"}`}
+              >
                 <div className="prose-content">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {msg.content}
+                  </ReactMarkdown>
                 </div>
 
                 {/* User Attachments Grid (Thumbnails & Filenames) - Max 5 Items Logic */}
@@ -2571,74 +3723,188 @@ export const App: React.FC = () => {
                   <div className="mt-3 grid grid-cols-5 gap-2">
                     {/* Render first 4 items normally */}
                     {msg.attachments.slice(0, 4).map((att, i) => (
-                      <div key={i} className="flex flex-col gap-1 items-center cursor-pointer group" onClick={() => handleViewAttachments(msg.attachments!, '消息附件')}>
+                      <div
+                        key={i}
+                        className="flex flex-col gap-1 items-center cursor-pointer group"
+                        onClick={() =>
+                          handleViewAttachments(msg.attachments!, "消息附件")
+                        }
+                      >
                         <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-black/10 border border-white/20 group-hover:shadow-md transition-all">
-                          {att.type.includes('image') && (att.base64 || att.url) ? <img src={att.url || `data:${att.type};base64,${att.base64}`} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><i className={`fas ${getDocIcon(att.name)} text-xl opacity-50`}></i></div>}
+                          {att.type.includes("image") &&
+                          (att.base64 || att.url) ? (
+                            <img
+                              src={
+                                att.url ||
+                                `data:${att.type};base64,${att.base64}`
+                              }
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <i
+                                className={`fas ${getDocIcon(att.name)} text-xl opacity-50`}
+                              ></i>
+                            </div>
+                          )}
                         </div>
-                        <div className="text-[10px] text-center w-full truncate opacity-70 px-0.5 leading-tight">{att.name}</div>
+                        <div className="text-[10px] text-center w-full truncate opacity-70 px-0.5 leading-tight">
+                          {att.name}
+                        </div>
                       </div>
                     ))}
 
                     {/* If exactly 5 items, render the 5th one normally */}
                     {msg.attachments.length === 5 && (
-                      <div className="flex flex-col gap-1 items-center cursor-pointer group" onClick={() => handleViewAttachments(msg.attachments!, '消息附件')}>
+                      <div
+                        className="flex flex-col gap-1 items-center cursor-pointer group"
+                        onClick={() =>
+                          handleViewAttachments(msg.attachments!, "消息附件")
+                        }
+                      >
                         <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-black/10 border border-white/20 group-hover:shadow-md transition-all">
-                          {msg.attachments[4].type.includes('image') && (msg.attachments[4].base64 || msg.attachments[4].url) ? <img src={msg.attachments[4].url || `data:${msg.attachments[4].type};base64,${msg.attachments[4].base64}`} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><i className={`fas ${getDocIcon(msg.attachments[4].name)} text-xl opacity-50`}></i></div>}
+                          {msg.attachments[4].type.includes("image") &&
+                          (msg.attachments[4].base64 ||
+                            msg.attachments[4].url) ? (
+                            <img
+                              src={
+                                msg.attachments[4].url ||
+                                `data:${msg.attachments[4].type};base64,${msg.attachments[4].base64}`
+                              }
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <i
+                                className={`fas ${getDocIcon(msg.attachments[4].name)} text-xl opacity-50`}
+                              ></i>
+                            </div>
+                          )}
                         </div>
-                        <div className="text-[10px] text-center w-full truncate opacity-70 px-0.5 leading-tight">{msg.attachments[4].name}</div>
+                        <div className="text-[10px] text-center w-full truncate opacity-70 px-0.5 leading-tight">
+                          {msg.attachments[4].name}
+                        </div>
                       </div>
                     )}
 
                     {/* If more than 5 items, render the +N button in the 5th slot */}
                     {msg.attachments.length > 5 && (
-                      <div className="flex flex-col gap-1 items-center cursor-pointer group" onClick={() => handleViewAttachments(msg.attachments!, '消息附件')}>
+                      <div
+                        className="flex flex-col gap-1 items-center cursor-pointer group"
+                        onClick={() =>
+                          handleViewAttachments(msg.attachments!, "消息附件")
+                        }
+                      >
                         <div className="relative w-full aspect-square rounded-lg bg-white/20 border border-white/30 group-hover:bg-white/30 transition-all flex items-center justify-center text-white font-bold text-xs shadow-inner">
                           +{msg.attachments.length - 4}
                         </div>
-                        <div className="text-[10px] text-center w-full truncate opacity-70 px-0.5 leading-tight">更多...</div>
+                        <div className="text-[10px] text-center w-full truncate opacity-70 px-0.5 leading-tight">
+                          更多...
+                        </div>
                       </div>
                     )}
                   </div>
                 )}
 
-                {/* Assistant Analysis Result (Single Card + Expand) */}
                 {msg.analysisResults && msg.analysisResults.length > 0 && (
-                  <div className="mt-3 flex flex-col gap-2">
-                    {/* Only show the FIRST result as a card, with error styling if needed */}
+                  <div className="mt-3 flex flex-col gap-3">
+                    <div className="flex flex-wrap gap-2">
+                      {msg.analysisResults.map((doc, idx) => {
+                        const isError = hasMissingFields(doc);
+                        const imgSrc =
+                          doc.url ||
+                          (doc.base64
+                            ? `data:${doc.type};base64,${doc.base64}`
+                            : "");
+                        const isImage = doc.type.includes("image");
+
+                        return (
+                          <div
+                            key={idx}
+                            className={`group relative w-16 h-16 rounded-xl overflow-hidden border-2 cursor-pointer transition-all hover:scale-105 ${isError ? "border-red-300 bg-red-50" : "border-white/60 bg-white/60"}`}
+                            onClick={() =>
+                              handleViewAttachments(
+                                msg.analysisResults!,
+                                "分析结果",
+                              )
+                            }
+                            title={`${doc.name}${isError ? " (缺少信息)" : ""}`}
+                          >
+                            {isImage && imgSrc ? (
+                              <img
+                                src={imgSrc}
+                                className="w-full h-full object-cover"
+                                alt={doc.name}
+                              />
+                            ) : (
+                              <div className="w-full h-full flex flex-col items-center justify-center bg-slate-100">
+                                <i
+                                  className={`fas ${getDocIcon(doc.name)} text-lg ${isError ? "text-red-400" : "text-blue-400"}`}
+                                />
+                              </div>
+                            )}
+                            <div
+                              className={`absolute -top-0.5 -right-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] shadow-sm ${isError ? "bg-red-500 text-white" : "bg-green-500 text-white"}`}
+                            >
+                              <i
+                                className={`fas ${isError ? "fa-exclamation" : "fa-check"}`}
+                              />
+                            </div>
+                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent px-1 py-1">
+                              <p className="text-[9px] text-white truncate text-center leading-tight">
+                                {doc.analysis?.category || "未分类"}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
                     {(() => {
-                      const firstDoc = msg.analysisResults[0];
-                      const isError = hasMissingFields(firstDoc);
-                      const imgSrc = firstDoc.url || (firstDoc.base64 ? `data:${firstDoc.type};base64,${firstDoc.base64}` : '');
+                      const hasErrors =
+                        msg.analysisResults!.some(hasMissingFields);
+                      const categoryCounts = msg.analysisResults!.reduce(
+                        (acc, doc) => {
+                          const cat = doc.analysis?.category || "未分类";
+                          acc[cat] = (acc[cat] || 0) + 1;
+                          return acc;
+                        },
+                        {} as Record<string, number>,
+                      );
+                      const summaryStr = Object.entries(categoryCounts)
+                        .map(([cat, count]) => `${cat} x${count}`)
+                        .join("，");
 
                       return (
                         <div
-                          className={`p-3 rounded-xl border flex items-center gap-3 shadow-sm hover:shadow-md transition-all cursor-pointer ${isError ? 'bg-red-50 border-red-200' : 'bg-white/60 border-white/60'}`}
-                          onClick={() => handleViewAttachments(msg.analysisResults!, '分析结果')}
+                          className={`p-3 rounded-xl border flex items-center gap-3 shadow-sm hover:shadow-md transition-all cursor-pointer ${hasErrors ? "bg-red-50/80 border-red-200" : "bg-blue-50/50 border-blue-200"}`}
+                          onClick={() =>
+                            handleViewAttachments(
+                              msg.analysisResults!,
+                              "分析结果",
+                            )
+                          }
                         >
-                          <div className={`w-12 h-12 rounded-lg flex items-center justify-center text-xl shrink-0 overflow-hidden border ${isError ? 'bg-red-100 border-red-200 text-red-500' : 'bg-blue-50 border-blue-100 text-blue-500'}`}>
-                            {firstDoc.type.includes('image') && imgSrc ? <img src={imgSrc} className="w-full h-full object-cover" /> : <i className={`fas ${getDocIcon(firstDoc.name)}`}></i>}
+                          <div
+                            className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg shrink-0 ${hasErrors ? "bg-red-100 text-red-500" : "bg-blue-100 text-blue-500"}`}
+                          >
+                            <i className="fas fa-file-contract"></i>
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="text-sm font-bold text-slate-700 truncate">{firstDoc.name}</div>
-                            <div className="flex items-center gap-2 mt-1">
-                              {isError ? (
-                                <span className="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded text-xs font-bold flex items-center gap-1 truncate">
-                                  <i className="fas fa-triangle-exclamation"></i> 缺少: {firstDoc.analysis?.missingFields?.join('、')}
+                            <div className="text-sm font-bold text-slate-700">
+                              已识别 {msg.analysisResults!.length} 份文件
+                            </div>
+                            <div className="text-xs text-slate-500 mt-0.5 truncate">
+                              {summaryStr}
+                              {hasErrors && (
+                                <span className="text-red-500 ml-1">
+                                  (部分文件缺失关键信息)
                                 </span>
-                              ) : (
-                                <>
-                                  <span className="text-[10px] bg-blue-100/50 text-blue-600 px-1.5 py-0.5 rounded text-xs font-medium">
-                                    {firstDoc.analysis?.category || '识别中'}
-                                  </span>
-                                  {firstDoc.analysis?.ocr?.amount && (
-                                    <span className="text-[10px] text-slate-500">¥{firstDoc.analysis.ocr.amount}</span>
-                                  )}
-                                </>
                               )}
                             </div>
                           </div>
-                          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs shadow-sm ${isError ? 'bg-red-500 text-white animate-pulse' : 'bg-green-500 text-white'}`}>
-                            <i className={`fas ${isError ? 'fa-circle-exclamation' : 'fa-check'}`}></i>
+                          <div className="text-slate-400">
+                            <i className="fas fa-chevron-right text-sm"></i>
                           </div>
                         </div>
                       );
@@ -2651,19 +3917,34 @@ export const App: React.FC = () => {
                   <div className="mt-3">
                     {/* 理赔进度卡片 */}
                     {msg.uiComponent === UIComponentType.CLAIM_PROGRESS && (
-                      <ClaimProgressCard data={msg.uiData as ClaimProgressInfo} />
+                      <ClaimProgressCard
+                        data={msg.uiData as ClaimProgressInfo}
+                      />
                     )}
                     {/* 材料清单 */}
                     {msg.uiComponent === UIComponentType.MATERIALS_LIST && (
-                      <MaterialsListCard data={msg.uiData as MaterialsListInfo} />
+                      <MaterialsListCard
+                        data={msg.uiData as MaterialsListInfo}
+                        onViewSample={(url, name) =>
+                          setSamplePreviewData({
+                            isOpen: true,
+                            url,
+                            name: `${name}样例`,
+                          })
+                        }
+                      />
                     )}
                     {/* 缺失材料提醒 */}
                     {msg.uiComponent === UIComponentType.MISSING_MATERIALS && (
-                      <MissingMaterialsCard data={msg.uiData as MissingMaterialsInfo} />
+                      <MissingMaterialsCard
+                        data={msg.uiData as MissingMaterialsInfo}
+                      />
                     )}
                     {/* 保费影响说明 */}
                     {msg.uiComponent === UIComponentType.PREMIUM_IMPACT && (
-                      <PremiumImpactCard data={msg.uiData as PremiumImpactInfo} />
+                      <PremiumImpactCard
+                        data={msg.uiData as PremiumImpactInfo}
+                      />
                     )}
                   </div>
                 )}
@@ -2672,8 +3953,14 @@ export const App: React.FC = () => {
                 {msg.groundingLinks && (
                   <div className="mt-3 pt-3 border-t border-dashed border-current/20 flex flex-wrap gap-2">
                     {msg.groundingLinks.map((link, i) => (
-                      <a key={i} href={link.uri} target="_blank" className="text-xs bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-full flex items-center gap-1.5 transition-colors no-underline text-current">
-                        <i className="fas fa-link text-[10px]"></i> {link.title || 'Source'}
+                      <a
+                        key={i}
+                        href={link.uri}
+                        target="_blank"
+                        className="text-xs bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-full flex items-center gap-1.5 transition-colors no-underline text-current"
+                      >
+                        <i className="fas fa-link text-[10px]"></i>{" "}
+                        {link.title || "Source"}
                       </a>
                     ))}
                   </div>
@@ -2684,12 +3971,20 @@ export const App: React.FC = () => {
               <div className="mt-2 w-full max-w-[85%] sm:max-w-[75%]">
                 {msg.reportingChoice && (
                   <div className="flex gap-2">
-                    <button onClick={toggleVoiceMode} className="glass-btn px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2">
-                      <i className="fas fa-microphone text-blue-500"></i> 语音报案
+                    <button
+                      onClick={toggleVoiceMode}
+                      className="glass-btn px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2"
+                    >
+                      <i className="fas fa-microphone text-blue-500"></i>{" "}
+                      语音报案
                     </button>
                     {selectedIntakeConfig && (
-                      <button onClick={handleOpenReportingForm} className="glass-btn px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2">
-                        <i className="fas fa-pen-to-square text-cyan-500"></i> 在线填单
+                      <button
+                        onClick={handleOpenReportingForm}
+                        className="glass-btn px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2"
+                      >
+                        <i className="fas fa-pen-to-square text-cyan-500"></i>{" "}
+                        在线填单
                       </button>
                     )}
                   </div>
@@ -2697,92 +3992,132 @@ export const App: React.FC = () => {
 
                 {msg.intentChoice && (
                   <div className="flex flex-col gap-2">
-                    <button onClick={() => handleIntentChoice('new')} className="glass-btn w-full py-3 rounded-xl text-sm font-bold text-left px-4">🆕 发起新理赔</button>
-                    <button onClick={() => handleIntentChoice('supplement')} className="glass-btn w-full py-3 rounded-xl text-sm font-bold text-left px-4">📎 补充至旧案</button>
+                    <button
+                      onClick={() => handleIntentChoice("new")}
+                      className="glass-btn w-full py-3 rounded-xl text-sm font-bold text-left px-4"
+                    >
+                      🆕 发起新理赔
+                    </button>
+                    <button
+                      onClick={() => handleIntentChoice("supplement")}
+                      className="glass-btn w-full py-3 rounded-xl text-sm font-bold text-left px-4"
+                    >
+                      📎 补充至旧案
+                    </button>
                   </div>
                 )}
 
-                {msg.calculatedMaterials && msg.calculatedMaterials.length > 0 && (
-                  <div className="bg-blue-50/50 border border-blue-200 rounded-xl p-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                        <i className="fas fa-clipboard-list text-blue-500"></i>
-                        所需理赔材料（{msg.calculatedMaterials.filter(m => m.required).length}份必传 / 共{msg.calculatedMaterials.length}份）
-                      </h4>
-                    </div>
-                    <div className="space-y-2 max-h-64 overflow-y-auto">
-                      {msg.calculatedMaterials.map((material) => (
-                        <div
-                          key={material.materialId}
-                          className={`p-3 rounded-lg border transition-all ${
-                            material.required
-                              ? 'bg-white border-blue-200 shadow-sm'
-                              : 'bg-white/60 border-slate-200'
-                          }`}
-                        >
-                          <div className="flex items-start gap-3">
-                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0 ${
+                {msg.calculatedMaterials &&
+                  msg.calculatedMaterials.length > 0 && (
+                    <div className="bg-blue-50/50 border border-blue-200 rounded-xl p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                          <i className="fas fa-clipboard-list text-blue-500"></i>
+                          所需理赔材料（
+                          {
+                            msg.calculatedMaterials.filter((m) => m.required)
+                              .length
+                          }
+                          份必传 / 共{msg.calculatedMaterials.length}份）
+                        </h4>
+                      </div>
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {msg.calculatedMaterials.map((material) => (
+                          <div
+                            key={material.materialId}
+                            className={`p-3 rounded-lg border transition-all ${
                               material.required
-                                ? 'bg-blue-100 text-blue-600'
-                                : 'bg-slate-100 text-slate-500'
-                            }`}>
-                              <i className={`fas ${material.required ? 'fa-star' : 'fa-file-lines'}`}></i>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="text-sm font-bold text-slate-700">{material.materialName}</span>
-                                {material.required && (
-                                  <span className="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-bold">
-                                    必传
-                                  </span>
+                                ? "bg-white border-blue-200 shadow-sm"
+                                : "bg-white/60 border-slate-200"
+                            }`}
+                          >
+                            <div className="flex items-start gap-3">
+                              <div
+                                className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0 ${
+                                  material.required
+                                    ? "bg-blue-100 text-blue-600"
+                                    : "bg-slate-100 text-slate-500"
+                                }`}
+                              >
+                                <i
+                                  className={`fas ${material.required ? "fa-star" : "fa-file-lines"}`}
+                                ></i>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between mb-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-sm font-bold text-slate-700">
+                                      {material.materialName}
+                                    </span>
+                                    {material.required && (
+                                      <span className="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-bold">
+                                        必传
+                                      </span>
+                                    )}
+                                  </div>
+                                  {submittedClaimId && (
+                                    <button
+                                      onClick={() =>
+                                        handleMaterialUploadForType(
+                                          material.materialId,
+                                        )
+                                      }
+                                      className="px-3 py-1 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors flex items-center gap-1 shrink-0"
+                                    >
+                                      <i className="fas fa-upload text-[10px]"></i>
+                                      上传
+                                    </button>
+                                  )}
+                                </div>
+                                {material.materialDescription && (
+                                  <p className="text-xs text-slate-500 leading-relaxed mb-2">
+                                    {material.materialDescription}
+                                  </p>
+                                )}
+                                {material.sampleUrl && (
+                                  <button
+                                    onClick={() =>
+                                      setSamplePreviewData({
+                                        isOpen: true,
+                                        url: material.sampleUrl,
+                                        name: `${material.materialName}样例`,
+                                      })
+                                    }
+                                    className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 transition-colors"
+                                  >
+                                    <i className="fas fa-eye text-[10px]"></i>
+                                    查看样例
+                                  </button>
                                 )}
                               </div>
-                              {material.materialDescription && (
-                                <p className="text-xs text-slate-500 leading-relaxed mb-2">{material.materialDescription}</p>
-                              )}
-                              {material.sampleUrl && (
-                                <button
-                                  onClick={() => handleViewAttachments([{
-                                    url: material.sampleUrl,
-                                    type: 'image/jpeg',
-                                    name: `${material.materialName}样例`,
-                                    ossKey: material.ossKey
-                                  }], '材料样例')}
-                                  className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 transition-colors"
-                                >
-                                  <i className="fas fa-image text-[10px]"></i>
-                                  查看样例
-                                </button>
-                              )}
                             </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="pt-3 border-t border-blue-200 space-y-3">
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => fileInputRef.current?.click()}
-                          className="flex-1 py-2.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold flex items-center justify-center gap-2 transition-colors shadow-sm"
-                        >
-                          <i className="fas fa-file-arrow-up"></i>
-                          批量上传
-                        </button>
-                        <button
-                          onClick={openCamera}
-                          className="flex-1 py-2.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 text-sm font-bold flex items-center justify-center gap-2 transition-colors border border-slate-200 shadow-sm"
-                        >
-                          <i className="fas fa-camera"></i>
-                          拍照上传
-                        </button>
+                        ))}
                       </div>
-                      <p className="text-xs text-slate-500 flex items-center gap-1">
-                        <i className="fas fa-info-circle text-blue-500"></i>
-                        上传的材料将自动识别分类，请确保照片清晰完整
-                      </p>
+                      <div className="pt-3 border-t border-blue-200 space-y-3">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => fileInputRef.current?.click()}
+                            className="flex-1 py-2.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold flex items-center justify-center gap-2 transition-colors shadow-sm"
+                          >
+                            <i className="fas fa-file-arrow-up"></i>
+                            批量上传
+                          </button>
+                          <button
+                            onClick={openCamera}
+                            className="flex-1 py-2.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 text-sm font-bold flex items-center justify-center gap-2 transition-colors border border-slate-200 shadow-sm"
+                          >
+                            <i className="fas fa-camera"></i>
+                            拍照上传
+                          </button>
+                        </div>
+                        <p className="text-xs text-slate-500 flex items-center gap-1">
+                          <i className="fas fa-info-circle text-blue-500"></i>
+                          上传的材料将自动识别分类，请确保照片清晰完整
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
                 {msg.policies && (
                   <div className="bg-white/50 p-3 rounded-xl border border-white/60 shadow-sm">
@@ -2800,17 +4135,22 @@ export const App: React.FC = () => {
 
                     <div className="space-y-2">
                       {(() => {
-                        const filteredPolicies = msg.policies.filter(p =>
-                          p.type.includes(policySearchTerm) ||
-                          p.id.toLowerCase().includes(policySearchTerm.toLowerCase()) ||
-                          p.insuredName.includes(policySearchTerm)
+                        const filteredPolicies = msg.policies.filter(
+                          (p) =>
+                            p.type.includes(policySearchTerm) ||
+                            p.id
+                              .toLowerCase()
+                              .includes(policySearchTerm.toLowerCase()) ||
+                            p.insuredName.includes(policySearchTerm),
                         );
 
-                        const visiblePolicies = isPolicyExpanded ? filteredPolicies : filteredPolicies.slice(0, 3);
+                        const visiblePolicies = isPolicyExpanded
+                          ? filteredPolicies
+                          : filteredPolicies.slice(0, 3);
 
                         return (
                           <>
-                            {visiblePolicies.map(p => {
+                            {visiblePolicies.map((p) => {
                               const now = new Date();
                               const validUntil = new Date(p.validUntil);
                               const isExpired = validUntil < now;
@@ -2819,29 +4159,45 @@ export const App: React.FC = () => {
                                 <Card
                                   key={p.id}
                                   onClick={() => handlePolicySelect(p)}
-                                  className={`relative overflow-hidden transition-all hover:shadow-md cursor-pointer ${isExpired ? 'bg-slate-50' : ''}`}
+                                  className={`relative overflow-hidden transition-all hover:shadow-md cursor-pointer ${isExpired ? "bg-slate-50" : ""}`}
                                 >
                                   <div className="relative z-10">
                                     {/* Header: ID + Status */}
                                     <div className="flex justify-between items-center mb-1.5">
-                                      <span className="text-[10px] font-mono text-slate-400">{p.id}</span>
-                                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${isExpired ? 'bg-slate-200 text-slate-500' : 'bg-green-100 text-green-600'}`}>
-                                        {isExpired ? '已失效' : '保障中'}
+                                      <span className="text-[10px] font-mono text-slate-400">
+                                        {p.id}
+                                      </span>
+                                      <span
+                                        className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${isExpired ? "bg-slate-200 text-slate-500" : "bg-green-100 text-green-600"}`}
+                                      >
+                                        {isExpired ? "已失效" : "保障中"}
                                       </span>
                                     </div>
 
                                     {/* Main Title */}
-                                    <div className="font-bold text-slate-700 text-sm mb-2">{p.type}</div>
+                                    <div className="font-bold text-slate-700 text-sm mb-2">
+                                      {p.type}
+                                    </div>
 
                                     {/* Details: Insured + Date */}
                                     <div className="flex flex-col gap-0.5 text-xs text-slate-500 border-t border-slate-100 pt-2">
                                       <div className="flex justify-between">
                                         <span>被保人</span>
-                                        <span className="font-medium text-slate-700">{p.insuredName}</span>
+                                        <span className="font-medium text-slate-700">
+                                          {p.insuredName}
+                                        </span>
                                       </div>
                                       <div className="flex justify-between">
                                         <span>有效期至</span>
-                                        <span className={isExpired ? 'text-red-400' : 'text-slate-600'}>{p.validUntil}</span>
+                                        <span
+                                          className={
+                                            isExpired
+                                              ? "text-red-400"
+                                              : "text-slate-600"
+                                          }
+                                        >
+                                          {p.validUntil}
+                                        </span>
                                       </div>
                                     </div>
                                   </div>
@@ -2850,7 +4206,9 @@ export const App: React.FC = () => {
                                   {isExpired && (
                                     <div className="absolute -right-2 -bottom-2 w-20 h-20 border-4 border-slate-300 rounded-full flex items-center justify-center opacity-20 -rotate-12 pointer-events-none">
                                       <div className="w-16 h-16 border-2 border-slate-300 rounded-full flex items-center justify-center">
-                                        <span className="text-slate-400 font-black text-xs transform -rotate-0">已过期</span>
+                                        <span className="text-slate-400 font-black text-xs transform -rotate-0">
+                                          已过期
+                                        </span>
                                       </div>
                                     </div>
                                   )}
@@ -2870,10 +4228,17 @@ export const App: React.FC = () => {
                               {/* Expand Toggle */}
                               {filteredPolicies.length > 3 && (
                                 <button
-                                  onClick={() => handleTogglePolicyExpand(!isPolicyExpanded, filteredPolicies.length)}
+                                  onClick={() =>
+                                    handleTogglePolicyExpand(
+                                      !isPolicyExpanded,
+                                      filteredPolicies.length,
+                                    )
+                                  }
                                   className="flex-1 py-2 rounded-lg bg-white/60 hover:bg-white text-xs text-slate-600 font-bold border border-slate-100 transition-colors"
                                 >
-                                  {isPolicyExpanded ? '收起' : `查看全部 (${filteredPolicies.length})`}
+                                  {isPolicyExpanded
+                                    ? "收起"
+                                    : `查看全部 (${filteredPolicies.length})`}
                                 </button>
                               )}
 
@@ -2882,7 +4247,8 @@ export const App: React.FC = () => {
                                 onClick={handlePolicyUploadClick}
                                 className="flex-1 py-2 rounded-lg border border-dashed border-blue-300 bg-blue-50/50 hover:bg-blue-50 text-xs text-blue-600 font-bold flex items-center justify-center gap-1.5 transition-colors"
                               >
-                                <i className="fas fa-file-arrow-up"></i> 上传保单 PDF
+                                <i className="fas fa-file-arrow-up"></i>{" "}
+                                上传保单 PDF
                               </button>
                             </div>
                           </>
@@ -2892,7 +4258,9 @@ export const App: React.FC = () => {
                   </div>
                 )}
 
-                {msg.claimsList && (
+                {/* 案件选择列表 - 来自 claimsList 或 CLAIM_SELECTION uiComponent */}
+                {(msg.claimsList ||
+                  msg.uiComponent === UIComponentType.CLAIM_SELECTION) && (
                   <div className="bg-white/50 p-3 rounded-xl border border-white/60 shadow-sm">
                     {/* Search Bar */}
                     <div className="relative mb-3">
@@ -2907,36 +4275,57 @@ export const App: React.FC = () => {
                     </div>
                     <div className="space-y-2">
                       {(() => {
-                        const filteredClaims = msg.claimsList.filter(c =>
-                          c.id.toLowerCase().includes(claimSearchTerm.toLowerCase()) ||
-                          c.type.includes(claimSearchTerm) ||
-                          (c.incidentReason && c.incidentReason.includes(claimSearchTerm))
+                        const claimsList =
+                          msg.claimsList || msg.uiData?.claims || [];
+                        const filteredClaims = claimsList.filter(
+                          (c) =>
+                            c.id
+                              .toLowerCase()
+                              .includes(claimSearchTerm.toLowerCase()) ||
+                            c.type.includes(claimSearchTerm) ||
+                            (c.incidentReason &&
+                              c.incidentReason.includes(claimSearchTerm)),
                         );
 
-                        const visibleClaims = isClaimsExpanded ? filteredClaims : filteredClaims.slice(0, 3);
+                        const visibleClaims = isClaimsExpanded
+                          ? filteredClaims
+                          : filteredClaims.slice(0, 3);
                         return (
                           <>
                             {visibleClaims.map((c, i) => (
                               <Card key={i} onClick={() => handleClaimClick(c)}>
                                 <div className="flex justify-between items-center mb-1">
-                                  <span className="font-bold text-slate-700 text-sm">{c.type}</span>
-                                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${c.status === ClaimStatus.PAID ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'}`}>{getStatusLabel(c.status)}</span>
+                                  <span className="font-bold text-slate-700 text-sm">
+                                    {c.type}
+                                  </span>
+                                  <span
+                                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${c.status === ClaimStatus.PAID ? "bg-green-100 text-green-600" : "bg-blue-100 text-blue-600"}`}
+                                  >
+                                    {getStatusLabel(c.status)}
+                                  </span>
                                 </div>
                                 <div className="flex justify-between items-center mb-2">
-                                  <span className="text-[10px] font-mono text-slate-400">{c.id}</span>
-                                  <span className="text-[10px] text-slate-400">{c.date}</span>
+                                  <span className="text-[10px] font-mono text-slate-400">
+                                    {c.id}
+                                  </span>
+                                  <span className="text-[10px] text-slate-400">
+                                    {c.date}
+                                  </span>
                                 </div>
 
                                 {c.incidentReason && (
                                   <div className="text-xs text-slate-500 bg-slate-50 p-2 rounded border border-slate-100 line-clamp-2">
-                                    <span className="font-bold text-slate-400 mr-1"><i className="fas fa-circle-info"></i></span>
+                                    <span className="font-bold text-slate-400 mr-1">
+                                      <i className="fas fa-circle-info"></i>
+                                    </span>
                                     {c.incidentReason}
                                   </div>
                                 )}
 
                                 {pendingFiles.length > 0 && (
                                   <div className="mt-2 text-xs bg-blue-50 text-blue-600 p-1.5 rounded text-center border border-blue-100 font-bold">
-                                    <i className="fas fa-file-import mr-1"></i> 点击关联当前文件
+                                    <i className="fas fa-file-import mr-1"></i>{" "}
+                                    点击关联当前文件
                                   </div>
                                 )}
                               </Card>
@@ -2950,11 +4339,20 @@ export const App: React.FC = () => {
 
                             {filteredClaims.length > 3 && (
                               <button
-                                onClick={() => handleToggleClaimsExpand(!isClaimsExpanded, filteredClaims.length)}
+                                onClick={() =>
+                                  handleToggleClaimsExpand(
+                                    !isClaimsExpanded,
+                                    filteredClaims.length,
+                                  )
+                                }
                                 className="w-full py-2 rounded-lg bg-white/60 hover:bg-white text-xs text-slate-600 font-bold border border-slate-100 transition-colors flex items-center justify-center gap-1"
                               >
-                                {isClaimsExpanded ? '收起' : `查看更多历史案件 (${filteredClaims.length - 3})`}
-                                <i className={`fas fa-chevron-${isClaimsExpanded ? 'up' : 'down'}`}></i>
+                                {isClaimsExpanded
+                                  ? "收起"
+                                  : `查看更多历史案件 (${filteredClaims.length - 3})`}
+                                <i
+                                  className={`fas fa-chevron-${isClaimsExpanded ? "up" : "down"}`}
+                                ></i>
                               </button>
                             )}
                           </>
@@ -2992,23 +4390,53 @@ export const App: React.FC = () => {
                 <span className="font-medium">
                   处理进度: {uploadProgress.completed} / {uploadProgress.total}
                 </span>
-                <span className={uploadProgress.failed > 0 ? 'text-red-600 font-medium' : 'text-gray-600'}>
-                  {uploadProgress.failed > 0 && `失败: ${uploadProgress.failed}`}
+                <span
+                  className={
+                    uploadProgress.failed > 0
+                      ? "text-red-600 font-medium"
+                      : "text-gray-600"
+                  }
+                >
+                  {uploadProgress.failed > 0 &&
+                    `失败: ${uploadProgress.failed}`}
                 </span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                 <div
                   className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-300 ease-out"
-                  style={{ width: `${(uploadProgress.completed / uploadProgress.total) * 100}%` }}
+                  style={{
+                    width: `${(uploadProgress.completed / uploadProgress.total) * 100}%`,
+                  }}
                 />
               </div>
               {(uploadProgress.currentFile || uploadProgress.active > 0) && (
                 <p className="text-xs text-gray-500 mt-2 flex items-center gap-2">
-                  <svg className="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8 018 0 18 018 0-018-8 018-8 018 0z"></path>
+                  <svg
+                    className="animate-spin h-3 w-3"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8 018 0 18 018 0-018-8 018-8 018 0z"
+                    ></path>
                   </svg>
-                  {(uploadProgress.currentFile ? `正在处理: ${uploadProgress.currentFile}` : '正在处理...') + (uploadProgress.active > 0 ? ` · 并行处理中: ${uploadProgress.active}` : '')}
+                  {(uploadProgress.currentFile
+                    ? `正在处理: ${uploadProgress.currentFile}`
+                    : "正在处理...") +
+                    (uploadProgress.active > 0
+                      ? ` · 并行处理中: ${uploadProgress.active}`
+                      : "")}
                 </p>
               )}
             </div>
@@ -3016,425 +4444,697 @@ export const App: React.FC = () => {
 
           {/* Quick Actions (Scrollable) */}
           <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-            <button onClick={() => handleSend("我要报案")} className="glass-btn shrink-0 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2">
+            <button
+              onClick={() => handleSend("我要报案")}
+              className="glass-btn shrink-0 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2"
+            >
               <i className="fas fa-truck-medical text-red-500"></i> 我要报案
             </button>
-            <button onClick={() => handleSend("进度查询")} className="glass-btn shrink-0 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2">
+            <button
+              onClick={() => handleSend("进度查询")}
+              className="glass-btn shrink-0 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2"
+            >
               <i className="fas fa-list-check text-blue-500"></i> 进度查询
             </button>
-            <button onClick={toggleVoiceMode} className={`shrink-0 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 transition-all ${isVoiceMode ? 'bg-red-500 text-white shadow-lg shadow-red-500/30' : 'glass-btn'}`}>
-              <i className="fas fa-microphone"></i> {isVoiceMode ? '挂断语音' : '语音管家'}
+            <button
+              onClick={toggleVoiceMode}
+              className={`shrink-0 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 transition-all ${isVoiceMode ? "bg-red-500 text-white shadow-lg shadow-red-500/30" : "glass-btn"}`}
+            >
+              <i className="fas fa-microphone"></i>{" "}
+              {isVoiceMode ? "挂断语音" : "语音管家"}
             </button>
           </div>
 
           {/* Input Bar */}
           <div className="input-dock p-2 flex items-center gap-2">
-            <button onClick={handleOpenUploadGuide} className="w-10 h-10 rounded-full hover:bg-blue-50 text-blue-500 flex items-center justify-center transition-colors">
+            <button
+              onClick={handleOpenUploadGuide}
+              className="w-10 h-10 rounded-full hover:bg-blue-50 text-blue-500 flex items-center justify-center transition-colors"
+            >
               <i className="fas fa-paperclip text-lg"></i>
             </button>
-            <button onClick={openCamera} className="w-10 h-10 rounded-full hover:bg-blue-50 text-blue-500 flex items-center justify-center transition-colors">
+            <button
+              onClick={openCamera}
+              className="w-10 h-10 rounded-full hover:bg-blue-50 text-blue-500 flex items-center justify-center transition-colors"
+            >
               <i className="fas fa-camera text-lg"></i>
             </button>
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+              onKeyDown={(e) => e.key === "Enter" && handleSend()}
               placeholder="输入消息..."
               className="flex-1 bg-transparent border-none outline-none text-slate-700 placeholder-slate-400 font-medium h-10"
             />
-            <button onClick={() => handleSend()} disabled={!input.trim()} className="w-10 h-10 rounded-full primary-btn flex items-center justify-center disabled:opacity-50 disabled:shadow-none">
+            <button
+              onClick={() => handleSend()}
+              disabled={!input.trim()}
+              className="w-10 h-10 rounded-full primary-btn flex items-center justify-center disabled:opacity-50 disabled:shadow-none"
+            >
               <i className="fas fa-arrow-up"></i>
             </button>
           </div>
         </div>
       </div>
 
-      <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleFileUpload} />
-      <input ref={policyUploadRef} type="file" accept=".pdf" className="hidden" onChange={handlePolicyUpload} />
-      <input ref={materialUploadInputRef} type="file" multiple className="hidden" onChange={handleMaterialTypeFileChange} />
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        className="hidden"
+        onChange={handleFileUpload}
+      />
+      <input
+        ref={policyUploadRef}
+        type="file"
+        accept=".pdf"
+        className="hidden"
+        onChange={handlePolicyUpload}
+      />
+      <input
+        ref={materialUploadInputRef}
+        type="file"
+        multiple
+        className="hidden"
+        onChange={handleMaterialTypeFileChange}
+      />
 
       {/* --- Overlays --- */}
 
       {/* Sample Image Preview Modal */}
-      {
-        previewSampleUrl && (
+      {previewSampleUrl && (
+        <div
+          className="absolute inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-enter"
+          onClick={() => setPreviewSampleUrl(null)}
+        >
           <div
-            className="absolute inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-enter"
-            onClick={() => setPreviewSampleUrl(null)}
+            className="relative max-w-2xl max-h-[80vh] w-full"
+            onClick={(e) => e.stopPropagation()}
           >
-            <div className="relative max-w-2xl max-h-[80vh] w-full" onClick={e => e.stopPropagation()}>
+            <button
+              onClick={() => setPreviewSampleUrl(null)}
+              className="absolute -top-3 -right-3 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center text-slate-600 hover:bg-slate-100 transition-colors z-10"
+            >
+              <i className="fas fa-xmark"></i>
+            </button>
+            <img
+              src={previewSampleUrl}
+              alt="材料样例"
+              className="w-full h-full object-contain rounded-2xl shadow-2xl bg-white"
+            />
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-black/60 text-white text-xs rounded-full">
+              材料样例图片
+            </div>
+          </div>
+        </div>
+      )}
+
+      <SamplePreviewModal
+        isOpen={samplePreviewData.isOpen}
+        onClose={() =>
+          setSamplePreviewData({ isOpen: false, url: "", name: "" })
+        }
+        sampleUrl={samplePreviewData.url}
+        sampleName={samplePreviewData.name}
+      />
+
+      {/* Upload Guide Modal */}
+      {showUploadGuide && (
+        <div
+          className="absolute inset-0 z-50 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 animate-enter"
+          onClick={handleCloseUploadGuide}
+        >
+          <div
+            className="bg-white/90 backdrop-blur-xl p-6 rounded-2xl shadow-2xl max-w-sm w-full border border-white/50"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                <i className="fas fa-cloud-arrow-up"></i>
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-800">上传材料指引</h3>
+                <p className="text-xs text-slate-500">SmartClaim AI 智能识别</p>
+              </div>
+            </div>
+
+            <div className="space-y-3 mb-6">
+              <div className="flex gap-3 text-sm text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                <i className="fas fa-robot mt-1 text-blue-500"></i>
+                <p className="leading-relaxed text-xs">
+                  文件上传后，系统将自动进行 <strong>OCR 识别</strong>
+                  ，提取关键字段（如金额、日期、诊断）并归档。
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-xs text-slate-500">
+                  <i className="fas fa-check text-green-500"></i>
+                  <span>支持格式：JPG, PNG, PDF</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-slate-500">
+                  <i className="fas fa-check text-green-500"></i>
+                  <span>大小限制：单文件不超过 10MB</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-slate-500">
+                  <i className="fas fa-triangle-exclamation text-yellow-500"></i>
+                  <span>请确保图片光线充足，文字清晰可辨</span>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={handleUploadGuideChooseFile}
+              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-600/30 transition-all active:scale-95 flex items-center justify-center gap-2"
+            >
+              <i className="fas fa-plus"></i> 选择文件
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Reporting Form Modal - Dynamic */}
+      {showReportingForm && selectedIntakeConfig && (
+        <div
+          className="absolute inset-0 z-50 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 animate-enter"
+          onClick={handleCloseReportingForm}
+        >
+          <div
+            className="glass-panel w-full max-w-md max-h-[85vh] rounded-[32px] shadow-2xl flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center p-6 pb-3 shrink-0">
+              <div>
+                <h3 className="text-xl font-bold text-slate-800">在线报案</h3>
+                {selectedPolicyForForm && (
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    {selectedPolicyForForm.type}
+                  </p>
+                )}
+              </div>
               <button
-                onClick={() => setPreviewSampleUrl(null)}
-                className="absolute -top-3 -right-3 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center text-slate-600 hover:bg-slate-100 transition-colors z-10"
+                onClick={handleCloseReportingForm}
+                className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500"
               >
                 <i className="fas fa-xmark"></i>
               </button>
-              <img
-                src={previewSampleUrl}
-                alt="材料样例"
-                className="w-full h-full object-contain rounded-2xl shadow-2xl bg-white"
-              />
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-black/60 text-white text-xs rounded-full">
-                材料样例图片
-              </div>
             </div>
-          </div>
-        )
-      }
 
-      {/* Upload Guide Modal */}
-      {
-        showUploadGuide && (
-          <div className="absolute inset-0 z-50 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 animate-enter" onClick={handleCloseUploadGuide}>
-            <div className="bg-white/90 backdrop-blur-xl p-6 rounded-2xl shadow-2xl max-w-sm w-full border border-white/50" onClick={e => e.stopPropagation()}>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                  <i className="fas fa-cloud-arrow-up"></i>
-                </div>
-                <div>
-                  <h3 className="font-bold text-slate-800">上传材料指引</h3>
-                  <p className="text-xs text-slate-500">SmartClaim AI 智能识别</p>
-                </div>
-              </div>
-
-              <div className="space-y-3 mb-6">
-                <div className="flex gap-3 text-sm text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100">
-                  <i className="fas fa-robot mt-1 text-blue-500"></i>
-                  <p className="leading-relaxed text-xs">文件上传后，系统将自动进行 <strong>OCR 识别</strong>，提取关键字段（如金额、日期、诊断）并归档。</p>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-xs text-slate-500">
-                    <i className="fas fa-check text-green-500"></i>
-                    <span>支持格式：JPG, PNG, PDF</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-slate-500">
-                    <i className="fas fa-check text-green-500"></i>
-                    <span>大小限制：单文件不超过 10MB</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-slate-500">
-                    <i className="fas fa-triangle-exclamation text-yellow-500"></i>
-                    <span>请确保图片光线充足，文字清晰可辨</span>
-                  </div>
-                </div>
-              </div>
-
-              <button
-                onClick={handleUploadGuideChooseFile}
-                className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-600/30 transition-all active:scale-95 flex items-center justify-center gap-2"
-              >
-                <i className="fas fa-plus"></i> 选择文件
-              </button>
-            </div>
-          </div>
-        )
-      }
-
-      {/* Reporting Form Modal - Dynamic */}
-      {
-        showReportingForm && selectedIntakeConfig && (
-          <div className="absolute inset-0 z-50 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 animate-enter" onClick={handleCloseReportingForm}>
-            <div className="glass-panel w-full max-w-md max-h-[85vh] rounded-[32px] shadow-2xl flex flex-col" onClick={e => e.stopPropagation()}>
-              <div className="flex justify-between items-center p-6 pb-3 shrink-0">
-                <div>
-                  <h3 className="text-xl font-bold text-slate-800">在线报案</h3>
-                  {selectedPolicyForForm && (
-                    <p className="text-xs text-slate-400 mt-0.5">{selectedPolicyForForm.type}</p>
-                  )}
-                </div>
-                <button onClick={handleCloseReportingForm} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500"><i className="fas fa-xmark"></i></button>
-              </div>
-
-              <div className="flex-1 overflow-y-auto px-6 pb-2 space-y-4">
-                {selectedIntakeConfig.fields.map((field) => {
-                  // Handle follow_up visibility
-                  if (isFollowUpField(field.field_id) && !isFieldVisible(field)) return null;
-
-                  const value = dynamicFormValues[field.field_id];
-                  const error = formErrors[field.field_id];
-                  const inputClass = `w-full px-4 py-3 rounded-xl bg-white/50 border outline-none text-slate-700 font-medium transition-colors ${error ? 'border-red-300 bg-red-50/30' : 'border-white/60 focus:border-blue-400'}`;
-
-                  return (
-                    <div key={field.field_id} className="space-y-1">
-                      <label className="text-xs font-bold text-slate-400 ml-1">
-                        {field.label}
-                        {field.required && <span className="text-red-400 ml-0.5">*</span>}
-                      </label>
-
-                      {/* text */}
-                      {field.type === 'text' && (
-                        <input type="text" value={value || ''} onChange={e => handleDynamicFormChange(field.field_id, e.target.value)} placeholder={field.placeholder} className={inputClass} />
-                      )}
-
-                      {/* text_with_search */}
-                      {field.type === 'text_with_search' && field.data_source === 'hospital_db' ? (
-                        <HospitalSelectField
-                          value={value || ''}
-                          onChange={(val) => handleDynamicFormChange(field.field_id, val)}
-                          placeholder={field.placeholder}
-                          hospitals={hospitals}
-                          isLoading={isLoadingHospitals}
-                          error={error}
-                        />
-                      ) : field.type === 'text_with_search' ? (
-                        <input type="text" value={value || ''} onChange={e => handleDynamicFormChange(field.field_id, e.target.value)} placeholder={field.placeholder} className={inputClass} />
-                      ) : null}
-
-                      {/* date */}
-                      {field.type === 'date' && (
-                        <input type="date" value={value || ''} onChange={e => handleDynamicFormChange(field.field_id, e.target.value)} className={inputClass} />
-                      )}
-
-                      {/* time */}
-                      {field.type === 'time' && (
-                        <input type="time" value={value || ''} onChange={e => handleDynamicFormChange(field.field_id, e.target.value)} className={inputClass} />
-                      )}
-
-                      {/* number */}
-                      {field.type === 'number' && (
-                        <input type="number" value={value ?? ''} onChange={e => handleDynamicFormChange(field.field_id, e.target.value)} placeholder={field.placeholder} className={inputClass} />
-                      )}
-
-                      {/* textarea */}
-                      {field.type === 'textarea' && (
-                        <textarea value={value || ''} onChange={e => handleDynamicFormChange(field.field_id, e.target.value)} placeholder={field.placeholder} className={`${inputClass} h-24 resize-none`} />
-                      )}
-
-                      {/* enum */}
-                      {field.type === 'enum' && (
-                        <select value={value || ''} onChange={e => handleDynamicFormChange(field.field_id, e.target.value)} className={`${inputClass} appearance-none`}>
-                          <option value="">{field.placeholder || '请选择'}</option>
-                          {field.options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                        </select>
-                      )}
-
-                      {/* enum_with_other */}
-                      {field.type === 'enum_with_other' && (
-                        <>
-                          <select
-                            value={value === '__other__' ? '__other__' : (field.options?.includes(value) ? value : (value ? '__other__' : ''))}
-                            onChange={e => {
-                              if (e.target.value === '__other__') handleDynamicFormChange(field.field_id, '__other__');
-                              else handleDynamicFormChange(field.field_id, e.target.value);
-                            }}
-                            className={`${inputClass} appearance-none`}
-                          >
-                            <option value="">{field.placeholder || '请选择'}</option>
-                            {field.options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                            <option value="__other__">其他</option>
-                          </select>
-                          {(value === '__other__' || (value && !field.options?.includes(value))) && (
-                            <input
-                              type="text"
-                              value={value === '__other__' ? '' : value}
-                              onChange={e => handleDynamicFormChange(field.field_id, e.target.value || '__other__')}
-                              placeholder="请输入..."
-                              className={`${inputClass} mt-2`}
-                            />
-                          )}
-                        </>
-                      )}
-
-                      {/* multi_select */}
-                      {field.type === 'multi_select' && (
-                        <div className="flex flex-wrap gap-2 pt-1">
-                          {field.options?.map(opt => {
-                            const selected = Array.isArray(value) && value.includes(opt);
-                            return (
-                              <button
-                                key={opt}
-                                type="button"
-                                onClick={() => {
-                                  const current = Array.isArray(value) ? value : [];
-                                  const next = selected ? current.filter((v: string) => v !== opt) : [...current, opt];
-                                  handleDynamicFormChange(field.field_id, next);
-                                }}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${selected ? 'bg-blue-500 text-white border-blue-500 shadow-sm' : 'bg-white/40 border-white/60 text-slate-600 hover:bg-white/60'
-                                  }`}
-                              >
-                                {selected && <i className="fas fa-check mr-1 text-[10px]"></i>}{opt}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-
-                      {/* boolean */}
-                      {field.type === 'boolean' && (
-                        <div className="grid grid-cols-2 gap-2">
-                          {[{ label: '是', val: true }, { label: '否', val: false }].map(({ label, val }) => (
-                            <button
-                              key={label}
-                              type="button"
-                              onClick={() => handleDynamicFormChange(field.field_id, val)}
-                              className={`py-2.5 rounded-xl text-sm font-bold border transition-all ${value === val ? 'bg-blue-500 text-white border-blue-500 shadow-lg shadow-blue-500/30' : 'bg-white/40 border-white/60 text-slate-500 hover:bg-white/60'
-                                }`}
-                            >
-                              {label}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Error Message */}
-                      {error && (
-                        <div className="text-red-500 text-xs font-medium ml-1 flex items-center gap-1">
-                          <i className="fas fa-circle-exclamation text-[10px]"></i> {error}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-
-                {/* 动态材料清单展示 */}
-                {calculatedMaterials && calculatedMaterials.length > 0 && (
-                  <div className="bg-blue-50/50 border border-blue-200 rounded-xl p-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                        <i className="fas fa-clipboard-list text-blue-500"></i>
-                        所需理赔材料（{calculatedMaterials.filter(m => m.required).length}份必传 / 共{calculatedMaterials.length}份）
-                      </h4>
-                      <button
-                        onClick={() => setShowMaterialsList(!showMaterialsList)}
-                        className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+            <div className="flex-1 overflow-y-auto px-6 pb-2 space-y-4">
+              {/* 已上传文件显示区域 */}
+              {pendingFiles.length > 0 && (
+                <div className="bg-blue-50/50 rounded-xl p-4 border border-blue-100">
+                  <h4 className="text-sm font-bold text-blue-700 mb-3 flex items-center gap-2">
+                    <i className="fas fa-paperclip"></i>
+                    已上传材料 ({pendingFiles.length})
+                  </h4>
+                  <div className="space-y-2">
+                    {pendingFiles.map((file, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center gap-2 text-sm text-slate-700 bg-white/60 rounded-lg px-3 py-2"
                       >
-                        {showMaterialsList ? (
-                          <>
-                            收起 <i className="fas fa-chevron-up text-[10px]"></i>
-                          </>
-                        ) : (
-                          <>
-                            展开 <i className="fas fa-chevron-down text-[10px]"></i>
-                          </>
-                        )}
-                      </button>
-                    </div>
+                        <i
+                          className={`fas ${file.type?.includes("image") ? "fa-image text-blue-500" : "fa-file text-gray-500"}`}
+                        ></i>
+                        <span className="flex-1 truncate">{file.name}</span>
+                        <span className="text-xs text-slate-400">
+                          {file.analysis?.category || "未分类"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-500 mt-3">
+                    <i className="fas fa-info-circle text-blue-500 mr-1"></i>
+                    这些文件将随报案一起提交
+                  </p>
+                </div>
+              )}
 
-                    {isMaterialsLoading && (
-                      <div className="flex items-center justify-center py-4">
-                        <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                        <span className="ml-2 text-sm text-slate-500">计算中...</span>
+              {selectedIntakeConfig.fields.map((field) => {
+                // Handle follow_up visibility
+                if (isFollowUpField(field.field_id) && !isFieldVisible(field))
+                  return null;
+
+                const value = dynamicFormValues[field.field_id];
+                const error = formErrors[field.field_id];
+                const inputClass = `w-full px-4 py-3 rounded-xl bg-white/50 border outline-none text-slate-700 font-medium transition-colors ${error ? "border-red-300 bg-red-50/30" : "border-white/60 focus:border-blue-400"}`;
+
+                return (
+                  <div key={field.field_id} className="space-y-1">
+                    <label className="text-xs font-bold text-slate-400 ml-1">
+                      {field.label}
+                      {field.required && (
+                        <span className="text-red-400 ml-0.5">*</span>
+                      )}
+                    </label>
+
+                    {/* text */}
+                    {field.type === "text" && (
+                      <input
+                        type="text"
+                        value={value || ""}
+                        onChange={(e) =>
+                          handleDynamicFormChange(
+                            field.field_id,
+                            e.target.value,
+                          )
+                        }
+                        placeholder={field.placeholder}
+                        className={inputClass}
+                      />
+                    )}
+
+                    {/* text_with_search */}
+                    {field.type === "text_with_search" &&
+                    field.data_source === "hospital_db" ? (
+                      <HospitalSelectField
+                        value={value || ""}
+                        onChange={(val) =>
+                          handleDynamicFormChange(field.field_id, val)
+                        }
+                        placeholder={field.placeholder}
+                        hospitals={hospitals}
+                        isLoading={isLoadingHospitals}
+                        error={error}
+                      />
+                    ) : field.type === "text_with_search" ? (
+                      <input
+                        type="text"
+                        value={value || ""}
+                        onChange={(e) =>
+                          handleDynamicFormChange(
+                            field.field_id,
+                            e.target.value,
+                          )
+                        }
+                        placeholder={field.placeholder}
+                        className={inputClass}
+                      />
+                    ) : null}
+
+                    {/* date */}
+                    {field.type === "date" && (
+                      <input
+                        type="date"
+                        value={value || ""}
+                        onChange={(e) =>
+                          handleDynamicFormChange(
+                            field.field_id,
+                            e.target.value,
+                          )
+                        }
+                        className={inputClass}
+                      />
+                    )}
+
+                    {/* time */}
+                    {field.type === "time" && (
+                      <input
+                        type="time"
+                        value={value || ""}
+                        onChange={(e) =>
+                          handleDynamicFormChange(
+                            field.field_id,
+                            e.target.value,
+                          )
+                        }
+                        className={inputClass}
+                      />
+                    )}
+
+                    {/* number */}
+                    {field.type === "number" && (
+                      <input
+                        type="number"
+                        value={value ?? ""}
+                        onChange={(e) =>
+                          handleDynamicFormChange(
+                            field.field_id,
+                            e.target.value,
+                          )
+                        }
+                        placeholder={field.placeholder}
+                        className={inputClass}
+                      />
+                    )}
+
+                    {/* textarea */}
+                    {field.type === "textarea" && (
+                      <textarea
+                        value={value || ""}
+                        onChange={(e) =>
+                          handleDynamicFormChange(
+                            field.field_id,
+                            e.target.value,
+                          )
+                        }
+                        placeholder={field.placeholder}
+                        className={`${inputClass} h-24 resize-none`}
+                      />
+                    )}
+
+                    {/* enum */}
+                    {field.type === "enum" && (
+                      <select
+                        value={value || ""}
+                        onChange={(e) =>
+                          handleDynamicFormChange(
+                            field.field_id,
+                            e.target.value,
+                          )
+                        }
+                        className={`${inputClass} appearance-none`}
+                      >
+                        <option value="">
+                          {field.placeholder || "请选择"}
+                        </option>
+                        {field.options?.map((opt) => (
+                          <option key={opt} value={opt}>
+                            {opt}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+
+                    {/* enum_with_other */}
+                    {field.type === "enum_with_other" && (
+                      <>
+                        <select
+                          value={
+                            value === "__other__"
+                              ? "__other__"
+                              : field.options?.includes(value)
+                                ? value
+                                : value
+                                  ? "__other__"
+                                  : ""
+                          }
+                          onChange={(e) => {
+                            if (e.target.value === "__other__")
+                              handleDynamicFormChange(
+                                field.field_id,
+                                "__other__",
+                              );
+                            else
+                              handleDynamicFormChange(
+                                field.field_id,
+                                e.target.value,
+                              );
+                          }}
+                          className={`${inputClass} appearance-none`}
+                        >
+                          <option value="">
+                            {field.placeholder || "请选择"}
+                          </option>
+                          {field.options?.map((opt) => (
+                            <option key={opt} value={opt}>
+                              {opt}
+                            </option>
+                          ))}
+                          <option value="__other__">其他</option>
+                        </select>
+                        {(value === "__other__" ||
+                          (value && !field.options?.includes(value))) && (
+                          <input
+                            type="text"
+                            value={value === "__other__" ? "" : value}
+                            onChange={(e) =>
+                              handleDynamicFormChange(
+                                field.field_id,
+                                e.target.value || "__other__",
+                              )
+                            }
+                            placeholder="请输入..."
+                            className={`${inputClass} mt-2`}
+                          />
+                        )}
+                      </>
+                    )}
+
+                    {/* multi_select */}
+                    {field.type === "multi_select" && (
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        {field.options?.map((opt) => {
+                          const selected =
+                            Array.isArray(value) && value.includes(opt);
+                          return (
+                            <button
+                              key={opt}
+                              type="button"
+                              onClick={() => {
+                                const current = Array.isArray(value)
+                                  ? value
+                                  : [];
+                                const next = selected
+                                  ? current.filter((v: string) => v !== opt)
+                                  : [...current, opt];
+                                handleDynamicFormChange(field.field_id, next);
+                              }}
+                              className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
+                                selected
+                                  ? "bg-blue-500 text-white border-blue-500 shadow-sm"
+                                  : "bg-white/40 border-white/60 text-slate-600 hover:bg-white/60"
+                              }`}
+                            >
+                              {selected && (
+                                <i className="fas fa-check mr-1 text-[10px]"></i>
+                              )}
+                              {opt}
+                            </button>
+                          );
+                        })}
                       </div>
                     )}
 
-                    {!isMaterialsLoading && showMaterialsList && (
-                      <div className="space-y-2 max-h-64 overflow-y-auto">
-                        {calculatedMaterials.map((material) => (
-                          <div
-                            key={material.materialId}
-                            className={`flex items-start gap-2 p-3 rounded-lg transition-all ${material.required
-                              ? 'bg-red-50 border border-red-200 hover:border-red-300'
-                              : 'bg-white border border-gray-200 hover:border-gray-300'
-                              }`}
+                    {/* boolean */}
+                    {field.type === "boolean" && (
+                      <div className="grid grid-cols-2 gap-2">
+                        {[
+                          { label: "是", val: true },
+                          { label: "否", val: false },
+                        ].map(({ label, val }) => (
+                          <button
+                            key={label}
+                            type="button"
+                            onClick={() =>
+                              handleDynamicFormChange(field.field_id, val)
+                            }
+                            className={`py-2.5 rounded-xl text-sm font-bold border transition-all ${
+                              value === val
+                                ? "bg-blue-500 text-white border-blue-500 shadow-lg shadow-blue-500/30"
+                                : "bg-white/40 border-white/60 text-slate-500 hover:bg-white/60"
+                            }`}
                           >
-                            <i className={`fas fa-${material.required ? 'exclamation-circle text-red-500' : 'info-circle text-gray-400'
-                              } mt-0.5 text-sm`}></i>
-                            <div className="flex-1">
-                              <div className="font-medium text-sm text-slate-800">
-                                {material.materialName}
-                                {material.required && <span className="text-red-500 ml-1">*</span>}
-                              </div>
-                              {material.materialDescription && (
-                                <div className="text-xs text-slate-500 mt-1">
-                                  {material.materialDescription}
-                                </div>
-                              )}
-                              <div className="text-xs text-slate-500 mt-1 flex items-center gap-1">
-                                <i className="fas fa-tag text-[10px]"></i>
-                                来源: {material.sourceDetails}
-                              </div>
-                            </div>
-                          </div>
+                            {label}
+                          </button>
                         ))}
                       </div>
                     )}
 
-                    {!isMaterialsLoading && !showMaterialsList && (
-                      <div className="text-xs text-center text-slate-500">
-                        点击“展开”查看所需材料清单
+                    {/* Error Message */}
+                    {error && (
+                      <div className="text-red-500 text-xs font-medium ml-1 flex items-center gap-1">
+                        <i className="fas fa-circle-exclamation text-[10px]"></i>{" "}
+                        {error}
                       </div>
                     )}
+                  </div>
+                );
+              })}
+
+              {/* 动态材料清单展示 */}
+              {calculatedMaterials && calculatedMaterials.length > 0 && (
+                <div className="bg-blue-50/50 border border-blue-200 rounded-xl p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                      <i className="fas fa-clipboard-list text-blue-500"></i>
+                      所需理赔材料（
+                      {calculatedMaterials.filter((m) => m.required).length}
+                      份必传 / 共{calculatedMaterials.length}份）
+                    </h4>
+                    <button
+                      onClick={() => setShowMaterialsList(!showMaterialsList)}
+                      className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+                    >
+                      {showMaterialsList ? (
+                        <>
+                          收起 <i className="fas fa-chevron-up text-[10px]"></i>
+                        </>
+                      ) : (
+                        <>
+                          展开{" "}
+                          <i className="fas fa-chevron-down text-[10px]"></i>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {isMaterialsLoading && (
+                    <div className="flex items-center justify-center py-4">
+                      <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                      <span className="ml-2 text-sm text-slate-500">
+                        计算中...
+                      </span>
+                    </div>
+                  )}
+
+                  {!isMaterialsLoading && showMaterialsList && (
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {calculatedMaterials.map((material) => (
+                        <div
+                          key={material.materialId}
+                          className={`flex items-start gap-2 p-3 rounded-lg transition-all ${
+                            material.required
+                              ? "bg-red-50 border border-red-200 hover:border-red-300"
+                              : "bg-white border border-gray-200 hover:border-gray-300"
+                          }`}
+                        >
+                          <i
+                            className={`fas fa-${
+                              material.required
+                                ? "exclamation-circle text-red-500"
+                                : "info-circle text-gray-400"
+                            } mt-0.5 text-sm`}
+                          ></i>
+                          <div className="flex-1">
+                            <div className="font-medium text-sm text-slate-800">
+                              {material.materialName}
+                              {material.required && (
+                                <span className="text-red-500 ml-1">*</span>
+                              )}
+                            </div>
+                            {material.materialDescription && (
+                              <div className="text-xs text-slate-500 mt-1">
+                                {material.materialDescription}
+                              </div>
+                            )}
+                            <div className="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                              <i className="fas fa-tag text-[10px]"></i>
+                              来源: {material.sourceDetails}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {!isMaterialsLoading && !showMaterialsList && (
+                    <div className="text-xs text-center text-slate-500">
+                      点击“展开”查看所需材料清单
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 pt-3 shrink-0">
+              <button
+                onClick={handleFormSubmit}
+                className="w-full py-3.5 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-600/30 active:scale-95 transition-transform"
+              >
+                提交报案
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Camera */}
+      {isCameraOpen && (
+        <div className="absolute inset-0 bg-black z-50 flex flex-col">
+          <div className="relative flex-1 bg-black">
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              className="w-full h-full object-cover"
+            ></video>
+            <button
+              onClick={closeCamera}
+              className="absolute top-6 right-6 w-10 h-10 bg-black/50 text-white rounded-full flex items-center justify-center"
+            >
+              <i className="fas fa-xmark"></i>
+            </button>
+          </div>
+          <div className="h-32 bg-black flex items-center justify-center gap-8">
+            <button
+              onClick={capturePhoto}
+              className="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center"
+            >
+              <div className="w-16 h-16 bg-white rounded-full active:scale-90 transition-transform"></div>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Voice Mode */}
+      {isVoiceMode && (
+        <div className="absolute inset-0 bg-white/90 backdrop-blur-xl z-40 flex flex-col items-center justify-center animate-enter">
+          <div className="relative w-40 h-40 flex items-center justify-center">
+            <div className="absolute inset-0 bg-blue-500/20 rounded-full animate-ping"></div>
+            <div className="w-32 h-32 bg-gradient-to-tr from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-white text-4xl shadow-2xl">
+              <i className="fas fa-microphone"></i>
+            </div>
+          </div>
+          <h3 className="mt-8 text-2xl font-bold text-slate-800">
+            正在聆听...
+          </h3>
+          <p className="text-slate-500 mt-2">请直接描述您的事故情况</p>
+          <button
+            onClick={toggleVoiceMode}
+            className="mt-12 w-16 h-16 rounded-full bg-red-100 text-red-500 flex items-center justify-center text-xl hover:bg-red-200 transition-colors"
+          >
+            <i className="fas fa-phone-slash"></i>
+          </button>
+        </div>
+      )}
+
+      {/* Detail View */}
+      {selectedDetailClaim && (
+        <div className="absolute inset-0 z-50 bg-white/50 backdrop-blur-lg flex items-center justify-center p-4">
+          <div className="glass-panel w-full max-w-lg max-h-[85vh] rounded-[32px] overflow-hidden flex flex-col shadow-2xl animate-enter">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white/50">
+              <h2 className="text-xl font-bold text-slate-800">案件详情</h2>
+              <button
+                onClick={handleCloseClaimDetail}
+                className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-slate-200 transition-colors"
+              >
+                <i className="fas fa-xmark"></i>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6 space-y-8 scroll-smooth">
+              {/* Status Section */}
+              <div className="p-5 bg-gradient-to-br from-blue-50 to-white rounded-2xl border border-blue-100 shadow-sm">
+                <div className="text-xs font-bold text-blue-500 uppercase tracking-wider mb-2">
+                  Current Status
+                </div>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-lg font-bold text-slate-800">
+                    {getStatusLabel(selectedDetailClaim.status)}
+                  </span>
+                  <span className="text-2xl text-blue-500">
+                    <i
+                      className={`fas ${
+                        selectedDetailClaim.status === ClaimStatus.PAID
+                          ? "fa-circle-check"
+                          : selectedDetailClaim.status === ClaimStatus.REJECTED
+                            ? "fa-circle-xmark"
+                            : "fa-spinner fa-spin"
+                      }`}
+                    ></i>
+                  </span>
+                </div>
+                {selectedDetailClaim.assessment && (
+                  <div className="text-sm text-slate-600 bg-white/60 p-3 rounded-lg border border-blue-50/50">
+                    {selectedDetailClaim.assessment.reasoning}
                   </div>
                 )}
               </div>
 
-              <div className="p-6 pt-3 shrink-0">
-                <button
-                  onClick={handleFormSubmit}
-                  className="w-full py-3.5 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-600/30 active:scale-95 transition-transform"
-                >
-                  提交报案
-                </button>
-              </div>
-            </div>
-          </div>
-        )
-      }
-
-      {/* Camera */}
-      {
-        isCameraOpen && (
-          <div className="absolute inset-0 bg-black z-50 flex flex-col">
-            <div className="relative flex-1 bg-black">
-              <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover"></video>
-              <button onClick={closeCamera} className="absolute top-6 right-6 w-10 h-10 bg-black/50 text-white rounded-full flex items-center justify-center"><i className="fas fa-xmark"></i></button>
-            </div>
-            <div className="h-32 bg-black flex items-center justify-center gap-8">
-              <button onClick={capturePhoto} className="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center"><div className="w-16 h-16 bg-white rounded-full active:scale-90 transition-transform"></div></button>
-            </div>
-          </div>
-        )
-      }
-
-      {/* Voice Mode */}
-      {
-        isVoiceMode && (
-          <div className="absolute inset-0 bg-white/90 backdrop-blur-xl z-40 flex flex-col items-center justify-center animate-enter">
-            <div className="relative w-40 h-40 flex items-center justify-center">
-              <div className="absolute inset-0 bg-blue-500/20 rounded-full animate-ping"></div>
-              <div className="w-32 h-32 bg-gradient-to-tr from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-white text-4xl shadow-2xl">
-                <i className="fas fa-microphone"></i>
-              </div>
-            </div>
-            <h3 className="mt-8 text-2xl font-bold text-slate-800">正在聆听...</h3>
-            <p className="text-slate-500 mt-2">请直接描述您的事故情况</p>
-            <button onClick={toggleVoiceMode} className="mt-12 w-16 h-16 rounded-full bg-red-100 text-red-500 flex items-center justify-center text-xl hover:bg-red-200 transition-colors">
-              <i className="fas fa-phone-slash"></i>
-            </button>
-          </div>
-        )
-      }
-
-      {/* Detail View */}
-      {
-        selectedDetailClaim && (
-          <div className="absolute inset-0 z-50 bg-white/50 backdrop-blur-lg flex items-center justify-center p-4">
-            <div className="glass-panel w-full max-w-lg max-h-[85vh] rounded-[32px] overflow-hidden flex flex-col shadow-2xl animate-enter">
-              <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white/50">
-                <h2 className="text-xl font-bold text-slate-800">案件详情</h2>
-                <button onClick={handleCloseClaimDetail} className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-slate-200 transition-colors"><i className="fas fa-xmark"></i></button>
-              </div>
-              <div className="flex-1 overflow-y-auto p-6 space-y-8 scroll-smooth">
-                {/* Status Section */}
-                <div className="p-5 bg-gradient-to-br from-blue-50 to-white rounded-2xl border border-blue-100 shadow-sm">
-                  <div className="text-xs font-bold text-blue-500 uppercase tracking-wider mb-2">Current Status</div>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-lg font-bold text-slate-800">{getStatusLabel(selectedDetailClaim.status)}</span>
-                    <span className="text-2xl text-blue-500">
-                      <i className={`fas ${selectedDetailClaim.status === ClaimStatus.PAID ? 'fa-circle-check' :
-                        selectedDetailClaim.status === ClaimStatus.REJECTED ? 'fa-circle-xmark' : 'fa-spinner fa-spin'
-                        }`}></i>
-                    </span>
-                  </div>
-                  {selectedDetailClaim.assessment && (
-                    <div className="text-sm text-slate-600 bg-white/60 p-3 rounded-lg border border-blue-50/50">
-                      {selectedDetailClaim.assessment.reasoning}
-                    </div>
-                  )}
-                </div>
-
-                {/* Timeline Section */}
-                {selectedDetailClaim.timeline && selectedDetailClaim.timeline.length > 0 && (
+              {/* Timeline Section */}
+              {selectedDetailClaim.timeline &&
+                selectedDetailClaim.timeline.length > 0 && (
                   <div>
                     <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
                       <i className="fas fa-clock-rotate-left"></i> 理赔进度
@@ -3446,14 +5146,29 @@ export const App: React.FC = () => {
                       <div className="space-y-6">
                         {selectedDetailClaim.timeline.map((event, idx) => (
                           <div key={idx} className="relative flex gap-4 group">
-                            <div className={`w-4 h-4 rounded-full mt-1 shrink-0 z-10 ring-4 ring-white transition-all duration-500 ${event.status === 'completed' ? 'bg-blue-500 shadow-lg shadow-blue-500/30' :
-                              event.status === 'active' ? 'bg-green-500 animate-pulse shadow-lg shadow-green-500/30' :
-                                'bg-slate-200'
-                              }`}></div>
-                            <div className={`${event.status === 'pending' ? 'opacity-50' : 'opacity-100'}`}>
-                              <div className="text-[10px] font-bold text-slate-400 font-mono tracking-wide mb-0.5 uppercase">{event.date}</div>
-                              <div className={`text-sm font-bold mb-1 ${event.status === 'active' ? 'text-green-600' : 'text-slate-700'}`}>{event.label}</div>
-                              <div className="text-xs text-slate-500 leading-relaxed max-w-[280px]">{event.description}</div>
+                            <div
+                              className={`w-4 h-4 rounded-full mt-1 shrink-0 z-10 ring-4 ring-white transition-all duration-500 ${
+                                event.status === "completed"
+                                  ? "bg-blue-500 shadow-lg shadow-blue-500/30"
+                                  : event.status === "active"
+                                    ? "bg-green-500 animate-pulse shadow-lg shadow-green-500/30"
+                                    : "bg-slate-200"
+                              }`}
+                            ></div>
+                            <div
+                              className={`${event.status === "pending" ? "opacity-50" : "opacity-100"}`}
+                            >
+                              <div className="text-[10px] font-bold text-slate-400 font-mono tracking-wide mb-0.5 uppercase">
+                                {event.date}
+                              </div>
+                              <div
+                                className={`text-sm font-bold mb-1 ${event.status === "active" ? "text-green-600" : "text-slate-700"}`}
+                              >
+                                {event.label}
+                              </div>
+                              <div className="text-xs text-slate-500 leading-relaxed max-w-[280px]">
+                                {event.description}
+                              </div>
                             </div>
                           </div>
                         ))}
@@ -3462,102 +5177,126 @@ export const App: React.FC = () => {
                   </div>
                 )}
 
-                {/* Documents Section */}
-                <div>
-                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-                    <i className="fas fa-folder-open"></i> 关联材料
-                  </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {selectedDetailClaim.documents?.map((d, i) => (
-                      <div
-                        key={i}
-                        onClick={() => handleDocumentClick(d)}
-                        className="p-3 bg-white rounded-xl border border-slate-100 flex items-center gap-3 hover:shadow-md transition-shadow cursor-pointer active:scale-95"
-                      >
-                        <div className="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 shrink-0"><i className={`fas ${getDocIcon(d.name)}`}></i></div>
-                        <div className="overflow-hidden min-w-0">
-                          <div className="text-sm font-bold text-slate-700 truncate">{d.name}</div>
-                          <div className="text-xs text-slate-400 flex items-center gap-1">
-                            <i className="fas fa-check-circle text-green-500 text-[10px]"></i> 已验证
-                          </div>
+              {/* Documents Section */}
+              <div>
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                  <i className="fas fa-folder-open"></i> 关联材料
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {selectedDetailClaim.documents?.map((d, i) => (
+                    <div
+                      key={i}
+                      onClick={() => handleDocumentClick(d)}
+                      className="p-3 bg-white rounded-xl border border-slate-100 flex items-center gap-3 hover:shadow-md transition-shadow cursor-pointer active:scale-95"
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 shrink-0">
+                        <i className={`fas ${getDocIcon(d.name)}`}></i>
+                      </div>
+                      <div className="overflow-hidden min-w-0">
+                        <div className="text-sm font-bold text-slate-700 truncate">
+                          {d.name}
+                        </div>
+                        <div className="text-xs text-slate-400 flex items-center gap-1">
+                          <i className="fas fa-check-circle text-green-500 text-[10px]"></i>{" "}
+                          已验证
                         </div>
                       </div>
-                    ))}
-                    {(!selectedDetailClaim.documents?.length) && <div className="text-sm text-slate-400 italic py-4 text-center w-full bg-slate-50/50 rounded-xl border border-dashed border-slate-200">暂无关联文件</div>}
-                  </div>
+                    </div>
+                  ))}
+                  {!selectedDetailClaim.documents?.length && (
+                    <div className="text-sm text-slate-400 italic py-4 text-center w-full bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
+                      暂无关联文件
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           </div>
-        )
-      }
+        </div>
+      )}
 
       {/* File Inspector Modal (List View) */}
-      {
-        fileInspectData && (
-          <div className="absolute inset-0 z-[100] bg-black/50 backdrop-blur-md flex items-end sm:items-center justify-center sm:p-4 animate-enter">
-            <div className="w-full sm:max-w-lg bg-white h-[90vh] sm:h-auto sm:max-h-[80vh] sm:rounded-[32px] rounded-t-[32px] shadow-2xl overflow-hidden flex flex-col">
-              <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white z-10">
-                <h3 className="text-lg font-bold text-slate-800">文件详情 ({fileInspectData.length})</h3>
-                <button onClick={handleCloseFileInspect} className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-slate-200"><i className="fas fa-xmark"></i></button>
-              </div>
-              <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50">
-                {fileInspectData.map((doc, i) => (
-                  <FileInspectorItem
-                    key={i}
-                    doc={doc}
-                    index={i}
-                    isError={hasMissingFields(doc)}
-                    failedImages={failedImages}
-                    setFailedImages={setFailedImages}
-                    isExpanded={expandedDocIndex === i}
-                    onPreview={(d) => handlePreviewAttachment(d, '文件列表')}
-                    onToggleExpand={(idx) => setExpandedDocIndex(expandedDocIndex === idx ? null : idx)}
-                    onReplaceFile={handleReplaceFileClick}
-                  />
-                ))}
-              </div>
-              <div className="p-4 border-t border-slate-100 bg-white">
-                <button onClick={handleCloseFileInspect} className="w-full py-3.5 rounded-xl bg-slate-900 text-white font-bold shadow-lg shadow-slate-900/20 active:scale-95 transition-all">确认</button>
-              </div>
-            </div>
-          </div>
-        )
-      }
-
-      {/* Preview Modal (Full Screen) */}
-      {
-        previewAttachment && (
-          <div className="fixed inset-0 z-[200] flex flex-col animate-enter">
-            {/* Top Bar */}
-            <div className="h-16 bg-black/95 text-white flex items-center justify-between px-6 border-b border-white/10 shrink-0">
-              <h3 className="font-bold truncate max-w-md">{previewAttachment.name}</h3>
-              <button onClick={handleClosePreview} className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
-                <i className="fas fa-xmark text-lg"></i>
+      {fileInspectData && (
+        <div className="absolute inset-0 z-[100] bg-black/50 backdrop-blur-md flex items-end sm:items-center justify-center sm:p-4 animate-enter">
+          <div className="w-full sm:max-w-lg bg-white h-[90vh] sm:h-auto sm:max-h-[80vh] sm:rounded-[32px] rounded-t-[32px] shadow-2xl overflow-hidden flex flex-col">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white z-10">
+              <h3 className="text-lg font-bold text-slate-800">
+                文件详情 ({fileInspectData.length})
+              </h3>
+              <button
+                onClick={handleCloseFileInspect}
+                className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-slate-200"
+              >
+                <i className="fas fa-xmark"></i>
               </button>
             </div>
-
-            {/* Content Area */}
-            <div className="flex-1 bg-black/90 relative overflow-hidden">
-              {previewAttachment.type.includes('image') && (previewAttachment.base64 || previewAttachment.url) ? (
-                <ImagePreview attachment={previewAttachment} />
-              ) : previewAttachment.type.includes('pdf') && previewAttachment.base64 ? (
-                <iframe
-                  src={`data:application/pdf;base64,${previewAttachment.base64}`}
-                  className="w-full h-full bg-white"
-                  title={previewAttachment.name}
-                ></iframe>
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-white/50 flex-col gap-4">
-                  <i className="fas fa-file-circle-question text-6xl"></i>
-                  <p>无法预览此文件类型或文件内容未加载</p>
-                </div>
-              )}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50">
+              {fileInspectData.map((doc, i) => (
+                <FileInspectorItem
+                  key={i}
+                  doc={doc}
+                  index={i}
+                  isError={hasMissingFields(doc)}
+                  failedImages={failedImages}
+                  setFailedImages={setFailedImages}
+                  isExpanded={expandedDocIndex === i}
+                  onPreview={(d) => handlePreviewAttachment(d, "文件列表")}
+                  onToggleExpand={(idx) =>
+                    setExpandedDocIndex(expandedDocIndex === idx ? null : idx)
+                  }
+                  onReplaceFile={handleReplaceFileClick}
+                />
+              ))}
+            </div>
+            <div className="p-4 border-t border-slate-100 bg-white">
+              <button
+                onClick={handleCloseFileInspect}
+                className="w-full py-3.5 rounded-xl bg-slate-900 text-white font-bold shadow-lg shadow-slate-900/20 active:scale-95 transition-all"
+              >
+                确认
+              </button>
             </div>
           </div>
-        )
-      }
+        </div>
+      )}
 
-    </div >
+      {/* Preview Modal (Full Screen) */}
+      {previewAttachment && (
+        <div className="fixed inset-0 z-[200] flex flex-col animate-enter">
+          {/* Top Bar */}
+          <div className="h-16 bg-black/95 text-white flex items-center justify-between px-6 border-b border-white/10 shrink-0">
+            <h3 className="font-bold truncate max-w-md">
+              {previewAttachment.name}
+            </h3>
+            <button
+              onClick={handleClosePreview}
+              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+            >
+              <i className="fas fa-xmark text-lg"></i>
+            </button>
+          </div>
+
+          {/* Content Area */}
+          <div className="flex-1 bg-black/90 relative overflow-hidden">
+            {previewAttachment.type.includes("image") &&
+            (previewAttachment.base64 || previewAttachment.url) ? (
+              <ImagePreview attachment={previewAttachment} />
+            ) : previewAttachment.type.includes("pdf") &&
+              previewAttachment.base64 ? (
+              <iframe
+                src={`data:application/pdf;base64,${previewAttachment.base64}`}
+                className="w-full h-full bg-white"
+                title={previewAttachment.name}
+              ></iframe>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-white/50 flex-col gap-4">
+                <i className="fas fa-file-circle-question text-6xl"></i>
+                <p>无法预览此文件类型或文件内容未加载</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
   );
 };

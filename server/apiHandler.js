@@ -79,6 +79,54 @@ import {
 } from "./messageCenter/messageService.js";
 import { generateDamageReport } from "./services/reportGenerator.js";
 
+// ============ 操作日志辅助函数 ============
+
+/**
+ * 将审计日志类型映射为操作类型
+ */
+function mapAuditTypeToOperationType(auditType) {
+  const typeMap = {
+    'RULE_EXECUTION': 'AI_REVIEW',
+    'AI_REVIEW': 'AI_REVIEW',
+    'CLAIM_ACTION': 'CLAIM_ACTION',
+    'API_CALL': 'SYSTEM_CALL',
+    'TASK_CREATE': 'TASK_CREATE',
+    'TASK_RETRY': 'TASK_RETRY',
+    'IMPORT_TASK_CREATE': 'IMPORT_MATERIALS',
+  };
+  return typeMap[auditType] || 'SYSTEM_CALL';
+}
+
+/**
+ * 格式化审计日志为可读标签
+ */
+function formatAuditLogLabel(log) {
+  const labels = {
+    'RULE_EXECUTION': `规则执行: ${log.rulesetId || '未知规则'}`,
+    'AI_REVIEW': `AI智能审核${log.decision ? ` - ${log.decision}` : ''}`,
+    'CLAIM_ACTION': `案件操作: ${log.action || '未知操作'}`,
+    'API_CALL': `系统调用: ${log.endpoint || log.type}`,
+    'TASK_CREATE': `创建处理任务 (${log.fileCount || 0}个文件)`,
+    'TASK_RETRY': `重试处理任务`,
+    'IMPORT_TASK_CREATE': `导入离线材料 (${log.fileCount || 0}个文件)`,
+  };
+  return labels[log.type] || log.type;
+}
+
+/**
+ * 检测设备类型
+ */
+function detectDeviceType(userAgent) {
+  if (!userAgent) return 'unknown';
+  const ua = userAgent.toLowerCase();
+  if (/mobile|android|iphone|ipad|ipod/.test(ua)) {
+    if (/ipad/.test(ua)) return 'tablet';
+    return 'mobile';
+  }
+  if (/tablet|ipad/.test(ua)) return 'tablet';
+  return 'desktop';
+}
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, "..");
@@ -326,7 +374,7 @@ async function classifyMaterial(result, fileName) {
     ];
 
     const response = await callGemini({
-      model: "gemini-2.0-flash",
+      model: "gemini-2.5-flash",
       contents: prompt,
       temperature: 0.1,
     });
@@ -581,6 +629,158 @@ export const handleApiRequest = async (req, res) => {
       res.end(
         JSON.stringify({ error: "Signed URL failed", message: error.message }),
       );
+    }
+    return;
+  }
+
+  // 文档解析 API - 根据已配置的材料 schema 和 prompt 提取结构化内容
+  if (resource === "parse-document") {
+    if (req.method !== "POST") {
+      res.statusCode = 405;
+      res.end(JSON.stringify({ error: "Method Not Allowed" }));
+      return;
+    }
+
+    try {
+      const { fileUrl, fileName, materialName, jsonSchema, aiAuditPrompt } = await parseBody(req);
+      
+      if (!fileUrl) {
+        res.statusCode = 400;
+        res.end(JSON.stringify({ error: "Missing fileUrl" }));
+        return;
+      }
+
+      const genAI = new GoogleGenAI({ apiKey: getGeminiApiKey() });
+      const model = process.env.GEMINI_VISION_MODEL || "gemini-2.5-flash";
+      
+      const startTime = Date.now();
+      let result = {
+        success: true,
+        text: "",
+        extractedData: {},
+        auditConclusion: "",
+        confidence: 0,
+      };
+
+      // 下载文件内容
+      let fileBuffer;
+      let mimeType = "image/jpeg";
+      
+      try {
+        // 使用 AbortController 实现超时
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000);
+        
+        const response = await fetch(fileUrl, { signal: controller.signal });
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to download file: ${response.status}`);
+        }
+        fileBuffer = Buffer.from(await response.arrayBuffer());
+        mimeType = response.headers.get("content-type") || mimeType;
+      } catch (e) {
+        console.error("[ParseDocument] Failed to download:", e);
+        res.statusCode = 400;
+        res.end(JSON.stringify({ error: "Failed to download file", message: e.message }));
+        return;
+      }
+
+      // 根据文件类型选择处理方式
+      const isImage = mimeType.startsWith("image/");
+      const isPdf = mimeType === "application/pdf" || fileName?.toLowerCase().endsWith(".pdf");
+      
+      if (isImage || isPdf) {
+        // 使用 Gemini Vision 进行提取
+        const base64Data = fileBuffer.toString("base64");
+        
+        // 构造提示词：融合材料的 aiAuditPrompt 和 jsonSchema
+        const prompt = `你是一个专业的保险理赔材料审核系统。请对上传的「${materialName || '理赔材料'}」进行 OCR 识别和审核。
+
+## 提取要求
+请严格根据图片中可见的文字内容提取信息，按以下 JSON Schema 结构提取：
+${jsonSchema || '{}'}
+
+## 审核要求
+${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
+
+## 重要规则
+1. 只提取图片中**明确可见**的文字和数字，严禁补充、推测或编造任何信息
+2. 如果某个区域模糊不清或被遮挡，对应字段返回空字符串，**不要猜测**
+3. 数字必须严格按图片显示提取
+4. 日期格式统一为 YYYY-MM-DD
+5. 无法识别的字段：字符串用空字符串 ""，数字用 0
+
+## 输出格式
+请严格返回以下 JSON 格式（不要包含 markdown 代码块标记）：
+{
+  "extractedData": { ... 按 schema 提取的字段 },
+  "auditConclusion": "审核结论文本，包含提取摘要和校验结果",
+  "confidence": 0.95
+}`;
+        
+        const geminiResponse = await genAI.models.generateContent({
+          model,
+          contents: [
+            {
+              role: "user",
+              parts: [
+                { text: prompt },
+                { inlineData: { mimeType, data: base64Data } },
+              ],
+            },
+          ],
+        });
+        
+        const responseText = geminiResponse.text || "";
+        
+        // 提取 JSON
+        let extractedData = {};
+        let auditConclusion = "";
+        let confidence = 0;
+        
+        try {
+          // 尝试解析整个响应为 JSON
+          const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            const parsed = JSON.parse(jsonMatch[0]);
+            extractedData = parsed.extractedData || parsed;
+            auditConclusion = parsed.auditConclusion || "识别完成";
+            confidence = parsed.confidence || 0.8;
+          }
+        } catch (e) {
+          console.error("[ParseDocument] Failed to parse JSON:", e);
+          // 如果解析失败，返回原始文本
+          auditConclusion = responseText.slice(0, 500);
+        }
+        
+        result = {
+          success: true,
+          text: responseText,
+          extractedData,
+          auditConclusion,
+          confidence,
+          model,
+          parseTime: Date.now() - startTime,
+        };
+      } else {
+        // 对于非图片/PDF，返回基本信息
+        result = {
+          success: true,
+          text: `文件类型 ${mimeType} 暂不支持自动解析`,
+          extractedData: { fileType: mimeType, fileSize: fileBuffer.length },
+          auditConclusion: "不支持的文件类型",
+          confidence: 0,
+          parseTime: Date.now() - startTime,
+        };
+      }
+
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify(result));
+    } catch (error) {
+      console.error("[API] Parse document failed:", error);
+      res.statusCode = 500;
+      res.end(JSON.stringify({ error: "Parse failed", message: error.message }));
     }
     return;
   }
@@ -2528,6 +2728,121 @@ ${schemaText}
     return;
   }
 
+  // ============ 案件操作日志查询 API ============
+  // 查询指定案件的操作日志（合并用户操作日志和审计日志）
+  if (resource === "operation-logs") {
+    if (req.method === "GET") {
+      const params = new URL(req.url, "http://x").searchParams;
+      const claimId = params.get("claimId");
+
+      if (!claimId) {
+        res.statusCode = 400;
+        res.end(JSON.stringify({ error: "Missing claimId parameter" }));
+        return;
+      }
+
+      try {
+        // 1. 从 user-operation-logs.json 查询（用户操作日志）
+        const userLogs = readData("user-operation-logs") || [];
+        const filteredUserLogs = userLogs.filter(
+          (log) => log.claimId === claimId || log.claimCaseId === claimId
+        ).map((log) => ({
+          ...log,
+          logSource: "user", // 标记来源
+        }));
+
+        // 2. 从审计日志查询（系统操作日志）
+        const auditLogs = readAuditLogs("all", { claimCaseId: claimId });
+        const formattedAuditLogs = auditLogs.map((log) => ({
+          logId: `audit-${log.timestamp}-${Math.random().toString(36).slice(2, 8)}`,
+          timestamp: log.timestamp,
+          userName: log.operator || "系统",
+          operationType: mapAuditTypeToOperationType(log.type),
+          operationLabel: formatAuditLogLabel(log),
+          claimId: log.claimCaseId,
+          claimReportNumber: null,
+          currentStatus: log.newStatus || null,
+          inputData: log.input || null,
+          outputData: log.output || null,
+          success: log.success !== false,
+          duration: log.duration || null,
+          logSource: "system",
+        }));
+
+        // 3. 合并并按时间排序（最新的在前）
+        const allLogs = [...filteredUserLogs, ...formattedAuditLogs].sort(
+          (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        );
+
+        res.setHeader("Content-Type", "application/json");
+        res.end(
+          JSON.stringify({
+            claimId,
+            total: allLogs.length,
+            userLogsCount: filteredUserLogs.length,
+            systemLogsCount: formattedAuditLogs.length,
+            logs: allLogs,
+          })
+        );
+      } catch (error) {
+        console.error("[operation-logs] Error:", error);
+        res.statusCode = 500;
+        res.end(JSON.stringify({ error: "Failed to fetch operation logs" }));
+      }
+      return;
+    }
+
+    // 记录案件操作日志 API
+    if (req.method === "POST") {
+      try {
+        const body = await parseBody(req);
+        const { claimId, operationType, operationLabel, inputData, outputData, success = true, duration, userName } = body;
+
+        if (!claimId || !operationType) {
+          res.statusCode = 400;
+          res.end(JSON.stringify({ error: "Missing required fields: claimId, operationType" }));
+          return;
+        }
+
+        // 创建日志条目
+        const logEntry = {
+          logId: `log-${new Date().toISOString().replace(/[-:T.Z]/g, '').slice(0, 14)}-${Math.random().toString(36).slice(2, 8)}`,
+          timestamp: new Date().toISOString(),
+          userName: userName || req.headers["x-user-id"] || "system",
+          operationType,
+          operationLabel: operationLabel || operationType,
+          claimId,
+          claimReportNumber: body.claimReportNumber || null,
+          currentStatus: body.currentStatus || null,
+          inputData: inputData || null,
+          outputData: outputData || null,
+          success,
+          duration: duration || null,
+          userAgent: req.headers["user-agent"] || null,
+          deviceType: detectDeviceType(req.headers["user-agent"]),
+        };
+
+        // 保存到 user-operation-logs.json
+        const logs = readData("user-operation-logs") || [];
+        logs.push(logEntry);
+        writeData("user-operation-logs", logs);
+
+        res.setHeader("Content-Type", "application/json");
+        res.statusCode = 201;
+        res.end(JSON.stringify({ success: true, logId: logEntry.logId }));
+      } catch (error) {
+        console.error("[operation-logs] POST Error:", error);
+        res.statusCode = 500;
+        res.end(JSON.stringify({ error: "Failed to save operation log" }));
+      }
+      return;
+    }
+
+    res.statusCode = 405;
+    res.end(JSON.stringify({ error: "Method Not Allowed" }));
+    return;
+  }
+
   // 执行理算（通用接口，按公式类型区分）
   if (resource === "calculate") {
     if (req.method !== "POST") {
@@ -2837,6 +3152,93 @@ ${schemaText}
       res.end(JSON.stringify({ error: formatErrorMessage(error) }));
     }
     return;
+  }
+
+  if (resource === "materials" && id === "classify") {
+    if (req.method !== "POST") {
+      res.statusCode = 405;
+      res.end(JSON.stringify({ error: "Method Not Allowed" }));
+      return;
+    }
+
+    try {
+      const body = await parseBody(req);
+      const { fileSource, mimeType } = body;
+
+      if (!fileSource) {
+        res.statusCode = 400;
+        res.end(JSON.stringify({ error: "Missing fileSource" }));
+        return;
+      }
+
+      const buffer = Buffer.from(fileSource, "base64");
+
+      const processResult = await processFile({
+        fileName: "uploaded-file",
+        mimeType: mimeType || "image/jpeg",
+        buffer: buffer,
+        options: {
+          base64Data: fileSource,
+          skipOCR: false,
+        },
+      });
+
+      const classification = await classifyMaterial(
+        processResult,
+        "uploaded-file"
+      );
+
+      res.setHeader("Content-Type", "application/json");
+      res.end(
+        JSON.stringify({
+          success: true,
+          data: classification,
+        })
+      );
+    } catch (error) {
+      console.error("[materials/classify error]", error);
+      res.statusCode = 500;
+      res.end(
+        JSON.stringify({
+          error: formatErrorMessage(error),
+        })
+      );
+    }
+    return;
+  }
+
+  // 材料 Schema 查询 API
+  if (resource === "materials" && id && id !== "classify") {
+    if (req.method === "GET") {
+      try {
+        const materials = readData("claims-materials");
+        const material = materials.find((m) => m.id === id);
+
+        if (!material) {
+          res.statusCode = 404;
+          res.end(JSON.stringify({ error: "Material not found" }));
+          return;
+        }
+
+        res.setHeader("Content-Type", "application/json");
+        res.end(
+          JSON.stringify({
+            success: true,
+            data: {
+              materialId: material.id,
+              materialName: material.name,
+              category: material.category,
+              extractionConfig: material.extractionConfig || null,
+            },
+          }),
+        );
+      } catch (error) {
+        console.error("[materials/schema error]", error);
+        res.statusCode = 500;
+        res.end(JSON.stringify({ error: formatErrorMessage(error) }));
+      }
+      return;
+    }
   }
 
   if (!allowedResources.includes(resource)) {

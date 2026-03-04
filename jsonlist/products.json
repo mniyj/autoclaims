@@ -291,15 +291,8 @@
           "placeholder": "请选择事故发生日期",
           "validation": {
             "rule": "lte_today_and_gte_policy_start",
-            "error_msg": "事故日期必须在保单有效期内且不晚于今天"
+            "error_msg": "不晚于今天且不早于保单生效日"
           }
-        },
-        {
-          "field_id": "accident_time",
-          "label": "事故时间",
-          "type": "time",
-          "required": false,
-          "placeholder": "请选择事故发生时间（可选）"
         },
         {
           "field_id": "accident_location",
@@ -424,7 +417,7 @@
         }
       ]
     },
-    "intakeConfigUpdatedAt": "2026-03-03T09:36:08.525Z",
+    "intakeConfigUpdatedAt": "2026-03-03T13:08:21.166Z",
     "intakeConfigOperator": "admin",
     "selectedResponsibilities": [
       {

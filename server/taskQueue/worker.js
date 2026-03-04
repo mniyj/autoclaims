@@ -143,9 +143,20 @@ export async function processFileWithRetry(taskId, file, fileIndex, retryCount =
       });
       console.log(`[Worker] processFile completed for ${file.fileName}, result:`, result.parseStatus);
 
-      console.log(`[Worker] Calling classifyMaterial for ${file.fileName}`);
-      const classification = await classifyMaterial(result, file.fileName);
-      console.log(`[Worker] classifyMaterial completed for ${file.fileName}:`, classification.materialName);
+      // 优先使用前端传来的分类结果
+      let classification = file.classification;
+      if (!classification || classification.materialId === 'unknown') {
+        console.log(`[Worker] Calling classifyMaterial for ${file.fileName}`);
+        classification = await classifyMaterial(result, file.fileName);
+        console.log(`[Worker] classifyMaterial completed for ${file.fileName}:`, classification.materialName);
+      } else {
+        console.log(`[Worker] Using frontend classification for ${file.fileName}:`, classification.materialName);
+        // 添加来源标记
+        classification = {
+          ...classification,
+          source: 'ai',
+        };
+      }
 
       return {
         ...result,

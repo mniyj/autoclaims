@@ -409,5 +409,431 @@
     ],
     "selectedAccidentCauseId": "交通事故",
     "requiredMaterials": []
+  },
+  {
+    "id": "CLM329746",
+    "reportNumber": "R20260303130849JCNY",
+    "reporter": "1",
+    "reportTime": "3/3/2026, 9:08:49 PM",
+    "accidentTime": "2026-03-03",
+    "accidentReason": "交通事故",
+    "accidentLocation": "上海",
+    "productCode": "zhongan2026PAC814",
+    "productName": "无忧保综合意外险(2022升级版)",
+    "policyNumber": "PM157CG240579335929704",
+    "status": "已报案",
+    "operator": "1",
+    "claimAmount": 0,
+    "intakeFormData": {
+      "accident_date": "2026-03-03",
+      "accident_time": "21:08",
+      "accident_location": "上海",
+      "accident_description": "车祸",
+      "accident_reason": "交通事故",
+      "claim_item": [
+        "门诊费",
+        "住院费"
+      ],
+      "claim_amount": "1000"
+    },
+    "selectedClaimItems": [
+      "门诊费",
+      "住院费"
+    ],
+    "selectedAccidentCauseId": "交通事故",
+    "requiredMaterials": []
+  },
+  {
+    "id": "CLM908110",
+    "reportNumber": "R202603031425086M92",
+    "reporter": "陈",
+    "reportTime": "3/3/2026, 10:25:08 PM",
+    "accidentTime": "2026-03-03",
+    "accidentReason": "交通事故",
+    "accidentLocation": "上海",
+    "productCode": "zhongan2026PAC814",
+    "productName": "无忧保综合意外险(2022升级版)",
+    "policyNumber": "PM157CG240579335929704",
+    "policyholder": "杨三",
+    "insured": "杨霁",
+    "status": "已报案",
+    "operator": "陈",
+    "claimAmount": 1000,
+    "intakeFormData": {
+      "accident_date": "2026-03-03",
+      "accident_location": "上海",
+      "accident_description": "车祸",
+      "accident_reason": "交通事故",
+      "claim_item": [
+        "门诊费",
+        "住院费"
+      ],
+      "claim_amount": "1000"
+    },
+    "selectedClaimItems": [
+      "门诊费",
+      "住院费"
+    ],
+    "selectedAccidentCauseId": "交通事故",
+    "requiredMaterials": [],
+    "fileCategories": []
+  },
+  {
+    "id": "CLM369820",
+    "reportNumber": "R20260303152249RA1S",
+    "reporter": "刘",
+    "reportTime": "3/3/2026, 11:22:49 PM",
+    "accidentTime": "2026-03-03",
+    "accidentReason": "交通事故",
+    "accidentLocation": "1",
+    "productCode": "zhongan2026PAC814",
+    "productName": "无忧保综合意外险(2022升级版)",
+    "policyNumber": "PM157CG240579335929704",
+    "policyholder": "杨三",
+    "insured": "杨霁",
+    "status": "已报案",
+    "operator": "刘",
+    "claimAmount": "111.1111",
+    "intakeFormData": {
+      "accident_date": "2026-03-03",
+      "accident_location": "1",
+      "accident_description": "1",
+      "accident_reason": "交通事故",
+      "claim_item": [
+        "门诊费",
+        "住院费"
+      ],
+      "claim_amount": "111.1111"
+    },
+    "selectedClaimItems": [
+      "门诊费",
+      "住院费"
+    ],
+    "selectedAccidentCauseId": "交通事故",
+    "requiredMaterials": [],
+    "fileCategories": []
+  },
+  {
+    "id": "CLM727422",
+    "reportNumber": "R20260303172527PG05",
+    "reporter": "liu",
+    "reportTime": "3/4/2026, 1:25:27 AM",
+    "accidentTime": "2026-03-02",
+    "accidentReason": "交通事故",
+    "accidentLocation": "1",
+    "productCode": "zhongan2026PAC814",
+    "productName": "无忧保综合意外险(2022升级版)",
+    "policyNumber": "PM157CG240579335929704",
+    "policyholder": "杨三",
+    "insured": "杨霁",
+    "status": "已报案",
+    "operator": "liu",
+    "claimAmount": "11.11111",
+    "intakeFormData": {
+      "accident_date": "2026-03-02",
+      "accident_location": "1",
+      "accident_description": "1",
+      "accident_reason": "交通事故",
+      "claim_item": [
+        "门诊费",
+        "住院费"
+      ],
+      "claim_amount": "11.11111"
+    },
+    "selectedClaimItems": [
+      "门诊费",
+      "住院费"
+    ],
+    "selectedAccidentCauseId": "交通事故",
+    "requiredMaterials": [],
+    "fileCategories": []
+  },
+  {
+    "id": "CLM371044",
+    "reportNumber": "R2026030402293165XS",
+    "reporter": "文件上传测试",
+    "reportTime": "3/4/2026, 10:29:31 AM",
+    "accidentTime": "2026-03-04",
+    "accidentReason": "交通事故",
+    "accidentLocation": "上海",
+    "productCode": "zhongan2026PAC814",
+    "productName": "无忧保综合意外险(2022升级版)",
+    "policyNumber": "PM157CG240579335929704",
+    "policyholder": "杨三",
+    "insured": "杨霁",
+    "status": "已报案",
+    "operator": "文件上传测试",
+    "claimAmount": "1000",
+    "intakeFormData": {
+      "accident_date": "2026-03-04",
+      "accident_location": "上海",
+      "accident_description": "测试文件上传",
+      "accident_reason": "交通事故",
+      "claim_item": [
+        "门诊费"
+      ],
+      "claim_amount": "1000"
+    },
+    "selectedClaimItems": [
+      "门诊费"
+    ],
+    "selectedAccidentCauseId": "交通事故",
+    "requiredMaterials": [],
+    "fileCategories": []
+  },
+  {
+    "id": "CLM386944",
+    "reportNumber": "R20260304024626GSLS",
+    "reporter": "测试文件上传",
+    "reportTime": "3/4/2026, 10:46:26 AM",
+    "accidentTime": "2026-03-11",
+    "accidentReason": "交通事故",
+    "accidentLocation": "测试文件上传",
+    "productCode": "zhongan2026PAC814",
+    "productName": "无忧保综合意外险(2022升级版)",
+    "policyNumber": "PM157CG240579335929704",
+    "policyholder": "杨三",
+    "insured": "杨霁",
+    "status": "已报案",
+    "operator": "测试文件上传",
+    "claimAmount": "1000",
+    "intakeFormData": {
+      "accident_date": "2026-03-11",
+      "accident_location": "测试文件上传",
+      "accident_description": "测试文件上传",
+      "accident_reason": "交通事故",
+      "claim_item": [
+        "门诊费"
+      ],
+      "claim_amount": "1000"
+    },
+    "selectedClaimItems": [
+      "门诊费"
+    ],
+    "selectedAccidentCauseId": "交通事故",
+    "requiredMaterials": [],
+    "fileCategories": []
+  },
+  {
+    "id": "CLM132887",
+    "reportNumber": "R20260304033212RY76",
+    "reporter": "测试文件上传",
+    "reportTime": "3/4/2026, 11:32:12 AM",
+    "accidentTime": "2026-03-03",
+    "accidentReason": "交通事故",
+    "accidentLocation": "测试文件上传",
+    "productCode": "zhongan2026PAC814",
+    "productName": "无忧保综合意外险(2022升级版)",
+    "policyNumber": "PM157CG240579335929704",
+    "policyholder": "杨三",
+    "insured": "杨霁",
+    "status": "已报案",
+    "operator": "测试文件上传",
+    "claimAmount": "1000",
+    "intakeFormData": {
+      "accident_date": "2026-03-03",
+      "accident_location": "测试文件上传",
+      "accident_description": "测试文件上传",
+      "accident_reason": "交通事故",
+      "claim_item": [
+        "门诊费"
+      ],
+      "claim_amount": "1000"
+    },
+    "selectedClaimItems": [
+      "门诊费"
+    ],
+    "selectedAccidentCauseId": "交通事故",
+    "requiredMaterials": [],
+    "fileCategories": []
+  },
+  {
+    "id": "CLM912131",
+    "reportNumber": "R20260304063152MMU4",
+    "reporter": "测试",
+    "reportTime": "3/4/2026, 2:31:52 PM",
+    "accidentTime": "2026-03-31",
+    "accidentReason": "交通事故",
+    "accidentLocation": "测试",
+    "productCode": "zhongan2026PAC814",
+    "productName": "无忧保综合意外险(2022升级版)",
+    "policyNumber": "PM157CG240579335929704",
+    "policyholder": "杨三",
+    "insured": "杨霁",
+    "status": "已报案",
+    "operator": "测试",
+    "claimAmount": "100",
+    "intakeFormData": {
+      "accident_date": "2026-03-31",
+      "accident_location": "测试",
+      "accident_description": "测试",
+      "accident_reason": "交通事故",
+      "claim_item": [
+        "门诊费",
+        "住院费"
+      ],
+      "claim_amount": "100"
+    },
+    "selectedClaimItems": [
+      "门诊费",
+      "住院费"
+    ],
+    "selectedAccidentCauseId": "交通事故",
+    "requiredMaterials": [],
+    "fileCategories": []
+  },
+  {
+    "id": "CLM370476",
+    "reportNumber": "R20260304063930TQ42",
+    "reporter": "1",
+    "reportTime": "3/4/2026, 2:39:30 PM",
+    "accidentTime": "2026-03-03",
+    "accidentReason": "交通事故",
+    "accidentLocation": "11",
+    "productCode": "zhongan2026PAC814",
+    "productName": "无忧保综合意外险(2022升级版)",
+    "policyNumber": "PM157CG240579335929704",
+    "policyholder": "杨三",
+    "insured": "杨霁",
+    "status": "已报案",
+    "operator": "1",
+    "claimAmount": "1",
+    "intakeFormData": {
+      "accident_date": "2026-03-03",
+      "accident_location": "11",
+      "accident_description": "1",
+      "accident_reason": "交通事故",
+      "claim_item": [
+        "门诊费"
+      ],
+      "claim_amount": "1"
+    },
+    "selectedClaimItems": [
+      "门诊费"
+    ],
+    "selectedAccidentCauseId": "交通事故",
+    "requiredMaterials": [],
+    "fileCategories": []
+  },
+  {
+    "id": "CLM111230",
+    "reportNumber": "R202603040651519F7J",
+    "reporter": "1",
+    "reportTime": "3/4/2026, 2:51:51 PM",
+    "accidentTime": "2026-03-03",
+    "accidentReason": "交通事故",
+    "accidentLocation": "1",
+    "productCode": "zhongan2026PAC814",
+    "productName": "无忧保综合意外险(2022升级版)",
+    "policyNumber": "PM157CG240579335929704",
+    "policyholder": "杨三",
+    "insured": "杨霁",
+    "status": "已报案",
+    "operator": "1",
+    "claimAmount": "1",
+    "intakeFormData": {
+      "accident_date": "2026-03-03",
+      "accident_location": "1",
+      "accident_description": "1",
+      "accident_reason": "交通事故",
+      "claim_item": [
+        "门诊费"
+      ],
+      "claim_amount": "1"
+    },
+    "selectedClaimItems": [
+      "门诊费"
+    ],
+    "selectedAccidentCauseId": "交通事故",
+    "requiredMaterials": [],
+    "fileCategories": []
+  },
+  {
+    "id": "CLM685408",
+    "reportNumber": "R20260304070125NR1O",
+    "reporter": "3",
+    "reportTime": "3/4/2026, 3:01:25 PM",
+    "accidentTime": "2026-03-03",
+    "accidentReason": "交通事故",
+    "accidentLocation": "3",
+    "productCode": "zhongan2026PAC814",
+    "productName": "无忧保综合意外险(2022升级版)",
+    "policyNumber": "PM157CG240579335929704",
+    "policyholder": "杨三",
+    "insured": "杨霁",
+    "status": "已报案",
+    "operator": "3",
+    "claimAmount": "3",
+    "intakeFormData": {
+      "accident_date": "2026-03-03",
+      "accident_location": "3",
+      "accident_description": "3",
+      "accident_reason": "交通事故",
+      "claim_item": [
+        "门诊费"
+      ],
+      "claim_amount": "3"
+    },
+    "selectedClaimItems": [
+      "门诊费"
+    ],
+    "selectedAccidentCauseId": "交通事故",
+    "requiredMaterials": [],
+    "fileCategories": [
+      {
+        "name": "交通事故责任认定书",
+        "files": [
+          {
+            "name": "责任认定书.jpg",
+            "url": "http://drools-purplespark.oss-cn-beijing.aliyuncs.com/claims/1772607740101.jpg?OSSAccessKeyId=LTAI5tFnto3xoZD6Km6GRK76&Expires=1772611347&Signature=%2FakVdAQQSS80b%2BQ6DicYlYJ4oOY%3D",
+            "ossKey": "claims/1772607740101.jpg"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "CLM973980",
+    "reportNumber": "R20260304154253JXP0",
+    "reporter": "1",
+    "reportTime": "3/4/2026, 11:42:53 PM",
+    "accidentTime": "2026-03-04",
+    "accidentReason": "交通事故",
+    "accidentLocation": "1",
+    "productCode": "zhongan2026PAC814",
+    "productName": "无忧保综合意外险(2022升级版)",
+    "policyNumber": "PM157CG240579335929704",
+    "policyholder": "杨三",
+    "insured": "杨霁",
+    "status": "已报案",
+    "operator": "1",
+    "claimAmount": "1",
+    "intakeFormData": {
+      "accident_date": "2026-03-04",
+      "claim_item": [
+        "门诊费"
+      ],
+      "accident_reason": "交通事故",
+      "accident_description": "1",
+      "accident_location": "1",
+      "claim_amount": "1"
+    },
+    "selectedClaimItems": [
+      "门诊费"
+    ],
+    "selectedAccidentCauseId": "交通事故",
+    "requiredMaterials": [],
+    "fileCategories": [
+      {
+        "name": "医疗费发票",
+        "files": [
+          {
+            "name": "微信图片_2025-07-02_173630_395.jpg",
+            "url": "http://drools-purplespark.oss-cn-beijing.aliyuncs.com/claims/1772639128528.jpg?OSSAccessKeyId=LTAI5tFnto3xoZD6Km6GRK76&Expires=1772642731&Signature=pXjGOn531SaaF8nZBm8ken22l9o%3D",
+            "ossKey": "claims/1772639128528.jpg"
+          }
+        ]
+      }
+    ]
   }
 ]

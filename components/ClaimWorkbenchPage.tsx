@@ -318,7 +318,7 @@ const ClaimWorkbenchPage: React.FC<ClaimWorkbenchPageProps> = ({ onViewClaim }) 
                         </div>
                         <div className="text-right">
                           <p className="text-sm text-gray-500">索赔金额</p>
-                          <p className="text-xl font-bold text-gray-900">¥{claim.claimAmount?.toLocaleString()}</p>
+                          <p className="text-xl font-bold text-gray-900">¥{typeof claim.claimAmount === 'number' ? claim.claimAmount.toLocaleString() : Number(claim.claimAmount || 0).toLocaleString()}</p>
                         </div>
                       </div>
 

@@ -1,0 +1,12 @@
+/* Base styles */
+#root {
+  min-height: 100vh;
+}
+
+/* Loading state */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}

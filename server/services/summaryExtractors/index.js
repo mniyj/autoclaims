@@ -254,8 +254,8 @@ async function extractSummaryWithGemini({ docId, summaryType, extractedText, bas
   }
 
   const modelCandidates = hasImage
-    ? ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.0-flash"]
-    : ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.0-flash"];
+    ? ["gemini-2.5-flash", "gemini-2.5-pro"]
+    : ["gemini-2.5-flash", "gemini-2.5-pro"];
 
   let lastError;
   for (const model of modelCandidates) {

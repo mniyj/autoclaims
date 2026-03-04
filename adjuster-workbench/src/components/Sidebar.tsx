@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu } from 'antd';
+import { Layout, Menu } from 'antd';
 import {
   TeamOutlined,
   MessageOutlined,

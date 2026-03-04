@@ -91,7 +91,7 @@ export const REGULATORY_OPTIONS = [
       { code: "17200", name: " 商业险" },
     ],
   },
-];
+ ] as any;
 
 export const MOCK_RESPONSIBILITIES: ResponsibilityItem[] = [
   {
@@ -5220,6 +5220,32 @@ export const MOCK_CLAIMS_MATERIALS: ClaimsMaterial[] = [
     ),
     aiAuditPrompt:
       "请从身份证正面提取姓名、性别、民族、出生日期、住址和身份证号码。校验要点：1）身份证号码必须为18位，校验最后一位校验码是否正确；2）比对姓名是否与保单上的被保险人/受益人一致；3）检查出生日期与身份证号中的出生日期编码是否一致。若有信息模糊无法识别，请标注具体字段。",
+    category: "identity",
+    processingStrategy: "structured_doc",
+    extractionConfig: {
+      jsonSchema: JSON.stringify(
+        {
+          type: "object",
+          properties: {
+            name: { type: "string", description: "姓名" },
+            gender: { type: "string", description: "性别" },
+            ethnicity: { type: "string", description: "民族" },
+            birth_date: {
+              type: "string",
+              format: "date",
+              description: "出生日期",
+            },
+            address: { type: "string", description: "住址" },
+            id_number: { type: "string", description: "身份证号码" },
+          },
+          required: ["name", "id_number"],
+        },
+        null,
+        2,
+      ),
+      aiAuditPrompt:
+        "请从身份证正面提取姓名、性别、民族、出生日期、住址和身份证号码。校验要点：1）身份证号码必须为18位，校验最后一位校验码是否正确；2）比对姓名是否与保单上的被保险人/受益人一致；3）检查出生日期与身份证号中的出生日期编码是否一致。若有信息模糊无法识别，请标注具体字段。",
+    },
   },
   {
     id: "mat-2",

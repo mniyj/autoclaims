@@ -1,6 +1,7 @@
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import http from 'http';
 import { handleApiRequest } from './server/apiHandler.js';
 import { startScheduler, stopScheduler } from './server/taskQueue/scheduler.js';
 
@@ -73,11 +74,23 @@ if (BASE_PATH !== '/') {
    });
  }
 
-app.listen(PORT, '0.0.0.0', () => {
+// 创建 HTTP 服务器
+const server = http.createServer(app);
+
+// 初始化语音 WebSocket 服务（动态加载，避免 TS 文件未编译时崩溃）
+import('./server/voice/VoiceGateway.js').then(({ VoiceGateway }) => {
+  new VoiceGateway(server);
+  console.log('[Server] 语音 WebSocket 服务已初始化');
+}).catch(err => {
+  console.warn('[Server] 语音 WebSocket 服务未启动:', err.message);
+});
+
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`Server is running on http://0.0.0.0:${PORT}${BASE_PATH !== '/' ? BASE_PATH : ''}`);
   console.log(`Environment: Production`);
   console.log(`Serving static files from: ${distPath}`);
   console.log(`API routes: /api/* → JSON file storage`);
+  console.log(`Voice WebSocket: ws://localhost:${PORT}/voice/ws/:sessionId`);
   
   startScheduler();
 });

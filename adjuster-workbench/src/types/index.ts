@@ -12,7 +12,7 @@ export interface Adjuster {
   feishuId?: string;
   feishuEmail?: string;
   department: string;
-  status: 'active' | 'inactive' | 'suspended';
+  status: "active" | "inactive" | "suspended";
   createdAt: string;
   lastLoginAt?: string;
   permissions: string[];
@@ -26,7 +26,7 @@ export interface Conversation {
   claimId: string;
   userName: string;
   userAvatar?: string;
-  status: 'active' | 'paused' 'closed';
+  status: "active" | "paused" | "closed";
   unreadCount: number;
   lastMessage: string;
   lastMessageTime: Date;
@@ -40,7 +40,7 @@ export interface Conversation {
 export interface ChatMessage {
   id: string;
   conversationId: string;
-  sender: 'user' | 'ai' | 'human';
+  sender: "user" | "ai" | "human";
   senderId: string;
   senderName: string;
   content: string;
@@ -55,7 +55,7 @@ export interface ChatAttachment {
   id: string;
   name: string;
   url: string;
-  type: 'image' | 'file' | 'video';
+  type: "image" | "file" | "video";
   size?: number;
 }
 
@@ -65,7 +65,7 @@ export interface ChatAttachment {
 export interface AIAuthorizationConfig {
   id: string;
   enabled: boolean;
-  autoReplyLevel: 'full' | 'partial' | 'disabled';
+  autoReplyLevel: "full" | "partial" | "disabled";
   maxConfidence?: number;
   allowedTopics?: string[];
   blockedKeywords?: string[];
@@ -79,9 +79,15 @@ export interface AIAuthorizationConfig {
  */
 export interface EscalationRule {
   id: string;
-  trigger: 'low_confidence' | 'complex_issue' | 'user_request' | 'time_limit' | 'emotion_issue';
-  threshold: number;
-  action: 'notify_human' | 'transfer_to_human' | 'escalate_priority';
+  condition:
+    | "confidence_low"
+    | "manual_request"
+    | "complex_question"
+    | "emotion_abnormal"
+    | "keyword_match";
+  threshold?: number | null;
+  action: "human_intervention" | "pause_ai" | "notify_adjuster";
+  priority?: "high" | "medium" | "low";
 }
 
 /**
@@ -95,7 +101,7 @@ export interface ConversationStats {
   messagesByAdjuster: {
     [adjusterId: string]: {
       conversations: number;
-      messages: number
-    }
+      messages: number;
+    };
   };
 }
