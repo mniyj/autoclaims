@@ -5,6 +5,8 @@ import RuleListTab from './RuleListTab';
 import ExecutionPipelineTab from './ExecutionPipelineTab';
 import OverrideChainsTab from './OverrideChainsTab';
 import FieldDictionaryTab from './FieldDictionaryTab';
+import RulesetFlowCanvas from './RulesetFlowCanvas';
+import type { RulesetFlowNode } from '../../utils/rulesetFlowTransformer';
 
 interface RulesetDetailViewProps {
   ruleset: InsuranceRuleset;
@@ -12,10 +14,11 @@ interface RulesetDetailViewProps {
   onUpdateRuleset: (updated: InsuranceRuleset) => void;
 }
 
-type DetailTab = 'rules' | 'pipeline' | 'chains' | 'dictionary' | 'metadata';
+type DetailTab = 'rules' | 'visualization' | 'pipeline' | 'chains' | 'dictionary' | 'metadata';
 
 const TABS: { id: DetailTab; label: string }[] = [
   { id: 'rules', label: '规则列表' },
+  { id: 'visualization', label: '可视化' },
   { id: 'pipeline', label: '执行管道' },
   { id: 'chains', label: '覆盖链' },
   { id: 'dictionary', label: '字段字典' },
@@ -25,6 +28,9 @@ const TABS: { id: DetailTab; label: string }[] = [
 const RulesetDetailView: React.FC<RulesetDetailViewProps> = ({ ruleset, onBack, onUpdateRuleset }) => {
   const [activeTab, setActiveTab] = useState<DetailTab>('rules');
   const [currentRuleset, setCurrentRuleset] = useState<InsuranceRuleset>(ruleset);
+  const [selectedRule, setSelectedRule] = useState<RulesetRule | null>(null);
+  const [selectedNode, setSelectedNode] = useState<RulesetFlowNode | null>(null);
+  const [showNodePanel, setShowNodePanel] = useState(false);
 
   const handleUpdateRule = (updatedRule: RulesetRule) => {
     const newRules = currentRuleset.rules.map(r => r.rule_id === updatedRule.rule_id ? updatedRule : r);
@@ -52,6 +58,16 @@ const RulesetDetailView: React.FC<RulesetDetailViewProps> = ({ ruleset, onBack, 
     a.download = `${currentRuleset.ruleset_id}_v${currentRuleset.metadata.version}.json`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleNodeClick = (node: RulesetFlowNode) => {
+    setSelectedNode(node);
+    setShowNodePanel(true);
+  };
+
+  const handleCloseNodePanel = () => {
+    setShowNodePanel(false);
+    setSelectedNode(null);
   };
 
   return (
@@ -93,9 +109,12 @@ const RulesetDetailView: React.FC<RulesetDetailViewProps> = ({ ruleset, onBack, 
               }`}
             >
               {tab.label}
-              {tab.id === 'rules' && (
-                <span className="ml-1.5 px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs">{currentRuleset.rules.length}</span>
-              )}
+        {tab.id === 'rules' && (
+          <span className="ml-1.5 px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs">{currentRuleset.rules.length}</span>
+        )}
+        {tab.id === 'visualization' && (
+          <span className="ml-1.5 px-1.5 py-0.5 bg-purple-100 text-purple-600 rounded-full text-xs">新</span>
+        )}
               {tab.id === 'chains' && currentRuleset.override_chains.length > 0 && (
                 <span className="ml-1.5 px-1.5 py-0.5 bg-orange-100 text-orange-600 rounded-full text-xs">{currentRuleset.override_chains.length}</span>
               )}
@@ -112,7 +131,99 @@ const RulesetDetailView: React.FC<RulesetDetailViewProps> = ({ ruleset, onBack, 
             fieldDictionary={currentRuleset.field_dictionary}
             onUpdateRule={handleUpdateRule}
             onToggleStatus={handleToggleStatus}
+            onSelectRule={(rule) => {
+              setSelectedRule(rule);
+              setActiveTab('visualization');
+            }}
           />
+        )}
+
+        {activeTab === 'visualization' && (
+          <div className="flex h-[600px]">
+            <div className="flex-1">
+              {selectedRule ? (
+                <RulesetFlowCanvas
+                  rule={selectedRule}
+                  onNodeClick={handleNodeClick}
+                  className="h-full"
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                  <div className="text-center text-gray-500">
+                    <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                    </svg>
+                    <p className="text-lg font-medium">选择规则查看可视化</p>
+                    <p className="text-sm mt-1">从"规则列表"中选择一个规则以查看决策树</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Node detail panel */}
+            {showNodePanel && selectedNode && (
+              <div className="w-80 ml-4 bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-gray-50">
+                  <h3 className="text-sm font-semibold text-gray-900">节点详情</h3>
+                  <button
+                    onClick={handleCloseNodePanel}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <div className="p-4 space-y-4">
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">类型</p>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      selectedNode.type === 'logicGate' ? 'bg-yellow-100 text-yellow-800' :
+                      selectedNode.type === 'condition' ? 'bg-blue-100 text-blue-800' :
+                      'bg-green-100 text-green-800'
+                    }`}>
+                      {selectedNode.type === 'logicGate' ? '逻辑门' :
+                       selectedNode.type === 'condition' ? '条件' : '动作'}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">标签</p>
+                    <p className="text-sm font-medium text-gray-900">{selectedNode.data.label}</p>
+                  </div>
+                  {selectedNode.data.description && (
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">描述</p>
+                      <p className="text-sm text-gray-700">{selectedNode.data.description}</p>
+                    </div>
+                  )}
+                  {selectedNode.data.field && (
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">字段</p>
+                      <p className="text-sm font-mono text-gray-700 bg-gray-100 px-2 py-1 rounded">{selectedNode.data.field}</p>
+                    </div>
+                  )}
+                  {selectedNode.data.operator && (
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">操作符</p>
+                      <p className="text-sm font-medium text-gray-900">{selectedNode.data.operator}</p>
+                    </div>
+                  )}
+                  {selectedNode.data.value !== undefined && (
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">值</p>
+                      <p className="text-sm font-mono text-gray-700 bg-gray-100 px-2 py-1 rounded">{String(selectedNode.data.value)}</p>
+                    </div>
+                  )}
+                  {selectedNode.data.action && (
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">动作</p>
+                      <p className="text-sm font-medium text-gray-900">{selectedNode.data.action}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         )}
 
         {activeTab === 'pipeline' && (
