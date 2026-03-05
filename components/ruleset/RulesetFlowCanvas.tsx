@@ -1,11 +1,9 @@
-import React, { useMemo, useCallback, useState } from 'react';
+import React, { useMemo, useCallback, useState, useEffect } from 'react';
 import {
   ReactFlow,
   Background,
   Controls,
   MiniMap,
-  useNodesState,
-  useEdgesState,
   type Node,
   type Edge,
   Panel,
@@ -53,21 +51,46 @@ export default function RulesetFlowCanvas({
 }: RulesetFlowCanvasProps) {
   const [viewMode, setViewMode] = useState<'overview' | 'detail'>('overview');
   const [selectedRule, setSelectedRule] = useState<RulesetRule | null>(null);
+  const [nodes, setNodes] = useState<Node<FlowNodeData>[]>([]);
+  const [edges, setEdges] = useState<Edge[]>([]);
 
-  const { initialNodes, initialEdges } = useMemo(() => {
+  useEffect(() => {
+    let result;
     if (viewMode === 'detail' && selectedRule) {
-      return ruleToDetailedFlowElements(selectedRule);
+      result = ruleToDetailedFlowElements(selectedRule);
+    } else {
+      result = rulesetToFlowElements(ruleset);
     }
-    return rulesetToFlowElements(ruleset);
+    setNodes(result.nodes);
+    setEdges(result.edges);
   }, [ruleset, viewMode, selectedRule]);
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const onNodesChange = useCallback((changes: any) => {
+    setNodes((nds) => {
+      let newNodes = [...nds];
+      changes.forEach((change: any) => {
+        if (change.type === 'position' && change.position) {
+          const node = newNodes.find((n) => n.id === change.id);
+          if (node) {
+            node.position = change.position;
+          }
+        }
+      });
+      return newNodes;
+    });
+  }, []);
 
-  React.useEffect(() => {
-    setNodes(initialNodes);
-    setEdges(initialEdges);
-  }, [initialNodes, initialEdges, setNodes, setEdges]);
+  const onEdgesChange = useCallback((changes: any) => {
+    setEdges((eds) => {
+      let newEdges = [...eds];
+      changes.forEach((change: any) => {
+        if (change.type === 'remove') {
+          newEdges = newEdges.filter((e) => e.id !== change.id);
+        }
+      });
+      return newEdges;
+    });
+  }, []);
 
   const handleNodeClick = useCallback(
     (_: React.MouseEvent, node: Node<FlowNodeData>) => {
@@ -142,7 +165,6 @@ export default function RulesetFlowCanvas({
             className="bg-white border border-gray-200 rounded-lg shadow-md"
           />
           
-          {/* View mode toggle */}
           {viewMode === 'detail' && (
             <Panel position="top-center" className="bg-white/90 px-4 py-2 rounded-lg shadow-md border border-gray-200">
               <div className="flex items-center space-x-3">
@@ -159,7 +181,6 @@ export default function RulesetFlowCanvas({
             </Panel>
           )}
           
-          {/* Legend */}
           <Panel position="top-left" className="bg-white/90 p-3 rounded-lg shadow-md border border-gray-200">
             <div className="text-xs text-gray-700 space-y-2">
               <p className="font-medium mb-2">图例</p>
@@ -209,7 +230,6 @@ export default function RulesetFlowCanvas({
             </div>
           </Panel>
           
-          {/* Stats */}
           <Panel position="top-right" className="bg-white/90 px-4 py-3 rounded-lg shadow-md border border-gray-200">
             <div className="text-xs text-gray-600 space-y-1">
               <p className="font-medium text-gray-900">{ruleset.policy_info.product_name}</p>

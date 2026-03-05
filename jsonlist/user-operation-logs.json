@@ -11738,5 +11738,1235 @@
     "duration": null,
     "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
     "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260305075443-158wsw",
+    "timestamp": "2026-03-05T07:54:43.190Z",
+    "userName": "系统用户",
+    "operationType": "VIEW_CLAIM_DETAIL",
+    "operationLabel": "查看赔案详情",
+    "claimId": "CLM973980",
+    "claimReportNumber": "R20260304154253JXP0",
+    "currentStatus": "已报案",
+    "inputData": null,
+    "outputData": null,
+    "success": true,
+    "duration": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260305075443-rzk5ri",
+    "timestamp": "2026-03-05T07:54:43.351Z",
+    "userName": "系统用户",
+    "operationType": "VIEW_CLAIM_DETAIL",
+    "operationLabel": "查看赔案详情",
+    "claimId": "CLM973980",
+    "claimReportNumber": "R20260304154253JXP0",
+    "currentStatus": "已报案",
+    "inputData": null,
+    "outputData": null,
+    "success": true,
+    "duration": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260305075553-wn3xe5",
+    "timestamp": "2026-03-05T07:55:53.586Z",
+    "userName": "系统用户",
+    "operationType": "UPLOAD_FILE",
+    "operationLabel": "导入理赔材料 (1个成功)",
+    "claimId": "CLM973980",
+    "claimReportNumber": "R20260304154253JXP0",
+    "currentStatus": "已报案",
+    "inputData": {
+      "totalFiles": 1,
+      "successCount": 1,
+      "failCount": 0
+    },
+    "outputData": {
+      "files": [
+        {
+          "documentId": "task-c5b899cd-f047-49ab-b84e-02f80ae25ff5-0",
+          "fileName": "WechatIMG29.jpg",
+          "fileType": "image/jpeg",
+          "status": "completed",
+          "classification": {
+            "materialId": "unknown",
+            "materialName": "未识别",
+            "confidence": 0
+          },
+          "extractedData": {},
+          "errorMessage": null,
+          "ossUrl": null
+        }
+      ],
+      "completeness": {
+        "isComplete": true,
+        "score": 1,
+        "requiredMaterials": [],
+        "providedMaterials": [],
+        "missingMaterials": [],
+        "warnings": []
+      },
+      "classificationSummary": {
+        "未识别": 1
+      },
+      "statusSummary": {
+        "completed": 1,
+        "failed": 0,
+        "processing": 0
+      }
+    },
+    "success": true,
+    "duration": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260305075553-ylbquk",
+    "timestamp": "2026-03-05T07:55:53.862Z",
+    "userName": "系统用户",
+    "operationType": "UPLOAD_FILE",
+    "operationLabel": "导入理赔材料 (1个成功)",
+    "claimId": "CLM973980",
+    "claimReportNumber": "R20260304154253JXP0",
+    "currentStatus": "已报案",
+    "inputData": {
+      "totalFiles": 1,
+      "successCount": 1,
+      "failCount": 0
+    },
+    "outputData": {
+      "files": [
+        {
+          "documentId": "task-c5b899cd-f047-49ab-b84e-02f80ae25ff5-0",
+          "fileName": "WechatIMG29.jpg",
+          "fileType": "image/jpeg",
+          "status": "completed",
+          "classification": {
+            "materialId": "unknown",
+            "materialName": "未识别",
+            "confidence": 0
+          },
+          "extractedData": {},
+          "errorMessage": null,
+          "ossUrl": null
+        }
+      ],
+      "completeness": {
+        "isComplete": true,
+        "score": 1,
+        "requiredMaterials": [],
+        "providedMaterials": [],
+        "missingMaterials": [],
+        "warnings": []
+      },
+      "classificationSummary": {
+        "未识别": 1
+      },
+      "statusSummary": {
+        "completed": 1,
+        "failed": 0,
+        "processing": 0
+      }
+    },
+    "success": true,
+    "duration": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260305075554-nbuad3",
+    "timestamp": "2026-03-05T07:55:54.072Z",
+    "userName": "系统用户",
+    "operationType": "UPLOAD_FILE",
+    "operationLabel": "导入理赔材料 (1个成功)",
+    "claimId": "CLM973980",
+    "claimReportNumber": "R20260304154253JXP0",
+    "currentStatus": "已报案",
+    "inputData": {
+      "totalFiles": 1,
+      "successCount": 1,
+      "failCount": 0
+    },
+    "outputData": {
+      "files": [
+        {
+          "documentId": "task-c5b899cd-f047-49ab-b84e-02f80ae25ff5-0",
+          "fileName": "WechatIMG29.jpg",
+          "fileType": "image/jpeg",
+          "status": "completed",
+          "classification": {
+            "materialId": "unknown",
+            "materialName": "未识别",
+            "confidence": 0
+          },
+          "extractedData": {},
+          "errorMessage": null,
+          "ossUrl": null
+        }
+      ],
+      "completeness": {
+        "isComplete": true,
+        "score": 1,
+        "requiredMaterials": [],
+        "providedMaterials": [],
+        "missingMaterials": [],
+        "warnings": []
+      },
+      "classificationSummary": {
+        "未识别": 1
+      },
+      "statusSummary": {
+        "completed": 1,
+        "failed": 0,
+        "processing": 0
+      }
+    },
+    "success": true,
+    "duration": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260305075554-vlsp36",
+    "timestamp": "2026-03-05T07:55:54.165Z",
+    "userName": "系统用户",
+    "operationType": "UPLOAD_FILE",
+    "operationLabel": "导入理赔材料 (1个成功)",
+    "claimId": "CLM973980",
+    "claimReportNumber": "R20260304154253JXP0",
+    "currentStatus": "已报案",
+    "inputData": {
+      "totalFiles": 1,
+      "successCount": 1,
+      "failCount": 0
+    },
+    "outputData": {
+      "files": [
+        {
+          "documentId": "task-c5b899cd-f047-49ab-b84e-02f80ae25ff5-0",
+          "fileName": "WechatIMG29.jpg",
+          "fileType": "image/jpeg",
+          "status": "completed",
+          "classification": {
+            "materialId": "unknown",
+            "materialName": "未识别",
+            "confidence": 0
+          },
+          "extractedData": {},
+          "errorMessage": null,
+          "ossUrl": null
+        }
+      ],
+      "completeness": {
+        "isComplete": true,
+        "score": 1,
+        "requiredMaterials": [],
+        "providedMaterials": [],
+        "missingMaterials": [],
+        "warnings": []
+      },
+      "classificationSummary": {
+        "未识别": 1
+      },
+      "statusSummary": {
+        "completed": 1,
+        "failed": 0,
+        "processing": 0
+      }
+    },
+    "success": true,
+    "duration": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260305075554-1gg9xk",
+    "timestamp": "2026-03-05T07:55:54.328Z",
+    "userName": "系统用户",
+    "operationType": "UPLOAD_FILE",
+    "operationLabel": "导入理赔材料 (1个成功)",
+    "claimId": "CLM973980",
+    "claimReportNumber": "R20260304154253JXP0",
+    "currentStatus": "已报案",
+    "inputData": {
+      "totalFiles": 1,
+      "successCount": 1,
+      "failCount": 0
+    },
+    "outputData": {
+      "files": [
+        {
+          "documentId": "task-c5b899cd-f047-49ab-b84e-02f80ae25ff5-0",
+          "fileName": "WechatIMG29.jpg",
+          "fileType": "image/jpeg",
+          "status": "completed",
+          "classification": {
+            "materialId": "unknown",
+            "materialName": "未识别",
+            "confidence": 0
+          },
+          "extractedData": {},
+          "errorMessage": null,
+          "ossUrl": null
+        }
+      ],
+      "completeness": {
+        "isComplete": true,
+        "score": 1,
+        "requiredMaterials": [],
+        "providedMaterials": [],
+        "missingMaterials": [],
+        "warnings": []
+      },
+      "classificationSummary": {
+        "未识别": 1
+      },
+      "statusSummary": {
+        "completed": 1,
+        "failed": 0,
+        "processing": 0
+      }
+    },
+    "success": true,
+    "duration": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260305075554-29702v",
+    "timestamp": "2026-03-05T07:55:54.446Z",
+    "userName": "系统用户",
+    "operationType": "UPLOAD_FILE",
+    "operationLabel": "导入理赔材料 (1个成功)",
+    "claimId": "CLM973980",
+    "claimReportNumber": "R20260304154253JXP0",
+    "currentStatus": "已报案",
+    "inputData": {
+      "totalFiles": 1,
+      "successCount": 1,
+      "failCount": 0
+    },
+    "outputData": {
+      "files": [
+        {
+          "documentId": "task-c5b899cd-f047-49ab-b84e-02f80ae25ff5-0",
+          "fileName": "WechatIMG29.jpg",
+          "fileType": "image/jpeg",
+          "status": "completed",
+          "classification": {
+            "materialId": "unknown",
+            "materialName": "未识别",
+            "confidence": 0
+          },
+          "extractedData": {},
+          "errorMessage": null,
+          "ossUrl": null
+        }
+      ],
+      "completeness": {
+        "isComplete": true,
+        "score": 1,
+        "requiredMaterials": [],
+        "providedMaterials": [],
+        "missingMaterials": [],
+        "warnings": []
+      },
+      "classificationSummary": {
+        "未识别": 1
+      },
+      "statusSummary": {
+        "completed": 1,
+        "failed": 0,
+        "processing": 0
+      }
+    },
+    "success": true,
+    "duration": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260305075554-gollss",
+    "timestamp": "2026-03-05T07:55:54.531Z",
+    "userName": "系统用户",
+    "operationType": "UPLOAD_FILE",
+    "operationLabel": "导入理赔材料 (1个成功)",
+    "claimId": "CLM973980",
+    "claimReportNumber": "R20260304154253JXP0",
+    "currentStatus": "已报案",
+    "inputData": {
+      "totalFiles": 1,
+      "successCount": 1,
+      "failCount": 0
+    },
+    "outputData": {
+      "files": [
+        {
+          "documentId": "task-c5b899cd-f047-49ab-b84e-02f80ae25ff5-0",
+          "fileName": "WechatIMG29.jpg",
+          "fileType": "image/jpeg",
+          "status": "completed",
+          "classification": {
+            "materialId": "unknown",
+            "materialName": "未识别",
+            "confidence": 0
+          },
+          "extractedData": {},
+          "errorMessage": null,
+          "ossUrl": null
+        }
+      ],
+      "completeness": {
+        "isComplete": true,
+        "score": 1,
+        "requiredMaterials": [],
+        "providedMaterials": [],
+        "missingMaterials": [],
+        "warnings": []
+      },
+      "classificationSummary": {
+        "未识别": 1
+      },
+      "statusSummary": {
+        "completed": 1,
+        "failed": 0,
+        "processing": 0
+      }
+    },
+    "success": true,
+    "duration": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260305075554-c88dql",
+    "timestamp": "2026-03-05T07:55:54.725Z",
+    "userName": "系统用户",
+    "operationType": "UPLOAD_FILE",
+    "operationLabel": "导入理赔材料 (1个成功)",
+    "claimId": "CLM973980",
+    "claimReportNumber": "R20260304154253JXP0",
+    "currentStatus": "已报案",
+    "inputData": {
+      "totalFiles": 1,
+      "successCount": 1,
+      "failCount": 0
+    },
+    "outputData": {
+      "files": [
+        {
+          "documentId": "task-c5b899cd-f047-49ab-b84e-02f80ae25ff5-0",
+          "fileName": "WechatIMG29.jpg",
+          "fileType": "image/jpeg",
+          "status": "completed",
+          "classification": {
+            "materialId": "unknown",
+            "materialName": "未识别",
+            "confidence": 0
+          },
+          "extractedData": {},
+          "errorMessage": null,
+          "ossUrl": null
+        }
+      ],
+      "completeness": {
+        "isComplete": true,
+        "score": 1,
+        "requiredMaterials": [],
+        "providedMaterials": [],
+        "missingMaterials": [],
+        "warnings": []
+      },
+      "classificationSummary": {
+        "未识别": 1
+      },
+      "statusSummary": {
+        "completed": 1,
+        "failed": 0,
+        "processing": 0
+      }
+    },
+    "success": true,
+    "duration": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260305075554-qs8ye5",
+    "timestamp": "2026-03-05T07:55:54.813Z",
+    "userName": "系统用户",
+    "operationType": "UPLOAD_FILE",
+    "operationLabel": "导入理赔材料 (1个成功)",
+    "claimId": "CLM973980",
+    "claimReportNumber": "R20260304154253JXP0",
+    "currentStatus": "已报案",
+    "inputData": {
+      "totalFiles": 1,
+      "successCount": 1,
+      "failCount": 0
+    },
+    "outputData": {
+      "files": [
+        {
+          "documentId": "task-c5b899cd-f047-49ab-b84e-02f80ae25ff5-0",
+          "fileName": "WechatIMG29.jpg",
+          "fileType": "image/jpeg",
+          "status": "completed",
+          "classification": {
+            "materialId": "unknown",
+            "materialName": "未识别",
+            "confidence": 0
+          },
+          "extractedData": {},
+          "errorMessage": null,
+          "ossUrl": null
+        }
+      ],
+      "completeness": {
+        "isComplete": true,
+        "score": 1,
+        "requiredMaterials": [],
+        "providedMaterials": [],
+        "missingMaterials": [],
+        "warnings": []
+      },
+      "classificationSummary": {
+        "未识别": 1
+      },
+      "statusSummary": {
+        "completed": 1,
+        "failed": 0,
+        "processing": 0
+      }
+    },
+    "success": true,
+    "duration": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260305075554-jpkh9x",
+    "timestamp": "2026-03-05T07:55:54.935Z",
+    "userName": "系统用户",
+    "operationType": "UPLOAD_FILE",
+    "operationLabel": "导入理赔材料 (1个成功)",
+    "claimId": "CLM973980",
+    "claimReportNumber": "R20260304154253JXP0",
+    "currentStatus": "已报案",
+    "inputData": {
+      "totalFiles": 1,
+      "successCount": 1,
+      "failCount": 0
+    },
+    "outputData": {
+      "files": [
+        {
+          "documentId": "task-c5b899cd-f047-49ab-b84e-02f80ae25ff5-0",
+          "fileName": "WechatIMG29.jpg",
+          "fileType": "image/jpeg",
+          "status": "completed",
+          "classification": {
+            "materialId": "unknown",
+            "materialName": "未识别",
+            "confidence": 0
+          },
+          "extractedData": {},
+          "errorMessage": null,
+          "ossUrl": null
+        }
+      ],
+      "completeness": {
+        "isComplete": true,
+        "score": 1,
+        "requiredMaterials": [],
+        "providedMaterials": [],
+        "missingMaterials": [],
+        "warnings": []
+      },
+      "classificationSummary": {
+        "未识别": 1
+      },
+      "statusSummary": {
+        "completed": 1,
+        "failed": 0,
+        "processing": 0
+      }
+    },
+    "success": true,
+    "duration": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260305075555-7mvdsh",
+    "timestamp": "2026-03-05T07:55:55.138Z",
+    "userName": "系统用户",
+    "operationType": "UPLOAD_FILE",
+    "operationLabel": "导入理赔材料 (1个成功)",
+    "claimId": "CLM973980",
+    "claimReportNumber": "R20260304154253JXP0",
+    "currentStatus": "已报案",
+    "inputData": {
+      "totalFiles": 1,
+      "successCount": 1,
+      "failCount": 0
+    },
+    "outputData": {
+      "files": [
+        {
+          "documentId": "task-c5b899cd-f047-49ab-b84e-02f80ae25ff5-0",
+          "fileName": "WechatIMG29.jpg",
+          "fileType": "image/jpeg",
+          "status": "completed",
+          "classification": {
+            "materialId": "unknown",
+            "materialName": "未识别",
+            "confidence": 0
+          },
+          "extractedData": {},
+          "errorMessage": null,
+          "ossUrl": null
+        }
+      ],
+      "completeness": {
+        "isComplete": true,
+        "score": 1,
+        "requiredMaterials": [],
+        "providedMaterials": [],
+        "missingMaterials": [],
+        "warnings": []
+      },
+      "classificationSummary": {
+        "未识别": 1
+      },
+      "statusSummary": {
+        "completed": 1,
+        "failed": 0,
+        "processing": 0
+      }
+    },
+    "success": true,
+    "duration": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260305075555-ge100s",
+    "timestamp": "2026-03-05T07:55:55.278Z",
+    "userName": "系统用户",
+    "operationType": "UPLOAD_FILE",
+    "operationLabel": "导入理赔材料 (1个成功)",
+    "claimId": "CLM973980",
+    "claimReportNumber": "R20260304154253JXP0",
+    "currentStatus": "已报案",
+    "inputData": {
+      "totalFiles": 1,
+      "successCount": 1,
+      "failCount": 0
+    },
+    "outputData": {
+      "files": [
+        {
+          "documentId": "task-c5b899cd-f047-49ab-b84e-02f80ae25ff5-0",
+          "fileName": "WechatIMG29.jpg",
+          "fileType": "image/jpeg",
+          "status": "completed",
+          "classification": {
+            "materialId": "unknown",
+            "materialName": "未识别",
+            "confidence": 0
+          },
+          "extractedData": {},
+          "errorMessage": null,
+          "ossUrl": null
+        }
+      ],
+      "completeness": {
+        "isComplete": true,
+        "score": 1,
+        "requiredMaterials": [],
+        "providedMaterials": [],
+        "missingMaterials": [],
+        "warnings": []
+      },
+      "classificationSummary": {
+        "未识别": 1
+      },
+      "statusSummary": {
+        "completed": 1,
+        "failed": 0,
+        "processing": 0
+      }
+    },
+    "success": true,
+    "duration": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260305075555-dx09yn",
+    "timestamp": "2026-03-05T07:55:55.416Z",
+    "userName": "系统用户",
+    "operationType": "UPLOAD_FILE",
+    "operationLabel": "导入理赔材料 (1个成功)",
+    "claimId": "CLM973980",
+    "claimReportNumber": "R20260304154253JXP0",
+    "currentStatus": "已报案",
+    "inputData": {
+      "totalFiles": 1,
+      "successCount": 1,
+      "failCount": 0
+    },
+    "outputData": {
+      "files": [
+        {
+          "documentId": "task-c5b899cd-f047-49ab-b84e-02f80ae25ff5-0",
+          "fileName": "WechatIMG29.jpg",
+          "fileType": "image/jpeg",
+          "status": "completed",
+          "classification": {
+            "materialId": "unknown",
+            "materialName": "未识别",
+            "confidence": 0
+          },
+          "extractedData": {},
+          "errorMessage": null,
+          "ossUrl": null
+        }
+      ],
+      "completeness": {
+        "isComplete": true,
+        "score": 1,
+        "requiredMaterials": [],
+        "providedMaterials": [],
+        "missingMaterials": [],
+        "warnings": []
+      },
+      "classificationSummary": {
+        "未识别": 1
+      },
+      "statusSummary": {
+        "completed": 1,
+        "failed": 0,
+        "processing": 0
+      }
+    },
+    "success": true,
+    "duration": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260305075555-ie4vdm",
+    "timestamp": "2026-03-05T07:55:55.523Z",
+    "userName": "系统用户",
+    "operationType": "UPLOAD_FILE",
+    "operationLabel": "导入理赔材料 (1个成功)",
+    "claimId": "CLM973980",
+    "claimReportNumber": "R20260304154253JXP0",
+    "currentStatus": "已报案",
+    "inputData": {
+      "totalFiles": 1,
+      "successCount": 1,
+      "failCount": 0
+    },
+    "outputData": {
+      "files": [
+        {
+          "documentId": "task-c5b899cd-f047-49ab-b84e-02f80ae25ff5-0",
+          "fileName": "WechatIMG29.jpg",
+          "fileType": "image/jpeg",
+          "status": "completed",
+          "classification": {
+            "materialId": "unknown",
+            "materialName": "未识别",
+            "confidence": 0
+          },
+          "extractedData": {},
+          "errorMessage": null,
+          "ossUrl": null
+        }
+      ],
+      "completeness": {
+        "isComplete": true,
+        "score": 1,
+        "requiredMaterials": [],
+        "providedMaterials": [],
+        "missingMaterials": [],
+        "warnings": []
+      },
+      "classificationSummary": {
+        "未识别": 1
+      },
+      "statusSummary": {
+        "completed": 1,
+        "failed": 0,
+        "processing": 0
+      }
+    },
+    "success": true,
+    "duration": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260305075555-psi6ov",
+    "timestamp": "2026-03-05T07:55:55.717Z",
+    "userName": "系统用户",
+    "operationType": "UPLOAD_FILE",
+    "operationLabel": "导入理赔材料 (1个成功)",
+    "claimId": "CLM973980",
+    "claimReportNumber": "R20260304154253JXP0",
+    "currentStatus": "已报案",
+    "inputData": {
+      "totalFiles": 1,
+      "successCount": 1,
+      "failCount": 0
+    },
+    "outputData": {
+      "files": [
+        {
+          "documentId": "task-c5b899cd-f047-49ab-b84e-02f80ae25ff5-0",
+          "fileName": "WechatIMG29.jpg",
+          "fileType": "image/jpeg",
+          "status": "completed",
+          "classification": {
+            "materialId": "unknown",
+            "materialName": "未识别",
+            "confidence": 0
+          },
+          "extractedData": {},
+          "errorMessage": null,
+          "ossUrl": null
+        }
+      ],
+      "completeness": {
+        "isComplete": true,
+        "score": 1,
+        "requiredMaterials": [],
+        "providedMaterials": [],
+        "missingMaterials": [],
+        "warnings": []
+      },
+      "classificationSummary": {
+        "未识别": 1
+      },
+      "statusSummary": {
+        "completed": 1,
+        "failed": 0,
+        "processing": 0
+      }
+    },
+    "success": true,
+    "duration": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260305075555-2fimjz",
+    "timestamp": "2026-03-05T07:55:55.884Z",
+    "userName": "系统用户",
+    "operationType": "UPLOAD_FILE",
+    "operationLabel": "导入理赔材料 (1个成功)",
+    "claimId": "CLM973980",
+    "claimReportNumber": "R20260304154253JXP0",
+    "currentStatus": "已报案",
+    "inputData": {
+      "totalFiles": 1,
+      "successCount": 1,
+      "failCount": 0
+    },
+    "outputData": {
+      "files": [
+        {
+          "documentId": "task-c5b899cd-f047-49ab-b84e-02f80ae25ff5-0",
+          "fileName": "WechatIMG29.jpg",
+          "fileType": "image/jpeg",
+          "status": "completed",
+          "classification": {
+            "materialId": "unknown",
+            "materialName": "未识别",
+            "confidence": 0
+          },
+          "extractedData": {},
+          "errorMessage": null,
+          "ossUrl": null
+        }
+      ],
+      "completeness": {
+        "isComplete": true,
+        "score": 1,
+        "requiredMaterials": [],
+        "providedMaterials": [],
+        "missingMaterials": [],
+        "warnings": []
+      },
+      "classificationSummary": {
+        "未识别": 1
+      },
+      "statusSummary": {
+        "completed": 1,
+        "failed": 0,
+        "processing": 0
+      }
+    },
+    "success": true,
+    "duration": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260305075556-fqfxqq",
+    "timestamp": "2026-03-05T07:55:56.035Z",
+    "userName": "系统用户",
+    "operationType": "UPLOAD_FILE",
+    "operationLabel": "导入理赔材料 (1个成功)",
+    "claimId": "CLM973980",
+    "claimReportNumber": "R20260304154253JXP0",
+    "currentStatus": "已报案",
+    "inputData": {
+      "totalFiles": 1,
+      "successCount": 1,
+      "failCount": 0
+    },
+    "outputData": {
+      "files": [
+        {
+          "documentId": "task-c5b899cd-f047-49ab-b84e-02f80ae25ff5-0",
+          "fileName": "WechatIMG29.jpg",
+          "fileType": "image/jpeg",
+          "status": "completed",
+          "classification": {
+            "materialId": "unknown",
+            "materialName": "未识别",
+            "confidence": 0
+          },
+          "extractedData": {},
+          "errorMessage": null,
+          "ossUrl": null
+        }
+      ],
+      "completeness": {
+        "isComplete": true,
+        "score": 1,
+        "requiredMaterials": [],
+        "providedMaterials": [],
+        "missingMaterials": [],
+        "warnings": []
+      },
+      "classificationSummary": {
+        "未识别": 1
+      },
+      "statusSummary": {
+        "completed": 1,
+        "failed": 0,
+        "processing": 0
+      }
+    },
+    "success": true,
+    "duration": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260305075556-347cw6",
+    "timestamp": "2026-03-05T07:55:56.178Z",
+    "userName": "系统用户",
+    "operationType": "UPLOAD_FILE",
+    "operationLabel": "导入理赔材料 (1个成功)",
+    "claimId": "CLM973980",
+    "claimReportNumber": "R20260304154253JXP0",
+    "currentStatus": "已报案",
+    "inputData": {
+      "totalFiles": 1,
+      "successCount": 1,
+      "failCount": 0
+    },
+    "outputData": {
+      "files": [
+        {
+          "documentId": "task-c5b899cd-f047-49ab-b84e-02f80ae25ff5-0",
+          "fileName": "WechatIMG29.jpg",
+          "fileType": "image/jpeg",
+          "status": "completed",
+          "classification": {
+            "materialId": "unknown",
+            "materialName": "未识别",
+            "confidence": 0
+          },
+          "extractedData": {},
+          "errorMessage": null,
+          "ossUrl": null
+        }
+      ],
+      "completeness": {
+        "isComplete": true,
+        "score": 1,
+        "requiredMaterials": [],
+        "providedMaterials": [],
+        "missingMaterials": [],
+        "warnings": []
+      },
+      "classificationSummary": {
+        "未识别": 1
+      },
+      "statusSummary": {
+        "completed": 1,
+        "failed": 0,
+        "processing": 0
+      }
+    },
+    "success": true,
+    "duration": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260305075556-yudb9b",
+    "timestamp": "2026-03-05T07:55:56.378Z",
+    "userName": "系统用户",
+    "operationType": "UPLOAD_FILE",
+    "operationLabel": "导入理赔材料 (1个成功)",
+    "claimId": "CLM973980",
+    "claimReportNumber": "R20260304154253JXP0",
+    "currentStatus": "已报案",
+    "inputData": {
+      "totalFiles": 1,
+      "successCount": 1,
+      "failCount": 0
+    },
+    "outputData": {
+      "files": [
+        {
+          "documentId": "task-c5b899cd-f047-49ab-b84e-02f80ae25ff5-0",
+          "fileName": "WechatIMG29.jpg",
+          "fileType": "image/jpeg",
+          "status": "completed",
+          "classification": {
+            "materialId": "unknown",
+            "materialName": "未识别",
+            "confidence": 0
+          },
+          "extractedData": {},
+          "errorMessage": null,
+          "ossUrl": null
+        }
+      ],
+      "completeness": {
+        "isComplete": true,
+        "score": 1,
+        "requiredMaterials": [],
+        "providedMaterials": [],
+        "missingMaterials": [],
+        "warnings": []
+      },
+      "classificationSummary": {
+        "未识别": 1
+      },
+      "statusSummary": {
+        "completed": 1,
+        "failed": 0,
+        "processing": 0
+      }
+    },
+    "success": true,
+    "duration": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260305075556-edlba9",
+    "timestamp": "2026-03-05T07:55:56.483Z",
+    "userName": "系统用户",
+    "operationType": "UPLOAD_FILE",
+    "operationLabel": "导入理赔材料 (1个成功)",
+    "claimId": "CLM973980",
+    "claimReportNumber": "R20260304154253JXP0",
+    "currentStatus": "已报案",
+    "inputData": {
+      "totalFiles": 1,
+      "successCount": 1,
+      "failCount": 0
+    },
+    "outputData": {
+      "files": [
+        {
+          "documentId": "task-c5b899cd-f047-49ab-b84e-02f80ae25ff5-0",
+          "fileName": "WechatIMG29.jpg",
+          "fileType": "image/jpeg",
+          "status": "completed",
+          "classification": {
+            "materialId": "unknown",
+            "materialName": "未识别",
+            "confidence": 0
+          },
+          "extractedData": {},
+          "errorMessage": null,
+          "ossUrl": null
+        }
+      ],
+      "completeness": {
+        "isComplete": true,
+        "score": 1,
+        "requiredMaterials": [],
+        "providedMaterials": [],
+        "missingMaterials": [],
+        "warnings": []
+      },
+      "classificationSummary": {
+        "未识别": 1
+      },
+      "statusSummary": {
+        "completed": 1,
+        "failed": 0,
+        "processing": 0
+      }
+    },
+    "success": true,
+    "duration": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260305075556-yncvdn",
+    "timestamp": "2026-03-05T07:55:56.694Z",
+    "userName": "系统用户",
+    "operationType": "UPLOAD_FILE",
+    "operationLabel": "导入理赔材料 (1个成功)",
+    "claimId": "CLM973980",
+    "claimReportNumber": "R20260304154253JXP0",
+    "currentStatus": "已报案",
+    "inputData": {
+      "totalFiles": 1,
+      "successCount": 1,
+      "failCount": 0
+    },
+    "outputData": {
+      "files": [
+        {
+          "documentId": "task-c5b899cd-f047-49ab-b84e-02f80ae25ff5-0",
+          "fileName": "WechatIMG29.jpg",
+          "fileType": "image/jpeg",
+          "status": "completed",
+          "classification": {
+            "materialId": "unknown",
+            "materialName": "未识别",
+            "confidence": 0
+          },
+          "extractedData": {},
+          "errorMessage": null,
+          "ossUrl": null
+        }
+      ],
+      "completeness": {
+        "isComplete": true,
+        "score": 1,
+        "requiredMaterials": [],
+        "providedMaterials": [],
+        "missingMaterials": [],
+        "warnings": []
+      },
+      "classificationSummary": {
+        "未识别": 1
+      },
+      "statusSummary": {
+        "completed": 1,
+        "failed": 0,
+        "processing": 0
+      }
+    },
+    "success": true,
+    "duration": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260305075556-btd8xb",
+    "timestamp": "2026-03-05T07:55:56.852Z",
+    "userName": "系统用户",
+    "operationType": "UPLOAD_FILE",
+    "operationLabel": "导入理赔材料 (1个成功)",
+    "claimId": "CLM973980",
+    "claimReportNumber": "R20260304154253JXP0",
+    "currentStatus": "已报案",
+    "inputData": {
+      "totalFiles": 1,
+      "successCount": 1,
+      "failCount": 0
+    },
+    "outputData": {
+      "files": [
+        {
+          "documentId": "task-c5b899cd-f047-49ab-b84e-02f80ae25ff5-0",
+          "fileName": "WechatIMG29.jpg",
+          "fileType": "image/jpeg",
+          "status": "completed",
+          "classification": {
+            "materialId": "unknown",
+            "materialName": "未识别",
+            "confidence": 0
+          },
+          "extractedData": {},
+          "errorMessage": null,
+          "ossUrl": null
+        }
+      ],
+      "completeness": {
+        "isComplete": true,
+        "score": 1,
+        "requiredMaterials": [],
+        "providedMaterials": [],
+        "missingMaterials": [],
+        "warnings": []
+      },
+      "classificationSummary": {
+        "未识别": 1
+      },
+      "statusSummary": {
+        "completed": 1,
+        "failed": 0,
+        "processing": 0
+      }
+    },
+    "success": true,
+    "duration": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260305080616-l1sbis",
+    "timestamp": "2026-03-05T08:06:16.400Z",
+    "userName": "系统用户",
+    "operationType": "VIEW_CLAIM_DETAIL",
+    "operationLabel": "查看赔案详情",
+    "claimId": "CLM973980",
+    "claimReportNumber": "R20260304154253JXP0",
+    "currentStatus": "已报案",
+    "inputData": null,
+    "outputData": null,
+    "success": true,
+    "duration": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260305080616-favkyv",
+    "timestamp": "2026-03-05T08:06:16.609Z",
+    "userName": "系统用户",
+    "operationType": "VIEW_CLAIM_DETAIL",
+    "operationLabel": "查看赔案详情",
+    "claimId": "CLM973980",
+    "claimReportNumber": "R20260304154253JXP0",
+    "currentStatus": "已报案",
+    "inputData": null,
+    "outputData": null,
+    "success": true,
+    "duration": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
   }
 ]
