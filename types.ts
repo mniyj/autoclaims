@@ -648,6 +648,55 @@ export interface OfflineMaterialImportResult {
   warnings: string[];
   summary?: string;
 }
+// Batch operation types for batch OSS upload and classification
+export interface BatchOSSUploadRequest {
+  batchId?: string;
+  claimCaseId?: string;
+  ossKeys: string[];
+  productCode?: string;
+  importedAt?: string;
+}
+
+export interface BatchOSSUploadResponse {
+  batchId: string;
+  uploadedCount: number;
+  failedCount?: number;
+  errors?: { ossKey: string; reason?: string }[];
+  timestamp?: string;
+}
+
+export interface BatchClassifyRequest {
+  batchId: string;
+  materialIds?: string[];
+  strategy?: 'fast' | 'accurate';
+}
+
+export interface BatchClassifyResponse {
+  batchId: string;
+  results: Array<{
+    materialId: string;
+    materialName?: string;
+    category?: string;
+    confidence?: number;
+  }>;
+  completedAt?: string;
+  errors?: { materialId?: string; error: string }[];
+}
+
+// Core: Batch Material Import Task V2
+export interface MaterialImportTaskV2 {
+  id: string;
+  claimCaseId?: string;
+  batchId: string;
+  ossKeys: string[];
+  status: 'pending' | 'in_progress' | 'completed' | 'failed';
+  createdAt: string;
+  updatedAt?: string;
+  summary?: string;
+  processedCount?: number;
+  errors?: string[];
+}
+
 // --- END: Types for Offline Material Import ---
 
 // --- START: Types for Unified Claim Materials ---
@@ -679,6 +728,7 @@ export interface ClaimMaterial {
   fileSize?: number;
   url: string;
   ossKey?: string;
+  ossUrlExpiresAt?: string;
 
   // 分类信息
   category?: string;
