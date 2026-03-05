@@ -13,7 +13,9 @@ interface UploadingFile {
   id: string;
   file: File;
   preview?: string;
-  status: 'uploading' | 'processing' | 'classified' | 'failed';
+  status: 'pending' | 'uploading' | 'processing' | 'classified' | 'failed';
+  uploadProgress?: number;
+  ossKey?: string;
   classification?: {
     materialId: string;
     materialName: string;
@@ -86,60 +88,144 @@ const OfflineMaterialImportDialog: React.FC<OfflineMaterialImportDialogProps> = 
       id: `file-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       file: f,
       preview: f.type.startsWith('image/') ? URL.createObjectURL(f) : undefined,
-      status: 'uploading' as const,
+      status: 'pending' as const,
+      uploadProgress: 0,
     }));
 
     setFiles(prev => [...prev, ...uploadingFiles]);
     setError(null);
 
-    // Process each file
-    for (const uf of uploadingFiles) {
-      try {
-        const base64Data = await readFileAsBase64(uf.file);
+    try {
+      const fileList = uploadingFiles.map(uf => ({ name: uf.file.name, type: uf.file.type }));
+      const credsResponse = await fetch('/api/batch-upload-oss', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ files: fileList }),
+      });
 
-        setFiles(prev => prev.map(f =>
-          f.id === uf.id ? { ...f, status: 'processing' as const } : f
-        ));
+      if (!credsResponse.ok) {
+        throw new Error('获取上传凭证失败');
+      }
 
-        // Use new materials classify API
-        const response = await fetch('/api/materials/classify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            fileSource: base64Data,
-            mimeType: uf.file.type,
-          }),
-        });
+      const credsData = await credsResponse.json();
+      const credentials = credsData.files;
 
-        if (!response.ok) {
-          throw new Error(`分类失败: ${response.statusText}`);
+      const uploadPromises = uploadingFiles.map(async (uf, index) => {
+        const cred = credentials[index];
+        if (!cred) {
+          setFiles(prev => prev.map(f =>
+            f.id === uf.id ? { ...f, status: 'failed' as const, errorMessage: '无上传凭证' } : f
+          ));
+          return;
         }
 
-        const result = await response.json();
-        console.log('[OfflineImport] Classification result:', result);
-
-        const classification = result?.data || {
-          materialId: 'unknown',
-          materialName: '未识别',
-          confidence: 0,
-          isConfident: false,
-        };
-
         setFiles(prev => prev.map(f =>
-          f.id === uf.id
-            ? { ...f, status: 'classified' as const, classification }
-            : f
+          f.id === uf.id ? { ...f, status: 'uploading' as const } : f
         ));
-      } catch (err) {
-        console.error('[OfflineImport] Processing error:', err);
-        setFiles(prev => prev.map(f =>
-          f.id === uf.id
-            ? { ...f, status: 'failed' as const, errorMessage: err instanceof Error ? err.message : '处理失败' }
-            : f
-        ));
+
+        try {
+          const formData = new FormData();
+          formData.append('key', cred.key);
+          formData.append('policy', cred.policy);
+          formData.append('OSSAccessKeyId', cred.accessid);
+          formData.append('signature', cred.signature);
+          formData.append('file', uf.file);
+
+          const xhr = new XMLHttpRequest();
+          await new Promise<void>((resolve, reject) => {
+            xhr.upload.addEventListener('progress', (event) => {
+              if (event.lengthComputable) {
+                const progress = Math.round((event.loaded / event.total) * 100);
+                setFiles(prev => prev.map(f =>
+                  f.id === uf.id ? { ...f, uploadProgress: progress } : f
+                ));
+              }
+            });
+
+            xhr.addEventListener('load', () => {
+              if (xhr.status >= 200 && xhr.status < 300) {
+                resolve();
+              } else {
+                reject(new Error(`上传失败: ${xhr.status}`));
+              }
+            });
+
+            xhr.addEventListener('error', () => reject(new Error('上传错误')));
+            xhr.open('POST', cred.host);
+            xhr.send(formData);
+          });
+
+          setFiles(prev => prev.map(f =>
+            f.id === uf.id ? { ...f, status: 'processing' as const, ossKey: cred.key } : f
+          ));
+        } catch (err) {
+          console.error('[OfflineImport] Upload error:', err);
+          setFiles(prev => prev.map(f =>
+            f.id === uf.id
+              ? { ...f, status: 'failed' as const, errorMessage: err instanceof Error ? err.message : '上传失败' }
+              : f
+          ));
+        }
+      });
+
+      await Promise.all(uploadPromises);
+
+      const processedFiles = uploadingFiles.filter(uf => {
+        const current = files.find(f => f.id === uf.id);
+        return current?.status === 'processing' && current?.ossKey;
+      });
+
+      if (processedFiles.length > 0) {
+        await batchClassify(processedFiles);
       }
+    } catch (err) {
+      console.error('[OfflineImport] Batch upload error:', err);
+      setError(err instanceof Error ? err.message : '批量上传失败');
+      uploadingFiles.forEach(uf => {
+        setFiles(prev => prev.map(f =>
+          f.id === uf.id ? { ...f, status: 'failed' as const, errorMessage: '批量上传失败' } : f
+        ));
+      });
     }
-  }, []);
+  }, [files]);
+
+  const batchClassify = async (filesToClassify: UploadingFile[]) => {
+    const ossKeys = filesToClassify.map(f => f.ossKey!).filter(Boolean);
+    const mimeTypes = filesToClassify.map(f => f.file.type);
+
+    try {
+      const response = await fetch('/api/batch-classify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ossKeys, mimeTypes }),
+      });
+
+      if (!response.ok) {
+        throw new Error('批量分类失败');
+      }
+
+      const result = await response.json();
+      const classifications = result.data?.results || [];
+
+      classifications.forEach((item: any, index: number) => {
+        const fileId = filesToClassify[index]?.id;
+        if (fileId) {
+          setFiles(prev => prev.map(f =>
+            f.id === fileId
+              ? { ...f, status: 'classified' as const, classification: item.classification }
+              : f
+          ));
+        }
+      });
+    } catch (err) {
+      console.error('[OfflineImport] Batch classify error:', err);
+      filesToClassify.forEach(uf => {
+        setFiles(prev => prev.map(f =>
+          f.id === uf.id ? { ...f, status: 'failed' as const, errorMessage: '分类失败' } : f
+        ));
+      });
+    }
+  };
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -260,29 +346,26 @@ const OfflineMaterialImportDialog: React.FC<OfflineMaterialImportDialogProps> = 
   }, [taskId, pollTaskStatus]);
 
   const handleImport = async () => {
-    const classifiedFiles = files.filter(f => f.status === 'classified');
+    const classifiedFiles = files.filter(f => f.status === 'classified' && f.ossKey);
     if (classifiedFiles.length === 0) return;
 
     setImporting(true);
     setError(null);
 
     try {
-      const fileDataPromises = classifiedFiles.map(async f => ({
-        fileName: f.file.name,
-        mimeType: f.file.type,
-        base64Data: await readFileAsBase64(f.file),
-        classification: f.classification,
-      }));
+      const ossKeys = classifiedFiles.map(f => f.ossKey!);
+      const mimeTypes = classifiedFiles.map(f => f.file.type);
+      const classifications = classifiedFiles.map(f => f.classification);
 
-      const fileData = await Promise.all(fileDataPromises);
-
-      const response = await fetch('/api/import-offline-materials', {
+      const response = await fetch('/api/import-offline-materials-v2', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           claimCaseId,
           productCode,
-          files: fileData,
+          ossKeys,
+          mimeTypes,
+          classifications,
         }),
       });
 
@@ -370,16 +453,27 @@ const OfflineMaterialImportDialog: React.FC<OfflineMaterialImportDialogProps> = 
                   )}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{file.file.name}</p>
-                    <p className="text-xs text-gray-500">
-                      {file.status === 'uploading' && '准备中...'}
+                    <div className="text-xs text-gray-500">
+                      {file.status === 'pending' && '等待上传...'}
+                      {file.status === 'uploading' && (
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 bg-gray-200 rounded-full h-1.5 w-20">
+                            <div
+                              className="bg-blue-600 h-1.5 rounded-full transition-all"
+                              style={{ width: `${file.uploadProgress || 0}%` }}
+                            />
+                          </div>
+                          <span>{file.uploadProgress || 0}%</span>
+                        </div>
+                      )}
                       {file.status === 'processing' && '识别中...'}
                       {file.status === 'classified' && (
-                        <span className={file.classification?.confidence > 0.7 ? 'text-green-600' : 'text-yellow-600'}>
+                        <span className={file.classification?.confidence! > 0.7 ? 'text-green-600' : 'text-yellow-600'}>
                           识别为: {file.classification?.materialName} ({Math.round((file.classification?.confidence || 0) * 100)}%)
                         </span>
                       )}
                       {file.status === 'failed' && <span className="text-red-600">{file.errorMessage || '处理失败'}</span>}
-                    </p>
+                    </div>
                   </div>
                   <button
                     onClick={() => removeFile(file.id)}
