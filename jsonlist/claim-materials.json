@@ -71,7 +71,84 @@
     "materialName": "医疗费发票",
     "source": "direct_upload",
     "status": "completed",
-    "uploadedAt": "3/4/2026, 11:42:53 PM"
+    "uploadedAt": "3/4/2026, 11:42:53 PM",
+    "extractedData": {
+      "basicInfo": {
+        "name": "刘亚轩",
+        "gender": "女",
+        "age": "",
+        "department": "儿科二",
+        "bedCode": "",
+        "hospitalizationNumber": "22022767",
+        "dischargeDiagnosis": "",
+        "admissionDate": "2022-11-24",
+        "dischargeDate": "2022-12-07",
+        "otherInfo": "业务流水号: 019004667, 病历号: 22022767, 医疗机构类型: 三级综合医院, 医保类型: 医保, 医保编号: , 预缴金额: 2000.00, 补缴金额: 938.04, 退费金额: 0.00, 医保统筹基金支付: 1771.18, 其他支付: 0.00, 大病保险支付: 0.00, 其他保险支付: 0.00, 医疗救助支付: 0.00, 个人账户支付: 0.00, 个人账户余额: 0.00, 个人现金支付: 5938.04, 个人自付: 2938.04, 个人自费: 202.00, 支付方式: "
+      },
+      "chargeItems": [
+        {
+          "itemName": "西药费",
+          "specifications": "",
+          "unitPrice": 0,
+          "quantity": 0,
+          "totalPrice": 2471.83
+        },
+        {
+          "itemName": "治疗费",
+          "specifications": "",
+          "unitPrice": 0,
+          "quantity": 0,
+          "totalPrice": 1911.2
+        },
+        {
+          "itemName": "化验费",
+          "specifications": "",
+          "unitPrice": 0,
+          "quantity": 0,
+          "totalPrice": 1253
+        },
+        {
+          "itemName": "床位费",
+          "specifications": "",
+          "unitPrice": 0,
+          "quantity": 0,
+          "totalPrice": 520
+        },
+        {
+          "itemName": "护理费",
+          "specifications": "",
+          "unitPrice": 0,
+          "quantity": 0,
+          "totalPrice": 591.5
+        },
+        {
+          "itemName": "卫生材料费",
+          "specifications": "",
+          "unitPrice": 0,
+          "quantity": 0,
+          "totalPrice": 501.69
+        },
+        {
+          "itemName": "检查费",
+          "specifications": "",
+          "unitPrice": 0,
+          "quantity": 0,
+          "totalPrice": 96
+        },
+        {
+          "itemName": "诊察费",
+          "specifications": "",
+          "unitPrice": 0,
+          "quantity": 0,
+          "totalPrice": 364
+        }
+      ],
+      "totalAmount": 7709.22
+    },
+    "auditConclusion": "已成功从医疗费发票中提取以下信息：医院名称“连云港市赣榆区人民医院”，患者姓名“刘亚轩”，发票号码“0052108817”，发票代码“32060222”，开票日期“2022-12-07”，金额合计“7,709.22元”，个人自付“2,938.04元”，医保统筹基金支付“1,771.18元”，个人账户支付“0.00元”。\n\n校验结果如下：\n1.  各项费用明细（西药费、治疗费等）的总和为7,709.22元，与发票合计金额7,709.22元一致。同时，医保统筹基金支付(1,771.18元)、个人账户支付(0.00元)和个人现金支付(5,938.04元)的总和为7,709.22元，与合计金额一致。\n2.  发票开票日期2022-12-07在就诊期间（入院日期2022-11-24至出院日期2022-12-07）内。\n3.  该发票标题为“江苏省医疗住院收费票据 (电子)”，盖有“财政部监制”和“收费专用章”，并注明“财政电子票据可作为报销凭证”，确认为正规财政票据。\n4.  发票中列出的费用明细项目总金额与发票合计金额一致，符合费用明细清单总金额一致性要求（此处费用明细清单指发票内所列项目）。\n\n总体审核通过。",
+    "confidence": 0.95,
+    "materialId": "mat-20",
+    "processedAt": "2026-03-04T17:09:09.922Z"
   },
   {
     "id": "doc-1772456047413-u91b7i",
@@ -92,5 +169,20 @@
     "status": "completed",
     "uploadedAt": "2026-03-02T12:54:07.417Z",
     "processedAt": "2026-03-02T12:54:07.417Z"
+  },
+  {
+    "id": "mat-1772697861670-rruf9xxg1",
+    "claimCaseId": "CLM973980",
+    "fileName": "WechatIMG29.jpg",
+    "fileType": "image/jpeg",
+    "category": "未识别",
+    "materialName": "未识别",
+    "materialId": "unknown",
+    "source": "offline_import",
+    "status": "completed",
+    "uploadedAt": "2026-03-05T08:04:21.670Z",
+    "ocrText": "中华人民共和国机动车驾驶证\n证号: 130223198812225522\n姓名: 文川又又\n性别: 女\n国籍: 中国/CHN\n住址: 河北省唐山市滦县东安各庄镇前李各庄村22排17号\n发证机关: 河北省唐山市公安局交警支队\n出生日期: 1988-12-22\n初次领证日期: 2008-11-07\n准驾车型: C1\n有效期限: 2024-11-07 至 长期\n\n中华人民共和国机动车驾驶证副页\n证号: 130223198812225522\n姓名: 文川又又\n档案编号: 130200850415\n记录: 自2024年10月23日至有效起始日期有效。\n请于2059年11月07日后30日内，提交身体条件证明，之后每年于11月07日后30日内提交。",
+    "structuredData": {},
+    "taskId": "task-c5b899cd-f047-49ab-b84e-02f80ae25ff5"
   }
 ]
