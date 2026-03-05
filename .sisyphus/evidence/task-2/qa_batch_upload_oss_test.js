@@ -1,7 +1,8 @@
 // QA test for batch OSS batch-upload-oss endpoint (no network calls made during unit test)
 // This script imports the API handler and invokes the batch endpoint with a mocked request/response.
 (async () => {
-  const { handleApiRequest } = await import('./../../.claude/worktrees/offline-import-optimization-1772720681/server/apiHandler.js');
+  // Absolute path import to avoid relative path issues in the test env
+  const { handleApiRequest } = await import('file:///Users/pegasus/Documents/trae_projects/保险产品配置页面 -理赔/.claude/worktrees/offline-import-optimization-1772720681/server/apiHandler.js');
 
   // Setup dummy OSS credentials for test (non-production)
   process.env.ALIYUN_OSS_REGION = "oss-cn-beijing";

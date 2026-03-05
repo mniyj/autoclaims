@@ -507,6 +507,8 @@ const allowedResources = [
   "review-tasks",
   "ai",
   "batch-upload-oss",
+  "batch-classify",
+  "import-offline-materials-v2",
   "intake-field-presets",
 ];
 
@@ -598,6 +600,189 @@ export const handleApiRequest = async (req, res) => {
       );
     } catch (error) {
       console.error("[API] Batch OSS credentials failed:", error);
+      res.statusCode = 500;
+      res.end(JSON.stringify({ error: formatErrorMessage(error) }));
+    }
+    return;
+  }
+
+  // 批量材料分类 API
+  if (resource === "batch-classify") {
+    if (req.method !== "POST") {
+      res.statusCode = 405;
+      res.end(JSON.stringify({ error: "Method Not Allowed" }));
+      return;
+    }
+
+    try {
+      const body = await parseBody(req);
+      const { ossKeys, mimeTypes } = body;
+
+      if (!Array.isArray(ossKeys) || ossKeys.length === 0) {
+        res.statusCode = 400;
+        res.end(JSON.stringify({ error: "Missing or invalid ossKeys" }));
+        return;
+      }
+
+      // 并发控制：最多3个并行
+      const CONCURRENCY = 3;
+      const results = [];
+
+      // 批量处理函数
+      async function processBatch(keys, types) {
+        const batchResults = [];
+        for (let i = 0; i < keys.length; i += CONCURRENCY) {
+          const batch = keys.slice(i, i + CONCURRENCY);
+          const batchPromises = batch.map(async (key, idx) => {
+            const actualIdx = i + idx;
+            try {
+              // 获取签名URL
+              const region = process.env.ALIYUN_OSS_REGION || "oss-cn-beijing";
+              const bucket = process.env.ALIYUN_OSS_BUCKET;
+              const accessKeyId = process.env.ALIYUN_OSS_ACCESS_KEY_ID;
+              const accessKeySecret = process.env.ALIYUN_OSS_ACCESS_KEY_SECRET;
+
+              if (!bucket || !accessKeyId || !accessKeySecret) {
+                throw new Error("OSS credentials not configured");
+              }
+
+              const client = new OSS({
+                region,
+                accessKeyId,
+                accessKeySecret,
+                bucket,
+              });
+
+              const signedUrl = client.signatureUrl(key, { expires: 3600 });
+
+              // 下载文件
+              const response = await fetch(signedUrl);
+              if (!response.ok) {
+                throw new Error(`Failed to download file: ${response.status}`);
+              }
+
+              const buffer = Buffer.from(await response.arrayBuffer());
+              const mimeType = (types && types[actualIdx]) || "image/jpeg";
+
+              // 处理文件
+              const processResult = await processFile({
+                fileName: key.split('/').pop() || 'file',
+                mimeType,
+                buffer,
+                options: { skipOCR: false },
+              });
+
+              // 分类
+              const classification = await classifyMaterialFromAPI(processResult, key);
+
+              return {
+                ossKey: key,
+                status: 'success',
+                classification,
+              };
+            } catch (error) {
+              console.error(`[Batch Classify] Error processing ${key}:`, error);
+              return {
+                ossKey: key,
+                status: 'failed',
+                error: error.message,
+                classification: {
+                  materialId: 'unknown',
+                  materialName: '未识别',
+                  confidence: 0,
+                },
+              };
+            }
+          });
+
+          const batchResult = await Promise.all(batchPromises);
+          batchResults.push(...batchResult);
+        }
+        return batchResults;
+      }
+
+      const classifyResults = await processBatch(ossKeys, mimeTypes);
+
+      res.setHeader("Content-Type", "application/json");
+      res.end(
+        JSON.stringify({
+          success: true,
+          data: {
+            total: ossKeys.length,
+            completed: classifyResults.filter(r => r.status === 'success').length,
+            failed: classifyResults.filter(r => r.status === 'failed').length,
+            results: classifyResults,
+          },
+        })
+      );
+    } catch (error) {
+      console.error("[API] Batch classify failed:", error);
+      res.statusCode = 500;
+      res.end(JSON.stringify({ error: formatErrorMessage(error) }));
+    }
+    return;
+  }
+
+  // 新版离线材料导入 API (v2 - 使用 OSS Key)
+  if (resource === "import-offline-materials-v2") {
+    if (req.method !== "POST") {
+      res.statusCode = 405;
+      res.end(JSON.stringify({ error: "Method Not Allowed" }));
+      return;
+    }
+
+    try {
+      const body = await parseBody(req);
+      const { claimCaseId, productCode, ossKeys, mimeTypes, classifications } = body;
+
+      if (!claimCaseId || !productCode) {
+        res.statusCode = 400;
+        res.end(JSON.stringify({ error: "Missing claimCaseId or productCode" }));
+        return;
+      }
+
+      if (!Array.isArray(ossKeys) || ossKeys.length === 0) {
+        res.statusCode = 400;
+        res.end(JSON.stringify({ error: "Missing or invalid ossKeys" }));
+        return;
+      }
+
+      // 创建任务数据
+      const files = ossKeys.map((key, index) => ({
+        index,
+        fileName: key.split('/').pop() || `file-${index}`,
+        mimeType: (mimeTypes && mimeTypes[index]) || "image/jpeg",
+        ossKey: key,
+        classification: (classifications && classifications[index]) || null,
+        status: 'pending',
+      }));
+
+      // 创建异步任务
+      const task = createTask(claimCaseId, productCode, files, null, {
+        useV2: true,
+        source: 'offline-import-v2',
+      });
+
+      // 记录审计日志
+      writeAuditLog({
+        type: 'IMPORT_TASK_CREATE',
+        claimCaseId,
+        taskId: task.id,
+        fileCount: files.length,
+        useV2: true,
+      });
+
+      res.setHeader("Content-Type", "application/json");
+      res.end(
+        JSON.stringify({
+          success: true,
+          taskId: task.id,
+          message: "Import task created successfully",
+          totalFiles: files.length,
+        })
+      );
+    } catch (error) {
+      console.error("[API] Import offline materials v2 failed:", error);
       res.statusCode = 500;
       res.end(JSON.stringify({ error: formatErrorMessage(error) }));
     }
@@ -3650,3 +3835,73 @@ ${schemaText}
     res.end(JSON.stringify({ error: e.message || "Bad Request" }));
   }
 };
+
+// ============ 批量分类辅助函数 ============
+
+async function classifyMaterialFromAPI(result, fileName) {
+  if (result.parseStatus !== 'completed') {
+    return {
+      materialId: 'unknown',
+      materialName: '未识别',
+      confidence: 0,
+    };
+  }
+
+  try {
+    const materials = readData('claims-materials');
+    if (materials.length === 0) {
+      return {
+        materialId: 'unknown',
+        materialName: '未识别',
+        confidence: 0,
+      };
+    }
+
+    const catalog = materials
+      .map((m) => `${m.id}|${m.name}|${m.description?.slice(0, 60) || ''}`)
+      .join('\n');
+
+    const ocrText = result.extractedText || '';
+    const prompt = `你是保险理赔材料分类专家。请根据以下 OCR 文字内容，从材料目录中选出最匹配的材料类型。
+
+【OCR 文字】
+${ocrText.slice(0, 1200)}
+
+【文件名参考】${fileName}
+
+【材料目录（格式: id|名称|说明摘要）】
+${catalog}
+
+请返回 JSON：{"materialId":"...","materialName":"...","confidence":0.0到1.0之间的小数,"reason":"简短说明"}。若无匹配则 materialId 填 "unknown"，materialName 填 "未识别"，confidence 填 0。`;
+
+    const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+    const ai = new GoogleGenAI({ apiKey });
+    
+    const response = await ai.models.generateContent({
+      model: 'gemini-1.5-flash',
+      contents: { parts: [{ text: prompt }] },
+      config: { temperature: 0.1 },
+    });
+
+    const raw = response.text || '{}';
+    let parsed = {};
+    try {
+      parsed = JSON.parse(raw.replace(/```json|```/g, '').trim());
+    } catch {}
+
+    const classification = {
+      materialId: parsed.materialId || 'unknown',
+      materialName: parsed.materialName || '未识别',
+      confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0,
+    };
+
+    return classification;
+  } catch (error) {
+    console.error('[API] classifyMaterialFromAPI error:', error);
+    return {
+      materialId: 'unknown',
+      materialName: '未识别',
+      confidence: 0,
+    };
+  }
+}
