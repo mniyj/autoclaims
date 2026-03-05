@@ -8,6 +8,8 @@ import { updateFileStatus } from './queue.js';
 import { writeAuditLog } from '../middleware/index.js';
 import { readData } from '../utils/fileStore.js';
 import { GoogleGenAI } from '@google/genai';
+import OSS from 'ali-oss';
+import { ensureFreshSignedUrl } from '../middleware/urlRefresher.js';
 
 const RETRYABLE_ERRORS = [
   'ECONNRESET',
@@ -18,9 +20,12 @@ const RETRYABLE_ERRORS = [
   'TIMEOUT',
   'socket hang up',
   'network error',
+  'OSS_URL_EXPIRED',
+  'EAI_AGAIN',
 ];
 
 const MAX_RETRIES = 3;
+const BATCH_CONCURRENCY = 3;
 
 function getRetryDelay(retryCount) {
   return Math.pow(2, retryCount) * 1000;
@@ -112,6 +117,47 @@ async function processWithTimeout(processFn, timeoutMs = 60000) {
   ]);
 }
 
+async function downloadFileFromOSS(ossKey, retryCount = 0) {
+  try {
+    const region = process.env.ALIYUN_OSS_REGION || 'oss-cn-beijing';
+    const bucket = process.env.ALIYUN_OSS_BUCKET;
+    const accessKeyId = process.env.ALIYUN_OSS_ACCESS_KEY_ID;
+    const accessKeySecret = process.env.ALIYUN_OSS_ACCESS_KEY_SECRET;
+
+    if (!bucket || !accessKeyId || !accessKeySecret) {
+      throw new Error('OSS credentials not configured');
+    }
+
+    const client = new OSS({
+      region,
+      accessKeyId,
+      accessKeySecret,
+      bucket,
+    });
+
+    const signedUrl = client.signatureUrl(ossKey, { expires: 3600 });
+    const response = await fetch(signedUrl);
+    
+    if (!response.ok) {
+      if (response.status === 403 && retryCount < MAX_RETRIES) {
+        console.log(`[Worker] URL expired for ${ossKey}, retrying with fresh URL...`);
+        const freshUrl = await ensureFreshSignedUrl(signedUrl, ossKey);
+        const retryResponse = await fetch(freshUrl);
+        if (!retryResponse.ok) {
+          throw new Error(`Failed to download file after URL refresh: ${retryResponse.status}`);
+        }
+        return Buffer.from(await retryResponse.arrayBuffer());
+      }
+      throw new Error(`Failed to download file: ${response.status}`);
+    }
+
+    return Buffer.from(await response.arrayBuffer());
+  } catch (error) {
+    console.error(`[Worker] downloadFileFromOSS error for ${ossKey}:`, error);
+    throw error;
+  }
+}
+
 export async function processFileWithRetry(taskId, file, fileIndex, retryCount = 0) {
   const startTime = Date.now();
   
@@ -131,15 +177,34 @@ export async function processFileWithRetry(taskId, file, fileIndex, retryCount =
 
   try {
     console.log(`[Worker] Starting to process file ${file.fileName} for task ${taskId}`);
+    
+    let fileBuffer;
+    let processOptions;
+    
+    if (file.ossKey) {
+      console.log(`[Worker] Downloading file from OSS: ${file.ossKey}`);
+      fileBuffer = await downloadFileFromOSS(file.ossKey, retryCount);
+      processOptions = {
+        buffer: fileBuffer,
+        extractText: true,
+      };
+    } else if (file.base64Data) {
+      fileBuffer = Buffer.from(file.base64Data, 'base64');
+      processOptions = {
+        base64Data: file.base64Data,
+        extractText: true,
+      };
+    } else {
+      throw new Error('No file source provided (ossKey or base64Data)');
+    }
+    
     const processResult = await processWithTimeout(async () => {
       console.log(`[Worker] Calling processFile for ${file.fileName}`);
       const result = await processFile({
         fileName: file.fileName,
         mimeType: file.mimeType,
-        options: {
-          base64Data: file.base64Data,
-          extractText: true,
-        },
+        buffer: fileBuffer,
+        options: processOptions,
       });
       console.log(`[Worker] processFile completed for ${file.fileName}, result:`, result.parseStatus);
 
@@ -147,7 +212,6 @@ export async function processFileWithRetry(taskId, file, fileIndex, retryCount =
         throw new Error(result.errorMessage || '文件处理失败');
       }
 
-      // 优先使用前端传来的分类结果
       let classification = file.classification;
       if (!classification || classification.materialId === 'unknown') {
         console.log(`[Worker] Calling classifyMaterial for ${file.fileName}`);
@@ -155,7 +219,6 @@ export async function processFileWithRetry(taskId, file, fileIndex, retryCount =
         console.log(`[Worker] classifyMaterial completed for ${file.fileName}:`, classification.materialName);
       } else {
         console.log(`[Worker] Using frontend classification for ${file.fileName}:`, classification.materialName);
-        // 添加来源标记
         classification = {
           ...classification,
           source: 'ai',
@@ -201,7 +264,9 @@ export async function processFileWithRetry(taskId, file, fileIndex, retryCount =
   } catch (error) {
     const duration = Date.now() - startTime;
     const errorMessage = error.message || String(error);
-    const shouldRetry = isRetryableError(error) && retryCount < MAX_RETRIES;
+    
+    const isUrlExpired = errorMessage.includes('403') || errorMessage.includes('expired');
+    const shouldRetry = (isRetryableError(error) || isUrlExpired) && retryCount < MAX_RETRIES;
 
     writeAuditLog({
       type: 'FILE_PROCESS_ERROR',
@@ -247,6 +312,40 @@ export async function processFileWithRetry(taskId, file, fileIndex, retryCount =
   }
 }
 
+export async function processBatchFiles(taskId, files, options = {}) {
+  const { concurrency = BATCH_CONCURRENCY } = options;
+  const results = [];
+  
+  console.log(`[Worker] Starting batch processing for ${files.length} files with concurrency ${concurrency}`);
+  
+  for (let i = 0; i < files.length; i += concurrency) {
+    const batch = files.slice(i, i + concurrency);
+    console.log(`[Worker] Processing batch ${Math.floor(i / concurrency) + 1}/${Math.ceil(files.length / concurrency)}`);
+    
+    const batchPromises = batch.map((file, idx) => {
+      const fileIndex = i + idx;
+      return processFileWithRetry(taskId, file, fileIndex);
+    });
+    
+    const batchResults = await Promise.all(batchPromises);
+    results.push(...batchResults);
+  }
+  
+  const successCount = results.filter(r => r.success).length;
+  const failCount = results.filter(r => !r.success).length;
+  
+  console.log(`[Worker] Batch processing completed: ${successCount} succeeded, ${failCount} failed`);
+  
+  return {
+    total: files.length,
+    succeeded: successCount,
+    failed: failCount,
+    results,
+  };
+}
+
 export default {
   processFileWithRetry,
+  processBatchFiles,
+  downloadFileFromOSS,
 };
