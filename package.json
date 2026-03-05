@@ -15,7 +15,9 @@
     "@langchain/core": "^1.1.24",
     "@langchain/google-genai": "^2.1.18",
     "@langchain/langgraph": "^1.1.4",
+    "@xyflow/react": "^12.10.1",
     "ali-oss": "^6.23.0",
+    "dagre": "^0.8.5",
     "express": "^5.2.0",
     "express-rate-limit": "^8.2.1",
     "langchain": "^1.2.24",
@@ -25,6 +27,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@types/dagre": "^0.7.54",
     "@types/node": "^22.14.0",
     "@types/ws": "^8.18.1",
     "@vitejs/plugin-react": "^5.0.0",

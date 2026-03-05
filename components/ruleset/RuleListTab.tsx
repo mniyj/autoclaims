@@ -8,6 +8,7 @@ interface RuleListTabProps {
   fieldDictionary: Record<string, FieldDefinition>;
   onUpdateRule: (updatedRule: RulesetRule) => void;
   onToggleStatus: (ruleId: string) => void;
+  onSelectRule?: (rule: RulesetRule) => void;
 }
 
 const DOMAIN_COLORS: Record<string, string> = {
@@ -22,7 +23,7 @@ const DOMAIN_HEADER_COLORS: Record<string, string> = {
   [ExecutionDomain.POST_PROCESS]: 'bg-purple-50 text-purple-700',
 };
 
-const RuleListTab: React.FC<RuleListTabProps> = ({ rules, fieldDictionary, onUpdateRule, onToggleStatus }) => {
+const RuleListTab: React.FC<RuleListTabProps> = ({ rules, fieldDictionary, onUpdateRule, onToggleStatus, onSelectRule }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [domainFilter, setDomainFilter] = useState<string>('');
@@ -205,6 +206,14 @@ const RuleListTab: React.FC<RuleListTabProps> = ({ rules, fieldDictionary, onUpd
                               </div>
 
                               <div className="flex items-center space-x-1 shrink-0 ml-2">
+                                {onSelectRule && (
+                                  <button
+                                    onClick={() => onSelectRule(rule)}
+                                    className="text-xs text-purple-600 hover:text-purple-800 px-1.5 py-0.5"
+                                  >
+                                    可视化
+                                  </button>
+                                )}
                                 <button
                                   onClick={() => setEditingRule(rule)}
                                   className="text-xs text-blue-600 hover:text-blue-800 px-1.5 py-0.5"
