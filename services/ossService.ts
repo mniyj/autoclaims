@@ -75,6 +75,63 @@ export const uploadBase64ToOSS = async (base64: string, mimeType: string, pathPr
     }
 };
 
+ 
+// In-memory cache for signed URLs (with per-item expiration metadata)
+type SignedUrlCacheItem = {
+    url: string;
+    expiresAt: number; // timestamp in ms when this URL expires
+};
+
+const signedUrlCache: Record<string, SignedUrlCacheItem> = {};
+
+ 
+export const getSignedUrlWithRetry = async (objectKey: string, expires = 3600): Promise<string> => {
+    const now = Date.now();
+    const cached = signedUrlCache[objectKey];
+
+    // If we have a valid cached URL, return it
+    if (cached && now < cached.expiresAt) {
+        return cached.url;
+    }
+
+    // Otherwise, fetch a fresh URL from backend
+    const refreshedUrl = await getSignedUrl(objectKey, expires);
+    // Compute expiry time with a small safety margin (5 seconds)
+    const expiryAt = now + expires * 1000 - 5000;
+    signedUrlCache[objectKey] = {
+        url: refreshedUrl,
+        expiresAt: expiryAt > now ? expiryAt : now + expires * 1000,
+    };
+    return refreshedUrl;
+};
+
+/**
+ * Refresh multiple signed URLs in batch.
+ * Returns a map of objectKey -> newSignedUrl for the provided keys.
+ */
+export const refreshSignedUrls = async (ossKeys: string[]): Promise<Record<string, string>> => {
+    const results: Record<string, string> = {};
+    if (!ossKeys || ossKeys.length === 0) return results;
+
+    // Refresh in parallel for all keys
+    const promises = ossKeys.map(async (key) => {
+        try {
+            const url = await getSignedUrl(key, 3600);
+            // Update cache with refreshed URL
+            const now = Date.now();
+            const expiryAt = now + 3600 * 1000 - 5000;
+            signedUrlCache[key] = { url, expiresAt: expiryAt > now ? expiryAt : now + 3600 * 1000 };
+            results[key] = url;
+        } catch (e) {
+            // On failure, do not crash; return empty entry for this key
+            console.error('[OSS] Failed to refresh signed URL for', key, e);
+        }
+    });
+
+    await Promise.all(promises);
+    return results;
+};
+
 /**
  * Generate a fresh signed URL for an existing OSS object.
  * Signed URLs expire after `expires` seconds (default 1 hour).
