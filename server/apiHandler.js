@@ -670,6 +670,76 @@ export const handleApiRequest = async (req, res) => {
     return;
   }
 
+  // 快速导入API - 仅存档，后台异步处理
+  if (resource === "offline-import" && id === "quick") {
+    if (req.method !== "POST") {
+      res.statusCode = 405;
+      res.end(JSON.stringify({ error: "Method Not Allowed" }));
+      return;
+    }
+
+    try {
+      const body = await parseBody(req);
+      const { claimCaseId, productCode, files } = body;
+
+      if (!claimCaseId || !files || !Array.isArray(files) || files.length === 0) {
+        res.statusCode = 400;
+        res.end(JSON.stringify({ error: "Missing claimCaseId or files" }));
+        return;
+      }
+
+      // 创建任务，初始状态为 archived
+      const taskFiles = files.map((file, index) => ({
+        index,
+        fileName: file.fileName,
+        mimeType: file.mimeType || "image/jpeg",
+        ossKey: file.ossKey,
+        status: "archived",
+        stages: {
+          archive: {
+            status: "completed",
+            completedAt: new Date().toISOString(),
+          },
+          classification: {
+            status: "pending",
+          },
+          extraction: {
+            status: "pending",
+          },
+        },
+      }));
+
+      const task = createTask(claimCaseId, productCode, taskFiles, null, {
+        source: "offline-import-quick",
+        useV2: true,
+      });
+
+      // 记录审计日志
+      writeAuditLog({
+        type: "IMPORT_TASK_CREATE",
+        claimCaseId,
+        taskId: task.id,
+        fileCount: files.length,
+        useQuickImport: true,
+      });
+
+      res.setHeader("Content-Type", "application/json");
+      res.end(
+        JSON.stringify({
+          success: true,
+          taskId: task.id,
+          message: "导入成功，后台识别中",
+          totalFiles: files.length,
+        })
+      );
+    } catch (error) {
+      console.error("[API] Quick import failed:", error);
+      res.statusCode = 500;
+      res.end(JSON.stringify({ error: formatErrorMessage(error) }));
+    }
+    return;
+  }
+
   // 批量材料分类 API
   if (resource === "batch-classify") {
     if (req.method !== "POST") {
