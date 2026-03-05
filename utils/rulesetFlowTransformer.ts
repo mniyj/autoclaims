@@ -23,6 +23,7 @@ export interface FlowNodeData {
   executionMode?: string;
   count?: number;
   colorClass?: string;
+  laneColor?: string;
   details?: Record<string, unknown>;
   [key: string]: unknown;
 }
@@ -35,10 +36,34 @@ export interface FlowElementsResult {
   edges: RulesetFlowEdge[];
 }
 
-const DOMAIN_COLORS: Record<string, { bg: string; border: string; text: string }> = {
-  ELIGIBILITY: { bg: 'bg-blue-100', border: 'border-blue-500', text: 'text-blue-800' },
-  ASSESSMENT: { bg: 'bg-green-100', border: 'border-green-500', text: 'text-green-800' },
-  POST_PROCESS: { bg: 'bg-purple-100', border: 'border-purple-500', text: 'text-purple-800' },
+const DOMAIN_COLORS: Record<string, { 
+  bg: string; 
+  border: string; 
+  text: string;
+  laneColor: string;
+  edgeColor: string;
+}> = {
+  ELIGIBILITY: { 
+    bg: 'bg-blue-100', 
+    border: 'border-blue-500', 
+    text: 'text-blue-800',
+    laneColor: '#dbeafe',
+    edgeColor: '#3b82f6',
+  },
+  ASSESSMENT: { 
+    bg: 'bg-green-100', 
+    border: 'border-green-500', 
+    text: 'text-green-800',
+    laneColor: '#dcfce7',
+    edgeColor: '#22c55e',
+  },
+  POST_PROCESS: { 
+    bg: 'bg-purple-100', 
+    border: 'border-purple-500', 
+    text: 'text-purple-800',
+    laneColor: '#f3e8ff',
+    edgeColor: '#a855f7',
+  },
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -59,6 +84,12 @@ const CATEGORY_COLORS: Record<string, string> = {
   BENEFIT_OFFSET: 'bg-slate-50 border-slate-400 text-slate-700',
   AGGREGATE_CAP: 'bg-zinc-50 border-zinc-400 text-zinc-700',
   POST_ADJUSTMENT: 'bg-neutral-50 border-neutral-400 text-neutral-700',
+};
+
+const DOMAIN_LABELS: Record<string, string> = {
+  ELIGIBILITY: '定责',
+  ASSESSMENT: '定损',
+  POST_PROCESS: '后处理',
 };
 
 function isGroupCondition(expr: LeafCondition | GroupCondition): expr is GroupCondition {
@@ -89,68 +120,6 @@ function countConditionNodes(conditions: RuleConditions): number {
   return count;
 }
 
-function calculateLayout(
-  nodes: RulesetFlowNode[],
-  edges: RulesetFlowEdge[]
-): RulesetFlowNode[] {
-  const levelMap = new Map<string, number>();
-  const nodesAtLevel = new Map<number, string[]>();
-  
-  const incomingEdges = new Map<string, string[]>();
-  edges.forEach((edge) => {
-    if (!incomingEdges.has(edge.target)) {
-      incomingEdges.set(edge.target, []);
-    }
-    incomingEdges.get(edge.target)!.push(edge.source);
-  });
-  
-  const rootNodes = nodes.filter((node) => !incomingEdges.has(node.id));
-  
-  const queue: Array<{ id: string; level: number }> = rootNodes.map((n) => ({ id: n.id, level: 0 }));
-  const visited = new Set<string>();
-  
-  while (queue.length > 0) {
-    const { id, level } = queue.shift()!;
-    if (visited.has(id)) continue;
-    visited.add(id);
-    
-    levelMap.set(id, level);
-    if (!nodesAtLevel.has(level)) {
-      nodesAtLevel.set(level, []);
-    }
-    nodesAtLevel.get(level)!.push(id);
-    
-    const children = edges
-      .filter((edge) => edge.source === id)
-      .map((edge) => edge.target);
-    
-    children.forEach((childId) => {
-      if (!visited.has(childId)) {
-        queue.push({ id: childId, level: level + 1 });
-      }
-    });
-  }
-  
-  const horizontalGap = 220;
-  const verticalGap = 120;
-  
-  return nodes.map((node) => {
-    const level = levelMap.get(node.id) || 0;
-    const nodesInThisLevel = nodesAtLevel.get(level) || [];
-    const indexInLevel = nodesInThisLevel.indexOf(node.id);
-    const totalInLevel = nodesInThisLevel.length;
-    
-    const totalWidth = (totalInLevel - 1) * horizontalGap;
-    const x = indexInLevel * horizontalGap - totalWidth / 2;
-    const y = level * verticalGap;
-    
-    return {
-      ...node,
-      position: { x, y },
-    };
-  });
-}
-
 export function rulesetToFlowElements(ruleset: InsuranceRuleset): FlowElementsResult {
   const nodes: RulesetFlowNode[] = [];
   const edges: RulesetFlowEdge[] = [];
@@ -159,11 +128,24 @@ export function rulesetToFlowElements(ruleset: InsuranceRuleset): FlowElementsRe
     return { nodes, edges };
   }
 
-  // 1. Create ruleset start node
+  const domainOrder = ['ELIGIBILITY', 'ASSESSMENT', 'POST_PROCESS'] as const;
+  const laneWidth = 380;
+  const laneGap = 80;
+  const startY = 0;
+  const domainY = 100;
+  const categoryY = 200;
+  const ruleStartY = 320;
+  const nodeHeight = 70;
+  const categoryGap = 40;
+  const ruleGap = 20;
+
+  const totalWidth = domainOrder.length * laneWidth + (domainOrder.length - 1) * laneGap;
+
+  // 1. Create ruleset start node (top center)
   const startNode: RulesetFlowNode = {
     id: 'ruleset_start',
     type: 'rulesetStart',
-    position: { x: 0, y: 0 },
+    position: { x: 0, y: startY },
     data: {
       label: ruleset.policy_info.product_name || '规则集',
       description: `版本: ${ruleset.metadata.version} | 规则数: ${ruleset.rules.length}`,
@@ -177,11 +159,8 @@ export function rulesetToFlowElements(ruleset: InsuranceRuleset): FlowElementsRe
   };
   nodes.push(startNode);
 
-  // 2. Create execution domain nodes
-  const domainOrder = ['ELIGIBILITY', 'ASSESSMENT', 'POST_PROCESS'];
-  let lastDomainId: string | null = 'ruleset_start';
-  
-  domainOrder.forEach((domainKey) => {
+  // 2. Create domain lanes
+  domainOrder.forEach((domainKey, domainIndex) => {
     const domainConfig = ruleset.execution_pipeline?.domains?.find(
       (d) => d.domain === domainKey
     );
@@ -191,21 +170,54 @@ export function rulesetToFlowElements(ruleset: InsuranceRuleset): FlowElementsRe
     );
     
     if (domainRules.length === 0 && !domainConfig) return;
+
+    const laneX = (domainIndex - 1) * (laneWidth + laneGap);
+    const colors = DOMAIN_COLORS[domainKey];
     
+    // Add lane background node (for visual grouping)
+    const laneBgId = `lane_bg_${domainKey}`;
+    const maxNodesInLane = Math.max(
+      1,
+      domainRules.length + (domainConfig?.category_sequence?.length || 0)
+    );
+    const laneHeight = Math.max(400, maxNodesInLane * 60 + 200);
+    
+    nodes.push({
+      id: laneBgId,
+      type: 'default',
+      position: { x: laneX - laneWidth/2 + 10, y: domainY - 50 },
+      style: { 
+        width: laneWidth - 20, 
+        height: laneHeight,
+        backgroundColor: colors.laneColor,
+        borderRadius: '12px',
+        border: `3px solid ${colors.edgeColor}`,
+        opacity: 0.15,
+        zIndex: -1,
+        pointerEvents: 'none' as const,
+      },
+      data: {
+        label: '',
+        laneColor: colors.laneColor,
+      },
+      selectable: false,
+      draggable: false,
+    });
+    
+    // Add domain node
     const domainId = generateNodeId('domain', domainKey);
-    const colors = DOMAIN_COLORS[domainKey] || DOMAIN_COLORS.ELIGIBILITY;
-    
     const domainNode: RulesetFlowNode = {
       id: domainId,
       type: 'executionDomain',
-      position: { x: 0, y: 0 },
+      position: { x: laneX, y: domainY },
       data: {
-        label: domainKey,
+        label: DOMAIN_LABELS[domainKey] || domainKey,
         description: `${domainRules.length} 条规则`,
         domain: domainKey,
         count: domainRules.length,
         executionMode: domainConfig?.execution_mode,
         colorClass: `${colors.bg} ${colors.border} ${colors.text}`,
+        laneColor: colors.laneColor,
         details: {
           categories: domainConfig?.category_sequence || [],
           inputGranularity: domainConfig?.input_granularity,
@@ -215,19 +227,19 @@ export function rulesetToFlowElements(ruleset: InsuranceRuleset): FlowElementsRe
     };
     nodes.push(domainNode);
     
-    if (lastDomainId) {
-      edges.push({
-        id: `${lastDomainId}->${domainId}`,
-        source: lastDomainId,
-        target: domainId,
-        type: 'smoothstep',
-        animated: true,
-        style: { stroke: '#6366f1', strokeWidth: 2 },
-      });
-    }
-    
-    // 3. Create category nodes within this domain
+    // Connect ruleset to domain with domain color
+    edges.push({
+      id: `ruleset_start->${domainId}`,
+      source: 'ruleset_start',
+      target: domainId,
+      type: 'smoothstep',
+      animated: true,
+      style: { stroke: colors.edgeColor, strokeWidth: 3 },
+    });
+
+    // Group rules by category
     const categories = domainConfig?.category_sequence || [];
+    let currentY = categoryY;
     
     categories.forEach((categoryKey) => {
       const categoryRules = domainRules.filter((r) => r.category === categoryKey);
@@ -237,10 +249,11 @@ export function rulesetToFlowElements(ruleset: InsuranceRuleset): FlowElementsRe
       const categoryId = generateNodeId(`cat_${domainKey}`, categoryKey);
       const colorClass = CATEGORY_COLORS[categoryKey] || 'bg-gray-50 border-gray-400 text-gray-700';
       
+      // Add category node
       const categoryNode: RulesetFlowNode = {
         id: categoryId,
         type: 'category',
-        position: { x: 0, y: 0 },
+        position: { x: laneX, y: currentY },
         data: {
           label: categoryKey,
           description: `${categoryRules.length} 条规则`,
@@ -248,6 +261,7 @@ export function rulesetToFlowElements(ruleset: InsuranceRuleset): FlowElementsRe
           domain: domainKey,
           count: categoryRules.length,
           colorClass,
+          laneColor: colors.laneColor,
           details: {
             rules: categoryRules.map((r) => ({
               id: r.rule_id,
@@ -259,15 +273,18 @@ export function rulesetToFlowElements(ruleset: InsuranceRuleset): FlowElementsRe
       };
       nodes.push(categoryNode);
       
+      // Connect domain to category with domain color
       edges.push({
         id: `${domainId}->${categoryId}`,
         source: domainId,
         target: categoryId,
         type: 'smoothstep',
-        style: { stroke: '#9ca3af', strokeWidth: 1 },
+        style: { stroke: colors.edgeColor, strokeWidth: 2, opacity: 0.6 },
       });
       
-      // 4. Create rule nodes within this category
+      currentY += nodeHeight + categoryGap;
+      
+      // Add rules under this category
       categoryRules.forEach((rule) => {
         const ruleId = generateNodeId('rule', rule.rule_id);
         const conditionCount = countConditionNodes(rule.conditions);
@@ -275,7 +292,7 @@ export function rulesetToFlowElements(ruleset: InsuranceRuleset): FlowElementsRe
         const ruleNode: RulesetFlowNode = {
           id: ruleId,
           type: 'rule',
-          position: { x: 0, y: 0 },
+          position: { x: laneX, y: currentY },
           data: {
             label: rule.rule_name,
             description: rule.description || `${conditionCount} 个条件`,
@@ -285,6 +302,7 @@ export function rulesetToFlowElements(ruleset: InsuranceRuleset): FlowElementsRe
             domain: domainKey,
             status: rule.status,
             count: conditionCount,
+            laneColor: colors.laneColor,
             details: {
               action: rule.action?.action_type,
               priority: rule.priority,
@@ -294,20 +312,23 @@ export function rulesetToFlowElements(ruleset: InsuranceRuleset): FlowElementsRe
         };
         nodes.push(ruleNode);
         
+        // Connect category to rule
         edges.push({
           id: `${categoryId}->${ruleId}`,
           source: categoryId,
           target: ruleId,
           type: 'smoothstep',
-          style: { stroke: '#d1d5db', strokeWidth: 1 },
+          style: { stroke: colors.edgeColor, strokeWidth: 1, opacity: 0.4 },
         });
+        
+        currentY += nodeHeight + ruleGap;
       });
+      
+      currentY += 10;
     });
-    
-    lastDomainId = domainId;
   });
 
-  // 5. Add override chain connections
+  // Add override chain connections
   if (ruleset.override_chains?.length) {
     ruleset.override_chains.forEach((chain) => {
       if (chain.chain?.length > 1) {
@@ -332,8 +353,7 @@ export function rulesetToFlowElements(ruleset: InsuranceRuleset): FlowElementsRe
     });
   }
 
-  const positionedNodes = calculateLayout(nodes, edges);
-  return { nodes: positionedNodes, edges };
+  return { nodes, edges };
 }
 
 export function ruleToDetailedFlowElements(rule: RulesetRule): FlowElementsResult {
@@ -432,8 +452,70 @@ export function ruleToDetailedFlowElements(rule: RulesetRule): FlowElementsResul
     });
   }
 
-  const positionedNodes = calculateLayout(nodes, edges);
+  const positionedNodes = calculateTreeLayout(nodes, edges);
   return { nodes: positionedNodes, edges };
+}
+
+function calculateTreeLayout(
+  nodes: RulesetFlowNode[],
+  edges: RulesetFlowEdge[]
+): RulesetFlowNode[] {
+  const levelMap = new Map<string, number>();
+  const nodesAtLevel = new Map<number, string[]>();
+  
+  const incomingEdges = new Map<string, string[]>();
+  edges.forEach((edge) => {
+    if (!incomingEdges.has(edge.target)) {
+      incomingEdges.set(edge.target, []);
+    }
+    incomingEdges.get(edge.target)!.push(edge.source);
+  });
+  
+  const rootNodes = nodes.filter((node) => !incomingEdges.has(node.id));
+  
+  const queue: Array<{ id: string; level: number }> = rootNodes.map((n) => ({ id: n.id, level: 0 }));
+  const visited = new Set<string>();
+  
+  while (queue.length > 0) {
+    const { id, level } = queue.shift()!;
+    if (visited.has(id)) continue;
+    visited.add(id);
+    
+    levelMap.set(id, level);
+    if (!nodesAtLevel.has(level)) {
+      nodesAtLevel.set(level, []);
+    }
+    nodesAtLevel.get(level)!.push(id);
+    
+    const children = edges
+      .filter((edge) => edge.source === id)
+      .map((edge) => edge.target);
+    
+    children.forEach((childId) => {
+      if (!visited.has(childId)) {
+        queue.push({ id: childId, level: level + 1 });
+      }
+    });
+  }
+  
+  const horizontalGap = 200;
+  const verticalGap = 100;
+  
+  return nodes.map((node) => {
+    const level = levelMap.get(node.id) || 0;
+    const nodesInThisLevel = nodesAtLevel.get(level) || [];
+    const indexInLevel = nodesInThisLevel.indexOf(node.id);
+    const totalInLevel = nodesInThisLevel.length;
+    
+    const totalWidth = (totalInLevel - 1) * horizontalGap;
+    const x = (indexInLevel * horizontalGap) - (totalWidth / 2);
+    const y = level * verticalGap;
+    
+    return {
+      ...node,
+      position: { x, y },
+    };
+  });
 }
 
 export default rulesetToFlowElements;
