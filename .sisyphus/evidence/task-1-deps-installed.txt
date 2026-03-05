@@ -1,0 +1,19 @@
+Task 1 evidence: Installation of React Flow and Dagre dependencies
+
+- Installed packages:
+  - @xyflow/react@12.10.1
+  - dagre@0.8.5
+- DevDependencies:
+  - @types/dagre@0.7.54
+
+- Verification commands results:
+  - npm list @xyflow/react
+    @xyflow/react@12.10.1
+  - npm list dagre
+    dagre@0.8.5
+  - npm list @types/dagre
+    @types/dagre@0.7.54
+
+Notes:
+- No additional visualization libraries installed.
+- Versions match acceptance criteria.

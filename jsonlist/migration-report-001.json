@@ -1,0 +1,28 @@
+{
+  "timestamp": "2026-03-05T06:31:29.749Z",
+  "summary": {
+    "totalSourceRecords": 10,
+    "totalMigrated": 7,
+    "duplicatesRemoved": 3
+  },
+  "statistics": {
+    "bySource": {
+      "direct_upload": 6,
+      "batch_import": 1
+    },
+    "byStatus": {
+      "pending": 0,
+      "processing": 0,
+      "completed": 7,
+      "failed": 0
+    },
+    "byClaimCase": 4
+  },
+  "files": {
+    "input": [
+      "claim-cases.json",
+      "claim-documents.json"
+    ],
+    "output": "claim-materials.json"
+  }
+}

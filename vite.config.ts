@@ -38,6 +38,14 @@ export default defineConfig(({ mode }) => {
           // VoiceGateway disabled in dev mode - it conflicts with Vite's HMR WebSocket,
           // causing infinite reload loops. Voice features use the production server only.
 
+          // 启动任务调度器（开发模式）
+          import('./server/taskQueue/scheduler.js').then(({ startScheduler }) => {
+            startScheduler();
+            console.log('[Vite Dev] Task scheduler started');
+          }).catch(err => {
+            console.error('[Vite Dev] Failed to start scheduler:', err);
+          });
+
           // 注意：在 configureServer 中注册的中间件会在 Vite 内部中间件之前执行
           server.middlewares.use((req, res, next) => {
             if (req.url?.startsWith('/api/')) {

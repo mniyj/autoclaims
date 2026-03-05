@@ -10,6 +10,7 @@ import {
   type AnyDocumentSummary,
   type ClaimFileCategory,
   type ClaimsMaterial,
+  type ClaimMaterial,
 } from "../types";
 import OfflineMaterialImportButton from "./OfflineMaterialImportButton";
 import OfflineMaterialImportDialog from "./OfflineMaterialImportDialog";
@@ -52,6 +53,25 @@ interface ClaimCaseDetailPageProps {
   claim: ClaimCase;
   onBack: () => void;
 }
+
+// 根据文件名推断 MIME 类型
+const inferFileType = (fileName: string): string => {
+  if (!fileName) return 'application/octet-stream';
+  const ext = fileName.split('.').pop()?.toLowerCase();
+  const typeMap: Record<string, string> = {
+    'jpg': 'image/jpeg',
+    'jpeg': 'image/jpeg',
+    'png': 'image/png',
+    'gif': 'image/gif',
+    'webp': 'image/webp',
+    'pdf': 'application/pdf',
+    'doc': 'application/msword',
+    'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'xls': 'application/vnd.ms-excel',
+    'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  };
+  return typeMap[ext] || 'application/octet-stream';
+};
 
 const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
   claim,
@@ -134,6 +154,8 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
 
   // --- 材料审核 Tab 状态 ---
   const [activeTab, setActiveTab] = useState<ActiveTab>("case_info");
+  // 统一材料数据（来自 claim-materials API）
+  const [claimMaterials, setClaimMaterials] = useState<ClaimMaterial[]>([]);
   const [reviewDocuments, setReviewDocuments] = useState<
     Array<
       ProcessedFile & {
@@ -476,28 +498,58 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
     });
   };
 
-  // 加载材料审核数据（批量导入结果 + 摘要 + 聚合）
+  // 加载材料审核数据（统一从 claim-materials API 获取）
   const loadReviewData = async () => {
     try {
-      const resp = await fetch(`/api/claim-documents?claimCaseId=${claim.id}`);
+      // 使用新的统一 materials API
+      const resp = await fetch(`/api/claim-materials?claimCaseId=${claim.id}`);
       if (!resp.ok) return;
       const data = await resp.json();
 
-      // 合并所有批次的文档
-      const allDocs: typeof reviewDocuments = [];
-      const allSummaries: AnyDocumentSummary[] = [];
+      // 保存统一材料数据
+      setClaimMaterials(data.materials || []);
 
-      for (const record of data.records || data.allRecords || []) {
-        for (const doc of record.documents || []) {
-          allDocs.push(doc);
-          if (doc.documentSummary) {
-            allSummaries.push(doc.documentSummary as AnyDocumentSummary);
+      // 转换为 reviewDocuments 格式（兼容现有 UI）
+      const allDocs: typeof reviewDocuments = (data.materials || []).map((m: ClaimMaterial) => {
+        // 根据 materialName 查找对应的 ClaimsMaterial.id
+        let resolvedMaterialId = m.materialId;
+        let resolvedMaterialName = m.materialName || m.category || "未分类";
+        
+        if (!resolvedMaterialId || resolvedMaterialId === 'unknown') {
+          // 尝试根据名称匹配材料类型
+          const matchedMaterial = materialList.find((mat: ClaimsMaterial) => 
+            mat.name === resolvedMaterialName || 
+            resolvedMaterialName.includes(mat.name) ||
+            mat.name.includes(resolvedMaterialName)
+          );
+          if (matchedMaterial) {
+            resolvedMaterialId = matchedMaterial.id;
           }
         }
-        if (record.aggregation) {
-          setAggregationResult(record.aggregation);
-        }
-      }
+        
+        return {
+          documentId: m.id,
+          fileName: m.fileName,
+          fileType: m.fileType,
+          ossUrl: m.url,
+          ossKey: m.ossKey,
+          classification: {
+            materialId: resolvedMaterialId || "unknown",
+            materialName: resolvedMaterialName,
+            confidence: m.confidence || 0,
+          },
+          structuredData: m.extractedData,
+          documentSummary: m.documentSummary,
+          duplicateWarning: m.metadata?.duplicateWarning || null,
+          status: m.status,
+          batchId: m.sourceDetail?.importId,
+          importedAt: m.uploadedAt,
+        };
+      });
+
+      const allSummaries: AnyDocumentSummary[] = (data.materials || [])
+        .filter((m: ClaimMaterial) => m.documentSummary)
+        .map((m: ClaimMaterial) => m.documentSummary as AnyDocumentSummary);
 
       setReviewDocuments(allDocs);
       setReviewSummaries(allSummaries);
@@ -540,11 +592,27 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
   };
 
   // 跳转到文件并高亮锚点
-  const handleJumpTo = (
-    doc: { ossUrl?: string; fileType: string; fileName: string },
+  const handleJumpTo = async (
+    doc: { ossUrl?: string; ossKey?: string; fileType: string; fileName: string },
     anchor: SourceAnchor,
   ) => {
-    if (!doc.ossUrl) return;
+    if (!doc.ossUrl && !doc.ossKey) return;
+    
+    // 获取文件预览 URL（优先使用 ossKey 获取实时签名 URL）
+    let fileUrl = doc.ossUrl;
+    if (doc.ossKey) {
+      try {
+        fileUrl = await getSignedUrl(doc.ossKey, 3600);
+      } catch (e) {
+        console.error("[Viewer] Failed to get signed URL:", e);
+        // 如果获取失败，尝试使用现有的 ossUrl
+        if (!fileUrl) {
+          alert("获取文件预览链接失败，请稍后重试");
+          return;
+        }
+      }
+    }
+    
     const fileCategory = doc.fileType?.startsWith("image/")
       ? "image"
       : doc.fileType?.includes("pdf")
@@ -555,7 +623,7 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
             ? "excel"
             : "other";
     setSelectedViewerDoc({
-      fileUrl: doc.ossUrl,
+      fileUrl,
       fileType: fileCategory as "pdf" | "image" | "word" | "excel" | "other",
       fileName: doc.fileName,
     });
@@ -700,6 +768,63 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
           },
         });
         console.log("[Parse] Result saved to backend:", fileKey);
+        
+        // 同步到 claim-materials（确保材料审核页能看到）
+        try {
+          // 先检查是否已存在
+          const materialsResp = await fetch(`/api/claim-materials?claimCaseId=${claim.id}`);
+          if (materialsResp.ok) {
+            const materialsData = await materialsResp.json();
+            const existingMaterial = materialsData.materials?.find(
+              (m: ClaimMaterial) => m.fileName === file.name && m.source === 'direct_upload'
+            );
+            
+            if (existingMaterial) {
+              // 更新现有记录（添加解析结果）
+              await fetch(`/api/claim-materials/${existingMaterial.id}/parse`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  extractedData: result.extractedData,
+                  auditConclusion: result.auditConclusion,
+                  confidence: result.confidence,
+                  materialId: materialConfig.id,
+                  materialName: materialConfig.name,
+                  status: 'completed',
+                  processedAt: new Date().toISOString(),
+                }),
+              });
+              console.log("[Parse] Updated existing material:", existingMaterial.id);
+            } else {
+              // 创建新记录
+              await fetch('/api/claim-materials', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  claimCaseId: claim.id,
+                  fileName: file.name,
+                  fileType: inferFileType(file.name),
+                  url: file.url || '#',
+                  ossKey: file.ossKey,
+                  category: categoryName,
+                  materialId: materialConfig.id,
+                  materialName: materialConfig.name,
+                  extractedData: result.extractedData,
+                  auditConclusion: result.auditConclusion,
+                  confidence: result.confidence,
+                  source: 'direct_upload',
+                  status: 'completed',
+                  uploadedAt: new Date().toISOString(),
+                  processedAt: new Date().toISOString(),
+                }),
+              });
+              console.log("[Parse] Created new material for:", file.name);
+            }
+          }
+        } catch (syncError) {
+          console.error("[Parse] Failed to sync to claim-materials:", syncError);
+          // 同步失败不影响主流程
+        }
       } catch (saveError) {
         console.error("[Parse] Failed to save result to backend:", saveError);
         // 保存失败不影响用户体验，继续执行
@@ -2006,6 +2131,7 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
                     handleJumpTo(
                       {
                         ossUrl: doc.ossUrl,
+                        ossKey: doc.ossKey,
                         fileType: doc.fileType || "",
                         fileName: doc.fileName,
                       },
@@ -2018,7 +2144,7 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
                       docId={doc.documentId}
                       confidence={summary?.confidence}
                       onViewSource={
-                        doc.ossUrl
+                        doc.ossUrl || doc.ossKey
                           ? () =>
                               makeJump({
                                 pageIndex: 0,

@@ -143,6 +143,10 @@ export async function processFileWithRetry(taskId, file, fileIndex, retryCount =
       });
       console.log(`[Worker] processFile completed for ${file.fileName}, result:`, result.parseStatus);
 
+      if (result.parseStatus === 'failed') {
+        throw new Error(result.errorMessage || '文件处理失败');
+      }
+
       // 优先使用前端传来的分类结果
       let classification = file.classification;
       if (!classification || classification.materialId === 'unknown') {

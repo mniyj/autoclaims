@@ -10,7 +10,7 @@ import {
   updateTask,
   getQueueStats,
 } from './queue.js';
-import { processFileWithRetry } from './worker-new.js';
+import { processFileWithRetry } from './worker.js';
 import { writeAuditLog } from '../middleware/index.js';
 import { createTaskCompleteMessage } from '../messageCenter/messageService.js';
 import {
@@ -21,6 +21,7 @@ import {
   recordQueueSnapshot,
 } from '../monitoring/metrics.js';
 import { runAllChecks } from '../monitoring/alerts.js';
+import { readData, writeData } from '../utils/fileStore.js';
 
 const MAX_CONCURRENT_PER_USER = 10;
 const POLL_INTERVAL = 1000;
@@ -261,7 +262,54 @@ class TaskScheduler {
       timestamp: new Date().toISOString(),
     });
 
+    await this.saveMaterialsToClaimCase(task);
+
     this.emitTaskComplete(task);
+  }
+
+  async saveMaterialsToClaimCase(task) {
+    try {
+      const allMaterials = readData('claim-materials');
+      const newMaterials = [];
+
+      for (const file of task.files) {
+        if (file.status !== 'completed') continue;
+
+
+        const exists = allMaterials.some(
+          (m) => m.claimCaseId === task.claimCaseId &&
+                 m.fileName === file.fileName &&
+                 m.source === 'offline_import'
+        );
+
+        if (!exists) {
+          const classification = file.result?.classification || {};
+          newMaterials.push({
+            id: `mat-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            claimCaseId: task.claimCaseId,
+            fileName: file.fileName,
+            fileType: file.mimeType || 'unknown',
+            category: classification.materialName || '未分类',
+            materialName: classification.materialName || '未分类',
+            materialId: classification.materialId || 'unknown',
+            source: 'offline_import',
+            status: 'completed',
+            uploadedAt: new Date().toISOString(),
+            ocrText: file.result?.extractedText || '',
+            structuredData: file.result?.structuredData || {},
+            taskId: task.id,
+          });
+        }
+      }
+
+      if (newMaterials.length > 0) {
+        allMaterials.push(...newMaterials);
+        writeData('claim-materials', allMaterials);
+        console.log(`[Scheduler] Saved ${newMaterials.length} materials to claim case ${task.claimCaseId}`);
+      }
+    } catch (error) {
+      console.error('[Scheduler] Failed to save materials:', error);
+    }
   }
 
   emitTaskComplete(task) {
