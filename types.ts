@@ -619,6 +619,7 @@ export interface ProcessedFile {
   fileName: string;
   fileType: string;
   ossUrl?: string;
+  ossKey?: string;
   extractedText?: string;
   structuredData?: Record<string, unknown>;
   classification: {
@@ -648,6 +649,79 @@ export interface OfflineMaterialImportResult {
   summary?: string;
 }
 // --- END: Types for Offline Material Import ---
+
+// --- START: Types for Unified Claim Materials ---
+/**
+ * 材料来源类型
+ * - direct_upload: 用户直接上传（案件信息页）
+ * - batch_import: 批量导入（材料审核页）
+ * - api_sync: API 同步导入
+ */
+export type ClaimMaterialSource = 'direct_upload' | 'batch_import' | 'api_sync';
+
+/**
+ * 材料状态
+ */
+export type ClaimMaterialStatus = 'pending' | 'processing' | 'completed' | 'failed';
+
+/**
+ * 统一的理赔材料记录
+ * 合并 fileCategories 和 claim-documents 的数据结构
+ */
+export interface ClaimMaterial {
+  // 核心标识
+  id: string;
+  claimCaseId: string;
+
+  // 文件信息
+  fileName: string;
+  fileType: string;
+  fileSize?: number;
+  url: string;
+  ossKey?: string;
+
+  // 分类信息
+  category?: string;
+  materialId?: string;
+  materialName?: string;
+
+  // AI 解析结果
+  extractedData?: Record<string, any>;
+  auditConclusion?: string;
+  confidence?: number;
+  documentSummary?: AnyDocumentSummary;
+
+  // 来源追踪
+  source: ClaimMaterialSource;
+  sourceDetail?: {
+    importId?: string;
+    importedAt?: string;
+    taskId?: string;
+  };
+
+  // 状态
+  status: ClaimMaterialStatus;
+  uploadedAt: string;
+  processedAt?: string;
+
+  // 元数据
+  metadata?: {
+    duplicateWarning?: { message: string; similarity: number };
+    parseVersion?: string;
+    ocrEngine?: string;
+  };
+}
+
+/**
+ * ClaimMaterials API 响应
+ */
+export interface ClaimMaterialsResponse {
+  claimCaseId: string;
+  materials: ClaimMaterial[];
+  total: number;
+  bySource: Record<ClaimMaterialSource, number>;
+}
+// --- END: Types for Unified Claim Materials ---
 
 export interface EndUser {
   id: string;

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MaterialViewItem } from '../../types/material-review';
 import Modal from '../ui/Modal';
 import { ClaimCase, ClaimsMaterial } from '../../types';
+import { getSignedUrl } from '../../services/ossService';
 
 interface MaterialReviewDrawerProps {
   isOpen: boolean;
@@ -27,6 +28,8 @@ const MaterialReviewDrawer: React.FC<MaterialReviewDrawerProps> = ({
   const [selectedMaterialId, setSelectedMaterialId] = useState<string>('');
   const [isParsing, setIsParsing] = useState(false);
   const [parseResult, setParseResult] = useState<any>(null);
+  const [imageUrl, setImageUrl] = useState<string>('');
+  const [isLoadingImage, setIsLoadingImage] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -46,6 +49,38 @@ const MaterialReviewDrawer: React.FC<MaterialReviewDrawerProps> = ({
       setSelectedMaterialId(material.classification.materialId);
     }
   }, [material]);
+
+  // 获取实时签名 URL
+  useEffect(() => {
+    const fetchSignedUrl = async () => {
+      if (!isOpen || !material) {
+        setImageUrl('');
+        return;
+      }
+
+      setIsLoadingImage(true);
+      try {
+        // 优先使用 ossKey 获取实时签名 URL
+        if (material.ossKey) {
+          const signedUrl = await getSignedUrl(material.ossKey, 3600);
+          setImageUrl(signedUrl);
+        } else if (material.ossUrl) {
+          // 如果没有 ossKey，尝试使用现有的 ossUrl
+          setImageUrl(material.ossUrl);
+        } else {
+          setImageUrl('');
+        }
+      } catch (error) {
+        console.error('[MaterialReviewDrawer] Failed to get signed URL:', error);
+        // 如果获取失败，尝试使用现有的 ossUrl
+        setImageUrl(material.ossUrl || '');
+      } finally {
+        setIsLoadingImage(false);
+      }
+    };
+
+    fetchSignedUrl();
+  }, [isOpen, material]);
 
   if (!material || !claimCase) return null;
 
@@ -118,9 +153,16 @@ const MaterialReviewDrawer: React.FC<MaterialReviewDrawerProps> = ({
       <div className="flex h-[60vh]">
         <div className="w-1/2 border-r border-gray-200 p-4">
           <div className="h-full bg-gray-100 rounded-lg flex items-center justify-center">
-            {material.ossUrl ? (
+            {isLoadingImage ? (
+              <div className="text-gray-400 text-center">
+                <svg className="w-16 h-16 mx-auto mb-2 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <p>加载中...</p>
+              </div>
+            ) : imageUrl ? (
               <img
-                src={material.ossUrl}
+                src={imageUrl}
                 alt={material.fileName}
                 className="max-w-full max-h-full object-contain rounded-lg"
               />
@@ -277,7 +319,30 @@ const MaterialReviewDrawer: React.FC<MaterialReviewDrawerProps> = ({
             </div>
           )}
 
-          {!hasDocumentSummary && (
+          {/* 从案件信息页解析的简单结果（没有 documentSummary 但有 structuredData） */}
+          {!hasDocumentSummary && material.structuredData && Object.keys(material.structuredData).length > 0 && (
+            <div className="mb-4">
+              <h3 className="text-lg font-medium text-gray-900 mb-2">AI提取结果</h3>
+              <div className="space-y-2">
+                {Object.entries(material.structuredData).map(([key, value]) => {
+                  if (value === undefined || value === null) return null;
+                  
+                  return (
+                    <div key={key} className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-start">
+                        <span className="text-sm text-gray-500 capitalize">{key}：</span>
+                        <span className="text-sm font-medium text-gray-900 text-right">
+                          {String(value)}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>            
+            </div>
+          )}
+
+          {!hasDocumentSummary && (!material.structuredData || Object.keys(material.structuredData).length === 0) && (
             <div className="p-4 bg-yellow-50 rounded-lg">
               <p className="text-sm text-yellow-700">
                 该材料暂无AI提取结果，可能还在处理中或识别失败。

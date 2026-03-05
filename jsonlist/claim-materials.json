@@ -1,0 +1,96 @@
+[
+  {
+    "id": "direct-1772692289748-ofyv2tim1",
+    "claimCaseId": "claim-detail-1",
+    "fileName": "发票1.jpg",
+    "fileType": "image/jpeg",
+    "url": "#",
+    "category": "医疗费用",
+    "materialName": "医疗费用",
+    "source": "direct_upload",
+    "status": "completed",
+    "uploadedAt": "2024-01-02 09:24"
+  },
+  {
+    "id": "direct-1772692289748-50ardgbfg",
+    "claimCaseId": "claim-detail-1",
+    "fileName": "发票2.jpg",
+    "fileType": "image/jpeg",
+    "url": "#",
+    "category": "医疗费用",
+    "materialName": "医疗费用",
+    "source": "direct_upload",
+    "status": "completed",
+    "uploadedAt": "2024-01-02 09:24"
+  },
+  {
+    "id": "direct-1772692289748-nf9qgpnpx",
+    "claimCaseId": "claim-detail-1",
+    "fileName": "诊断证明.pdf",
+    "fileType": "application/pdf",
+    "url": "#",
+    "category": "医疗费用",
+    "materialName": "医疗费用",
+    "source": "direct_upload",
+    "status": "completed",
+    "uploadedAt": "2024-01-02 09:24"
+  },
+  {
+    "id": "direct-1772692289748-tfe70gb9d",
+    "claimCaseId": "claim-detail-1",
+    "fileName": "请假条.jpg",
+    "fileType": "image/jpeg",
+    "url": "#",
+    "category": "误工费",
+    "materialName": "误工费",
+    "source": "direct_upload",
+    "status": "completed",
+    "uploadedAt": "2024-01-02 09:24"
+  },
+  {
+    "id": "direct-1772692289748-99t6ze9a8",
+    "claimCaseId": "CLM685408",
+    "fileName": "责任认定书.jpg",
+    "fileType": "image/jpeg",
+    "url": "http://drools-purplespark.oss-cn-beijing.aliyuncs.com/claims/1772607740101.jpg?OSSAccessKeyId=LTAI5tFnto3xoZD6Km6GRK76&Expires=1772611347&Signature=%2FakVdAQQSS80b%2BQ6DicYlYJ4oOY%3D",
+    "ossKey": "claims/1772607740101.jpg",
+    "category": "交通事故责任认定书",
+    "materialName": "交通事故责任认定书",
+    "source": "direct_upload",
+    "status": "completed",
+    "uploadedAt": "3/4/2026, 3:01:25 PM"
+  },
+  {
+    "id": "direct-1772692289748-8cgwqm9r7",
+    "claimCaseId": "CLM973980",
+    "fileName": "微信图片_2025-07-02_173630_395.jpg",
+    "fileType": "image/jpeg",
+    "url": "http://drools-purplespark.oss-cn-beijing.aliyuncs.com/claims/1772639128528.jpg?OSSAccessKeyId=LTAI5tFnto3xoZD6Km6GRK76&Expires=1772642731&Signature=pXjGOn531SaaF8nZBm8ken22l9o%3D",
+    "ossKey": "claims/1772639128528.jpg",
+    "category": "医疗费发票",
+    "materialName": "医疗费发票",
+    "source": "direct_upload",
+    "status": "completed",
+    "uploadedAt": "3/4/2026, 11:42:53 PM"
+  },
+  {
+    "id": "doc-1772456047413-u91b7i",
+    "claimCaseId": "claim-1",
+    "fileName": "行驶证.jpg",
+    "fileType": "image/jpeg",
+    "url": "#",
+    "category": "未识别",
+    "materialId": "unknown",
+    "materialName": "未识别",
+    "extractedData": {},
+    "confidence": 0,
+    "source": "batch_import",
+    "sourceDetail": {
+      "importId": "import-1772456047417",
+      "importedAt": "2026-03-02T12:54:07.417Z"
+    },
+    "status": "completed",
+    "uploadedAt": "2026-03-02T12:54:07.417Z",
+    "processedAt": "2026-03-02T12:54:07.417Z"
+  }
+]

@@ -127,6 +127,74 @@ function detectDeviceType(userAgent) {
   return 'desktop';
 }
 
+/**
+ * 根据文件名推断 MIME 类型
+ */
+function inferFileType(fileName) {
+  if (!fileName) return 'application/octet-stream';
+  const ext = fileName.split('.').pop()?.toLowerCase();
+  const typeMap = {
+    'jpg': 'image/jpeg',
+    'jpeg': 'image/jpeg',
+    'png': 'image/png',
+    'gif': 'image/gif',
+    'webp': 'image/webp',
+    'pdf': 'application/pdf',
+    'doc': 'application/msword',
+    'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'xls': 'application/vnd.ms-excel',
+    'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  };
+  return typeMap[ext] || 'application/octet-stream';
+}
+
+/**
+ * 将 fileCategories 同步到 claim-materials
+ * @param {string} claimCaseId - 案件 ID
+ * @param {Array} fileCategories - 文件分类数组
+ */
+function syncFileCategoriesToMaterials(claimCaseId, fileCategories) {
+  try {
+    const allMaterials = readData("claim-materials");
+    const newMaterials = [];
+
+    for (const category of fileCategories || []) {
+      for (const file of category.files || []) {
+        // 检查是否已存在
+        const exists = allMaterials.some(
+          (m) => m.claimCaseId === claimCaseId &&
+                 m.fileName === file.name &&
+                 m.source === "direct_upload"
+        );
+
+        if (!exists && file.name) {
+          newMaterials.push({
+            id: `mat-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            claimCaseId,
+            fileName: file.name,
+            fileType: inferFileType(file.name),
+            url: file.url || "#",
+            ossKey: file.ossKey,
+            category: category.name,
+            materialName: category.name,
+            source: "direct_upload",
+            status: "completed",
+            uploadedAt: new Date().toISOString(),
+          });
+        }
+      }
+    }
+
+    if (newMaterials.length > 0) {
+      allMaterials.push(...newMaterials);
+      writeData("claim-materials", allMaterials);
+      console.log(`[Sync] Added ${newMaterials.length} materials for claim ${claimCaseId}`);
+    }
+  } catch (error) {
+    console.error("[Sync] Failed to sync fileCategories:", error);
+  }
+}
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, "..");
@@ -1625,6 +1693,133 @@ ${schemaText}
     return;
   }
 
+  // ==================== 统一材料管理 API ====================
+
+  // GET /api/claim-materials - 查询案件材料
+  if (resource === "claim-materials" && req.method === "GET") {
+    const claimCaseId = url.searchParams.get("claimCaseId");
+    const source = url.searchParams.get("source");
+    const allMaterials = readData("claim-materials");
+
+    let materials = allMaterials;
+
+    // 按案件 ID 过滤
+    if (claimCaseId) {
+      materials = materials.filter((m) => m.claimCaseId === claimCaseId);
+    }
+
+    // 按来源过滤（支持多个来源，逗号分隔）
+    if (source) {
+      const sources = source.split(",");
+      materials = materials.filter((m) => sources.includes(m.source));
+    }
+
+    // 统计信息
+    const bySource = materials.reduce((acc, m) => {
+      acc[m.source] = (acc[m.source] || 0) + 1;
+      return acc;
+    }, {});
+
+    res.setHeader("Content-Type", "application/json");
+    res.end(
+      JSON.stringify({
+        claimCaseId,
+        materials,
+        total: materials.length,
+        bySource,
+      }),
+    );
+    return;
+  }
+
+  // POST /api/claim-materials - 添加新材料
+  if (resource === "claim-materials" && req.method === "POST") {
+    try {
+      const body = await parseBody(req);
+      const { claimCaseId, fileName, fileType, url, ossKey, category, source = "direct_upload" } = body;
+
+      if (!claimCaseId || !fileName) {
+        res.statusCode = 400;
+        res.end(JSON.stringify({ error: "Missing required fields: claimCaseId, fileName" }));
+        return;
+      }
+
+      const allMaterials = readData("claim-materials");
+
+      // 检查是否已存在（去重）
+      const exists = allMaterials.some(
+        (m) => m.claimCaseId === claimCaseId && m.fileName === fileName && m.source === source
+      );
+
+      if (exists) {
+        res.statusCode = 409;
+        res.end(JSON.stringify({ error: "Material already exists", fileName, source }));
+        return;
+      }
+
+      // 创建新材料记录
+      const newMaterial = {
+        id: `mat-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        claimCaseId,
+        fileName,
+        fileType: fileType || inferFileType(fileName),
+        url: url || "#",
+        ossKey,
+        category,
+        materialName: category,
+        source,
+        status: "completed",
+        uploadedAt: new Date().toISOString(),
+      };
+
+      allMaterials.push(newMaterial);
+      writeData("claim-materials", allMaterials);
+
+      res.statusCode = 201;
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({ success: true, material: newMaterial }));
+    } catch (error) {
+      console.error("[API] Create material error:", error);
+      res.statusCode = 500;
+      res.end(JSON.stringify({ error: error.message }));
+    }
+    return;
+  }
+
+  // PUT /api/claim-materials/:id/parse - 触发解析
+  if (resource === "claim-materials" && id && req.method === "PUT" && url.pathname.endsWith("/parse")) {
+    try {
+      const materialId = id;
+      const allMaterials = readData("claim-materials");
+      const material = allMaterials.find((m) => m.id === materialId);
+
+      if (!material) {
+        res.statusCode = 404;
+        res.end(JSON.stringify({ error: "Material not found" }));
+        return;
+      }
+
+      // 更新状态为处理中
+      material.status = "processing";
+      writeData("claim-materials", allMaterials);
+
+      // 异步触发解析（这里简化处理，实际应调用解析服务）
+      res.setHeader("Content-Type", "application/json");
+      res.end(
+        JSON.stringify({
+          success: true,
+          message: "Parse task started",
+          materialId,
+        }),
+      );
+    } catch (error) {
+      console.error("[API] Parse material error:", error);
+      res.statusCode = 500;
+      res.end(JSON.stringify({ error: error.message }));
+    }
+    return;
+  }
+
   // ==================== 任务队列 API ====================
 
   if (resource === "tasks" && req.method === "POST") {
@@ -2054,6 +2249,42 @@ ${schemaText}
       };
       allClaimDocs.push(importRecord);
       writeData("claim-documents", allClaimDocs);
+
+      // 4.5. 同步到 claim-materials
+      try {
+        const allMaterials = readData("claim-materials");
+        const batchMaterials = documents.map((doc) => ({
+          id: doc.documentId || `mat-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          claimCaseId,
+          fileName: doc.fileName,
+          fileType: doc.fileType || inferFileType(doc.fileName),
+          url: doc.ossUrl || "#",
+          ossKey: undefined,
+          category: doc.classification?.materialName,
+          materialId: doc.classification?.materialId,
+          materialName: doc.classification?.materialName,
+          extractedData: doc.structuredData,
+          auditConclusion: undefined,
+          confidence: doc.classification?.confidence,
+          documentSummary: doc.documentSummary,
+          source: "batch_import",
+          sourceDetail: {
+            importId: importRecord.id,
+            importedAt: importRecord.importedAt,
+            taskId: importRecord.taskId,
+          },
+          status: doc.status === "completed" ? "completed" : doc.status === "failed" ? "failed" : "pending",
+          uploadedAt: importRecord.importedAt,
+          processedAt: doc.status === "completed" ? importRecord.importedAt : undefined,
+          metadata: doc.duplicateWarning ? { duplicateWarning: doc.duplicateWarning } : undefined,
+        }));
+
+        allMaterials.push(...batchMaterials);
+        writeData("claim-materials", allMaterials);
+        console.log(`[Import] Synced ${batchMaterials.length} materials to claim-materials`);
+      } catch (syncError) {
+        console.error("[Import] Failed to sync to claim-materials:", syncError);
+      }
 
       // 5. Build summary
       const successCount = documents.filter(
@@ -3295,6 +3526,12 @@ ${schemaText}
         } else {
           data[idx] = { ...data[idx], ...payload };
           writeData(resource, data);
+
+          // 同步 fileCategories 到 claim-materials
+          if (resource === "claim-cases" && payload.fileCategories) {
+            syncFileCategoriesToMaterials(id, payload.fileCategories);
+          }
+
           res.end(JSON.stringify({ success: true, data: data[idx] }));
         }
       } else {

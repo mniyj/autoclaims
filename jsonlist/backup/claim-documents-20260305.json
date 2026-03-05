@@ -1,0 +1,157 @@
+[
+  {
+    "id": "import-1772456047417",
+    "claimCaseId": "claim-1",
+    "productCode": "ZA-001",
+    "importedAt": "2026-03-02T12:54:07.417Z",
+    "documents": [
+      {
+        "documentId": "doc-1772456047413-u91b7i",
+        "fileName": "行驶证.jpg",
+        "fileType": "image/jpeg",
+        "ossUrl": null,
+        "structuredData": {},
+        "classification": {
+          "materialId": "unknown",
+          "materialName": "未识别",
+          "confidence": 0
+        },
+        "status": "completed"
+      }
+    ],
+    "completeness": {
+      "isComplete": false,
+      "completenessScore": 0,
+      "requiredMaterials": [
+        "item-1"
+      ],
+      "providedMaterials": [
+        "image/jpeg"
+      ],
+      "missingMaterials": [
+        "item-1"
+      ],
+      "optionalMaterials": [],
+      "warnings": [
+        "缺少以下材料: item-1"
+      ]
+    }
+  },
+  {
+    "id": "import-1772456975287",
+    "claimCaseId": "claim-1",
+    "productCode": "ZA-001",
+    "importedAt": "2026-03-02T13:09:35.287Z",
+    "documents": [
+      {
+        "documentId": "doc-1772456975285-75x7z0",
+        "fileName": "行驶证.jpg",
+        "fileType": "image/jpeg",
+        "ossUrl": null,
+        "structuredData": {},
+        "classification": {
+          "materialId": "unknown",
+          "materialName": "未识别",
+          "confidence": 0
+        },
+        "status": "completed"
+      }
+    ],
+    "completeness": {
+      "isComplete": false,
+      "completenessScore": 0,
+      "requiredMaterials": [
+        "item-1"
+      ],
+      "providedMaterials": [
+        "image/jpeg"
+      ],
+      "missingMaterials": [
+        "item-1"
+      ],
+      "optionalMaterials": [],
+      "warnings": [
+        "缺少以下材料: item-1"
+      ]
+    }
+  },
+  {
+    "id": "import-1772457450429",
+    "claimCaseId": "claim-1",
+    "productCode": "ZA-001",
+    "importedAt": "2026-03-02T13:17:30.429Z",
+    "documents": [
+      {
+        "documentId": "doc-1772457450426-ddvi4u",
+        "fileName": "行驶证.jpg",
+        "fileType": "image/jpeg",
+        "ossUrl": null,
+        "structuredData": {},
+        "classification": {
+          "materialId": "unknown",
+          "materialName": "未识别",
+          "confidence": 0
+        },
+        "status": "completed"
+      }
+    ],
+    "completeness": {
+      "isComplete": false,
+      "completenessScore": 0,
+      "requiredMaterials": [
+        "item-1"
+      ],
+      "providedMaterials": [
+        "image/jpeg"
+      ],
+      "missingMaterials": [
+        "item-1"
+      ],
+      "optionalMaterials": [],
+      "warnings": [
+        "缺少以下材料: item-1"
+      ]
+    }
+  },
+  {
+    "id": "import-1772458732607",
+    "claimCaseId": "claim-1",
+    "productCode": "ZA-001",
+    "importedAt": "2026-03-02T13:38:52.607Z",
+    "documents": [
+      {
+        "documentId": "doc-1772458732600-ufds3s",
+        "fileName": "行驶证.jpg",
+        "fileType": "image/jpeg",
+        "ossUrl": null,
+        "structuredData": {},
+        "classification": {
+          "materialId": "mat-4",
+          "materialName": "行驶证（含副页）",
+          "confidence": 1
+        },
+        "status": "completed"
+      }
+    ],
+    "completeness": {
+      "isComplete": false,
+      "completenessScore": 0,
+      "requiredMaterials": [
+        "item-1"
+      ],
+      "providedMaterials": [
+        "image/jpeg"
+      ],
+      "missingMaterials": [
+        "item-1"
+      ],
+      "optionalMaterials": [],
+      "warnings": [
+        "缺少以下材料: item-1"
+      ]
+    },
+    "reviewTasks": [
+      "rt-1772458732606-ndirlo"
+    ]
+  }
+]

@@ -1,9 +1,8 @@
 {
-  "active_plan": "/Users/pegasus/Documents/trae_projects/保险产品配置页面 -理赔/.sisyphus/plans/material-classification-save.md",
-  "plan_name": "material-classification-save",
-  "started_at": "2026-03-04T13:57:41.205Z",
-  "completed_at": "2026-03-04T14:10:00.000Z",
-  "session_ids": ["ses_346eaf34dffe4kvSBUDLZ6GE7R"],
+  "active_plan": "/Users/pegasus/Documents/trae_projects/保险产品配置页面 -理赔/.sisyphus/plans/ruleset-visualization-upgrade.md",
+  "plan_name": "ruleset-visualization-upgrade",
+  "started_at": "2026-03-05T07:44:00Z",
+  "session_ids": ["ses_3436c6120ffeWm4ryu7Sk9lww1"],
   "worktree_path": "/Users/pegasus/Documents/trae_projects/保险产品配置页面 -理赔",
-  "status": "completed"
+  "status": "in_progress"
 }

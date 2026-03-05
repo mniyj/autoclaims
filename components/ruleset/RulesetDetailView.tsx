@@ -139,30 +139,17 @@ const RulesetDetailView: React.FC<RulesetDetailViewProps> = ({ ruleset, onBack, 
         )}
 
         {activeTab === 'visualization' && (
-          <div className="flex h-[600px]">
+          <div className="flex h-[700px]">
             <div className="flex-1">
-              {selectedRule ? (
-                <RulesetFlowCanvas
-                  rule={selectedRule}
-                  onNodeClick={handleNodeClick}
-                  className="h-full"
-                />
-              ) : (
-                <div className="flex items-center justify-center h-full bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                  <div className="text-center text-gray-500">
-                    <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
-                    </svg>
-                    <p className="text-lg font-medium">选择规则查看可视化</p>
-                    <p className="text-sm mt-1">从"规则列表"中选择一个规则以查看决策树</p>
-                  </div>
-                </div>
-              )}
+              <RulesetFlowCanvas
+                ruleset={currentRuleset}
+                onNodeClick={handleNodeClick}
+                className="h-full"
+              />
             </div>
 
-            {/* Node detail panel */}
-            {showNodePanel && selectedNode && (
-              <div className="w-80 ml-4 bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+  {showNodePanel && selectedNode && (
+              <div className="w-80 ml-4 bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden flex flex-col max-h-[700px]">
                 <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-gray-50">
                   <h3 className="text-sm font-semibold text-gray-900">节点详情</h3>
                   <button
@@ -174,28 +161,109 @@ const RulesetDetailView: React.FC<RulesetDetailViewProps> = ({ ruleset, onBack, 
                     </svg>
                   </button>
                 </div>
-                <div className="p-4 space-y-4">
+                <div className="p-4 space-y-4 overflow-y-auto">
+                  {/* Node type badge */}
                   <div>
                     <p className="text-xs text-gray-500 mb-1">类型</p>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      selectedNode.type === 'logicGate' ? 'bg-yellow-100 text-yellow-800' :
-                      selectedNode.type === 'condition' ? 'bg-blue-100 text-blue-800' :
-                      'bg-green-100 text-green-800'
-                    }`}>
-                      {selectedNode.type === 'logicGate' ? '逻辑门' :
-                       selectedNode.type === 'condition' ? '条件' : '动作'}
-                    </span>
+                    {selectedNode.type === 'rulesetStart' && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                        规则集
+                      </span>
+                    )}
+                    {selectedNode.type === 'executionDomain' && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        执行域
+                      </span>
+                    )}
+                    {selectedNode.type === 'category' && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-100 text-cyan-800">
+                        类别
+                      </span>
+                    )}
+                    {selectedNode.type === 'rule' && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        规则
+                      </span>
+                    )}
+                    {selectedNode.type === 'logicGate' && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                        逻辑门
+                      </span>
+                    )}
+                    {selectedNode.type === 'condition' && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        条件
+                      </span>
+                    )}
+                    {selectedNode.type === 'action' && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        动作
+                      </span>
+                    )}
                   </div>
+
+                  {/* Label */}
                   <div>
-                    <p className="text-xs text-gray-500 mb-1">标签</p>
+                    <p className="text-xs text-gray-500 mb-1">名称</p>
                     <p className="text-sm font-medium text-gray-900">{selectedNode.data.label}</p>
                   </div>
+
+                  {/* Description */}
                   {selectedNode.data.description && (
                     <div>
                       <p className="text-xs text-gray-500 mb-1">描述</p>
                       <p className="text-sm text-gray-700">{selectedNode.data.description}</p>
                     </div>
                   )}
+
+                  {/* Domain info */}
+                  {selectedNode.data.domain && (
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">所属域</p>
+                      <p className="text-sm font-medium text-gray-900">{selectedNode.data.domain}</p>
+                    </div>
+                  )}
+
+                  {/* Category info */}
+                  {selectedNode.data.category && (
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">类别</p>
+                      <p className="text-sm font-medium text-gray-900">{selectedNode.data.category}</p>
+                    </div>
+                  )}
+
+                  {/* Count */}
+                  {selectedNode.data.count !== undefined && (
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">数量</p>
+                      <p className="text-sm font-medium text-gray-900">{selectedNode.data.count}</p>
+                    </div>
+                  )}
+
+                  {/* Status */}
+                  {selectedNode.data.status && (
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">状态</p>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                        selectedNode.data.status === 'EFFECTIVE' ? 'bg-green-100 text-green-800' :
+                        selectedNode.data.status === 'DISABLED' ? 'bg-gray-100 text-gray-800' :
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {selectedNode.data.status === 'EFFECTIVE' ? '生效' :
+                         selectedNode.data.status === 'DISABLED' ? '禁用' : '草稿'}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Execution mode */}
+                  {selectedNode.data.executionMode && (
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">执行模式</p>
+                      <p className="text-sm font-medium text-gray-900">{selectedNode.data.executionMode}</p>
+                    </div>
+                  )}
+
+                  {/* Condition details */}
                   {selectedNode.data.field && (
                     <div>
                       <p className="text-xs text-gray-500 mb-1">字段</p>
@@ -214,10 +282,20 @@ const RulesetDetailView: React.FC<RulesetDetailViewProps> = ({ ruleset, onBack, 
                       <p className="text-sm font-mono text-gray-700 bg-gray-100 px-2 py-1 rounded">{String(selectedNode.data.value)}</p>
                     </div>
                   )}
+
+                  {/* Action */}
                   {selectedNode.data.action && (
                     <div>
                       <p className="text-xs text-gray-500 mb-1">动作</p>
                       <p className="text-sm font-medium text-gray-900">{selectedNode.data.action}</p>
+                    </div>
+                  )}
+
+                  {/* Rule ID */}
+                  {selectedNode.data.ruleId && (
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">规则ID</p>
+                      <p className="text-xs font-mono text-gray-500">{selectedNode.data.ruleId}</p>
                     </div>
                   )}
                 </div>
