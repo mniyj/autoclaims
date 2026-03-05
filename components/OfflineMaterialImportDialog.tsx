@@ -194,12 +194,54 @@ const OfflineMaterialImportDialog: React.FC<OfflineMaterialImportDialogProps> = 
       }
     } catch (err) {
       console.error('[OfflineImport] Batch upload error:', err);
-      setError(err instanceof Error ? err.message : '批量上传失败');
-      uploadingFiles.forEach(uf => {
-        setFiles(prev => prev.map(f =>
-          f.id === uf.id ? { ...f, status: 'failed' as const, errorMessage: '批量上传失败' } : f
-        ));
-      });
+      setError(err instanceof Error ? err.message : '批量上传失败，使用备用方式');
+      
+      for (const uf of uploadingFiles) {
+        try {
+          setFiles(prev => prev.map(f =>
+            f.id === uf.id ? { ...f, status: 'uploading' as const } : f
+          ));
+          
+          const base64Data = await readFileAsBase64(uf.file);
+          
+          setFiles(prev => prev.map(f =>
+            f.id === uf.id ? { ...f, status: 'processing' as const } : f
+          ));
+
+          const response = await fetch('/api/materials/classify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              fileSource: base64Data,
+              mimeType: uf.file.type,
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`分类失败: ${response.statusText}`);
+          }
+
+          const result = await response.json();
+          const classification = result?.data || {
+            materialId: 'unknown',
+            materialName: '未识别',
+            confidence: 0,
+          };
+
+          setFiles(prev => prev.map(f =>
+            f.id === uf.id
+              ? { ...f, status: 'classified' as const, classification }
+              : f
+          ));
+        } catch (innerErr) {
+          console.error('[OfflineImport] Fallback upload error:', innerErr);
+          setFiles(prev => prev.map(f =>
+            f.id === uf.id
+              ? { ...f, status: 'failed' as const, errorMessage: '上传失败' }
+              : f
+          ));
+        }
+      }
     }
   }, [files]);
 
