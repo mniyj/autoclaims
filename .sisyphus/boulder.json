@@ -1,8 +1,8 @@
 {
-  "active_plan": "/Users/pegasus/Documents/trae_projects/保险产品配置页面 -理赔/.sisyphus/plans/ruleset-visualization-upgrade.md",
-  "plan_name": "ruleset-visualization-upgrade",
-  "started_at": "2026-03-05T07:44:00Z",
-  "session_ids": ["ses_3436c6120ffeWm4ryu7Sk9lww1"],
-  "worktree_path": "/Users/pegasus/Documents/trae_projects/保险产品配置页面 -理赔",
+  "active_plan": "/Users/pegasus/Documents/trae_projects/保险产品配置页面 -理赔/.sisyphus/plans/offline-material-import-optimization.md",
+  "plan_name": "offline-material-import-optimization",
+  "started_at": "2026-03-05T22:24:41+08:00",
+  "session_ids": ["ses_current"],
+  "worktree_path": "/Users/pegasus/Documents/trae_projects/保险产品配置页面 -理赔/.claude/worktrees/offline-import-optimization-1772720681",
   "status": "in_progress"
 }

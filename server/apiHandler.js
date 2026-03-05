@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import OSS from "ali-oss";
+import crypto from "crypto";
 import { GoogleGenAI } from "@google/genai";
 import {
   checkEligibility,
@@ -521,6 +522,86 @@ export const handleApiRequest = async (req, res) => {
 
   const resource = match[1];
   const id = match[2] ? decodeURIComponent(match[2]) : null;
+
+  // 批量 OSS 直传凭证 API
+  if (resource === "batch-upload-oss") {
+    if (req.method !== "POST") {
+      res.statusCode = 405;
+      res.end(JSON.stringify({ error: "Method Not Allowed" }));
+      return;
+    }
+
+    try {
+      const body = await parseBody(req);
+      const files = (body && Array.isArray(body.files)) ? body.files : [];
+      const expiresSec = Number(body?.expires ?? 3600) || 3600;
+
+      // OSS 配置
+      const region = process.env.ALIYUN_OSS_REGION || "oss-cn-beijing";
+      const bucket = process.env.ALIYUN_OSS_BUCKET;
+      const accessKeyId = process.env.ALIYUN_OSS_ACCESS_KEY_ID;
+      const accessKeySecret = process.env.ALIYUN_OSS_ACCESS_KEY_SECRET;
+
+      if (!bucket || !accessKeyId || !accessKeySecret) {
+        throw new Error("OSS credentials not configured on server");
+      }
+
+      // 形成 host
+      const regionForHost = region.startsWith("oss-") ? region.replace("oss-", "") : region;
+      const host = `https://${bucket}.oss-${regionForHost}.aliyuncs.com`;
+
+      const policyBase64For = (keyPrefix) => {
+        const expiration = new Date(Date.now() + expiresSec * 1000).toISOString();
+        const policy = {
+          expiration,
+          conditions: [
+            { bucket },
+            ["starts-with", "$key", keyPrefix],
+            ["content-length-range", 0, 10485760], // 10MB
+          ],
+        };
+        const policyJson = JSON.stringify(policy);
+        return Buffer.from(policyJson).toString("base64");
+      };
+
+      const results = files.map((f) => {
+        // 简单兜底：如果没有文件名，跳过并返回空对象
+        const name = (f && f.name) || "untitled";
+        // 统一生成 key，前缀设为 uploads/
+        const key = `uploads/${Date.now()}_${Math.random().toString(36).slice(2)}_${name}`;
+        const policy = policyBase64For("" + ("uploads/"));
+        // 签名使用 policyBase64 的值
+        const signature = crypto
+          .createHmac("sha1", accessKeySecret)
+          .update(policy)
+          .digest("base64");
+        return {
+          name,
+          key,
+          policy,
+          signature,
+          accessid: accessKeyId,
+          host,
+          url: `https://${bucket}.oss-${regionForHost}.aliyuncs.com/${key}`,
+          expires: new Date(Date.now() + expiresSec * 1000).toISOString(),
+        };
+      });
+
+      res.setHeader("Content-Type", "application/json");
+      res.end(
+        JSON.stringify({
+          bucket,
+          endpoint: host,
+          files: results.filter(r => r && r.name),
+        }),
+      );
+    } catch (error) {
+      console.error("[API] Batch OSS credentials failed:", error);
+      res.statusCode = 500;
+      res.end(JSON.stringify({ error: formatErrorMessage(error) }));
+    }
+    return;
+  }
 
   if (resource === "upload-token") {
     const config = {
