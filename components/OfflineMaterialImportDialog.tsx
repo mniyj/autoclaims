@@ -360,26 +360,26 @@ const OfflineMaterialImportDialog: React.FC<OfflineMaterialImportDialogProps> = 
   }, [taskId, pollTaskStatus]);
 
   const handleImport = async () => {
-    const classifiedFiles = files.filter(f => f.status === 'classified' && f.ossKey);
-    if (classifiedFiles.length === 0) return;
+    const uploadedFiles = files.filter(f => f.status === 'processing' && f.ossKey);
+    if (uploadedFiles.length === 0) return;
 
     setImporting(true);
     setError(null);
 
     try {
-      const ossKeys = classifiedFiles.map(f => f.ossKey!);
-      const mimeTypes = classifiedFiles.map(f => f.file.type);
-      const classifications = classifiedFiles.map(f => f.classification);
+      const filesData = uploadedFiles.map(f => ({
+        fileName: f.file.name,
+        mimeType: f.file.type,
+        ossKey: f.ossKey!,
+      }));
 
-      const response = await fetch('/api/import-offline-materials-v2', {
+      const response = await fetch('/api/offline-import/quick', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           claimCaseId,
           productCode,
-          ossKeys,
-          mimeTypes,
-          classifications,
+          files: filesData,
         }),
       });
 
@@ -392,6 +392,7 @@ const OfflineMaterialImportDialog: React.FC<OfflineMaterialImportDialogProps> = 
       if (result.success && result.taskId) {
         setTaskId(result.taskId);
         setTaskStatus('pending');
+        setError(null);
       }
     } catch (err) {
       setImporting(false);
@@ -401,9 +402,9 @@ const OfflineMaterialImportDialog: React.FC<OfflineMaterialImportDialogProps> = 
 
   if (!isOpen) return null;
 
-  const classifiedCount = files.filter(f => f.status === 'classified').length;
+  const uploadedCount = files.filter(f => f.status === 'processing' && f.ossKey).length;
   const failedCount = files.filter(f => f.status === 'failed').length;
-  const processingCount = files.filter(f => f.status === 'processing' || f.status === 'uploading').length;
+  const processingCount = files.filter(f => f.status === 'processing' || f.status === 'uploading' || f.status === 'pending').length;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -502,7 +503,7 @@ const OfflineMaterialImportDialog: React.FC<OfflineMaterialImportDialogProps> = 
           )}
 
           {/* Completeness Check */}
-          {classifiedCount > 0 && !importing && (
+          {uploadedCount > 0 && !importing && (
             <div className="mt-4">
               <button
                 onClick={handleCheckCompleteness}
@@ -555,7 +556,7 @@ const OfflineMaterialImportDialog: React.FC<OfflineMaterialImportDialogProps> = 
         {/* Footer */}
         <div className="flex items-center justify-between p-4 border-t">
           <div className="text-sm text-gray-500">
-            {classifiedCount > 0 && `${classifiedCount} 个文件已识别`}
+            {uploadedCount > 0 && `${uploadedCount} 个文件已上传`}
             {failedCount > 0 && `, ${failedCount} 个失败`}
             {processingCount > 0 && `, ${processingCount} 个处理中`}
           </div>
@@ -569,10 +570,10 @@ const OfflineMaterialImportDialog: React.FC<OfflineMaterialImportDialogProps> = 
             </button>
             <button
               onClick={handleImport}
-              disabled={classifiedCount === 0 || importing}
+              disabled={uploadedCount === 0 || importing}
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {importing ? '导入中...' : `导入 ${classifiedCount} 个文件`}
+              {importing ? '导入中...' : `导入 ${uploadedCount} 个文件`}
             </button>
           </div>
         </div>
