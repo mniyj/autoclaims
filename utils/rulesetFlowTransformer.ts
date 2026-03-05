@@ -129,15 +129,15 @@ export function rulesetToFlowElements(ruleset: InsuranceRuleset): FlowElementsRe
   }
 
   const domainOrder = ['ELIGIBILITY', 'ASSESSMENT', 'POST_PROCESS'] as const;
-  const laneWidth = 420;
-  const laneGap = 120;
+  const laneWidth = 450;
+  const laneGap = 150;
   const startY = 0;
-  const domainY = 80;
-  const categoryY = 260;
-  const ruleStartY = 400;
-  const nodeHeight = 80;
-  const categoryGap = 60;
-  const ruleGap = 16;
+  const domainY = 60;
+  const categoryY = 200;
+  const ruleStartY = 340;
+  const nodeHeight = 70;
+  const categoryGap = 80;
+  const ruleGap = 20;
 
   const totalWidth = domainOrder.length * laneWidth + (domainOrder.length - 1) * laneGap;
 
@@ -171,7 +171,7 @@ export function rulesetToFlowElements(ruleset: InsuranceRuleset): FlowElementsRe
     
     if (domainRules.length === 0 && !domainConfig) return;
 
-    const laneX = (domainIndex - 1) * (laneWidth + laneGap);
+    const laneCenterX = (domainIndex - 1) * (laneWidth + laneGap);
     const colors = DOMAIN_COLORS[domainKey];
     
     // Add lane background node (for visual grouping)
@@ -180,19 +180,19 @@ export function rulesetToFlowElements(ruleset: InsuranceRuleset): FlowElementsRe
       1,
       domainRules.length + (domainConfig?.category_sequence?.length || 0)
     );
-    const laneHeight = Math.max(400, maxNodesInLane * 60 + 200);
+    const laneHeight = Math.max(500, maxNodesInLane * 70 + 250);
     
     nodes.push({
       id: laneBgId,
       type: 'default',
-      position: { x: laneX - laneWidth/2 + 10, y: domainY - 50 },
+      position: { x: laneCenterX - laneWidth/2 + 15, y: domainY - 40 },
       style: { 
-        width: laneWidth - 20, 
+        width: laneWidth - 30, 
         height: laneHeight,
         backgroundColor: colors.laneColor,
-        borderRadius: '12px',
-        border: `3px solid ${colors.edgeColor}`,
-        opacity: 0.15,
+        borderRadius: '16px',
+        border: `2px solid ${colors.edgeColor}`,
+        opacity: 0.12,
         zIndex: -1,
         pointerEvents: 'none' as const,
       },
@@ -209,7 +209,7 @@ export function rulesetToFlowElements(ruleset: InsuranceRuleset): FlowElementsRe
     const domainNode: RulesetFlowNode = {
       id: domainId,
       type: 'executionDomain',
-      position: { x: laneX, y: domainY },
+      position: { x: laneCenterX, y: domainY },
       data: {
         label: DOMAIN_LABELS[domainKey] || domainKey,
         description: `${domainRules.length} 条规则`,
@@ -237,14 +237,30 @@ export function rulesetToFlowElements(ruleset: InsuranceRuleset): FlowElementsRe
       style: { stroke: colors.edgeColor, strokeWidth: 3 },
     });
 
-    // Group rules by category
+    // Group rules by category and layout horizontally within the lane
     const categories = domainConfig?.category_sequence || [];
-    let currentY = categoryY;
+    const categoriesWithRules = categories.filter(cat => 
+      domainRules.some(r => r.category === cat)
+    );
     
-    categories.forEach((categoryKey) => {
+    if (categoriesWithRules.length === 0) return;
+    
+    // Calculate horizontal spacing for categories within the lane
+    const availableWidth = laneWidth - 60;
+    const categorySpacing = categoriesWithRules.length > 1 
+      ? availableWidth / (categoriesWithRules.length - 1)
+      : 0;
+    
+    categoriesWithRules.forEach((categoryKey, catIndex) => {
       const categoryRules = domainRules.filter((r) => r.category === categoryKey);
       
       if (categoryRules.length === 0) return;
+      
+      // Calculate category X position - spread horizontally within lane
+      const categoryOffset = categoriesWithRules.length > 1
+        ? (catIndex - (categoriesWithRules.length - 1) / 2) * Math.min(categorySpacing, 140)
+        : 0;
+      const categoryX = laneCenterX + categoryOffset;
       
       const categoryId = generateNodeId(`cat_${domainKey}`, categoryKey);
       const colorClass = CATEGORY_COLORS[categoryKey] || 'bg-gray-50 border-gray-400 text-gray-700';
@@ -253,7 +269,7 @@ export function rulesetToFlowElements(ruleset: InsuranceRuleset): FlowElementsRe
       const categoryNode: RulesetFlowNode = {
         id: categoryId,
         type: 'category',
-        position: { x: laneX, y: currentY },
+        position: { x: categoryX, y: categoryY },
         data: {
           label: categoryKey,
           description: `${categoryRules.length} 条规则`,
@@ -273,26 +289,29 @@ export function rulesetToFlowElements(ruleset: InsuranceRuleset): FlowElementsRe
       };
       nodes.push(categoryNode);
       
-      // Connect domain to category with domain color (thick solid line)
+      // Connect domain to category with direct line
       edges.push({
         id: `${domainId}->${categoryId}`,
         source: domainId,
         target: categoryId,
-        type: 'smoothstep',
-        style: { stroke: colors.edgeColor, strokeWidth: 3, opacity: 0.8 },
+        type: 'default',
+        style: { stroke: colors.edgeColor, strokeWidth: 2, opacity: 0.6 },
       });
       
-      currentY += nodeHeight + categoryGap;
-      
-      // Add rules under this category
-      categoryRules.forEach((rule) => {
+      // Add rules under this category - vertically stacked with slight horizontal offset
+      let ruleY = ruleStartY;
+      categoryRules.forEach((rule, ruleIndex) => {
         const ruleId = generateNodeId('rule', rule.rule_id);
         const conditionCount = countConditionNodes(rule.conditions);
+        
+        // Slight horizontal offset for each rule to reduce edge overlap
+        const ruleOffsetX = (ruleIndex % 2 === 0 ? -20 : 20);
+        const ruleX = categoryX + ruleOffsetX;
         
         const ruleNode: RulesetFlowNode = {
           id: ruleId,
           type: 'rule',
-          position: { x: laneX, y: currentY },
+          position: { x: ruleX, y: ruleY },
           data: {
             label: rule.rule_name,
             description: rule.description || `${conditionCount} 个条件`,
@@ -312,18 +331,17 @@ export function rulesetToFlowElements(ruleset: InsuranceRuleset): FlowElementsRe
         };
         nodes.push(ruleNode);
         
+        // Simple straight line connection
         edges.push({
           id: `${categoryId}->${ruleId}`,
           source: categoryId,
           target: ruleId,
-          type: 'smoothstep',
+          type: 'default',
           style: { stroke: '#9ca3af', strokeWidth: 1.5 },
         });
         
-        currentY += nodeHeight + ruleGap;
+        ruleY += nodeHeight + ruleGap;
       });
-      
-      currentY += 10;
     });
   });
 
