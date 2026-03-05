@@ -606,6 +606,70 @@ export const handleApiRequest = async (req, res) => {
     return;
   }
 
+  // 代理上传文件到OSS (解决CORS问题)
+  if (resource === "upload-to-oss") {
+    if (req.method !== "POST") {
+      res.statusCode = 405;
+      res.end(JSON.stringify({ error: "Method Not Allowed" }));
+      return;
+    }
+
+    try {
+      const { fileName, fileType, base64Data } = await parseBody(req);
+      
+      if (!base64Data || !fileName) {
+        res.statusCode = 400;
+        res.end(JSON.stringify({ error: "Missing file data or filename" }));
+        return;
+      }
+
+      const buffer = Buffer.from(base64Data, "base64");
+      
+      // 生成唯一的OSS key
+      const key = `uploads/${Date.now()}_${Math.random().toString(36).slice(2)}_${fileName}`;
+      
+      // OSS配置
+      const region = process.env.ALIYUN_OSS_REGION || "oss-cn-beijing";
+      const bucket = process.env.ALIYUN_OSS_BUCKET;
+      const accessKeyId = process.env.ALIYUN_OSS_ACCESS_KEY_ID;
+      const accessKeySecret = process.env.ALIYUN_OSS_ACCESS_KEY_SECRET;
+
+      if (!bucket || !accessKeyId || !accessKeySecret) {
+        throw new Error("OSS credentials not configured");
+      }
+
+      const client = new OSS({
+        region,
+        accessKeyId,
+        accessKeySecret,
+        bucket,
+      });
+
+      // 上传到OSS
+      const result = await client.put(key, buffer, {
+        mime: fileType || "image/jpeg",
+      });
+
+      // 生成签名URL
+      const signedUrl = client.signatureUrl(key, { expires: 3600 });
+
+      res.setHeader("Content-Type", "application/json");
+      res.end(
+        JSON.stringify({
+          success: true,
+          ossKey: key,
+          url: signedUrl,
+          publicUrl: result.url,
+        })
+      );
+    } catch (error) {
+      console.error("[API] Upload to OSS failed:", error);
+      res.statusCode = 500;
+      res.end(JSON.stringify({ error: formatErrorMessage(error) }));
+    }
+    return;
+  }
+
   // 批量材料分类 API
   if (resource === "batch-classify") {
     if (req.method !== "POST") {

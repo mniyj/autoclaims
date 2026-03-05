@@ -96,78 +96,36 @@ const OfflineMaterialImportDialog: React.FC<OfflineMaterialImportDialogProps> = 
     setError(null);
 
     try {
-      const fileList = uploadingFiles.map(uf => ({ name: uf.file.name, type: uf.file.type }));
-      const credsResponse = await fetch('/api/batch-upload-oss', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ files: fileList }),
-      });
-
-      if (!credsResponse.ok) {
-        throw new Error('获取上传凭证失败');
-      }
-
-      const credsData = await credsResponse.json();
-      const credentials = credsData.files;
-
-      const uploadPromises = uploadingFiles.map(async (uf, index) => {
-        const cred = credentials[index];
-        if (!cred) {
-          setFiles(prev => prev.map(f =>
-            f.id === uf.id ? { ...f, status: 'failed' as const, errorMessage: '无上传凭证' } : f
-          ));
-          return;
-        }
-
+      const uploadPromises = uploadingFiles.map(async (uf) => {
         setFiles(prev => prev.map(f =>
           f.id === uf.id ? { ...f, status: 'uploading' as const } : f
         ));
 
         try {
-          const formData = new FormData();
-          formData.append('key', cred.key);
-          formData.append('policy', cred.policy);
-          formData.append('OSSAccessKeyId', cred.accessid);
-          formData.append('signature', cred.signature);
-          formData.append('success_action_status', '200');
-          formData.append('file', uf.file);
+          const base64Data = await readFileAsBase64(uf.file);
+          
+          setFiles(prev => prev.map(f =>
+            f.id === uf.id ? { ...f, uploadProgress: 50 } : f
+          ));
 
-          const xhr = new XMLHttpRequest();
-          await new Promise<void>((resolve, reject) => {
-            xhr.upload.addEventListener('progress', (event) => {
-              if (event.lengthComputable) {
-                const progress = Math.round((event.loaded / event.total) * 100);
-                setFiles(prev => prev.map(f =>
-                  f.id === uf.id ? { ...f, uploadProgress: progress } : f
-                ));
-              }
-            });
-
-            xhr.addEventListener('load', () => {
-              if (xhr.status >= 200 && xhr.status < 300) {
-                resolve();
-              } else {
-                console.error('[OfflineImport] Upload failed:', xhr.status, xhr.responseText);
-                reject(new Error(`上传失败: ${xhr.status}`));
-              }
-            });
-
-            xhr.addEventListener('error', () => {
-              console.error('[OfflineImport] Upload error:', xhr.statusText);
-              reject(new Error('上传错误'));
-            });
-
-            xhr.addEventListener('abort', () => {
-              console.error('[OfflineImport] Upload aborted');
-              reject(new Error('上传被取消'));
-            });
-
-            xhr.open('POST', cred.host);
-            xhr.send(formData);
+          const response = await fetch('/api/upload-to-oss', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              fileName: uf.file.name,
+              fileType: uf.file.type,
+              base64Data,
+            }),
           });
 
+          if (!response.ok) {
+            throw new Error('上传失败');
+          }
+
+          const result = await response.json();
+          
           setFiles(prev => prev.map(f =>
-            f.id === uf.id ? { ...f, status: 'processing' as const, ossKey: cred.key } : f
+            f.id === uf.id ? { ...f, status: 'processing' as const, ossKey: result.ossKey, uploadProgress: 100 } : f
           ));
         } catch (err) {
           console.error('[OfflineImport] Upload error:', err);
