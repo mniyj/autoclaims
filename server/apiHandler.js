@@ -506,6 +506,7 @@ const allowedResources = [
   "system-logs",
   "review-tasks",
   "ai",
+  "batch-upload-oss",
   "intake-field-presets",
 ];
 
