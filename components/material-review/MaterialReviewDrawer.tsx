@@ -4,6 +4,72 @@ import Modal from '../ui/Modal';
 import { ClaimCase, ClaimsMaterial } from '../../types';
 import { getSignedUrl } from '../../services/ossService';
 
+// 递归显示结构化数据组件
+interface StructuredDataViewerProps {
+  data: any;
+  level?: number;
+}
+
+const StructuredDataViewer: React.FC<StructuredDataViewerProps> = ({ data, level = 0 }) => {
+  if (data === null || data === undefined) return null;
+
+  // 处理数组
+  if (Array.isArray(data)) {
+    if (data.length === 0) return <span className="text-gray-400">空数组</span>;
+    return (
+      <div className="space-y-2">
+        {data.map((item, index) => (
+          <div key={index} className="pl-3 border-l-2 border-gray-200">
+            <span className="text-xs text-gray-400">[{index}]</span>
+            <div className="mt-1">
+              <StructuredDataViewer data={item} level={level + 1} />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // 处理对象
+  if (typeof data === 'object') {
+    const entries = Object.entries(data);
+    if (entries.length === 0) return <span className="text-gray-400">空对象</span>;
+    
+    return (
+      <div className={`space-y-2 ${level > 0 ? 'pl-3 border-l-2 border-gray-200' : ''}`}>
+        {entries.map(([key, value]) => {
+          if (value === undefined || value === null) return null;
+          
+          // 如果值是基本类型，直接显示
+          if (typeof value !== 'object') {
+            return (
+              <div key={key} className="flex justify-between items-start py-1">
+                <span className="text-sm text-gray-500 capitalize shrink-0">{key}：</span>
+                <span className="text-sm font-medium text-gray-900 text-right break-all ml-2">
+                  {String(value)}
+                </span>
+              </div>
+            );
+          }
+          
+          // 如果值是对象或数组，递归显示
+          return (
+            <div key={key} className="py-1">
+              <span className="text-sm text-gray-500 capitalize">{key}：</span>
+              <div className="mt-1">
+                <StructuredDataViewer data={value} level={level + 1} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // 处理基本类型
+  return <span className="text-sm font-medium text-gray-900">{String(data)}</span>;
+};
+
 interface MaterialReviewDrawerProps {
   isOpen: boolean;
   material: MaterialViewItem | null;
@@ -30,10 +96,11 @@ const MaterialReviewDrawer: React.FC<MaterialReviewDrawerProps> = ({
   const [parseResult, setParseResult] = useState<any>(null);
   const [imageUrl, setImageUrl] = useState<string>('');
   const [isLoadingImage, setIsLoadingImage] = useState(false);
+  const [imageError, setImageError] = useState<string>('');
 
   useEffect(() => {
     if (isOpen) {
-      fetch('/api/claimsMaterials')
+      fetch('/api/claims-materials')
         .then(res => res.json())
         .then(data => {
           if (Array.isArray(data)) {
@@ -55,24 +122,36 @@ const MaterialReviewDrawer: React.FC<MaterialReviewDrawerProps> = ({
     const fetchSignedUrl = async () => {
       if (!isOpen || !material) {
         setImageUrl('');
+        setImageError('');
         return;
       }
 
       setIsLoadingImage(true);
+      setImageError('');
+      const timeoutId = setTimeout(() => {
+        console.warn('[MaterialReviewDrawer] Fetch signed URL timeout');
+        setImageError('获取签名URL超时');
+        setImageUrl(material.ossUrl || '');
+        setIsLoadingImage(false);
+      }, 10000);
+
       try {
-        // 优先使用 ossKey 获取实时签名 URL
         if (material.ossKey) {
           const signedUrl = await getSignedUrl(material.ossKey, 3600);
+          clearTimeout(timeoutId);
           setImageUrl(signedUrl);
         } else if (material.ossUrl) {
-          // 如果没有 ossKey，尝试使用现有的 ossUrl
+          clearTimeout(timeoutId);
           setImageUrl(material.ossUrl);
         } else {
+          clearTimeout(timeoutId);
+          setImageError('没有可用的图片链接');
           setImageUrl('');
         }
       } catch (error) {
+        clearTimeout(timeoutId);
         console.error('[MaterialReviewDrawer] Failed to get signed URL:', error);
-        // 如果获取失败，尝试使用现有的 ossUrl
+        setImageError('获取签名URL失败');
         setImageUrl(material.ossUrl || '');
       } finally {
         setIsLoadingImage(false);
@@ -80,7 +159,12 @@ const MaterialReviewDrawer: React.FC<MaterialReviewDrawerProps> = ({
     };
 
     fetchSignedUrl();
-  }, [isOpen, material]);
+
+    return () => {
+      setImageUrl('');
+      setImageError('');
+    };
+  }, [isOpen, material?.documentId]);
 
   if (!material || !claimCase) return null;
 
@@ -165,7 +249,41 @@ const MaterialReviewDrawer: React.FC<MaterialReviewDrawerProps> = ({
                 src={imageUrl}
                 alt={material.fileName}
                 className="max-w-full max-h-full object-contain rounded-lg"
+                onError={(e) => {
+                  console.error('[MaterialReviewDrawer] Image load error:', e);
+                  setImageError('图片加载失败，链接可能已过期');
+                }}
               />
+            ) : imageError ? (
+              <div className="text-red-400 text-center p-4">
+                <svg className="w-16 h-16 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-sm">{imageError}</p>
+                {material.ossKey && (
+                  <button
+                    onClick={() => {
+                      setImageError('');
+                      setIsLoadingImage(true);
+                      getSignedUrl(material.ossKey!, 3600)
+                        .then(url => setImageUrl(url))
+                        .catch(() => setImageError('重试失败'))
+                        .finally(() => setIsLoadingImage(false));
+                    }}
+                    className="mt-2 px-3 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700"
+                  >
+                    重试
+                  </button>
+                )}
+              </div>
+            ) : (material as any).ocrText ? (
+              /* 离线导入的材料没有图片，显示 OCR 文本 */
+              <div className="h-full w-full overflow-auto bg-white p-4">
+                <h4 className="text-sm font-medium text-gray-700 mb-2">OCR 识别文本</h4>
+                <pre className="text-xs text-gray-600 whitespace-pre-wrap font-mono bg-gray-50 p-3 rounded">
+                  {(material as any).ocrText}
+                </pre>
+              </div>
             ) : (
               <div className="text-gray-400 text-center">
                 <svg className="w-16 h-16 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -324,21 +442,8 @@ const MaterialReviewDrawer: React.FC<MaterialReviewDrawerProps> = ({
             <div className="mb-4">
               <h3 className="text-lg font-medium text-gray-900 mb-2">AI提取结果</h3>
               <div className="space-y-2">
-                {Object.entries(material.structuredData).map(([key, value]) => {
-                  if (value === undefined || value === null) return null;
-                  
-                  return (
-                    <div key={key} className="p-3 bg-gray-50 rounded-lg">
-                      <div className="flex justify-between items-start">
-                        <span className="text-sm text-gray-500 capitalize">{key}：</span>
-                        <span className="text-sm font-medium text-gray-900 text-right">
-                          {String(value)}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>            
+                <StructuredDataViewer data={material.structuredData} />
+              </div>
             </div>
           )}
 
