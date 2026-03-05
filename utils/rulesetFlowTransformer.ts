@@ -129,15 +129,15 @@ export function rulesetToFlowElements(ruleset: InsuranceRuleset): FlowElementsRe
   }
 
   const domainOrder = ['ELIGIBILITY', 'ASSESSMENT', 'POST_PROCESS'] as const;
-  const laneWidth = 380;
-  const laneGap = 80;
+  const laneWidth = 420;
+  const laneGap = 120;
   const startY = 0;
-  const domainY = 100;
-  const categoryY = 200;
-  const ruleStartY = 320;
-  const nodeHeight = 70;
-  const categoryGap = 40;
-  const ruleGap = 20;
+  const domainY = 80;
+  const categoryY = 260;
+  const ruleStartY = 400;
+  const nodeHeight = 80;
+  const categoryGap = 60;
+  const ruleGap = 16;
 
   const totalWidth = domainOrder.length * laneWidth + (domainOrder.length - 1) * laneGap;
 
@@ -273,13 +273,13 @@ export function rulesetToFlowElements(ruleset: InsuranceRuleset): FlowElementsRe
       };
       nodes.push(categoryNode);
       
-      // Connect domain to category with domain color
+      // Connect domain to category with domain color (thick solid line)
       edges.push({
         id: `${domainId}->${categoryId}`,
         source: domainId,
         target: categoryId,
         type: 'smoothstep',
-        style: { stroke: colors.edgeColor, strokeWidth: 2, opacity: 0.6 },
+        style: { stroke: colors.edgeColor, strokeWidth: 3, opacity: 0.8 },
       });
       
       currentY += nodeHeight + categoryGap;
@@ -312,13 +312,12 @@ export function rulesetToFlowElements(ruleset: InsuranceRuleset): FlowElementsRe
         };
         nodes.push(ruleNode);
         
-        // Connect category to rule
         edges.push({
           id: `${categoryId}->${ruleId}`,
           source: categoryId,
           target: ruleId,
           type: 'smoothstep',
-          style: { stroke: colors.edgeColor, strokeWidth: 1, opacity: 0.4 },
+          style: { stroke: '#9ca3af', strokeWidth: 1.5 },
         });
         
         currentY += nodeHeight + ruleGap;

@@ -17,37 +17,74 @@ const DOMAIN_LABELS: Record<string, string> = {
 };
 
 const ExecutionDomainNode = memo(function ExecutionDomainNode({ data }: ExecutionDomainNodeProps) {
-  const colorClass = data.colorClass || 'bg-gray-50 border-gray-400 text-gray-700';
   const domain = data.domain || 'ELIGIBILITY';
   const iconPath = DOMAIN_ICONS[domain] || DOMAIN_ICONS.ELIGIBILITY;
   const label = DOMAIN_LABELS[domain] || domain;
+  const laneColor = data.laneColor || '#dbeafe';
+  
+  const getBorderColor = () => {
+    if (domain === 'ELIGIBILITY') return '#3b82f6';
+    if (domain === 'ASSESSMENT') return '#22c55e';
+    return '#a855f7';
+  };
+  
+  const getTextColor = () => {
+    if (domain === 'ELIGIBILITY') return 'text-blue-800';
+    if (domain === 'ASSESSMENT') return 'text-green-800';
+    return 'text-purple-800';
+  };
+  
+  const getBgColor = () => {
+    if (domain === 'ELIGIBILITY') return 'bg-blue-50';
+    if (domain === 'ASSESSMENT') return 'bg-green-50';
+    return 'bg-purple-50';
+  };
   
   return (
     <div className="relative">
       <Handle type="target" position={Position.Top} className="!w-3 !h-3 !bg-gray-400" />
-      <Handle type="source" position={Position.Bottom} className="!w-3 !h-3 !bg-gray-400" />
+      <Handle type="source" position={Position.Bottom} className="!w-4 !h-4 !bg-gray-500" />
       
-      <div className={`px-4 py-3 border-2 rounded-xl shadow-md min-w-[180px] max-w-[240px] ${colorClass}`}>
-        <div className="flex items-center space-x-2 mb-2">
-          <svg className="w-4 h-4 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={iconPath} />
-          </svg>
-          <span className="text-xs font-medium opacity-75 uppercase tracking-wider">{label}</span>
+      <div 
+        className={`px-6 py-5 rounded-2xl shadow-lg min-w-[240px] max-w-[280px] ${getBgColor()}`}
+        style={{ 
+          border: `3px solid ${getBorderColor()}`,
+          boxShadow: `0 4px 20px ${getBorderColor()}20`,
+        }}
+      >
+        <div className="flex items-center space-x-3 mb-3">
+          <div 
+            className="w-10 h-10 rounded-xl flex items-center justify-center"
+            style={{ backgroundColor: getBorderColor() + '20' }}
+          >
+            <svg className="w-6 h-6" fill="none" stroke={getBorderColor()} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={iconPath} />
+            </svg>
+          </div>
+          <div>
+            <span className="text-xs font-bold uppercase tracking-wider opacity-60">
+              执行阶段
+            </span>
+            <h3 className={`text-xl font-bold ${getTextColor()}`}>{label}</h3>
+          </div>
         </div>
         
-        <h4 className="text-sm font-bold truncate">{domain}</h4>
-        
-        {data.executionMode && (
-          <p className="text-xs opacity-75 mt-1">模式: {data.executionMode}</p>
-        )}
-        
-        {data.count !== undefined && (
-          <div className="mt-2">
-            <span className="px-2 py-0.5 bg-white/50 rounded-full text-xs font-medium">
-              {data.count} 条规则
+        <div className="border-t border-gray-200/50 pt-3 mt-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-gray-500">规则数量</span>
+            <span className="text-2xl font-bold" style={{ color: getBorderColor() }}>
+              {data.count || 0}
             </span>
-          </div>
-        )}
+          </div>          
+          {data.executionMode && (
+            <div className="flex items-center justify-between mt-2">
+              <span className="text-xs text-gray-500">执行模式</span>
+              <span className="text-xs font-medium px-2 py-1 bg-white/60 rounded-full">
+                {data.executionMode}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
