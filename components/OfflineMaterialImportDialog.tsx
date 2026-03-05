@@ -129,6 +129,7 @@ const OfflineMaterialImportDialog: React.FC<OfflineMaterialImportDialogProps> = 
           formData.append('policy', cred.policy);
           formData.append('OSSAccessKeyId', cred.accessid);
           formData.append('signature', cred.signature);
+          formData.append('success_action_status', '200');
           formData.append('file', uf.file);
 
           const xhr = new XMLHttpRequest();
@@ -146,11 +147,21 @@ const OfflineMaterialImportDialog: React.FC<OfflineMaterialImportDialogProps> = 
               if (xhr.status >= 200 && xhr.status < 300) {
                 resolve();
               } else {
+                console.error('[OfflineImport] Upload failed:', xhr.status, xhr.responseText);
                 reject(new Error(`上传失败: ${xhr.status}`));
               }
             });
 
-            xhr.addEventListener('error', () => reject(new Error('上传错误')));
+            xhr.addEventListener('error', () => {
+              console.error('[OfflineImport] Upload error:', xhr.statusText);
+              reject(new Error('上传错误'));
+            });
+
+            xhr.addEventListener('abort', () => {
+              console.error('[OfflineImport] Upload aborted');
+              reject(new Error('上传被取消'));
+            });
+
             xhr.open('POST', cred.host);
             xhr.send(formData);
           });
