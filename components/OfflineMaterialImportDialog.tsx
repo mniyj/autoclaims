@@ -170,9 +170,12 @@ const OfflineMaterialImportDialog: React.FC<OfflineMaterialImportDialogProps> = 
 
       await Promise.all(uploadPromises);
 
-      const processedFiles = uploadingFiles.filter(uf => {
+      const processedFiles: UploadingFile[] = [];
+      uploadingFiles.forEach(uf => {
         const current = files.find(f => f.id === uf.id);
-        return current?.status === 'processing' && current?.ossKey;
+        if (current?.status === 'processing' && current?.ossKey) {
+          processedFiles.push(current);
+        }
       });
 
       if (processedFiles.length > 0) {
