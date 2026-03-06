@@ -13352,5 +13352,37 @@
     "duration": null,
     "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
     "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260306042737-w1rpm6",
+    "timestamp": "2026-03-06T04:27:37.684Z",
+    "userName": "系统用户",
+    "operationType": "VIEW_CLAIM_DETAIL",
+    "operationLabel": "查看赔案详情",
+    "claimId": "CLM973980",
+    "claimReportNumber": "R20260304154253JXP0",
+    "currentStatus": "已报案",
+    "inputData": null,
+    "outputData": null,
+    "success": true,
+    "duration": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
+  },
+  {
+    "logId": "log-20260306042737-jo99tg",
+    "timestamp": "2026-03-06T04:27:37.889Z",
+    "userName": "系统用户",
+    "operationType": "VIEW_CLAIM_DETAIL",
+    "operationLabel": "查看赔案详情",
+    "claimId": "CLM973980",
+    "claimReportNumber": "R20260304154253JXP0",
+    "currentStatus": "已报案",
+    "inputData": null,
+    "outputData": null,
+    "success": true,
+    "duration": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0",
+    "deviceType": "desktop"
   }
 ]

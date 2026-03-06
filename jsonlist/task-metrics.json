@@ -10,34 +10,6 @@
   "durations": [],
   "snapshots": [
     {
-      "timestamp": "2026-03-06T04:10:51.356Z",
-      "queue_length": 0,
-      "processing_count": 0,
-      "completed_count": 17,
-      "failed_count": 0
-    },
-    {
-      "timestamp": "2026-03-06T04:10:51.455Z",
-      "queue_length": 0,
-      "processing_count": 0,
-      "completed_count": 17,
-      "failed_count": 0
-    },
-    {
-      "timestamp": "2026-03-06T04:10:51.476Z",
-      "queue_length": 0,
-      "processing_count": 0,
-      "completed_count": 17,
-      "failed_count": 0
-    },
-    {
-      "timestamp": "2026-03-06T04:10:51.506Z",
-      "queue_length": 0,
-      "processing_count": 0,
-      "completed_count": 17,
-      "failed_count": 0
-    },
-    {
       "timestamp": "2026-03-06T04:10:51.526Z",
       "queue_length": 0,
       "processing_count": 0,
@@ -1184,7 +1156,35 @@
       "processing_count": 0,
       "completed_count": 17,
       "failed_count": 2
+    },
+    {
+      "timestamp": "2026-03-06T04:25:01.606Z",
+      "queue_length": 0,
+      "processing_count": 0,
+      "completed_count": 17,
+      "failed_count": 2
+    },
+    {
+      "timestamp": "2026-03-06T04:26:01.610Z",
+      "queue_length": 0,
+      "processing_count": 0,
+      "completed_count": 17,
+      "failed_count": 2
+    },
+    {
+      "timestamp": "2026-03-06T04:27:01.638Z",
+      "queue_length": 0,
+      "processing_count": 0,
+      "completed_count": 17,
+      "failed_count": 2
+    },
+    {
+      "timestamp": "2026-03-06T04:28:01.641Z",
+      "queue_length": 0,
+      "processing_count": 0,
+      "completed_count": 17,
+      "failed_count": 3
     }
   ],
-  "lastUpdated": "2026-03-06T04:24:01.588Z"
+  "lastUpdated": "2026-03-06T04:28:01.641Z"
 }
