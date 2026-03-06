@@ -153,12 +153,12 @@ export async function updateFileStatus(taskId, fileIndex, updates) {
   };
   
   const allProcessed = tasks[taskIndex].files.every(
-    f => f.status === 'completed' || f.status === 'failed' || f.status === 'archived'
+    f => f.status === 'completed' || f.status === 'failed'
   );
-  
+
   if (allProcessed) {
     tasks[taskIndex].completedAt = new Date().toISOString();
-    
+
     if (failedFiles === 0) {
       tasks[taskIndex].status = 'completed';
     } else if (completedFiles === 0) {
@@ -166,7 +166,7 @@ export async function updateFileStatus(taskId, fileIndex, updates) {
     } else {
       tasks[taskIndex].status = 'partial_success';
     }
-    
+
     console.log(`[Queue] Task ${taskId} completed with status: ${tasks[taskIndex].status}`);
   }
   

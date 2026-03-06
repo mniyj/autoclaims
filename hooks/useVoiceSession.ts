@@ -1,12 +1,12 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
-import type { 
-  VoiceMessage, 
-  VoiceSessionState, 
+import { useState, useRef, useCallback, useEffect } from "react";
+import type {
+  VoiceMessage,
+  VoiceSessionState,
   VoiceChatMessage,
   TextPayload,
   AudioPayload,
-  EventPayload 
-} from '../types/voice';
+  EventPayload,
+} from "../types/voice";
 
 interface UseVoiceSessionProps {
   sessionId: string;
@@ -23,17 +23,17 @@ interface UseVoiceSessionReturn {
   sendBargeIn: () => void;
 }
 
-export function useVoiceSession({ 
-  sessionId, 
-  wsUrl, 
-  onSessionEnd 
+export function useVoiceSession({
+  sessionId,
+  wsUrl,
+  onSessionEnd,
 }: UseVoiceSessionProps): UseVoiceSessionReturn {
   const [state, setState] = useState<VoiceSessionState>({
     isConnected: false,
     isListening: false,
     isSpeaking: false,
-    transcript: '',
-    messages: []
+    transcript: "",
+    messages: [],
   });
 
   const wsRef = useRef<WebSocket | null>(null);
@@ -53,33 +53,32 @@ export function useVoiceSession({
           sampleRate: 16000,
           channelCount: 1,
           echoCancellation: true,
-          noiseSuppression: true
-        }
+          noiseSuppression: true,
+        },
       });
 
       // Connect WebSocket
       wsRef.current = new WebSocket(wsUrl);
-      wsRef.current.binaryType = 'arraybuffer';
+      wsRef.current.binaryType = "arraybuffer";
 
       wsRef.current.onopen = () => {
-        setState(prev => ({ ...prev, isConnected: true }));
+        setState((prev) => ({ ...prev, isConnected: true }));
       };
 
       wsRef.current.onmessage = handleServerMessage;
       wsRef.current.onerror = handleError;
       wsRef.current.onclose = () => {
-        setState(prev => ({ 
-          ...prev, 
+        setState((prev) => ({
+          ...prev,
           isConnected: false,
-          isListening: false 
+          isListening: false,
         }));
       };
-
     } catch (error) {
-      console.error('Failed to connect:', error);
-      setState(prev => ({ 
-        ...prev, 
-        error: '连接失败，请检查麦克风权限'
+      console.error("Failed to connect:", error);
+      setState((prev) => ({
+        ...prev,
+        error: "连接失败，请检查麦克风权限",
       }));
     }
   }, [wsUrl]);
@@ -89,7 +88,7 @@ export function useVoiceSession({
       wsRef.current.close();
     }
     if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      mediaStreamRef.current.getTracks().forEach((track) => track.stop());
     }
     if (audioContextRef.current) {
       audioContextRef.current.close();
@@ -100,103 +99,123 @@ export function useVoiceSession({
     const message: VoiceMessage = JSON.parse(event.data);
 
     switch (message.type) {
-      case 'text':
+      case "text":
         handleTextMessage(message.payload as TextPayload);
         break;
-      case 'audio':
+      case "audio":
         handleAudioMessage(message.payload as AudioPayload);
         break;
-      case 'event':
+      case "event":
         handleEventMessage(message.payload as EventPayload);
         break;
     }
   }, []);
 
   const handleTextMessage = useCallback((payload: TextPayload) => {
-    if (payload.source === 'stt') {
-      setState(prev => ({ 
-        ...prev, 
-        transcript: payload.content 
-      }));
-    } else if (payload.source === 'llm') {
-      setState(prev => ({
+    if (payload.source === "stt") {
+      setState((prev) => ({
         ...prev,
-        messages: [...prev.messages, {
-          role: 'assistant',
-          content: payload.content,
-          timestamp: Date.now()
-        }]
+        transcript: payload.content,
+      }));
+    } else if (payload.source === "llm") {
+      setState((prev) => ({
+        ...prev,
+        messages: [
+          ...prev.messages,
+          {
+            role: "assistant",
+            content: payload.content,
+            timestamp: Date.now(),
+          },
+        ],
       }));
     }
   }, []);
 
-  const handleAudioMessage = useCallback(async (payload: AudioPayload) => {
-    if (!audioContextRef.current) return;
-    
-    const audioData = base64ToArrayBuffer(payload.data);
-    const audioBuffer = await audioContextRef.current.decodeAudioData(audioData);
-    audioQueueRef.current.push(audioBuffer);
+  const handleAudioMessage = useCallback(
+    async (payload: AudioPayload) => {
+      if (!audioContextRef.current) return;
 
-    if (!state.isSpeaking) {
-      playAudioQueue();
-    }
-  }, [state.isSpeaking]);
+      const audioData = base64ToArrayBuffer(payload.data);
+      const audioBuffer =
+        await audioContextRef.current.decodeAudioData(audioData);
+      audioQueueRef.current.push(audioBuffer);
+
+      if (!state.isSpeaking) {
+        playAudioQueue();
+      }
+    },
+    [state.isSpeaking],
+  );
 
   const playAudioQueue = useCallback(async () => {
-    setState(prev => ({ ...prev, isSpeaking: true }));
+    setState((prev) => ({ ...prev, isSpeaking: true }));
 
     while (audioQueueRef.current.length > 0 && audioContextRef.current) {
       const buffer = audioQueueRef.current.shift()!;
       const source = audioContextRef.current.createBufferSource();
       source.buffer = buffer;
       source.connect(audioContextRef.current.destination);
-      
-      await new Promise<void>(resolve => {
+
+      await new Promise<void>((resolve) => {
         source.onended = resolve;
         source.start();
       });
     }
 
-    setState(prev => ({ ...prev, isSpeaking: false }));
+    setState((prev) => ({ ...prev, isSpeaking: false }));
   }, []);
 
-  const handleEventMessage = useCallback((payload: EventPayload) => {
-    switch (payload.event) {
-      case 'tool_call_start':
-        setState(prev => ({ ...prev, currentTool: payload.data.toolName }));
-        break;
-      case 'tool_call_end':
-        setState(prev => ({ ...prev, currentTool: undefined }));
-        break;
-      case 'session_ended':
-        onSessionEnd?.(payload.data);
-        break;
-    }
-  }, [onSessionEnd]);
+  const handleEventMessage = useCallback(
+    (payload: EventPayload) => {
+      switch (payload.event) {
+        case "tool_call_start":
+          setState((prev) => ({ ...prev, currentTool: payload.data.toolName }));
+          break;
+        case "tool_call_end":
+          setState((prev) => ({ ...prev, currentTool: undefined }));
+          break;
+        case "session_ended":
+          onSessionEnd?.(payload.data);
+          break;
+      }
+    },
+    [onSessionEnd],
+  );
 
   const startListening = useCallback(() => {
-    if (!audioContextRef.current || !mediaStreamRef.current) return;
+    if (!audioContextRef.current || !mediaStreamRef.current) {
+      console.error(
+        "[useVoiceSession] Cannot start listening: AudioContext or MediaStream not initialized",
+      );
+      return;
+    }
+
+    console.log("[useVoiceSession] Starting to listen...");
 
     const ctx = audioContextRef.current;
     const stream = mediaStreamRef.current;
     const source = ctx.createMediaStreamSource(stream);
     const processor = ctx.createScriptProcessor(4096, 1, 1);
 
+    // 先设置状态为 listening
+    setState((prev) => ({ ...prev, isListening: true }));
+
     processor.onaudioprocess = (e) => {
-      if (!state.isListening) return;
-      
       const inputData = e.inputBuffer.getChannelData(0);
       const pcmData = floatTo16BitPCM(inputData);
-      
+
       if (wsRef.current?.readyState === WebSocket.OPEN) {
-        wsRef.current.send(JSON.stringify({
-          type: 'audio',
-          payload: {
-            data: arrayBufferToBase64(pcmData),
-            seq: Date.now(),
-            isFinal: false
-          }
-        }));
+        wsRef.current.send(
+          JSON.stringify({
+            type: "audio",
+            payload: {
+              data: arrayBufferToBase64(pcmData),
+              seq: Date.now(),
+              isFinal: false,
+            },
+          }),
+        );
       }
     };
 
@@ -204,29 +223,31 @@ export function useVoiceSession({
     processor.connect(ctx.destination);
     processorRef.current = processor;
 
-    setState(prev => ({ ...prev, isListening: true }));
-  }, [state.isListening]);
+    console.log("[useVoiceSession] Listening started");
+  }, []);
 
   const stopListening = useCallback(() => {
     if (processorRef.current) {
       processorRef.current.disconnect();
     }
-    setState(prev => ({ ...prev, isListening: false }));
+    setState((prev) => ({ ...prev, isListening: false }));
   }, []);
 
   const sendBargeIn = useCallback(() => {
     audioQueueRef.current = [];
-    setState(prev => ({ ...prev, isSpeaking: false }));
-    
-    wsRef.current?.send(JSON.stringify({
-      type: 'control',
-      payload: { action: 'barge_in' }
-    }));
+    setState((prev) => ({ ...prev, isSpeaking: false }));
+
+    wsRef.current?.send(
+      JSON.stringify({
+        type: "control",
+        payload: { action: "barge_in" },
+      }),
+    );
   }, []);
 
   const handleError = useCallback((error: Event) => {
-    console.error('WebSocket error:', error);
-    setState(prev => ({ ...prev, error: '连接错误' }));
+    console.error("WebSocket error:", error);
+    setState((prev) => ({ ...prev, error: "连接错误" }));
   }, []);
 
   useEffect(() => {
@@ -241,7 +262,7 @@ export function useVoiceSession({
     disconnect,
     startListening,
     stopListening,
-    sendBargeIn
+    sendBargeIn,
   };
 }
 
@@ -249,18 +270,18 @@ export function useVoiceSession({
 function floatTo16BitPCM(input: Float32Array): ArrayBuffer {
   const buffer = new ArrayBuffer(input.length * 2);
   const view = new DataView(buffer);
-  
+
   for (let i = 0; i < input.length; i++) {
     const s = Math.max(-1, Math.min(1, input[i]));
-    view.setInt16(i * 2, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+    view.setInt16(i * 2, s < 0 ? s * 0x8000 : s * 0x7fff, true);
   }
-  
+
   return buffer;
 }
 
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer);
-  let binary = '';
+  let binary = "";
   for (let i = 0; i < bytes.byteLength; i++) {
     binary += String.fromCharCode(bytes[i]);
   }
