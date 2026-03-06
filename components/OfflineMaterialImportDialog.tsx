@@ -375,7 +375,12 @@ const OfflineMaterialImportDialog: React.FC<OfflineMaterialImportDialogProps> = 
 
   const handleImport = async () => {
     const uploadedFiles = files.filter(f => f.status === 'processing' && f.ossKey);
-    if (uploadedFiles.length === 0) return;
+    console.log('[OfflineImport] Starting import with files:', uploadedFiles.length);
+    
+    if (uploadedFiles.length === 0) {
+      console.warn('[OfflineImport] No files to import');
+      return;
+    }
 
     setImporting(true);
     setError(null);
@@ -387,6 +392,7 @@ const OfflineMaterialImportDialog: React.FC<OfflineMaterialImportDialogProps> = 
         ossKey: f.ossKey!,
       }));
 
+      console.log('[OfflineImport] Calling quick import API...');
       const response = await fetch('/api/offline-import/quick', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -397,18 +403,26 @@ const OfflineMaterialImportDialog: React.FC<OfflineMaterialImportDialogProps> = 
         }),
       });
 
+      console.log('[OfflineImport] API response status:', response.status);
       const result = await response.json();
+      console.log('[OfflineImport] API result:', result);
 
       if (!response.ok) {
         throw new Error(result.error || '导入失败');
       }
 
       if (result.success && result.taskId) {
+        console.log('[OfflineImport] Import successful, taskId:', result.taskId);
         setTaskId(result.taskId);
         setTaskStatus('pending');
         setError(null);
+        // 导入成功后立即重置 importing 状态，因为后台会异步处理
+        setImporting(false);
+      } else {
+        throw new Error(result.error || '导入失败：未返回任务ID');
       }
     } catch (err) {
+      console.error('[OfflineImport] Import error:', err);
       setImporting(false);
       setError(err instanceof Error ? err.message : '导入失败');
     }
