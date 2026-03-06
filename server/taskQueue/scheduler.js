@@ -173,17 +173,11 @@ class TaskScheduler {
     const updatedTask = getTask(task.id);
     if (updatedTask) {
       const allProcessed = updatedTask.files.every(
-        f => f.status === 'completed' || f.status === 'failed' || f.status === 'archived'
+        f => f.status === 'completed' || f.status === 'failed'
       );
 
       if (allProcessed && updatedTask.status === 'processing') {
-        // 检查是否所有文件都已完成（包括 archived 状态的文件）
-        const allReallyProcessed = updatedTask.files.every(
-          f => f.status === 'completed' || f.status === 'failed'
-        );
-        if (allReallyProcessed) {
-          await this.completeTask(updatedTask);
-        }
+        await this.completeTask(updatedTask);
       }
     }
   }
