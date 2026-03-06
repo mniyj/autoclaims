@@ -10,7 +10,7 @@ import {
   updateTask,
   getQueueStats,
 } from './queue.js';
-import { processFileWithRetry } from './worker.js';
+import { processFileWithRetry, processStagedFile } from './worker.js';
 import { writeAuditLog } from '../middleware/index.js';
 import { createTaskCompleteMessage } from '../messageCenter/messageService.js';
 import {
@@ -136,14 +136,15 @@ class TaskScheduler {
   }
 
   async processTask(task, maxSlots) {
-    const pendingFiles = task.files.filter(f => f.status === 'pending');
+    // 支持传统 pending 状态和新 staged 流程的 archived 状态
+    const pendingFiles = task.files.filter(f => f.status === 'pending' || f.status === 'archived');
     const filesToProcess = pendingFiles.slice(0, maxSlots);
 
-    console.log(`[Scheduler] Task ${task.id}: ${pendingFiles.length} pending files, processing ${filesToProcess.length} files`);
+    console.log(`[Scheduler] Task ${task.id}: ${pendingFiles.length} pending/archived files, processing ${filesToProcess.length} files`);
 
     if (filesToProcess.length === 0) return;
 
-    if (task.status === 'pending') {
+    if (task.status === 'pending' || task.status === 'archived') {
       console.log(`[Scheduler] Starting task ${task.id}`);
       await updateTask(task.id, {
         status: 'processing',
@@ -158,7 +159,7 @@ class TaskScheduler {
         timestamp: new Date().toISOString(),
       });
     }
-    
+
     const processPromises = filesToProcess.map(async (file) => {
       try {
         await this.processFile(task, file);
@@ -168,27 +169,40 @@ class TaskScheduler {
     });
 
     await Promise.all(processPromises);
-    
+
     const updatedTask = getTask(task.id);
     if (updatedTask) {
       const allProcessed = updatedTask.files.every(
-        f => f.status === 'completed' || f.status === 'failed'
+        f => f.status === 'completed' || f.status === 'failed' || f.status === 'archived'
       );
-      
+
       if (allProcessed && updatedTask.status === 'processing') {
-        await this.completeTask(updatedTask);
+        // 检查是否所有文件都已完成（包括 archived 状态的文件）
+        const allReallyProcessed = updatedTask.files.every(
+          f => f.status === 'completed' || f.status === 'failed'
+        );
+        if (allReallyProcessed) {
+          await this.completeTask(updatedTask);
+        }
       }
     }
   }
 
   async processFile(task, file) {
-    console.log(`[Scheduler] Processing file ${file.fileName} (index: ${file.index}) for task ${task.id}`);
+    console.log(`[Scheduler] Processing file ${file.fileName} (index: ${file.index}) for task ${task.id}, status: ${file.status}`);
     const fileKey = `${task.id}_${file.index}`;
 
     this.addProcessingFile(task.createdBy, fileKey);
 
     try {
-      await processFileWithRetry(task.id, file, file.index, file.retryCount || 0);
+      // 根据文件状态选择合适的处理方式
+      if (file.status === 'archived') {
+        // 使用分阶段处理流程：archived -> classifying -> extracting -> completed
+        await processStagedFile(task.id, file, file.index);
+      } else {
+        // 使用传统处理流程
+        await processFileWithRetry(task.id, file, file.index, file.retryCount || 0);
+      }
       console.log(`[Scheduler] File ${file.fileName} processed successfully`);
     } catch (error) {
       console.error(`[Scheduler] Error processing file ${file.fileName}:`, error);

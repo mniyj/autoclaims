@@ -141,15 +141,19 @@ export async function updateFileStatus(taskId, fileIndex, updates) {
   
   const completedFiles = tasks[taskIndex].files.filter(f => f.status === 'completed').length;
   const failedFiles = tasks[taskIndex].files.filter(f => f.status === 'failed').length;
+  const processingFiles = tasks[taskIndex].files.filter(f => 
+    f.status === 'processing' || f.status === 'classifying' || f.status === 'extracting'
+  ).length;
   
   tasks[taskIndex].progress = {
     total: tasks[taskIndex].files.length,
     completed: completedFiles,
     failed: failedFiles,
+    processing: processingFiles,
   };
   
   const allProcessed = tasks[taskIndex].files.every(
-    f => f.status === 'completed' || f.status === 'failed'
+    f => f.status === 'completed' || f.status === 'failed' || f.status === 'archived'
   );
   
   if (allProcessed) {
@@ -174,9 +178,9 @@ export async function updateFileStatus(taskId, fileIndex, updates) {
 export function getPendingTasks(options = {}) {
   const tasks = readTasks();
   const pendingTasks = tasks
-    .filter(t => t.status === 'pending')
+    .filter(t => t.status === 'pending' || t.status === 'archived')
     .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-  
+
   if (options.limit) {
     return pendingTasks.slice(0, options.limit);
   }
