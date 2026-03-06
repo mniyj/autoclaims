@@ -357,7 +357,7 @@ export async function processStagedFile(taskId, file, fileIndex) {
   });
 
   try {
-    console.log(`[Worker] Starting staged processing for ${file.fileName}`);
+    console.log(`[Worker] Starting staged processing for ${file.fileName}, taskId: ${taskId}, fileIndex: ${fileIndex}`);
     
     await updateFileStatus(taskId, fileIndex, {
       status: 'classifying',
@@ -367,26 +367,49 @@ export async function processStagedFile(taskId, file, fileIndex) {
     let fileBuffer;
     if (file.ossKey) {
       console.log(`[Worker] Downloading file from OSS: ${file.ossKey}`);
-      fileBuffer = await downloadFileFromOSS(file.ossKey, 0);
+      try {
+        fileBuffer = await downloadFileFromOSS(file.ossKey, 0);
+        console.log(`[Worker] Downloaded ${fileBuffer.length} bytes from OSS`);
+      } catch (downloadError) {
+        console.error(`[Worker] OSS download failed:`, downloadError);
+        throw new Error(`文件下载失败: ${downloadError.message}`);
+      }
     } else if (file.base64Data) {
+      console.log(`[Worker] Using base64 data`);
       fileBuffer = Buffer.from(file.base64Data, 'base64');
     } else {
-      throw new Error('No file source provided');
+      throw new Error('No file source provided (no ossKey or base64Data)');
     }
     
-    const processResult = await processFile({
-      fileName: file.fileName,
-      mimeType: file.mimeType,
-      buffer: fileBuffer,
-      options: { extractText: true },
-    });
-
-    if (processResult.parseStatus === 'failed') {
-      throw new Error(processResult.errorMessage || '文件处理失败');
+    console.log(`[Worker] Processing file: ${file.fileName}`);
+    let processResult;
+    try {
+      processResult = await processFile({
+        fileName: file.fileName,
+        mimeType: file.mimeType,
+        buffer: fileBuffer,
+        options: { extractText: true },
+      });
+      console.log(`[Worker] File processed, parseStatus: ${processResult.parseStatus}`);
+    } catch (processError) {
+      console.error(`[Worker] File processing failed:`, processError);
+      throw new Error(`文件处理失败: ${processError.message}`);
     }
 
+    if (processResult.parseStatus === 'failed') {
+      throw new Error(processResult.errorMessage || '文件解析失败');
+    }
+
+    console.log(`[Worker] Starting classification for ${file.fileName}`);
     const classificationStart = Date.now();
-    const classification = await classifyMaterial(processResult, file.fileName);
+    let classification;
+    try {
+      classification = await classifyMaterial(processResult, file.fileName);
+      console.log(`[Worker] Classification completed: ${classification.materialName} (${classification.confidence})`);
+    } catch (classifyError) {
+      console.error(`[Worker] Classification failed:`, classifyError);
+      throw new Error(`材料分类失败: ${classifyError.message}`);
+    }
     const classificationEnd = Date.now();
     
     logInteraction({

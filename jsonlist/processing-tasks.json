@@ -1555,6 +1555,147 @@
       "startedAt": "2026-03-06T05:18:10.620Z",
       "completedAt": "2026-03-06T05:18:13.112Z",
       "createdBy": null
+    },
+    {
+      "id": "task-3469dfb6-6a1b-41e7-a8ad-629b9dff7cf7",
+      "type": "import-offline-materials",
+      "claimCaseId": "CLM973980",
+      "productCode": "zhongan2026PAC814",
+      "status": "failed",
+      "files": [
+        {
+          "index": 0,
+          "fileName": "WechatIMG29.jpg",
+          "mimeType": "image/jpeg",
+          "ossKey": "uploads/1772774825372_v5ekl2iwl2p_WechatIMG29.jpg",
+          "status": "failed",
+          "stages": {
+            "archive": {
+              "status": "completed",
+              "completedAt": "2026-03-06T05:27:10.758Z"
+            },
+            "classification": {
+              "status": "pending"
+            },
+            "extraction": {
+              "status": "pending"
+            }
+          },
+          "startedAt": "2026-03-06T05:27:11.830Z",
+          "errorMessage": "Image processing requires base64Data",
+          "completedAt": "2026-03-06T05:27:14.437Z"
+        }
+      ],
+      "progress": {
+        "total": 1,
+        "completed": 0,
+        "failed": 1,
+        "processing": 0
+      },
+      "options": {
+        "skipOCR": false,
+        "skipAI": false,
+        "source": "offline-import-quick",
+        "useV2": true
+      },
+      "createdAt": "2026-03-06T05:27:10.759Z",
+      "startedAt": "2026-03-06T05:27:11.618Z",
+      "completedAt": "2026-03-06T05:27:14.456Z",
+      "createdBy": null
+    },
+    {
+      "id": "task-a27cf47e-8317-4cc6-9705-dbd273a1b6e3",
+      "type": "import-offline-materials",
+      "claimCaseId": "CLM973980",
+      "productCode": "zhongan2026PAC814",
+      "status": "failed",
+      "files": [
+        {
+          "index": 0,
+          "fileName": "WechatIMG29.jpg",
+          "mimeType": "image/jpeg",
+          "ossKey": "uploads/1772774825372_v5ekl2iwl2p_WechatIMG29.jpg",
+          "status": "failed",
+          "stages": {
+            "archive": {
+              "status": "completed",
+              "completedAt": "2026-03-06T05:27:13.109Z"
+            },
+            "classification": {
+              "status": "pending"
+            },
+            "extraction": {
+              "status": "pending"
+            }
+          },
+          "startedAt": "2026-03-06T05:27:14.091Z",
+          "errorMessage": "Image processing requires base64Data",
+          "completedAt": "2026-03-06T05:27:16.371Z"
+        }
+      ],
+      "progress": {
+        "total": 1,
+        "completed": 0,
+        "failed": 1,
+        "processing": 0
+      },
+      "options": {
+        "skipOCR": false,
+        "skipAI": false,
+        "source": "offline-import-quick",
+        "useV2": true
+      },
+      "createdAt": "2026-03-06T05:27:13.109Z",
+      "startedAt": "2026-03-06T05:27:14.028Z",
+      "completedAt": "2026-03-06T05:27:16.410Z",
+      "createdBy": null
+    },
+    {
+      "id": "task-e58e20c7-4c5e-41f6-a806-3dd7416460f3",
+      "type": "import-offline-materials",
+      "claimCaseId": "CLM973980",
+      "productCode": "zhongan2026PAC814",
+      "status": "failed",
+      "files": [
+        {
+          "index": 0,
+          "fileName": "WechatIMG29.jpg",
+          "mimeType": "image/jpeg",
+          "ossKey": "uploads/1772774935080_5wff4bhrlnt_WechatIMG29.jpg",
+          "status": "failed",
+          "stages": {
+            "archive": {
+              "status": "completed",
+              "completedAt": "2026-03-06T05:29:00.957Z"
+            },
+            "classification": {
+              "status": "pending"
+            },
+            "extraction": {
+              "status": "pending"
+            }
+          },
+          "startedAt": "2026-03-06T05:29:01.421Z",
+          "errorMessage": "Image processing requires base64Data",
+          "completedAt": "2026-03-06T05:29:04.045Z"
+        }
+      ],
+      "progress": {
+        "total": 1,
+        "completed": 0,
+        "failed": 1,
+        "processing": 0
+      },
+      "options": {
+        "skipOCR": false,
+        "skipAI": false,
+        "source": "offline-import-quick",
+        "useV2": true
+      },
+      "createdAt": "2026-03-06T05:29:00.957Z",
+      "startedAt": "2026-03-06T05:29:01.315Z",
+      "completedAt": "2026-03-06T05:29:04.065Z",
+      "createdBy": null
     }
   ]
 }
