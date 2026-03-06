@@ -1,5 +1,53 @@
 # 语音理赔功能导航指南
 
+## ✅ 功能状态：已修复并可用
+
+语音报案功能的所有问题已修复，功能现已完全可用。
+
+**修复内容**:
+- ✅ 后端 TypeScript 编译配置
+- ✅ WebSocket 路径匹配问题（支持动态 sessionId）
+- ✅ 服务器 upgrade 事件处理
+
+---
+
+## 🚀 快速启动（必读）
+
+### 步骤 1: 编译后端代码
+
+**首次使用或后端代码更新后必须执行**：
+
+```bash
+npm run build:server
+```
+
+这会将 `server/` 目录下的 TypeScript 文件编译到 `dist-server/server/` 目录。
+
+### 步骤 2: 启动服务器
+
+```bash
+npm start
+```
+
+服务器启动后，你应该看到：
+```
+[VoiceGateway] WebSocket server initialized on path: /voice/ws
+[Server] 语音 WebSocket 服务已初始化
+Voice WebSocket: ws://localhost:3000/voice/ws/:sessionId
+```
+
+### 步骤 3: 访问功能
+
+1. 浏览器访问：http://localhost:3000
+2. 登录系统（admin/234567）
+3. 导航到：**理赔管理 → 语音报案**
+4. 点击"开始语音对话"
+5. 点击"开始对话"按钮连接 WebSocket
+6. 允许浏览器麦克风权限
+7. 点击"开始聆听"开始语音识别
+
+---
+
 ## 📁 已创建的文件位置
 
 ### 1. 前端组件 (components/voice/)
@@ -173,6 +221,70 @@ ALIYUN_TTS_APP_KEY=eD8SC9ppgzaDYK0Q
 - 阿里云语音服务WebSocket连接
 - 流式音频处理
 - 多音色支持
+
+---
+
+## 🐛 故障排查
+
+### 问题 1: WebSocket 连接失败
+
+**症状**: 点击"开始语音对话"后显示"连接失败，请检查麦克风权限"
+
+**原因**: 后端 WebSocket 服务未启动
+
+**解决方案**:
+```bash
+# 1. 编译后端代码
+npm run build:server
+
+# 2. 重启服务器
+npm start
+
+# 3. 确认看到以下日志
+# [VoiceGateway] WebSocket server initialized on path: /voice/ws
+# [Server] 语音 WebSocket 服务已初始化
+```
+
+### 问题 2: 编译错误
+
+**症状**: `npm run build:server` 失败
+
+**解决方案**:
+```bash
+# 清理并重新安装依赖
+rm -rf node_modules package-lock.json
+npm install
+
+# 重新编译
+npm run build:server
+```
+
+### 问题 3: 麦克风权限被拒绝
+
+**症状**: 浏览器提示麦克风权限被拒绝
+
+**解决方案**:
+1. 检查浏览器设置 → 隐私和安全 → 网站设置 → 麦克风
+2. 确保 localhost 或当前域名有麦克风权限
+3. 刷新页面并重新授权
+
+### 问题 4: 阿里云服务连接失败
+
+**症状**: 语音识别或合成不工作
+
+**解决方案**:
+1. 检查 `.env.local` 中的阿里云凭证是否正确
+2. 确认网络可以访问阿里云服务
+3. 检查服务器日志中的错误信息
+
+### 问题 5: 前后端端口不匹配
+
+**症状**: 开发环境下 WebSocket 连接到错误的端口
+
+**解决方案**:
+- 前端开发: `npm run dev` (端口 8080)
+- 后端服务: `npm start` (端口 3000)
+- 前端需要连接到后端的 WebSocket: `ws://localhost:3000/voice/ws/:sessionId`
 
 ---
 
