@@ -789,6 +789,42 @@
       "startedAt": "2026-03-06T04:12:54.946Z",
       "completedAt": "2026-03-06T04:12:55.109Z",
       "createdBy": null
+    },
+    {
+      "id": "task-e83bea05-48da-45eb-bb54-40314b5a0a52",
+      "type": "import-offline-materials",
+      "claimCaseId": "CLM973980",
+      "productCode": "zhongan2026PAC814",
+      "status": "failed",
+      "files": [
+        {
+          "index": 0,
+          "fileName": "行驶证.jpg",
+          "mimeType": "image/jpeg",
+          "status": "failed",
+          "retryCount": 0,
+          "result": null,
+          "errorMessage": "No file source provided (ossKey or base64Data)",
+          "startedAt": "2026-03-06T04:22:23.795Z",
+          "completedAt": "2026-03-06T04:22:23.849Z"
+        }
+      ],
+      "progress": {
+        "total": 1,
+        "completed": 0,
+        "failed": 1,
+        "processing": 0
+      },
+      "options": {
+        "skipOCR": false,
+        "skipAI": false,
+        "source": "offline-import-quick",
+        "useV2": true
+      },
+      "createdAt": "2026-03-06T04:22:22.711Z",
+      "startedAt": "2026-03-06T04:22:23.729Z",
+      "completedAt": "2026-03-06T04:22:23.873Z",
+      "createdBy": null
     }
   ]
 }
