@@ -144,17 +144,6 @@ const OfflineMaterialImportDialog: React.FC<OfflineMaterialImportDialogProps> = 
 
       await Promise.all(uploadPromises);
 
-      const processedFiles: UploadingFile[] = [];
-      uploadingFiles.forEach(uf => {
-        const current = files.find(f => f.id === uf.id);
-        if (current?.status === 'processing' && current?.ossKey) {
-          processedFiles.push(current);
-        }
-      });
-
-      if (processedFiles.length > 0) {
-        await batchClassify(processedFiles);
-      }
     } catch (err) {
       console.error('[OfflineImport] Batch upload error:', err);
       setError(err instanceof Error ? err.message : '批量上传失败，使用备用方式');
@@ -207,44 +196,6 @@ const OfflineMaterialImportDialog: React.FC<OfflineMaterialImportDialogProps> = 
       }
     }
   }, [files]);
-
-  const batchClassify = async (filesToClassify: UploadingFile[]) => {
-    const ossKeys = filesToClassify.map(f => f.ossKey!).filter(Boolean);
-    const mimeTypes = filesToClassify.map(f => f.file.type);
-
-    try {
-      const response = await fetch('/api/batch-classify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ossKeys, mimeTypes }),
-      });
-
-      if (!response.ok) {
-        throw new Error('批量分类失败');
-      }
-
-      const result = await response.json();
-      const classifications = result.data?.results || [];
-
-      classifications.forEach((item: any, index: number) => {
-        const fileId = filesToClassify[index]?.id;
-        if (fileId) {
-          setFiles(prev => prev.map(f =>
-            f.id === fileId
-              ? { ...f, status: 'classified' as const, classification: item.classification }
-              : f
-          ));
-        }
-      });
-    } catch (err) {
-      console.error('[OfflineImport] Batch classify error:', err);
-      filesToClassify.forEach(uf => {
-        setFiles(prev => prev.map(f =>
-          f.id === uf.id ? { ...f, status: 'failed' as const, errorMessage: '分类失败' } : f
-        ));
-      });
-    }
-  };
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -508,7 +459,7 @@ const OfflineMaterialImportDialog: React.FC<OfflineMaterialImportDialogProps> = 
                           <span>{file.uploadProgress || 0}%</span>
                         </div>
                       )}
-                      {file.status === 'processing' && '识别中...'}
+                      {file.status === 'processing' && <span className="text-green-600">已上传 ✓</span>}
                       {file.status === 'classified' && (
                         <span className={file.classification?.confidence! > 0.7 ? 'text-green-600' : 'text-yellow-600'}>
                           识别为: {file.classification?.materialName} ({Math.round((file.classification?.confidence || 0) * 100)}%)

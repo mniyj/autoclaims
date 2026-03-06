@@ -3,7 +3,7 @@
   "compilerOptions": {
     "noEmit": false,
     "outDir": "./dist-server",
-    "rootDir": "./server",
+    "rootDir": ".",
     "module": "ESNext",
     "target": "ES2022",
     "moduleResolution": "node",
@@ -14,11 +14,22 @@
     "skipLibCheck": true
   },
   "include": [
-    "server/**/*"
+    "server/**/*",
+    "types.ts",
+    "types/**/*"
   ],
   "exclude": [
     "node_modules",
     "dist",
-    "dist-server"
+    "dist-server",
+    "components",
+    "pages",
+    "hooks",
+    "services",
+    "schemas",
+    "utils",
+    "smartclaim-ai-agent",
+    "adjuster-workbench",
+    "wechat-miniprogram"
   ]
 }

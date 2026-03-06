@@ -861,6 +861,653 @@
       "startedAt": "2026-03-06T04:27:46.948Z",
       "completedAt": "2026-03-06T04:27:47.192Z",
       "createdBy": null
+    },
+    {
+      "id": "task-d917b8d3-ffc1-42a7-b539-ef08960e01e7",
+      "type": "import-offline-materials",
+      "claimCaseId": "CLM973980",
+      "productCode": "zhongan2026PAC814",
+      "status": "failed",
+      "files": [
+        {
+          "index": 0,
+          "fileName": "WechatIMG29.jpg",
+          "mimeType": "image/jpeg",
+          "ossKey": "uploads/1772773901523_mzx96ogar7d_WechatIMG29.jpg",
+          "status": "failed",
+          "stages": {
+            "archive": {
+              "status": "completed",
+              "completedAt": "2026-03-06T05:11:45.563Z"
+            },
+            "classification": {
+              "status": "pending"
+            },
+            "extraction": {
+              "status": "pending"
+            }
+          },
+          "startedAt": "2026-03-06T05:11:46.274Z",
+          "errorMessage": "Image processing requires base64Data",
+          "completedAt": "2026-03-06T05:11:49.031Z"
+        }
+      ],
+      "progress": {
+        "total": 1,
+        "completed": 0,
+        "failed": 1,
+        "processing": 0
+      },
+      "options": {
+        "skipOCR": false,
+        "skipAI": false,
+        "source": "offline-import-quick",
+        "useV2": true
+      },
+      "createdAt": "2026-03-06T05:11:45.564Z",
+      "startedAt": "2026-03-06T05:11:46.203Z",
+      "completedAt": "2026-03-06T05:11:49.073Z",
+      "createdBy": null
+    },
+    {
+      "id": "task-36580c44-e501-439d-a50c-1d4d71474ae0",
+      "type": "import-offline-materials",
+      "claimCaseId": "CLM973980",
+      "productCode": "zhongan2026PAC814",
+      "status": "failed",
+      "files": [
+        {
+          "index": 0,
+          "fileName": "WechatIMG29.jpg",
+          "mimeType": "image/jpeg",
+          "ossKey": "uploads/1772773901523_mzx96ogar7d_WechatIMG29.jpg",
+          "status": "failed",
+          "stages": {
+            "archive": {
+              "status": "completed",
+              "completedAt": "2026-03-06T05:11:47.891Z"
+            },
+            "classification": {
+              "status": "pending"
+            },
+            "extraction": {
+              "status": "pending"
+            }
+          },
+          "startedAt": "2026-03-06T05:11:49.849Z",
+          "errorMessage": "Image processing requires base64Data",
+          "completedAt": "2026-03-06T05:11:50.494Z"
+        }
+      ],
+      "progress": {
+        "total": 1,
+        "completed": 0,
+        "failed": 1,
+        "processing": 0
+      },
+      "options": {
+        "skipOCR": false,
+        "skipAI": false,
+        "source": "offline-import-quick",
+        "useV2": true
+      },
+      "createdAt": "2026-03-06T05:11:47.891Z",
+      "startedAt": "2026-03-06T05:11:49.788Z",
+      "completedAt": "2026-03-06T05:11:50.524Z",
+      "createdBy": null
+    },
+    {
+      "id": "task-534a4f65-834a-472c-8353-81fba04ee84f",
+      "type": "import-offline-materials",
+      "claimCaseId": "CLM973980",
+      "productCode": "zhongan2026PAC814",
+      "status": "failed",
+      "files": [
+        {
+          "index": 0,
+          "fileName": "WechatIMG29.jpg",
+          "mimeType": "image/jpeg",
+          "ossKey": "uploads/1772773901523_mzx96ogar7d_WechatIMG29.jpg",
+          "status": "failed",
+          "stages": {
+            "archive": {
+              "status": "completed",
+              "completedAt": "2026-03-06T05:11:48.663Z"
+            },
+            "classification": {
+              "status": "pending"
+            },
+            "extraction": {
+              "status": "pending"
+            }
+          },
+          "startedAt": "2026-03-06T05:11:50.631Z",
+          "errorMessage": "Image processing requires base64Data",
+          "completedAt": "2026-03-06T05:11:52.984Z"
+        }
+      ],
+      "progress": {
+        "total": 1,
+        "completed": 0,
+        "failed": 1,
+        "processing": 0
+      },
+      "options": {
+        "skipOCR": false,
+        "skipAI": false,
+        "source": "offline-import-quick",
+        "useV2": true
+      },
+      "createdAt": "2026-03-06T05:11:48.663Z",
+      "startedAt": "2026-03-06T05:11:50.578Z",
+      "completedAt": "2026-03-06T05:11:53.008Z",
+      "createdBy": null
+    },
+    {
+      "id": "task-c0d80005-e697-4be0-bd06-ed921ea3f9eb",
+      "type": "import-offline-materials",
+      "claimCaseId": "CLM973980",
+      "productCode": "zhongan2026PAC814",
+      "status": "failed",
+      "files": [
+        {
+          "index": 0,
+          "fileName": "WechatIMG29.jpg",
+          "mimeType": "image/jpeg",
+          "ossKey": "uploads/1772773901523_mzx96ogar7d_WechatIMG29.jpg",
+          "status": "failed",
+          "stages": {
+            "archive": {
+              "status": "completed",
+              "completedAt": "2026-03-06T05:11:49.393Z"
+            },
+            "classification": {
+              "status": "pending"
+            },
+            "extraction": {
+              "status": "pending"
+            }
+          },
+          "startedAt": "2026-03-06T05:11:53.130Z",
+          "errorMessage": "Image processing requires base64Data",
+          "completedAt": "2026-03-06T05:11:53.946Z"
+        }
+      ],
+      "progress": {
+        "total": 1,
+        "completed": 0,
+        "failed": 1,
+        "processing": 0
+      },
+      "options": {
+        "skipOCR": false,
+        "skipAI": false,
+        "source": "offline-import-quick",
+        "useV2": true
+      },
+      "createdAt": "2026-03-06T05:11:49.393Z",
+      "startedAt": "2026-03-06T05:11:53.075Z",
+      "completedAt": "2026-03-06T05:11:53.995Z",
+      "createdBy": null
+    },
+    {
+      "id": "task-ed8a6ca6-f245-4541-90a8-5e3a5317d16a",
+      "type": "import-offline-materials",
+      "claimCaseId": "CLM973980",
+      "productCode": "zhongan2026PAC814",
+      "status": "failed",
+      "files": [
+        {
+          "index": 0,
+          "fileName": "WechatIMG29.jpg",
+          "mimeType": "image/jpeg",
+          "ossKey": "uploads/1772773901523_mzx96ogar7d_WechatIMG29.jpg",
+          "status": "failed",
+          "stages": {
+            "archive": {
+              "status": "completed",
+              "completedAt": "2026-03-06T05:11:50.061Z"
+            },
+            "classification": {
+              "status": "pending"
+            },
+            "extraction": {
+              "status": "pending"
+            }
+          },
+          "startedAt": "2026-03-06T05:11:54.134Z",
+          "errorMessage": "Image processing requires base64Data",
+          "completedAt": "2026-03-06T05:11:55.249Z"
+        }
+      ],
+      "progress": {
+        "total": 1,
+        "completed": 0,
+        "failed": 1,
+        "processing": 0
+      },
+      "options": {
+        "skipOCR": false,
+        "skipAI": false,
+        "source": "offline-import-quick",
+        "useV2": true
+      },
+      "createdAt": "2026-03-06T05:11:50.061Z",
+      "startedAt": "2026-03-06T05:11:54.082Z",
+      "completedAt": "2026-03-06T05:11:55.267Z",
+      "createdBy": null
+    },
+    {
+      "id": "task-8e6e2349-f6c9-4cf3-8297-a6889eda58f3",
+      "type": "import-offline-materials",
+      "claimCaseId": "CLM973980",
+      "productCode": "zhongan2026PAC814",
+      "status": "failed",
+      "files": [
+        {
+          "index": 0,
+          "fileName": "WechatIMG29.jpg",
+          "mimeType": "image/jpeg",
+          "ossKey": "uploads/1772773901523_mzx96ogar7d_WechatIMG29.jpg",
+          "status": "failed",
+          "stages": {
+            "archive": {
+              "status": "completed",
+              "completedAt": "2026-03-06T05:11:50.744Z"
+            },
+            "classification": {
+              "status": "pending"
+            },
+            "extraction": {
+              "status": "pending"
+            }
+          },
+          "startedAt": "2026-03-06T05:11:55.177Z",
+          "errorMessage": "Image processing requires base64Data",
+          "completedAt": "2026-03-06T05:11:55.887Z"
+        }
+      ],
+      "progress": {
+        "total": 1,
+        "completed": 0,
+        "failed": 1,
+        "processing": 0
+      },
+      "options": {
+        "skipOCR": false,
+        "skipAI": false,
+        "source": "offline-import-quick",
+        "useV2": true
+      },
+      "createdAt": "2026-03-06T05:11:50.744Z",
+      "startedAt": "2026-03-06T05:11:55.111Z",
+      "completedAt": "2026-03-06T05:11:55.935Z",
+      "createdBy": null
+    },
+    {
+      "id": "task-69d49875-74ab-4a30-bea3-f19bb70db8bc",
+      "type": "import-offline-materials",
+      "claimCaseId": "CLM973980",
+      "productCode": "zhongan2026PAC814",
+      "status": "failed",
+      "files": [
+        {
+          "index": 0,
+          "fileName": "WechatIMG29.jpg",
+          "mimeType": "image/jpeg",
+          "ossKey": "uploads/1772773901523_mzx96ogar7d_WechatIMG29.jpg",
+          "status": "failed",
+          "stages": {
+            "archive": {
+              "status": "completed",
+              "completedAt": "2026-03-06T05:11:51.653Z"
+            },
+            "classification": {
+              "status": "pending"
+            },
+            "extraction": {
+              "status": "pending"
+            }
+          },
+          "startedAt": "2026-03-06T05:11:56.048Z",
+          "errorMessage": "Image processing requires base64Data",
+          "completedAt": "2026-03-06T05:11:56.737Z"
+        }
+      ],
+      "progress": {
+        "total": 1,
+        "completed": 0,
+        "failed": 1,
+        "processing": 0
+      },
+      "options": {
+        "skipOCR": false,
+        "skipAI": false,
+        "source": "offline-import-quick",
+        "useV2": true
+      },
+      "createdAt": "2026-03-06T05:11:51.653Z",
+      "startedAt": "2026-03-06T05:11:55.997Z",
+      "completedAt": "2026-03-06T05:11:56.758Z",
+      "createdBy": null
+    },
+    {
+      "id": "task-7260f7b6-f451-4950-acee-edf3d8bd417e",
+      "type": "import-offline-materials",
+      "claimCaseId": "CLM973980",
+      "productCode": "zhongan2026PAC814",
+      "status": "failed",
+      "files": [
+        {
+          "index": 0,
+          "fileName": "WechatIMG29.jpg",
+          "mimeType": "image/jpeg",
+          "status": "failed",
+          "retryCount": 0,
+          "result": null,
+          "errorMessage": "No file source provided (ossKey or base64Data)",
+          "startedAt": "2026-03-06T05:11:56.866Z",
+          "completedAt": "2026-03-06T05:11:56.918Z"
+        }
+      ],
+      "progress": {
+        "total": 1,
+        "completed": 0,
+        "failed": 1,
+        "processing": 0
+      },
+      "options": {
+        "skipOCR": false,
+        "skipAI": false,
+        "source": "offline-import-quick",
+        "useV2": true
+      },
+      "createdAt": "2026-03-06T05:11:52.901Z",
+      "startedAt": "2026-03-06T05:11:56.814Z",
+      "completedAt": "2026-03-06T05:11:56.939Z",
+      "createdBy": null
+    },
+    {
+      "id": "task-54975070-234b-46bb-9cce-536e4798c2d2",
+      "type": "import-offline-materials",
+      "claimCaseId": "CLM973980",
+      "productCode": "zhongan2026PAC814",
+      "status": "failed",
+      "files": [
+        {
+          "index": 0,
+          "fileName": "WechatIMG29.jpg",
+          "mimeType": "image/jpeg",
+          "ossKey": "uploads/1772773901523_mzx96ogar7d_WechatIMG29.jpg",
+          "status": "failed",
+          "stages": {
+            "archive": {
+              "status": "completed",
+              "completedAt": "2026-03-06T05:11:54.191Z"
+            },
+            "classification": {
+              "status": "pending"
+            },
+            "extraction": {
+              "status": "pending"
+            }
+          },
+          "startedAt": "2026-03-06T05:11:57.043Z",
+          "errorMessage": "Image processing requires base64Data",
+          "completedAt": "2026-03-06T05:11:57.778Z"
+        }
+      ],
+      "progress": {
+        "total": 1,
+        "completed": 0,
+        "failed": 1,
+        "processing": 0
+      },
+      "options": {
+        "skipOCR": false,
+        "skipAI": false,
+        "source": "offline-import-quick",
+        "useV2": true
+      },
+      "createdAt": "2026-03-06T05:11:54.191Z",
+      "startedAt": "2026-03-06T05:11:56.990Z",
+      "completedAt": "2026-03-06T05:11:57.797Z",
+      "createdBy": null
+    },
+    {
+      "id": "task-7f35686a-37eb-474b-80d7-38eca38bdb87",
+      "type": "import-offline-materials",
+      "claimCaseId": "CLM973980",
+      "productCode": "zhongan2026PAC814",
+      "status": "failed",
+      "files": [
+        {
+          "index": 0,
+          "fileName": "WechatIMG29.jpg",
+          "mimeType": "image/jpeg",
+          "ossKey": "uploads/1772773901523_mzx96ogar7d_WechatIMG29.jpg",
+          "status": "failed",
+          "stages": {
+            "archive": {
+              "status": "completed",
+              "completedAt": "2026-03-06T05:11:57.848Z"
+            },
+            "classification": {
+              "status": "pending"
+            },
+            "extraction": {
+              "status": "pending"
+            }
+          },
+          "startedAt": "2026-03-06T05:11:58.996Z",
+          "errorMessage": "Image processing requires base64Data",
+          "completedAt": "2026-03-06T05:12:00.110Z"
+        }
+      ],
+      "progress": {
+        "total": 1,
+        "completed": 0,
+        "failed": 1,
+        "processing": 0
+      },
+      "options": {
+        "skipOCR": false,
+        "skipAI": false,
+        "source": "offline-import-quick",
+        "useV2": true
+      },
+      "createdAt": "2026-03-06T05:11:57.848Z",
+      "startedAt": "2026-03-06T05:11:58.943Z",
+      "completedAt": "2026-03-06T05:12:00.146Z",
+      "createdBy": null
+    },
+    {
+      "id": "task-9fb7edb7-bfad-4072-881c-25de19d63835",
+      "type": "import-offline-materials",
+      "claimCaseId": "CLM973980",
+      "productCode": "zhongan2026PAC814",
+      "status": "failed",
+      "files": [
+        {
+          "index": 0,
+          "fileName": "WechatIMG29.jpg",
+          "mimeType": "image/jpeg",
+          "ossKey": "uploads/1772773901523_mzx96ogar7d_WechatIMG29.jpg",
+          "status": "failed",
+          "stages": {
+            "archive": {
+              "status": "completed",
+              "completedAt": "2026-03-06T05:11:58.778Z"
+            },
+            "classification": {
+              "status": "pending"
+            },
+            "extraction": {
+              "status": "pending"
+            }
+          },
+          "startedAt": "2026-03-06T05:12:00.259Z",
+          "errorMessage": "Image processing requires base64Data",
+          "completedAt": "2026-03-06T05:12:02.410Z"
+        }
+      ],
+      "progress": {
+        "total": 1,
+        "completed": 0,
+        "failed": 1,
+        "processing": 0
+      },
+      "options": {
+        "skipOCR": false,
+        "skipAI": false,
+        "source": "offline-import-quick",
+        "useV2": true
+      },
+      "createdAt": "2026-03-06T05:11:58.778Z",
+      "startedAt": "2026-03-06T05:12:00.207Z",
+      "completedAt": "2026-03-06T05:12:02.507Z",
+      "createdBy": null
+    },
+    {
+      "id": "task-720601c2-6cf6-47d9-a886-5f49530cf3cb",
+      "type": "import-offline-materials",
+      "claimCaseId": "CLM973980",
+      "productCode": "zhongan2026PAC814",
+      "status": "failed",
+      "files": [
+        {
+          "index": 0,
+          "fileName": "WechatIMG29.jpg",
+          "mimeType": "image/jpeg",
+          "ossKey": "uploads/1772773901523_mzx96ogar7d_WechatIMG29.jpg",
+          "status": "failed",
+          "stages": {
+            "archive": {
+              "status": "completed",
+              "completedAt": "2026-03-06T05:11:59.394Z"
+            },
+            "classification": {
+              "status": "pending"
+            },
+            "extraction": {
+              "status": "pending"
+            }
+          },
+          "startedAt": "2026-03-06T05:12:00.776Z",
+          "errorMessage": "Image processing requires base64Data",
+          "completedAt": "2026-03-06T05:12:01.382Z"
+        }
+      ],
+      "progress": {
+        "total": 1,
+        "completed": 0,
+        "failed": 1,
+        "processing": 0
+      },
+      "options": {
+        "skipOCR": false,
+        "skipAI": false,
+        "source": "offline-import-quick",
+        "useV2": true
+      },
+      "createdAt": "2026-03-06T05:11:59.394Z",
+      "startedAt": "2026-03-06T05:12:00.711Z",
+      "completedAt": "2026-03-06T05:12:01.424Z",
+      "createdBy": null
+    },
+    {
+      "id": "task-9e70a099-0d78-432d-b675-de95f1043831",
+      "type": "import-offline-materials",
+      "claimCaseId": "CLM973980",
+      "productCode": "zhongan2026PAC814",
+      "status": "failed",
+      "files": [
+        {
+          "index": 0,
+          "fileName": "WechatIMG29.jpg",
+          "mimeType": "image/jpeg",
+          "ossKey": "uploads/1772773901523_mzx96ogar7d_WechatIMG29.jpg",
+          "status": "failed",
+          "stages": {
+            "archive": {
+              "status": "completed",
+              "completedAt": "2026-03-06T05:12:25.816Z"
+            },
+            "classification": {
+              "status": "pending"
+            },
+            "extraction": {
+              "status": "pending"
+            }
+          },
+          "startedAt": "2026-03-06T05:12:26.010Z",
+          "errorMessage": "Image processing requires base64Data",
+          "completedAt": "2026-03-06T05:12:28.670Z"
+        }
+      ],
+      "progress": {
+        "total": 1,
+        "completed": 0,
+        "failed": 1,
+        "processing": 0
+      },
+      "options": {
+        "skipOCR": false,
+        "skipAI": false,
+        "source": "offline-import-quick",
+        "useV2": true
+      },
+      "createdAt": "2026-03-06T05:12:25.816Z",
+      "startedAt": "2026-03-06T05:12:25.953Z",
+      "completedAt": "2026-03-06T05:12:28.702Z",
+      "createdBy": null
+    },
+    {
+      "id": "task-f6e68167-821f-452a-86b8-baa2b885a9fb",
+      "type": "import-offline-materials",
+      "claimCaseId": "CLM973980",
+      "productCode": "zhongan2026PAC814",
+      "status": "failed",
+      "files": [
+        {
+          "index": 0,
+          "fileName": "WechatIMG29.jpg",
+          "mimeType": "image/jpeg",
+          "ossKey": "uploads/1772773901523_mzx96ogar7d_WechatIMG29.jpg",
+          "status": "failed",
+          "stages": {
+            "archive": {
+              "status": "completed",
+              "completedAt": "2026-03-06T05:12:26.345Z"
+            },
+            "classification": {
+              "status": "pending"
+            },
+            "extraction": {
+              "status": "pending"
+            }
+          },
+          "startedAt": "2026-03-06T05:12:27.299Z",
+          "errorMessage": "Image processing requires base64Data",
+          "completedAt": "2026-03-06T05:12:29.700Z"
+        }
+      ],
+      "progress": {
+        "total": 1,
+        "completed": 0,
+        "failed": 1,
+        "processing": 0
+      },
+      "options": {
+        "skipOCR": false,
+        "skipAI": false,
+        "source": "offline-import-quick",
+        "useV2": true
+      },
+      "createdAt": "2026-03-06T05:12:26.345Z",
+      "startedAt": "2026-03-06T05:12:27.216Z",
+      "completedAt": "2026-03-06T05:12:29.730Z",
+      "createdBy": null
     }
   ]
 }

@@ -1,7 +1,7 @@
-import { WebSocketServer, WebSocket } from 'ws';
-import { Server } from 'http';
-import { VoiceSession } from './VoiceSession.js';
-import { VoicePipeline } from './VoicePipeline.js';
+import { WebSocketServer, WebSocket, type RawData } from "ws";
+import { Server } from "http";
+import { VoiceSession } from "./VoiceSession.js";
+import { VoicePipeline } from "./VoicePipeline.js";
 
 interface SessionData {
   session: VoiceSession;
@@ -16,64 +16,81 @@ export class VoiceGateway {
   private pipeline: VoicePipeline;
 
   constructor(server: Server) {
-    this.wss = new WebSocketServer({ 
-      server,
-      path: '/voice/ws'
+    this.wss = new WebSocketServer({
+      noServer: true,
     });
-    
-    console.log('[VoiceGateway] WebSocket server initialized on path: /voice/ws');
+
+    console.log(
+      "[VoiceGateway] WebSocket server initialized on path: /voice/ws",
+    );
 
     this.pipeline = new VoicePipeline();
-    
-    this.wss.on('connection', this.handleConnection.bind(this));
-    
+
+    // 手动处理 upgrade 事件
+    server.on("upgrade", (request, socket, head) => {
+      console.log(`[VoiceGateway] Upgrade request: ${request.url}`);
+      if (request.url?.startsWith("/voice/ws")) {
+        console.log(`[VoiceGateway] Accepting WebSocket connection`);
+        this.wss.handleUpgrade(request, socket, head, (ws) => {
+          this.wss.emit("connection", ws, request);
+        });
+      } else {
+        console.log(
+          `[VoiceGateway] Rejecting non-voice WebSocket: ${request.url}`,
+        );
+        socket.destroy();
+      }
+    });
+
+    this.wss.on("connection", this.handleConnection.bind(this));
+
     // Cleanup inactive sessions every 5 minutes
     setInterval(() => this.cleanupInactiveSessions(), 5 * 60 * 1000);
   }
 
   private handleConnection(ws: WebSocket, req: any) {
     const sessionId = this.extractSessionId(req);
-    
+
     console.log(`[VoiceGateway] New connection: ${sessionId}`);
 
     // Create new session
     const session = new VoiceSession({
       sessionId,
       ws,
-      pipeline: this.pipeline
+      pipeline: this.pipeline,
     });
 
     this.sessions.set(sessionId, {
       session,
-      userId: 'anonymous', // Will be set during authentication
+      userId: "anonymous", // Will be set during authentication
       createdAt: new Date(),
-      lastActivity: new Date()
+      lastActivity: new Date(),
     });
 
     // Handle messages
-    ws.on('message', (data: WebSocket.Data) => {
+    ws.on("message", (data: RawData) => {
       this.handleMessage(sessionId, data);
     });
 
     // Handle close
-    ws.on('close', () => {
+    ws.on("close", () => {
       console.log(`[VoiceGateway] Connection closed: ${sessionId}`);
       this.cleanupSession(sessionId);
     });
 
     // Handle errors
-    ws.on('error', (error) => {
+    ws.on("error", (error) => {
       console.error(`[VoiceGateway] WebSocket error for ${sessionId}:`, error);
     });
 
     // Send welcome message
-    session.sendEvent('session_started', {
+    session.sendEvent("session_started", {
       sessionId,
-      message: '语音会话已启动'
+      message: "语音会话已启动",
     });
   }
 
-  private handleMessage(sessionId: string, data: WebSocket.Data) {
+  private handleMessage(sessionId: string, data: RawData) {
     const sessionData = this.sessions.get(sessionId);
     if (!sessionData) return;
 
@@ -83,12 +100,15 @@ export class VoiceGateway {
       const message = JSON.parse(data.toString());
       sessionData.session.handleMessage(message);
     } catch (error) {
-      console.error(`[VoiceGateway] Failed to parse message from ${sessionId}:`, error);
+      console.error(
+        `[VoiceGateway] Failed to parse message from ${sessionId}:`,
+        error,
+      );
     }
   }
 
   private extractSessionId(req: any): string {
-    const url = req.url || '';
+    const url = req.url || "";
     const match = url.match(/\/voice\/ws\/(.+)/);
     return match ? match[1] : `session_${Date.now()}`;
   }
@@ -107,7 +127,9 @@ export class VoiceGateway {
 
     for (const [sessionId, data] of this.sessions.entries()) {
       if (now.getTime() - data.lastActivity.getTime() > timeout) {
-        console.log(`[VoiceGateway] Cleaning up inactive session: ${sessionId}`);
+        console.log(
+          `[VoiceGateway] Cleaning up inactive session: ${sessionId}`,
+        );
         this.cleanupSession(sessionId);
       }
     }
