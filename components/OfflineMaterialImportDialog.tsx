@@ -51,15 +51,20 @@ const OfflineMaterialImportDialog: React.FC<OfflineMaterialImportDialogProps> = 
 
   // handleClose defined AFTER all state hooks
   const handleClose = useCallback(() => {
-    if (importing && taskStatus !== 'completed' && taskStatus !== 'failed' && taskStatus !== 'partial_success') return;
     setFiles([]);
     setCompleteness(null);
     setError(null);
     setTaskId(null);
+    setImporting(false);
     setTaskStatus('pending');
     setTaskProgress({ total: 0, completed: 0, failed: 0 });
     onClose();
-  }, [importing, taskStatus, onClose]);
+  }, [onClose]);
+
+  const handleCancel = useCallback(() => {
+    setImporting(false);
+    handleClose();
+  }, [handleClose]);
 
   const readFileAsBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -316,14 +321,22 @@ const OfflineMaterialImportDialog: React.FC<OfflineMaterialImportDialogProps> = 
   const pollTaskStatus = useCallback(async (id: string) => {
     try {
       const response = await fetch(`/api/tasks/${id}`);
-      if (!response.ok) return;
+      if (!response.ok) {
+        console.error('[OfflineImport] Failed to fetch task status:', response.status);
+        return;
+      }
       
       const result = await response.json();
-      if (!result.success) return;
+      if (!result.success) {
+        console.error('[OfflineImport] Task status query failed:', result.error);
+        return;
+      }
 
       const task = result.data;
+      console.log('[OfflineImport] Task status:', task.status, 'Progress:', task.progress);
+      
       setTaskStatus(task.status);
-      setTaskProgress(task.progress);
+      setTaskProgress(task.progress || { total: 0, completed: 0, failed: 0 });
 
       if (task.status === 'completed' || task.status === 'failed' || task.status === 'partial_success') {
         onImportComplete?.({
@@ -338,7 +351,7 @@ const OfflineMaterialImportDialog: React.FC<OfflineMaterialImportDialogProps> = 
           })) || [],
           completeness: {
             isComplete: true,
-            score: task.progress.completed / (task.progress.total || 1),
+            score: task.progress?.completed / (task.progress?.total || 1) || 0,
             requiredMaterials: [],
             providedMaterials: [],
             missingMaterials: [],
@@ -346,10 +359,11 @@ const OfflineMaterialImportDialog: React.FC<OfflineMaterialImportDialogProps> = 
           },
         });
         setImporting(false);
-        setTimeout(() => handleClose(), 1500);
       }
-    } catch {}
-  }, [onImportComplete, handleClose]);
+    } catch (err) {
+      console.error('[OfflineImport] Error polling task status:', err);
+    }
+  }, [onImportComplete]);
 
   useEffect(() => {
     if (!taskId) return;
@@ -413,9 +427,8 @@ const OfflineMaterialImportDialog: React.FC<OfflineMaterialImportDialogProps> = 
         <div className="flex items-center justify-between p-4 border-b">
           <h3 className="text-lg font-semibold">离线材料导入</h3>
           <button
-            onClick={handleClose}
-            disabled={importing && taskStatus === 'processing'}
-            className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
+            onClick={handleCancel}
+            className="text-gray-400 hover:text-gray-600"
           >
             ✕
           </button>
@@ -562,11 +575,10 @@ const OfflineMaterialImportDialog: React.FC<OfflineMaterialImportDialogProps> = 
           </div>
           <div className="flex gap-2">
             <button
-              onClick={handleClose}
-              disabled={importing && taskStatus === 'processing'}
-              className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded disabled:opacity-50"
+              onClick={handleCancel}
+              className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded"
             >
-              取消
+              {importing ? '取消导入' : '关闭'}
             </button>
             <button
               onClick={handleImport}
