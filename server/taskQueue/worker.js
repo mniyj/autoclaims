@@ -10,6 +10,7 @@ import { readData } from '../utils/fileStore.js';
 import { GoogleGenAI } from '@google/genai';
 import OSS from 'ali-oss';
 import { ensureFreshSignedUrl } from '../middleware/urlRefresher.js';
+import { logInteraction } from '../services/aiInteractionLogger.js';
 
 const RETRYABLE_ERRORS = [
   'ECONNRESET',
@@ -344,8 +345,165 @@ export async function processBatchFiles(taskId, files, options = {}) {
   };
 }
 
+export async function processStagedFile(taskId, file, fileIndex) {
+  const startTime = Date.now();
+  
+  writeAuditLog({
+    type: 'FILE_PROCESS_START',
+    taskId,
+    fileIndex,
+    fileName: file.fileName,
+    timestamp: new Date().toISOString(),
+  });
+
+  try {
+    console.log(`[Worker] Starting staged processing for ${file.fileName}`);
+    
+    await updateFileStatus(taskId, fileIndex, {
+      status: 'classifying',
+      startedAt: new Date().toISOString(),
+    });
+    
+    let fileBuffer;
+    if (file.ossKey) {
+      console.log(`[Worker] Downloading file from OSS: ${file.ossKey}`);
+      fileBuffer = await downloadFileFromOSS(file.ossKey, 0);
+    } else if (file.base64Data) {
+      fileBuffer = Buffer.from(file.base64Data, 'base64');
+    } else {
+      throw new Error('No file source provided');
+    }
+    
+    const processResult = await processFile({
+      fileName: file.fileName,
+      mimeType: file.mimeType,
+      buffer: fileBuffer,
+      options: { extractText: true },
+    });
+
+    if (processResult.parseStatus === 'failed') {
+      throw new Error(processResult.errorMessage || '文件处理失败');
+    }
+
+    const classificationStart = Date.now();
+    const classification = await classifyMaterial(processResult, file.fileName);
+    const classificationEnd = Date.now();
+    
+    logInteraction({
+      taskId,
+      fileIndex,
+      taskType: 'classification',
+      input: {
+        prompt: '材料分类',
+        fileName: file.fileName,
+        fileType: file.mimeType,
+        model: 'gemini-1.5-flash',
+      },
+      output: {
+        response: JSON.stringify(classification),
+        parsedResult: classification,
+      },
+      performance: {
+        startTime: classificationStart,
+        endTime: classificationEnd,
+        duration: classificationEnd - classificationStart,
+        retryCount: 0,
+      },
+    });
+
+    await updateFileStatus(taskId, fileIndex, {
+      status: 'extracting',
+      stages: {
+        archive: { status: 'completed', completedAt: new Date().toISOString() },
+        classification: { status: 'completed', result: classification, completedAt: new Date().toISOString() },
+        extraction: { status: 'in_progress' },
+      },
+    });
+
+    const extractionStart = Date.now();
+    const extraction = {
+      extractedText: processResult.extractedText,
+      structuredData: processResult.structuredData,
+    };
+    const extractionEnd = Date.now();
+    
+    logInteraction({
+      taskId,
+      fileIndex,
+      taskType: 'extraction',
+      input: {
+        fileName: file.fileName,
+        fileType: file.mimeType,
+        model: 'gemini-1.5-flash',
+      },
+      output: {
+        response: JSON.stringify(extraction),
+        parsedResult: extraction,
+      },
+      performance: {
+        startTime: extractionStart,
+        endTime: extractionEnd,
+        duration: extractionEnd - extractionStart,
+        retryCount: 0,
+      },
+    });
+
+    const duration = Date.now() - startTime;
+
+    await updateFileStatus(taskId, fileIndex, {
+      status: 'completed',
+      result: {
+        extractedText: processResult.extractedText,
+        structuredData: processResult.structuredData,
+        classification,
+        parseDuration: processResult.parseDuration,
+      },
+      stages: {
+        archive: { status: 'completed', completedAt: new Date().toISOString() },
+        classification: { status: 'completed', result: classification, completedAt: new Date().toISOString() },
+        extraction: { status: 'completed', result: extraction, completedAt: new Date().toISOString() },
+      },
+      completedAt: new Date().toISOString(),
+    });
+
+    writeAuditLog({
+      type: 'FILE_PROCESS_SUCCESS',
+      taskId,
+      fileIndex,
+      fileName: file.fileName,
+      duration,
+      classification,
+      timestamp: new Date().toISOString(),
+    });
+
+    return { success: true, duration };
+
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    const errorMessage = error.message || String(error);
+
+    writeAuditLog({
+      type: 'FILE_PROCESS_ERROR',
+      taskId,
+      fileIndex,
+      fileName: file.fileName,
+      error: errorMessage,
+      timestamp: new Date().toISOString(),
+    });
+
+    await updateFileStatus(taskId, fileIndex, {
+      status: 'failed',
+      errorMessage,
+      completedAt: new Date().toISOString(),
+    });
+
+    return { success: false, error: errorMessage, duration };
+  }
+}
+
 export default {
   processFileWithRetry,
   processBatchFiles,
   downloadFileFromOSS,
+  processStagedFile,
 };
