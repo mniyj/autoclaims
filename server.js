@@ -78,11 +78,12 @@ if (BASE_PATH !== '/') {
 const server = http.createServer(app);
 
 // 初始化语音 WebSocket 服务（动态加载，避免 TS 文件未编译时崩溃）
-import('./server/voice/VoiceGateway.js').then(({ VoiceGateway }) => {
+import('./dist-server/voice/VoiceGateway.js').then(({ VoiceGateway }) => {
   new VoiceGateway(server);
   console.log('[Server] 语音 WebSocket 服务已初始化');
 }).catch(err => {
   console.warn('[Server] 语音 WebSocket 服务未启动:', err.message);
+  console.warn('[Server] 提示：请先运行 npm run build:server 编译后端代码');
 });
 
 server.listen(PORT, '0.0.0.0', () => {

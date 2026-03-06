@@ -709,12 +709,11 @@ export const handleApiRequest = async (req, res) => {
         },
       }));
 
-      let task = createTask(claimCaseId, productCode, taskFiles, null, {
+      let task = await createTask(claimCaseId, productCode, taskFiles, null, {
         source: "offline-import-quick",
         useV2: true,
       });
-      
-      // 更新任务状态为 archived（createTask默认设为pending）
+
       task.status = "archived";
       await updateTask(task.id, {
         status: "archived",
