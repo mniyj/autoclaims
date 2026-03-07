@@ -4613,5 +4613,294 @@
         }
       ]
     }
+  },
+  {
+    "ruleset_id": "RS-AUTO-001",
+    "product_line": "AUTO",
+    "policy_info": {
+      "policy_no": "POL-2026-AUTO-001",
+      "product_code": "PICC_AUTO_COMP_2020",
+      "product_name": "机动车综合保险演示版",
+      "insurer": "中国人民财产保险股份有限公司",
+      "effective_date": "2026-01-01",
+      "expiry_date": "2026-12-31",
+      "payment_mode": "ANNUAL",
+      "insured_subject": {
+        "subject_type": "VEHICLE",
+        "vehicle": {
+          "plate_no": "沪A88888",
+          "vin": "LSVNV2188K2000888",
+          "model": "大众朗逸 2024款",
+          "engine_no": "EA211000888",
+          "register_date": "2024-03-20",
+          "usage_type": "PERSONAL",
+          "new_vehicle_purchase_price": 129900,
+          "actual_value": 108000
+        },
+        "person": null
+      },
+      "coverages": [
+        {
+          "coverage_code": "CTPL",
+          "coverage_name": "交强险",
+          "sum_insured": {
+            "amount": 20000,
+            "currency": "CNY",
+            "per_unit": "PER_ACCIDENT"
+          },
+          "deductible": null
+        },
+        {
+          "coverage_code": "TPL",
+          "coverage_name": "第三者责任险",
+          "sum_insured": {
+            "amount": 2000000,
+            "currency": "CNY",
+            "per_unit": "PER_ACCIDENT"
+          },
+          "deductible": null
+        },
+        {
+          "coverage_code": "VHL",
+          "coverage_name": "机动车损失保险",
+          "sum_insured": {
+            "amount": 108000,
+            "currency": "CNY",
+            "per_unit": "PER_VEHICLE"
+          },
+          "deductible": null
+        },
+        {
+          "coverage_code": "SEAT",
+          "coverage_name": "车上人员责任险",
+          "sum_insured": {
+            "amount": 100000,
+            "currency": "CNY",
+            "per_unit": "PER_SEAT"
+          },
+          "per_seat_sum_insured": {
+            "amount": 100000,
+            "currency": "CNY",
+            "per_unit": "PER_SEAT"
+          },
+          "deductible": null
+        }
+      ]
+    },
+    "rules": [
+      {
+        "rule_id": "AUTO001",
+        "rule_name": "车险保障期间校验",
+        "description": "事故日期需在保单保障期间内",
+        "category": "COVERAGE_PERIOD",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "车险条款第一条",
+          "clause_code": "AUTO-CL-001",
+          "source_text": "保险事故须发生在保险期间内"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 10
+        },
+        "conditions": {
+          "logic": "AND",
+          "expressions": [
+            {
+              "field": "claim.accident_date",
+              "operator": "GTE",
+              "value": "${policy.effective_date}"
+            },
+            {
+              "field": "claim.accident_date",
+              "operator": "LTE",
+              "value": "${policy.expiry_date}"
+            }
+          ]
+        },
+        "action": {
+          "action_type": "APPROVE_CLAIM",
+          "params": {}
+        }
+      },
+      {
+        "rule_id": "AUTO002",
+        "rule_name": "保单状态有效",
+        "description": "车险保单状态必须有效",
+        "category": "POLICY_STATUS",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "车险条款第二条",
+          "clause_code": "AUTO-CL-002",
+          "source_text": "保单有效状态下方可赔付"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 20
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.policy_active",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "APPROVE_CLAIM",
+          "params": {}
+        }
+      },
+      {
+        "rule_id": "AUTO003",
+        "rule_name": "车险责任范围识别",
+        "description": "仅支持交强险、三者险、车损险、车上人员责任险",
+        "category": "COVERAGE_SCOPE",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "车险条款第三条",
+          "clause_code": "AUTO-CL-003",
+          "source_text": "事故责任须落在承保责任范围内"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 30
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.auto_coverage_type",
+              "operator": "IN",
+              "value": [
+                "COMPULSORY",
+                "CTPL",
+                "THIRD_PARTY",
+                "TPL",
+                "VEHICLE_DAMAGE",
+                "VHL",
+                "DRIVER_PASSENGER",
+                "SEAT",
+                "交强险",
+                "第三者责任险",
+                "机动车损失保险",
+                "车上人员责任险"
+              ]
+            }
+          ]
+        },
+        "action": {
+          "action_type": "APPROVE_CLAIM",
+          "params": {}
+        }
+      },
+      {
+        "rule_id": "AUTO004",
+        "rule_name": "酒驾拒赔",
+        "description": "酒后驾驶导致事故的，商业车险拒赔",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "车险免责条款第一条",
+          "clause_code": "AUTO-EX-001",
+          "source_text": "酒后驾驶属于免责情形"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 5
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.is_drunk_driving",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "DRUNK_DRIVING"
+          }
+        }
+      }
+    ],
+    "execution_pipeline": {
+      "domains": [
+        {
+          "domain": "ELIGIBILITY",
+          "label": "定责",
+          "execution_mode": "ALL_MATCH",
+          "input_granularity": "CLAIM",
+          "short_circuit_on": [
+            "REJECT_CLAIM"
+          ],
+          "category_sequence": [
+            "COVERAGE_PERIOD",
+            "POLICY_STATUS",
+            "COVERAGE_SCOPE",
+            "EXCLUSION"
+          ]
+        },
+        {
+          "domain": "ASSESSMENT",
+          "label": "定损",
+          "execution_mode": "ALL_MATCH",
+          "input_granularity": "ITEM",
+          "loop_collection": "claim.damage_items",
+          "short_circuit_on": [],
+          "category_sequence": []
+        },
+        {
+          "domain": "POST_PROCESS",
+          "label": "后处理",
+          "execution_mode": "PRIORITY_ORDERED",
+          "input_granularity": "CLAIM",
+          "short_circuit_on": [],
+          "category_sequence": []
+        }
+      ]
+    },
+    "override_chains": [],
+    "field_dictionary": {},
+    "metadata": {
+      "schema_version": "2.0",
+      "version": "1",
+      "generated_at": "2026-03-08T19:00:00+08:00",
+      "generated_by": "CODEX",
+      "total_rules": 4
+    }
   }
 ]
