@@ -1,6 +1,15 @@
 import { buildContext } from '../../rules/context.js';
 import { ExecutionDomain, sortRulesByPriority, filterRulesByDomain, executeSingleRule } from '../../rules/runtime.js';
 import { inferAccidentCoverageCode } from '../accident/engine.js';
+import { inferMedicalCoverageCode } from '../medical/engine.js';
+
+function inferCoverageCodeByClaimType(context, state = {}) {
+  const claimType = context.ruleset?.product_line || context.policy?.insuranceType;
+  if (claimType === 'HEALTH') {
+    return inferMedicalCoverageCode(context, state);
+  }
+  return inferAccidentCoverageCode(context, state);
+}
 
 export function evaluateFacts({ claimCaseId, productCode, invoiceItems = [], ocrData = {} }) {
   const startTime = Date.now();
@@ -15,7 +24,7 @@ export function evaluateFacts({ claimCaseId, productCode, invoiceItems = [], ocr
     payoutRatio: null,
     deductible: 0,
     itemAmounts: {},
-    coverageCode: inferAccidentCoverageCode(context, {}),
+    coverageCode: inferCoverageCodeByClaimType(context, {}),
     totalApprovedAmount: 0,
     totalClaimedAmount: totalClaimed
   };
@@ -87,7 +96,7 @@ export function evaluateFacts({ claimCaseId, productCode, invoiceItems = [], ocr
   return {
     context,
     state,
-    coverageCode: inferAccidentCoverageCode(context, state),
+    coverageCode: inferCoverageCodeByClaimType(context, state),
     expenseItems,
     totalClaimed,
     totalApproved,
