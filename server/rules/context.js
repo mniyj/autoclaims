@@ -1,91 +1,11 @@
 import { readData } from '../utils/fileStore.js';
+import { normalizeClaimContext } from '../claims/normalizers/claimNormalizer.js';
 
 const COVERAGE_CODE_ALIASES = {
   ACC_DISABILITY: ['ACC_DEATH_DISAB'],
   ACC_DEATH: ['ACC_DEATH_DISAB'],
   HLT_INPATIENT: ['HEALTH_MEDICAL']
 };
-
-function toDateOnly(value) {
-  if (!value) return undefined;
-  if (typeof value === 'string') {
-    const match = value.match(/^(\d{4}-\d{2}-\d{2})/);
-    if (match) return match[1];
-  }
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return undefined;
-  return date.toISOString().split('T')[0];
-}
-
-function toNumber(value) {
-  if (value === null || value === undefined || value === '') return undefined;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : undefined;
-}
-
-function normalizeClaimContext(claimCase = {}, ocrData = {}, invoiceItems = []) {
-  const normalized = {
-    ...claimCase,
-    ...ocrData
-  };
-
-  normalized.accident_date = toDateOnly(
-    ocrData.accident_date ||
-    ocrData.accidentDate ||
-    claimCase.accident_date ||
-    claimCase.accidentDate ||
-    claimCase.accidentTime
-  );
-
-  normalized.report_time = toDateOnly(
-    ocrData.report_time ||
-    ocrData.reportTime ||
-    claimCase.report_time ||
-    claimCase.reportTime
-  );
-
-  normalized.claimed_amount =
-    toNumber(
-      ocrData.claimed_amount ||
-      ocrData.totalAmount ||
-      claimCase.claimed_amount ||
-      claimCase.claimAmount
-    ) || 0;
-
-  normalized.accident_reason =
-    ocrData.accident_reason ||
-    ocrData.accidentReason ||
-    claimCase.accident_reason ||
-    claimCase.accidentReason;
-
-  normalized.expense_items = invoiceItems.length > 0 ? invoiceItems : (ocrData.chargeItems || []);
-  normalized.total_claimed_amount = calculateTotalAmount(normalized.expense_items);
-
-  normalized.disability_grade =
-    ocrData.disability_grade ??
-    ocrData.disabilityGrade ??
-    claimCase.disability_grade ??
-    claimCase.disabilityGrade ??
-    null;
-
-  normalized.death_confirmed = Boolean(
-    ocrData.death_confirmed ||
-    ocrData.deathConfirmed ||
-    claimCase.death_confirmed ||
-    claimCase.deathConfirmed
-  );
-
-  normalized.hospital_days =
-    toNumber(
-      ocrData.hospital_days ||
-      ocrData.hospitalDays ||
-      claimCase.hospital_days ||
-      claimCase.hospitalDays
-    ) || 0;
-
-  return normalized;
-}
 
 
 /**
@@ -165,28 +85,6 @@ export function buildContext({ claimCaseId, productCode, ocrData = {}, invoiceIt
   // 构建理赔上下文
   const claimContext = normalizeClaimContext(claimCase, ocrData, invoiceItems);
 
-  // 从 OCR 数据提取关键字段
-  if (ocrData.basicInfo) {
-    claimContext.patient_name = ocrData.basicInfo.name;
-    claimContext.patient_gender = ocrData.basicInfo.gender;
-    claimContext.admission_date = toDateOnly(ocrData.basicInfo.admissionDate);
-    claimContext.discharge_date = toDateOnly(ocrData.basicInfo.dischargeDate);
-    claimContext.diagnosis = ocrData.basicInfo.dischargeDiagnosis;
-    claimContext.department = ocrData.basicInfo.department;
-  }
-
-  if (ocrData.invoiceInfo) {
-    claimContext.hospital_name = ocrData.invoiceInfo.hospitalName;
-    claimContext.invoice_date = toDateOnly(ocrData.invoiceInfo.issueDate);
-  }
-
-  if (ocrData.insurancePayment) {
-    claimContext.social_insurance_paid = ocrData.insurancePayment.governmentFundPayment || 0;
-    claimContext.personal_payment = ocrData.insurancePayment.personalPayment || 0;
-    claimContext.personal_self_pay = ocrData.insurancePayment.personalSelfPayment || 0;
-    claimContext.personal_self_expense = ocrData.insurancePayment.personalSelfExpense || 0;
-  }
-
   // 构建完整上下文
   const context = {
     // 理赔数据
@@ -225,19 +123,6 @@ export function buildContext({ claimCaseId, productCode, ocrData = {}, invoiceIt
   }
 
   return context;
-}
-
-/**
- * 计算费用明细总金额
- * @param {object[]} items - 费用明细
- * @returns {number} 总金额
- */
-function calculateTotalAmount(items) {
-  if (!Array.isArray(items)) return 0;
-  return items.reduce((sum, item) => {
-    const amount = item.totalPrice || item.amount || item.total || 0;
-    return sum + Number(amount);
-  }, 0);
 }
 
 /**
