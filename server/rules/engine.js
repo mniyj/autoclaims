@@ -128,6 +128,7 @@ export async function executeFullReview({ claimCaseId, productCode, ocrData = {}
       deductible: amountResult.deductible,
       reimbursementRatio: amountResult.reimbursementRatio,
       finalAmount: amountResult.finalAmount,
+      factAssessment: amountResult.factAssessment,
       itemBreakdown: amountResult.itemBreakdown,
       coverageCode: amountResult.coverageCode,
       coverageResult: amountResult.coverageResult,
