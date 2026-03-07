@@ -917,5 +917,237 @@
         "parsedAt": "2026-03-04T17:09:09.922Z"
       }
     }
+  },
+  {
+    "id": "CLM935821",
+    "reportNumber": "R20260306122535H4UI",
+    "reporter": "chen",
+    "reportTime": "3/6/2026, 8:25:35 PM",
+    "accidentTime": "2026-03-05",
+    "accidentReason": "交通事故",
+    "accidentLocation": "1",
+    "productCode": "zhongan2026PAC814",
+    "productName": "无忧保综合意外险(2022升级版)",
+    "policyNumber": "PM157CG240579335929704",
+    "policyholder": "杨三",
+    "insured": "杨霁",
+    "status": "已报案",
+    "operator": "chen",
+    "claimAmount": "11",
+    "intakeFormData": {
+      "accident_date": "2026-03-05",
+      "accident_location": "1",
+      "accident_description": "1",
+      "accident_reason": "交通事故",
+      "claim_item": [
+        "门诊费",
+        "住院费"
+      ],
+      "claim_amount": "11"
+    },
+    "selectedClaimItems": [
+      "门诊费",
+      "住院费"
+    ],
+    "selectedAccidentCauseId": "交通事故",
+    "requiredMaterials": [],
+    "fileCategories": []
+  },
+  {
+    "id": "CLM156686",
+    "reportNumber": "R202603061352366E6C",
+    "reporter": "1",
+    "reportTime": "3/6/2026, 9:52:36 PM",
+    "accidentTime": "2026-03-05",
+    "accidentReason": "交通事故",
+    "accidentLocation": "1",
+    "productCode": "zhongan2026PAC814",
+    "productName": "无忧保综合意外险(2022升级版)",
+    "policyNumber": "PM157CG240579335929704",
+    "policyholder": "杨三",
+    "insured": "杨霁",
+    "status": "已报案",
+    "operator": "1",
+    "claimAmount": "111",
+    "intakeFormData": {
+      "accident_date": "2026-03-05",
+      "accident_location": "1",
+      "accident_description": "1",
+      "accident_reason": "交通事故",
+      "claim_item": [
+        "住院费"
+      ],
+      "claim_amount": "111"
+    },
+    "selectedClaimItems": [
+      "住院费"
+    ],
+    "selectedAccidentCauseId": "交通事故",
+    "requiredMaterials": [],
+    "fileCategories": [
+      {
+        "name": "医疗费发票",
+        "files": [
+          {
+            "name": "微信图片_2025-07-02_173630_395.jpg",
+            "url": "http://drools-purplespark.oss-cn-beijing.aliyuncs.com/claims/1772805180553.jpg?OSSAccessKeyId=LTAI5tFnto3xoZD6Km6GRK76&Expires=1772808787&Signature=HNYesUovYCZ5PtorhPFGSOcJJ9s%3D",
+            "ossKey": "claims/1772805180553.jpg"
+          }
+        ]
+      },
+      {
+        "name": "驾驶证",
+        "files": [
+          {
+            "name": "WechatIMG29.jpg",
+            "url": "http://drools-purplespark.oss-cn-beijing.aliyuncs.com/claims/1772805197891.jpg?OSSAccessKeyId=LTAI5tFnto3xoZD6Km6GRK76&Expires=1772808800&Signature=bSznMOwP4uR4psXBIaNPWbw1rBg%3D",
+            "ossKey": "claims/1772805197891.jpg"
+          }
+        ]
+      },
+      {
+        "name": "事故认定书",
+        "files": [
+          {
+            "name": "责任认定书.jpg",
+            "url": "http://drools-purplespark.oss-cn-beijing.aliyuncs.com/claims/1772805197892.jpg?OSSAccessKeyId=LTAI5tFnto3xoZD6Km6GRK76&Expires=1772808798&Signature=Z444Vg0MVh8nKwldCfeFgGZK83k%3D",
+            "ossKey": "claims/1772805197892.jpg"
+          }
+        ]
+      }
+    ],
+    "fileParseResults": {
+      "驾驶证-WechatIMG29.jpg": {
+        "extractedData": {
+          "name": "文习又又",
+          "license_number": "130223198812225522",
+          "vehicle_class": "C1",
+          "valid_period": "2024-11-07 至 长期",
+          "issue_date": "2008-11-07",
+          "file_number": "130200850415"
+        },
+        "auditConclusion": "审核结论：\n已成功识别驾驶证正页和副页信息。\n\n提取摘要：\n*   姓名：文习又又\n*   驾驶证号码：130223198812225522\n*   准驾车型：C1\n*   有效期限：2024-11-07 至 长期\n*   初次领证日期：2008-11-07\n*   档案编号：130200850415\n\n校验结果：\n1.  驾驶证有效期：驾驶证有效期限为“2024-11-07 至 长期”，目前处于有效状态。若需进一步校验，请提供事故发生日期。\n2.  准驾车型匹配：准驾车型为C1。若需进一步校验，请提供事故车辆类型，以确认准驾车型是否与事故中驾驶的车辆类型匹配（例如C1不能驾驶大型车辆）。\n3.  扣分或违章记录：驾驶证副页未显示明确的扣分或违章记录标注。副页记录内容为身体条件证明的提交要求，而非违章记录。",
+        "confidence": 0.98,
+        "materialName": "驾驶证（含副页）",
+        "materialId": "mat-3",
+        "parsedAt": "2026-03-07T11:57:13.464Z"
+      },
+      "医疗费发票-微信图片_2025-07-02_173630_395.jpg": {
+        "extractedData": {
+          "basicInfo": {
+            "name": "刘亚轩",
+            "gender": "女",
+            "age": "",
+            "department": "儿科二",
+            "bedCode": "",
+            "hospitalizationNumber": "22022767",
+            "dischargeDiagnosis": "",
+            "admissionDate": "2022-11-24",
+            "dischargeDate": "2022-12-07",
+            "otherInfo": ""
+          },
+          "chargeItems": [
+            {
+              "itemName": "西药费",
+              "specifications": "",
+              "unitPrice": 0,
+              "quantity": 0,
+              "totalPrice": 2471.83
+            },
+            {
+              "itemName": "治疗费",
+              "specifications": "",
+              "unitPrice": 0,
+              "quantity": 0,
+              "totalPrice": 1911.2
+            },
+            {
+              "itemName": "化验费",
+              "specifications": "",
+              "unitPrice": 0,
+              "quantity": 0,
+              "totalPrice": 1253
+            },
+            {
+              "itemName": "床位费",
+              "specifications": "",
+              "unitPrice": 0,
+              "quantity": 0,
+              "totalPrice": 520
+            },
+            {
+              "itemName": "护理费",
+              "specifications": "",
+              "unitPrice": 0,
+              "quantity": 0,
+              "totalPrice": 591.5
+            },
+            {
+              "itemName": "卫生材料费",
+              "specifications": "",
+              "unitPrice": 0,
+              "quantity": 0,
+              "totalPrice": 501.69
+            },
+            {
+              "itemName": "检查费",
+              "specifications": "",
+              "unitPrice": 0,
+              "quantity": 0,
+              "totalPrice": 96
+            },
+            {
+              "itemName": "诊察费",
+              "specifications": "",
+              "unitPrice": 0,
+              "quantity": 0,
+              "totalPrice": 364
+            }
+          ],
+          "totalAmount": 7709.22
+        },
+        "auditConclusion": "已从医疗费发票中提取以下信息：\n医院名称：连云港市赣榆区人民医院\n患者姓名：刘亚轩\n发票号码：0052108817\n发票代码：32060222\n开票日期：2022-12-07\n金额合计：7709.22元\n个人自付：5938.04元（按发票中“个人现金支付”金额计算，该金额与医保统筹支付共同构成总费用）\n医保统筹支付：1771.18元\n个人账户支付：0.00元\n\n校验结果：\n1. 各项金额相加校验：医保统筹基金支付(1771.18元) + 个人账户支付(0.00元) + 个人现金支付(5938.04元) = 7709.22元，与发票合计金额(7709.22元)一致。\n2. 发票日期校验：发票日期(2022-12-07)在就诊期间(2022-11-24至2022-12-07)内，符合要求。\n3. 发票是否为正规财政票据或税务发票校验：该票据标题为“江苏省医疗住院收费票据(电子)”，有“江苏省财政部监制”印章，并注明“财政电子票据可作为报销凭证”，确认为正规财政票据。\n4. 与费用明细清单中的总金额一致性校验：发票中列出的所有收费项目金额总和(2471.83 + 1911.20 + 1253.00 + 520.00 + 591.50 + 501.69 + 96.00 + 364.00 = 7709.22元)与发票合计金额(7709.22元)一致。由于未提供单独的费用明细清单，此项校验是基于发票内部项目总和与总金额的对比。",
+        "confidence": 0.95,
+        "materialName": "医疗费发票",
+        "materialId": "mat-20",
+        "parsedAt": "2026-03-07T11:57:43.656Z"
+      }
+    }
+  },
+  {
+    "id": "CLM-AUTO-001",
+    "reportNumber": "R20260308193000AUTO",
+    "reporter": "codex",
+    "reportTime": "2026-03-08T19:30:00+08:00",
+    "accidentTime": "2026-03-05",
+    "accidentReason": "追尾事故",
+    "accidentLocation": "上海市浦东新区世纪大道",
+    "productCode": "PICC_AUTO_COMP_2020",
+    "productName": "机动车综合保险演示版",
+    "policyNumber": "POL-2026-AUTO-001",
+    "policyholder": "王磊",
+    "insured": "王磊",
+    "status": "已报案",
+    "operator": "codex",
+    "claimAmount": "300000",
+    "insuranceType": "AUTO",
+    "policy_active": true,
+    "autoCoverageType": "THIRD_PARTY",
+    "faultRatio": 70,
+    "thirdPartyLossAmount": 300000,
+    "repairEstimate": 50000,
+    "vehicle": {
+      "plate_no": "沪A88888",
+      "actual_value": 108000
+    },
+    "intakeFormData": {
+      "accident_date": "2026-03-05",
+      "accident_location": "上海市浦东新区世纪大道",
+      "accident_description": "本车追尾前车，造成第三者车辆受损",
+      "accident_reason": "追尾事故",
+      "claim_amount": "300000"
+    },
+    "requiredMaterials": [],
+    "fileCategories": []
   }
 ]
