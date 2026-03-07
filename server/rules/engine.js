@@ -116,6 +116,10 @@ function appendWarning(warnings, message, category = 'SYSTEM', ruleId = 'SYSTEM'
   });
 }
 
+function inferClaimType(context) {
+  return context.ruleset?.product_line || context.policy?.insuranceType || 'UNKNOWN';
+}
+
 function getConfiguredAmount(value) {
   if (typeof value === 'number') return value;
   if (value && typeof value === 'object' && typeof value.amount === 'number') {
@@ -341,7 +345,8 @@ export async function checkEligibility({ claimCaseId, productCode, ocrData = {} 
       claim_id: claimCaseId,
       product_code: context.policy?.product_code,
       product_name: context.policy?.product_name,
-      ruleset_id: context.ruleset?.ruleset_id
+      ruleset_id: context.ruleset?.ruleset_id,
+      product_line: context.ruleset?.product_line
     },
     duration: Date.now() - startTime
   };
@@ -375,7 +380,14 @@ export async function calculateAmount({ claimCaseId, productCode, eligibilityRes
       deductible: 0,
       reimbursementRatio: 0,
       finalAmount: 0,
+      claimType: eligibilityResult.context?.product_line || 'UNKNOWN',
+      coverageCode: null,
+      coverageResult: null,
+      coverageResults: [],
+      settlementDecision: 'ZERO_PAY',
       itemBreakdown: [],
+      warnings: [],
+      needsManualReview: false,
       reason: '责任判断未通过',
       rejectionReasons: eligibilityResult.rejectionReasons,
       duration: Date.now() - startTime
@@ -537,8 +549,12 @@ export async function calculateAmount({ claimCaseId, productCode, eligibilityRes
     deductible: state.deductible || 0,
     reimbursementRatio,
     sumInsured: Number.isFinite(sumInsured) ? sumInsured : null,
-    status: needsManualReview ? 'MANUAL_REVIEW' : (cappedAmount > 0 ? 'PAYABLE' : 'ZERO_PAY')
+    status: needsManualReview ? 'MANUAL_REVIEW' : (cappedAmount > 0 ? 'PAYABLE' : 'ZERO_PAY'),
+    warnings
   };
+  const settlementDecision = needsManualReview
+    ? 'MANUAL_REVIEW'
+    : (cappedAmount > 0 ? 'PAY' : 'ZERO_PAY');
   
   const result = {
     totalClaimable: reportedClaimable,
@@ -547,8 +563,11 @@ export async function calculateAmount({ claimCaseId, productCode, eligibilityRes
     finalAmount: cappedAmount,
     capApplied: finalAmount > sumInsured,
     sumInsured,
+    claimType: inferClaimType(context),
     coverageCode,
     coverageResult,
+    coverageResults: [coverageResult],
+    settlementDecision,
     itemBreakdown,
     warnings,
     needsManualReview,
@@ -556,7 +575,8 @@ export async function calculateAmount({ claimCaseId, productCode, eligibilityRes
     context: {
       claim_id: claimCaseId,
       product_code: context.policy?.product_code,
-      coverage_code: coverageCode
+      coverage_code: coverageCode,
+      claim_type: inferClaimType(context)
     },
     duration: Date.now() - startTime
   };
@@ -596,11 +616,39 @@ export async function executeFullReview({ claimCaseId, productCode, ocrData = {}
   });
   
   // 3. 构建综合结果
+  const liabilityDecision = eligibilityResult.needsManualReview
+    ? 'MANUAL_REVIEW'
+    : (eligibilityResult.eligible ? 'ACCEPT' : 'REJECT');
+  const assessmentDecision = amountResult.needsManualReview
+    ? 'PARTIAL_ASSESSED'
+    : 'ASSESSED';
+  const settlementDecision = amountResult.settlementDecision || (amountResult.finalAmount > 0 ? 'PAY' : 'ZERO_PAY');
+  const coverageResults = amountResult.coverageResults || (amountResult.coverageResult ? [amountResult.coverageResult] : []);
+  const warnings = [
+    ...(eligibilityResult.warnings || []).map(item => item.message),
+    ...(amountResult.warnings || []).map(item => item.message)
+  ];
+  const reasonCodes = [
+    ...(eligibilityResult.rejectionReasons || []).map(item => item.reason_code),
+    ...warnings.map((_, index) => `WARN_${index + 1}`)
+  ];
+
   return {
     // 决策结果
-    decision: eligibilityResult.needsManualReview
+    decision: (eligibilityResult.needsManualReview || amountResult.needsManualReview)
       ? 'MANUAL_REVIEW'
       : (eligibilityResult.eligible ? 'APPROVE' : 'REJECT'),
+    intakeDecision: 'PASS',
+    liabilityDecision,
+    assessmentDecision,
+    settlementDecision,
+    claimType: amountResult.claimType || eligibilityResult.context?.product_line || 'UNKNOWN',
+    coverageResults,
+    reasonCodes,
+    warnings,
+    missingMaterials: [],
+    payableAmount: amountResult.finalAmount,
+    currency: 'CNY',
     
     // 责任判断
     eligibility: {
@@ -621,6 +669,7 @@ export async function executeFullReview({ claimCaseId, productCode, ocrData = {}
       itemBreakdown: amountResult.itemBreakdown,
       coverageCode: amountResult.coverageCode,
       coverageResult: amountResult.coverageResult,
+      coverageResults,
       warnings: amountResult.warnings,
       needsManualReview: amountResult.needsManualReview
     },
@@ -635,6 +684,18 @@ export async function executeFullReview({ claimCaseId, productCode, ocrData = {}
     
     // 上下文信息
     context: eligibilityResult.context,
+    auditTrail: [
+      ...(eligibilityResult.executionDetails || []).map(item => ({
+        stage: 'LIABILITY',
+        ruleId: item.rule_id,
+        matched: item.condition_met
+      })),
+      ...(amountResult.executionDetails || []).map(item => ({
+        stage: 'SETTLEMENT',
+        ruleId: item.rule_id,
+        matched: item.condition_met
+      }))
+    ],
     
     // 执行时长
     duration: Date.now() - startTime
