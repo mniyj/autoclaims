@@ -41,6 +41,30 @@ export function resolveValue(value, context) {
   return value;
 }
 
+function isDateOnlyString(value) {
+  return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value);
+}
+
+function compareValues(fieldValue, targetValue) {
+  if (isDateOnlyString(fieldValue) && isDateOnlyString(targetValue)) {
+    if (fieldValue === targetValue) return 0;
+    return fieldValue > targetValue ? 1 : -1;
+  }
+
+  const left = Number(fieldValue);
+  const right = Number(targetValue);
+  if (Number.isFinite(left) && Number.isFinite(right)) {
+    if (left === right) return 0;
+    return left > right ? 1 : -1;
+  }
+
+  if (fieldValue === targetValue) return 0;
+  if (fieldValue === undefined || fieldValue === null || targetValue === undefined || targetValue === null) {
+    return NaN;
+  }
+  return String(fieldValue).localeCompare(String(targetValue), 'zh-CN');
+}
+
 /**
  * 评估单个叶子条件
  * @param {object} condition - LeafCondition
@@ -61,16 +85,16 @@ export function evaluateLeafCondition(condition, context) {
       return fieldValue !== targetValue;
       
     case 'GT':
-      return Number(fieldValue) > Number(targetValue);
+      return compareValues(fieldValue, targetValue) > 0;
       
     case 'GTE':
-      return Number(fieldValue) >= Number(targetValue);
+      return compareValues(fieldValue, targetValue) >= 0;
       
     case 'LT':
-      return Number(fieldValue) < Number(targetValue);
+      return compareValues(fieldValue, targetValue) < 0;
       
     case 'LTE':
-      return Number(fieldValue) <= Number(targetValue);
+      return compareValues(fieldValue, targetValue) <= 0;
       
     case 'IN':
       if (!Array.isArray(targetValue)) return false;
@@ -168,6 +192,13 @@ export function evaluateConditionGroup(group, context) {
         }
         return evaluateLeafCondition(expr, context);
       });
+
+    case 'SINGLE':
+      if (expressions.length === 0) return false;
+      if (isGroupCondition(expressions[0])) {
+        return evaluateConditionGroup(expressions[0], context);
+      }
+      return evaluateLeafCondition(expressions[0], context);
       
     case 'NOT':
       // NOT 逻辑：所有子表达式都不满足才返回 true

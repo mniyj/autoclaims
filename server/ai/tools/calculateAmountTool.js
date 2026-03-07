@@ -56,10 +56,17 @@ export const calculateAmountTool = new DynamicStructuredTool({
       
       // 格式化输出
       let summary = `💰 金额计算结果:\n`;
+      summary += `- 责任类型: ${result.coverageCode || '未识别'}\n`;
       summary += `- 申请总额: ¥${result.totalClaimable}\n`;
       summary += `- 免赔额: ¥${result.deductible}\n`;
       summary += `- 赔付比例: ${result.reimbursementRatio * 100}%\n`;
       summary += `- 最终赔付: ¥${result.finalAmount}\n`;
+      if (result.needsManualReview) {
+        summary += `- 🔍 需要人工复核\n`;
+      }
+      if (result.warnings?.length > 0) {
+        summary += `- ⚠️ ${result.warnings.map(item => item.message).join('; ')}\n`;
+      }
       
       if (result.capApplied) {
         summary += `- ⚠️ 已达保额上限 ¥${result.sumInsured}\n`;
@@ -79,8 +86,12 @@ export const calculateAmountTool = new DynamicStructuredTool({
         deductible: result.deductible,
         reimbursementRatio: result.reimbursementRatio,
         finalAmount: result.finalAmount,
+        coverageCode: result.coverageCode,
+        coverageResult: result.coverageResult,
         capApplied: result.capApplied,
         sumInsured: result.sumInsured,
+        warnings: result.warnings,
+        needsManualReview: result.needsManualReview,
         itemBreakdown: result.itemBreakdown
       }, null, 2);
       

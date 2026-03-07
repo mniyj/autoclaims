@@ -1,5 +1,92 @@
 import { readData } from '../utils/fileStore.js';
 
+const COVERAGE_CODE_ALIASES = {
+  ACC_DISABILITY: ['ACC_DEATH_DISAB'],
+  ACC_DEATH: ['ACC_DEATH_DISAB'],
+  HLT_INPATIENT: ['HEALTH_MEDICAL']
+};
+
+function toDateOnly(value) {
+  if (!value) return undefined;
+  if (typeof value === 'string') {
+    const match = value.match(/^(\d{4}-\d{2}-\d{2})/);
+    if (match) return match[1];
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return undefined;
+  return date.toISOString().split('T')[0];
+}
+
+function toNumber(value) {
+  if (value === null || value === undefined || value === '') return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function normalizeClaimContext(claimCase = {}, ocrData = {}, invoiceItems = []) {
+  const normalized = {
+    ...claimCase,
+    ...ocrData
+  };
+
+  normalized.accident_date = toDateOnly(
+    ocrData.accident_date ||
+    ocrData.accidentDate ||
+    claimCase.accident_date ||
+    claimCase.accidentDate ||
+    claimCase.accidentTime
+  );
+
+  normalized.report_time = toDateOnly(
+    ocrData.report_time ||
+    ocrData.reportTime ||
+    claimCase.report_time ||
+    claimCase.reportTime
+  );
+
+  normalized.claimed_amount =
+    toNumber(
+      ocrData.claimed_amount ||
+      ocrData.totalAmount ||
+      claimCase.claimed_amount ||
+      claimCase.claimAmount
+    ) || 0;
+
+  normalized.accident_reason =
+    ocrData.accident_reason ||
+    ocrData.accidentReason ||
+    claimCase.accident_reason ||
+    claimCase.accidentReason;
+
+  normalized.expense_items = invoiceItems.length > 0 ? invoiceItems : (ocrData.chargeItems || []);
+  normalized.total_claimed_amount = calculateTotalAmount(normalized.expense_items);
+
+  normalized.disability_grade =
+    ocrData.disability_grade ??
+    ocrData.disabilityGrade ??
+    claimCase.disability_grade ??
+    claimCase.disabilityGrade ??
+    null;
+
+  normalized.death_confirmed = Boolean(
+    ocrData.death_confirmed ||
+    ocrData.deathConfirmed ||
+    claimCase.death_confirmed ||
+    claimCase.deathConfirmed
+  );
+
+  normalized.hospital_days =
+    toNumber(
+      ocrData.hospital_days ||
+      ocrData.hospitalDays ||
+      claimCase.hospital_days ||
+      claimCase.hospitalDays
+    ) || 0;
+
+  return normalized;
+}
+
 
 /**
  * 根据案件ID获取案件数据
@@ -76,29 +163,21 @@ export function buildContext({ claimCaseId, productCode, ocrData = {}, invoiceIt
   const policyInfo = ruleset?.policy_info || {};
 
   // 构建理赔上下文
-  const claimContext = {
-    ...claimCase,
-    // 从 OCR 数据补充
-    ...ocrData,
-    // 费用明细
-    expense_items: invoiceItems.length > 0 ? invoiceItems : (ocrData.chargeItems || []),
-    // 计算总金额
-    total_claimed_amount: calculateTotalAmount(invoiceItems.length > 0 ? invoiceItems : (ocrData.chargeItems || []))
-  };
+  const claimContext = normalizeClaimContext(claimCase, ocrData, invoiceItems);
 
   // 从 OCR 数据提取关键字段
   if (ocrData.basicInfo) {
     claimContext.patient_name = ocrData.basicInfo.name;
     claimContext.patient_gender = ocrData.basicInfo.gender;
-    claimContext.admission_date = ocrData.basicInfo.admissionDate;
-    claimContext.discharge_date = ocrData.basicInfo.dischargeDate;
+    claimContext.admission_date = toDateOnly(ocrData.basicInfo.admissionDate);
+    claimContext.discharge_date = toDateOnly(ocrData.basicInfo.dischargeDate);
     claimContext.diagnosis = ocrData.basicInfo.dischargeDiagnosis;
     claimContext.department = ocrData.basicInfo.department;
   }
 
   if (ocrData.invoiceInfo) {
     claimContext.hospital_name = ocrData.invoiceInfo.hospitalName;
-    claimContext.invoice_date = ocrData.invoiceInfo.issueDate;
+    claimContext.invoice_date = toDateOnly(ocrData.invoiceInfo.issueDate);
   }
 
   if (ocrData.insurancePayment) {
@@ -170,7 +249,18 @@ function calculateTotalAmount(items) {
 export function getCoverageConfig(productCode, coverageCode) {
   const ruleset = getRuleset(productCode);
   if (!ruleset?.policy_info?.coverages) return null;
-  return ruleset.policy_info.coverages.find(c => c.coverage_code === coverageCode) || null;
+
+  const coverages = ruleset.policy_info.coverages;
+  const exactMatch = coverages.find(c => c.coverage_code === coverageCode);
+  if (exactMatch) return exactMatch;
+
+  const aliases = COVERAGE_CODE_ALIASES[coverageCode] || [];
+  for (const alias of aliases) {
+    const aliasMatch = coverages.find(c => c.coverage_code === alias);
+    if (aliasMatch) return aliasMatch;
+  }
+
+  return coverages.find(c => c.coverage_code?.includes(coverageCode) || coverageCode?.includes(c.coverage_code)) || null;
 }
 
 /**
