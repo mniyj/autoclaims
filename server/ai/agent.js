@@ -88,7 +88,9 @@ function parseReviewResult(content, toolResults) {
     reasoning: content,
     ruleTrace: [],
     eligibility: null,
-    calculation: null
+    calculation: null,
+    manualReviewReasons: [],
+    missingMaterials: []
   };
   
   // 从工具结果中提取数据
@@ -101,11 +103,14 @@ function parseReviewResult(content, toolResults) {
           eligible: data.eligible,
           matchedRules: data.matchedRules,
           rejectionReasons: data.rejectionReasons,
-          warnings: data.warnings
+          warnings: data.warnings,
+          needsManualReview: data.needsManualReview,
+          manualReviewReasons: data.manualReviewReasons || []
         };
+        result.manualReviewReasons.push(...(data.manualReviewReasons || []));
         result.ruleTrace.push(...(data.matchedRules || []));
         
-        if (!data.eligible) {
+        if (!data.eligible && !data.needsManualReview) {
           result.decision = 'REJECT';
         }
       }
@@ -116,11 +121,17 @@ function parseReviewResult(content, toolResults) {
           deductible: data.deductible,
           reimbursementRatio: data.reimbursementRatio,
           finalAmount: data.finalAmount,
-          itemBreakdown: data.itemBreakdown
+          itemBreakdown: data.itemBreakdown,
+          needsManualReview: data.needsManualReview,
+          manualReviewReasons: data.manualReviewReasons || []
         };
         result.amount = data.finalAmount;
+        result.manualReviewReasons.push(...(data.manualReviewReasons || []));
+        result.missingMaterials.push(...(data.missingMaterials || []));
         
-        if (result.decision !== 'REJECT') {
+        if (data.needsManualReview) {
+          result.decision = 'MANUAL_REVIEW';
+        } else if (result.decision !== 'REJECT') {
           result.decision = 'APPROVE';
         }
       }
@@ -141,7 +152,16 @@ function parseReviewResult(content, toolResults) {
   if (content.includes('MANUAL_REVIEW') || content.includes('人工复核') || content.includes('人工审核')) {
     result.decision = 'MANUAL_REVIEW';
   }
-  
+
+  const seen = new Set();
+  result.manualReviewReasons = result.manualReviewReasons.filter((item) => {
+    const key = JSON.stringify([item.code, item.stage, item.source, item.message]);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  result.missingMaterials = [...new Set(result.missingMaterials)];
+
   return result;
 }
 

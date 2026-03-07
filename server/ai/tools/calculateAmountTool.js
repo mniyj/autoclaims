@@ -62,7 +62,8 @@ export const calculateAmountTool = new DynamicStructuredTool({
       summary += `- 赔付比例: ${result.reimbursementRatio * 100}%\n`;
       summary += `- 最终赔付: ¥${result.finalAmount}\n`;
       if (result.needsManualReview) {
-        summary += `- 🔍 需要人工复核\n`;
+        const reasons = (result.manualReviewReasons || []).map(item => item.message).join('; ');
+        summary += reasons ? `- 🔍 需要人工复核: ${reasons}\n` : `- 🔍 需要人工复核\n`;
       }
       if (result.warnings?.length > 0) {
         summary += `- ⚠️ ${result.warnings.map(item => item.message).join('; ')}\n`;
@@ -92,6 +93,7 @@ export const calculateAmountTool = new DynamicStructuredTool({
         sumInsured: result.sumInsured,
         warnings: result.warnings,
         needsManualReview: result.needsManualReview,
+        manualReviewReasons: result.manualReviewReasons || [],
         itemBreakdown: result.itemBreakdown
       }, null, 2);
       
