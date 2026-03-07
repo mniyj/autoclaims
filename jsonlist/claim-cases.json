@@ -1255,6 +1255,34 @@
       "claim_amount": "100000"
     },
     "requiredMaterials": [],
-    "fileCategories": []
+    "fileCategories": [
+      {
+        "name": "驾驶证",
+        "files": [
+          {
+            "name": "驾驶证.jpg",
+            "url": "https://example.com/driver-license.jpg"
+          }
+        ]
+      },
+      {
+        "name": "行驶证",
+        "files": [
+          {
+            "name": "行驶证.jpg",
+            "url": "https://example.com/vehicle-license.jpg"
+          }
+        ]
+      },
+      {
+        "name": "事故责任认定书",
+        "files": [
+          {
+            "name": "事故责任认定书.jpg",
+            "url": "https://example.com/accident-liability.jpg"
+          }
+        ]
+      }
+    ]
   }
 ]
