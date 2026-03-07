@@ -8,6 +8,16 @@ import { calculateSettlement } from '../claims/settlement/calculator.js';
 import { evaluateMaterialCompleteness } from '../claims/materials/completeness.js';
 import { logRuleExecution } from '../middleware/index.js';
 
+function dedupeManualReviewReasons(reasons = []) {
+  const seen = new Set();
+  return reasons.filter(reason => {
+    const key = JSON.stringify([reason.code, reason.stage, reason.source, reason.message]);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 /**
  * 执行责任判断（ELIGIBILITY域）
  * @param {object} params - 参数
@@ -93,6 +103,20 @@ export async function executeFullReview({ claimCaseId, productCode, ocrData = {}
     claimType: amountResult.claimType || eligibilityResult.context?.product_line
   });
   const hasMissingMaterials = materialCompleteness.missingMaterials.length > 0;
+  const manualReviewReasons = dedupeManualReviewReasons([
+    ...(eligibilityResult.manualReviewReasons || []),
+    ...(amountResult.manualReviewReasons || []),
+    ...(hasMissingMaterials ? [{
+      code: 'MISSING_REQUIRED_MATERIALS',
+      stage: 'INTAKE',
+      source: 'MATERIAL_COMPLETENESS',
+      category: 'MATERIAL',
+      message: `缺少材料: ${materialCompleteness.missingMaterials.map(item => item.name).join('、')}`,
+      metadata: {
+        missingMaterials: materialCompleteness.missingMaterials.map(item => item.name)
+      }
+    }] : [])
+  ]);
   const warnings = [
     ...(eligibilityResult.warnings || []).map(item => item.message),
     ...(amountResult.warnings || []).map(item => item.message),
@@ -102,6 +126,7 @@ export async function executeFullReview({ claimCaseId, productCode, ocrData = {}
   ];
   const reasonCodes = [
     ...(eligibilityResult.rejectionReasons || []).map(item => item.reason_code),
+    ...manualReviewReasons.map(item => item.code),
     ...warnings.map((_, index) => `WARN_${index + 1}`)
   ];
   const finalDecision = (eligibilityResult.needsManualReview || amountResult.needsManualReview || hasMissingMaterials)
@@ -129,6 +154,7 @@ export async function executeFullReview({ claimCaseId, productCode, ocrData = {}
     coverageResults,
     reasonCodes,
     warnings,
+    manualReviewReasons,
     missingMaterials: materialCompleteness.missingMaterials.map(item => item.name),
     payableAmount: amountResult.finalAmount,
     currency: 'CNY',
@@ -140,6 +166,7 @@ export async function executeFullReview({ claimCaseId, productCode, ocrData = {}
       rejectionReasons: eligibilityResult.rejectionReasons,
       warnings: eligibilityResult.warnings,
       needsManualReview: eligibilityResult.needsManualReview,
+      manualReviewReasons: eligibilityResult.manualReviewReasons,
       fraudFlagged: eligibilityResult.fraudFlagged
     },
     
@@ -155,7 +182,8 @@ export async function executeFullReview({ claimCaseId, productCode, ocrData = {}
       coverageResult: amountResult.coverageResult,
       coverageResults,
       warnings: amountResult.warnings,
-      needsManualReview: amountResult.needsManualReview
+      needsManualReview: amountResult.needsManualReview,
+      manualReviewReasons: amountResult.manualReviewReasons
     },
 
     completeness: materialCompleteness,
