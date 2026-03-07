@@ -16,6 +16,17 @@ function appendWarning(warnings, message, category = 'SYSTEM', ruleId = 'SYSTEM'
   warnings.push({ rule_id: ruleId, message, category });
 }
 
+function appendManualReviewReason(reasons, { code, source = 'SYSTEM', category = 'SYSTEM', stage = 'SETTLEMENT', message, metadata = undefined }) {
+  reasons.push({
+    code,
+    source,
+    category,
+    stage,
+    message,
+    ...(metadata ? { metadata } : {})
+  });
+}
+
 function inferClaimType(context) {
   return context.ruleset?.product_line || context.policy?.insuranceType || 'UNKNOWN';
 }
@@ -286,6 +297,7 @@ export function calculateSettlement({ claimCaseId, productCode, eligibilityResul
   const postProcessRules = sortRulesByPriority(filterRulesByDomain(rules, ExecutionDomain.POST_PROCESS));
   const executionResults = [...(factResult.executionDetails || [])];
   const warnings = [];
+  const manualReviewReasons = [...(eligibilityResult?.manualReviewReasons || [])];
   let needsManualReview = Boolean(eligibilityResult?.needsManualReview);
   executionResults.push(...applyPostProcessRules(postProcessRules, context, state));
   const claimType = inferClaimType(context);
@@ -293,7 +305,15 @@ export function calculateSettlement({ claimCaseId, productCode, eligibilityResul
 
   if (!coverageConfig) {
     needsManualReview = true;
-    appendWarning(warnings, `未找到责任 ${coverageCode} 对应的保障配置，需人工复核产品责任映射`, 'COVERAGE_CONFIG');
+    const message = `未找到责任 ${coverageCode} 对应的保障配置，需人工复核产品责任映射`;
+    appendWarning(warnings, message, 'COVERAGE_CONFIG');
+    appendManualReviewReason(manualReviewReasons, {
+      code: 'COVERAGE_CONFIG_MISSING',
+      source: coverageCode || 'UNKNOWN_COVERAGE',
+      category: 'COVERAGE_CONFIG',
+      message,
+      metadata: { coverageCode }
+    });
   }
 
   if (
@@ -367,6 +387,7 @@ export function calculateSettlement({ claimCaseId, productCode, eligibilityResul
           duration: factResult.duration
         },
         warnings,
+        manualReviewReasons,
         needsManualReview,
         executionDetails: executionResults,
         context: {
@@ -417,6 +438,7 @@ export function calculateSettlement({ claimCaseId, productCode, eligibilityResul
       duration: factResult.duration
     },
     warnings,
+    manualReviewReasons,
     needsManualReview,
     executionDetails: executionResults,
     context: {

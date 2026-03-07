@@ -79,6 +79,7 @@ export function evaluateEligibility({ claimCaseId, productCode, ocrData = {} }) 
   const executionResults = [];
   const matchedRules = [];
   const warnings = [];
+  const manualReviewReasons = [];
   let rejectionReason = null;
   let positiveRuleMatched = false;
   let unresolvedPositiveRule = false;
@@ -109,6 +110,13 @@ export function evaluateEligibility({ claimCaseId, productCode, ocrData = {} }) 
           message: state.manualReviewReason || '需人工复核',
           category: rule.category
         });
+        manualReviewReasons.push({
+          code: 'LIABILITY_RULE_REVIEW',
+          stage: 'LIABILITY',
+          source: rule.rule_id,
+          category: rule.category,
+          message: state.manualReviewReason || '需人工复核'
+        });
       }
 
       if (state.fraudFlagged) {
@@ -130,6 +138,7 @@ export function evaluateEligibility({ claimCaseId, productCode, ocrData = {} }) 
       if (missingFields.length > 0 || unsupportedReference) {
         unresolvedPositiveRule = true;
         state.needsManualReview = true;
+        const manualReviewCode = unsupportedReference ? 'UNSUPPORTED_RULE_EXPRESSION' : 'MISSING_LIABILITY_FIELDS';
         state.manualReviewReason = unsupportedReference
           ? `${rule.rule_name} 包含当前引擎不支持的条件表达式`
           : `${rule.rule_name} 缺少关键字段: ${missingFields.join(', ')}`;
@@ -137,6 +146,14 @@ export function evaluateEligibility({ claimCaseId, productCode, ocrData = {} }) 
           rule_id: rule.rule_id,
           message: state.manualReviewReason,
           category: rule.category
+        });
+        manualReviewReasons.push({
+          code: manualReviewCode,
+          stage: 'LIABILITY',
+          source: rule.rule_id,
+          category: rule.category,
+          fields: missingFields,
+          message: state.manualReviewReason
         });
       } else {
         state.claimRejected = true;
@@ -161,6 +178,7 @@ export function evaluateEligibility({ claimCaseId, productCode, ocrData = {} }) 
     rejectionReasons: rejectionReason ? [rejectionReason] : [],
     warnings,
     needsManualReview: state.needsManualReview,
+    manualReviewReasons,
     fraudFlagged: state.fraudFlagged,
     fraudRiskScore: state.fraudRiskScore,
     executionDetails: executionResults,
