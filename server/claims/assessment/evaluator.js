@@ -1,25 +1,6 @@
 import { buildContext } from '../../rules/context.js';
 import { ExecutionDomain, sortRulesByPriority, filterRulesByDomain, executeSingleRule } from '../../rules/runtime.js';
-
-function inferCoverageCode(context, state) {
-  if (state.coverageCode) {
-    return state.coverageCode;
-  }
-
-  if (context.claim?.death_confirmed) {
-    return 'ACC_DEATH';
-  }
-
-  if (context.claim?.disability_grade !== null && context.claim?.disability_grade !== undefined) {
-    return 'ACC_DISABILITY';
-  }
-
-  if ((context.claim?.hospital_days || 0) > 0 && (context.claim?.expense_items || []).length === 0) {
-    return 'ACC_HOSPITAL_ALLOWANCE';
-  }
-
-  return 'ACC_MEDICAL';
-}
+import { inferAccidentCoverageCode } from '../accident/engine.js';
 
 export function evaluateFacts({ claimCaseId, productCode, invoiceItems = [], ocrData = {} }) {
   const startTime = Date.now();
@@ -34,7 +15,7 @@ export function evaluateFacts({ claimCaseId, productCode, invoiceItems = [], ocr
     payoutRatio: null,
     deductible: 0,
     itemAmounts: {},
-    coverageCode: inferCoverageCode(context, {}),
+    coverageCode: inferAccidentCoverageCode(context, {}),
     totalApprovedAmount: 0,
     totalClaimedAmount: totalClaimed
   };
@@ -106,7 +87,7 @@ export function evaluateFacts({ claimCaseId, productCode, invoiceItems = [], ocr
   return {
     context,
     state,
-    coverageCode: inferCoverageCode(context, state),
+    coverageCode: inferAccidentCoverageCode(context, state),
     expenseItems,
     totalClaimed,
     totalApproved,
