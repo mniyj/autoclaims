@@ -1185,5 +1185,76 @@
     },
     "requiredMaterials": [],
     "fileCategories": []
+  },
+  {
+    "id": "CLM-AUTO-003",
+    "reportNumber": "R20260308200500AUTO",
+    "reporter": "codex",
+    "reportTime": "2026-03-08T20:05:00+08:00",
+    "accidentTime": "2026-03-07",
+    "accidentReason": "路口碰撞致第三者受伤",
+    "accidentLocation": "上海市徐汇区虹桥路",
+    "productCode": "PICC_AUTO_COMP_2020",
+    "productName": "机动车综合保险演示版",
+    "policyNumber": "POL-2026-AUTO-001",
+    "policyholder": "王磊",
+    "insured": "王磊",
+    "status": "已报案",
+    "operator": "codex",
+    "claimAmount": "70000",
+    "insuranceType": "AUTO",
+    "policy_active": true,
+    "autoCoverageType": "THIRD_PARTY",
+    "faultRatio": 50,
+    "thirdPartyPropertyDamageAmount": 10000,
+    "thirdPartyInjuryAmount": 60000,
+    "vehicle": {
+      "plate_no": "沪A88888",
+      "actual_value": 108000
+    },
+    "intakeFormData": {
+      "accident_date": "2026-03-07",
+      "accident_location": "上海市徐汇区虹桥路",
+      "accident_description": "路口碰撞导致第三者车辆受损并有人受伤",
+      "accident_reason": "路口碰撞",
+      "claim_amount": "70000"
+    },
+    "requiredMaterials": [],
+    "fileCategories": []
+  },
+  {
+    "id": "CLM-AUTO-004",
+    "reportNumber": "R20260308201500AUTO",
+    "reporter": "codex",
+    "reportTime": "2026-03-08T20:15:00+08:00",
+    "accidentTime": "2026-03-07",
+    "accidentReason": "车上乘客受伤",
+    "accidentLocation": "上海市长宁区延安西路",
+    "productCode": "PICC_AUTO_COMP_2020",
+    "productName": "机动车综合保险演示版",
+    "policyNumber": "POL-2026-AUTO-001",
+    "policyholder": "王磊",
+    "insured": "王磊",
+    "status": "已报案",
+    "operator": "codex",
+    "claimAmount": "100000",
+    "insuranceType": "AUTO",
+    "policy_active": true,
+    "autoCoverageType": "DRIVER_PASSENGER",
+    "faultRatio": 100,
+    "injuryGrade": "重伤",
+    "vehicle": {
+      "plate_no": "沪A88888",
+      "actual_value": 108000
+    },
+    "intakeFormData": {
+      "accident_date": "2026-03-07",
+      "accident_location": "上海市长宁区延安西路",
+      "accident_description": "本车事故造成乘客重伤",
+      "accident_reason": "车上乘客受伤",
+      "claim_amount": "100000"
+    },
+    "requiredMaterials": [],
+    "fileCategories": []
   }
 ]
