@@ -2,7 +2,7 @@ import { ExecutionDomain, sortRulesByPriority, filterRulesByDomain, executeSingl
 import { evaluateFacts } from '../assessment/evaluator.js';
 import { getAccidentCoverageConfig, ACCIDENT_COVERAGE_CODES } from '../accident/engine.js';
 import { getMedicalCoverageConfig, MEDICAL_COVERAGE_CODES, isMedicalCoverageCode } from '../medical/engine.js';
-import { getAutoCoverageConfig, AUTO_COVERAGE_CODES, isAutoCoverageCode, getAutoLossAmount, getAutoActualValue } from '../auto/engine.js';
+import { getAutoCoverageConfig, AUTO_COVERAGE_CODES, isAutoCoverageCode, getAutoLossAmount, getAutoActualValue, getCompulsoryBreakdown } from '../auto/engine.js';
 
 function applyPostProcessRules(postProcessRules, context, state) {
   const executionResults = [];
@@ -83,6 +83,44 @@ function getCoverageStatus(needsManualReview, approvedAmount) {
   return approvedAmount > 0 ? 'PAYABLE' : 'ZERO_PAY';
 }
 
+function getCompulsoryLimits(coverageConfig) {
+  const defaults = {
+    deathDisability: 180000,
+    injury: 18000,
+    propertyDamage: 2000
+  };
+
+  if (!coverageConfig?.limit_breakdown) {
+    return defaults;
+  }
+
+  return {
+    deathDisability: getConfiguredAmount(coverageConfig.limit_breakdown.death_disability) || defaults.deathDisability,
+    injury: getConfiguredAmount(coverageConfig.limit_breakdown.injury) || defaults.injury,
+    propertyDamage: getConfiguredAmount(coverageConfig.limit_breakdown.property_damage) || defaults.propertyDamage
+  };
+}
+
+function calculateCompulsoryApprovedAmount(context, coverageConfig, totalClaimedAmount) {
+  const breakdown = getCompulsoryBreakdown(context);
+  const limits = getCompulsoryLimits(coverageConfig);
+
+  if (breakdown.total <= 0) {
+    return {
+      claimedAmount: totalClaimedAmount,
+      approvedAmount: Math.min(totalClaimedAmount, getSumInsuredAmount(coverageConfig) || totalClaimedAmount)
+    };
+  }
+
+  return {
+    claimedAmount: breakdown.total,
+    approvedAmount:
+      Math.min(breakdown.propertyDamage, limits.propertyDamage) +
+      Math.min(breakdown.injury, limits.injury) +
+      Math.min(breakdown.deathDisability, limits.deathDisability)
+  };
+}
+
 function calculateAutoCoverageResults({ productCode, context, factResult, coverageCode, coverageConfig, warnings, needsManualReview }) {
   const faultRatio = factResult.faultRatio ?? 1;
 
@@ -118,10 +156,11 @@ function calculateAutoCoverageResults({ productCode, context, factResult, covera
   if (coverageCode === AUTO_COVERAGE_CODES.COMPULSORY) {
     const claimedAmount = getAutoLossAmount(context, factResult, coverageCode, coverageConfig);
     const sumInsured = getSumInsuredAmount(coverageConfig) || null;
-    const approvedAmount = sumInsured ? Math.min(claimedAmount, sumInsured) : claimedAmount;
+    const compulsoryAmount = calculateCompulsoryApprovedAmount(context, coverageConfig, claimedAmount);
+    const approvedAmount = sumInsured ? Math.min(compulsoryAmount.approvedAmount, sumInsured) : compulsoryAmount.approvedAmount;
 
     return {
-      totalClaimable: claimedAmount,
+      totalClaimable: compulsoryAmount.claimedAmount,
       deductible: 0,
       reimbursementRatio: 1,
       finalAmount: approvedAmount,
@@ -129,7 +168,7 @@ function calculateAutoCoverageResults({ productCode, context, factResult, covera
       coverageResults: [
         buildCoverageResult({
           coverageCode,
-          claimedAmount,
+          claimedAmount: compulsoryAmount.claimedAmount,
           approvedAmount,
           deductible: 0,
           reimbursementRatio: 1,
@@ -144,8 +183,9 @@ function calculateAutoCoverageResults({ productCode, context, factResult, covera
   if (coverageCode === AUTO_COVERAGE_CODES.THIRD_PARTY) {
     const claimedAmount = getAutoLossAmount(context, factResult, coverageCode, coverageConfig);
     const compulsoryConfig = getAutoCoverageConfig(productCode, AUTO_COVERAGE_CODES.COMPULSORY);
+    const compulsoryAmount = calculateCompulsoryApprovedAmount(context, compulsoryConfig, claimedAmount);
     const compulsorySumInsured = getSumInsuredAmount(compulsoryConfig) || null;
-    const compulsoryApproved = compulsorySumInsured ? Math.min(claimedAmount, compulsorySumInsured) : 0;
+    const compulsoryApproved = compulsorySumInsured ? Math.min(compulsoryAmount.approvedAmount, compulsorySumInsured) : compulsoryAmount.approvedAmount;
     const remainingLoss = Math.max(0, claimedAmount - compulsoryApproved);
     const commercialBaseAmount = Math.max(0, Math.round(remainingLoss * faultRatio * 100) / 100);
     const commercialSumInsured = getSumInsuredAmount(coverageConfig) || null;
@@ -155,7 +195,7 @@ function calculateAutoCoverageResults({ productCode, context, factResult, covera
     if (compulsoryApproved > 0) {
       coverageResults.push(buildCoverageResult({
         coverageCode: AUTO_COVERAGE_CODES.COMPULSORY,
-        claimedAmount,
+        claimedAmount: compulsoryAmount.claimedAmount,
         approvedAmount: compulsoryApproved,
         deductible: 0,
         reimbursementRatio: 1,

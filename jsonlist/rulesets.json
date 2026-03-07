@@ -4640,16 +4640,21 @@
         "person": null
       },
       "coverages": [
-        {
-          "coverage_code": "CTPL",
-          "coverage_name": "交强险",
-          "sum_insured": {
-            "amount": 20000,
-            "currency": "CNY",
-            "per_unit": "PER_ACCIDENT"
-          },
-          "deductible": null
+      {
+        "coverage_code": "CTPL",
+        "coverage_name": "交强险",
+        "sum_insured": {
+          "amount": 20000,
+          "currency": "CNY",
+          "per_unit": "PER_ACCIDENT"
         },
+        "limit_breakdown": {
+          "death_disability": 180000,
+          "injury": 18000,
+          "property_damage": 2000
+        },
+        "deductible": null
+      },
         {
           "coverage_code": "TPL",
           "coverage_name": "第三者责任险",

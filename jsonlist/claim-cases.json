@@ -1135,6 +1135,7 @@
     "autoCoverageType": "THIRD_PARTY",
     "faultRatio": 70,
     "thirdPartyLossAmount": 300000,
+    "thirdPartyPropertyDamageAmount": 300000,
     "repairEstimate": 50000,
     "vehicle": {
       "plate_no": "沪A88888",
@@ -1146,6 +1147,41 @@
       "accident_description": "本车追尾前车，造成第三者车辆受损",
       "accident_reason": "追尾事故",
       "claim_amount": "300000"
+    },
+    "requiredMaterials": [],
+    "fileCategories": []
+  },
+  {
+    "id": "CLM-AUTO-002",
+    "reportNumber": "R20260308194500AUTO",
+    "reporter": "codex",
+    "reportTime": "2026-03-08T19:45:00+08:00",
+    "accidentTime": "2026-03-06",
+    "accidentReason": "单方碰撞护栏",
+    "accidentLocation": "上海市闵行区申长路",
+    "productCode": "PICC_AUTO_COMP_2020",
+    "productName": "机动车综合保险演示版",
+    "policyNumber": "POL-2026-AUTO-001",
+    "policyholder": "王磊",
+    "insured": "王磊",
+    "status": "已报案",
+    "operator": "codex",
+    "claimAmount": "120000",
+    "insuranceType": "AUTO",
+    "policy_active": true,
+    "autoCoverageType": "VEHICLE_DAMAGE",
+    "faultRatio": 100,
+    "repairEstimate": 120000,
+    "vehicle": {
+      "plate_no": "沪A88888",
+      "actual_value": 108000
+    },
+    "intakeFormData": {
+      "accident_date": "2026-03-06",
+      "accident_location": "上海市闵行区申长路",
+      "accident_description": "单方事故导致本车车头及右侧严重受损",
+      "accident_reason": "单方碰撞护栏",
+      "claim_amount": "120000"
     },
     "requiredMaterials": [],
     "fileCategories": []

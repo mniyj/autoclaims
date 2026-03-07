@@ -143,6 +143,12 @@ export function getAutoLossAmount(context, factResult, coverageCode, coverageCon
     return getNumber(
       context.claim?.third_party_loss_amount,
       context.claim?.thirdPartyLossAmount,
+      context.claim?.third_party_property_damage_amount,
+      context.claim?.thirdPartyPropertyDamageAmount,
+      context.claim?.third_party_injury_amount,
+      context.claim?.thirdPartyInjuryAmount,
+      context.claim?.third_party_death_disability_amount,
+      context.claim?.thirdPartyDeathDisabilityAmount,
       context.claim?.third_party_damage_amount,
       context.claim?.thirdPartyDamageAmount,
       totalApproved
@@ -175,6 +181,28 @@ export function getAutoActualValue(context, coverageConfig = null) {
     coverageConfig?.sum_insured?.amount,
     coverageConfig?.sum_insured
   );
+}
+
+export function getCompulsoryBreakdown(context) {
+  const propertyDamage = getNumber(
+    context.claim?.third_party_property_damage_amount,
+    context.claim?.thirdPartyPropertyDamageAmount
+  );
+  const injury = getNumber(
+    context.claim?.third_party_injury_amount,
+    context.claim?.thirdPartyInjuryAmount
+  );
+  const deathDisability = getNumber(
+    context.claim?.third_party_death_disability_amount,
+    context.claim?.thirdPartyDeathDisabilityAmount
+  );
+
+  return {
+    propertyDamage,
+    injury,
+    deathDisability,
+    total: propertyDamage + injury + deathDisability
+  };
 }
 
 export { AUTO_COVERAGE_CODES };

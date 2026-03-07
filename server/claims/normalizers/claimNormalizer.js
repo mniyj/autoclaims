@@ -142,6 +142,30 @@ export function normalizeClaimContext(claimCase = {}, ocrData = {}, invoiceItems
       claimCase.thirdPartyLossAmount
     );
 
+  normalized.third_party_property_damage_amount =
+    toNumber(
+      ocrData.third_party_property_damage_amount ||
+      ocrData.thirdPartyPropertyDamageAmount ||
+      claimCase.third_party_property_damage_amount ||
+      claimCase.thirdPartyPropertyDamageAmount
+    );
+
+  normalized.third_party_injury_amount =
+    toNumber(
+      ocrData.third_party_injury_amount ||
+      ocrData.thirdPartyInjuryAmount ||
+      claimCase.third_party_injury_amount ||
+      claimCase.thirdPartyInjuryAmount
+    );
+
+  normalized.third_party_death_disability_amount =
+    toNumber(
+      ocrData.third_party_death_disability_amount ||
+      ocrData.thirdPartyDeathDisabilityAmount ||
+      claimCase.third_party_death_disability_amount ||
+      claimCase.thirdPartyDeathDisabilityAmount
+    );
+
   normalized.vehicle_damage_amount =
     toNumber(
       ocrData.vehicle_damage_amount ||
