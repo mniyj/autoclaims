@@ -59,11 +59,14 @@ export const checkEligibilityTool = new DynamicStructuredTool({
           summary += `\n⚠️ 注意事项: ${result.warnings.map(w => w.message).join('; ')}`;
         }
         if (result.needsManualReview) {
-          summary += '\n🔍 需要人工复核。';
+          const reasons = (result.manualReviewReasons || []).map(item => item.message).join('; ');
+          summary += reasons ? `\n🔍 需要人工复核: ${reasons}` : '\n🔍 需要人工复核。';
         }
       } else if (result.needsManualReview) {
         summary = `🔍 责任判断暂不能自动确认，需要人工复核。`;
-        if (result.warnings.length > 0) {
+        if ((result.manualReviewReasons || []).length > 0) {
+          summary += `\n复核原因: ${result.manualReviewReasons.map(item => item.message).join('; ')}`;
+        } else if (result.warnings.length > 0) {
           summary += `\n复核原因: ${result.warnings.map(w => w.message).join('; ')}`;
         }
       } else {
@@ -82,6 +85,7 @@ export const checkEligibilityTool = new DynamicStructuredTool({
         rejectionReasons: result.rejectionReasons,
         warnings: result.warnings,
         needsManualReview: result.needsManualReview,
+        manualReviewReasons: result.manualReviewReasons || [],
         fraudFlagged: result.fraudFlagged,
         productInfo: result.context
       }, null, 2);
