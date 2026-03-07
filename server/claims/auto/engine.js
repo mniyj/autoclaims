@@ -118,6 +118,10 @@ function getNumber(...values) {
   return 0;
 }
 
+function sumResolvedNumbers(groups) {
+  return groups.reduce((sum, group) => sum + getNumber(...group), 0);
+}
+
 function getConfiguredAmount(value) {
   if (typeof value === 'number') return value;
   if (value && typeof value === 'object' && typeof value.amount === 'number') {
@@ -140,19 +144,32 @@ export function getAutoLossAmount(context, factResult, coverageCode, coverageCon
   }
 
   if (coverageCode === AUTO_COVERAGE_CODES.THIRD_PARTY || coverageCode === AUTO_COVERAGE_CODES.COMPULSORY) {
-    return getNumber(
+    const explicitTotal = getNumber(
       context.claim?.third_party_loss_amount,
       context.claim?.thirdPartyLossAmount,
-      context.claim?.third_party_property_damage_amount,
-      context.claim?.thirdPartyPropertyDamageAmount,
-      context.claim?.third_party_injury_amount,
-      context.claim?.thirdPartyInjuryAmount,
-      context.claim?.third_party_death_disability_amount,
-      context.claim?.thirdPartyDeathDisabilityAmount,
       context.claim?.third_party_damage_amount,
-      context.claim?.thirdPartyDamageAmount,
-      totalApproved
+      context.claim?.thirdPartyDamageAmount
     );
+    if (explicitTotal > 0) {
+      return explicitTotal;
+    }
+
+    const componentTotal = sumResolvedNumbers([
+      [
+        context.claim?.third_party_property_damage_amount,
+        context.claim?.thirdPartyPropertyDamageAmount
+      ],
+      [
+        context.claim?.third_party_injury_amount,
+        context.claim?.thirdPartyInjuryAmount
+      ],
+      [
+        context.claim?.third_party_death_disability_amount,
+        context.claim?.thirdPartyDeathDisabilityAmount
+      ]
+    ]);
+
+    return componentTotal || totalApproved;
   }
 
   if (coverageCode === AUTO_COVERAGE_CODES.DRIVER_PASSENGER) {
