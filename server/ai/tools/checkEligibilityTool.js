@@ -61,6 +61,11 @@ export const checkEligibilityTool = new DynamicStructuredTool({
         if (result.needsManualReview) {
           summary += '\n🔍 需要人工复核。';
         }
+      } else if (result.needsManualReview) {
+        summary = `🔍 责任判断暂不能自动确认，需要人工复核。`;
+        if (result.warnings.length > 0) {
+          summary += `\n复核原因: ${result.warnings.map(w => w.message).join('; ')}`;
+        }
       } else {
         summary = `❌ 责任判断未通过。`;
         if (result.rejectionReasons.length > 0) {

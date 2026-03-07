@@ -5,6 +5,14 @@
 
 import { getFieldValue, evaluateConditions as evaluateConditionsImported } from './conditionEvaluator.js';
 
+function resolveStateField(state, fieldName) {
+  if (!fieldName) return undefined;
+  if (Object.prototype.hasOwnProperty.call(state, fieldName)) {
+    return state[fieldName];
+  }
+  return undefined;
+}
+
 /**
  * 执行规则动作
  * @param {object} action - RuleAction { action_type, params }
@@ -40,7 +48,13 @@ export function executeAction(action, context, state = {}) {
       break;
       
     case 'SET_CLAIM_RATIO':
-      const ratio = params.payout_ratio ?? 1;
+      let ratio = params.payout_ratio;
+      if (ratio === undefined && Array.isArray(params.disability_grade_table)) {
+        const disabilityGrade = Number(context.claim?.disability_grade);
+        const matchedRatio = params.disability_grade_table.find(item => Number(item.grade) === disabilityGrade);
+        ratio = matchedRatio?.payout_ratio;
+      }
+      ratio = ratio ?? 1;
       result.message = `设置理赔比例: ${ratio * 100}%`;
       result.data.payout_ratio = ratio;
       state.payoutRatio = ratio;
@@ -121,12 +135,13 @@ export function executeAction(action, context, state = {}) {
     case 'APPLY_CAP':
       const capAmount = params.cap_amount ?? Infinity;
       const capField = params.cap_field || 'amount';
-      const currentAmount = getFieldValue(context, capField) || state.calculatedAmount || 0;
+      const currentAmount = resolveStateField(state, capField) ?? getFieldValue(context, capField) ?? state.calculatedAmount ?? 0;
       const cappedAmount = Math.min(currentAmount, capAmount);
       result.message = `限额应用: ${capField} 上限 ${capAmount}`;
       result.data.capped_amount = cappedAmount;
       result.data.cap_applied = currentAmount > capAmount;
       state.calculatedAmount = cappedAmount;
+      state[capField] = cappedAmount;
       break;
       
     case 'APPLY_DEDUCTIBLE':
