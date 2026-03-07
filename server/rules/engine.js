@@ -5,6 +5,7 @@
 
 import { evaluateEligibility } from '../claims/liability/evaluator.js';
 import { calculateSettlement } from '../claims/settlement/calculator.js';
+import { evaluateMaterialCompleteness } from '../claims/materials/completeness.js';
 import { logRuleExecution } from '../middleware/index.js';
 
 /**
@@ -86,29 +87,49 @@ export async function executeFullReview({ claimCaseId, productCode, ocrData = {}
     : 'ASSESSED';
   const settlementDecision = amountResult.settlementDecision || (amountResult.finalAmount > 0 ? 'PAY' : 'ZERO_PAY');
   const coverageResults = amountResult.coverageResults || (amountResult.coverageResult ? [amountResult.coverageResult] : []);
+  const materialCompleteness = evaluateMaterialCompleteness({
+    claimCaseId,
+    productCode,
+    claimType: amountResult.claimType || eligibilityResult.context?.product_line
+  });
+  const hasMissingMaterials = materialCompleteness.missingMaterials.length > 0;
   const warnings = [
     ...(eligibilityResult.warnings || []).map(item => item.message),
-    ...(amountResult.warnings || []).map(item => item.message)
+    ...(amountResult.warnings || []).map(item => item.message),
+    ...(hasMissingMaterials
+      ? [`缺少材料: ${materialCompleteness.missingMaterials.map(item => item.name).join('、')}`]
+      : [])
   ];
   const reasonCodes = [
     ...(eligibilityResult.rejectionReasons || []).map(item => item.reason_code),
     ...warnings.map((_, index) => `WARN_${index + 1}`)
   ];
+  const finalDecision = (eligibilityResult.needsManualReview || amountResult.needsManualReview || hasMissingMaterials)
+    ? 'MANUAL_REVIEW'
+    : (eligibilityResult.eligible ? 'APPROVE' : 'REJECT');
+  const finalIntakeDecision = hasMissingMaterials ? 'PENDING_MATERIAL' : 'PASS';
+  const finalLiabilityDecision = hasMissingMaterials
+    ? 'MANUAL_REVIEW'
+    : liabilityDecision;
+  const finalAssessmentDecision = hasMissingMaterials && assessmentDecision === 'ASSESSED'
+    ? 'PARTIAL_ASSESSED'
+    : assessmentDecision;
+  const finalSettlementDecision = hasMissingMaterials
+    ? 'MANUAL_REVIEW'
+    : settlementDecision;
 
   return {
     // 决策结果
-    decision: (eligibilityResult.needsManualReview || amountResult.needsManualReview)
-      ? 'MANUAL_REVIEW'
-      : (eligibilityResult.eligible ? 'APPROVE' : 'REJECT'),
-    intakeDecision: 'PASS',
-    liabilityDecision,
-    assessmentDecision,
-    settlementDecision,
+    decision: finalDecision,
+    intakeDecision: finalIntakeDecision,
+    liabilityDecision: finalLiabilityDecision,
+    assessmentDecision: finalAssessmentDecision,
+    settlementDecision: finalSettlementDecision,
     claimType: amountResult.claimType || eligibilityResult.context?.product_line || 'UNKNOWN',
     coverageResults,
     reasonCodes,
     warnings,
-    missingMaterials: [],
+    missingMaterials: materialCompleteness.missingMaterials.map(item => item.name),
     payableAmount: amountResult.finalAmount,
     currency: 'CNY',
     
@@ -136,6 +157,8 @@ export async function executeFullReview({ claimCaseId, productCode, ocrData = {}
       warnings: amountResult.warnings,
       needsManualReview: amountResult.needsManualReview
     },
+
+    completeness: materialCompleteness,
     
     // 规则追踪
     ruleTrace: [
