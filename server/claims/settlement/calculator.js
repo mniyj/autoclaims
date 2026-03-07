@@ -2,6 +2,7 @@ import { ExecutionDomain, sortRulesByPriority, filterRulesByDomain, executeSingl
 import { evaluateFacts } from '../assessment/evaluator.js';
 import { getAccidentCoverageConfig, ACCIDENT_COVERAGE_CODES } from '../accident/engine.js';
 import { getMedicalCoverageConfig, MEDICAL_COVERAGE_CODES, isMedicalCoverageCode } from '../medical/engine.js';
+import { getAutoCoverageConfig, AUTO_COVERAGE_CODES, isAutoCoverageCode } from '../auto/engine.js';
 
 function applyPostProcessRules(postProcessRules, context, state) {
   const executionResults = [];
@@ -20,6 +21,9 @@ function inferClaimType(context) {
 }
 
 function getCoverageConfigByClaimType(productCode, claimType, coverageCode) {
+  if (claimType === 'AUTO' || isAutoCoverageCode(coverageCode)) {
+    return getAutoCoverageConfig(productCode, coverageCode);
+  }
   if (claimType === 'HEALTH' || isMedicalCoverageCode(coverageCode)) {
     return getMedicalCoverageConfig(productCode, coverageCode);
   }
@@ -137,6 +141,17 @@ export function calculateSettlement({ claimCaseId, productCode, eligibilityResul
     baseAmount = Math.max(0, baseAmount - fallbackDeductible);
   }
 
+  if (
+    coverageCode === AUTO_COVERAGE_CODES.COMPULSORY ||
+    coverageCode === AUTO_COVERAGE_CODES.THIRD_PARTY ||
+    coverageCode === AUTO_COVERAGE_CODES.VEHICLE_DAMAGE ||
+    coverageCode === AUTO_COVERAGE_CODES.DRIVER_PASSENGER
+  ) {
+    const faultRatio = factResult.faultRatio ?? 1;
+    baseAmount = Math.max(0, baseAmount * faultRatio);
+    reportedClaimable = baseAmount;
+  }
+
   const finalAmount = Math.max(0, Math.round(baseAmount * reimbursementRatio * 100) / 100);
   const configuredSumInsured = getSumInsuredAmount(coverageConfig);
   const sumInsured = configuredSumInsured || Infinity;
@@ -167,6 +182,7 @@ export function calculateSettlement({ claimCaseId, productCode, eligibilityResul
     itemBreakdown,
     factAssessment: {
       coverageCode,
+      faultRatio: factResult.faultRatio,
       totalApproved,
       itemBreakdown,
       executionDetails: factResult.executionDetails,

@@ -2,9 +2,13 @@ import { buildContext } from '../../rules/context.js';
 import { ExecutionDomain, sortRulesByPriority, filterRulesByDomain, executeSingleRule } from '../../rules/runtime.js';
 import { inferAccidentCoverageCode } from '../accident/engine.js';
 import { inferMedicalCoverageCode } from '../medical/engine.js';
+import { inferAutoCoverageCode, getAutoFaultRatio } from '../auto/engine.js';
 
 function inferCoverageCodeByClaimType(context, state = {}) {
   const claimType = context.ruleset?.product_line || context.policy?.insuranceType;
+  if (claimType === 'AUTO') {
+    return inferAutoCoverageCode(context, state);
+  }
   if (claimType === 'HEALTH') {
     return inferMedicalCoverageCode(context, state);
   }
@@ -97,6 +101,7 @@ export function evaluateFacts({ claimCaseId, productCode, invoiceItems = [], ocr
     context,
     state,
     coverageCode: inferCoverageCodeByClaimType(context, state),
+    faultRatio: context.ruleset?.product_line === 'AUTO' ? getAutoFaultRatio(context) : null,
     expenseItems,
     totalClaimed,
     totalApproved,
