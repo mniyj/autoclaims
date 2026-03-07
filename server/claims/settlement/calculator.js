@@ -1,6 +1,7 @@
 import { ExecutionDomain, sortRulesByPriority, filterRulesByDomain, executeSingleRule } from '../../rules/runtime.js';
 import { evaluateFacts } from '../assessment/evaluator.js';
 import { getAccidentCoverageConfig, ACCIDENT_COVERAGE_CODES } from '../accident/engine.js';
+import { getMedicalCoverageConfig, MEDICAL_COVERAGE_CODES, isMedicalCoverageCode } from '../medical/engine.js';
 
 function applyPostProcessRules(postProcessRules, context, state) {
   const executionResults = [];
@@ -16,6 +17,13 @@ function appendWarning(warnings, message, category = 'SYSTEM', ruleId = 'SYSTEM'
 
 function inferClaimType(context) {
   return context.ruleset?.product_line || context.policy?.insuranceType || 'UNKNOWN';
+}
+
+function getCoverageConfigByClaimType(productCode, claimType, coverageCode) {
+  if (claimType === 'HEALTH' || isMedicalCoverageCode(coverageCode)) {
+    return getMedicalCoverageConfig(productCode, coverageCode);
+  }
+  return getAccidentCoverageConfig(productCode, coverageCode);
 }
 
 function getConfiguredAmount(value) {
@@ -84,7 +92,8 @@ export function calculateSettlement({ claimCaseId, productCode, eligibilityResul
   const warnings = [];
   let needsManualReview = Boolean(eligibilityResult?.needsManualReview);
   executionResults.push(...applyPostProcessRules(postProcessRules, context, state));
-  const coverageConfig = getAccidentCoverageConfig(productCode || context.policy?.product_code, coverageCode);
+  const claimType = inferClaimType(context);
+  const coverageConfig = getCoverageConfigByClaimType(productCode || context.policy?.product_code, claimType, coverageCode);
 
   if (!coverageConfig) {
     needsManualReview = true;
@@ -100,7 +109,10 @@ export function calculateSettlement({ claimCaseId, productCode, eligibilityResul
   }
 
   const deductible = state.deductible || 0;
-  const defaultRatio = coverageCode === ACCIDENT_COVERAGE_CODES.MEDICAL ? getMedicalReimbursementRatio(coverageConfig) : 1;
+  const defaultRatio = (
+    coverageCode === ACCIDENT_COVERAGE_CODES.MEDICAL ||
+    coverageCode === MEDICAL_COVERAGE_CODES.INPATIENT
+  ) ? getMedicalReimbursementRatio(coverageConfig) : 1;
   const reimbursementRatio = state.payoutRatio || defaultRatio;
   let baseAmount = state.calculatedAmount ?? totalApproved;
   let reportedClaimable = totalApproved;
@@ -115,7 +127,11 @@ export function calculateSettlement({ claimCaseId, productCode, eligibilityResul
     const dailyAllowance = coverageConfig?.daily_allowance || 0;
     baseAmount = (context.claim?.hospital_days || 0) * dailyAllowance;
     reportedClaimable = baseAmount;
-  } else if (coverageCode === ACCIDENT_COVERAGE_CODES.MEDICAL && deductible === 0 && getDeductibleAmount(coverageConfig) > 0) {
+  } else if (
+    (coverageCode === ACCIDENT_COVERAGE_CODES.MEDICAL || coverageCode === MEDICAL_COVERAGE_CODES.INPATIENT) &&
+    deductible === 0 &&
+    getDeductibleAmount(coverageConfig) > 0
+  ) {
     const fallbackDeductible = getDeductibleAmount(coverageConfig);
     state.deductible = fallbackDeductible;
     baseAmount = Math.max(0, baseAmount - fallbackDeductible);
@@ -143,7 +159,7 @@ export function calculateSettlement({ claimCaseId, productCode, eligibilityResul
     finalAmount: cappedAmount,
     capApplied: finalAmount > sumInsured,
     sumInsured,
-    claimType: inferClaimType(context),
+    claimType,
     coverageCode,
     coverageResult,
     coverageResults: [coverageResult],
@@ -163,7 +179,7 @@ export function calculateSettlement({ claimCaseId, productCode, eligibilityResul
       claim_id: claimCaseId,
       product_code: context.policy?.product_code,
       coverage_code: coverageCode,
-      claim_type: inferClaimType(context)
+      claim_type: claimType
     },
     duration: Date.now() - startTime
   };
