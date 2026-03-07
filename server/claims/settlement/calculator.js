@@ -2,7 +2,7 @@ import { ExecutionDomain, sortRulesByPriority, filterRulesByDomain, executeSingl
 import { evaluateFacts } from '../assessment/evaluator.js';
 import { getAccidentCoverageConfig, ACCIDENT_COVERAGE_CODES } from '../accident/engine.js';
 import { getMedicalCoverageConfig, MEDICAL_COVERAGE_CODES, isMedicalCoverageCode } from '../medical/engine.js';
-import { getAutoCoverageConfig, AUTO_COVERAGE_CODES, isAutoCoverageCode } from '../auto/engine.js';
+import { getAutoCoverageConfig, AUTO_COVERAGE_CODES, isAutoCoverageCode, getAutoLossAmount, getAutoActualValue } from '../auto/engine.js';
 
 function applyPostProcessRules(postProcessRules, context, state) {
   const executionResults = [];
@@ -63,6 +63,158 @@ function getMedicalReimbursementRatio(coverageConfig) {
   }
 
   return 1;
+}
+
+function buildCoverageResult({ coverageCode, claimedAmount, approvedAmount, deductible, reimbursementRatio, sumInsured, status, warnings = [] }) {
+  return {
+    coverageCode,
+    claimedAmount,
+    approvedAmount,
+    deductible,
+    reimbursementRatio,
+    sumInsured,
+    status,
+    warnings
+  };
+}
+
+function getCoverageStatus(needsManualReview, approvedAmount) {
+  if (needsManualReview) return 'MANUAL_REVIEW';
+  return approvedAmount > 0 ? 'PAYABLE' : 'ZERO_PAY';
+}
+
+function calculateAutoCoverageResults({ productCode, context, factResult, coverageCode, coverageConfig, warnings, needsManualReview }) {
+  const faultRatio = factResult.faultRatio ?? 1;
+
+  if (coverageCode === AUTO_COVERAGE_CODES.VEHICLE_DAMAGE) {
+    const claimedAmount = getAutoLossAmount(context, factResult, coverageCode, coverageConfig);
+    const actualValue = getAutoActualValue(context, coverageConfig);
+    const baseAmount = actualValue > 0 ? Math.min(claimedAmount, actualValue) : claimedAmount;
+    const finalAmount = Math.max(0, Math.round(baseAmount * faultRatio * 100) / 100);
+    const sumInsured = getSumInsuredAmount(coverageConfig) || null;
+    const approvedAmount = sumInsured ? Math.min(finalAmount, sumInsured) : finalAmount;
+
+    return {
+      totalClaimable: claimedAmount,
+      deductible: 0,
+      reimbursementRatio: faultRatio,
+      finalAmount: approvedAmount,
+      sumInsured: sumInsured || Infinity,
+      coverageResults: [
+        buildCoverageResult({
+          coverageCode,
+          claimedAmount,
+          approvedAmount,
+          deductible: 0,
+          reimbursementRatio: faultRatio,
+          sumInsured,
+          status: getCoverageStatus(needsManualReview, approvedAmount),
+          warnings
+        })
+      ]
+    };
+  }
+
+  if (coverageCode === AUTO_COVERAGE_CODES.COMPULSORY) {
+    const claimedAmount = getAutoLossAmount(context, factResult, coverageCode, coverageConfig);
+    const sumInsured = getSumInsuredAmount(coverageConfig) || null;
+    const approvedAmount = sumInsured ? Math.min(claimedAmount, sumInsured) : claimedAmount;
+
+    return {
+      totalClaimable: claimedAmount,
+      deductible: 0,
+      reimbursementRatio: 1,
+      finalAmount: approvedAmount,
+      sumInsured: sumInsured || Infinity,
+      coverageResults: [
+        buildCoverageResult({
+          coverageCode,
+          claimedAmount,
+          approvedAmount,
+          deductible: 0,
+          reimbursementRatio: 1,
+          sumInsured,
+          status: getCoverageStatus(needsManualReview, approvedAmount),
+          warnings
+        })
+      ]
+    };
+  }
+
+  if (coverageCode === AUTO_COVERAGE_CODES.THIRD_PARTY) {
+    const claimedAmount = getAutoLossAmount(context, factResult, coverageCode, coverageConfig);
+    const compulsoryConfig = getAutoCoverageConfig(productCode, AUTO_COVERAGE_CODES.COMPULSORY);
+    const compulsorySumInsured = getSumInsuredAmount(compulsoryConfig) || null;
+    const compulsoryApproved = compulsorySumInsured ? Math.min(claimedAmount, compulsorySumInsured) : 0;
+    const remainingLoss = Math.max(0, claimedAmount - compulsoryApproved);
+    const commercialBaseAmount = Math.max(0, Math.round(remainingLoss * faultRatio * 100) / 100);
+    const commercialSumInsured = getSumInsuredAmount(coverageConfig) || null;
+    const commercialApproved = commercialSumInsured ? Math.min(commercialBaseAmount, commercialSumInsured) : commercialBaseAmount;
+    const coverageResults = [];
+
+    if (compulsoryApproved > 0) {
+      coverageResults.push(buildCoverageResult({
+        coverageCode: AUTO_COVERAGE_CODES.COMPULSORY,
+        claimedAmount,
+        approvedAmount: compulsoryApproved,
+        deductible: 0,
+        reimbursementRatio: 1,
+        sumInsured: compulsorySumInsured,
+        status: getCoverageStatus(needsManualReview, compulsoryApproved),
+        warnings
+      }));
+    } else if (!compulsoryConfig) {
+      appendWarning(warnings, '未找到交强险保障配置，三者险按商业险单链路试算', 'AUTO_COMPULSORY', 'SYSTEM');
+    }
+
+    coverageResults.push(buildCoverageResult({
+      coverageCode,
+      claimedAmount: remainingLoss || claimedAmount,
+      approvedAmount: commercialApproved,
+      deductible: 0,
+      reimbursementRatio: faultRatio,
+      sumInsured: commercialSumInsured,
+      status: getCoverageStatus(needsManualReview, commercialApproved),
+      warnings
+    }));
+
+    return {
+      totalClaimable: claimedAmount,
+      deductible: 0,
+      reimbursementRatio: faultRatio,
+      finalAmount: coverageResults.reduce((sum, item) => sum + item.approvedAmount, 0),
+      sumInsured: commercialSumInsured || Infinity,
+      coverageResults
+    };
+  }
+
+  if (coverageCode === AUTO_COVERAGE_CODES.DRIVER_PASSENGER) {
+    const claimedAmount = getAutoLossAmount(context, factResult, coverageCode, coverageConfig);
+    const sumInsured = getSumInsuredAmount(coverageConfig) || null;
+    const approvedAmount = sumInsured ? Math.min(claimedAmount, sumInsured) : claimedAmount;
+
+    return {
+      totalClaimable: claimedAmount,
+      deductible: 0,
+      reimbursementRatio: 1,
+      finalAmount: approvedAmount,
+      sumInsured: sumInsured || Infinity,
+      coverageResults: [
+        buildCoverageResult({
+          coverageCode,
+          claimedAmount,
+          approvedAmount,
+          deductible: 0,
+          reimbursementRatio: 1,
+          sumInsured,
+          status: getCoverageStatus(needsManualReview, approvedAmount),
+          warnings
+        })
+      ]
+    };
+  }
+
+  return null;
 }
 
 export function calculateSettlement({ claimCaseId, productCode, eligibilityResult, invoiceItems = [], ocrData = {} }) {
@@ -141,31 +293,67 @@ export function calculateSettlement({ claimCaseId, productCode, eligibilityResul
     baseAmount = Math.max(0, baseAmount - fallbackDeductible);
   }
 
-  if (
-    coverageCode === AUTO_COVERAGE_CODES.COMPULSORY ||
-    coverageCode === AUTO_COVERAGE_CODES.THIRD_PARTY ||
-    coverageCode === AUTO_COVERAGE_CODES.VEHICLE_DAMAGE ||
-    coverageCode === AUTO_COVERAGE_CODES.DRIVER_PASSENGER
-  ) {
-    const faultRatio = factResult.faultRatio ?? 1;
-    baseAmount = Math.max(0, baseAmount * faultRatio);
-    reportedClaimable = baseAmount;
+  if (isAutoCoverageCode(coverageCode)) {
+    const autoSettlement = calculateAutoCoverageResults({
+      productCode: productCode || context.policy?.product_code,
+      context,
+      factResult,
+      coverageCode,
+      coverageConfig,
+      warnings,
+      needsManualReview
+    });
+
+    if (autoSettlement) {
+      return {
+        totalClaimable: autoSettlement.totalClaimable,
+        deductible: autoSettlement.deductible,
+        reimbursementRatio: autoSettlement.reimbursementRatio,
+        finalAmount: autoSettlement.finalAmount,
+        capApplied: autoSettlement.coverageResults.some(item => item.sumInsured !== null && item.approvedAmount < item.claimedAmount),
+        sumInsured: autoSettlement.sumInsured,
+        claimType,
+        coverageCode,
+        coverageResult: autoSettlement.coverageResults[0] || null,
+        coverageResults: autoSettlement.coverageResults,
+        settlementDecision: needsManualReview ? 'MANUAL_REVIEW' : (autoSettlement.finalAmount > 0 ? 'PAY' : 'ZERO_PAY'),
+        itemBreakdown,
+        factAssessment: {
+          coverageCode,
+          faultRatio: factResult.faultRatio,
+          totalApproved,
+          itemBreakdown,
+          executionDetails: factResult.executionDetails,
+          duration: factResult.duration
+        },
+        warnings,
+        needsManualReview,
+        executionDetails: executionResults,
+        context: {
+          claim_id: claimCaseId,
+          product_code: context.policy?.product_code,
+          coverage_code: coverageCode,
+          claim_type: claimType
+        },
+        duration: Date.now() - startTime
+      };
+    }
   }
 
   const finalAmount = Math.max(0, Math.round(baseAmount * reimbursementRatio * 100) / 100);
   const configuredSumInsured = getSumInsuredAmount(coverageConfig);
   const sumInsured = configuredSumInsured || Infinity;
   const cappedAmount = Math.min(finalAmount, sumInsured);
-  const coverageResult = {
+  const coverageResult = buildCoverageResult({
     coverageCode,
     claimedAmount: reportedClaimable,
     approvedAmount: cappedAmount,
     deductible: state.deductible || 0,
     reimbursementRatio,
     sumInsured: Number.isFinite(sumInsured) ? sumInsured : null,
-    status: needsManualReview ? 'MANUAL_REVIEW' : (cappedAmount > 0 ? 'PAYABLE' : 'ZERO_PAY'),
+    status: getCoverageStatus(needsManualReview, cappedAmount),
     warnings
-  };
+  });
 
   return {
     totalClaimable: reportedClaimable,

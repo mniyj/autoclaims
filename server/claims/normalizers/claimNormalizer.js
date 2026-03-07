@@ -84,6 +84,103 @@ export function normalizeClaimContext(claimCase = {}, ocrData = {}, invoiceItems
       claimCase.hospitalDays
     ) || 0;
 
+  normalized.auto_coverage_type =
+    ocrData.auto_coverage_type ||
+    ocrData.autoCoverageType ||
+    claimCase.auto_coverage_type ||
+    claimCase.autoCoverageType ||
+    claimCase.claim_liability_type ||
+    claimCase.claimLiabilityType;
+
+  normalized.fault_ratio =
+    toNumber(
+      ocrData.fault_ratio ||
+      ocrData.faultRatio ||
+      claimCase.fault_ratio ||
+      claimCase.faultRatio
+    );
+
+  normalized.insured_liability_ratio =
+    toNumber(
+      ocrData.insured_liability_ratio ||
+      ocrData.insuredLiabilityRatio ||
+      claimCase.insured_liability_ratio ||
+      claimCase.insuredLiabilityRatio
+    );
+
+  normalized.third_party_liability_ratio =
+    toNumber(
+      ocrData.third_party_liability_ratio ||
+      ocrData.thirdPartyLiabilityRatio ||
+      ocrData.thirdPartyLiabilityPct ||
+      claimCase.third_party_liability_ratio ||
+      claimCase.thirdPartyLiabilityRatio ||
+      claimCase.thirdPartyLiabilityPct
+    );
+
+  normalized.claimant_liability_pct =
+    toNumber(
+      ocrData.claimant_liability_pct ||
+      ocrData.claimantLiabilityPct ||
+      claimCase.claimant_liability_pct ||
+      claimCase.claimantLiabilityPct
+    );
+
+  normalized.repair_estimate =
+    toNumber(
+      ocrData.repair_estimate ||
+      ocrData.repairEstimate ||
+      claimCase.repair_estimate ||
+      claimCase.repairEstimate
+    ) || 0;
+
+  normalized.third_party_loss_amount =
+    toNumber(
+      ocrData.third_party_loss_amount ||
+      ocrData.thirdPartyLossAmount ||
+      claimCase.third_party_loss_amount ||
+      claimCase.thirdPartyLossAmount
+    );
+
+  normalized.vehicle_damage_amount =
+    toNumber(
+      ocrData.vehicle_damage_amount ||
+      ocrData.vehicleDamageAmount ||
+      claimCase.vehicle_damage_amount ||
+      claimCase.vehicleDamageAmount
+    );
+
+  normalized.passenger_injury_amount =
+    toNumber(
+      ocrData.passenger_injury_amount ||
+      ocrData.passengerInjuryAmount ||
+      claimCase.passenger_injury_amount ||
+      claimCase.passengerInjuryAmount
+    );
+
+  normalized.injury_grade =
+    ocrData.injury_grade ||
+    ocrData.injuryGrade ||
+    claimCase.injury_grade ||
+    claimCase.injuryGrade;
+
+  normalized.vehicle = {
+    ...(claimCase.vehicle || {}),
+    ...(ocrData.vehicle || {})
+  };
+
+  const normalizedActualValue = toNumber(
+    normalized.vehicle.actual_value ||
+    normalized.vehicle.actualValue ||
+    ocrData.actual_value ||
+    ocrData.actualValue ||
+    claimCase.actual_value ||
+    claimCase.actualValue
+  );
+  if (normalizedActualValue !== undefined) {
+    normalized.vehicle.actual_value = normalizedActualValue;
+  }
+
   if (ocrData.basicInfo) {
     normalized.patient_name = ocrData.basicInfo.name;
     normalized.patient_gender = ocrData.basicInfo.gender;

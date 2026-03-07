@@ -103,6 +103,8 @@ export function buildContext({ claimCaseId, productCode, ocrData = {}, invoiceIt
       ...product
     },
 
+    vehicle: claimContext.vehicle || policyInfo.insured_subject?.vehicle || null,
+
     // 规则集元数据
     ruleset: {
       ruleset_id: ruleset?.ruleset_id,
