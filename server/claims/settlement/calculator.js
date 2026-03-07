@@ -1,6 +1,6 @@
-import { getCoverageConfig } from '../../rules/context.js';
 import { ExecutionDomain, sortRulesByPriority, filterRulesByDomain, executeSingleRule } from '../../rules/runtime.js';
 import { evaluateFacts } from '../assessment/evaluator.js';
+import { getAccidentCoverageConfig, ACCIDENT_COVERAGE_CODES } from '../accident/engine.js';
 
 function applyPostProcessRules(postProcessRules, context, state) {
   const executionResults = [];
@@ -84,34 +84,38 @@ export function calculateSettlement({ claimCaseId, productCode, eligibilityResul
   const warnings = [];
   let needsManualReview = Boolean(eligibilityResult?.needsManualReview);
   executionResults.push(...applyPostProcessRules(postProcessRules, context, state));
-  const coverageConfig = getCoverageConfig(productCode || context.policy?.product_code, coverageCode);
+  const coverageConfig = getAccidentCoverageConfig(productCode || context.policy?.product_code, coverageCode);
 
   if (!coverageConfig) {
     needsManualReview = true;
     appendWarning(warnings, `未找到责任 ${coverageCode} 对应的保障配置，需人工复核产品责任映射`, 'COVERAGE_CONFIG');
   }
 
-  if (coverageCode === 'ACC_DISABILITY' || coverageCode === 'ACC_DEATH' || coverageCode === 'ACC_HOSPITAL_ALLOWANCE') {
+  if (
+    coverageCode === ACCIDENT_COVERAGE_CODES.DISABILITY ||
+    coverageCode === ACCIDENT_COVERAGE_CODES.DEATH ||
+    coverageCode === ACCIDENT_COVERAGE_CODES.ALLOWANCE
+  ) {
     state.deductible = 0;
   }
 
   const deductible = state.deductible || 0;
-  const defaultRatio = coverageCode === 'ACC_MEDICAL' ? getMedicalReimbursementRatio(coverageConfig) : 1;
+  const defaultRatio = coverageCode === ACCIDENT_COVERAGE_CODES.MEDICAL ? getMedicalReimbursementRatio(coverageConfig) : 1;
   const reimbursementRatio = state.payoutRatio || defaultRatio;
   let baseAmount = state.calculatedAmount ?? totalApproved;
   let reportedClaimable = totalApproved;
 
-  if (coverageCode === 'ACC_DISABILITY') {
+  if (coverageCode === ACCIDENT_COVERAGE_CODES.DISABILITY) {
     baseAmount = getSumInsuredAmount(coverageConfig);
     reportedClaimable = baseAmount;
-  } else if (coverageCode === 'ACC_DEATH') {
+  } else if (coverageCode === ACCIDENT_COVERAGE_CODES.DEATH) {
     baseAmount = getSumInsuredAmount(coverageConfig);
     reportedClaimable = baseAmount;
-  } else if (coverageCode === 'ACC_HOSPITAL_ALLOWANCE') {
+  } else if (coverageCode === ACCIDENT_COVERAGE_CODES.ALLOWANCE) {
     const dailyAllowance = coverageConfig?.daily_allowance || 0;
     baseAmount = (context.claim?.hospital_days || 0) * dailyAllowance;
     reportedClaimable = baseAmount;
-  } else if (coverageCode === 'ACC_MEDICAL' && deductible === 0 && getDeductibleAmount(coverageConfig) > 0) {
+  } else if (coverageCode === ACCIDENT_COVERAGE_CODES.MEDICAL && deductible === 0 && getDeductibleAmount(coverageConfig) > 0) {
     const fallbackDeductible = getDeductibleAmount(coverageConfig);
     state.deductible = fallbackDeductible;
     baseAmount = Math.max(0, baseAmount - fallbackDeductible);
