@@ -6,17 +6,39 @@ interface SmartReviewResult {
   decision: 'APPROVE' | 'REJECT' | 'MANUAL_REVIEW';
   amount: number | null;
   reasoning: string;
+  missingMaterials?: string[];
+  manualReviewReasons?: Array<{
+    code: string;
+    stage: string;
+    source: string;
+    category: string;
+    message: string;
+  }>;
   eligibility?: {
     eligible: boolean;
     matchedRules: string[];
     rejectionReasons: any[];
     warnings: any[];
+    manualReviewReasons?: Array<{
+      code: string;
+      stage: string;
+      source: string;
+      category: string;
+      message: string;
+    }>;
   };
   calculation?: {
     totalClaimable: number;
     deductible: number;
     reimbursementRatio: number;
     finalAmount: number;
+    manualReviewReasons?: Array<{
+      code: string;
+      stage: string;
+      source: string;
+      category: string;
+      message: string;
+    }>;
     itemBreakdown: Array<{
       item: string;
       claimed: number;
@@ -425,6 +447,33 @@ const ClaimWorkbenchPage: React.FC<ClaimWorkbenchPageProps> = ({ onViewClaim }) 
                             {reviewResult.eligibility.warnings.map((w: any, i: number) => (
                               <div key={i} className="text-sm text-amber-700">{w.message || w}</div>
                             ))}
+                          </div>
+                        )}
+                        {reviewResult.manualReviewReasons && reviewResult.manualReviewReasons.length > 0 && (
+                          <div className="mt-3 p-3 bg-orange-50 rounded-lg border border-orange-100">
+                            <div className="text-sm font-medium text-orange-800 mb-2">🔍 人工复核原因</div>
+                            <div className="space-y-2">
+                              {reviewResult.manualReviewReasons.map((reason, i) => (
+                                <div key={`${reason.code}-${i}`} className="text-sm text-orange-700">
+                                  <div className="font-medium">{reason.message}</div>
+                                  <div className="text-xs text-orange-600 mt-0.5">
+                                    {reason.stage} · {reason.code}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {reviewResult.missingMaterials && reviewResult.missingMaterials.length > 0 && (
+                          <div className="mt-3 p-3 bg-red-50 rounded-lg border border-red-100">
+                            <div className="text-sm font-medium text-red-800 mb-2">缺失材料</div>
+                            <div className="flex flex-wrap gap-2">
+                              {reviewResult.missingMaterials.map((material, i) => (
+                                <span key={`${material}-${i}`} className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs">
+                                  {material}
+                                </span>
+                              ))}
+                            </div>
                           </div>
                         )}
                       </div>

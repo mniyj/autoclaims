@@ -27,17 +27,39 @@ interface SmartReviewResult {
   decision: "APPROVE" | "REJECT" | "MANUAL_REVIEW";
   amount: number | null;
   reasoning: string;
+  missingMaterials?: string[];
+  manualReviewReasons?: Array<{
+    code: string;
+    stage: string;
+    source: string;
+    category: string;
+    message: string;
+  }>;
   eligibility?: {
     eligible: boolean;
     matchedRules: string[];
     rejectionReasons: any[];
     warnings: any[];
+    manualReviewReasons?: Array<{
+      code: string;
+      stage: string;
+      source: string;
+      category: string;
+      message: string;
+    }>;
   };
   calculation?: {
     totalClaimable: number;
     deductible: number;
     reimbursementRatio: number;
     finalAmount: number;
+    manualReviewReasons?: Array<{
+      code: string;
+      stage: string;
+      source: string;
+      category: string;
+      message: string;
+    }>;
     itemBreakdown: Array<{
       item: string;
       claimed: number;
@@ -135,6 +157,7 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
         materialId: string;
         materialName: string;
         confidence: number;
+        errorMessage?: string;
       };
       status: string;
       importedAt: string;
@@ -431,9 +454,29 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
     documents: ProcessedFile[];
     completeness: CompletenessResult;
   }) => {
+    const nowIso = new Date().toISOString();
+    setImportedDocuments((result.documents || []).map((d) => ({
+      documentId: d.documentId,
+      fileName: d.fileName,
+      fileType: d.fileType,
+      ossUrl: d.ossUrl,
+      classification: d.classification || {
+        materialId: "unknown",
+        materialName: "未识别",
+        confidence: 0,
+      },
+      status: d.status,
+      importedAt: nowIso,
+    })));
+    setImportedCompleteness(result.completeness || null);
+
     // Refresh the imported documents list from backend
     fetchImportedDocuments();
     loadReviewData();
+    setTimeout(() => {
+      fetchImportedDocuments();
+      loadReviewData();
+    }, 1500);
     // 记录材料导入操作（包含详细的文件解析信息）
     const successCount = result.documents?.filter((d) => d.status === "completed").length || 0;
     const failCount = result.documents?.filter((d) => d.status === "failed").length || 0;
@@ -537,6 +580,7 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
             materialId: resolvedMaterialId || "unknown",
             materialName: resolvedMaterialName,
             confidence: m.confidence || 0,
+            errorMessage: m.classificationError,
           },
           structuredData: m.extractedData,
           documentSummary: m.documentSummary,
@@ -1219,6 +1263,44 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
                     </div>
                   )}
 
+                {reviewResult.manualReviewReasons &&
+                  reviewResult.manualReviewReasons.length > 0 && (
+                    <div className="mb-4 rounded-lg border border-orange-100 bg-orange-50 p-4">
+                      <p className="text-sm font-medium text-orange-800 mb-2">
+                        🔍 人工复核原因
+                      </p>
+                      <div className="space-y-2">
+                        {reviewResult.manualReviewReasons.map((reason, i) => (
+                          <div key={`${reason.code}-${i}`} className="text-sm text-orange-700">
+                            <div className="font-medium">{reason.message}</div>
+                            <div className="text-xs text-orange-600 mt-0.5">
+                              {reason.stage} · {reason.code}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                {reviewResult.missingMaterials &&
+                  reviewResult.missingMaterials.length > 0 && (
+                    <div className="mb-4 rounded-lg border border-red-100 bg-red-50 p-4">
+                      <p className="text-sm font-medium text-red-800 mb-2">
+                        缺失材料
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {reviewResult.missingMaterials.map((material, i) => (
+                          <span
+                            key={`${material}-${i}`}
+                            className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs"
+                          >
+                            {material}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                 <div className="bg-white/60 rounded-lg p-4 border border-gray-100">
                   <p className="text-sm text-gray-500 mb-2">审核意见</p>
                   <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed max-h-32 overflow-y-auto">
@@ -1838,12 +1920,19 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
                               <p className="text-[10px] text-indigo-600">
                                 {doc.classification.materialName}
                               </p>
+                              {doc.classification.errorMessage && (
+                                <p className="text-[10px] text-red-600 truncate">
+                                  分类失败: {doc.classification.errorMessage}
+                                </p>
+                              )}
                             </div>
                           </div>
                           <span
                             className={`text-[10px] px-1.5 py-0.5 rounded flex-shrink-0 ${
                               doc.status !== "completed"
                                 ? "bg-red-100 text-red-700"
+                                : doc.classification?.errorMessage
+                                  ? "bg-red-100 text-red-700"
                                 : doc.classification?.materialId === "unknown"
                                   ? "bg-gray-100 text-gray-600"
                                   : "bg-green-100 text-green-700"
@@ -1851,6 +1940,8 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
                           >
                             {doc.status !== "completed"
                               ? "失败"
+                              : doc.classification?.errorMessage
+                                ? "分类失败"
                               : doc.classification?.materialId === "unknown"
                                 ? "未识别"
                                 : "已识别"}
