@@ -5,7 +5,7 @@
  * - 成本追踪
  */
 
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -38,7 +38,9 @@ export const aiRateLimiter = rateLimit({
   keyGenerator: (req) => {
     // 使用 IP + 用户标识（如有）作为限流 key
     const userId = req.headers['x-user-id'] || '';
-    const ip = req.ip || req.headers['x-forwarded-for'] || 'unknown';
+    const forwardedFor = req.headers['x-forwarded-for'];
+    const rawIp = req.ip || (Array.isArray(forwardedFor) ? forwardedFor[0] : forwardedFor) || 'unknown';
+    const ip = ipKeyGenerator(rawIp);
     return `${ip}:${userId}`;
   }
 });
