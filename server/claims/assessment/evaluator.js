@@ -29,6 +29,8 @@ export function evaluateFacts({ claimCaseId, productCode, invoiceItems = [], ocr
       ? invoiceItems
       : Array.isArray(ocrData.chargeItems) && ocrData.chargeItems.length > 0
         ? ocrData.chargeItems
+        : Array.isArray(context.claim?.expense_items) && context.claim.expense_items.length > 0
+          ? context.claim.expense_items
         : Number(context.aggregation?.expenseAggregation?.medicalTotal || 0) > 0
           ? [
               {

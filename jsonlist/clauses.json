@@ -2710,5 +2710,103 @@
         "description": "意外导致的门诊、住院医疗费用报销"
       }
     ]
+  },
+  {
+    "productCode": "ZA-GOPD-2022A-90",
+    "regulatoryName": "众安互联网团体门诊急诊医疗保险（2022版A款）",
+    "marketingName": "众安互联网团体门诊急诊医疗保险（0免赔90%赔付版）",
+    "companyName": "众安在线财产保险股份有限公司",
+    "version": "2022版A款",
+    "salesRegions": "全国（不含港澳台）",
+    "effectiveDate": "2026-03-16",
+    "discontinuationDate": "",
+    "status": "生效",
+    "primaryCategory": "医疗保险",
+    "secondaryCategory": "门急诊医疗",
+    "primaryCategoryCode": "A",
+    "secondaryCategoryCode": "A01",
+    "racewayId": "A0103",
+    "racewayName": "门急诊医疗",
+    "clauseType": "主险",
+    "operator": "codex",
+    "coverageDetails": [],
+    "coveragePlans": [
+      {
+        "planType": "双责任标准版",
+        "annualLimit": 20000,
+        "guaranteedRenewalYears": 0,
+        "coverageDetails": [
+          {
+            "mandatory": true,
+            "item_code": "ZA_GRP_OPD_SOCIAL",
+            "item_name": "基本医疗保险范围内门急诊医疗费用保险金",
+            "description": "医保范围内门急诊合理且必要医疗费用保障",
+            "details": {
+              "limit": 10000,
+              "deductible": 0,
+              "reimbursement_ratio": 0.9,
+              "hospital_requirements": "中华人民共和国境内合法医院普通门诊或急诊",
+              "coverage_scope": "医保范围内门急诊费用"
+            }
+          },
+          {
+            "mandatory": true,
+            "item_code": "ZA_GRP_OPD_NON_SOCIAL",
+            "item_name": "基本医疗保险范围外门急诊医疗费用保险金",
+            "description": "医保范围外门急诊合理且必要医疗费用保障",
+            "details": {
+              "limit": 10000,
+              "deductible": 0,
+              "reimbursement_ratio": 0.9,
+              "hospital_requirements": "中华人民共和国境内合法医院普通门诊或急诊",
+              "coverage_scope": "医保范围外门急诊费用"
+            }
+          }
+        ]
+      }
+    ],
+    "underwritingAge": "出生满30天至65周岁",
+    "coveragePeriod": "1年",
+    "coverageArea": "中华人民共和国境内（不含港澳台）",
+    "hospitalScope": "合法医院普通门诊及急诊",
+    "claimScope": "医保内及医保外合理且必要门急诊费用在责任限额内按90%赔付",
+    "occupationScope": "团体成员及经保险人同意的配偶、子女、父母",
+    "hesitationPeriod": "2天",
+    "waitingPeriod": "疾病等待期30天，意外伤害等待期0天",
+    "policyEffectiveDate": "生效日零时",
+    "purchaseLimit": 1,
+    "annualPremium": 2031.12,
+    "valueAddedServices": [],
+    "productCardImage": "https://pic1.imgdb.cn/item/692dd43cc2ca2fe15cf17332.webp",
+    "productHeroImage": "https://pic1.imgdb.cn/item/69311d3fa11464095f88537e.webp",
+    "productLongImage": [
+      "https://pic1.imgdb.cn/item/69313be6a11464095f8a12dd.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d8.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d7.jpg"
+    ],
+    "productAttachments": [
+      "众安互联网团体门诊急诊医疗保险.pdf",
+      "众安互联网团体门诊急诊医疗保险费率表.pdf"
+    ],
+    "productSummary": "众安团体门急诊医疗保障，双责任各1万元，0免赔，按90%赔付，覆盖疾病与意外门急诊费用。",
+    "tags": [
+      "门急诊",
+      "团体医疗",
+      "0免赔",
+      "90%赔付"
+    ],
+    "promoTag": "团体门急诊医疗预设",
+    "cardMetric1Label": "医保内保额",
+    "cardMetric1Value": "1万元",
+    "cardMetric2Label": "医保外保额",
+    "cardMetric2Value": "1万元",
+    "cardMetric3Label": "赔付比例",
+    "cardMetric3Value": "90%",
+    "supportsOnlineClaim": true,
+    "isOnline": true,
+    "clauseTextFile": "众安互联网团体门诊急诊医疗保险.pdf",
+    "rateTableFile": "众安互联网团体门诊急诊医疗保险费率表.pdf",
+    "productDescriptionFile": "",
+    "cashValueTableFile": ""
   }
 ]

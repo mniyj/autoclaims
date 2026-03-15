@@ -329,6 +329,7 @@ export async function executeFullReview({ claimCaseId, productCode, ocrData = {}
     missingMaterials: materialCompleteness.missingMaterials.map(item => item.name),
     materialValidationResults,
     matchedRuleDetails,
+    policyBinding: amountResult.policyBinding || null,
     payableAmount: amountResult.finalAmount,
     currency: 'CNY',
     
@@ -360,7 +361,9 @@ export async function executeFullReview({ claimCaseId, productCode, ocrData = {}
       coverageResults,
       warnings: amountResult.warnings,
       needsManualReview: amountResult.needsManualReview,
-      manualReviewReasons: amountResult.manualReviewReasons
+      manualReviewReasons: amountResult.manualReviewReasons,
+      medicalReview: amountResult.factAssessment?.medicalReview || null,
+      policyBinding: amountResult.policyBinding || null
     },
 
     completeness: materialCompleteness,

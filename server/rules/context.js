@@ -1,5 +1,6 @@
 import { readData } from '../utils/fileStore.js';
 import { normalizeClaimContext } from '../claims/normalizers/claimNormalizer.js';
+import { evaluateMedicalCatalogItems, evaluateHospitalRequirement } from '../claims/medical/review.js';
 
 const COVERAGE_CODE_ALIASES = {
   ACC_DISABILITY: ['ACC_DEATH_DISAB'],
@@ -163,6 +164,188 @@ export function getProduct(productCode) {
   return products.find(p => p.productCode === productCode) || null;
 }
 
+export function getPolicy(policyIdentifier, productCode = null) {
+  const policies = readData('policies') || [];
+  if (policyIdentifier) {
+    const exact = policies.find((item) =>
+      item.policyNumber === policyIdentifier ||
+      item.policyNo === policyIdentifier ||
+      item.policy_number === policyIdentifier ||
+      item.id === policyIdentifier
+    );
+    if (exact) {
+      return exact;
+    }
+  }
+  if (!productCode) {
+    return null;
+  }
+  return policies.find((item) => item.productCode === productCode) || null;
+}
+
+function normalizeName(value) {
+  return String(value || '').replace(/\s+/g, '').trim();
+}
+
+function resolveBoundPolicy(claimCase = {}, explicitProductCode = null) {
+  const identifiers = [
+    claimCase.policyNumber,
+    claimCase.policyNo,
+    claimCase.policy_number,
+    claimCase.boundPolicyNumber,
+    claimCase.boundPolicyNo,
+    claimCase.bound_policy_number,
+    claimCase.policyId,
+    claimCase.boundPolicyId,
+  ].filter(Boolean);
+
+  for (const identifier of identifiers) {
+    const policy = getPolicy(identifier, explicitProductCode || claimCase.productCode);
+    if (policy) {
+      return policy;
+    }
+  }
+
+  return null;
+}
+
+function resolveBoundInsured(boundPolicy = null, claimCase = {}, claimContext = {}) {
+  if (!boundPolicy || !Array.isArray(boundPolicy.insureds) || boundPolicy.insureds.length === 0) {
+    return {
+      matched: null,
+      matchStatus: null,
+      insuredName: null,
+    };
+  }
+
+  const claimInsuredName = normalizeName(
+    claimContext.insured ||
+      claimContext.patient_name ||
+      claimCase.insured ||
+      claimCase.reporter
+  );
+
+  if (!claimInsuredName) {
+    return {
+      matched: null,
+      matchStatus: null,
+      insuredName: null,
+    };
+  }
+
+  const matched = boundPolicy.insureds.find((item) => normalizeName(item?.name) === claimInsuredName) || null;
+  return {
+    matched,
+    matchStatus: matched ? true : false,
+    insuredName: claimInsuredName,
+  };
+}
+
+function mergePolicyInfo({ ruleset, boundPolicy, effectiveProductCode, product }) {
+  const policyInfo = {
+    ...(ruleset?.policy_info || {}),
+  };
+
+  if (boundPolicy) {
+    policyInfo.policy_no =
+      boundPolicy.policyNumber ||
+      boundPolicy.policyNo ||
+      boundPolicy.policy_number ||
+      policyInfo.policy_no;
+    policyInfo.product_code = boundPolicy.productCode || policyInfo.product_code || effectiveProductCode;
+    policyInfo.product_name = boundPolicy.productName || policyInfo.product_name || product?.marketingName || product?.regulatoryName;
+    policyInfo.insurer = boundPolicy.companyName || policyInfo.insurer;
+    policyInfo.effective_date = boundPolicy.effectiveDate || policyInfo.effective_date;
+    policyInfo.expiry_date = boundPolicy.expiryDate || policyInfo.expiry_date;
+    policyInfo.bound_policy = boundPolicy;
+    policyInfo.bound_policy_number = boundPolicy.policyNumber || boundPolicy.policyNo || boundPolicy.policy_number || null;
+    policyInfo.bound_policy_product_code = boundPolicy.productCode || null;
+    policyInfo.bound_policy_product_name = boundPolicy.productName || null;
+    policyInfo.bound_policyholder = boundPolicy.policyholder || null;
+    policyInfo.bound_insureds = boundPolicy.insureds || [];
+    policyInfo.payment_mode = boundPolicy.paymentFrequency || policyInfo.payment_mode;
+  }
+
+  return policyInfo;
+}
+
+function inferCauseTypeForMedical(claimContext = {}, claimCase = {}, product = null) {
+  const explicit = inferCauseType(claimContext);
+  if (explicit) return explicit;
+
+  const intakeCause = [
+    claimCase?.intakeFormData?.cause_type,
+    claimCase?.intakeFormData?.claim_type,
+    claimCase?.accidentReason,
+    claimContext?.accident_reason,
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  if (/(意外)/.test(intakeCause)) return 'ACCIDENT';
+  if (/(疾病|医疗|门诊|急诊|就诊)/.test(intakeCause)) return 'DISEASE';
+
+  const productText = [
+    product?.primaryCategory,
+    product?.secondaryCategory,
+    product?.racewayName,
+    product?.marketingName,
+  ].filter(Boolean).join(' ');
+  if (/(门急诊|住院|医疗)/.test(productText)) {
+    return 'DISEASE';
+  }
+
+  return undefined;
+}
+
+function inferSettledWithSocialSecurity(claimContext = {}) {
+  const explicit = pickFirstNonEmpty(
+    claimContext.settled_with_social_security,
+    claimContext.settledWithSocialSecurity,
+    claimContext.social_settled,
+    claimContext.socialSettled,
+  );
+  if (explicit !== undefined) {
+    return Boolean(explicit);
+  }
+
+  const socialPaid = Number(
+    claimContext.social_insurance_paid ??
+      claimContext.socialInsurancePaid ??
+      0
+  );
+  const personalSelfPay = Number(
+    claimContext.personal_self_pay ??
+      claimContext.personalSelfPay ??
+      0
+  );
+  const personalSelfExpense = Number(
+    claimContext.personal_self_expense ??
+      claimContext.personalSelfExpense ??
+      0
+  );
+
+  if (socialPaid > 0) {
+    return true;
+  }
+  if (socialPaid === 0 && (personalSelfPay > 0 || personalSelfExpense > 0)) {
+    return false;
+  }
+  return null;
+}
+
+function resolveMedicalNecessity(claimContext = {}, latestAggregation = null) {
+  if (claimContext.medically_necessary !== undefined && claimContext.medically_necessary !== null) {
+    return Boolean(claimContext.medically_necessary);
+  }
+  const hasDiagnosis =
+    Boolean(claimContext.diagnosis) ||
+    (Array.isArray(claimContext.diagnosis_names) && claimContext.diagnosis_names.length > 0) ||
+    Boolean(latestAggregation?.injuryProfile?.injuryDescription);
+  const hasExpenses = Array.isArray(claimContext.expense_items) && claimContext.expense_items.length > 0;
+  return hasDiagnosis && hasExpenses ? true : null;
+}
+
 /**
  * 根据产品代码获取规则集
  * @param {string} productCode - 产品代码
@@ -282,14 +465,20 @@ export function buildContext({ claimCaseId, productCode, ocrData = {}, invoiceIt
   }
 
   // 确定产品代码
-  const effectiveProductCode = productCode || claimCase?.productCode;
+  const boundPolicy = resolveBoundPolicy(claimCase || {}, productCode || claimCase?.productCode || null);
+  const effectiveProductCode = boundPolicy?.productCode || productCode || claimCase?.productCode;
 
   // 获取产品和规则集
   const product = effectiveProductCode ? getProduct(effectiveProductCode) : null;
   const ruleset = effectiveProductCode ? getRuleset(effectiveProductCode, rulesetOverride) : rulesetOverride;
 
   // 构建保单上下文（从规则集的policy_info获取）
-  const policyInfo = ruleset?.policy_info || {};
+  const policyInfo = mergePolicyInfo({
+    ruleset,
+    boundPolicy,
+    effectiveProductCode,
+    product,
+  });
 
   // 构建理赔上下文
   const claimContext = normalizeClaimContext(claimCase, ocrData, invoiceItems);
@@ -301,6 +490,7 @@ export function buildContext({ claimCaseId, productCode, ocrData = {}, invoiceIt
   const canonicalFacts = latestAggregation?.factModel?.canonicalFacts || {};
 
   const canonicalizedClaimContext = applyCanonicalClaimFacts(claimContext, canonicalFacts);
+  const boundInsured = resolveBoundInsured(boundPolicy, claimCase || {}, canonicalizedClaimContext);
 
   canonicalizedClaimContext.diagnosis = pickFirstNonEmpty(
     canonicalizedClaimContext.diagnosis,
@@ -364,6 +554,32 @@ export function buildContext({ claimCaseId, productCode, ocrData = {}, invoiceIt
     canonicalizedClaimContext.beneficiaryType,
     canonicalizedClaimContext.claimants?.[0]?.beneficiaryType
   );
+  canonicalizedClaimContext.cause_type =
+    canonicalizedClaimContext.cause_type ||
+    canonicalizedClaimContext.causeType ||
+    inferCauseTypeForMedical(canonicalizedClaimContext, claimCase || {}, product);
+  canonicalizedClaimContext.hospital_name = pickFirstNonEmpty(
+    canonicalizedClaimContext.hospital_name,
+    canonicalizedClaimContext.hospitalName,
+    canonicalizedClaimContext.invoiceInfo?.hospitalName
+  );
+  canonicalizedClaimContext.bound_policy_number =
+    boundPolicy?.policyNumber ||
+    boundPolicy?.policyNo ||
+    boundPolicy?.policy_number ||
+    claimCase?.policyNumber ||
+    null;
+  canonicalizedClaimContext.bound_policy_product_code = boundPolicy?.productCode || effectiveProductCode || null;
+  canonicalizedClaimContext.bound_policy_insured_name = boundInsured.insuredName;
+  canonicalizedClaimContext.bound_policy_insured_match = boundInsured.matchStatus;
+  canonicalizedClaimContext.insured_social_security =
+    canonicalizedClaimContext.insured_social_security ??
+    canonicalizedClaimContext.insuredSocialSecurity ??
+    (boundInsured.matched
+      ? /有社保/.test(String(boundInsured.matched.socialSecurity || '')) || boundInsured.matched.socialSecurity === true
+      : null);
+  canonicalizedClaimContext.settled_with_social_security = inferSettledWithSocialSecurity(canonicalizedClaimContext);
+  canonicalizedClaimContext.medically_necessary = resolveMedicalNecessity(canonicalizedClaimContext, latestAggregation);
   const validationAliases = toClaimValidationAliases(resolvedValidationFacts);
   const facts = buildFacts({
     claimCaseId,
@@ -401,6 +617,9 @@ export function buildContext({ claimCaseId, productCode, ocrData = {}, invoiceIt
       days_overdue: Number(policyInfo.days_overdue || 0),
       is_within_coverage_period: facts.policy.isWithinCoveragePeriod,
       coverages: policyInfo.coverages || [],
+      boundPolicy: boundPolicy || null,
+      bound_policy_number: policyInfo.bound_policy_number || null,
+      product_source: boundPolicy?.productCode && boundPolicy.productCode !== claimCase?.productCode ? 'POLICY_BOUND' : 'CLAIM_CASE',
       // 产品详情
       ...product
     },
@@ -426,6 +645,9 @@ export function buildContext({ claimCaseId, productCode, ocrData = {}, invoiceIt
   // 如果有医院名称，补充医院信息
   if (claimContext.hospital_name) {
     context.hospital = getHospitalInfo(claimContext.hospital_name);
+  }
+  if (!context.hospital && context.claim.hospital_name) {
+    context.hospital = getHospitalInfo(context.claim.hospital_name);
   }
 
   context.claim.result_type = context.claim.result_type || facts.claim.resultType;
@@ -497,6 +719,57 @@ export function buildContext({ claimCaseId, productCode, ocrData = {}, invoiceIt
     context.claim.insured_total_accident_death_sum ?? context.claim.insuredTotalAccidentDeathSum ?? 0;
   context.claim.newest_policy_inception_days =
     context.claim.newest_policy_inception_days ?? context.claim.newestPolicyInceptionDays ?? 999;
+
+  const catalogReview = evaluateMedicalCatalogItems({
+    context,
+    expenseItems: Array.isArray(context.claim.expense_items) ? context.claim.expense_items : [],
+  });
+  context.claim.expense_items = catalogReview.reviewedItems || [];
+  context.claim.claimed_total_amount =
+    context.claim.claimed_total_amount ??
+    context.claim.total_claimed_amount ??
+    catalogReview.summary.totalClaimedAmount;
+  const derivedSocialAmount = catalogReview.summary.catalogCoveredAmount;
+  const derivedNonSocialAmount =
+    catalogReview.summary.selfPayAmount + catalogReview.summary.restrictedAmount;
+  context.claim.social_medical_amount =
+    Number.isFinite(Number(context.claim.social_medical_amount))
+      ? Number(context.claim.social_medical_amount)
+      : derivedSocialAmount;
+  context.claim.non_social_medical_amount =
+    Number.isFinite(Number(context.claim.non_social_medical_amount))
+      ? Number(context.claim.non_social_medical_amount)
+      : derivedNonSocialAmount;
+  context.claim.catalog_covered_amount = catalogReview.summary.catalogCoveredAmount;
+  context.claim.catalog_non_covered_amount =
+    catalogReview.summary.selfPayAmount + catalogReview.summary.restrictedAmount;
+  context.claim.catalog_uncertain_amount = catalogReview.summary.uncertainAmount;
+
+  const primaryMedicalCoverage =
+    (context.policy.coverages || []).find((item) => item?.coverage_code === 'HLT_OPD_SOCIAL') ||
+    (context.policy.coverages || []).find((item) => item?.coverage_code === 'HLT_INPATIENT') ||
+    null;
+  const hospitalReview = evaluateHospitalRequirement({
+    context,
+    coverageConfig: primaryMedicalCoverage || {},
+    claimType: context.ruleset?.product_line || '',
+  });
+  context.claim.hospital_qualified =
+    hospitalReview.requirement == null
+      ? null
+      : (!hospitalReview.hospitalName || !hospitalReview.hospital)
+        ? null
+        : hospitalReview.manualReviewReasons.some((reason) => reason.code === 'WARD_SCOPE_UNCONFIRMED')
+          ? null
+          : hospitalReview.passed;
+  context.claim.hospital_review = hospitalReview;
+  context.claim.medical_review = {
+    catalogSummary: catalogReview.summary,
+    hospitalReview,
+  };
+  context.claim.bound_policy_insured_match = boundInsured.matchStatus;
+  context.claim.bound_policy_insured_name = boundInsured.insuredName;
+  context.claim.bound_policy_number = context.claim.bound_policy_number || policyInfo.bound_policy_number || null;
 
   return context;
 }

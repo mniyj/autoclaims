@@ -81,5 +81,42 @@
       "mat-50": true,
       "mat-52": true
     }
+  },
+  {
+    "id": "item-ZA-GOPD-outpatient",
+    "name": "门急诊医疗理赔",
+    "description": "适用于众安互联网团体门诊急诊医疗保险的门诊、急诊医疗费用理赔，统一受理医保内及医保外责任。",
+    "materialIds": [
+      "mat-20",
+      "mat-21",
+      "mat-11",
+      "mat-13"
+    ],
+    "responsibilityIds": [
+      "resp-ZA-GOPD-social",
+      "resp-ZA-GOPD-nonsocial"
+    ],
+    "materialRequiredMap": {
+      "mat-20": true,
+      "mat-21": true,
+      "mat-11": true,
+      "mat-13": true
+    }
+  },
+  {
+    "id": "item-1773560882432",
+    "name": "门急诊医疗费用保险金",
+    "description": "",
+    "materialIds": [
+      "mat-20",
+      "mat-11"
+    ],
+    "responsibilityIds": [
+      "resp-ZA-GOPD-social",
+      "resp-ZA-GOPD-nonsocial"
+    ],
+    "materialRequiredMap": {
+      "mat-20": true
+    }
   }
 ]

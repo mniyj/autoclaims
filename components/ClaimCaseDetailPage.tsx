@@ -310,6 +310,57 @@ type ClaimFactCard = {
   editableRatio?: number | null;
 };
 
+function getClaimDomainPresentation(domainModel: Record<string, unknown> | null) {
+  const scenario = String(domainModel?.claimScenario || "unknown");
+  switch (scenario) {
+    case "medical_expense":
+      return {
+        reportActionLabel: "生成审核报告",
+        reportTabLabel: "审核报告",
+        reportSummaryLabels: ["核定费用", "抵扣金额", "报告结论金额"],
+        reportDetailTitle: "费用明细",
+        decisionTraceHint: "用于审计医疗费用审核过程，并作为审核报告生成的结构化依据。",
+        validationHint: "这里汇总票据完整性、病历摘要、目录匹配等医疗案件级校验结果。",
+        reviewActionLabel: "责任 / 审核",
+        stageAssessmentLabel: "审核",
+      };
+    case "accident_benefit":
+      return {
+        reportActionLabel: "生成给付审核报告",
+        reportTabLabel: "给付审核报告",
+        reportSummaryLabels: ["核定金额", "扣减金额", "给付结论金额"],
+        reportDetailTitle: "给付项目",
+        decisionTraceHint: "用于审计给付责任成立、受益人关系和给付结论的形成过程。",
+        validationHint: "这里汇总受益人关系、保险期间、身故事实等给付型案件校验结果。",
+        reviewActionLabel: "责任 / 给付",
+        stageAssessmentLabel: "给付核定",
+      };
+    case "auto_property_damage":
+    case "auto_injury":
+      return {
+        reportActionLabel: "生成车险损失报告",
+        reportTabLabel: "车险损失报告",
+        reportSummaryLabels: ["损失总额", "责任系数", "报告结论金额"],
+        reportDetailTitle: "损失项目",
+        decisionTraceHint: "用于审计事故责任、损失核定和险种赔付试算过程。",
+        validationHint: "这里汇总事故责任、维修/人伤资料、交强险或商业险口径等车险校验结果。",
+        reviewActionLabel: "责任 / 损失",
+        stageAssessmentLabel: "损失核定",
+      };
+    default:
+      return {
+        reportActionLabel: "生成定损报告",
+        reportTabLabel: "定损报告",
+        reportSummaryLabels: ["损失总额", "责任调整系数", "应赔金额"],
+        reportDetailTitle: "损失明细",
+        decisionTraceHint: "用于审计系统处理过程，并作为理算报告生成的结构化依据。",
+        validationHint: "这里汇总材料归并、责任依据、赔偿标准、已付款抵扣等案件级校验结果。",
+        reviewActionLabel: "定责 / 定损",
+        stageAssessmentLabel: "定损",
+      };
+  }
+}
+
 function buildClaimFactCards(aggregationResult: Record<string, unknown> | null) {
   if (!aggregationResult) return [] as ClaimFactCard[];
 
@@ -352,6 +403,12 @@ function buildClaimFactCards(aggregationResult: Record<string, unknown> | null) 
     aggregationResult.handlingProfile && typeof aggregationResult.handlingProfile === "object"
       ? (aggregationResult.handlingProfile as Record<string, unknown>)
       : null;
+  const claimDomainModel =
+    aggregationResult.domainModel && typeof aggregationResult.domainModel === "object"
+      ? (aggregationResult.domainModel as Record<string, unknown>)
+      : handlingProfile?.domainModel && typeof handlingProfile.domainModel === "object"
+        ? (handlingProfile.domainModel as Record<string, unknown>)
+        : null;
   const enabledFactCards = Array.isArray((handlingProfile?.uiModules as Record<string, unknown> | undefined)?.factCards)
     ? new Set(
         ((((handlingProfile?.uiModules as Record<string, unknown> | undefined)?.factCards as unknown[]) || []).map((item) =>
@@ -772,6 +829,10 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
         setValidationFacts(data.validationFacts || {});
         setMaterialValidationResults(data.materialValidationResults || []);
         setValidationChecklist(data.validationChecklist || null);
+        setDamageReport(data.damageReport || null);
+        if (data.reviewResult) {
+          setReviewResult(data.reviewResult as SmartReviewResult);
+        }
         setLatestImportMeta(data.latestImport || null);
         if (data.completeness) {
           setImportedCompleteness({
@@ -791,6 +852,7 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
         setValidationFacts({});
         setMaterialValidationResults([]);
         setValidationChecklist(null);
+        setDamageReport(null);
         setLatestImportMeta(null);
       }
     } catch (error) {
@@ -799,6 +861,7 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
       setValidationFacts({});
       setMaterialValidationResults([]);
       setValidationChecklist(null);
+      setDamageReport(null);
       setLatestImportMeta(null);
     }
   };
@@ -1357,7 +1420,7 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
     }
   };
 
-  // 生成定损报告
+  // 生成案件审核/定损报告
   const handleGenerateReport = async () => {
     setGeneratingReport(true);
     const startTime = Date.now();
@@ -1373,7 +1436,7 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
         setActiveTab("damage_report");
         logOperation({
           operationType: UserOperationType.GENERATE_REPORT,
-          operationLabel: "生成定损报告",
+          operationLabel: reportActionLabel,
           outputData: {
             reportId: report.reportId,
             finalAmount: report.finalAmount,
@@ -1717,8 +1780,24 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
   const passedMaterialValidations = materialValidationResults.filter(
     (item) => item.passed,
   );
+  const claimDomainModel =
+    aggregationResult?.domainModel && typeof aggregationResult.domainModel === "object"
+      ? (aggregationResult.domainModel as Record<string, unknown>)
+      : aggregationResult?.handlingProfile &&
+          typeof aggregationResult.handlingProfile === "object" &&
+          (aggregationResult.handlingProfile as Record<string, unknown>).domainModel &&
+          typeof (aggregationResult.handlingProfile as Record<string, unknown>).domainModel === "object"
+        ? ((aggregationResult.handlingProfile as Record<string, unknown>).domainModel as Record<string, unknown>)
+        : null;
   const claimFactCards = buildClaimFactCards(aggregationResult);
   const decisionTraceStages = getDecisionTraceStages(aggregationResult);
+  const isMedicalScenario = Boolean(claimDomainModel?.isMedicalScenario);
+  const domainPresentation = getClaimDomainPresentation(claimDomainModel);
+  const requiresDeductionAssessment = Boolean(
+    claimDomainModel?.requiresDeductionAssessment,
+  );
+  const reportActionLabel = domainPresentation.reportActionLabel;
+  const reportTabLabel = domainPresentation.reportTabLabel;
   const recognizedReviewDocuments = reviewDocuments.filter(
     (doc) => doc.classification?.materialId && doc.classification.materialId !== "unknown",
   );
@@ -1989,7 +2068,8 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
   const handleManualStageComplete = async (
     stageKey: "liability" | "assessment",
   ) => {
-    const stageLabel = stageKey === "liability" ? "定责" : "定损";
+    const stageLabel =
+      stageKey === "liability" ? "定责" : domainPresentation.stageAssessmentLabel;
     setManualStageSubmitting(stageKey);
     try {
       const currentUser = getCurrentUser();
@@ -2178,7 +2258,7 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
                 d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
               />
             </svg>
-            定责 / 定损
+            {domainPresentation.reviewActionLabel}
           </button>
         </div>
       </div>
@@ -2191,7 +2271,7 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
             const labels: Record<ActiveTab, string> = {
               case_info: "案件信息",
               material_review: "材料管理",
-              damage_report: "定损报告",
+              damage_report: reportTabLabel,
             };
             return (
               <button
@@ -3656,7 +3736,7 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
                         d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                       />
                     </svg>
-                    生成定损报告
+                    {reportActionLabel}
                   </>
                 )}
               </button>
@@ -3857,7 +3937,7 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
             <div className="mb-4 rounded-lg border border-slate-200 bg-white p-4">
               <div className="text-sm font-semibold text-slate-900">决策轨迹</div>
               <div className="mt-1 text-xs text-slate-500">
-                用于审计系统处理过程，并作为理算报告生成的结构化依据。
+                {domainPresentation.decisionTraceHint}
               </div>
               <div className="mt-3 space-y-3">
                 {decisionTraceStages.map((stage, index) => (
@@ -3970,7 +4050,7 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
                       案件校验发现
                     </div>
                     <div className="mt-1 text-xs text-slate-500">
-                      这里汇总材料归并、责任依据、赔偿标准、已付款抵扣等案件级校验结果。
+                      {domainPresentation.validationHint}
                     </div>
                   </div>
                   <div className="text-right text-xs text-slate-500">
@@ -4053,7 +4133,8 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
                       </div>
                     ))}
                 </div>
-                {aggregationResult &&
+                {requiresDeductionAssessment &&
+                  aggregationResult &&
                   (aggregationResult as Record<string, unknown>).paymentSummary && (
                     <div className="mt-4 rounded-md border border-indigo-200 bg-indigo-50 p-3">
                       <div className="flex items-start justify-between gap-4">
@@ -4271,9 +4352,9 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
                   d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                 />
               </svg>
-              <p className="text-sm">尚未生成定损报告</p>
+              <p className="text-sm">尚未生成{reportTabLabel}</p>
               <p className="text-xs text-gray-400">
-                请先完成材料审核，再生成报告
+                请先完成材料审核，再生成{reportTabLabel}
               </p>
               <button
                 onClick={handleGenerateReport}
@@ -4286,7 +4367,7 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
                     生成中...
                   </>
                 ) : (
-                  "生成定损报告"
+                  reportActionLabel
                 )}
               </button>
             </div>
@@ -4295,7 +4376,7 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
               {/* 报告头部 */}
               <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
                 <div>
-                  <h2 className="text-lg font-bold text-gray-900">定损报告</h2>
+                  <h2 className="text-lg font-bold text-gray-900">{reportTabLabel}</h2>
                   <p className="text-sm text-gray-500 mt-0.5">
                     生成时间：
                     {new Date(
@@ -4326,10 +4407,92 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
               </div>
 
               {/* 汇总金额 */}
+              {((damageReport as Record<string, unknown>).settlementSnapshot as Record<string, unknown> | undefined)?.policyBinding && (
+                <div className="px-6 py-4 border-b border-gray-100 bg-slate-50">
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <span className="text-gray-500">绑定保单：</span>
+                      <span className="font-medium text-gray-900">
+                        {String(
+                          (((damageReport as Record<string, unknown>).settlementSnapshot as Record<string, unknown>)
+                            ?.policyBinding as Record<string, unknown>)?.policyNumber ?? "-",
+                        )}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">规则集：</span>
+                      <span className="font-medium text-gray-900">
+                        {String(
+                          (((damageReport as Record<string, unknown>).settlementSnapshot as Record<string, unknown>)
+                            ?.policyBinding as Record<string, unknown>)?.rulesetId ?? "-",
+                        )}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">实际产品：</span>
+                      <span className="font-medium text-gray-900">
+                        {String(
+                          (((damageReport as Record<string, unknown>).settlementSnapshot as Record<string, unknown>)
+                            ?.policyBinding as Record<string, unknown>)?.productCode ?? "-",
+                        )}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">承保匹配：</span>
+                      <span
+                        className={`font-medium ${
+                          (((damageReport as Record<string, unknown>).settlementSnapshot as Record<string, unknown>)
+                            ?.policyBinding as Record<string, unknown>)?.insuredMatched === false
+                            ? "text-red-600"
+                            : "text-gray-900"
+                        }`}
+                      >
+                        {(((damageReport as Record<string, unknown>).settlementSnapshot as Record<string, unknown>)
+                          ?.policyBinding as Record<string, unknown>)?.insuredMatched === false
+                          ? "不匹配"
+                          : (((damageReport as Record<string, unknown>).settlementSnapshot as Record<string, unknown>)
+                              ?.policyBinding as Record<string, unknown>)?.insuredMatched === true
+                            ? "已匹配"
+                            : "待确认"}
+                      </span>
+                    </div>
+                  </div>
+                  {Array.isArray(
+                    (((damageReport as Record<string, unknown>).settlementSnapshot as Record<string, unknown>)
+                      ?.coverageBreakdown as unknown[] | undefined),
+                  ) &&
+                    ((((damageReport as Record<string, unknown>).settlementSnapshot as Record<string, unknown>)
+                      ?.coverageBreakdown as unknown[])?.length > 0) && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {((((damageReport as Record<string, unknown>).settlementSnapshot as Record<string, unknown>)
+                          ?.coverageBreakdown as Array<Record<string, unknown>>)).map((item) => (
+                          <span
+                            key={String(item.coverageCode)}
+                            className="px-2 py-1 rounded bg-white border border-slate-200 text-xs text-slate-700"
+                          >
+                            {String(item.coverageCode)}: 申报 ¥
+                            {Number(item.claimedAmount ?? 0).toLocaleString("zh-CN", {
+                              minimumFractionDigits: 2,
+                            })}{" "}
+                            / 核定 ¥
+                            {Number(item.approvedAmount ?? 0).toLocaleString("zh-CN", {
+                              minimumFractionDigits: 2,
+                            })}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                </div>
+              )}
               <div className="px-6 py-4 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-gray-100">
                 <div className="grid grid-cols-3 gap-8">
                   <div>
-                    <p className="text-sm text-gray-500 mb-1">损失总额</p>
+                    <p className="text-sm text-gray-500 mb-1">
+                      {String(
+                        ((damageReport as Record<string, unknown>).amountLabels as string[] | undefined)?.[0] ??
+                          domainPresentation.reportSummaryLabels[0],
+                      )}
+                    </p>
                     <p className="text-2xl font-bold text-gray-900">
                       ¥
                       {Number(
@@ -4338,17 +4501,36 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500 mb-1">责任调整系数</p>
-                    <p className="text-2xl font-bold text-red-600">
-                      ×{" "}
+                    <p className="text-sm text-gray-500 mb-1">
+                      {String(
+                        ((damageReport as Record<string, unknown>).amountLabels as string[] | undefined)?.[1] ??
+                          domainPresentation.reportSummaryLabels[1],
+                      )}
+                    </p>
+                    <p className={`text-2xl font-bold ${isMedicalScenario ? "text-amber-600" : "text-red-600"}`}>
+                      {isMedicalScenario ||
+                      Boolean(claimDomainModel?.isBenefitScenario)
+                        ? "¥ "
+                        : "× "}
                       {Number(
-                        (damageReport as Record<string, unknown>)
-                          .liabilityAdjustment ?? 1,
-                      ).toFixed(2)}
+                        isMedicalScenario
+                          ? (damageReport as Record<string, unknown>).deductionTotal ?? 0
+                          : Boolean(claimDomainModel?.isBenefitScenario)
+                          ? (damageReport as Record<string, unknown>).deductionTotal ?? 0
+                          : (damageReport as Record<string, unknown>).liabilityAdjustment ?? 1,
+                      ).toLocaleString("zh-CN", {
+                        minimumFractionDigits: isMedicalScenario ? 2 : 2,
+                        maximumFractionDigits: 2,
+                      })}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500 mb-1">应赔金额</p>
+                    <p className="text-sm text-gray-500 mb-1">
+                      {String(
+                        ((damageReport as Record<string, unknown>).amountLabels as string[] | undefined)?.[2] ??
+                          domainPresentation.reportSummaryLabels[2],
+                      )}
+                    </p>
                     <p className="text-2xl font-bold text-indigo-700">
                       ¥
                       {Number(
@@ -4366,7 +4548,10 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
                   .length > 0 && (
                   <div className="px-6 py-4">
                     <h3 className="text-sm font-bold text-gray-700 mb-3">
-                      损失明细
+                      {String(
+                        (damageReport as Record<string, unknown>).detailSectionTitle ??
+                          domainPresentation.reportDetailTitle,
+                      )}
                     </h3>
                     <div className="overflow-x-auto">
                       <table className="min-w-full">
@@ -4376,7 +4561,11 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
                               项目
                             </th>
                             <th className="px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase">
-                              损失金额
+                              {Boolean(claimDomainModel?.isBenefitScenario)
+                                ? "给付基数"
+                                : isMedicalScenario
+                                  ? "费用金额"
+                                  : "损失金额"}
                             </th>
                             <th className="px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase">
                               核定金额
@@ -4456,7 +4645,11 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
       <Modal
         isOpen={stageDecisionModalMode !== null}
         onClose={() => setStageDecisionModalMode(null)}
-        title={stageDecisionModalMode === "assessment" ? "定损" : "定责"}
+        title={
+          stageDecisionModalMode === "assessment"
+            ? domainPresentation.stageAssessmentLabel
+            : "定责"
+        }
         width="max-w-6xl"
       >
         {stageDecisionModalMode && (

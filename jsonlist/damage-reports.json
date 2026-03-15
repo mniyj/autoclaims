@@ -1,8 +1,8 @@
 [
   {
-    "reportId": "RPT-1773511005615-f2b8b4",
+    "reportId": "RPT-1773558731779-7dec4d",
     "claimCaseId": "R261123052024800086",
-    "generatedAt": "2026-03-14T17:56:45.616Z",
+    "generatedAt": "2026-03-15T07:12:11.780Z",
     "generatedBy": "ai",
     "items": [
       {
@@ -48,6 +48,39 @@
     "calculationFormula": "损失合计 × 第三方责任比例",
     "regionalStandards": "安徽省 2024年，城镇居民人均可支配收入 ¥47,446/年",
     "status": "draft",
+    "domainModel": {
+      "claimCaseId": "R261123052024800086",
+      "productLine": "LIABILITY",
+      "claimScenario": "liability_death",
+      "reviewProfileCode": "liability_death_third_party",
+      "coverageFamily": [
+        "liability",
+        "damage"
+      ],
+      "requiresLiabilityAssessment": true,
+      "requiresExpenseAssessment": true,
+      "requiresBenefitAssessment": false,
+      "requiresDeductionAssessment": true,
+      "requiredModules": [
+        "material_overview",
+        "fact_cards",
+        "decision_trace",
+        "validation",
+        "liability_report"
+      ],
+      "isMedicalScenario": false,
+      "isLiabilityScenario": true,
+      "isBenefitScenario": false,
+      "isAutoScenario": false
+    },
+    "reportKind": "liability_damage_report",
+    "reportTitle": "定损报告",
+    "amountLabels": [
+      "损失总额",
+      "责任调整系数",
+      "应赔金额"
+    ],
+    "detailSectionTitle": "损失明细",
     "injuryProfile": null,
     "liabilityResult": {
       "claimantLiabilityPct": 50,
@@ -102,6 +135,13 @@
       "funeralMonthlySalary": 8499.92,
       "sourceDocument": "2024年《安徽省道路交通事故赔偿标准》",
       "source": "configured_standard"
+    },
+    "settlementSnapshot": {
+      "deductible": 0,
+      "reimbursementRatio": 0.5,
+      "payableAmount": 499959.75,
+      "settlementDecision": "MANUAL_REVIEW",
+      "medicalReview": null
     },
     "decisionTrace": {
       "traceId": "trace-R261123052024800086",
@@ -410,34 +450,80 @@
     "conflicts": []
   },
   {
-    "reportId": "RPT-1773540483621-6a0a25",
+    "reportId": "RPT-1773571009936-4f39fa",
     "claimCaseId": "CLM-MED-001",
-    "generatedAt": "2026-03-15T02:08:03.622Z",
+    "generatedAt": "2026-03-15T10:36:49.936Z",
     "generatedBy": "ai",
     "items": [
       {
-        "id": "di-1",
-        "category": "医疗费",
-        "itemName": "住院及门诊医疗费用",
-        "originalAmount": 148,
-        "approvedAmount": 148,
-        "formula": "实际发票金额",
-        "basis": "依据医疗发票据实核定",
-        "sourceDocIds": [
-          "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1",
-          "task-1e2217bc-f474-4cd6-abf1-fb693600e505-2",
-          "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
-        ]
+        "id": "doc-1-item-0",
+        "category": "诊疗费",
+        "itemName": "诊查费(自费)",
+        "originalAmount": 3,
+        "approvedAmount": 0,
+        "formula": "目录外/不赔项目，核定为 0",
+        "basis": "项目名称包含自费/自付提示，按目录外项目处理；项目名称包含自费/自付提示，按目录外项目处理"
+      },
+      {
+        "id": "doc-1-item-1",
+        "category": "诊疗费",
+        "itemName": "诊查费",
+        "originalAmount": 15,
+        "approvedAmount": 13.5,
+        "formula": "核定金额 ¥13.50",
+        "basis": "匹配医保目录“诊查费”；按默认赔付比例 0.9"
+      },
+      {
+        "id": "doc-2-item-0",
+        "category": "检查费",
+        "itemName": "13碳尿素呼气试验",
+        "originalAmount": 130,
+        "approvedAmount": 117,
+        "formula": "核定金额 ¥117.00",
+        "basis": "匹配医保目录“13碳尿素呼气试验”；按默认赔付比例 0.9"
       }
     ],
-    "subTotal": 148,
+    "subTotal": 130.5,
     "liabilityAdjustment": 1,
-    "adjustedAmount": 148,
+    "adjustedAmount": 130.5,
     "deductionTotal": 0,
-    "finalAmount": 148,
+    "finalAmount": 133.2,
     "calculationFormula": "损失合计（责任比例待人工确认，未折减）",
     "regionalStandards": "上海市 2024年，城镇居民人均可支配收入 ¥79,610/年",
     "status": "draft",
+    "domainModel": {
+      "claimCaseId": "CLM-MED-001",
+      "productLine": "HEALTH",
+      "claimScenario": "medical_expense",
+      "reviewProfileCode": "medical_expense_reimbursement",
+      "coverageFamily": [
+        "expense",
+        "medical"
+      ],
+      "requiresLiabilityAssessment": false,
+      "requiresExpenseAssessment": true,
+      "requiresBenefitAssessment": false,
+      "requiresDeductionAssessment": false,
+      "requiredModules": [
+        "material_overview",
+        "fact_cards",
+        "decision_trace",
+        "validation",
+        "expense_report"
+      ],
+      "isMedicalScenario": true,
+      "isLiabilityScenario": false,
+      "isBenefitScenario": false,
+      "isAutoScenario": false
+    },
+    "reportKind": "medical_expense_report",
+    "reportTitle": "医疗费用审核报告",
+    "amountLabels": [
+      "核定费用",
+      "抵扣金额",
+      "报告结论金额"
+    ],
+    "detailSectionTitle": "费用明细",
     "injuryProfile": {
       "injuryDescription": "急性阑尾炎；急性弥漫性腹膜炎",
       "diagnoses": [
@@ -473,20 +559,92 @@
     "deductionSummary": null,
     "manualReviewItems": [],
     "standardsSnapshot": {},
+    "settlementSnapshot": {
+      "deductible": 0,
+      "reimbursementRatio": 0.9,
+      "payableAmount": 133.2,
+      "settlementDecision": "PAY",
+      "medicalReview": {
+        "hospitalReview": {
+          "requirement": {
+            "rawText": "合法医院普通门诊及急诊",
+            "source": "explicit",
+            "minLevelRank": 0,
+            "requiresPublic": false,
+            "requiresOrdinaryWard": false
+          },
+          "hospitalName": "上海市东方医院",
+          "hospital": {
+            "id": "hosp-1772525384524-97",
+            "name": "上海市东方医院",
+            "province": "shanghai",
+            "city": "上海市",
+            "level": "三级甲等",
+            "type": "公立",
+            "address": "上海市浦东新区即墨路150号",
+            "qualifiedForInsurance": true
+          },
+          "passed": true,
+          "blockingMismatch": false,
+          "warnings": [],
+          "manualReviewReasons": []
+        },
+        "catalogSummary": {
+          "totalClaimedAmount": 148,
+          "catalogCoveredAmount": 145,
+          "selfPayAmount": 3,
+          "restrictedAmount": 0,
+          "uncertainAmount": 0,
+          "matchedItems": 2,
+          "selfPayItems": 1,
+          "uncertainItems": 0
+        }
+      },
+      "policyBinding": {
+        "policyNumber": "PZA202603150001",
+        "insuredMatched": true,
+        "insuredName": "杨秀",
+        "productCode": "ZA-GOPD-2022A-90",
+        "rulesetId": "RS-HEALTH-ZA-GOPD-2022A90-001",
+        "productSource": "CLAIM_CASE"
+      },
+      "coverageBreakdown": [
+        {
+          "coverageCode": "HLT_OPD_SOCIAL",
+          "claimedAmount": 145,
+          "approvedAmount": 130.5,
+          "deductible": 0,
+          "reimbursementRatio": 0.9,
+          "sumInsured": 10000,
+          "status": "PAYABLE",
+          "warnings": []
+        },
+        {
+          "coverageCode": "HLT_OPD_NON_SOCIAL",
+          "claimedAmount": 3,
+          "approvedAmount": 2.7,
+          "deductible": 0,
+          "reimbursementRatio": 0.9,
+          "sumInsured": 10000,
+          "status": "PAYABLE",
+          "warnings": []
+        }
+      ]
+    },
     "decisionTrace": {
       "traceId": "trace-CLM-MED-001",
-      "generatedAt": "2026-03-15T02:08:03.622Z",
+      "generatedAt": "2026-03-15T10:36:49.968Z",
       "stages": [
         {
           "stage": "damage_calculation",
           "title": "定损计算",
           "status": "completed",
-          "summary": "损失合计 148.00，责任系数 1.00，最终金额 148.00",
+          "summary": "损失合计 130.50，责任系数 1.00，最终金额 133.20",
           "sourceDocIds": [],
           "facts": [
             {
               "label": "损失合计",
-              "value": "¥148.00"
+              "value": "¥130.50"
             },
             {
               "label": "责任系数",
@@ -498,7 +656,7 @@
             },
             {
               "label": "最终金额",
-              "value": "¥148.00"
+              "value": "¥133.20"
             }
           ]
         }

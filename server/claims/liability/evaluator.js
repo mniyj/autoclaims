@@ -161,6 +161,54 @@ export function evaluateEligibility({ claimCaseId, productCode, ocrData = {}, va
   const liabilityInput = buildLiabilityInput({ claimCaseId, productCode, ocrData, validationFacts, rulesetOverride });
   const { context, ruleBuckets } = liabilityInput;
 
+  if (context?.claim?.bound_policy_insured_match === false) {
+    const message = `赔案被保险人“${context.claim.bound_policy_insured_name || context.claim.insured || '未知'}”不在绑定保单 ${context.claim.bound_policy_number || context.policy?.bound_policy_number || ''} 的承保名单内`;
+    return {
+      eligible: false,
+      matchedRules: [],
+      rejectionReasons: [],
+      warnings: [
+        {
+          rule_id: 'POLICY_BINDING_INSURED_CHECK',
+          message,
+          category: 'POLICY_BINDING',
+        },
+      ],
+      needsManualReview: true,
+      manualReviewReasons: [
+        {
+          code: 'INSURED_NOT_COVERED_BY_POLICY',
+          stage: 'LIABILITY',
+          source: 'POLICY_BINDING',
+          category: 'POLICY_BINDING',
+          fields: ['claim.bound_policy_insured_match'],
+          message,
+        },
+      ],
+      fraudFlagged: false,
+      fraudRiskScore: 0,
+      executionDetails: [],
+      context: {
+        claim_id: claimCaseId,
+        product_code: context.policy?.product_code,
+        product_name: context.policy?.product_name,
+        ruleset_id: context.ruleset?.ruleset_id,
+        product_line: context.ruleset?.product_line,
+        facts: context.facts,
+      },
+      liabilityModel: {
+        gateCount: ruleBuckets.gates.length,
+        triggerCount: ruleBuckets.triggers.length,
+        exclusionCount: ruleBuckets.exclusions.length,
+        adjustmentCount: ruleBuckets.adjustments.length,
+        matchedGates: [],
+        matchedTriggers: [],
+        matchedExclusions: [],
+      },
+      duration: Date.now() - startTime,
+    };
+  }
+
   const state = createInitialState();
   const executionResults = [];
   const matchedRules = [];

@@ -1,6 +1,7 @@
 import { ACCIDENT_COVERAGE_CODES } from '../accident/engine.js';
 import { MEDICAL_COVERAGE_CODES } from '../medical/engine.js';
 import { AUTO_COVERAGE_CODES, isAutoCoverageCode, getAutoLossAmount, getAutoActualValue, getCompulsoryBreakdown, getAutoCoverageConfig } from '../auto/engine.js';
+import { evaluateHospitalRequirement, evaluateMedicalCatalogItems } from '../medical/review.js';
 
 function roundAmount(value) {
   return Math.round((Number(value) || 0) * 100) / 100;
@@ -294,6 +295,8 @@ function createLossLedgerItem(item, index, coverageCode) {
     payableAmount: claimedAmount,
     status: claimedAmount > 0 ? 'PAYABLE' : 'ZERO_PAY',
     coverageCode,
+    category: item?.category || null,
+    medicalReview: item?.medicalReview || null,
     entries: [
       {
         step: 'INIT',
@@ -759,6 +762,9 @@ function getMedicalDefaultRatio(coverageConfig) {
   }
   const rules = coverageConfig.reimbursement_rules;
   if (rules) {
+    if (typeof rules.base_ratio === 'number') {
+      return rules.base_ratio;
+    }
     if (typeof rules.social_insurance_covered_ratio === 'number') {
       return rules.social_insurance_covered_ratio;
     }
@@ -1011,9 +1017,85 @@ export function runLossLedger({
     }
   }
 
-  const items = (factResult.expenseItems || []).map((item, index) => createLossLedgerItem(item, index, coverageCode));
+  const isMedicalCoverage =
+    coverageCode === ACCIDENT_COVERAGE_CODES.MEDICAL ||
+    coverageCode === MEDICAL_COVERAGE_CODES.INPATIENT;
+  const hospitalReview = isMedicalCoverage
+    ? evaluateHospitalRequirement({ context, coverageConfig, claimType })
+    : null;
+  const catalogReview = isMedicalCoverage
+    ? evaluateMedicalCatalogItems({ context, expenseItems: factResult.expenseItems || [] })
+    : { reviewedItems: factResult.expenseItems || [], manualReviewReasons: [], summary: null };
+  const sourceItems = catalogReview.reviewedItems || factResult.expenseItems || [];
+  const items = sourceItems.map((item, index) => createLossLedgerItem(item, index, coverageCode));
   const ruleIndex = new Map((context.ruleset?.rules || []).map((rule) => [rule.rule_id, rule]));
   const assessmentResults = factResult.executionDetails || [];
+  const settlementManualReviewReasons = [
+    ...(hospitalReview?.manualReviewReasons || []),
+    ...(catalogReview?.manualReviewReasons || []),
+  ];
+
+  if (hospitalReview?.warnings?.length > 0) {
+    warnings.push(...hospitalReview.warnings);
+  }
+
+  if (hospitalReview?.blockingMismatch) {
+    items.forEach((item) => {
+      if (item.payableAmount <= 0) {
+        return;
+      }
+      pushLossEntry(item, {
+        step: 'ELIGIBILITY',
+        ruleId: 'MEDICAL_HOSPITAL_REQUIREMENT',
+        beforeAmount: item.payableAmount,
+        afterAmount: 0,
+        reasonCode: 'HOSPITAL_REQUIREMENT_NOT_MET',
+        message: hospitalReview.manualReviewReasons[0]?.message || '医院不满足医疗责任就诊要求',
+      });
+      item.locked = true;
+      item.status = 'ZERO_PAY';
+    });
+  }
+
+  if (isMedicalCoverage) {
+    items.forEach((item) => {
+      const review = item.medicalReview;
+      if (!review || item.locked || item.payableAmount <= 0) {
+        return;
+      }
+
+      if (review.status === 'SELF_PAY') {
+        pushLossEntry(item, {
+          step: 'ELIGIBILITY',
+          ruleId: 'MEDICAL_CATALOG',
+          beforeAmount: item.payableAmount,
+          afterAmount: 0,
+          reasonCode: 'MEDICAL_CATALOG_SELF_PAY',
+          message: review.basis || '费用项判定为目录外自费项目',
+        });
+        item.locked = true;
+        item.status = 'ZERO_PAY';
+        return;
+      }
+
+      if (review.status === 'RESTRICTED' && typeof review.ratio === 'number' && review.ratio >= 0 && review.ratio < 1) {
+        pushLossEntry(item, {
+          step: 'RATIO',
+          ruleId: 'MEDICAL_CATALOG',
+          beforeAmount: item.payableAmount,
+          afterAmount: item.payableAmount * review.ratio,
+          reasonCode: 'MEDICAL_CATALOG_RATIO',
+          message: review.basis || `按医保目录比例 ${review.ratio}`,
+        });
+      }
+
+      if (review.status === 'UNCERTAIN') {
+        item.manualReviewReasons.push(
+          buildManualReviewReason('MEDICAL_CATALOG_UNCERTAIN', review.basis || '费用项目录属性待人工确认'),
+        );
+      }
+    });
+  }
 
   for (const result of assessmentResults) {
     if (!Array.isArray(result.item_results) || result.item_results.length === 0) {
@@ -1031,8 +1113,7 @@ export function runLossLedger({
   }
 
   const medicalDefaultRatio = (
-    coverageCode === ACCIDENT_COVERAGE_CODES.MEDICAL ||
-    coverageCode === MEDICAL_COVERAGE_CODES.INPATIENT
+    isMedicalCoverage
   ) ? getMedicalDefaultRatio(coverageConfig) : 1;
 
   if (medicalDefaultRatio !== 1) {
@@ -1073,7 +1154,12 @@ export function runLossLedger({
     deductible: appliedDeductible,
     reimbursementRatio: medicalDefaultRatio,
     sumInsured,
-    status: getCoverageStatus(needsManualReview || items.some(item => item.status === 'MANUAL_REVIEW'), lossPayableAmount),
+    status: getCoverageStatus(
+      needsManualReview ||
+      settlementManualReviewReasons.length > 0 ||
+      items.some(item => item.status === 'MANUAL_REVIEW'),
+      lossPayableAmount,
+    ),
     warnings
   });
 
@@ -1085,7 +1171,20 @@ export function runLossLedger({
     reimbursementRatio: medicalDefaultRatio,
     totalClaimable: claimedAmount,
     capApplied: capApplied || (Number.isFinite(sumInsured) && preCapTotal > sumInsured),
-    legacyItemBreakdown: buildLegacyItemBreakdown(items)
+    legacyItemBreakdown: buildLegacyItemBreakdown(items),
+    manualReviewReasons: settlementManualReviewReasons.concat(
+      items.flatMap((item) =>
+        (item.manualReviewReasons || []).map((reason) =>
+          buildManualReviewReason(reason.code || 'ITEM_MANUAL_REVIEW', reason.message || '费用项需人工复核', reason.metadata),
+        ),
+      ),
+    ),
+    medicalReview: isMedicalCoverage
+      ? {
+          hospitalReview,
+          catalogSummary: catalogReview.summary,
+        }
+      : null,
   };
 }
 

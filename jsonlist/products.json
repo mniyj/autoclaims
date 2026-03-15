@@ -535,5 +535,268 @@
         "description": "工程机械设备在施工场地作业过程中致第三者死亡，依法应由被保险人承担的经济赔偿责任"
       }
     ]
+  },
+  {
+    "productCode": "ZA-GOPD-2022A-90",
+    "regulatoryName": "众安互联网团体门诊急诊医疗保险（2022版A款）",
+    "marketingName": "众安互联网团体门诊急诊医疗保险（0免赔90%赔付版）",
+    "companyName": "众安在线财产保险股份有限公司",
+    "version": "2022版A款",
+    "salesRegions": "全国（不含港澳台）",
+    "effectiveDate": "2026-03-16",
+    "discontinuationDate": "",
+    "status": "生效",
+    "primaryCategory": "医疗保险",
+    "secondaryCategory": "门急诊医疗",
+    "primaryCategoryCode": "A",
+    "secondaryCategoryCode": "A01",
+    "racewayId": "A0103",
+    "racewayName": "门急诊医疗",
+    "clauseType": "主险",
+    "operator": "codex",
+    "coverageDetails": [],
+    "coveragePlans": [
+      {
+        "planType": "双责任标准版",
+        "annualLimit": 20000,
+        "guaranteedRenewalYears": 0,
+        "coverageDetails": [
+          {
+            "mandatory": true,
+            "item_code": "ZA_GRP_OPD_SOCIAL",
+            "item_name": "基本医疗保险范围内门急诊医疗费用保险金",
+            "description": "医保范围内门急诊合理且必要医疗费用保障",
+            "details": {
+              "limit": 10000,
+              "deductible": 0,
+              "reimbursement_ratio": 0.9,
+              "hospital_requirements": "中华人民共和国境内合法医院普通门诊或急诊",
+              "coverage_scope": "医保范围内门急诊费用"
+            }
+          },
+          {
+            "mandatory": true,
+            "item_code": "ZA_GRP_OPD_NON_SOCIAL",
+            "item_name": "基本医疗保险范围外门急诊医疗费用保险金",
+            "description": "医保范围外门急诊合理且必要医疗费用保障",
+            "details": {
+              "limit": 10000,
+              "deductible": 0,
+              "reimbursement_ratio": 0.9,
+              "hospital_requirements": "中华人民共和国境内合法医院普通门诊或急诊",
+              "coverage_scope": "医保范围外门急诊费用"
+            }
+          }
+        ]
+      }
+    ],
+    "underwritingAge": "出生满30天至65周岁",
+    "coveragePeriod": "1年",
+    "coverageArea": "中华人民共和国境内（不含港澳台）",
+    "hospitalScope": "合法医院普通门诊及急诊",
+    "claimScope": "医保内及医保外合理且必要门急诊费用在责任限额内按90%赔付",
+    "occupationScope": "团体成员及经保险人同意的配偶、子女、父母",
+    "hesitationPeriod": "2天",
+    "waitingPeriod": "疾病等待期30天，意外伤害等待期0天",
+    "policyEffectiveDate": "生效日零时",
+    "purchaseLimit": 1,
+    "annualPremium": 2031.12,
+    "valueAddedServices": [],
+    "productCardImage": "https://pic1.imgdb.cn/item/692dd43cc2ca2fe15cf17332.webp",
+    "productHeroImage": "https://pic1.imgdb.cn/item/69311d3fa11464095f88537e.webp",
+    "productLongImage": [
+      "https://pic1.imgdb.cn/item/69313be6a11464095f8a12dd.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d8.jpg",
+      "https://pic1.imgdb.cn/item/69313be5a11464095f8a12d7.jpg"
+    ],
+    "productAttachments": [
+      "众安互联网团体门诊急诊医疗保险.pdf",
+      "众安互联网团体门诊急诊医疗保险费率表.pdf"
+    ],
+    "productSummary": "众安团体门急诊医疗保障，双责任各1万元，0免赔，按90%赔付，覆盖疾病与意外门急诊费用。",
+    "tags": [
+      "门急诊",
+      "团体医疗",
+      "0免赔",
+      "90%赔付"
+    ],
+    "promoTag": "团体门急诊医疗预设",
+    "cardMetric1Label": "医保内保额",
+    "cardMetric1Value": "1万元",
+    "cardMetric2Label": "医保外保额",
+    "cardMetric2Value": "1万元",
+    "cardMetric3Label": "赔付比例",
+    "cardMetric3Value": "90%",
+    "supportsOnlineClaim": true,
+    "isOnline": true,
+    "clauseTextFile": "众安互联网团体门诊急诊医疗保险.pdf",
+    "rateTableFile": "众安互联网团体门诊急诊医疗保险费率表.pdf",
+    "productDescriptionFile": "",
+    "cashValueTableFile": "",
+    "selectedResponsibilities": [
+      {
+        "id": "resp-ZA-GOPD-social",
+        "code": "ZA_GRP_OPD_SOCIAL",
+        "name": "基本医疗保险范围内门急诊医疗费用保险金",
+        "category": "医疗保险",
+        "description": "被保险人因意外伤害或等待期后因疾病发生的医保范围内门诊、急诊合理且必要医疗费用，0免赔后按90%给付。"
+      },
+      {
+        "id": "resp-ZA-GOPD-nonsocial",
+        "code": "ZA_GRP_OPD_NON_SOCIAL",
+        "name": "基本医疗保险范围外门急诊医疗费用保险金",
+        "category": "医疗保险",
+        "description": "被保险人因意外伤害或等待期后因疾病发生的医保范围外门诊、急诊合理且必要医疗费用，0免赔后按90%给付。"
+      }
+    ],
+    "deductible": "单次免赔额0元",
+    "renewalWarranty": "不保证续保",
+    "outHospitalMedicine": "不适用院外特药责任，本产品仅保障门诊急诊医疗费用",
+    "healthConditionNotice": "按团险投保规则与条款约定执行",
+    "salesUrl": "",
+    "intakeConfig": {
+      "fields": [
+        {
+          "field_id": "visit_date",
+          "label": "就诊日期",
+          "type": "date",
+          "required": true,
+          "placeholder": "请选择门诊/急诊就诊日期",
+          "validation": {
+            "rule": "lte_today_and_gte_policy_start",
+            "error_msg": "就诊日期必须在保单有效期内且不晚于今天"
+          }
+        },
+        {
+          "field_id": "hospital_name",
+          "label": "就诊医院",
+          "type": "text_with_search",
+          "required": true,
+          "placeholder": "请搜索或输入就诊医院名称",
+          "data_source": "hospital_db"
+        },
+        {
+          "field_id": "cause_type",
+          "label": "出险原因",
+          "type": "enum",
+          "required": true,
+          "placeholder": "请选择出险原因",
+          "options": [
+            "疾病",
+            "意外伤害"
+          ]
+        },
+        {
+          "field_id": "diagnosis_result",
+          "label": "诊断结果",
+          "type": "textarea",
+          "required": true,
+          "placeholder": "请输入门急诊诊断结果"
+        },
+        {
+          "field_id": "treatment_type",
+          "label": "治疗类型",
+          "type": "enum",
+          "required": true,
+          "placeholder": "请选择治疗类型",
+          "options": [
+            "门诊",
+            "急诊"
+          ]
+        },
+        {
+          "field_id": "insured_social_security",
+          "label": "是否社保身份投保",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "field_id": "settled_with_social_security",
+          "label": "是否按社保结算",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "field_id": "social_medical_amount",
+          "label": "医保内费用(元)",
+          "type": "number",
+          "required": true,
+          "placeholder": "请输入医保内费用",
+          "validation": {
+            "rule": "gte_0_and_decimal_2",
+            "error_msg": "金额必须大于等于0，最多保留两位小数"
+          }
+        },
+        {
+          "field_id": "non_social_medical_amount",
+          "label": "医保外费用(元)",
+          "type": "number",
+          "required": true,
+          "placeholder": "请输入医保外费用",
+          "validation": {
+            "rule": "gte_0_and_decimal_2",
+            "error_msg": "金额必须大于等于0，最多保留两位小数"
+          }
+        },
+        {
+          "field_id": "other_reimbursement_received",
+          "label": "已获其他补偿(元)",
+          "type": "number",
+          "required": false,
+          "placeholder": "请输入其他途径已补偿金额",
+          "validation": {
+            "rule": "gte_0_and_decimal_2",
+            "error_msg": "金额必须大于等于0，最多保留两位小数"
+          }
+        },
+        {
+          "field_id": "claim_item",
+          "label": "索赔项目",
+          "type": "enum",
+          "required": true,
+          "options": [
+            "门急诊医疗理赔"
+          ],
+          "placeholder": "请选择索赔项目"
+        }
+      ],
+      "voice_input": {
+        "enabled": false,
+        "mode": "realtime_or_record"
+      },
+      "claimMaterials": {
+        "extraMaterialIds": [
+          "mat-20",
+          "mat-21",
+          "mat-11",
+          "mat-13",
+          "mat-6"
+        ],
+        "materialOverrides": {
+          "mat-20": {
+            "selected": true,
+            "required": true
+          },
+          "mat-21": {
+            "selected": true,
+            "required": true
+          },
+          "mat-11": {
+            "selected": true,
+            "required": true
+          },
+          "mat-13": {
+            "selected": true,
+            "required": true
+          },
+          "mat-6": {
+            "selected": true,
+            "required": false
+          }
+        }
+      }
+    },
+    "intakeConfigUpdatedAt": "2026-03-15T10:00:00+08:00",
+    "intakeConfigOperator": "codex"
   }
 ]

@@ -1375,7 +1375,7 @@
     "beneficiary_type": "第三者家属",
     "liability_basis": "公估报告协商同等责任，现阶段按被保险人责任50%处理",
     "latestReviewSnapshot": {
-      "updatedAt": "2026-03-15T10:20:00.000Z",
+      "updatedAt": "2026-03-15T07:12:11.793Z",
       "decision": "MANUAL_REVIEW",
       "amount": 499959.75,
       "payableAmount": 499959.75,
@@ -1391,48 +1391,145 @@
       "coverageResults": [
         {
           "coverageCode": "AUTO_THIRD_PARTY",
-          "claimedAmount": 1000000,
+          "claimedAmount": 999919.5,
           "approvedAmount": 499959.75,
           "deductible": 0,
           "reimbursementRatio": 0.5,
           "sumInsured": 1000000,
-          "status": "MANUAL_REVIEW",
-          "warnings": [
-            "当前金额依据公估协商方案，正式赔付前需核对责任比例与已付款抵扣口径"
-          ]
+          "status": "PAYABLE",
+          "warnings": []
         }
       ]
     },
     "assessmentCompletedAt": "2026-03-11T17:47:08.397Z",
     "assessmentCompletedBy": "system",
     "assessmentDecision": "PARTIAL_ASSESSED",
-    "approvedAmount": 499959.75
+    "approvedAmount": 499959.75,
+    "parsedAt": "2026-03-15T06:47:45.916Z",
+    "parsedBy": "system"
   },
   {
     "id": "CLM-MED-001",
     "reportNumber": "CLM-MED-001",
     "reporter": "系统导入",
     "reportTime": "2026-03-15 01:15:00",
-    "accidentTime": "2025-03-01",
-    "accidentReason": "门诊就诊",
+    "accidentTime": "2026-05-20",
+    "accidentReason": "疾病门诊",
     "accidentLocation": "上海市",
     "claimAmount": 148,
-    "productCode": "PROD002",
-    "productName": "百万医疗险Pro-旗舰版",
-    "status": "已报案",
+    "productCode": "ZA-GOPD-2022A-90",
+    "productName": "众安互联网团体门诊急诊医疗保险（0免赔90%赔付版）",
+    "status": "已结案-给付",
     "operator": "系统导入",
     "policyholder": "杨秀",
     "insured": "杨秀",
-    "policyNumber": "LOCAL-MED-CLM-MED-001",
+    "policyNumber": "PZA202603150001",
+    "policyPeriod": "2026-03-16 - 2027-03-15",
     "selectedClaimItems": [],
     "selectedAccidentCauseId": "非交通事故",
     "requiredMaterials": [],
     "fileCategories": [],
     "intakeFormData": {
-      "visit_date": "2025-03-01",
+      "visit_date": "2026-05-20",
       "visit_type": "门诊",
       "claim_type": "医疗费用报销",
-      "incident_description": "本地医疗险测试材料导入，用于验证医疗费用报销画像"
-    }
+      "incident_description": "门急诊医疗理赔自动审核回归样本",
+      "cause_type": "疾病",
+      "hospital_name": "上海市东方医院",
+      "diagnosis_result": "急性阑尾炎；急性弥漫性腹膜炎",
+      "treatment_type": "门诊",
+      "insured_social_security": false,
+      "settled_with_social_security": false,
+      "social_medical_amount": 145,
+      "non_social_medical_amount": 3,
+      "other_reimbursement_received": 0,
+      "claim_item": "门急诊医疗理赔"
+    },
+    "latestReviewSnapshot": {
+      "updatedAt": "2026-03-15T10:36:49.979Z",
+      "decision": "APPROVE",
+      "amount": 133.2,
+      "payableAmount": 133.2,
+      "intakeDecision": "PASS",
+      "liabilityDecision": "ACCEPT",
+      "assessmentDecision": "ASSESSED",
+      "settlementDecision": "PAY",
+      "missingMaterials": [],
+      "coverageResults": [
+        {
+          "coverageCode": "HLT_OPD_SOCIAL",
+          "claimedAmount": 145,
+          "approvedAmount": 130.5,
+          "deductible": 0,
+          "reimbursementRatio": 0.9,
+          "sumInsured": 10000,
+          "status": "PAYABLE",
+          "warnings": []
+        },
+        {
+          "coverageCode": "HLT_OPD_NON_SOCIAL",
+          "claimedAmount": 3,
+          "approvedAmount": 2.7,
+          "deductible": 0,
+          "reimbursementRatio": 0.9,
+          "sumInsured": 10000,
+          "status": "PAYABLE",
+          "warnings": []
+        }
+      ]
+    },
+    "acceptedAt": "2026-03-15T06:47:20.991Z",
+    "acceptedBy": "system",
+    "parsedAt": "2026-03-15T06:47:20.991Z",
+    "parsedBy": "system",
+    "liabilityCompletedAt": "2026-03-15T06:47:20.991Z",
+    "liabilityCompletedBy": "system",
+    "liabilityDecision": "ACCEPT",
+    "assessmentCompletedAt": "2026-03-15T06:47:20.991Z",
+    "assessmentCompletedBy": "system",
+    "assessmentDecision": "ASSESSED",
+    "approvedAmount": 0,
+    "ocrData": {
+      "insured": "杨秀",
+      "accident_date": "2026-05-20",
+      "cause_type": "DISEASE",
+      "hospital_name": "上海市东方医院",
+      "diagnosis": "急性阑尾炎；急性弥漫性腹膜炎",
+      "diagnosis_names": [
+        "急性阑尾炎",
+        "急性弥漫性腹膜炎"
+      ],
+      "insured_social_security": false,
+      "settled_with_social_security": false,
+      "social_medical_amount": 145,
+      "non_social_medical_amount": 3,
+      "claimed_total_amount": 148,
+      "medically_necessary": true,
+      "other_reimbursement_received": 0,
+      "policyholder_intentional_harm": false,
+      "self_inflicted": false,
+      "criminal_act": false,
+      "detained_or_imprisoned": false,
+      "intoxicated_or_drug": false,
+      "illegal_drug_use": false
+    },
+    "materialUploads": [
+      {
+        "materialId": "mat-20",
+        "materialName": "医疗费发票"
+      },
+      {
+        "materialId": "mat-21",
+        "materialName": "费用明细清单"
+      },
+      {
+        "materialId": "mat-11",
+        "materialName": "门（急）诊病历"
+      },
+      {
+        "materialId": "mat-13",
+        "materialName": "诊断证明书"
+      }
+    ]
   }
 ]
