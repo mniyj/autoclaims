@@ -1,11 +1,9 @@
 
-import { GoogleGenAI, Type, GenerateContentResponse, Modality } from "@google/genai";
 import { ClaimState, ClaimStatus, PolicyTerm, DocumentAnalysis, ToolResponse, IntentRecognitionResult } from "./types";
 import { AIInteractionLog } from "../types";
 import { uploadToOSS } from "./ossService";
 import { recognizeIntent, executeIntentTool, quickIntentDetection } from "./intentService";
-
-const getAI = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
+import { generateContentViaProxy } from "./services/aiProxyService";
 
 const analysisCache = new Map<string, DocumentAnalysis>();
 
@@ -42,22 +40,7 @@ export const getAIResponse = async (
   state: ClaimState,
   userLocation?: { latitude: number; longitude: number }
 ) => {
-  const ai = getAI();
-  // Using gemini-2.5-flash for maps grounding support
-  const model = 'gemini-2.5-flash';
-
-  const prompt = `
-    Current Claim State: ${JSON.stringify(state)}
-    History: ${messages.map(m => `${m.role}: ${m.content}`).join('\n')}
-    
-    Task: Respond to the user's latest message. 
-    If you've gathered enough info to change status, indicate it. 
-    Always prioritize completing the current step.
-    If the user mentions an accident location or you need to find a place, use the Google Maps tool.
-  `;
-
   const config: any = {
-    systemInstruction: SYSTEM_PROMPT,
     temperature: 0.7,
     tools: [{ googleMaps: {} }],
   };
@@ -70,13 +53,22 @@ export const getAIResponse = async (
     };
   }
 
-  const startTime = Date.now();
-  const response = await ai.models.generateContent({
-    model,
-    contents: [{ parts: [{ text: prompt }] }],
+  const { response, aiLog } = await generateContentViaProxy({
+    capabilityId: 'smartclaim.chat',
+    promptTemplateId: 'smartclaim_chat_user',
+    systemPromptTemplateId: 'smartclaim_system',
+    templateVariables: {
+      claimStateJson: JSON.stringify(state),
+      historyText: messages.map(m => `${m.role}: ${m.content}`).join('\n'),
+    },
     config,
+    operation: 'chat_response',
+    context: {
+      hasUserLocation: Boolean(userLocation),
+      messageCount: messages.length,
+      claimStatus: state.status,
+    },
   });
-  const duration = Date.now() - startTime;
 
   const groundingLinks = response.candidates?.[0]?.groundingMetadata?.groundingChunks
     ?.map((chunk: any) => {
@@ -86,15 +78,6 @@ export const getAIResponse = async (
     })
     .filter((link: any) => link !== null);
 
-  const aiLog: AIInteractionLog = {
-    model,
-    prompt,
-    response: response.text || "",
-    duration,
-    timestamp: new Date().toISOString(),
-    usageMetadata: (response as any).usageMetadata
-  };
-
   return {
     text: response.text || "我暂时无法回答。",
     groundingLinks,
@@ -103,22 +86,23 @@ export const getAIResponse = async (
 };
 
 export const transcribeAudio = async (base64Audio: string): Promise<string> => {
-  const ai = getAI();
-  const model = 'gemini-2.5-flash';
-  const response = await ai.models.generateContent({
-    model,
+  const { response } = await generateContentViaProxy({
+    capabilityId: 'shared.audio_transcription',
     contents: {
       parts: [
         { inlineData: { data: base64Audio, mimeType: 'audio/wav' } },
         { text: "请精准转录这段语音内容，仅返回转录的文本，不要有其他解释。" }
       ]
-    }
+    },
+    operation: 'transcribe_audio',
+    context: {
+      mimeType: 'audio/wav',
+    },
   });
   return response.text || "";
 };
 
 export const fetchPolicyTerms = async (incidentType: string): Promise<PolicyTerm[]> => {
-  const ai = getAI();
   const model = 'gemini-2.5-flash';
   const prompt = `
     Generate a list of 3-4 insurance policy terms and conditions specifically for the incident type: ${incidentType}.
@@ -135,11 +119,15 @@ export const fetchPolicyTerms = async (incidentType: string): Promise<PolicyTerm
     ]
   `;
 
-  const response = await ai.models.generateContent({
+  const { response } = await generateContentViaProxy({
     model,
     contents: [{ parts: [{ text: prompt }] }],
     config: {
       responseMimeType: "application/json",
+    },
+    operation: 'fetch_policy_terms',
+    context: {
+      incidentType,
     },
   });
 
@@ -158,13 +146,9 @@ export const quickAnalyze = async (base64: string, mimeType: string): Promise<{ 
     return { url: '', objectKey: '' };
   });
 
-  const ai = getAI();
-  const model = 'gemini-2.5-flash';
-
   const promptText = "快速识别文档类型，返回JSON: {\"category\": \"类型(身份证/医疗发票/出院小结/诊断证明/现场照片/银行卡等)\", \"needsDeepAnalysis\": true/false}";
-  const startTime = Date.now();
-  const response = await ai.models.generateContent({
-    model,
+  const { response, aiLog } = await generateContentViaProxy({
+    capabilityId: 'smartclaim.document_analysis',
     contents: {
       parts: [
         { inlineData: { mimeType, data: base64 } },
@@ -174,20 +158,14 @@ export const quickAnalyze = async (base64: string, mimeType: string): Promise<{ 
     config: {
       responseMimeType: "application/json",
       temperature: 0.1,
-    }
+    },
+    operation: 'quick_analyze',
+    context: {
+      mimeType,
+    },
   });
-  const duration = Date.now() - startTime;
 
   const ossResult = await ossPromise;
-
-  const aiLog: AIInteractionLog = {
-    model,
-    prompt: promptText,
-    response: response.text || "",
-    duration,
-    timestamp: new Date().toISOString(),
-    usageMetadata: (response as any).usageMetadata
-  };
 
   try {
     const result = JSON.parse(response.text || '{"category":"未知","needsDeepAnalysis":false}');
@@ -198,9 +176,6 @@ export const quickAnalyze = async (base64: string, mimeType: string): Promise<{ 
 };
 
 export const analyzeDocument = async (base64: string, mimeType: string, state: ClaimState, ossUrl: string): Promise<{ analysis: DocumentAnalysis; aiLog: AIInteractionLog }> => {
-  const ai = getAI();
-  const model = 'gemini-2.5-flash';
-
   const dischargeSchema = {
     "document_type": "string (Fixed: '出院小结')",
     "document_id": "string",
@@ -242,9 +217,8 @@ export const analyzeDocument = async (base64: string, mimeType: string, state: C
   "ocr": {"name":"","date":"","amount":0,"invoiceNumber":""}
 }`;
 
-  const startTime = Date.now();
-  const response = await ai.models.generateContent({
-    model,
+  const { response, aiLog } = await generateContentViaProxy({
+    capabilityId: 'smartclaim.document_analysis',
     contents: {
       parts: [
         { inlineData: { mimeType: mimeType, data: base64 } },
@@ -254,28 +228,22 @@ export const analyzeDocument = async (base64: string, mimeType: string, state: C
     config: {
       responseMimeType: "application/json",
       temperature: 0.1,
-    }
+    },
+    operation: 'analyze_document',
+    context: {
+      mimeType,
+      claimStatus: state.status,
+      ossUrl,
+    },
   });
-  const duration = Date.now() - startTime;
 
   const result = JSON.parse(response.text || '{}');
   result.ossUrl = ossUrl;
-
-  const aiLog: AIInteractionLog = {
-    model,
-    prompt,
-    response: response.text || "",
-    duration,
-    timestamp: new Date().toISOString(),
-    usageMetadata: (response as any).usageMetadata
-  };
 
   return { analysis: result, aiLog };
 };
 
 export const performFinalAssessment = async (state: ClaimState) => {
-  const ai = getAI();
-  const model = 'gemini-2.5-flash';
   const prompt = `
     FINAL CLAIM ASSESSMENT REQUEST:
     Claim Type: ${state.incidentType}
@@ -297,33 +265,25 @@ export const performFinalAssessment = async (state: ClaimState) => {
     }
   `;
 
-  const response = await ai.models.generateContent({
-    model,
+  const { response } = await generateContentViaProxy({
+    capabilityId: 'smartclaim.final_assessment',
     contents: [{ parts: [{ text: prompt }] }],
     config: {
       responseMimeType: "application/json",
       systemInstruction: SYSTEM_PROMPT,
-    }
+    },
+    operation: 'final_assessment',
+    context: {
+      claimStatus: state.status,
+      incidentType: state.incidentType,
+    },
   });
 
   return JSON.parse(response.text || '{}');
 };
 
 export const connectLive = (callbacks: any) => {
-  const ai = getAI();
-  return ai.live.connect({
-    model: 'gemini-2.5-flash',
-    callbacks,
-    config: {
-      responseModalities: [Modality.AUDIO],
-      speechConfig: {
-        voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } },
-      },
-      systemInstruction: SYSTEM_PROMPT + " Now you are interacting via live audio. Be concise but empathetic. Guide the user verbally.",
-      inputAudioTranscription: {},
-      outputAudioTranscription: {}
-    },
-  });
+  throw new Error('Live Gemini browser connection has been disabled. Use the server voice pipeline instead.');
 };
 
 

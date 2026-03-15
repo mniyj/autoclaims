@@ -1,13 +1,5 @@
-import { buildContext } from '../../rules/context.js';
-import { ExecutionDomain, sortRulesByPriority, filterRulesByDomain, executeSingleRule } from '../../rules/runtime.js';
-
-const REQUIRED_POSITIVE_CATEGORIES = new Set([
-  'COVERAGE_PERIOD',
-  'WAITING_PERIOD',
-  'POLICY_STATUS',
-  'COVERAGE_SCOPE',
-  'CLAIM_TIMELINE'
-]);
+import { executeSingleRule } from '../../rules/runtime.js';
+import { buildLiabilityInput } from './inputModel.js';
 
 function extractConditionFields(conditions, collected = new Set()) {
   if (!conditions || typeof conditions !== 'object') {
@@ -50,7 +42,7 @@ function hasUnsupportedValueReference(conditions) {
   if (typeof conditions.value === 'string') {
     const match = conditions.value.match(/^\$\{(.+)\}$/);
     if (match) {
-      return !/^[a-zA-Z0-9_.]+$/.test(match[1]);
+      return !/^[a-zA-Z0-9_.]+(\s*[+-]\s*\d+\s*d)?$/.test(match[1].trim());
     }
   }
 
@@ -61,60 +53,63 @@ function hasUnsupportedValueReference(conditions) {
   return conditions.expressions.some(expression => hasUnsupportedValueReference(expression));
 }
 
-export function evaluateEligibility({ claimCaseId, productCode, ocrData = {} }) {
-  const startTime = Date.now();
-  const context = buildContext({ claimCaseId, productCode, ocrData });
-  const rules = context.ruleset.rules;
-  const eligibilityRules = sortRulesByPriority(
-    filterRulesByDomain(rules, ExecutionDomain.ELIGIBILITY)
-  );
-
-  const state = {
+function createInitialState() {
+  return {
     claimApproved: false,
     claimRejected: false,
     needsManualReview: false,
-    fraudFlagged: false
+    fraudFlagged: false,
+    contractTerminated: false
   };
+}
 
-  const executionResults = [];
-  const matchedRules = [];
-  const warnings = [];
-  const manualReviewReasons = [];
+function createRejectionReason(rule, state) {
+  return {
+    rule_id: rule.rule_id,
+    rule_name: rule.rule_name,
+    reason_code: state.rejectReason || `REJECTED_BY_${rule.rule_kind || rule.category}`,
+    source_text: rule.source?.source_text
+  };
+}
+
+function appendManualReviewReason(reasons, warnings, { code, rule, message, fields = [] }) {
+  warnings.push({
+    rule_id: rule.rule_id,
+    message,
+    category: rule.rule_kind || rule.category
+  });
+  reasons.push({
+    code,
+    stage: 'LIABILITY',
+    source: rule.rule_id,
+    category: rule.rule_kind || rule.category,
+    fields,
+    message
+  });
+}
+
+function runBucket(rules, context, state, executionResults, matchedRules, warnings, manualReviewReasons) {
+  const matched = [];
+  const unresolved = [];
   let rejectionReason = null;
-  let positiveRuleMatched = false;
-  let unresolvedPositiveRule = false;
 
-  for (const rule of eligibilityRules) {
+  for (const rule of rules) {
     const result = executeSingleRule(rule, context, state);
     executionResults.push(result);
 
     if (result.condition_met) {
+      matched.push(rule);
       matchedRules.push(rule.rule_id);
-      if (REQUIRED_POSITIVE_CATEGORIES.has(rule.category)) {
-        positiveRuleMatched = true;
-      }
 
-      if (state.claimRejected) {
-        rejectionReason = {
-          rule_id: rule.rule_id,
-          rule_name: rule.rule_name,
-          reason_code: state.rejectReason,
-          source_text: rule.source?.source_text
-        };
+      if (state.claimRejected || state.contractTerminated) {
+        rejectionReason = createRejectionReason(rule, state);
         break;
       }
 
       if (state.needsManualReview) {
-        warnings.push({
-          rule_id: rule.rule_id,
-          message: state.manualReviewReason || '需人工复核',
-          category: rule.category
-        });
-        manualReviewReasons.push({
+        appendManualReviewReason(manualReviewReasons, warnings, {
           code: 'LIABILITY_RULE_REVIEW',
-          stage: 'LIABILITY',
-          source: rule.rule_id,
-          category: rule.category,
+          rule,
           message: state.manualReviewReason || '需人工复核'
         });
       }
@@ -130,47 +125,168 @@ export function evaluateEligibility({ claimCaseId, productCode, ocrData = {} }) 
       continue;
     }
 
-    if (REQUIRED_POSITIVE_CATEGORIES.has(rule.category) && rule.action?.action_type === 'APPROVE_CLAIM') {
-      const fields = extractConditionFields(rule.conditions);
-      const missingFields = findMissingFields(fields, context);
-      const unsupportedReference = hasUnsupportedValueReference(rule.conditions);
-
-      if (missingFields.length > 0 || unsupportedReference) {
-        unresolvedPositiveRule = true;
-        state.needsManualReview = true;
-        const manualReviewCode = unsupportedReference ? 'UNSUPPORTED_RULE_EXPRESSION' : 'MISSING_LIABILITY_FIELDS';
-        state.manualReviewReason = unsupportedReference
-          ? `${rule.rule_name} 包含当前引擎不支持的条件表达式`
-          : `${rule.rule_name} 缺少关键字段: ${missingFields.join(', ')}`;
-        warnings.push({
-          rule_id: rule.rule_id,
-          message: state.manualReviewReason,
-          category: rule.category
-        });
-        manualReviewReasons.push({
-          code: manualReviewCode,
-          stage: 'LIABILITY',
-          source: rule.rule_id,
-          category: rule.category,
-          fields: missingFields,
-          message: state.manualReviewReason
-        });
-      } else {
-        state.claimRejected = true;
-        state.rejectReason = `UNMET_${rule.category}`;
-        rejectionReason = {
-          rule_id: rule.rule_id,
-          rule_name: rule.rule_name,
-          reason_code: state.rejectReason,
-          source_text: rule.source?.source_text
-        };
-        break;
-      }
+    const fields = extractConditionFields(rule.conditions);
+    const missingFields = findMissingFields(fields, context);
+    const unsupportedReference = hasUnsupportedValueReference(rule.conditions);
+    if (missingFields.length > 0 || unsupportedReference) {
+      const message = unsupportedReference
+        ? `${rule.rule_name} 包含当前引擎不支持的条件表达式`
+        : `${rule.rule_name} 缺少关键字段: ${missingFields.join(', ')}`;
+      unresolved.push({
+        rule,
+        missingFields,
+        unsupportedReference,
+        message
+      });
+      state.needsManualReview = true;
+      state.manualReviewReason = message;
+      appendManualReviewReason(manualReviewReasons, warnings, {
+        code: unsupportedReference ? 'UNSUPPORTED_RULE_EXPRESSION' : 'MISSING_LIABILITY_FIELDS',
+        rule,
+        message,
+        fields: missingFields
+      });
     }
   }
 
-  const hasRequiredPositiveRules = eligibilityRules.some(rule => REQUIRED_POSITIVE_CATEGORIES.has(rule.category));
-  const eligible = !state.claimRejected && (positiveRuleMatched || !hasRequiredPositiveRules) && !unresolvedPositiveRule;
+  return {
+    matched,
+    unresolved,
+    rejectionReason
+  };
+}
+
+export function evaluateEligibility({ claimCaseId, productCode, ocrData = {}, validationFacts = null, rulesetOverride = null }) {
+  const startTime = Date.now();
+  const liabilityInput = buildLiabilityInput({ claimCaseId, productCode, ocrData, validationFacts, rulesetOverride });
+  const { context, ruleBuckets } = liabilityInput;
+
+  const state = createInitialState();
+  const executionResults = [];
+  const matchedRules = [];
+  const warnings = [];
+  const manualReviewReasons = [];
+
+  const gateResult = runBucket(
+    ruleBuckets.gates,
+    context,
+    state,
+    executionResults,
+    matchedRules,
+    warnings,
+    manualReviewReasons
+  );
+  if (gateResult.rejectionReason) {
+    return {
+      eligible: false,
+      matchedRules,
+      rejectionReasons: [gateResult.rejectionReason],
+      warnings,
+      needsManualReview: state.needsManualReview,
+      manualReviewReasons,
+      fraudFlagged: state.fraudFlagged,
+      fraudRiskScore: state.fraudRiskScore,
+      executionDetails: executionResults,
+      context: {
+        claim_id: claimCaseId,
+        product_code: context.policy?.product_code,
+        product_name: context.policy?.product_name,
+        ruleset_id: context.ruleset?.ruleset_id,
+        product_line: context.ruleset?.product_line,
+        facts: context.facts
+      },
+      duration: Date.now() - startTime
+    };
+  }
+
+  const exclusionResult = runBucket(
+    ruleBuckets.exclusions,
+    context,
+    state,
+    executionResults,
+    matchedRules,
+    warnings,
+    manualReviewReasons
+  );
+  if (exclusionResult.rejectionReason) {
+    return {
+      eligible: false,
+      matchedRules,
+      rejectionReasons: [exclusionResult.rejectionReason],
+      warnings,
+      needsManualReview: state.needsManualReview,
+      manualReviewReasons,
+      fraudFlagged: state.fraudFlagged,
+      fraudRiskScore: state.fraudRiskScore,
+      executionDetails: executionResults,
+      context: {
+        claim_id: claimCaseId,
+        product_code: context.policy?.product_code,
+        product_name: context.policy?.product_name,
+        ruleset_id: context.ruleset?.ruleset_id,
+        product_line: context.ruleset?.product_line,
+        facts: context.facts
+      },
+      duration: Date.now() - startTime
+    };
+  }
+
+  const triggerResult = runBucket(
+    ruleBuckets.triggers,
+    context,
+    state,
+    executionResults,
+    matchedRules,
+    warnings,
+    manualReviewReasons
+  );
+
+  runBucket(
+    ruleBuckets.adjustments,
+    context,
+    state,
+    executionResults,
+    matchedRules,
+    warnings,
+    manualReviewReasons
+  );
+
+  const hasTriggerRules = ruleBuckets.triggers.length > 0;
+  const hasMatchedTrigger = triggerResult.matched.length > 0;
+  const hasUnresolvedTrigger = triggerResult.unresolved.length > 0;
+  const hasUnresolvedGate = gateResult.unresolved.length > 0;
+
+  let eligible = false;
+  let rejectionReason = null;
+
+  if (state.claimRejected || state.contractTerminated) {
+    eligible = false;
+    rejectionReason = createRejectionReason(
+      triggerResult.matched[triggerResult.matched.length - 1] ||
+        exclusionResult.matched[exclusionResult.matched.length - 1] ||
+        gateResult.matched[gateResult.matched.length - 1] || {
+          rule_id: 'SYSTEM',
+          rule_name: '系统规则',
+          category: 'SYSTEM',
+          source: {}
+        },
+      state
+    );
+  } else if (hasUnresolvedGate || (hasUnresolvedTrigger && !hasMatchedTrigger)) {
+    eligible = false;
+  } else if (hasTriggerRules) {
+    eligible = hasMatchedTrigger;
+    if (!eligible) {
+      rejectionReason = {
+        rule_id: 'SYSTEM',
+        rule_name: '责任触发校验',
+        reason_code: 'NO_LIABILITY_TRIGGER_MATCHED',
+        source_text: '未命中任何责任触发规则'
+      };
+    }
+  } else {
+    eligible = true;
+  }
 
   return {
     eligible,
@@ -187,7 +303,17 @@ export function evaluateEligibility({ claimCaseId, productCode, ocrData = {} }) 
       product_code: context.policy?.product_code,
       product_name: context.policy?.product_name,
       ruleset_id: context.ruleset?.ruleset_id,
-      product_line: context.ruleset?.product_line
+      product_line: context.ruleset?.product_line,
+      facts: context.facts
+    },
+    liabilityModel: {
+      gateCount: ruleBuckets.gates.length,
+      triggerCount: ruleBuckets.triggers.length,
+      exclusionCount: ruleBuckets.exclusions.length,
+      adjustmentCount: ruleBuckets.adjustments.length,
+      matchedGates: gateResult.matched.map(rule => rule.rule_id),
+      matchedTriggers: triggerResult.matched.map(rule => rule.rule_id),
+      matchedExclusions: exclusionResult.matched.map(rule => rule.rule_id)
     },
     duration: Date.now() - startTime
   };

@@ -1,0 +1,31 @@
+[
+  {
+    "id": "mv-identity-001",
+    "name": "发票患者姓名与病历患者姓名一致性校验",
+    "description": "用于校验发票上的患者姓名与门急诊病历中的患者姓名是否一致。",
+    "enabled": true,
+    "category": "identity",
+    "left": {
+      "material_id": "mat-20",
+      "material_name": "医疗费发票",
+      "fact_id": "claim.patient_name",
+      "field_key": "claim.patient_name",
+      "field_label": "发票患者姓名"
+    },
+    "operator": "EQ",
+    "right": {
+      "material_id": "mat-11",
+      "material_name": "门（急）诊病历",
+      "fact_id": "claim.patient_name",
+      "field_key": "claim.patient_name",
+      "field_label": "病历患者姓名"
+    },
+    "failure_action": "MANUAL_REVIEW",
+    "severity": "warning",
+    "reason_code": "INVOICE_PATIENT_NAME_MISMATCH",
+    "message_template": "发票患者姓名与病历患者姓名不一致，需人工复核。",
+    "output_fact_id": "claim.invoice_patient_name_consistent",
+    "created_at": "2026-03-09T00:00:00.000Z",
+    "updated_at": "2026-03-09T00:00:00.000Z"
+  }
+]

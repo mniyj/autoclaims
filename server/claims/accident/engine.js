@@ -16,7 +16,8 @@ export function inferAccidentCoverageCode(context, state = {}) {
     return ACCIDENT_COVERAGE_CODES.DEATH;
   }
 
-  if (context.claim?.disability_grade !== null && context.claim?.disability_grade !== undefined) {
+  const disabilityGrade = Number(context.claim?.disability_grade);
+  if (Number.isFinite(disabilityGrade) && disabilityGrade > 0) {
     return ACCIDENT_COVERAGE_CODES.DISABILITY;
   }
 
@@ -27,8 +28,8 @@ export function inferAccidentCoverageCode(context, state = {}) {
   return ACCIDENT_COVERAGE_CODES.MEDICAL;
 }
 
-export function getAccidentCoverageConfig(productCode, coverageCode) {
-  return getCoverageConfig(productCode, coverageCode);
+export function getAccidentCoverageConfig(productCode, coverageCode, rulesetOverride = null) {
+  return getCoverageConfig(productCode, coverageCode, rulesetOverride);
 }
 
 export function isAccidentCoverageCode(coverageCode) {

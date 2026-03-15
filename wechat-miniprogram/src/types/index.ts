@@ -77,6 +77,14 @@ export interface Attachment {
 }
 
 /**
+ * 消息反应（点赞/点踩）
+ */
+export interface MessageReactions {
+  liked?: boolean;    // 当前用户是否点赞
+  disliked?: boolean; // 当前用户是否点踩
+}
+
+/**
  * 消息类型
  */
 export interface Message {
@@ -92,6 +100,7 @@ export interface Message {
   intentChoice?: boolean;
   policies?: Policy[];
   groundingLinks?: { uri: string; title: string }[];
+  reactions?: MessageReactions; // 点赞/点踩状态
 }
 
 /**

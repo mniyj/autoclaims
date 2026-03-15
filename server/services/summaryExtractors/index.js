@@ -13,18 +13,19 @@
  *   income_lost         ← mat-29 误工证明 / mat-30 收入证明
  */
 
-import { GoogleGenAI } from "@google/genai";
-
-const getApiKey = () =>
-  process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || process.env.API_KEY;
+import { invokeAICapability } from "../aiRuntime.js";
 
 // 材料 ID 到摘要类型的映射
 const MATERIAL_TO_SUMMARY_TYPE = {
+  "case_initial_report": "case_report",
+  "case_public_adjuster_report": "case_report",
+  "mat-7": "household_proof",
   "mat-8": "accident_liability",
   "mat-12": "inpatient_record",
   "mat-11": "diagnosis_proof",  // 门诊病历也用 diagnosis_proof
   "mat-13": "diagnosis_proof",
   "mat-14": "diagnosis_proof",  // 转院证明
+  "mat-28": "funeral_expense",
   "mat-20": "expense_invoice",
   "mat-21": "expense_invoice",
   "mat-22": "expense_invoice",  // 购药发票
@@ -35,10 +36,76 @@ const MATERIAL_TO_SUMMARY_TYPE = {
   "mat-38": "disability_assessment",  // 护理依赖鉴定
   "mat-29": "income_lost",
   "mat-30": "income_lost",
+  "mat-41": "dependent_support",
+  "mat-43": "death_record",
+  "mat-44": "death_record",
+  "mat-45": "claimant_relationship",
 };
 
 // 各摘要类型的提取 Prompt
 const EXTRACTION_PROMPTS = {
+  case_report: `你是一位专业的保险理赔员，请从以下案件初期报告、公估报告或调查报告中提取关键信息。
+
+提取要求：
+1. 报告类型（reportType）：initial=初期报告，public_adjuster=公估报告，other=其他调查报告
+2. 死者/伤者姓名（victimName）
+3. 事故日期（accidentDate，格式 YYYY-MM-DD）
+4. 事故地点（accidentLocation）
+5. 事故经过摘要（incidentSummary）
+6. 死亡事实（deathConfirmed，true/false）
+7. 死亡日期（deathDate，格式 YYYY-MM-DD，如无则 null）
+8. 第三者身份与责任链摘要（identityChainSummary）
+9. 责任意见摘要（liabilityOpinion）
+10. 已赔付或协商金额（compensationPaid，数字，如无则 null）
+11. 申请人/主要关系人（claimants）：每项包含 name 和 relationship
+12. 对关键字段提供 sourceAnchors
+
+请以 JSON 格式返回：
+{
+  "reportType": "initial",
+  "victimName": "张某",
+  "accidentDate": "2024-03-12",
+  "accidentLocation": "安徽省黄山市休宁县...",
+  "incidentSummary": "吊装作业过程中吊臂触碰高压线导致触电坠落死亡。",
+  "deathConfirmed": true,
+  "deathDate": "2024-03-12",
+  "identityChainSummary": "死者参与吊装作业，报告反映被保险人一侧操作员负责起吊并与现场作业存在责任链关联。",
+  "liabilityOpinion": "报告倾向认为现场安全防护不到位，具体责任仍待原始证据核实。",
+  "compensationPaid": 500000,
+  "claimants": [
+    {"name": "李某", "relationship": "配偶"},
+    {"name": "张小某", "relationship": "子女"}
+  ],
+  "sourceAnchors": {
+    "accidentDate": {"pageIndex": 0, "rawText": "2024年3月12日", "highlightLevel": "text_search"},
+    "incidentSummary": {"pageIndex": 1, "rawText": "作业过程中...", "highlightLevel": "text_search"}
+  },
+  "confidence": 0.86
+}`,
+
+  household_proof: `你是一位专业的保险理赔员，请从以下户籍证明/户口材料中提取关键信息。
+
+提取要求：
+1. 姓名（residentName）
+2. 户籍性质（householdType，城镇/农村/居民家庭户等，按原文提取）
+3. 户籍地址（householdAddress）
+4. 出具机关（issuingAuthority）
+5. 开具日期（issueDate，格式 YYYY-MM-DD）
+6. 提供 sourceAnchors
+
+请以 JSON 返回：
+{
+  "residentName": "张某",
+  "householdType": "城镇居民",
+  "householdAddress": "安徽省黄山市...",
+  "issuingAuthority": "休宁县某派出所",
+  "issueDate": "2024-01-15",
+  "sourceAnchors": {
+    "householdType": {"pageIndex": 0, "rawText": "户别：居民家庭户", "highlightLevel": "text_search"}
+  },
+  "confidence": 0.86
+}`,
+
   accident_liability: `你是一位专业的保险理赔员，请从以下交通事故责任认定书中提取关键信息。
 
 提取要求：
@@ -156,6 +223,30 @@ const EXTRACTION_PROMPTS = {
 
 注意：breakdown 中的金额加总应等于 totalAmount，如有出入请如实提取`,
 
+  funeral_expense: `你是一位专业的保险理赔员，请从以下丧葬服务票据/费用凭证中提取关键信息。
+
+提取要求：
+1. 服务单位（serviceProvider）
+2. 发票日期（invoiceDate，格式 YYYY-MM-DD）
+3. 合计金额（totalAmount，数字）
+4. 服务项目（serviceItems）：每项包含 itemName 和 amount
+5. 提供 sourceAnchors
+
+请以 JSON 返回：
+{
+  "serviceProvider": "黄山市殡仪馆",
+  "invoiceDate": "2024-01-20",
+  "totalAmount": 6800,
+  "serviceItems": [
+    {"itemName": "遗体接运", "amount": 800},
+    {"itemName": "火化服务", "amount": 2000}
+  ],
+  "sourceAnchors": {
+    "totalAmount": {"pageIndex": 0, "rawText": "合计：6800元", "highlightLevel": "text_search"}
+  },
+  "confidence": 0.88
+}`,
+
   disability_assessment: `你是一位专业的保险理赔员，请从以下伤残鉴定报告/劳动能力鉴定结论中提取关键信息。
 
 提取要求：
@@ -205,6 +296,79 @@ const EXTRACTION_PROMPTS = {
 注意：
 - 如果证明文件只写了年收入，请换算为月收入
 - 如果无法确认收入数额，monthlyIncome 设 null，incomeType 设 "average"`,
+
+  death_record: `你是一位专业的保险理赔员，请从以下死亡证明/户籍注销证明中提取关键信息。
+
+提取要求：
+1. 死者姓名（deceasedName）
+2. 死亡日期（deathDate，格式 YYYY-MM-DD；如是户籍注销证明则可为空）
+3. 户籍注销日期（cancellationDate，格式 YYYY-MM-DD；如无则为空）
+4. 死亡原因（deathCause）
+5. 死亡地点（deathLocation）
+6. 出具机关（issuingAuthority）
+7. 提供 sourceAnchors
+
+请以 JSON 返回：
+{
+  "deceasedName": "张某",
+  "deathDate": "2024-01-18",
+  "cancellationDate": "2024-01-22",
+  "deathCause": "高处坠落致颅脑损伤死亡",
+  "deathLocation": "黄山市某医院",
+  "issuingAuthority": "某医院/某派出所",
+  "sourceAnchors": {
+    "deathDate": {"pageIndex": 0, "rawText": "死亡日期：2024年1月18日", "highlightLevel": "text_search"}
+  },
+  "confidence": 0.9
+}`,
+
+  claimant_relationship: `你是一位专业的保险理赔员，请从以下亲属关系证明中提取关键信息。
+
+提取要求：
+1. 死者姓名（deceasedName）
+2. 申请人姓名（claimantName）
+3. 亲属关系（relationship）
+4. 出具机关（issuingAuthority）
+5. 开具日期（issueDate，格式 YYYY-MM-DD）
+6. 提供 sourceAnchors
+
+请以 JSON 返回：
+{
+  "deceasedName": "张某",
+  "claimantName": "李某",
+  "relationship": "配偶",
+  "issuingAuthority": "某社区",
+  "issueDate": "2024-01-25",
+  "sourceAnchors": {
+    "relationship": {"pageIndex": 0, "rawText": "系夫妻关系", "highlightLevel": "text_search"}
+  },
+  "confidence": 0.87
+}`,
+
+  dependent_support: `你是一位专业的保险理赔员，请从以下扶养关系证明中提取关键信息。
+
+提取要求：
+1. 扶养人姓名（supporterName）
+2. 被扶养人姓名（dependentName）
+3. 关系（relationship）
+4. 其他扶养义务人数（otherSupportersCount）
+5. 出具机关（issuingAuthority）
+6. 开具日期（issueDate，格式 YYYY-MM-DD）
+7. 提供 sourceAnchors
+
+请以 JSON 返回：
+{
+  "supporterName": "张某",
+  "dependentName": "张小某",
+  "relationship": "父子",
+  "otherSupportersCount": 1,
+  "issuingAuthority": "某村委会",
+  "issueDate": "2024-01-25",
+  "sourceAnchors": {
+    "dependentName": {"pageIndex": 0, "rawText": "被扶养人：张小某", "highlightLevel": "text_search"}
+  },
+  "confidence": 0.85
+}`,
 };
 
 /**
@@ -219,12 +383,6 @@ const EXTRACTION_PROMPTS = {
  * @returns {object} 类型化摘要
  */
 async function extractSummaryWithGemini({ docId, summaryType, extractedText, base64Data, mimeType }) {
-  const apiKey = getApiKey();
-  if (!apiKey) {
-    throw new Error("GEMINI_API_KEY not configured");
-  }
-
-  const ai = new GoogleGenAI({ apiKey });
   const prompt = EXTRACTION_PROMPTS[summaryType];
   if (!prompt) {
     throw new Error(`No prompt defined for summaryType: ${summaryType}`);
@@ -253,41 +411,43 @@ async function extractSummaryWithGemini({ docId, summaryType, extractedText, bas
     return null;
   }
 
-  const modelCandidates = hasImage
-    ? ["gemini-2.5-flash", "gemini-2.5-pro"]
-    : ["gemini-2.5-flash", "gemini-2.5-pro"];
-
-  let lastError;
-  for (const model of modelCandidates) {
-    try {
-      const response = await ai.models.generateContent({
-        model,
+  try {
+    const { response } = await invokeAICapability({
+      capabilityId: "admin.material.general_analysis",
+      request: {
         contents,
         config: {
           responseMimeType: "application/json",
           temperature: 0.1,
         },
-      });
+      },
+      meta: {
+        sourceApp: "admin-system",
+        module: "summaryExtractors.extractSummaryWithGemini",
+        operation: "extract_summary",
+        context: {
+          docId,
+          summaryType,
+          hasImage,
+        },
+      },
+    });
 
-      const text = response.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
-      const parsed = JSON.parse(text);
+    const text = response.candidates?.[0]?.content?.parts?.[0]?.text || response.text || "{}";
+    const parsed = JSON.parse(text);
 
-      return {
-        docId,
-        summaryType,
-        extractedAt: new Date().toISOString(),
-        ...parsed,
-        confidence: parsed.confidence || 0.5,
-        sourceAnchors: parsed.sourceAnchors || {},
-      };
-    } catch (error) {
-      lastError = error;
-      console.warn(`[summaryExtractor] Model ${model} failed:`, error.message);
-    }
+    return {
+      docId,
+      summaryType,
+      extractedAt: new Date().toISOString(),
+      ...parsed,
+      confidence: parsed.confidence || 0.5,
+      sourceAnchors: parsed.sourceAnchors || {},
+    };
+  } catch (error) {
+    console.error(`[summaryExtractor] Extraction failed for ${summaryType}:`, error.message);
+    return null;
   }
-
-  console.error(`[summaryExtractor] All models failed for ${summaryType}:`, lastError?.message);
-  return null;
 }
 
 /**

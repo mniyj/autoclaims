@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { type ClaimCase } from '../types';
 
 interface Message {
   id: string;
@@ -9,13 +10,20 @@ interface Message {
     taskId?: string;
     claimCaseId?: string;
     status?: string;
+    action?: string;
+    failureCategory?: string;
+    failureHint?: string;
   };
   isRead: boolean;
   createdAt: string;
   readAt: string | null;
 }
 
-export function MessageCenter() {
+interface MessageCenterProps {
+  onOpenClaim?: (claim: ClaimCase) => void | Promise<void>;
+}
+
+export function MessageCenter({ onOpenClaim }: MessageCenterProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [total, setTotal] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -23,6 +31,7 @@ export function MessageCenter() {
   const [page, setPage] = useState(1);
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
+  const [recoveringTaskId, setRecoveringTaskId] = useState<string | null>(null);
   const pageSize = 20;
 
   useEffect(() => {
@@ -102,6 +111,49 @@ export function MessageCenter() {
     } catch {}
   };
 
+  const handleOpenClaim = async (claimCaseId?: string) => {
+    if (!claimCaseId || !onOpenClaim) return;
+
+    try {
+      const claim = await fetch(`/api/claim-cases/${claimCaseId}`).then((res) => res.json());
+      if (claim?.id) {
+        await onOpenClaim(claim as ClaimCase);
+        setSelectedMessage(null);
+      }
+    } catch (error) {
+      console.error('Failed to open claim from message center:', error);
+    }
+  };
+
+  const handleRecoverTask = async (message: Message) => {
+    const taskId = message.data?.taskId;
+    if (!taskId || recoveringTaskId) return;
+
+    setRecoveringTaskId(taskId);
+    try {
+      const response = await fetch('/api/offline-import/recover-task', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': getUserId(),
+        },
+        body: JSON.stringify({ taskId }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result?.error || '恢复任务失败');
+      }
+      await fetchMessages();
+      await fetchUnreadCount();
+      setSelectedMessage(null);
+    } catch (error) {
+      console.error('Failed to recover task from message center:', error);
+      alert(error instanceof Error ? error.message : '恢复任务失败');
+    } finally {
+      setRecoveringTaskId(null);
+    }
+  };
+
   const formatTime = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleString('zh-CN', {
@@ -121,6 +173,12 @@ export function MessageCenter() {
         return <span className="text-red-500">✗</span>;
       case 'task_partial':
         return <span className="text-yellow-500">!</span>;
+      case 'task_recovered':
+        return <span className="text-indigo-500">↺</span>;
+      case 'task_recovery_needed':
+        return <span className="text-amber-500">⚠</span>;
+      case 'task_recovery_escalated':
+        return <span className="text-red-500">‼</span>;
       default:
         return <span className="text-blue-500">i</span>;
     }
@@ -281,6 +339,46 @@ export function MessageCenter() {
                 >
                   查看任务详情 →
                 </a>
+              </div>
+            )}
+
+            {selectedMessage.data?.claimCaseId && onOpenClaim && (
+              <div className="mt-4 p-4 bg-indigo-50 rounded-lg">
+                <p className="text-sm text-indigo-700">
+                  关联案件: {selectedMessage.data.claimCaseId}
+                </p>
+                <button
+                  onClick={() => void handleOpenClaim(selectedMessage.data?.claimCaseId)}
+                  className="inline-block mt-2 text-indigo-600 hover:text-indigo-800 text-sm font-medium"
+                >
+                  打开案件 →
+                </button>
+              </div>
+            )}
+
+            {(selectedMessage.type === 'task_recovery_needed' || selectedMessage.type === 'task_recovery_escalated') && selectedMessage.data?.taskId && (
+              <div className="mt-4 p-4 bg-amber-50 rounded-lg">
+                <p className="text-sm text-amber-700">
+                  {selectedMessage.type === 'task_recovery_escalated'
+                    ? '该任务已连续恢复失败，建议优先处理。'
+                    : '该任务当前支持直接恢复。'}
+                </p>
+                {selectedMessage.data?.failureHint && (
+                  <p className="text-xs text-amber-800 mt-2">
+                    失败判断: {selectedMessage.data.failureHint}
+                  </p>
+                )}
+                <button
+                  onClick={() => void handleRecoverTask(selectedMessage)}
+                  disabled={recoveringTaskId === selectedMessage.data.taskId}
+                  className={`inline-block mt-2 text-sm font-medium ${
+                    recoveringTaskId === selectedMessage.data.taskId
+                      ? 'text-gray-400 cursor-not-allowed'
+                      : 'text-amber-700 hover:text-amber-900'
+                  }`}
+                >
+                  {recoveringTaskId === selectedMessage.data.taskId ? '恢复中...' : '立即恢复任务 →'}
+                </button>
               </div>
             )}
             

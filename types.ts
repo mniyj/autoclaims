@@ -446,6 +446,45 @@ export interface ClaimsMaterial {
   category?: MaterialCategory;
   processingStrategy?: ProcessingStrategy;
   extractionConfig?: ExtractionConfig;
+  schemaFields?: Array<{
+    field_key: string;
+    field_label: string;
+    data_type: "STRING" | "NUMBER" | "BOOLEAN" | "DATE" | "ARRAY" | "OBJECT";
+    required?: boolean;
+    description?: string;
+    fact_id?: string;
+    children?: any[];
+    item_fields?: any[];
+  }>;
+}
+
+export type MaterialValidationOperator = "EQ" | "NE" | "GT" | "GTE" | "LT" | "LTE" | "CONTAINS" | "NOT_CONTAINS";
+export type MaterialValidationFailureAction = "WARNING" | "MANUAL_REVIEW" | "BLOCK";
+
+export interface MaterialFieldRef {
+  material_id: string;
+  material_name?: string;
+  fact_id: string;
+  field_key: string;
+  field_label?: string;
+}
+
+export interface MaterialValidationRule {
+  id: string;
+  name: string;
+  description?: string;
+  enabled: boolean;
+  category: "identity" | "amount_consistency" | "date_consistency" | "timeline" | "custom";
+  left: MaterialFieldRef;
+  operator: MaterialValidationOperator;
+  right: MaterialFieldRef;
+  failure_action: MaterialValidationFailureAction;
+  severity: "info" | "warning" | "error";
+  reason_code: string;
+  message_template: string;
+  output_fact_id?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 // Processing and extraction related types for claims materials
@@ -610,6 +649,35 @@ export interface ClaimCase {
     materialId?: string;
     parsedAt: string;
   }>;
+  acceptedAt?: string;
+  acceptedBy?: "system" | "manual";
+  parsedAt?: string;
+  parsedBy?: "system" | "manual";
+  liabilityCompletedAt?: string;
+  liabilityCompletedBy?: "system" | "manual";
+  liabilityDecision?: string;
+  assessmentCompletedAt?: string;
+  assessmentCompletedBy?: "system" | "manual";
+  assessmentDecision?: string;
+  latestReviewSnapshot?: {
+    updatedAt: string;
+    decision?: "APPROVE" | "REJECT" | "MANUAL_REVIEW";
+    amount?: number | null;
+    payableAmount?: number | null;
+    intakeDecision?: string;
+    liabilityDecision?: string;
+    assessmentDecision?: string;
+    settlementDecision?: string;
+    missingMaterials?: string[];
+    coverageResults?: Array<{
+      coverageCode: string;
+      claimedAmount: number;
+      approvedAmount: number;
+      reimbursementRatio?: number | null;
+      sumInsured?: number | null;
+      status?: string;
+    }>;
+  };
 }
 // --- END: Types for Claims Management ---
 
@@ -627,6 +695,8 @@ export interface ProcessedFile {
     materialName: string;
     confidence: number;
     source?: 'ai' | 'manual';
+    errorMessage?: string;
+    matchStrategy?: 'rule' | 'ai' | 'fallback';
   };
   status: "processing" | "completed" | "failed";
   errorMessage?: string;
@@ -734,6 +804,7 @@ export interface ClaimMaterial {
   category?: string;
   materialId?: string;
   materialName?: string;
+  classificationError?: string;
 
   // AI 解析结果
   extractedData?: Record<string, any>;
@@ -931,6 +1002,20 @@ export enum RuleCategory {
   POST_ADJUSTMENT = "POST_ADJUSTMENT",
 }
 
+export enum RuleKind {
+  GATE = "GATE",
+  TRIGGER = "TRIGGER",
+  EXCLUSION = "EXCLUSION",
+  ADJUSTMENT = "ADJUSTMENT",
+  BENEFIT = "BENEFIT",
+  ITEM_ELIGIBILITY = "ITEM_ELIGIBILITY",
+  ITEM_RATIO = "ITEM_RATIO",
+  ITEM_PRICING = "ITEM_PRICING",
+  ITEM_CAP = "ITEM_CAP",
+  ITEM_FLAG = "ITEM_FLAG",
+  POST_PROCESS = "POST_PROCESS",
+}
+
 export enum ConditionOperator {
   EQ = "EQ",
   NE = "NE",
@@ -1040,6 +1125,10 @@ export interface RulesetRule {
   rule_name: string;
   description?: string;
   category: string;
+  rule_kind?: RuleKind;
+  applies_to?: {
+    coverage_codes?: string[];
+  };
   tags?: string[];
   status: RuleStatus;
   execution: RuleExecution;
@@ -1057,6 +1146,7 @@ export interface DomainConfig {
   input_granularity?: string;
   loop_collection?: string;
   short_circuit_on?: string[];
+  semantic_sequence?: string[];
   category_sequence: string[];
 }
 
@@ -1085,6 +1175,31 @@ export interface FieldDefinition {
   source: string;
   applicable_domains: string[];
   enum_values?: { code: string; label: string }[];
+  source_type?: "material" | "derived" | "system" | "manual";
+  source_refs?: string[];
+  derivation?: string;
+  required_evidence?: boolean;
+}
+
+export interface FactMappingDefinition {
+  id: string;
+  fact_field: string;
+  source_type: "material" | "derived" | "system" | "manual";
+  material_id?: string;
+  material_name?: string;
+  schema_path?: string;
+  source_label?: string;
+  transform?: string;
+  notes?: string;
+}
+
+export interface FactCatalogField extends FieldDefinition {
+  fact_id: string;
+  description?: string;
+  status?: "ACTIVE" | "DRAFT" | "DISABLED";
+  system_source?: string;
+  allowed_material_ids?: string[];
+  allowed_material_categories?: string[];
 }
 
 export interface RulesetPolicyInfo {
@@ -1117,6 +1232,14 @@ export interface RulesetMetadata {
   };
   low_confidence_rules?: number;
   unresolved_conflicts?: number;
+  published_at?: string;
+  published_by?: string;
+  latest_validation?: {
+    status: "passed" | "warning" | "error";
+    validated_at: string;
+    issue_count: number;
+    summary?: string;
+  };
   audit_trail?: {
     timestamp: string;
     user_id: string;
@@ -1133,6 +1256,7 @@ export interface InsuranceRuleset {
   execution_pipeline: ExecutionPipeline;
   override_chains: OverrideChain[];
   field_dictionary: Record<string, FieldDefinition>;
+  field_mappings?: FactMappingDefinition[];
   metadata: RulesetMetadata;
 }
 // --- END: Types for Ruleset Management ---
@@ -1184,11 +1308,41 @@ export interface HospitalInfo {
 // 增加 AI 交互日志类型定义
 export interface AIInteractionLog {
   model: string;
+  provider?: string;
+  capabilityId?: string;
+  promptTemplateId?: string;
+  promptSourceType?: string;
   prompt: string;
   response: string;
   duration: number;
   timestamp: string;
   usageMetadata?: any;
+  request?: {
+    raw?: any;
+    summary?: {
+      systemInstruction?: string | null;
+      promptText?: string | null;
+      attachmentSummary?: Array<Record<string, any>>;
+      tools?: any;
+      toolConfig?: any;
+      generationConfig?: any;
+    } | null;
+  };
+  rawResponse?: {
+    raw?: any;
+    text?: string | null;
+    finishReason?: string | null;
+    toolCalls?: any;
+    grounding?: any;
+  } | null;
+  context?: Record<string, any>;
+  tokenUsage?: {
+    inputTokens: number | null;
+    outputTokens: number | null;
+    totalTokens: number | null;
+    rawUsageMetadata?: any;
+    unavailableReason?: string | null;
+  };
   timing?: {
     ocrDuration?: number; // OCR 识别耗时 (ms)
     parsingDuration?: number; // 大模型格式化耗时 (ms)
@@ -1196,6 +1350,79 @@ export interface AIInteractionLog {
   };
   errorMessage?: string; // 错误信息（如果失败）
   statusCode?: number; // HTTP 状态码
+}
+
+export interface AIProviderCatalogItem {
+  id: string;
+  name: string;
+  type: string;
+  runtime: string;
+  defaultModel: string;
+  supportsCustomModel: boolean;
+  envKeys?: string[];
+  description?: string;
+  available?: boolean;
+  missingEnvKeys?: string[];
+}
+
+export interface AIPromptSourceInfo {
+  type: string;
+  promptTemplateId?: string | null;
+  secondaryPromptTemplateId?: string | null;
+  editable: boolean;
+}
+
+export interface AIPromptTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  content: string;
+  requiredVariables?: string[];
+}
+
+export interface AICapabilityBinding {
+  provider: string;
+  model: string;
+}
+
+export interface AICapabilityDefinition {
+  id: string;
+  name: string;
+  group: string;
+  description?: string;
+  binding: AICapabilityBinding;
+  currentProvider?: string;
+  currentModel?: string;
+  supportedProviders: string[];
+  promptSourceType: string;
+  promptTemplateId?: string | null;
+  secondaryPromptTemplateId?: string | null;
+  editable?: boolean;
+  lockReason?: string;
+  codeLocations?: string[];
+  supportMatrix?: Array<{
+    providerId: string;
+    providerName: string;
+    available: boolean;
+    missingEnvKeys?: string[];
+    supportsCustomModel?: boolean;
+    defaultModel?: string | null;
+  }>;
+  promptSource?: AIPromptSourceInfo;
+  providerAvailable?: boolean;
+  providerMissingEnvKeys?: string[];
+}
+
+export interface AISettingsSnapshot {
+  version: number;
+  providers: AIProviderCatalogItem[];
+  capabilities: AICapabilityDefinition[];
+  promptTemplates: AIPromptTemplate[];
+  metadata: {
+    updatedAt: string;
+    updatedBy: string;
+    version: number;
+  };
 }
 
 export interface StepLog {
@@ -1738,6 +1965,59 @@ export interface UserOperationLog {
 }
 // --- END: Types for User Operation Logs ---
 
+export type ClaimStageStatus =
+  | "pending"
+  | "processing"
+  | "completed"
+  | "manual_completed"
+  | "failed";
+
+export interface ClaimStageProgress {
+  key: "intake" | "parse" | "liability" | "assessment";
+  label: string;
+  status: ClaimStageStatus;
+  completedAt?: string;
+  startedAt?: string;
+  completedBy?: "system" | "manual";
+  summary?: string;
+  blockingReason?: string;
+}
+
+export type ClaimTimelineEventType =
+  | "CLAIM_REPORTED"
+  | "MATERIAL_UPLOADED"
+  | "MATERIAL_COMPLETENESS_PASSED"
+  | "MATERIAL_COMPLETENESS_FAILED"
+  | "OCR_STARTED"
+  | "OCR_COMPLETED"
+  | "STRUCTURED_EXTRACTION_COMPLETED"
+  | "LIABILITY_AUTO_COMPLETED"
+  | "LIABILITY_MANUAL_COMPLETED"
+  | "ASSESSMENT_AUTO_COMPLETED"
+  | "ASSESSMENT_MANUAL_COMPLETED"
+  | "MANUAL_REVIEW_REQUESTED";
+
+export interface ClaimTimelineEvent {
+  id: string;
+  type: ClaimTimelineEventType;
+  timestamp: string;
+  actorType: "system" | "manual" | "customer";
+  actorName?: string;
+  claimId: string;
+  materialId?: string;
+  materialName?: string;
+  documentId?: string;
+  success: boolean;
+  summary: string;
+  details?: Record<string, unknown>;
+}
+
+export interface ClaimProcessTimeline {
+  stages: ClaimStageProgress[];
+  events: ClaimTimelineEvent[];
+  source: "standard" | "derived";
+}
+
 // --- START: Types for Multi-File Processing ---
 
 /** 文件类型分类 */
@@ -1827,6 +2107,8 @@ export interface ParsedDocument {
     materialName: string;
     confidence: number;
     source?: 'ai' | 'manual';
+    errorMessage?: string;
+    matchStrategy?: 'rule' | 'ai' | 'fallback';
   };
 
   // 处理信息

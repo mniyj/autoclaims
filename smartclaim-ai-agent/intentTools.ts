@@ -14,9 +14,31 @@ import {
   MaterialsListInfo,
   MissingMaterialsInfo,
   PremiumImpactInfo,
+  SettlementEstimateInfo,
+  SettlementDetailInfo,
+  PolicyInfoData,
+  ClaimHistoryInfo,
+  PaymentStatusInfo,
+  CoverageInfo,
+  Policy,
   MaterialItem,
   ClaimEvent
 } from "./types";
+import { materialConfigService } from "./services/materialConfigService";
+import { settlementConfigService } from "./services/settlementConfigService";
+import {
+  resolveClaimSelection,
+  resolveClaimTypeAndProductCode as resolveSharedClaimTypeAndProductCode,
+} from "../shared/claimRouting";
+import {
+  ClaimOrchestratorContext,
+  type ClaimOrchestratorState,
+  continueClaimFieldCollection,
+  continueClaimSubmission,
+  createClaimOrchestratorTools,
+  isClaimOrchestratorIntent,
+  routeClaimIntent,
+} from "./claimOrchestrator";
 
 /** 工具函数类型 */
 type ToolHandler = (
@@ -43,17 +65,17 @@ const TOOL_REGISTRY: Record<IntentType, ToolHandler> = {
   [IntentType.QUERY_MATERIALS_LIST]: handleQueryMaterialsList,
   [IntentType.QUERY_MISSING_MATERIALS]: handleQueryMissingMaterials,
   [IntentType.QUERY_PREMIUM_IMPACT]: handleQueryPremiumImpact,
-  [IntentType.QUERY_SETTLEMENT_AMOUNT]: handleUnimplemented,
-  [IntentType.QUERY_SETTLEMENT_DETAIL]: handleUnimplemented,
-  [IntentType.QUERY_POLICY_INFO]: handleUnimplemented,
-  [IntentType.QUERY_CLAIM_HISTORY]: handleUnimplemented,
-  [IntentType.QUERY_PAYMENT_STATUS]: handleUnimplemented,
+  [IntentType.QUERY_SETTLEMENT_AMOUNT]: handleQuerySettlementAmount,
+  [IntentType.QUERY_SETTLEMENT_DETAIL]: handleQuerySettlementDetail,
+  [IntentType.QUERY_POLICY_INFO]: handleQueryPolicyInfo,
+  [IntentType.QUERY_CLAIM_HISTORY]: handleQueryClaimHistory,
+  [IntentType.QUERY_PAYMENT_STATUS]: handleQueryPaymentStatus,
 
   // ---- 协助类 ----
   [IntentType.GUIDE_CLAIM_PROCESS]: handleUnimplemented,
   [IntentType.GUIDE_DOCUMENT_PHOTO]: handleUnimplemented,
   [IntentType.QUERY_CLAIM_TIMELINE]: handleUnimplemented,
-  [IntentType.QUERY_COVERAGE]: handleUnimplemented,
+  [IntentType.QUERY_COVERAGE]: handleQueryCoverage,
   [IntentType.QUERY_FAQ]: handleUnimplemented,
 
   // ---- 沟通类 ----
@@ -74,6 +96,184 @@ const TOOL_REGISTRY: Record<IntentType, ToolHandler> = {
   [IntentType.OUT_OF_SCOPE]: handleUnimplemented
 };
 
+const claimOrchestratorTools = createClaimOrchestratorTools();
+
+function hydrateClaimOrchestratorContext(claimState: ClaimState): ClaimOrchestratorContext {
+  const context = new ClaimOrchestratorContext(claimState.claimant);
+  const snapshot = claimState.claimOrchestrator;
+  if (!snapshot) {
+    return context;
+  }
+
+  context.setState(snapshot.state as ClaimOrchestratorState);
+  context.setAvailablePolicies(snapshot.availablePolicies || []);
+  context.setSelectedPolicy(snapshot.selectedPolicy || null);
+  context.setIntakeConfig(snapshot.intakeConfig || null);
+  Object.entries(snapshot.collectedFields || {}).forEach(([fieldId, value]) => {
+    context.updateField(fieldId, value);
+  });
+  context.setPendingFieldId(snapshot.pendingFieldId || null);
+  if (snapshot.lastResponse) {
+    context.setLastResponse(snapshot.lastResponse);
+  }
+  return context;
+}
+
+function buildClaimStatePatch(
+  claimState: ClaimState,
+  context: ClaimOrchestratorContext,
+  options?: {
+    submittedClaim?: {
+      claimId: string;
+      productCode?: string;
+      productName?: string;
+      reason?: string;
+    };
+  },
+): Partial<ClaimState> {
+  const snapshot = context.getSnapshot();
+  const historicalClaims = [...(claimState.historicalClaims || [])];
+  const hasDraftState =
+    snapshot.availablePolicies.length > 0 ||
+    Boolean(snapshot.selectedPolicy) ||
+    Boolean(snapshot.intakeConfig) ||
+    Object.keys(snapshot.collectedFields).length > 0;
+
+  if (options?.submittedClaim) {
+    historicalClaims.unshift({
+      id: options.submittedClaim.claimId,
+      date: new Date().toISOString().split("T")[0],
+      type:
+        options.submittedClaim.productName ||
+        options.submittedClaim.productCode ||
+        snapshot.selectedPolicy?.type ||
+        "新报案",
+      status: ClaimStatus.REPORTING,
+      incidentReason: options.submittedClaim.reason,
+      timeline: [
+        {
+          date: new Date().toLocaleString(),
+          label: "报案登记",
+          description: "用户通过索赔人端语音管家提交报案",
+          status: "completed",
+        },
+      ],
+    });
+  }
+
+  return {
+    ...claimState,
+    claimOrchestrator: snapshot,
+    selectedPolicyId: hasDraftState
+      ? snapshot.selectedPolicy?.id || claimState.selectedPolicyId
+      : undefined,
+    historicalClaims,
+    requiredDocs:
+      hasDraftState && snapshot.intakeConfig
+        ? snapshot.intakeConfig.fields.map((field) => ({
+            name: field.label,
+            description: field.placeholder || field.label,
+            received: field.field_id in snapshot.collectedFields,
+          }))
+        : [],
+    reportInfo: hasDraftState
+      ? {
+          ...claimState.reportInfo,
+          ...snapshot.collectedFields,
+          policyNumber:
+            snapshot.selectedPolicy?.id || claimState.reportInfo.policyNumber,
+        }
+      : {},
+  };
+}
+
+export async function executeClaimOrchestratorSelection(
+  policyIndex: number,
+  claimState: ClaimState,
+): Promise<ToolResponse> {
+  const context = hydrateClaimOrchestratorContext(claimState);
+  const result = await continueClaimSubmission(
+    context,
+    claimOrchestratorTools,
+    policyIndex,
+  );
+
+  return {
+    success: result.success,
+    data: {
+      claimStatePatch: buildClaimStatePatch(claimState, context),
+    },
+    message: result.message,
+  };
+}
+
+export async function continueClaimOrchestratorWithText(
+  userInput: string,
+  claimState: ClaimState,
+): Promise<ToolResponse> {
+  const context = hydrateClaimOrchestratorContext(claimState);
+
+  if (context.getState() === "CONFIRMING_SUBMISSION") {
+    const result = await continueClaimSubmission(context, claimOrchestratorTools);
+    const submittedClaim =
+      result.data &&
+      typeof result.data === "object" &&
+      "toolResponse" in result.data &&
+      (result.data.toolResponse as any)?.data?.claimId
+        ? {
+            claimId: (result.data.toolResponse as any).data.claimId as string,
+            productCode: (result.data.toolResponse as any).data.payload?.productCode,
+            reason:
+              (result.data.toolResponse as any).data.payload?.fieldData?.accident_reason ||
+              (result.data.toolResponse as any).data.payload?.fieldData?.accidentReason,
+          }
+        : undefined;
+    return {
+      success: result.success,
+      data: {
+        claimStatePatch: buildClaimStatePatch(claimState, context, {
+          submittedClaim,
+        }),
+        submittedClaim,
+        toolResult: result.data,
+      },
+      message: result.message,
+    };
+  }
+
+  const result = await continueClaimFieldCollection(context, {
+    rawValue: userInput,
+  });
+
+  return {
+    success: result.success,
+    data: {
+      claimStatePatch: buildClaimStatePatch(claimState, context),
+    },
+    message: result.message,
+  };
+}
+
+export async function cancelActiveClaimOrchestrator(
+  claimState: ClaimState,
+): Promise<ToolResponse> {
+  const context = hydrateClaimOrchestratorContext(claimState);
+  const result = await routeClaimIntent(
+    IntentType.CANCEL_CLAIM,
+    {},
+    context,
+    claimOrchestratorTools,
+  );
+
+  return {
+    success: result?.success ?? false,
+    data: {
+      claimStatePatch: buildClaimStatePatch(claimState, context),
+    },
+    message: result?.message || "已取消当前报案流程。",
+  };
+}
+
 /**
  * 执行工具
  * @param intent 意图类型
@@ -86,6 +286,27 @@ export async function executeTool(
   entities: IntentEntities,
   claimState: ClaimState
 ): Promise<ToolResponse> {
+  if (isClaimOrchestratorIntent(intent)) {
+    const context = hydrateClaimOrchestratorContext(claimState);
+    const result = await routeClaimIntent(
+      intent,
+      entities,
+      context,
+      claimOrchestratorTools,
+    );
+
+    if (result) {
+      return {
+        success: result.success,
+        data: {
+          ...(result.data || {}),
+          claimStatePatch: buildClaimStatePatch(claimState, context),
+        },
+        message: result.message,
+      };
+    }
+  }
+
   const handler = TOOL_REGISTRY[intent];
   if (!handler) {
     return {
@@ -113,6 +334,134 @@ export async function executeTool(
 // 工具实现
 // ============================================================================
 
+function getClaimProductCode(claim: ClaimState["historicalClaims"] extends Array<infer T> ? T : never): string | undefined {
+  const productCode = (claim as { productCode?: string }).productCode;
+  return typeof productCode === "string" && productCode ? productCode : undefined;
+}
+
+function resolveTargetClaim(
+  entities: IntentEntities,
+  claimState: ClaimState,
+): ReturnType<typeof resolveClaimSelection<NonNullable<ClaimState["historicalClaims"]>[number]>> {
+  return resolveClaimSelection(claimState.historicalClaims || [], entities.claimId);
+}
+
+function buildClaimSelectionResponse(
+  intent: IntentType,
+  claims: NonNullable<ClaimState["historicalClaims"]>,
+  message: string,
+): ToolResponse {
+  return {
+    success: false,
+    data: { claims },
+    message,
+    uiComponent: UIComponentType.CLAIM_SELECTION,
+    uiData: {
+      intent,
+      claims,
+    },
+  };
+}
+
+function buildNoClaimResponse(message: string): ToolResponse {
+  return {
+    success: false,
+    data: null,
+    message,
+    uiComponent: undefined,
+  };
+}
+
+function resolveClaimContext(
+  intent: IntentType,
+  entities: IntentEntities,
+  claimState: ClaimState,
+  missingMessage: string,
+  selectionMessage: string,
+): { claim?: NonNullable<ClaimState["historicalClaims"]>[number]; response?: ToolResponse } {
+  const resolution = resolveTargetClaim(entities, claimState);
+  if (resolution.kind === "resolved") {
+    return { claim: resolution.claim };
+  }
+  if (resolution.kind === "missing") {
+    return { response: buildNoClaimResponse(missingMessage) };
+  }
+  return {
+    response: buildClaimSelectionResponse(intent, resolution.claims, selectionMessage),
+  };
+}
+
+function resolveClaimTypeAndProductCode(
+  entities: IntentEntities,
+  claimState: ClaimState,
+  claim?: NonNullable<ClaimState["historicalClaims"]>[number],
+): { claimType: string; productCode?: string } {
+  return resolveSharedClaimTypeAndProductCode({
+    explicitClaimType: entities.claimType,
+    explicitProductCode: entities.productCode || (claim ? getClaimProductCode(claim) : undefined),
+    claim,
+    fallbackClaimType: claimState.incidentType || getIncidentTypeFromState(claimState),
+  });
+}
+
+function extractUploadedDocuments(claim: NonNullable<ClaimState["historicalClaims"]>[number]) {
+  const docsFromDocuments = (claim.documents || []).map((doc) => ({
+    id: doc.id,
+    category: doc.category,
+    name: doc.name,
+  }));
+  const docsFromCategories = (claim.fileCategories || []).flatMap((category) =>
+    category.files.map((file) => ({
+      id: undefined,
+      category: category.name,
+      name: file.name,
+    })),
+  );
+  const docsFromMaterialUploads = (claim.materialUploads || []).flatMap((upload) =>
+    upload.files.map((file) => ({
+      id: upload.materialId,
+      category: upload.materialName,
+      name: file.name,
+    })),
+  );
+
+  return [...docsFromDocuments, ...docsFromCategories, ...docsFromMaterialUploads];
+}
+
+async function fetchPolicies(): Promise<Policy[]> {
+  const response = await fetch("/api/policies");
+  if (!response.ok) {
+    throw new Error("Failed to load policies");
+  }
+  const rawPolicies = await response.json();
+  const policies = Array.isArray(rawPolicies) ? rawPolicies : [];
+  return policies
+    .map((policy: any) => ({
+      id: policy.policyNumber || policy.id || "",
+      policyholderName: policy.policyholder?.name || policy.policyholderName || "",
+      insuredName:
+        policy.insureds?.[0]?.name || policy.insuredName || policy.policyholder?.name || "",
+      type: policy.productName || policy.productCode || "未知险种",
+      validFrom: policy.effectiveDate || policy.issueDate || "",
+      validUntil: policy.expiryDate || "",
+      productCode: policy.productCode || "",
+    }))
+    .filter((policy: Policy) => Boolean(policy.id));
+}
+
+async function fetchProduct(productCode?: string): Promise<any | null> {
+  if (!productCode) return null;
+  const response = await fetch(`/api/products/${encodeURIComponent(productCode)}`);
+  if (!response.ok) {
+    return null;
+  }
+  return response.json();
+}
+
+function formatClaimStatusLabel(status: ClaimStatus): string {
+  return getStatusLabel(status);
+}
+
 /**
  * 查询理赔进度
  */
@@ -120,24 +469,15 @@ async function handleQueryProgress(
   entities: IntentEntities,
   claimState: ClaimState
 ): Promise<ToolResponse> {
-  // 1. 确定要查询的案件
-  let targetClaim = claimState.historicalClaims?.[0];
-  
-  if (entities.claimId) {
-    targetClaim = claimState.historicalClaims?.find(c => 
-      c.id === entities.claimId || 
-      c.id.includes(entities.claimId!)
-    );
-  }
-
-  if (!targetClaim) {
-    return {
-      success: false,
-      data: null,
-      message: "您还没有关联的理赔案件。如需查询案件进度，请先报案或关联已有案件。",
-      uiComponent: undefined
-    };
-  }
+  const context = resolveClaimContext(
+    IntentType.QUERY_PROGRESS,
+    entities,
+    claimState,
+    "您还没有关联的理赔案件。如需查询案件进度，请先报案或关联已有案件。",
+    "您有多个理赔案件，请先选择要查询进度的案件。",
+  );
+  if (context.response) return context.response;
+  const targetClaim = context.claim!;
 
   // 2. 构建进度信息
   const progressInfo: ClaimProgressInfo = {
@@ -168,13 +508,40 @@ async function handleQueryMaterialsList(
   entities: IntentEntities,
   claimState: ClaimState
 ): Promise<ToolResponse> {
-  // 1. 确定理赔类型
-  const claimType = entities.claimType || 
-    claimState.historicalClaims?.[0]?.type || 
-    getIncidentTypeFromState(claimState);
+  let targetClaim: NonNullable<ClaimState["historicalClaims"]>[number] | undefined;
+  if (!entities.claimType && !entities.productCode && (claimState.historicalClaims || []).length > 1) {
+    const context = resolveClaimContext(
+      IntentType.QUERY_MATERIALS_LIST,
+      entities,
+      claimState,
+      "暂时没有可参考的理赔案件。请告诉我您想咨询的险种，或先发起报案。",
+      "您有多个理赔案件，请先选择想查看材料清单的案件，或者直接告诉我险种。",
+    );
+    if (context.response) return context.response;
+    targetClaim = context.claim;
+  } else if ((claimState.historicalClaims || []).length === 1) {
+    targetClaim = claimState.historicalClaims?.[0];
+  }
 
-  // 2. 获取材料清单
-  const materials = await fetchMaterialsList(claimType, entities.productCode);
+  const { claimType, productCode } = resolveClaimTypeAndProductCode(
+    entities,
+    claimState,
+    targetClaim,
+  );
+  const queryResult = await materialConfigService.queryMaterials({
+    claimType,
+    productCode,
+    uploadedDocuments: targetClaim ? extractUploadedDocuments(targetClaim) : undefined,
+  });
+  const materials = queryResult.materials.map((material) => ({
+    id: material.id,
+    name: material.name,
+    description: material.description,
+    required: material.required,
+    sampleUrl: material.sampleUrl,
+    ossKey: material.ossKey,
+    uploaded: material.uploaded,
+  }));
 
   if (!materials || materials.length === 0) {
     return {
@@ -221,39 +588,35 @@ async function handleQueryMissingMaterials(
   entities: IntentEntities,
   claimState: ClaimState
 ): Promise<ToolResponse> {
-  // 1. 确定目标案件
-  let targetClaim = claimState.historicalClaims?.[0];
-  
-  if (entities.claimId) {
-    targetClaim = claimState.historicalClaims?.find(c => 
-      c.id === entities.claimId || 
-      c.id.includes(entities.claimId!)
-    );
-  }
+  const context = resolveClaimContext(
+    IntentType.QUERY_MISSING_MATERIALS,
+    entities,
+    claimState,
+    "您还没有关联的理赔案件。如需查询还缺什么材料，请先报案或关联已有案件。",
+    "您有多个理赔案件，请先选择要检查缺失材料的案件。",
+  );
+  if (context.response) return context.response;
+  const targetClaim = context.claim!;
 
-  if (!targetClaim) {
-    return {
-      success: false,
-      data: null,
-      message: "您还没有关联的理赔案件。如需查询还缺什么材料，请先报案或关联已有案件。",
-      uiComponent: undefined
-    };
-  }
-
-  // 2. 获取该案件的材料清单和已上传材料
-  const allMaterials = await fetchMaterialsList(targetClaim.type, entities.productCode);
-  const uploadedDocs = targetClaim.documents || [];
-
-  // 3. 对比找出缺失的材料
-  const missingItems = allMaterials.filter(material => {
-    // 检查是否已上传
-    const isUploaded = uploadedDocs.some(doc => 
-      doc.category?.includes(material.name) ||
-      doc.name?.includes(material.name) ||
-      material.id === doc.id
-    );
-    return material.required && !isUploaded;
+  const { claimType, productCode } = resolveClaimTypeAndProductCode(
+    entities,
+    claimState,
+    targetClaim,
+  );
+  const materialResult = await materialConfigService.queryMaterials({
+    claimType,
+    productCode,
+    uploadedDocuments: extractUploadedDocuments(targetClaim),
   });
+  const missingItems = materialResult.missingMaterials.map((material) => ({
+    id: material.id,
+    name: material.name,
+    description: material.description,
+    required: material.required,
+    sampleUrl: material.sampleUrl,
+    ossKey: material.ossKey,
+    uploaded: material.uploaded,
+  }));
 
   // 4. 构建缺失材料信息
   const missingInfo: MissingMaterialsInfo = {
@@ -283,6 +646,338 @@ ${missingInfo.deadline ? `⏰ **补交截止**：${missingInfo.deadline}` : ''}
     message,
     uiComponent: missingItems.length > 0 ? UIComponentType.MISSING_MATERIALS : undefined,
     uiData: missingInfo
+  };
+}
+
+async function handleQuerySettlementAmount(
+  entities: IntentEntities,
+  claimState: ClaimState
+): Promise<ToolResponse> {
+  const resolution = resolveTargetClaim(entities, claimState);
+  let targetClaim: NonNullable<ClaimState["historicalClaims"]>[number] | undefined;
+
+  if (resolution.kind === "selection" && !entities.claimType && !entities.productCode) {
+    return buildClaimSelectionResponse(
+      IntentType.QUERY_SETTLEMENT_AMOUNT,
+      resolution.claims,
+      "您有多个理赔案件，请先选择要查看赔付预估的案件，或者直接告诉我险种。",
+    );
+  }
+  if (resolution.kind === "resolved") {
+    targetClaim = resolution.claim;
+  }
+
+  const { claimType, productCode } = resolveClaimTypeAndProductCode(
+    entities,
+    claimState,
+    targetClaim,
+  );
+
+  let settlementResult =
+    targetClaim?.id && productCode
+      ? await settlementConfigService.calculateSettlement(targetClaim.id, productCode)
+      : null;
+
+  if (!settlementResult) {
+    const baseAmount = targetClaim?.amount || entities.amount || 0;
+    settlementResult = await settlementConfigService.estimateSettlement(claimType, {
+      approvedExpenses: baseAmount,
+      sumInsured: Math.max(baseAmount, 1) * 2,
+    });
+  }
+
+  if (!settlementResult) {
+    return {
+      success: false,
+      data: null,
+      message: `暂时无法生成「${claimType}」的赔付预估，请稍后重试或联系人工客服。`,
+      uiComponent: undefined,
+    };
+  }
+
+  const estimateInfo: SettlementEstimateInfo = {
+    claimId: targetClaim?.id || "未绑定案件",
+    claimType,
+    estimatedAmount: settlementResult.finalAmount,
+    breakdown: (settlementResult.steps || []).map((step) => ({
+      item: step.name,
+      amount: step.output,
+      note: step.expression,
+    })),
+    deductible: 0,
+    disclaimer: settlementResult.isEstimate
+      ? "当前金额为预估值，最终结果以审核结论为准。"
+      : "当前金额基于案件与产品规则计算，最终结果以审核结论为准。",
+  };
+
+  return {
+    success: true,
+    data: estimateInfo,
+    message: `${claimType}当前${settlementResult.isEstimate ? "预估" : "计算"}赔付金额约为 ${settlementResult.finalAmount.toLocaleString()} 元。`,
+    uiComponent: UIComponentType.SETTLEMENT_ESTIMATE,
+    uiData: estimateInfo,
+  };
+}
+
+async function handleQuerySettlementDetail(
+  entities: IntentEntities,
+  claimState: ClaimState
+): Promise<ToolResponse> {
+  const context = resolveClaimContext(
+    IntentType.QUERY_SETTLEMENT_DETAIL,
+    entities,
+    claimState,
+    "您还没有关联的理赔案件。如需查询赔付明细，请先报案或关联已有案件。",
+    "您有多个理赔案件，请先选择要查看赔付明细的案件。",
+  );
+  if (context.response) return context.response;
+  const targetClaim = context.claim!;
+
+  const { claimType, productCode } = resolveClaimTypeAndProductCode(
+    entities,
+    claimState,
+    targetClaim,
+  );
+  const settlementResult =
+    targetClaim.id && productCode
+      ? await settlementConfigService.calculateSettlement(targetClaim.id, productCode)
+      : await settlementConfigService.estimateSettlement(claimType, {
+          approvedExpenses: targetClaim.amount || 0,
+          sumInsured: Math.max(targetClaim.amount || 1, 1) * 2,
+        });
+
+  if (!settlementResult) {
+    return {
+      success: false,
+      data: null,
+      message: `暂时无法获取案件 ${targetClaim.id} 的赔付明细，请稍后重试。`,
+      uiComponent: undefined,
+    };
+  }
+
+  const detailItems =
+    targetClaim.assessment?.items?.map((item) => ({
+      name: item.name,
+      claimed: item.claimed,
+      approved: item.approved,
+      deduction: item.deduction,
+    })) ||
+    (settlementResult.breakdown || []).map((item) => ({
+      name: item.category,
+      claimed: item.amount,
+      approved: item.coveredAmount,
+      deduction:
+        item.deductible || item.ratio
+          ? `免赔额 ${item.deductible || 0}，赔付比例 ${item.ratio || 0}`
+          : "按条款计算",
+    }));
+
+  const totalClaimed = detailItems.reduce((sum, item) => sum + item.claimed, 0);
+  const totalApproved = detailItems.reduce((sum, item) => sum + item.approved, 0);
+  const detailInfo: SettlementDetailInfo = {
+    claimId: targetClaim.id,
+    items: detailItems,
+    totalClaimed,
+    totalApproved,
+    deductible: 0,
+    finalAmount: settlementResult.finalAmount,
+  };
+
+  return {
+    success: true,
+    data: detailInfo,
+    message: `案件 ${targetClaim.id} 的赔付明细已整理，核定赔付金额约为 ${settlementResult.finalAmount.toLocaleString()} 元。`,
+    uiComponent: UIComponentType.SETTLEMENT_DETAIL,
+    uiData: detailInfo,
+  };
+}
+
+async function handleQueryPolicyInfo(
+  entities: IntentEntities,
+  claimState: ClaimState
+): Promise<ToolResponse> {
+  const policies = await fetchPolicies();
+  const targetPolicyId =
+    entities.policyId ||
+    claimState.selectedPolicyId ||
+    claimState.reportInfo.policyNumber;
+  const matchedPolicy = targetPolicyId
+    ? policies.find((policy) => policy.id === targetPolicyId || policy.id.includes(targetPolicyId))
+    : undefined;
+
+  if (!matchedPolicy && policies.length === 0) {
+    return buildNoClaimResponse("暂未查询到保单信息，请稍后重试或联系客服。");
+  }
+
+  if (!matchedPolicy && policies.length > 1) {
+    return {
+      success: false,
+      data: { policies },
+      message: "您有多张保单，请先选择想查询的保单。",
+      uiComponent: undefined,
+      nextAction: {
+        type: "none",
+        label: "选择保单",
+        data: policies,
+      },
+    };
+  }
+
+  const policy = matchedPolicy || policies[0];
+  const product = await fetchProduct(policy.productCode);
+  const policyInfo: PolicyInfoData = {
+    policyId: policy.id,
+    policyholderName: policy.policyholderName,
+    insuredName: policy.insuredName,
+    productName: product?.marketingName || product?.regulatoryName || policy.type,
+    validFrom: policy.validFrom,
+    validUntil: policy.validUntil,
+    coverages: (product?.responsibilities || [])
+      .slice(0, 6)
+      .map((item: any) => ({
+        name: item.name || item.responsibilityName || "保障责任",
+        limit: Number(item.sumInsured || item.limit || 0),
+        deductible: item.deductible ? Number(item.deductible) : undefined,
+      })),
+    status: "生效中",
+  };
+
+  return {
+    success: true,
+    data: policyInfo,
+    message:
+      `保单 ${policyInfo.policyId} 当前为${policyInfo.status}，产品为「${policyInfo.productName}」，` +
+      `被保人 ${policyInfo.insuredName}，保障期限 ${policyInfo.validFrom || "未知"} 至 ${policyInfo.validUntil || "未知"}。`,
+    uiComponent: UIComponentType.POLICY_INFO,
+    uiData: policyInfo,
+  };
+}
+
+function handleQueryClaimHistory(
+  entities: IntentEntities,
+  claimState: ClaimState
+): ToolResponse {
+  const claims = claimState.historicalClaims || [];
+  if (claims.length === 0) {
+    return buildNoClaimResponse("您当前还没有历史理赔案件。");
+  }
+
+  const historyInfo: ClaimHistoryInfo = {
+    claims: claims.map((claim) => ({
+      id: claim.id,
+      date: claim.date,
+      type: claim.type,
+      status: claim.status,
+      amount: claim.amount,
+      statusLabel: formatClaimStatusLabel(claim.status),
+    })),
+    totalCount: claims.length,
+    totalAmount: claims.reduce((sum, claim) => sum + (claim.amount || 0), 0),
+  };
+
+  return {
+    success: true,
+    data: historyInfo,
+    message: `您当前共有 ${historyInfo.totalCount} 个理赔案件，我已为您列出历史记录。`,
+    uiComponent: UIComponentType.CLAIM_HISTORY,
+    uiData: historyInfo,
+  };
+}
+
+async function handleQueryPaymentStatus(
+  entities: IntentEntities,
+  claimState: ClaimState
+): Promise<ToolResponse> {
+  const context = resolveClaimContext(
+    IntentType.QUERY_PAYMENT_STATUS,
+    entities,
+    claimState,
+    "您还没有关联的理赔案件。如需查询打款状态，请先报案或关联已有案件。",
+    "您有多个理赔案件，请先选择要查询打款状态的案件。",
+  );
+  if (context.response) return context.response;
+  const targetClaim = context.claim!;
+
+  const paymentStatus = targetClaim.payment?.status || "pending";
+  const paymentInfo: PaymentStatusInfo = {
+    claimId: targetClaim.id,
+    paymentStatus,
+    amount: targetClaim.assessment?.finalAmount || targetClaim.amount,
+    bankName: targetClaim.payment?.bankName,
+    accountTail: targetClaim.payment?.accountNumber?.slice(-4),
+    transactionId: targetClaim.payment?.transactionId,
+    completedDate: targetClaim.payment?.timestamp
+      ? new Date(targetClaim.payment.timestamp).toLocaleDateString("zh-CN")
+      : undefined,
+    estimatedDate:
+      paymentStatus === "processing" || paymentStatus === "pending"
+        ? "预计1-3个工作日内到账"
+        : undefined,
+  };
+
+  const paymentLabelMap: Record<PaymentStatusInfo["paymentStatus"], string> = {
+    pending: "待打款",
+    processing: "打款处理中",
+    success: "已到账",
+    failed: "打款失败",
+  };
+
+  return {
+    success: true,
+    data: paymentInfo,
+    message:
+      `案件 ${targetClaim.id} 当前打款状态为「${paymentLabelMap[paymentStatus]}」` +
+      (paymentInfo.amount ? `，金额约 ${paymentInfo.amount.toLocaleString()} 元。` : "。"),
+    uiComponent: UIComponentType.PAYMENT_STATUS,
+    uiData: paymentInfo,
+  };
+}
+
+async function handleQueryCoverage(
+  entities: IntentEntities,
+  claimState: ClaimState
+): Promise<ToolResponse> {
+  const resolution = resolveTargetClaim(entities, claimState);
+  const targetClaim = resolution.kind === "resolved" ? resolution.claim : undefined;
+  const { claimType, productCode } = resolveClaimTypeAndProductCode(
+    entities,
+    claimState,
+    targetClaim,
+  );
+  const product = await fetchProduct(productCode);
+
+  const coverageItems = (product?.responsibilities || []).slice(0, 6).map((item: any) => ({
+    name: item.name || item.responsibilityName || "保障责任",
+    covered: true,
+    limit: item.sumInsured ? Number(item.sumInsured) : undefined,
+    note: item.description || item.details,
+  }));
+
+  const coverageInfo: CoverageInfo = {
+    isInScope: coverageItems.length > 0 ? true : null,
+    coverageItems,
+    exclusions: product?.precautions
+      ? String(product.precautions)
+          .split("\n")
+          .map((item) => item.trim())
+          .filter(Boolean)
+          .slice(0, 4)
+      : [],
+    explanation:
+      coverageItems.length > 0
+        ? `当前已按 ${claimType} 产品责任为您整理主要保障范围。`
+        : `暂未查询到 ${claimType} 的结构化保障责任，请以正式保单条款为准。`,
+  };
+
+  return {
+    success: true,
+    data: coverageInfo,
+    message:
+      coverageItems.length > 0
+        ? `我已为您整理 ${claimType} 的主要保障责任，可重点查看责任范围和注意事项。`
+        : `暂未查询到 ${claimType} 的完整保障范围结构化数据，建议结合保单条款进一步确认。`,
+    uiComponent: UIComponentType.COVERAGE_INFO,
+    uiData: coverageInfo,
   };
 }
 

@@ -916,7 +916,13 @@
         "materialId": "mat-20",
         "parsedAt": "2026-03-04T17:09:09.922Z"
       }
-    }
+    },
+    "acceptedAt": "2026-03-06T07:57:35.285Z",
+    "acceptedBy": "system",
+    "assessmentCompletedAt": "2026-03-08T12:49:21.832Z",
+    "assessmentCompletedBy": "system",
+    "assessmentDecision": "PARTIAL_ASSESSED",
+    "approvedAmount": 0
   },
   {
     "id": "CLM935821",
@@ -1283,6 +1289,150 @@
           }
         ]
       }
-    ]
+    ],
+    "acceptedAt": "2026-03-09T16:05:42.351Z",
+    "acceptedBy": "system",
+    "assessmentCompletedAt": "2026-03-09T16:05:42.351Z",
+    "assessmentCompletedBy": "system",
+    "assessmentDecision": "PARTIAL_ASSESSED",
+    "approvedAmount": 80000
+  },
+  {
+    "id": "CLM904790",
+    "reportNumber": "R202603080835040HOD",
+    "reporter": "1",
+    "reportTime": "3/8/2026, 4:35:04 PM",
+    "accidentTime": "2026-03-08",
+    "accidentReason": "交通事故",
+    "accidentLocation": "1",
+    "productCode": "zhongan2026PAC814",
+    "productName": "无忧保综合意外险(2022升级版)",
+    "policyNumber": "PM157CG240579335929704",
+    "policyholder": "杨三",
+    "insured": "杨霁",
+    "status": "已报案",
+    "operator": "1",
+    "claimAmount": "1",
+    "intakeFormData": {
+      "accident_date": "2026-03-08",
+      "accident_location": "1",
+      "accident_description": "1",
+      "accident_reason": "交通事故",
+      "claim_item": [
+        "门诊费",
+        "住院费"
+      ],
+      "claim_amount": "1"
+    },
+    "selectedClaimItems": [
+      "门诊费",
+      "住院费"
+    ],
+    "selectedAccidentCauseId": "交通事故",
+    "requiredMaterials": [],
+    "fileCategories": []
+  },
+  {
+    "id": "R261123052024800086",
+    "reportNumber": "R261123052024800086",
+    "reporter": "系统导入",
+    "reportTime": "2024-03-13 00:00:00",
+    "accidentTime": "2024-03-12",
+    "accidentReason": "作业事故",
+    "accidentLocation": "安徽省黄山市休宁县商山镇茶叶厂旁一处政府闲置空地",
+    "productCode": "SUN_EML_TPL_2023",
+    "productName": "阳光工程机械设备保险（附加第三者责任）",
+    "policyNumber": "12611230520230000499",
+    "policyholder": "黄山永顺起重设备安装有限公司",
+    "insured": "黄山永顺起重设备安装有限公司",
+    "status": "待补传",
+    "operator": "系统导入",
+    "claimAmount": 1000000,
+    "selectedClaimItems": [
+      "item-engineering-third-party-death"
+    ],
+    "selectedAccidentCauseId": "非交通事故",
+    "requiredMaterials": [],
+    "fileCategories": [],
+    "intakeFormData": {
+      "accident_date": "2024-03-12",
+      "accident_location": "安徽省黄山市休宁县商山镇茶叶厂旁一处政府闲置空地",
+      "accident_description": "工程机械设备吊装作业中，被吊物倾覆砸伤第三者方冬九，送医抢救无效死亡。",
+      "accident_reason": "作业事故"
+    },
+    "caseArchivePath": "docs/R261123052024800086安徽黄山",
+    "policy_active": true,
+    "auto_coverage_type": "THIRD_PARTY",
+    "claim_liability_type": "THIRD_PARTY",
+    "insured_liability_ratio": 0.5,
+    "claimant_liability_pct": 50,
+    "third_party_loss_amount": 999919.5,
+    "third_party_death_disability_amount": 999919.5,
+    "operator_certificate_valid": true,
+    "death_confirmed": true,
+    "death_date": "2024-03-12",
+    "deceased_name": "方冬九",
+    "beneficiary_type": "第三者家属",
+    "liability_basis": "公估报告协商同等责任，现阶段按被保险人责任50%处理",
+    "latestReviewSnapshot": {
+      "updatedAt": "2026-03-15T10:20:00.000Z",
+      "decision": "MANUAL_REVIEW",
+      "amount": 499959.75,
+      "payableAmount": 499959.75,
+      "intakeDecision": "PENDING_MATERIAL",
+      "liabilityDecision": "MANUAL_REVIEW",
+      "assessmentDecision": "PARTIAL_ASSESSED",
+      "settlementDecision": "MANUAL_REVIEW",
+      "missingMaterials": [
+        "事故认定书或事故证明",
+        "身份证件",
+        "银行卡信息"
+      ],
+      "coverageResults": [
+        {
+          "coverageCode": "AUTO_THIRD_PARTY",
+          "claimedAmount": 1000000,
+          "approvedAmount": 499959.75,
+          "deductible": 0,
+          "reimbursementRatio": 0.5,
+          "sumInsured": 1000000,
+          "status": "MANUAL_REVIEW",
+          "warnings": [
+            "当前金额依据公估协商方案，正式赔付前需核对责任比例与已付款抵扣口径"
+          ]
+        }
+      ]
+    },
+    "assessmentCompletedAt": "2026-03-11T17:47:08.397Z",
+    "assessmentCompletedBy": "system",
+    "assessmentDecision": "PARTIAL_ASSESSED",
+    "approvedAmount": 499959.75
+  },
+  {
+    "id": "CLM-MED-001",
+    "reportNumber": "CLM-MED-001",
+    "reporter": "系统导入",
+    "reportTime": "2026-03-15 01:15:00",
+    "accidentTime": "2025-03-01",
+    "accidentReason": "门诊就诊",
+    "accidentLocation": "上海市",
+    "claimAmount": 148,
+    "productCode": "PROD002",
+    "productName": "百万医疗险Pro-旗舰版",
+    "status": "已报案",
+    "operator": "系统导入",
+    "policyholder": "杨秀",
+    "insured": "杨秀",
+    "policyNumber": "LOCAL-MED-CLM-MED-001",
+    "selectedClaimItems": [],
+    "selectedAccidentCauseId": "非交通事故",
+    "requiredMaterials": [],
+    "fileCategories": [],
+    "intakeFormData": {
+      "visit_date": "2025-03-01",
+      "visit_type": "门诊",
+      "claim_type": "医疗费用报销",
+      "incident_description": "本地医疗险测试材料导入，用于验证医疗费用报销画像"
+    }
   }
 ]

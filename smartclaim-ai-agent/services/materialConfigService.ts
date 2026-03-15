@@ -13,6 +13,7 @@ export interface MaterialItem {
   description: string;
   required: boolean;
   sampleUrl?: string;
+  ossKey?: string;
   uploaded: boolean;
   aiAuditPrompt?: string;
 }
@@ -255,6 +256,7 @@ A: 可回就诊医院补打，或提供其他就诊凭证。
           description: m.description,
           required: m.required !== false, // 默认为必需
           sampleUrl: m.sampleUrl,
+          ossKey: m.ossKey,
           uploaded: false,
           aiAuditPrompt: m.aiAuditPrompt
         }));
@@ -348,6 +350,7 @@ A: 可回就诊医院补打，或提供其他就诊凭证。
           description: m.description,
           required: m.required !== false,
           sampleUrl: m.sampleUrl,
+          ossKey: m.ossKey,
           uploaded: false,
           aiAuditPrompt: m.aiAuditPrompt
         }));

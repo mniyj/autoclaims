@@ -27,6 +27,7 @@ import {
   RuleStatus,
   RuleActionType,
   RuleCategory,
+  RuleKind,
   ConditionLogic,
   ConditionOperator,
   type IntakeField,
@@ -7188,6 +7189,13 @@ export const FIELD_DATA_TYPE_LABELS: Record<string, string> = {
   ARRAY: "数组",
 };
 
+export const FIELD_SOURCE_TYPE_LABELS: Record<string, string> = {
+  material: "材料提取",
+  derived: "派生事实",
+  system: "系统配置",
+  manual: "人工录入",
+};
+
 export const MOCK_RULESETS: InsuranceRuleset[] = [
   {
     ruleset_id: "RS-ACCIDENT-001",
@@ -7222,6 +7230,7 @@ export const MOCK_RULESETS: InsuranceRuleset[] = [
         rule_name: "保障期间校验",
         description: "检查事故日期是否在保障期间内",
         category: RuleCategory.COVERAGE_PERIOD,
+        rule_kind: RuleKind.GATE,
         status: RuleStatus.EFFECTIVE,
         execution: {
           domain: ExecutionDomain.ELIGIBILITY,
@@ -7264,6 +7273,7 @@ export const MOCK_RULESETS: InsuranceRuleset[] = [
         rule_name: "等待期校验",
         description: "意外险通常无等待期",
         category: RuleCategory.WAITING_PERIOD,
+        rule_kind: RuleKind.GATE,
         status: RuleStatus.EFFECTIVE,
         execution: {
           domain: ExecutionDomain.ELIGIBILITY,
@@ -7286,6 +7296,7 @@ export const MOCK_RULESETS: InsuranceRuleset[] = [
         rule_name: "除外责任-酒驾",
         description: "酒后驾驶导致的事故不予赔付",
         category: RuleCategory.EXCLUSION,
+        rule_kind: RuleKind.EXCLUSION,
         status: RuleStatus.EFFECTIVE,
         execution: {
           domain: ExecutionDomain.ELIGIBILITY,
@@ -7327,6 +7338,7 @@ export const MOCK_RULESETS: InsuranceRuleset[] = [
         rule_id: "R004",
         rule_name: "费用分类判断",
         category: RuleCategory.ITEM_CLASSIFICATION,
+        rule_kind: RuleKind.ITEM_ELIGIBILITY,
         status: RuleStatus.EFFECTIVE,
         execution: {
           domain: ExecutionDomain.ASSESSMENT,
@@ -7357,6 +7369,7 @@ export const MOCK_RULESETS: InsuranceRuleset[] = [
         rule_id: "R005",
         rule_name: "伤残等级赔付",
         category: RuleCategory.DISABILITY_ASSESSMENT,
+        rule_kind: RuleKind.ADJUSTMENT,
         status: RuleStatus.EFFECTIVE,
         execution: {
           domain: ExecutionDomain.ASSESSMENT,
@@ -7403,6 +7416,7 @@ export const MOCK_RULESETS: InsuranceRuleset[] = [
         rule_id: "R006",
         rule_name: "免赔额扣除",
         category: RuleCategory.DEDUCTIBLE,
+        rule_kind: RuleKind.POST_PROCESS,
         status: RuleStatus.EFFECTIVE,
         execution: {
           domain: ExecutionDomain.POST_PROCESS,
@@ -7427,6 +7441,7 @@ export const MOCK_RULESETS: InsuranceRuleset[] = [
         rule_id: "R007",
         rule_name: "年度限额",
         category: RuleCategory.AGGREGATE_CAP,
+        rule_kind: RuleKind.POST_PROCESS,
         status: RuleStatus.EFFECTIVE,
         execution: {
           domain: ExecutionDomain.POST_PROCESS,
@@ -7456,6 +7471,12 @@ export const MOCK_RULESETS: InsuranceRuleset[] = [
           execution_mode: "ALL_MATCH",
           input_granularity: "CLAIM",
           short_circuit_on: ["REJECT_CLAIM"],
+          semantic_sequence: [
+            RuleKind.GATE,
+            RuleKind.TRIGGER,
+            RuleKind.EXCLUSION,
+            RuleKind.ADJUSTMENT,
+          ],
           category_sequence: [
             RuleCategory.COVERAGE_PERIOD,
             RuleCategory.WAITING_PERIOD,
@@ -7472,6 +7493,13 @@ export const MOCK_RULESETS: InsuranceRuleset[] = [
           input_granularity: "ITEM",
           loop_collection: "claim.expense_items",
           short_circuit_on: [],
+          semantic_sequence: [
+            RuleKind.ITEM_ELIGIBILITY,
+            RuleKind.ITEM_RATIO,
+            RuleKind.ITEM_PRICING,
+            RuleKind.ITEM_CAP,
+            RuleKind.ITEM_FLAG,
+          ],
           category_sequence: [
             RuleCategory.ITEM_CLASSIFICATION,
             RuleCategory.PRICING_REASONABILITY,
@@ -7486,6 +7514,7 @@ export const MOCK_RULESETS: InsuranceRuleset[] = [
           execution_mode: "PRIORITY_ORDERED",
           input_granularity: "CLAIM",
           short_circuit_on: [],
+          semantic_sequence: [RuleKind.POST_PROCESS],
           category_sequence: [
             RuleCategory.DEDUCTIBLE,
             RuleCategory.SUB_LIMIT,
@@ -7625,6 +7654,7 @@ export const MOCK_RULESETS: InsuranceRuleset[] = [
         rule_name: "等待期30天校验",
         description: "首次投保等待期30天",
         category: RuleCategory.WAITING_PERIOD,
+        rule_kind: RuleKind.GATE,
         status: RuleStatus.EFFECTIVE,
         execution: {
           domain: ExecutionDomain.ELIGIBILITY,
@@ -7681,6 +7711,7 @@ export const MOCK_RULESETS: InsuranceRuleset[] = [
         rule_id: "H002",
         rule_name: "年度免赔额1万元",
         category: RuleCategory.DEDUCTIBLE,
+        rule_kind: RuleKind.POST_PROCESS,
         status: RuleStatus.EFFECTIVE,
         execution: {
           domain: ExecutionDomain.POST_PROCESS,
@@ -7710,6 +7741,12 @@ export const MOCK_RULESETS: InsuranceRuleset[] = [
           execution_mode: "ALL_MATCH",
           input_granularity: "CLAIM",
           short_circuit_on: ["REJECT_CLAIM"],
+          semantic_sequence: [
+            RuleKind.GATE,
+            RuleKind.TRIGGER,
+            RuleKind.EXCLUSION,
+            RuleKind.ADJUSTMENT,
+          ],
           category_sequence: [
             RuleCategory.COVERAGE_PERIOD,
             RuleCategory.WAITING_PERIOD,
@@ -7723,6 +7760,13 @@ export const MOCK_RULESETS: InsuranceRuleset[] = [
           input_granularity: "ITEM",
           loop_collection: "claim.expense_items",
           short_circuit_on: [],
+          semantic_sequence: [
+            RuleKind.ITEM_ELIGIBILITY,
+            RuleKind.ITEM_RATIO,
+            RuleKind.ITEM_PRICING,
+            RuleKind.ITEM_CAP,
+            RuleKind.ITEM_FLAG,
+          ],
           category_sequence: [
             RuleCategory.ITEM_CLASSIFICATION,
             RuleCategory.PRICING_REASONABILITY,
@@ -7734,6 +7778,7 @@ export const MOCK_RULESETS: InsuranceRuleset[] = [
           execution_mode: "PRIORITY_ORDERED",
           input_granularity: "CLAIM",
           short_circuit_on: [],
+          semantic_sequence: [RuleKind.POST_PROCESS],
           category_sequence: [
             RuleCategory.DEDUCTIBLE,
             RuleCategory.SOCIAL_INSURANCE,

@@ -64,5 +64,27 @@
         ]
       }
     ]
+  },
+  {
+    "productCode": "SUN_EML_TPL_2023",
+    "responsibilityConfigs": [
+      {
+        "responsibilityId": "resp-19",
+        "claimItemIds": [
+          "mat-43",
+          "mat-44",
+          "mat-45",
+          "mat-46",
+          "mat-49",
+          "mat-50",
+          "mat-52",
+          "mat-57",
+          "mat-58",
+          "mat-64",
+          "mat-65",
+          "mat-66"
+        ]
+      }
+    ]
   }
 ]

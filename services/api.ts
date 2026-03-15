@@ -65,7 +65,36 @@ export const api = {
   responsibilities: buildResource("responsibilities"),
   claimsMaterials: buildResource("claims-materials"),
   claimItems: buildResource("claim-items"),
+  factCatalog: buildResource("fact-catalog"),
+  materialValidationRules: buildResource("material-validation-rules"),
   claimCases: buildResource("claim-cases"),
+  claimDocuments: {
+    getByClaimCaseId: async (claimCaseId: string) => {
+      const response = await fetch(
+        `/api/claim-documents?claimCaseId=${encodeURIComponent(claimCaseId)}`,
+      );
+      if (!response.ok) throw new Error("Failed to get claim documents");
+      return response.json();
+    },
+  },
+  claims: {
+    fullReview: async (params: {
+      claimCaseId?: string;
+      productCode?: string;
+      ocrData?: Record<string, unknown>;
+      invoiceItems?: Array<Record<string, unknown>>;
+      validationFacts?: Record<string, boolean | null>;
+      ruleset?: Record<string, unknown>;
+    }) => {
+      const response = await fetch("/api/claim/full-review", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(params),
+      });
+      if (!response.ok) throw new Error("Full review failed");
+      return response.json();
+    },
+  },
   rulesets: buildResource("rulesets"),
   productClaimConfigs: buildResource("product-claim-configs"),
   categoryMaterialConfigs: buildResource("category-material-configs"),
@@ -77,6 +106,40 @@ export const api = {
   hospitalInfo: buildResource("hospital-info"),
   invoiceAudits: buildResource("invoice-audits"),
   userOperationLogs: buildResource("user-operation-logs"),
+  ai: {
+    getInventory: async () => apiFetch<{ capabilities: any[]; config: any }>("ai/inventory"),
+    getConfig: async () => apiFetch<any>("ai/config"),
+    updateConfig: async (config: any) =>
+      apiFetch<any>("ai/config", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(config),
+      }),
+  },
+  aiInteractionLogs: {
+    query: async (params: Record<string, string | number | boolean | undefined>) => {
+      const search = new URLSearchParams();
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          search.set(key, String(value));
+        }
+      });
+      return apiFetch<{ logs: any[]; total: number; limit: number; offset: number }>(
+        `ai/interaction-logs?${search.toString()}`,
+      );
+    },
+    getById: async (logId: string) =>
+      apiFetch<{ logs: any[]; total: number; limit: number; offset: number }>(
+        `ai/interaction-logs?logId=${encodeURIComponent(logId)}&view=detail&limit=1`,
+      ),
+  },
+  getClaimProcessTimeline: async (claimId: string) => {
+    const response = await fetch(
+      `/api/claim-process-timeline?claimId=${encodeURIComponent(claimId)}`,
+    );
+    if (!response.ok) throw new Error("Failed to get claim process timeline");
+    return response.json();
+  },
   // 询价及保单管理
   quotes: buildResource("quotes"),
   policies: buildResource("policies"),

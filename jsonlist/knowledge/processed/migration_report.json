@@ -1,0 +1,19 @@
+{
+  "migration_date": "2026-03-09T16:35:15.725Z",
+  "source": "medical-insurance-catalog.json",
+  "source_count": 5378,
+  "results": {
+    "drugs": {
+      "count": 3938,
+      "file": "drugs.json"
+    },
+    "service_items": {
+      "count": 1440,
+      "file": "service_items.json"
+    },
+    "aliases": {
+      "count": 42,
+      "file": "aliases.json"
+    }
+  }
+}

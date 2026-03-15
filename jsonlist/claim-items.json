@@ -52,5 +52,34 @@
       "mat-12": true,
       "mat-20": true
     }
+  },
+  {
+    "id": "item-engineering-third-party-death",
+    "name": "工程机械第三者死亡赔偿",
+    "description": "适用于工程机械设备附加第三者责任险项下的第三者死亡案件，重点核验责任比例、死亡事实、亲属关系及赔偿协议。",
+    "materialIds": [
+      "mat-43",
+      "mat-44",
+      "mat-45",
+      "mat-46",
+      "mat-49",
+      "mat-50",
+      "mat-52",
+      "mat-57",
+      "mat-58",
+      "mat-64",
+      "mat-65",
+      "mat-66"
+    ],
+    "responsibilityIds": [
+      "resp-19"
+    ],
+    "materialRequiredMap": {
+      "mat-43": true,
+      "mat-45": true,
+      "mat-49": true,
+      "mat-50": true,
+      "mat-52": true
+    }
   }
 ]

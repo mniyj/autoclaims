@@ -3,12 +3,12 @@
  * 整合图片 OCR、PDF/Word/Excel 解析、视频处理等能力
  */
 
-import { GoogleGenAI } from '@google/genai';
 import { parseDocument } from './documentParser.js';
 import { processVideo, extractKeyFrames } from './videoProcessor.js';
+import { invokeAICapability } from './aiRuntime.js';
 
-// 获取 API Key
-const getGeminiApiKey = () => process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || process.env.API_KEY;
+const GLM_OCR_URL = 'https://open.bigmodel.cn/api/paas/v4/layout_parsing';
+const PADDLE_OCR_URL = process.env.PADDLE_OCR_URL || 'http://localhost:8866/predict/ocr_system';
 
 // 文件类型分类映射
 const FILE_TYPE_MAPPINGS = {
@@ -143,27 +143,37 @@ export function inferDocumentType(fileName, context = {}) {
  * @returns {Promise<object>}
  */
 export async function processImageWithAI(base64Data, mimeType, prompt, options = {}) {
-  const apiKey = getGeminiApiKey();
-  if (!apiKey) {
-    throw new Error('Gemini API Key not found');
-  }
-
-  const ai = new GoogleGenAI({ apiKey });
-  const model = options.model || 'gemini-2.5-flash';
+  const fallbackOrder = Array.isArray(options.ocrFallbackProviders)
+    ? options.ocrFallbackProviders
+    : String(process.env.IMAGE_OCR_FALLBACKS || 'glm-ocr,paddle-ocr')
+        .split(',')
+        .map((item) => item.trim())
+        .filter(Boolean);
 
   try {
-    const response = await ai.models.generateContent({
-      model,
-      contents: {
-        parts: [
-          { inlineData: { mimeType, data: base64Data } },
-          { text: prompt || '请识别并提取图片中的所有文字信息，以纯文本格式返回。' }
-        ]
+    const { response } = await invokeAICapability({
+      capabilityId: 'admin.material.general_analysis',
+      request: {
+        contents: {
+          parts: [
+            { inlineData: { mimeType, data: base64Data } },
+            { text: prompt || '请识别并提取图片中的所有文字信息，以纯文本格式返回。' }
+          ]
+        },
+        config: {
+          responseMimeType: 'text/plain',
+          temperature: options.temperature || 0.1
+        }
       },
-      config: {
-        responseMimeType: 'text/plain',
-        temperature: options.temperature || 0.1
-      }
+      meta: {
+        sourceApp: 'admin-system',
+        module: 'fileProcessor.processImageWithAI',
+        operation: 'process_image_with_ai',
+        context: {
+          mimeType,
+          promptType: options.promptType || 'default',
+        },
+      },
     });
 
     const extractedText = response.text || '';
@@ -183,15 +193,97 @@ export async function processImageWithAI(base64Data, mimeType, prompt, options =
       text: extractedText,
       structuredData,
       usageMetadata: response.usageMetadata,
+      provider: 'gemini-vision',
     };
   } catch (error) {
+    const geminiError = error?.message || String(error);
+
+    for (const providerId of fallbackOrder) {
+      try {
+        if (providerId === 'glm-ocr') {
+          const text = await processImageWithGlmOcr(base64Data, mimeType);
+          return {
+            success: true,
+            text,
+            structuredData: {},
+            provider: 'glm-ocr',
+            fallbackFrom: 'gemini-vision',
+            fallbackReason: geminiError,
+          };
+        }
+
+        if (providerId === 'paddle-ocr') {
+          const text = await processImageWithPaddleOcr(base64Data, mimeType);
+          return {
+            success: true,
+            text,
+            structuredData: {},
+            provider: 'paddle-ocr',
+            fallbackFrom: 'gemini-vision',
+            fallbackReason: geminiError,
+          };
+        }
+      } catch (fallbackError) {
+        console.warn(`[fileProcessor] OCR fallback ${providerId} failed:`, fallbackError?.message || fallbackError);
+      }
+    }
+
     return {
       success: false,
       text: '',
       structuredData: {},
-      error: error.message,
+      error: geminiError,
+      provider: 'gemini-vision',
     };
   }
+}
+
+async function processImageWithGlmOcr(base64Data, mimeType) {
+  const apiKey = process.env.GLM_OCR_API_KEY || process.env.ZHIPU_API_KEY;
+  if (!apiKey) {
+    throw new Error('GLM OCR API Key not found');
+  }
+
+  const response = await fetch(GLM_OCR_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: 'glm-ocr',
+      file: `data:${mimeType};base64,${base64Data}`,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`GLM OCR Failed: ${errorText}`);
+  }
+
+  const data = await response.json();
+  return data?.md_results || '';
+}
+
+async function processImageWithPaddleOcr(base64Data, mimeType) {
+  const response = await fetch(PADDLE_OCR_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      images: [`data:${mimeType};base64,${base64Data}`],
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Paddle OCR Failed: ${errorText}`);
+  }
+
+  const data = await response.json();
+  return (data?.results?.[0]?.data || [])
+    .map((item) => item?.text)
+    .filter(Boolean)
+    .join('\n');
 }
 
 // ============================================================================
@@ -237,9 +329,12 @@ export async function processFile(params) {
           result.extractedText = '';
           result.parseStatus = 'completed';
           result.confidence = 100;
-        } else if (options.base64Data) {
+        } else if (options.base64Data || buffer) {
+          // Offline import may provide OSS-downloaded buffer instead of base64Data.
+          // Convert to base64 here to keep both call paths compatible.
+          const imageBase64 = options.base64Data || buffer.toString('base64');
           const imageResult = await processImageWithAI(
-            options.base64Data,
+            imageBase64,
             mimeType,
             options.prompt,
             options
@@ -384,10 +479,6 @@ export async function processFile(params) {
  * @returns {Promise<object>}
  */
 async function analyzeDocumentContent(document, options = {}) {
-  const apiKey = getGeminiApiKey();
-  if (!apiKey) return null;
-
-  const ai = new GoogleGenAI({ apiKey });
   const text = document.extractedText || '';
   const fileType = document.fileType;
 
@@ -428,13 +519,25 @@ ${text?.substring(0, 2000)}`
   const prompt = analysisPrompts[fileType] || analysisPrompts.default;
 
   try {
-    const response = await ai.models.generateContent({
-      model: options.analysisModel || 'gemini-2.5-flash',
-      contents: { parts: [{ text: prompt }] },
-      config: {
-        responseMimeType: 'application/json',
-        temperature: 0.1
-      }
+    const { response } = await invokeAICapability({
+      capabilityId: 'admin.material.general_analysis',
+      request: {
+        contents: { parts: [{ text: prompt }] },
+        config: {
+          responseMimeType: 'application/json',
+          temperature: 0.1
+        }
+      },
+      meta: {
+        sourceApp: 'admin-system',
+        module: 'fileProcessor.analyzeDocumentContent',
+        operation: 'analyze_document_content',
+        context: {
+          documentId: document.documentId,
+          fileType,
+          fileName: document.fileName,
+        },
+      },
     });
 
     const analysisText = response.text || '';

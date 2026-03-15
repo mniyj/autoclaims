@@ -7,7 +7,7 @@ import { spawn } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 import os from 'os';
-import { GoogleGenAI } from '@google/genai';
+import { generateGeminiContent, invokeAICapability } from './aiRuntime.js';
 
 // 获取 API Key
 const getGeminiApiKey = () => process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || process.env.API_KEY;
@@ -276,37 +276,37 @@ export async function extractAndTranscribeAudio(videoPath, options = {}) {
     };
   }
 
-  const apiKey = getGeminiApiKey();
-  if (!apiKey) {
-    return {
-      success: true,
-      audioPath,
-      transcript: '',
-      note: 'No API key for transcription',
-    };
-  }
-
   try {
-    const ai = new GoogleGenAI({ apiKey });
     const audioData = fs.readFileSync(audioPath);
 
     // 使用 Gemini 处理音频
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: {
-        parts: [
-          {
-            inlineData: {
-              mimeType: 'audio/mp3',
-              data: audioData.toString('base64'),
-            }
-          },
-          { text: '请将这段音频内容转写为文字。如果是中文请使用中文输出。' }
-        ]
+    const { response } = await invokeAICapability({
+      capabilityId: 'shared.audio_transcription',
+      request: {
+        contents: {
+          parts: [
+            {
+              inlineData: {
+                mimeType: 'audio/mp3',
+                data: audioData.toString('base64'),
+              }
+            },
+            { text: '请将这段音频内容转写为文字。如果是中文请使用中文输出。' }
+          ]
+        },
+        config: {
+          temperature: 0,
+        }
       },
-      config: {
-        temperature: 0,
-      }
+      meta: {
+        sourceApp: 'admin-system',
+        module: 'videoProcessor.transcribeAudio',
+        operation: 'transcribe_audio',
+        context: {
+          audioPath,
+          fileSize: stats.size,
+        },
+      },
     });
 
     return {
@@ -340,32 +340,44 @@ export async function analyzeKeyFrames(keyFrames, context = '事故现场分析'
     }));
   }
 
-  const ai = new GoogleGenAI({ apiKey });
   const results = [];
 
   for (const frame of keyFrames) {
     try {
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: {
-          parts: [
-            {
-              inlineData: {
-                mimeType: 'image/jpeg',
-                data: frame.imageData,
-              }
-            },
-            { text: `请分析这张图片，上下文是"${context}"。
+      const { response } = await generateGeminiContent({
+        apiKey,
+        request: {
+          model: 'gemini-2.5-flash',
+          contents: {
+            parts: [
+              {
+                inlineData: {
+                  mimeType: 'image/jpeg',
+                  data: frame.imageData,
+                }
+              },
+              { text: `请分析这张图片，上下文是"${context}"。
 请描述：
 1. 场景内容（人物、物体、环境）
 2. 可见的细节或线索
 3. 是否有异常情况
 请用简洁的中文回答。` }
-          ]
+            ]
+          },
+          config: {
+            temperature: 0.1,
+          }
         },
-        config: {
-          temperature: 0.1,
-        }
+        meta: {
+          sourceApp: 'admin-system',
+          module: 'videoProcessor.analyzeKeyFrames',
+          operation: 'analyze_key_frame',
+          context: {
+            frameTimestamp: frame.timestamp,
+            frameIndex: frame.index,
+            analysisContext: context,
+          },
+        },
       });
 
       results.push({

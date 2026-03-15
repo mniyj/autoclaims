@@ -2,13 +2,36 @@ import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
 import http from "http";
+import { readFileSync } from "fs";
 import { handleApiRequest } from "./server/apiHandler.js";
 import { startScheduler, stopScheduler } from "./server/taskQueue/scheduler.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Load .env.local (Vite loads this in dev, but production server needs to do it manually)
+try {
+  const envContent = readFileSync(path.join(__dirname, ".env.local"), "utf8");
+  for (const line of envContent.split("\n")) {
+    const trimmed = line.trim();
+    if (trimmed && !trimmed.startsWith("#")) {
+      const eqIdx = trimmed.indexOf("=");
+      if (eqIdx > 0) {
+        const key = trimmed.slice(0, eqIdx).trim();
+        const value = trimmed.slice(eqIdx + 1).trim();
+        if (!process.env[key]) {
+          process.env[key] = value;
+        }
+      }
+    }
+  }
+  console.log("[Server] Loaded environment from .env.local");
+} catch {
+  // .env.local not found - rely on system environment variables
+}
+
 const app = express();
+const server = http.createServer(app);
 
 // 从环境变量获取端口，默认 3000
 // 在阿里云部署时，可以通过 PORT=8080 node server.js 来指定端口
@@ -37,6 +60,25 @@ app.use((req, res, next) => {
 
 // JSON body 解析中间件（用于 API 请求）
 app.use(express.json({ limit: "10mb" }));
+
+try {
+  const voiceRoutesModule = await import("./dist-server/server/routes/voice.js");
+  voiceRoutesModule.initializeVoiceRoutes(server);
+  app.use("/api/voice", voiceRoutesModule.default);
+  console.log("[Server] 语音 API 路由已初始化");
+} catch (err) {
+  console.warn("[Server] 语音 API 路由未启动:", err.message);
+  console.warn("[Server] 提示：请先运行 npm run build:server 编译后端代码");
+}
+
+// 知识库 API 路由
+try {
+  const knowledgeRoutes = await import("./server/knowledge/api/routes.js");
+  app.use("/api/knowledge", knowledgeRoutes.default);
+  console.log("[Server] 知识库 API 路由已初始化");
+} catch (err) {
+  console.warn("[Server] 知识库 API 路由未启动:", err.message);
+}
 
 // API 路由 — 优先于静态文件和 SPA 路由
 app.all(/^\/api\/(.*)$/, (req, res) => {
@@ -78,20 +120,6 @@ if (BASE_PATH !== "/") {
     res.sendFile(path.join(distPath, "index.html"));
   });
 }
-
-// 创建 HTTP 服务器
-const server = http.createServer(app);
-
-// 初始化语音 WebSocket 服务（动态加载，避免 TS 文件未编译时崩溃）
-import("./dist-server/server/voice/VoiceGateway.js")
-  .then(({ VoiceGateway }) => {
-    new VoiceGateway(server);
-    console.log("[Server] 语音 WebSocket 服务已初始化");
-  })
-  .catch((err) => {
-    console.warn("[Server] 语音 WebSocket 服务未启动:", err.message);
-    console.warn("[Server] 提示：请先运行 npm run build:server 编译后端代码");
-  });
 
 server.listen(PORT, "0.0.0.0", () => {
   console.log(

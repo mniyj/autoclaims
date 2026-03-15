@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { type RulesetRule, type FieldDefinition, ExecutionDomain, RuleStatus } from '../../types';
-import { DOMAIN_LABELS, RULE_STATUS_LABELS, RULE_STATUS_COLORS, CATEGORY_LABELS, ACTION_TYPE_LABELS } from '../../constants';
+import { DOMAIN_LABELS, RULE_STATUS_LABELS, RULE_STATUS_COLORS, ACTION_TYPE_LABELS } from '../../constants';
 import RuleDetailModal from './RuleDetailModal';
+import { getRuleSemantic } from './workbenchUtils';
 
 interface RuleListTabProps {
   rules: RulesetRule[];
@@ -30,7 +31,7 @@ const RuleListTab: React.FC<RuleListTabProps> = ({ rules, fieldDictionary, onUpd
   const [needsReviewOnly, setNeedsReviewOnly] = useState(false);
   const [selectedRuleIds, setSelectedRuleIds] = useState<Set<string>>(new Set());
   const [editingRule, setEditingRule] = useState<RulesetRule | null>(null);
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  const [expandedSemantics, setExpandedSemantics] = useState<Set<string>>(new Set());
 
   const filteredRules = useMemo(() => {
     let result = rules;
@@ -44,23 +45,25 @@ const RuleListTab: React.FC<RuleListTabProps> = ({ rules, fieldDictionary, onUpd
     return result;
   }, [rules, searchQuery, statusFilter, domainFilter, needsReviewOnly]);
 
-  // Group by domain then by category
+  // Group by domain then by rule semantic
   const groupedRules = useMemo(() => {
     const domains = [ExecutionDomain.ELIGIBILITY, ExecutionDomain.ASSESSMENT, ExecutionDomain.POST_PROCESS];
     return domains.map((domain) => {
       const domainRules = filteredRules.filter(r => r.execution.domain === domain);
-      const categories = new Map<string, RulesetRule[]>();
+      const semantics = new Map<string, { label: string; rules: RulesetRule[] }>();
       domainRules.forEach((r) => {
-        const cat = r.category;
-        if (!categories.has(cat)) categories.set(cat, []);
-        categories.get(cat)!.push(r);
+        const semantic = getRuleSemantic(r);
+        if (!semantics.has(semantic.key)) {
+          semantics.set(semantic.key, { label: semantic.label, rules: [] });
+        }
+        semantics.get(semantic.key)!.rules.push(r);
       });
-      return { domain, categories, count: domainRules.length };
+      return { domain, semantics, count: domainRules.length };
     });
   }, [filteredRules]);
 
-  const toggleCategory = (key: string) => {
-    setExpandedCategories(prev => {
+  const toggleSemantic = (key: string) => {
+    setExpandedSemantics(prev => {
       const next = new Set(prev);
       if (next.has(key)) next.delete(key); else next.add(key);
       return next;
@@ -142,7 +145,7 @@ const RuleListTab: React.FC<RuleListTabProps> = ({ rules, fieldDictionary, onUpd
 
       {/* Domain columns */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {groupedRules.map(({ domain, categories, count }) => (
+        {groupedRules.map(({ domain, semantics, count }) => (
           <div key={domain} className={`border rounded-lg overflow-hidden ${DOMAIN_COLORS[domain]}`}>
             <div className={`px-3 py-2 ${DOMAIN_HEADER_COLORS[domain]} font-medium text-sm flex justify-between items-center`}>
               <span>{DOMAIN_LABELS[domain]}</span>
@@ -150,16 +153,17 @@ const RuleListTab: React.FC<RuleListTabProps> = ({ rules, fieldDictionary, onUpd
             </div>
 
             <div className="divide-y divide-gray-100">
-              {Array.from(categories.entries()).map(([category, catRules]) => {
-                const catKey = `${domain}-${category}`;
-                const isExpanded = expandedCategories.has(catKey) || expandedCategories.size === 0;
+              {Array.from(semantics.entries()).map(([semanticKey, semanticGroup]) => {
+                const groupKey = `${domain}-${semanticKey}`;
+                const isExpanded = expandedSemantics.has(groupKey) || expandedSemantics.size === 0;
+                const catRules = semanticGroup.rules;
                 return (
-                  <div key={catKey}>
+                  <div key={groupKey}>
                     <button
-                      onClick={() => toggleCategory(catKey)}
+                      onClick={() => toggleSemantic(groupKey)}
                       className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 hover:bg-gray-100 text-xs text-gray-600"
                     >
-                      <span className="font-medium">{CATEGORY_LABELS[category as keyof typeof CATEGORY_LABELS] || category}</span>
+                      <span className="font-medium">{semanticGroup.label}</span>
                       <div className="flex items-center space-x-2">
                         <span className="text-gray-400">{catRules.length}</span>
                         <svg className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">

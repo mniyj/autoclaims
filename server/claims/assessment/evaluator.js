@@ -15,13 +15,32 @@ function inferCoverageCodeByClaimType(context, state = {}) {
   return inferAccidentCoverageCode(context, state);
 }
 
-export function evaluateFacts({ claimCaseId, productCode, invoiceItems = [], ocrData = {} }) {
+function getItemAmount(item) {
+  return Number(item?.totalPrice ?? item?.amount ?? 0) || 0;
+}
+
+export function evaluateFacts({ claimCaseId, productCode, invoiceItems = [], ocrData = {}, validationFacts = null, rulesetOverride = null }) {
   const startTime = Date.now();
-  const context = buildContext({ claimCaseId, productCode, ocrData, invoiceItems });
+  const context = buildContext({ claimCaseId, productCode, ocrData, invoiceItems, validationFacts, rulesetOverride });
   const rules = context.ruleset.rules;
   const assessmentRules = sortRulesByPriority(filterRulesByDomain(rules, ExecutionDomain.ASSESSMENT));
-  const expenseItems = invoiceItems.length > 0 ? invoiceItems : (ocrData.chargeItems || []);
-  const totalClaimed = expenseItems.reduce((sum, item) => sum + (item.totalPrice || item.amount || 0), 0);
+  const expenseItems =
+    invoiceItems.length > 0
+      ? invoiceItems
+      : Array.isArray(ocrData.chargeItems) && ocrData.chargeItems.length > 0
+        ? ocrData.chargeItems
+        : Number(context.aggregation?.expenseAggregation?.medicalTotal || 0) > 0
+          ? [
+              {
+                id: 'aggregated-medical-total',
+                itemName: '医疗费用汇总',
+                amount: Number(context.aggregation?.expenseAggregation?.medicalTotal || 0),
+                totalPrice: Number(context.aggregation?.expenseAggregation?.medicalTotal || 0),
+                source: 'aggregation',
+              },
+            ]
+          : [];
+  const totalClaimed = expenseItems.reduce((sum, item) => sum + getItemAmount(item), 0);
 
   const state = {
     calculatedAmount: totalClaimed,
@@ -34,68 +53,11 @@ export function evaluateFacts({ claimCaseId, productCode, invoiceItems = [], ocr
   };
 
   const executionResults = [];
-  const itemBreakdown = [];
 
   for (const rule of assessmentRules) {
     const result = executeSingleRule(rule, context, state);
     executionResults.push(result);
-
-    if (!result.item_results || result.item_results.length === 0) {
-      continue;
-    }
-
-    for (const itemResult of result.item_results) {
-      const item = itemResult.item;
-      const itemName = item.itemName || item.name || `项目${itemResult.itemIndex + 1}`;
-      const originalAmount = item.totalPrice || item.amount || 0;
-
-      let approvedAmount = originalAmount;
-      let reason = '通过';
-
-      if (!itemResult.conditionMet) {
-        approvedAmount = 0;
-        reason = '不符合赔付条件';
-      } else if (itemResult.actionResult?.data?.reduction_ratio) {
-        const reduction = itemResult.actionResult.data.reduction_ratio;
-        approvedAmount = originalAmount * (1 - reduction);
-        reason = `调减 ${reduction * 100}%`;
-      } else if (itemResult.actionResult?.data?.item_ratio) {
-        const ratio = itemResult.actionResult.data.item_ratio;
-        approvedAmount = originalAmount * ratio;
-        reason = `按 ${ratio * 100}% 赔付`;
-      }
-
-      const existingIndex = itemBreakdown.findIndex(entry => entry.item === itemName);
-      if (existingIndex >= 0) {
-        itemBreakdown[existingIndex].approved = approvedAmount;
-        itemBreakdown[existingIndex].reason = reason;
-      } else {
-        itemBreakdown.push({
-          item: itemName,
-          claimed: originalAmount,
-          approved: approvedAmount,
-          reason
-        });
-      }
-    }
   }
-
-  if (itemBreakdown.length === 0 && expenseItems.length > 0) {
-    for (const item of expenseItems) {
-      const itemName = item.itemName || item.name || '费用项目';
-      const originalAmount = item.totalPrice || item.amount || 0;
-      itemBreakdown.push({
-        item: itemName,
-        claimed: originalAmount,
-        approved: originalAmount,
-        reason: '通过'
-      });
-    }
-  }
-
-  const totalApproved = itemBreakdown.reduce((sum, item) => sum + item.approved, 0);
-  state.totalApprovedAmount = totalApproved;
-  state.calculatedAmount = totalApproved;
 
   return {
     context,
@@ -104,8 +66,7 @@ export function evaluateFacts({ claimCaseId, productCode, invoiceItems = [], ocr
     faultRatio: context.ruleset?.product_line === 'AUTO' ? getAutoFaultRatio(context) : null,
     expenseItems,
     totalClaimed,
-    totalApproved,
-    itemBreakdown,
+    assessmentRules,
     executionDetails: executionResults,
     duration: Date.now() - startTime
   };

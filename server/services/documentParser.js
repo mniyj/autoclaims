@@ -4,12 +4,69 @@
  */
 
 import { spawn } from 'child_process';
+import os from 'os';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+function isMissingModuleError(error) {
+  const code = error?.code || '';
+  const message = error?.message || '';
+  return code === 'MODULE_NOT_FOUND'
+    || code === 'ERR_MODULE_NOT_FOUND'
+    || message.includes('module not installed')
+    || message.includes('Cannot find package');
+}
+
+function createTempFile(buffer, extension) {
+  const tempPath = path.join(
+    os.tmpdir(),
+    `claim-doc-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${extension}`
+  );
+  fs.writeFileSync(tempPath, buffer);
+  return tempPath;
+}
+
+async function withTempFile(buffer, extension, handler) {
+  const tempPath = createTempFile(buffer, extension);
+  try {
+    return await handler(tempPath);
+  } finally {
+    try {
+      fs.unlinkSync(tempPath);
+    } catch {
+      // Ignore temp cleanup failures.
+    }
+  }
+}
+
+function runCommand(command, args) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args);
+    let stdout = '';
+    let stderr = '';
+
+    child.stdout.on('data', (chunk) => {
+      stdout += chunk.toString();
+    });
+
+    child.stderr.on('data', (chunk) => {
+      stderr += chunk.toString();
+    });
+
+    child.on('error', reject);
+    child.on('close', (code) => {
+      if (code === 0) {
+        resolve({ stdout, stderr });
+        return;
+      }
+      reject(new Error(stderr || `${command} exited with code ${code}`));
+    });
+  });
+}
 
 // ============================================================================
 // PDF 解析器
@@ -37,16 +94,19 @@ export async function parsePDF(buffer) {
       },
     };
   } catch (error) {
-    // 如果 pdf-parse 未安装，返回模拟数据
-    if (error.code === 'MODULE_NOT_FOUND') {
-      console.warn('[documentParser] pdf-parse not installed, using fallback');
-      return {
-        success: false,
-        text: '',
-        pages: 0,
-        metadata: {},
-        error: 'pdf-parse module not installed. Run: npm install pdf-parse',
-      };
+    if (isMissingModuleError(error)) {
+      console.warn('[documentParser] pdf-parse not installed, using python fallback');
+      return withTempFile(buffer, 'pdf', async (filePath) => {
+        const fallback = await parsePDFWithTables(filePath);
+        return {
+          success: fallback.success,
+          text: fallback.text || '',
+          pages: fallback.pages || 0,
+          tables: fallback.tables || [],
+          metadata: {},
+          error: fallback.error,
+        };
+      });
     }
     throw error;
   }
@@ -147,14 +207,16 @@ export async function parseWord(buffer) {
       messages: result.messages,
     };
   } catch (error) {
-    if (error.code === 'MODULE_NOT_FOUND') {
-      console.warn('[documentParser] mammoth not installed, using fallback');
-      return {
-        success: false,
-        text: '',
-        messages: [],
-        error: 'mammoth module not installed. Run: npm install mammoth',
-      };
+    if (isMissingModuleError(error)) {
+      console.warn('[documentParser] mammoth not installed, using textutil fallback');
+      return withTempFile(buffer, 'docx', async (filePath) => {
+        const { stdout } = await runCommand('/usr/bin/textutil', ['-convert', 'txt', '-stdout', filePath]);
+        return {
+          success: true,
+          text: stdout,
+          messages: ['textutil_fallback'],
+        };
+      });
     }
     throw error;
   }
@@ -177,13 +239,15 @@ export async function parseWordToHTML(buffer) {
       messages: result.messages,
     };
   } catch (error) {
-    if (error.code === 'MODULE_NOT_FOUND') {
-      return {
-        success: false,
-        html: '',
-        messages: [],
-        error: 'mammoth module not installed. Run: npm install mammoth',
-      };
+    if (isMissingModuleError(error)) {
+      return withTempFile(buffer, 'docx', async (filePath) => {
+        const { stdout } = await runCommand('/usr/bin/textutil', ['-convert', 'html', '-stdout', filePath]);
+        return {
+          success: true,
+          html: stdout,
+          messages: ['textutil_fallback'],
+        };
+      });
     }
     throw error;
   }
@@ -222,7 +286,7 @@ export async function parseExcel(buffer) {
       sheetNames: workbook.SheetNames,
     };
   } catch (error) {
-    if (error.code === 'MODULE_NOT_FOUND') {
+    if (isMissingModuleError(error)) {
       console.warn('[documentParser] xlsx not installed, using fallback');
       return {
         success: false,
@@ -271,7 +335,7 @@ export async function parseExcelToObjects(buffer, sheetName = null) {
       sheetName: targetSheet,
     };
   } catch (error) {
-    if (error.code === 'MODULE_NOT_FOUND') {
+    if (isMissingModuleError(error)) {
       return {
         success: false,
         data: [],

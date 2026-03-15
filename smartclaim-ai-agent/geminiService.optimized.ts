@@ -1,8 +1,6 @@
 
-import { GoogleGenAI } from "@google/genai";
 import { ClaimState, DocumentAnalysis } from "./types";
-
-const getAI = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
+import { generateContentViaProxy } from "./services/aiProxyService";
 
 // 优化1: 简化 Prompt，减少 Token 消耗
 const SIMPLE_PROMPT = `识别文档类型并提取关键信息。
@@ -12,10 +10,9 @@ const SIMPLE_PROMPT = `识别文档类型并提取关键信息。
 
 // 优化2: 分级处理 - 快速识别 + 按需深度解析
 export const quickAnalyze = async (base64: string, mimeType: string): Promise<{ category: string; needsDeepAnalysis: boolean }> => {
-  const ai = getAI();
   const model = 'gemini-2.5-flash'; // 使用更快的模型
   
-  const response = await ai.models.generateContent({
+  const { response } = await generateContentViaProxy({
     model,
     contents: {
       parts: [
@@ -25,8 +22,10 @@ export const quickAnalyze = async (base64: string, mimeType: string): Promise<{ 
     },
     config: {
       responseMimeType: "application/json",
-      temperature: 0.1, // 降低温度提高速度
-    }
+      temperature: 0.1,
+    },
+    operation: 'optimized_quick_analyze',
+    context: { mimeType },
   });
 
   return JSON.parse(response.text || '{}');
@@ -37,7 +36,6 @@ export const analyzeBatch = async (
   files: Array<{ base64: string; mimeType: string; name: string }>,
   state: ClaimState
 ): Promise<DocumentAnalysis[]> => {
-  const ai = getAI();
   const model = 'gemini-2.5-flash';
   
   // 将多个文件合并为一次请求
@@ -50,13 +48,18 @@ export const analyzeBatch = async (
     text: `批量识别以上${files.length}个文档，返回JSON数组: [{"category":"类型","ocr":{"name":"","date":"","amount":0}}]` 
   });
 
-  const response = await ai.models.generateContent({
+  const { response } = await generateContentViaProxy({
     model,
     contents: { parts },
     config: {
       responseMimeType: "application/json",
       temperature: 0.1,
-    }
+    },
+    operation: 'optimized_analyze_batch',
+    context: {
+      fileCount: files.length,
+      claimStatus: state.status,
+    },
   });
 
   return JSON.parse(response.text || '[]');
@@ -81,7 +84,6 @@ export const analyzeDocumentOptimized = async (
     return analysisCache.get(hash)!;
   }
 
-  const ai = getAI();
   const model = 'gemini-2.5-flash'; // 更快的模型
   
   // 精简的 Prompt
@@ -91,7 +93,7 @@ export const analyzeDocumentOptimized = async (
 3. 清晰度评分(0-100)
 返回JSON`;
 
-  const response = await ai.models.generateContent({
+  const { response } = await generateContentViaProxy({
     model,
     contents: {
       parts: [
@@ -102,7 +104,12 @@ export const analyzeDocumentOptimized = async (
     config: {
       responseMimeType: "application/json",
       temperature: 0.1,
-    }
+    },
+    operation: 'optimized_analyze_document',
+    context: {
+      mimeType,
+      claimStatus: state.status,
+    },
   });
 
   const result = JSON.parse(response.text || '{}');
@@ -126,7 +133,6 @@ export const deepAnalyze = async (
   category: string,
   state: ClaimState
 ): Promise<any> => {
-  const ai = getAI();
   const model = 'gemini-2.5-flash';
   
   let schema = {};
@@ -144,7 +150,7 @@ export const deepAnalyze = async (
     };
   }
 
-  const response = await ai.models.generateContent({
+  const { response } = await generateContentViaProxy({
     model,
     contents: {
       parts: [
@@ -154,7 +160,13 @@ export const deepAnalyze = async (
     },
     config: {
       responseMimeType: "application/json",
-    }
+    },
+    operation: 'optimized_deep_analyze',
+    context: {
+      mimeType,
+      category,
+      claimStatus: state.status,
+    },
   });
 
   return JSON.parse(response.text || '{}');

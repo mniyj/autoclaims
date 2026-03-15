@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { type InsuranceRuleset, RulesetProductLine, ExecutionDomain, RuleStatus, RuleActionType, RuleCategory, ConditionLogic } from '../../types';
+import { type InsuranceRuleset, RulesetProductLine, ExecutionDomain, RuleStatus, RuleActionType, RuleKind, ConditionLogic } from '../../types';
 
 interface ValidationError {
   path: string;
@@ -16,7 +16,7 @@ const VALID_PRODUCT_LINES = Object.values(RulesetProductLine);
 const VALID_DOMAINS = Object.values(ExecutionDomain);
 const VALID_STATUSES = Object.values(RuleStatus);
 const VALID_ACTION_TYPES = Object.values(RuleActionType);
-const VALID_CATEGORIES = Object.values(RuleCategory);
+const VALID_RULE_KINDS = Object.values(RuleKind);
 const VALID_LOGICS = Object.values(ConditionLogic);
 
 function validateRuleset(data: Record<string, unknown>): ValidationError[] {
@@ -54,8 +54,11 @@ function validateRuleset(data: Record<string, unknown>): ValidationError[] {
         errors.push({ path: `rules[${idx}].execution.domain`, message: '执行域无效' });
       }
 
-      if (!rule.category || !VALID_CATEGORIES.includes(rule.category as RuleCategory)) {
-        errors.push({ path: `rules[${idx}].category`, message: '规则类别无效' });
+      if (!rule.rule_kind) {
+        errors.push({ path: `rules[${idx}].rule_kind`, message: '缺少规则语义' });
+      }
+      if (rule.rule_kind && !VALID_RULE_KINDS.includes(rule.rule_kind as RuleKind)) {
+        errors.push({ path: `rules[${idx}].rule_kind`, message: '规则语义无效' });
       }
 
       if (!rule.status || !VALID_STATUSES.includes(rule.status as RuleStatus)) {

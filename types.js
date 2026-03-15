@@ -91,6 +91,20 @@ export var RuleCategory;
     RuleCategory["AGGREGATE_CAP"] = "AGGREGATE_CAP";
     RuleCategory["POST_ADJUSTMENT"] = "POST_ADJUSTMENT";
 })(RuleCategory || (RuleCategory = {}));
+export var RuleKind;
+(function (RuleKind) {
+    RuleKind["GATE"] = "GATE";
+    RuleKind["TRIGGER"] = "TRIGGER";
+    RuleKind["EXCLUSION"] = "EXCLUSION";
+    RuleKind["ADJUSTMENT"] = "ADJUSTMENT";
+    RuleKind["BENEFIT"] = "BENEFIT";
+    RuleKind["ITEM_ELIGIBILITY"] = "ITEM_ELIGIBILITY";
+    RuleKind["ITEM_RATIO"] = "ITEM_RATIO";
+    RuleKind["ITEM_PRICING"] = "ITEM_PRICING";
+    RuleKind["ITEM_CAP"] = "ITEM_CAP";
+    RuleKind["ITEM_FLAG"] = "ITEM_FLAG";
+    RuleKind["POST_PROCESS"] = "POST_PROCESS";
+})(RuleKind || (RuleKind = {}));
 export var ConditionOperator;
 (function (ConditionOperator) {
     ConditionOperator["EQ"] = "EQ";

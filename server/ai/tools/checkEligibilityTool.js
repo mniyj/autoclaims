@@ -6,6 +6,7 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { checkEligibility } from '../../rules/engine.js';
+import { getLatestValidationFacts } from '../../rules/context.js';
 
 export const checkEligibilityTool = new DynamicStructuredTool({
   name: 'check_eligibility',
@@ -21,18 +22,56 @@ export const checkEligibilityTool = new DynamicStructuredTool({
     claimCaseId: z.string().optional().describe('理赔案件ID（如 CLM001）'),
     productCode: z.string().optional().describe('产品代码（如 ZA-002）'),
     accidentDate: z.string().optional().describe('事故日期 YYYY-MM-DD'),
+    deathConfirmed: z.boolean().optional().describe('是否已确认身故'),
+    deathDate: z.string().optional().describe('死亡日期 YYYY-MM-DD'),
+    causeType: z.string().optional().describe('事故原因类型，如 ACCIDENT'),
+    resultType: z.string().optional().describe('结果类型，如 DEATH'),
+    scenario: z.string().optional().describe('事故场景，如 PUBLIC_TRANSPORT_PASSENGER'),
+    transportType: z.string().optional().describe('交通工具类型，如 BUS、TRAIN、AIRCRAFT'),
     isDrunkDriving: z.boolean().optional().describe('是否酒驾'),
     diagnosis: z.string().optional().describe('诊断结果'),
     hospitalName: z.string().optional().describe('医院名称'),
   }),
   
-  func: async ({ claimCaseId, productCode, accidentDate, isDrunkDriving, diagnosis, hospitalName }) => {
+  func: async ({
+    claimCaseId,
+    productCode,
+    accidentDate,
+    deathConfirmed,
+    deathDate,
+    causeType,
+    resultType,
+    scenario,
+    transportType,
+    isDrunkDriving,
+    diagnosis,
+    hospitalName
+  }) => {
     try {
       // 构建 OCR 数据对象
       const ocrData = {};
       
       if (accidentDate) {
         ocrData.accident_date = accidentDate;
+      }
+      if (deathConfirmed !== undefined) {
+        ocrData.death_confirmed = deathConfirmed;
+      }
+      if (deathDate) {
+        ocrData.death_date = deathDate;
+        ocrData.result_date = deathDate;
+      }
+      if (causeType) {
+        ocrData.cause_type = causeType;
+      }
+      if (resultType) {
+        ocrData.result_type = resultType;
+      }
+      if (scenario) {
+        ocrData.scenario = scenario;
+      }
+      if (transportType) {
+        ocrData.transport_type = transportType;
       }
       if (isDrunkDriving !== undefined) {
         ocrData.is_drunk_driving = isDrunkDriving;
@@ -47,7 +86,8 @@ export const checkEligibilityTool = new DynamicStructuredTool({
       const result = await checkEligibility({
         claimCaseId,
         productCode,
-        ocrData
+        ocrData,
+        validationFacts: claimCaseId ? getLatestValidationFacts(claimCaseId) : null,
       });
       
       // 格式化输出供 AI 理解

@@ -204,7 +204,7 @@ export default function RulesetFlowCanvas({
                   </div>
                   <div className="flex items-center space-x-2">
                     <div className="w-3 h-3 bg-cyan-50 border border-cyan-400 rounded" />
-                    <span>类别</span>
+                    <span>语义组</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <div className="w-3 h-3 bg-green-50 border border-green-300 rounded" />

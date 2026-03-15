@@ -351,18 +351,27 @@ const MaterialReviewDrawer: React.FC<MaterialReviewDrawerProps> = ({
                 <span className="text-gray-500">识别状态：</span>
                 <span className={`font-medium ${
                   material.status === 'completed'
-                    ? material.classification?.materialId === 'unknown'
-                      ? 'text-gray-600'
-                      : 'text-green-600'
+                    ? material.classification?.errorMessage
+                      ? 'text-red-600'
+                      : material.classification?.materialId === 'unknown'
+                        ? 'text-gray-600'
+                        : 'text-green-600'
                     : 'text-red-600'
                 }`}>
                   {material.status === 'completed'
-                    ? material.classification?.materialId === 'unknown'
-                      ? '未识别'
-                      : '已识别'
+                    ? material.classification?.errorMessage
+                      ? '分类失败'
+                      : material.classification?.materialId === 'unknown'
+                        ? '未识别'
+                        : '已识别'
                     : '处理失败'}
                 </span>
               </div>
+              {material.classification?.errorMessage && (
+                <div className="p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+                  分类错误：{material.classification.errorMessage}
+                </div>
+              )}
               {material.classification?.confidence !== undefined && (
                 <div className="flex justify-between">
                   <span className="text-gray-500">分类置信度：</span>

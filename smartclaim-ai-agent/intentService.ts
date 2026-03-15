@@ -3,7 +3,7 @@
  * 使用 Gemini Function Calling 识别用户意图
  */
 
-import { GoogleGenAI, Type } from "@google/genai";
+import { Type } from "@google/genai";
 import {
   IntentType,
   IntentRecognitionResult,
@@ -12,8 +12,7 @@ import {
   ClaimState
 } from "./types";
 import { executeTool } from "./intentTools";
-
-const getAI = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
+import { generateContentViaProxy } from "./services/aiProxyService";
 
 /** 置信度阈值 - 低于此值视为 GENERAL_CHAT */
 const CONFIDENCE_THRESHOLD = 0.7;
@@ -264,41 +263,32 @@ export async function recognizeIntent(
   conversationHistory: { role: string; content: string }[],
   claimState: ClaimState
 ): Promise<IntentRecognitionResult> {
-  const ai = getAI();
-  const model = "gemini-2.5-flash";
-
   try {
-    // 构建上下文信息
-    const contextInfo = `
-当前对话上下文：
-- 当前理赔状态: ${claimState.status}
-- 已关联案件数: ${claimState.historicalClaims?.length || 0}
-- 最近案件ID: ${claimState.historicalClaims?.[0]?.id || '无'}
-- 已上传材料数: ${claimState.documents?.length || 0}
-`;
-
-    const response = await ai.models.generateContent({
-      model,
-      contents: [
-        {
-          parts: [
-            { text: INTENT_RECOGNITION_PROMPT },
-            { text: contextInfo },
-            { text: `对话历史：\n${conversationHistory.slice(-5).map(m => `${m.role}: ${m.content}`).join('\n')}` },
-            { text: `用户最新输入："${userInput}"` },
-            { text: "请识别用户意图并返回结果。" }
-          ]
-        }
-      ],
+    const { response } = await generateContentViaProxy({
+      capabilityId: 'smartclaim.intent',
+      promptTemplateId: 'smartclaim_intent_recognition',
+      templateVariables: {
+        claimStatus: claimState.status,
+        historicalClaimCount: claimState.historicalClaims?.length || 0,
+        recentClaimId: claimState.historicalClaims?.[0]?.id || '无',
+        documentCount: claimState.documents?.length || 0,
+        conversationHistory: conversationHistory.slice(-5).map(m => `${m.role}: ${m.content}`).join('\n'),
+        userInput,
+      },
       config: {
-        temperature: 0.1, // 低温度确保确定性
+        temperature: 0.1,
         tools: [{ functionDeclarations: [INTENT_RECOGNITION_TOOL] }],
         toolConfig: {
           functionCallingConfig: {
-            mode: "ANY" as any // 强制使用工具
+            mode: "ANY" as any
           }
         }
-      }
+      },
+      operation: 'intent_recognition',
+      context: {
+        claimStatus: claimState.status,
+        historyCount: conversationHistory.length,
+      },
     });
 
     // 解析工具调用结果

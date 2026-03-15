@@ -5,6 +5,13 @@ interface TTSServiceConfig {
   accessKeyId: string;
   accessKeySecret: string;
   appKey: string;
+  defaultVoice: string;
+}
+
+function generateUUID(): string {
+  return "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx".replace(/x/g, () =>
+    Math.floor(Math.random() * 16).toString(16),
+  );
 }
 
 export class AliyunTTSService {
@@ -27,17 +34,23 @@ export class AliyunTTSService {
     }
   ): Promise<void> {
     try {
+      console.log(
+        `[AliyunTTS] Starting synthesis, textLength=${text.length}, voice=${options?.voice || this.config.defaultVoice}`,
+      );
       const token = await getTokenManager().getToken();
       const wsUrl = `wss://nls-gateway.cn-shanghai.aliyuncs.com/ws/v1?token=${token}`;
       
       const ws = new WebSocket(wsUrl);
-      const taskId = `tts_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const taskId = generateUUID();
+      let chunkCount = 0;
+      let totalBytes = 0;
 
       return new Promise((resolve, reject) => {
         ws.on('open', () => {
+          console.log(`[AliyunTTS] WebSocket connected for task ${taskId}`);
           const request = {
             header: {
-              message_id: `msg_${Date.now()}`,
+              message_id: generateUUID(),
               task_id: taskId,
               namespace: 'SpeechSynthesizer',
               name: 'StartSynthesis',
@@ -45,7 +58,7 @@ export class AliyunTTSService {
             },
             payload: {
               text,
-              voice: options?.voice || 'xiaoyun',
+              voice: options?.voice || this.config.defaultVoice,
               format: options?.format || 'pcm',
               sample_rate: options?.sampleRate || 16000,
               speech_rate: options?.speechRate || 0,
@@ -62,17 +75,63 @@ export class AliyunTTSService {
           };
 
           ws.send(JSON.stringify(request));
+          console.log(`[AliyunTTS] StartSynthesis sent for task ${taskId}`);
         });
 
-        ws.on('message', (data: WebSocket.Data) => {
+        ws.on('message', (data: WebSocket.Data, isBinary: boolean) => {
+          if (isBinary) {
+            const audioData = Buffer.isBuffer(data)
+              ? data
+              : Buffer.from(data as ArrayBuffer);
+            chunkCount += 1;
+            totalBytes += audioData.length;
+            if (chunkCount <= 3 || chunkCount % 10 === 0) {
+              console.log(
+                `[AliyunTTS] Binary audio chunk ${chunkCount} received, bytes=${audioData.length}, totalBytes=${totalBytes}`,
+              );
+            }
+            onAudio(audioData);
+            return;
+          }
+
           try {
             const response = JSON.parse(data.toString());
+            const messageName = response.header?.name;
+            if (messageName) {
+              console.log(`[AliyunTTS] Received message: ${messageName}`);
+            }
+
+            if (response.header?.name === 'TaskFailed') {
+              console.error(
+                '[AliyunTTS] Task failed:',
+                JSON.stringify(response, null, 2),
+              );
+              reject(
+                new Error(
+                  response.header?.status_text ||
+                    response.payload?.message ||
+                    'TTS task failed',
+                ),
+              );
+              ws.close();
+              return;
+            }
             
             if (response.header.name === 'SynthesisCompleted') {
+              console.log(
+                `[AliyunTTS] Synthesis completed for task ${taskId}, chunks=${chunkCount}, totalBytes=${totalBytes}`,
+              );
               resolve();
               ws.close();
             } else if (response.payload?.audio) {
               const audioData = Buffer.from(response.payload.audio, 'base64');
+              chunkCount += 1;
+              totalBytes += audioData.length;
+              if (chunkCount <= 3 || chunkCount % 10 === 0) {
+                console.log(
+                  `[AliyunTTS] Audio chunk ${chunkCount} received, bytes=${audioData.length}, totalBytes=${totalBytes}`,
+                );
+              }
               onAudio(audioData);
             }
           } catch (error) {
@@ -86,7 +145,12 @@ export class AliyunTTSService {
         });
 
         ws.on('close', () => {
-          resolve();
+          console.log(
+            `[AliyunTTS] WebSocket closed for task ${taskId}, chunks=${chunkCount}, totalBytes=${totalBytes}`,
+          );
+          if (chunkCount > 0) {
+            resolve();
+          }
         });
       });
     } catch (error) {
@@ -119,6 +183,7 @@ export class AliyunTTSService {
       { name: 'ruoxi', description: '若兮', gender: 'female' },
       { name: 'sicheng', description: '思诚', gender: 'male' },
       { name: 'aiqi', description: '艾琪', gender: 'female' },
+      { name: 'aishuo', description: '艾硕', gender: 'male' },
       { name: 'ailing', description: '艾灵', gender: 'female' },
       { name: 'aimo', description: '艾默', gender: 'male' },
       { name: 'aiya', description: '艾雅', gender: 'female' },
@@ -134,6 +199,7 @@ export function createTTSService(): AliyunTTSService {
   const accessKeyId = process.env.ALIYUN_ACCESS_KEY_ID;
   const accessKeySecret = process.env.ALIYUN_ACCESS_KEY_SECRET;
   const appKey = process.env.ALIYUN_TTS_APP_KEY;
+  const defaultVoice = process.env.ALIYUN_TTS_VOICE || 'xiaoyun';
 
   if (!accessKeyId || !accessKeySecret || !appKey) {
     throw new Error('阿里云 TTS 配置不完整');
@@ -142,6 +208,7 @@ export function createTTSService(): AliyunTTSService {
   return new AliyunTTSService({
     accessKeyId,
     accessKeySecret,
-    appKey
+    appKey,
+    defaultVoice,
   });
 }

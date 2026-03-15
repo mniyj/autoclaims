@@ -10,6 +10,109 @@
  */
 
 import crypto from "crypto";
+import { readData } from "../utils/fileStore.js";
+
+function getNestedValue(source, path) {
+  if (!source || !path) return undefined;
+  const segments = String(path)
+    .split(".")
+    .flatMap((segment) => {
+      if (segment.endsWith("[]")) {
+        return [segment.slice(0, -2), "[]"];
+      }
+      return [segment];
+    });
+
+  let current = [source];
+  for (const segment of segments) {
+    if (segment === "[]") {
+      current = current.flatMap((item) => (Array.isArray(item) ? item : []));
+      continue;
+    }
+    current = current
+      .map((item) => (item && typeof item === "object" ? item[segment] : undefined))
+      .filter((item) => item !== undefined && item !== null);
+  }
+
+  if (current.length === 0) return undefined;
+  return current.length === 1 ? current[0] : current;
+}
+
+function collectFactBindingsFromSchemaFields(fields = [], prefix = "") {
+  const bindings = [];
+  for (const field of fields || []) {
+    const key = String(field?.field_key || "").trim();
+    if (!key) continue;
+    const path = prefix ? `${prefix}.${key}` : key;
+    if (field?.fact_id) {
+      bindings.push({
+        factId: field.fact_id,
+        path,
+      });
+    }
+    if (field?.data_type === "OBJECT") {
+      bindings.push(...collectFactBindingsFromSchemaFields(field.children || [], path));
+    }
+    if (field?.data_type === "ARRAY") {
+      bindings.push(...collectFactBindingsFromSchemaFields(field.item_fields || [], `${path}[]`));
+    }
+  }
+  return bindings;
+}
+
+function hydrateSchemaFields(materialConfig = {}) {
+  return ((materialConfig?.schemaFields || [])).map((field) => ({ ...field }));
+}
+
+function normalizeFactValue(value) {
+  if (Array.isArray(value)) {
+    const compact = value.filter((item) => item !== undefined && item !== null && item !== "");
+    if (compact.length === 0) return undefined;
+    return compact.length === 1 ? compact[0] : compact;
+  }
+  return value === "" ? undefined : value;
+}
+
+function extractCanonicalFactsFromDocuments(documents = []) {
+  const materialConfigs = readData("claims-materials") || [];
+  const canonicalFacts = {};
+  const canonicalFactSources = {};
+
+  for (const document of documents || []) {
+    const materialId = document?.classification?.materialId || document?.materialId;
+    if (!materialId) continue;
+    const materialConfig = materialConfigs.find((item) => item.id === materialId);
+    if (!materialConfig) continue;
+
+    const bindings = collectFactBindingsFromSchemaFields(hydrateSchemaFields(materialConfig));
+
+    for (const binding of bindings) {
+      const sources = [
+        document?.structuredData,
+        document?.ocrData,
+        document?.documentSummary,
+      ].filter(Boolean);
+      for (const source of sources) {
+        const value = normalizeFactValue(getNestedValue(source, binding.path));
+        if (value === undefined) continue;
+        if (canonicalFacts[binding.factId] === undefined) {
+          canonicalFacts[binding.factId] = value;
+          canonicalFactSources[binding.factId] = {
+            documentId: document.documentId || null,
+            materialId,
+            path: binding.path,
+          };
+        }
+        break;
+      }
+    }
+  }
+
+  return {
+    canonicalFacts,
+    canonicalFactSources,
+  };
+}
 
 /**
  * 从多份摘要中聚合伤情概况
@@ -37,6 +140,14 @@ function aggregateInjuryProfile(summaries) {
   ];
   // 去重（按诊断名称）
   const uniqueDiagnoses = [...new Map(allDiagnoses.map((d) => [d.name, d])).values()];
+  const diagnosisNames = uniqueDiagnoses
+    .map((item) => item?.name)
+    .filter(Boolean);
+  const diagnosisDateCandidates = diagnosisProofs
+    .map((item) => item?.issueDate)
+    .filter(Boolean)
+    .sort((a, b) => String(a).localeCompare(String(b)));
+  const primaryDiagnosisDate = diagnosisDateCandidates[0] || null;
 
   // 总住院天数（多次住院累加）
   const hospitalizationDays = inpatientRecords.reduce(
@@ -77,6 +188,9 @@ function aggregateInjuryProfile(summaries) {
 
   return {
     injuryDescription: uniqueDiagnoses.map((d) => d.name).join("；") || "待补充",
+    diagnoses: uniqueDiagnoses,
+    diagnosisNames,
+    primaryDiagnosisDate,
     disabilityLevel: disabilityLevel || null,
     hospitalizationDays,
     treatmentTimeline: timeline,
@@ -257,6 +371,121 @@ function detectConflicts(summaries) {
   return conflicts;
 }
 
+function aggregateDeathProfile(summaries) {
+  const deathSummaries = summaries.filter((s) => s?.summaryType === "death_record");
+  const funeralSummaries = summaries.filter((s) => s?.summaryType === "funeral_expense");
+  const householdProof = summaries.find((s) => s?.summaryType === "household_proof");
+  const relationshipSummaries = summaries.filter((s) => s?.summaryType === "claimant_relationship");
+  const dependentSummaries = summaries.filter((s) => s?.summaryType === "dependent_support");
+
+  if (
+    deathSummaries.length === 0 &&
+    funeralSummaries.length === 0 &&
+    !householdProof &&
+    relationshipSummaries.length === 0 &&
+    dependentSummaries.length === 0
+  ) {
+    return null;
+  }
+
+  const primaryDeath = deathSummaries.find((s) => s.deathDate || s.deathCause) || deathSummaries[0] || null;
+  const funeralExpenseTotal = funeralSummaries.reduce((sum, item) => sum + (item.totalAmount || 0), 0);
+  const claimants = relationshipSummaries.map((item) => ({
+    name: item.claimantName,
+    relationship: item.relationship,
+    sourceDocId: item.docId,
+  })).filter((item) => item.name || item.relationship);
+  const dependents = dependentSummaries.map((item) => ({
+    supporterName: item.supporterName,
+    dependentName: item.dependentName,
+    relationship: item.relationship,
+    otherSupportersCount: item.otherSupportersCount || 0,
+    sourceDocId: item.docId,
+  })).filter((item) => item.dependentName || item.relationship);
+
+  return {
+    deathConfirmed: deathSummaries.length > 0,
+    deceasedName: primaryDeath?.deceasedName || householdProof?.residentName || null,
+    deathDate: primaryDeath?.deathDate || null,
+    deathCause: primaryDeath?.deathCause || null,
+    deathLocation: primaryDeath?.deathLocation || null,
+    cancellationDate: deathSummaries.find((s) => s.cancellationDate)?.cancellationDate || null,
+    householdType: householdProof?.householdType || null,
+    householdAddress: householdProof?.householdAddress || null,
+    funeralExpenseTotal: parseFloat(funeralExpenseTotal.toFixed(2)),
+    claimants,
+    dependents,
+    sourceDocIds: [
+      ...deathSummaries.map((item) => item.docId),
+      ...funeralSummaries.map((item) => item.docId),
+      ...(householdProof ? [householdProof.docId] : []),
+      ...relationshipSummaries.map((item) => item.docId),
+      ...dependentSummaries.map((item) => item.docId),
+    ].filter(Boolean),
+  };
+}
+
+function aggregateCaseReports(summaries) {
+  return summaries
+    .filter((s) => s?.summaryType === "case_report")
+    .map((item) => ({
+      reportType: item.reportType || "other",
+      victimName: item.victimName || null,
+      accidentDate: item.accidentDate || null,
+      accidentLocation: item.accidentLocation || null,
+      incidentSummary: item.incidentSummary || null,
+      deathConfirmed: item.deathConfirmed === true,
+      deathDate: item.deathDate || null,
+      identityChainSummary: item.identityChainSummary || item.employmentRelationship || null,
+      liabilityOpinion: item.liabilityOpinion || null,
+      compensationPaid: typeof item.compensationPaid === "number" ? item.compensationPaid : null,
+      claimants: Array.isArray(item.claimants) ? item.claimants : [],
+      sourceDocId: item.docId,
+    }));
+}
+
+function buildFactModel({ injuryProfile, liabilityResult, expenseAggregation, deathProfile, caseReports, conflictsDetected, validationFacts = {}, validationResults = [], documents = [] }) {
+  const { canonicalFacts, canonicalFactSources } = extractCanonicalFactsFromDocuments(documents);
+  return {
+    generatedAt: new Date().toISOString(),
+    injuryProfile,
+    liabilityResult,
+    expenseAggregation,
+    deathProfile,
+    caseReports,
+    conflictsDetected,
+    validationFacts,
+    validationResults,
+    canonicalFacts,
+    canonicalFactSources,
+  };
+}
+
+function buildLiabilitySuggestion(liabilityResult, conflictsDetected = []) {
+  if (!liabilityResult) {
+    return {
+      status: "MANUAL_REVIEW",
+      conclusion: "缺少责任认定依据，需人工确认",
+      confidence: 0.3,
+      basis: [],
+    };
+  }
+
+  const hasHardConflict = conflictsDetected.some((item) => item.severity === "error");
+  return {
+    status: hasHardConflict ? "MANUAL_REVIEW" : "REFERENCE_READY",
+    conclusion: `建议按第三方责任 ${liabilityResult.thirdPartyLiabilityPct}% 作为定损折算比例`,
+    confidence: hasHardConflict ? 0.55 : 0.85,
+    basis: [
+      {
+        type: "accident_liability",
+        sourceDocId: liabilityResult.sourceDocId,
+        text: liabilityResult.basis || "事故责任认定书责任划分",
+      },
+    ],
+  };
+}
+
 /**
  * 综合聚合：将所有文档摘要聚合为案件级数据
  *
@@ -265,13 +494,27 @@ function detectConflicts(summaries) {
  * @param {string} params.claimCaseId
  * @returns {object} 聚合结果 { injuryProfile, liabilityResult, expenseAggregation, conflictsDetected }
  */
-export function aggregateCase({ summaries, claimCaseId }) {
+export function aggregateCase({ summaries, claimCaseId, validationFacts = {}, validationResults = [], documents = [] }) {
   const validSummaries = (summaries || []).filter(Boolean);
 
   const injuryProfile = aggregateInjuryProfile(validSummaries);
   const liabilityResult = extractLiabilityResult(validSummaries);
   const expenseAggregation = aggregateExpenses(validSummaries);
   const conflictsDetected = detectConflicts(validSummaries);
+  const deathProfile = aggregateDeathProfile(validSummaries);
+  const caseReports = aggregateCaseReports(validSummaries);
+  const factModel = buildFactModel({
+    injuryProfile,
+    liabilityResult,
+    expenseAggregation,
+    deathProfile,
+    caseReports,
+    conflictsDetected,
+    validationFacts,
+    validationResults,
+    documents,
+  });
+  const liabilitySuggestion = buildLiabilitySuggestion(liabilityResult, conflictsDetected);
 
   return {
     claimCaseId,
@@ -279,21 +522,33 @@ export function aggregateCase({ summaries, claimCaseId }) {
     injuryProfile,
     liabilityResult,
     expenseAggregation,
+    deathProfile,
+    caseReports,
     conflictsDetected,
+    validationFacts,
+    validationResults,
+    factModel,
+    liabilitySuggestion,
     /** 用于前端展示的聚合摘要文本 */
     aggregationSummary: buildAggregationSummary({
       injuryProfile,
       liabilityResult,
       expenseAggregation,
+      deathProfile,
+      caseReports,
       conflictsDetected,
+      validationResults,
     }),
   };
 }
 
-function buildAggregationSummary({ injuryProfile, liabilityResult, expenseAggregation, conflictsDetected }) {
+function buildAggregationSummary({ injuryProfile, liabilityResult, expenseAggregation, deathProfile, caseReports, conflictsDetected, validationResults = [] }) {
   const parts = [];
   if (injuryProfile) {
     parts.push(`伤情：${injuryProfile.injuryDescription}，住院 ${injuryProfile.hospitalizationDays} 天${injuryProfile.disabilityLevel ? `，${injuryProfile.disabilityLevel}` : ""}`);
+  }
+  if (deathProfile?.deathConfirmed) {
+    parts.push(`死亡事实：${deathProfile.deceasedName || "死者"}${deathProfile.deathDate ? `于 ${deathProfile.deathDate}` : ""}死亡`);
   }
   if (liabilityResult) {
     parts.push(`责任：伤者 ${liabilityResult.claimantLiabilityPct}%，第三方 ${liabilityResult.thirdPartyLiabilityPct}%`);
@@ -301,10 +556,29 @@ function buildAggregationSummary({ injuryProfile, liabilityResult, expenseAggreg
   if (expenseAggregation && expenseAggregation.medicalTotal > 0) {
     parts.push(`医疗费：¥${expenseAggregation.medicalTotal.toLocaleString("zh-CN")}`);
   }
+  if (deathProfile?.funeralExpenseTotal > 0) {
+    parts.push(`丧葬票据：¥${deathProfile.funeralExpenseTotal.toLocaleString("zh-CN")}`);
+  }
+  if (caseReports?.length > 0) {
+    const reportNames = caseReports
+      .map((item) => {
+        if (item.reportType === "public_adjuster") return "公估报告";
+        if (item.reportType === "initial") return "初期报告";
+        return "调查报告";
+      })
+      .join("、");
+    parts.push(`报告参考：已提取 ${reportNames}`);
+  }
   if (conflictsDetected.length > 0) {
     const errors = conflictsDetected.filter((c) => c.severity === "error").length;
     const warnings = conflictsDetected.filter((c) => c.severity === "warning").length;
     parts.push(`检测到 ${errors} 个错误、${warnings} 个警告`);
+  }
+  if (validationResults.length > 0) {
+    const failed = validationResults.filter((item) => !item.passed).length;
+    if (failed > 0) {
+      parts.push(`材料校验规则异常 ${failed} 项`);
+    }
   }
   return parts.join("；") || "聚合完成，请手动核实详情";
 }

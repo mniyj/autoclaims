@@ -1,0 +1,148 @@
+{
+  "messages": [
+    {
+      "id": "msg-f2ad3623-d745-4b1c-86e7-8ac81f7512a3",
+      "userId": null,
+      "type": "task_complete",
+      "title": "材料导入完成",
+      "content": "您的离线材料导入任务已完成，成功处理 1/1 个文件",
+      "data": {
+        "taskId": "task-23e4de49-f9c1-45ad-8ce4-5e97ab05da57",
+        "claimCaseId": "CLM973980",
+        "totalFiles": 1,
+        "completedFiles": 1,
+        "failedFiles": 0,
+        "status": "completed"
+      },
+      "isRead": false,
+      "createdAt": "2026-03-06T06:21:14.924Z",
+      "readAt": null
+    },
+    {
+      "id": "msg-3cceb3c2-7b7e-40e9-9db3-c2c3d21d4192",
+      "userId": null,
+      "type": "task_complete",
+      "title": "材料导入完成",
+      "content": "您的离线材料导入任务已完成，成功处理 1/1 个文件",
+      "data": {
+        "taskId": "task-d1ec7770-8a18-47cc-be28-71e1763a111f",
+        "claimCaseId": "CLM973980",
+        "totalFiles": 1,
+        "completedFiles": 1,
+        "failedFiles": 0,
+        "status": "completed"
+      },
+      "isRead": false,
+      "createdAt": "2026-03-06T06:27:31.849Z",
+      "readAt": null
+    },
+    {
+      "id": "msg-caef38c9-52eb-489b-85a8-69f8c2776362",
+      "userId": null,
+      "type": "task_complete",
+      "title": "材料导入完成",
+      "content": "您的离线材料导入任务已完成，成功处理 1/1 个文件",
+      "data": {
+        "taskId": "task-92130489-8f24-4bd4-a3c7-e9c1cc703689",
+        "claimCaseId": "CLM973980",
+        "totalFiles": 1,
+        "completedFiles": 1,
+        "failedFiles": 0,
+        "status": "completed"
+      },
+      "isRead": false,
+      "createdAt": "2026-03-06T07:57:19.509Z",
+      "readAt": null
+    },
+    {
+      "id": "msg-8091be3f-a5f6-4575-a994-bf12b0b77ce1",
+      "userId": "local-import",
+      "type": "task_partial",
+      "title": "材料导入部分完成",
+      "content": "您的离线材料导入任务部分完成，成功 187 个，失败 4 个",
+      "data": {
+        "taskId": "task-7d603a4e-24ad-4331-a835-f3bffd4067ad",
+        "claimCaseId": "R261123052024800086",
+        "totalFiles": 191,
+        "completedFiles": 187,
+        "failedFiles": 4,
+        "status": "partial_success"
+      },
+      "isRead": false,
+      "createdAt": "2026-03-08T13:53:55.809Z",
+      "readAt": null
+    },
+    {
+      "id": "msg-e36f338b-cd94-4a0c-8bcc-4522d1df8a2d",
+      "userId": "local-import",
+      "type": "task_failed",
+      "title": "材料导入失败",
+      "content": "您的离线材料导入任务处理失败，3 个文件未能成功处理",
+      "data": {
+        "taskId": "task-1e2217bc-f474-4cd6-abf1-fb693600e505",
+        "claimCaseId": "CLM-MED-001",
+        "totalFiles": 3,
+        "completedFiles": 0,
+        "failedFiles": 3,
+        "status": "failed"
+      },
+      "isRead": false,
+      "createdAt": "2026-03-14T17:16:40.472Z",
+      "readAt": null
+    },
+    {
+      "id": "msg-9c128a67-c246-464d-b8ad-93a5d33cbc69",
+      "userId": "local-import",
+      "type": "task_complete",
+      "title": "材料导入完成",
+      "content": "您的离线材料导入任务已完成，成功处理 3/3 个文件",
+      "data": {
+        "taskId": "task-1e2217bc-f474-4cd6-abf1-fb693600e505",
+        "claimCaseId": "CLM-MED-001",
+        "totalFiles": 3,
+        "completedFiles": 3,
+        "failedFiles": 0,
+        "status": "completed"
+      },
+      "isRead": false,
+      "createdAt": "2026-03-14T17:47:24.521Z",
+      "readAt": null
+    },
+    {
+      "id": "msg-1514057c-e76a-47cc-a92c-9fe902daabf8",
+      "userId": "local-import",
+      "type": "task_complete",
+      "title": "材料导入完成",
+      "content": "您的离线材料导入任务已完成，成功处理 3/3 个文件",
+      "data": {
+        "taskId": "task-1e2217bc-f474-4cd6-abf1-fb693600e505",
+        "claimCaseId": "CLM-MED-001",
+        "totalFiles": 3,
+        "completedFiles": 3,
+        "failedFiles": 0,
+        "status": "completed"
+      },
+      "isRead": false,
+      "createdAt": "2026-03-14T17:47:38.284Z",
+      "readAt": null
+    },
+    {
+      "id": "msg-f2be6f69-ddeb-4920-8d07-ae54e5f11063",
+      "userId": "local-import",
+      "type": "task_complete",
+      "title": "材料导入完成",
+      "content": "您的离线材料导入任务已完成，成功处理 3/3 个文件",
+      "data": {
+        "taskId": "task-1e2217bc-f474-4cd6-abf1-fb693600e505",
+        "claimCaseId": "CLM-MED-001",
+        "totalFiles": 3,
+        "completedFiles": 3,
+        "failedFiles": 0,
+        "status": "completed"
+      },
+      "isRead": false,
+      "createdAt": "2026-03-14T17:51:19.388Z",
+      "readAt": null
+    }
+  ]
+}

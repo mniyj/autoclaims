@@ -15,7 +15,51 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"name\": {\n      \"type\": \"string\",\n      \"description\": \"姓名\"\n    },\n    \"gender\": {\n      \"type\": \"string\",\n      \"description\": \"性别\"\n    },\n    \"ethnicity\": {\n      \"type\": \"string\",\n      \"description\": \"民族\"\n    },\n    \"birth_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"出生日期\"\n    },\n    \"address\": {\n      \"type\": \"string\",\n      \"description\": \"住址\"\n    },\n    \"id_number\": {\n      \"type\": \"string\",\n      \"description\": \"身份证号码\"\n    }\n  },\n  \"required\": [\n    \"name\",\n    \"id_number\"\n  ]\n}",
       "aiAuditPrompt": "请从身份证正面提取姓名、性别、民族、出生日期、住址和身份证号码。校验要点：1）身份证号码必须为18位，校验最后一位校验码是否正确；2）比对姓名是否与保单上的被保险人/受益人一致；3）检查出生日期与身份证号中的出生日期编码是否一致。若有信息模糊无法识别，请标注具体字段。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "name",
+        "field_label": "姓名",
+        "data_type": "STRING",
+        "required": true,
+        "description": "姓名"
+      },
+      {
+        "field_key": "gender",
+        "field_label": "性别",
+        "data_type": "STRING",
+        "required": false,
+        "description": "性别"
+      },
+      {
+        "field_key": "ethnicity",
+        "field_label": "民族",
+        "data_type": "STRING",
+        "required": false,
+        "description": "民族"
+      },
+      {
+        "field_key": "birth_date",
+        "field_label": "出生日期",
+        "data_type": "DATE",
+        "required": false,
+        "description": "出生日期"
+      },
+      {
+        "field_key": "address",
+        "field_label": "住址",
+        "data_type": "STRING",
+        "required": false,
+        "description": "住址"
+      },
+      {
+        "field_key": "id_number",
+        "field_label": "身份证号码",
+        "data_type": "STRING",
+        "required": true,
+        "description": "身份证号码"
+      }
+    ]
   },
   {
     "id": "mat-2",
@@ -32,7 +76,30 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"issuing_authority\": {\n      \"type\": \"string\",\n      \"description\": \"签发机关\"\n    },\n    \"valid_from\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"有效期起始日期\"\n    },\n    \"valid_until\": {\n      \"type\": \"string\",\n      \"description\": \"有效期截止日期（可能为\\\"长期\\\"）\"\n    }\n  },\n  \"required\": [\n    \"valid_from\",\n    \"valid_until\"\n  ]\n}",
       "aiAuditPrompt": "请从身份证反面提取签发机关、有效期起始日期和截止日期。校验要点：1）有效期截止日期是否晚于事故发生日/就诊日期，若已过期则标记为\"证件已过期\"；2）若截止日期为\"长期\"则视为有效。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "issuing_authority",
+        "field_label": "签发机关",
+        "data_type": "STRING",
+        "required": false,
+        "description": "签发机关"
+      },
+      {
+        "field_key": "valid_from",
+        "field_label": "有效期起始日期",
+        "data_type": "DATE",
+        "required": true,
+        "description": "有效期起始日期"
+      },
+      {
+        "field_key": "valid_until",
+        "field_label": "有效期截止日期（可能为\"长期\"）",
+        "data_type": "STRING",
+        "required": true,
+        "description": "有效期截止日期（可能为\"长期\"）"
+      }
+    ]
   },
   {
     "id": "mat-3",
@@ -49,7 +116,51 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"name\": {\n      \"type\": \"string\",\n      \"description\": \"姓名\"\n    },\n    \"license_number\": {\n      \"type\": \"string\",\n      \"description\": \"驾驶证号码\"\n    },\n    \"vehicle_class\": {\n      \"type\": \"string\",\n      \"description\": \"准驾车型\"\n    },\n    \"valid_period\": {\n      \"type\": \"string\",\n      \"description\": \"有效期限\"\n    },\n    \"issue_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"初次领证日期\"\n    },\n    \"file_number\": {\n      \"type\": \"string\",\n      \"description\": \"档案编号\"\n    }\n  },\n  \"required\": [\n    \"name\",\n    \"license_number\",\n    \"vehicle_class\"\n  ]\n}",
       "aiAuditPrompt": "请从驾驶证正页和副页提取姓名、驾驶证号、准驾车型、有效期限和初次领证日期。校验要点：1）驾驶证有效期是否覆盖事故发生日期；2）准驾车型是否与事故中驾驶的车辆类型匹配（如C1不能驾驶大型车辆）；3）是否存在扣分或违章记录标注。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "name",
+        "field_label": "姓名",
+        "data_type": "STRING",
+        "required": true,
+        "description": "姓名"
+      },
+      {
+        "field_key": "license_number",
+        "field_label": "驾驶证号码",
+        "data_type": "STRING",
+        "required": true,
+        "description": "驾驶证号码"
+      },
+      {
+        "field_key": "vehicle_class",
+        "field_label": "准驾车型",
+        "data_type": "STRING",
+        "required": true,
+        "description": "准驾车型"
+      },
+      {
+        "field_key": "valid_period",
+        "field_label": "有效期限",
+        "data_type": "STRING",
+        "required": false,
+        "description": "有效期限"
+      },
+      {
+        "field_key": "issue_date",
+        "field_label": "初次领证日期",
+        "data_type": "DATE",
+        "required": false,
+        "description": "初次领证日期"
+      },
+      {
+        "field_key": "file_number",
+        "field_label": "档案编号",
+        "data_type": "STRING",
+        "required": false,
+        "description": "档案编号"
+      }
+    ]
   },
   {
     "id": "mat-4",
@@ -66,7 +177,58 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"plate_number\": {\n      \"type\": \"string\",\n      \"description\": \"号牌号码\"\n    },\n    \"vehicle_type\": {\n      \"type\": \"string\",\n      \"description\": \"车辆类型\"\n    },\n    \"owner\": {\n      \"type\": \"string\",\n      \"description\": \"所有人\"\n    },\n    \"vin\": {\n      \"type\": \"string\",\n      \"description\": \"车辆识别代号（VIN）\"\n    },\n    \"engine_number\": {\n      \"type\": \"string\",\n      \"description\": \"发动机号码\"\n    },\n    \"register_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"注册日期\"\n    },\n    \"inspection_valid_until\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"检验有效期至\"\n    }\n  },\n  \"required\": [\n    \"plate_number\",\n    \"vehicle_type\",\n    \"owner\"\n  ]\n}",
       "aiAuditPrompt": "请从行驶证正页和副页提取号牌号码、车辆类型、所有人、VIN码、发动机号、注册日期和检验有效期。校验要点：1）检验有效期是否覆盖事故发生日期，若已过期则标记；2）车辆类型与驾驶证准驾车型是否匹配。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "plate_number",
+        "field_label": "号牌号码",
+        "data_type": "STRING",
+        "required": true,
+        "description": "号牌号码"
+      },
+      {
+        "field_key": "vehicle_type",
+        "field_label": "车辆类型",
+        "data_type": "STRING",
+        "required": true,
+        "description": "车辆类型"
+      },
+      {
+        "field_key": "owner",
+        "field_label": "所有人",
+        "data_type": "STRING",
+        "required": true,
+        "description": "所有人"
+      },
+      {
+        "field_key": "vin",
+        "field_label": "车辆识别代号（VIN）",
+        "data_type": "STRING",
+        "required": false,
+        "description": "车辆识别代号（VIN）"
+      },
+      {
+        "field_key": "engine_number",
+        "field_label": "发动机号码",
+        "data_type": "STRING",
+        "required": false,
+        "description": "发动机号码"
+      },
+      {
+        "field_key": "register_date",
+        "field_label": "注册日期",
+        "data_type": "DATE",
+        "required": false,
+        "description": "注册日期"
+      },
+      {
+        "field_key": "inspection_valid_until",
+        "field_label": "检验有效期至",
+        "data_type": "DATE",
+        "required": false,
+        "description": "检验有效期至"
+      }
+    ]
   },
   {
     "id": "mat-5",
@@ -81,7 +243,65 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"principal_name\": {\n      \"type\": \"string\",\n      \"description\": \"委托人姓名\"\n    },\n    \"agent_name\": {\n      \"type\": \"string\",\n      \"description\": \"被委托人（代理人）姓名\"\n    },\n    \"principal_id\": {\n      \"type\": \"string\",\n      \"description\": \"委托人身份证号\"\n    },\n    \"agent_id\": {\n      \"type\": \"string\",\n      \"description\": \"被委托人身份证号\"\n    },\n    \"scope\": {\n      \"type\": \"string\",\n      \"description\": \"委托事项/授权范围\"\n    },\n    \"date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"委托日期\"\n    },\n    \"has_signature\": {\n      \"type\": \"boolean\",\n      \"description\": \"是否有委托人签名\"\n    },\n    \"has_fingerprint\": {\n      \"type\": \"boolean\",\n      \"description\": \"是否有指纹确认\"\n    }\n  },\n  \"required\": [\n    \"principal_name\",\n    \"agent_name\",\n    \"scope\"\n  ]\n}",
       "aiAuditPrompt": "请从委托授权书提取委托人姓名和身份证号、被委托人姓名和身份证号、委托事项范围和日期。校验要点：1）委托人是否为保单被保险人或受益人；2）授权范围是否明确覆盖理赔申请及领取赔款事项；3）是否有委托人亲笔签名或指纹确认；4）委托日期是否合理（不应早于事故日期）。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "principal_name",
+        "field_label": "委托人姓名",
+        "data_type": "STRING",
+        "required": true,
+        "description": "委托人姓名"
+      },
+      {
+        "field_key": "agent_name",
+        "field_label": "被委托人（代理人）姓名",
+        "data_type": "STRING",
+        "required": true,
+        "description": "被委托人（代理人）姓名"
+      },
+      {
+        "field_key": "principal_id",
+        "field_label": "委托人身份证号",
+        "data_type": "STRING",
+        "required": false,
+        "description": "委托人身份证号"
+      },
+      {
+        "field_key": "agent_id",
+        "field_label": "被委托人身份证号",
+        "data_type": "STRING",
+        "required": false,
+        "description": "被委托人身份证号"
+      },
+      {
+        "field_key": "scope",
+        "field_label": "委托事项/授权范围",
+        "data_type": "STRING",
+        "required": true,
+        "description": "委托事项/授权范围"
+      },
+      {
+        "field_key": "date",
+        "field_label": "委托日期",
+        "data_type": "DATE",
+        "required": false,
+        "description": "委托日期"
+      },
+      {
+        "field_key": "has_signature",
+        "field_label": "是否有委托人签名",
+        "data_type": "BOOLEAN",
+        "required": false,
+        "description": "是否有委托人签名"
+      },
+      {
+        "field_key": "has_fingerprint",
+        "field_label": "是否有指纹确认",
+        "data_type": "BOOLEAN",
+        "required": false,
+        "description": "是否有指纹确认"
+      }
+    ]
   },
   {
     "id": "mat-6",
@@ -96,7 +316,30 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"bank_name\": {\n      \"type\": \"string\",\n      \"description\": \"开户银行\"\n    },\n    \"card_number\": {\n      \"type\": \"string\",\n      \"description\": \"银行卡号\"\n    },\n    \"account_holder\": {\n      \"type\": \"string\",\n      \"description\": \"持卡人姓名\"\n    }\n  },\n  \"required\": [\n    \"bank_name\",\n    \"card_number\",\n    \"account_holder\"\n  ]\n}",
       "aiAuditPrompt": "请从银行卡照片提取开户银行名称、银行卡号和持卡人姓名。校验要点：1）持卡人姓名是否与被保险人或受益人一致（若有委托授权书则应与被委托人一致）；2）银行卡号格式是否合法（一般为16-19位数字）；3）确认银行卡号清晰可辨。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "bank_name",
+        "field_label": "开户银行",
+        "data_type": "STRING",
+        "required": true,
+        "description": "开户银行"
+      },
+      {
+        "field_key": "card_number",
+        "field_label": "银行卡号",
+        "data_type": "STRING",
+        "required": true,
+        "description": "银行卡号"
+      },
+      {
+        "field_key": "account_holder",
+        "field_label": "持卡人姓名",
+        "data_type": "STRING",
+        "required": true,
+        "description": "持卡人姓名"
+      }
+    ]
   },
   {
     "id": "mat-7",
@@ -111,7 +354,51 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"name\": {\n      \"type\": \"string\",\n      \"description\": \"姓名\"\n    },\n    \"id_number\": {\n      \"type\": \"string\",\n      \"description\": \"身份证号\"\n    },\n    \"household_address\": {\n      \"type\": \"string\",\n      \"description\": \"户籍地址\"\n    },\n    \"household_type\": {\n      \"type\": \"string\",\n      \"description\": \"户籍性质（城镇/农村）\"\n    },\n    \"issue_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"开具日期\"\n    },\n    \"issuing_authority\": {\n      \"type\": \"string\",\n      \"description\": \"出具机关\"\n    }\n  },\n  \"required\": [\n    \"name\",\n    \"household_address\",\n    \"household_type\"\n  ]\n}",
       "aiAuditPrompt": "请提取户籍证明中的姓名、身份证号、户籍地址、户籍性质（城镇或农村）、开具日期和出具机关。校验要点：1）户籍性质直接影响残疾赔偿金和死亡赔偿金计算标准（城镇标准通常高于农村标准）；2）证明是否由户籍所在地公安派出所或社区出具并盖章。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "name",
+        "field_label": "姓名",
+        "data_type": "STRING",
+        "required": true,
+        "description": "姓名"
+      },
+      {
+        "field_key": "id_number",
+        "field_label": "身份证号",
+        "data_type": "STRING",
+        "required": false,
+        "description": "身份证号"
+      },
+      {
+        "field_key": "household_address",
+        "field_label": "户籍地址",
+        "data_type": "STRING",
+        "required": true,
+        "description": "户籍地址"
+      },
+      {
+        "field_key": "household_type",
+        "field_label": "户籍性质（城镇/农村）",
+        "data_type": "STRING",
+        "required": true,
+        "description": "户籍性质（城镇/农村）"
+      },
+      {
+        "field_key": "issue_date",
+        "field_label": "开具日期",
+        "data_type": "DATE",
+        "required": false,
+        "description": "开具日期"
+      },
+      {
+        "field_key": "issuing_authority",
+        "field_label": "出具机关",
+        "data_type": "STRING",
+        "required": false,
+        "description": "出具机关"
+      }
+    ]
   },
   {
     "id": "mat-8",
@@ -129,7 +416,81 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"document_number\": {\n      \"type\": \"string\",\n      \"description\": \"文书编号\"\n    },\n    \"accident_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"事故发生日期\"\n    },\n    \"accident_time\": {\n      \"type\": \"string\",\n      \"description\": \"事故发生时间\"\n    },\n    \"accident_location\": {\n      \"type\": \"string\",\n      \"description\": \"事故发生地点\"\n    },\n    \"parties\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"name\": {\n            \"type\": \"string\",\n            \"description\": \"当事人姓名\"\n          },\n          \"vehicle_info\": {\n            \"type\": \"string\",\n            \"description\": \"车辆信息\"\n          },\n          \"responsibility\": {\n            \"type\": \"string\",\n            \"description\": \"责任认定（全责/主责/同责/次责/无责）\"\n          }\n        }\n      },\n      \"description\": \"当事人及责任划分\"\n    },\n    \"accident_summary\": {\n      \"type\": \"string\",\n      \"description\": \"事故经过摘要\"\n    },\n    \"issuing_authority\": {\n      \"type\": \"string\",\n      \"description\": \"出具机关\"\n    }\n  },\n  \"required\": [\n    \"accident_date\",\n    \"accident_location\",\n    \"parties\"\n  ]\n}",
       "aiAuditPrompt": "请从交通事故责任认定书中提取文书编号、事故日期时间、地点、各方当事人信息和责任划分、事故经过摘要。校验要点：1）明确各方责任比例（全责100%、主责70%、同责50%、次责30%、无责0%）；2）事故日期应在保险有效期内；3）被保险人在事故中的角色和责任。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "document_number",
+        "field_label": "文书编号",
+        "data_type": "STRING",
+        "required": false,
+        "description": "文书编号"
+      },
+      {
+        "field_key": "accident_date",
+        "field_label": "事故发生日期",
+        "data_type": "DATE",
+        "required": true,
+        "description": "事故发生日期"
+      },
+      {
+        "field_key": "accident_time",
+        "field_label": "事故发生时间",
+        "data_type": "STRING",
+        "required": false,
+        "description": "事故发生时间"
+      },
+      {
+        "field_key": "accident_location",
+        "field_label": "事故发生地点",
+        "data_type": "STRING",
+        "required": true,
+        "description": "事故发生地点"
+      },
+      {
+        "field_key": "parties",
+        "field_label": "当事人及责任划分",
+        "data_type": "ARRAY",
+        "required": true,
+        "description": "当事人及责任划分",
+        "item_fields": [
+          {
+            "field_key": "name",
+            "field_label": "当事人姓名",
+            "data_type": "STRING",
+            "required": false,
+            "description": "当事人姓名"
+          },
+          {
+            "field_key": "vehicle_info",
+            "field_label": "车辆信息",
+            "data_type": "STRING",
+            "required": false,
+            "description": "车辆信息"
+          },
+          {
+            "field_key": "responsibility",
+            "field_label": "责任认定（全责/主责/同责/次责/无责）",
+            "data_type": "STRING",
+            "required": false,
+            "description": "责任认定（全责/主责/同责/次责/无责）"
+          }
+        ]
+      },
+      {
+        "field_key": "accident_summary",
+        "field_label": "事故经过摘要",
+        "data_type": "STRING",
+        "required": false,
+        "description": "事故经过摘要"
+      },
+      {
+        "field_key": "issuing_authority",
+        "field_label": "出具机关",
+        "data_type": "STRING",
+        "required": false,
+        "description": "出具机关"
+      }
+    ]
   },
   {
     "id": "mat-9",
@@ -144,7 +505,65 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"decision_number\": {\n      \"type\": \"string\",\n      \"description\": \"决定书编号\"\n    },\n    \"employee_name\": {\n      \"type\": \"string\",\n      \"description\": \"职工姓名\"\n    },\n    \"employer\": {\n      \"type\": \"string\",\n      \"description\": \"用人单位\"\n    },\n    \"injury_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"受伤日期\"\n    },\n    \"injury_description\": {\n      \"type\": \"string\",\n      \"description\": \"受伤经过及诊断\"\n    },\n    \"work_injury_conclusion\": {\n      \"type\": \"string\",\n      \"description\": \"工伤认定结论\"\n    },\n    \"decision_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"决定日期\"\n    },\n    \"issuing_authority\": {\n      \"type\": \"string\",\n      \"description\": \"出具机关\"\n    }\n  },\n  \"required\": [\n    \"employee_name\",\n    \"employer\",\n    \"injury_date\",\n    \"work_injury_conclusion\"\n  ]\n}",
       "aiAuditPrompt": "请从认定工伤决定书中提取决定书编号、职工姓名、用人单位、受伤日期、受伤经过及诊断、工伤认定结论和决定日期。校验要点：1）确认工伤认定结论为\"认定为工伤\"或\"视同工伤\"；2）受伤日期与就诊日期逻辑一致；3）确认出具机关为人力资源和社会保障局。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "decision_number",
+        "field_label": "决定书编号",
+        "data_type": "STRING",
+        "required": false,
+        "description": "决定书编号"
+      },
+      {
+        "field_key": "employee_name",
+        "field_label": "职工姓名",
+        "data_type": "STRING",
+        "required": true,
+        "description": "职工姓名"
+      },
+      {
+        "field_key": "employer",
+        "field_label": "用人单位",
+        "data_type": "STRING",
+        "required": true,
+        "description": "用人单位"
+      },
+      {
+        "field_key": "injury_date",
+        "field_label": "受伤日期",
+        "data_type": "DATE",
+        "required": true,
+        "description": "受伤日期"
+      },
+      {
+        "field_key": "injury_description",
+        "field_label": "受伤经过及诊断",
+        "data_type": "STRING",
+        "required": false,
+        "description": "受伤经过及诊断"
+      },
+      {
+        "field_key": "work_injury_conclusion",
+        "field_label": "工伤认定结论",
+        "data_type": "STRING",
+        "required": true,
+        "description": "工伤认定结论"
+      },
+      {
+        "field_key": "decision_date",
+        "field_label": "决定日期",
+        "data_type": "DATE",
+        "required": false,
+        "description": "决定日期"
+      },
+      {
+        "field_key": "issuing_authority",
+        "field_label": "出具机关",
+        "data_type": "STRING",
+        "required": false,
+        "description": "出具机关"
+      }
+    ]
   },
   {
     "id": "mat-10",
@@ -159,7 +578,51 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"applicant_name\": {\n      \"type\": \"string\",\n      \"description\": \"申请人姓名\"\n    },\n    \"employer\": {\n      \"type\": \"string\",\n      \"description\": \"用人单位名称\"\n    },\n    \"injury_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"事故伤害日期\"\n    },\n    \"injury_cause\": {\n      \"type\": \"string\",\n      \"description\": \"事故伤害原因\"\n    },\n    \"injury_description\": {\n      \"type\": \"string\",\n      \"description\": \"受伤害经过简述\"\n    },\n    \"application_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"申请日期\"\n    }\n  },\n  \"required\": [\n    \"applicant_name\",\n    \"employer\",\n    \"injury_date\"\n  ]\n}",
       "aiAuditPrompt": "请从工伤认定申请表中提取申请人姓名、用人单位、事故伤害日期、伤害原因、受伤经过简述和申请日期。校验要点：1）申请人信息与认定工伤决定书中的职工信息应一致；2）事故日期和伤害经过描述应与工伤决定书吻合。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "applicant_name",
+        "field_label": "申请人姓名",
+        "data_type": "STRING",
+        "required": true,
+        "description": "申请人姓名"
+      },
+      {
+        "field_key": "employer",
+        "field_label": "用人单位名称",
+        "data_type": "STRING",
+        "required": true,
+        "description": "用人单位名称"
+      },
+      {
+        "field_key": "injury_date",
+        "field_label": "事故伤害日期",
+        "data_type": "DATE",
+        "required": true,
+        "description": "事故伤害日期"
+      },
+      {
+        "field_key": "injury_cause",
+        "field_label": "事故伤害原因",
+        "data_type": "STRING",
+        "required": false,
+        "description": "事故伤害原因"
+      },
+      {
+        "field_key": "injury_description",
+        "field_label": "受伤害经过简述",
+        "data_type": "STRING",
+        "required": false,
+        "description": "受伤害经过简述"
+      },
+      {
+        "field_key": "application_date",
+        "field_label": "申请日期",
+        "data_type": "DATE",
+        "required": false,
+        "description": "申请日期"
+      }
+    ]
   },
   {
     "id": "mat-11",
@@ -174,7 +637,72 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"hospital_name\": {\n      \"type\": \"string\",\n      \"description\": \"医院名称\"\n    },\n    \"department\": {\n      \"type\": \"string\",\n      \"description\": \"就诊科室\"\n    },\n    \"visit_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"就诊日期\"\n    },\n    \"patient_name\": {\n      \"type\": \"string\",\n      \"description\": \"患者姓名\"\n    },\n    \"chief_complaint\": {\n      \"type\": \"string\",\n      \"description\": \"主诉\"\n    },\n    \"present_illness\": {\n      \"type\": \"string\",\n      \"description\": \"现病史\"\n    },\n    \"diagnosis\": {\n      \"type\": \"string\",\n      \"description\": \"诊断\"\n    },\n    \"treatment\": {\n      \"type\": \"string\",\n      \"description\": \"处理/治疗方案\"\n    },\n    \"doctor_name\": {\n      \"type\": \"string\",\n      \"description\": \"医生姓名\"\n    }\n  },\n  \"required\": [\n    \"hospital_name\",\n    \"visit_date\",\n    \"diagnosis\"\n  ]\n}",
       "aiAuditPrompt": "请从门（急）诊病历中提取医院名称、就诊科室、就诊日期、患者姓名、主诉、现病史、诊断结果、治疗方案和医生姓名。校验要点：1）就诊日期与事故发生日期的时间逻辑是否合理（应在事故发生后）；2）诊断结果与事故伤情是否存在因果关系；3）治疗方案是否与诊断匹配。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "hospital_name",
+        "field_label": "医院名称",
+        "data_type": "STRING",
+        "required": true,
+        "description": "医院名称"
+      },
+      {
+        "field_key": "department",
+        "field_label": "就诊科室",
+        "data_type": "STRING",
+        "required": false,
+        "description": "就诊科室"
+      },
+      {
+        "field_key": "visit_date",
+        "field_label": "就诊日期",
+        "data_type": "DATE",
+        "required": true,
+        "description": "就诊日期"
+      },
+      {
+        "field_key": "patient_name",
+        "field_label": "患者姓名",
+        "data_type": "STRING",
+        "required": false,
+        "description": "患者姓名"
+      },
+      {
+        "field_key": "chief_complaint",
+        "field_label": "主诉",
+        "data_type": "STRING",
+        "required": false,
+        "description": "主诉"
+      },
+      {
+        "field_key": "present_illness",
+        "field_label": "现病史",
+        "data_type": "STRING",
+        "required": false,
+        "description": "现病史"
+      },
+      {
+        "field_key": "diagnosis",
+        "field_label": "诊断",
+        "data_type": "STRING",
+        "required": true,
+        "description": "诊断"
+      },
+      {
+        "field_key": "treatment",
+        "field_label": "处理/治疗方案",
+        "data_type": "STRING",
+        "required": false,
+        "description": "处理/治疗方案"
+      },
+      {
+        "field_key": "doctor_name",
+        "field_label": "医生姓名",
+        "data_type": "STRING",
+        "required": false,
+        "description": "医生姓名"
+      }
+    ]
   },
   {
     "id": "mat-12",
@@ -189,7 +717,72 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"hospital_name\": {\n      \"type\": \"string\",\n      \"description\": \"医院名称\"\n    },\n    \"patient_name\": {\n      \"type\": \"string\",\n      \"description\": \"患者姓名\"\n    },\n    \"admission_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"入院日期\"\n    },\n    \"discharge_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"出院日期\"\n    },\n    \"hospital_days\": {\n      \"type\": \"number\",\n      \"description\": \"住院天数\"\n    },\n    \"admission_diagnosis\": {\n      \"type\": \"string\",\n      \"description\": \"入院诊断\"\n    },\n    \"discharge_diagnosis\": {\n      \"type\": \"string\",\n      \"description\": \"出院诊断\"\n    },\n    \"treatment_summary\": {\n      \"type\": \"string\",\n      \"description\": \"治疗经过摘要\"\n    },\n    \"discharge_instructions\": {\n      \"type\": \"string\",\n      \"description\": \"出院医嘱\"\n    }\n  },\n  \"required\": [\n    \"hospital_name\",\n    \"admission_date\",\n    \"discharge_date\",\n    \"discharge_diagnosis\"\n  ]\n}",
       "aiAuditPrompt": "请从住院病历中提取医院名称、患者姓名、入院日期、出院日期、住院天数、入院诊断、出院诊断、治疗经过和出院医嘱。校验要点：1）住院天数计算是否正确（出院日期-入院日期）；2）入院诊断与出院诊断是否一致或有合理变化；3）治疗经过与诊断是否匹配。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "hospital_name",
+        "field_label": "医院名称",
+        "data_type": "STRING",
+        "required": true,
+        "description": "医院名称"
+      },
+      {
+        "field_key": "patient_name",
+        "field_label": "患者姓名",
+        "data_type": "STRING",
+        "required": false,
+        "description": "患者姓名"
+      },
+      {
+        "field_key": "admission_date",
+        "field_label": "入院日期",
+        "data_type": "DATE",
+        "required": true,
+        "description": "入院日期"
+      },
+      {
+        "field_key": "discharge_date",
+        "field_label": "出院日期",
+        "data_type": "DATE",
+        "required": true,
+        "description": "出院日期"
+      },
+      {
+        "field_key": "hospital_days",
+        "field_label": "住院天数",
+        "data_type": "NUMBER",
+        "required": false,
+        "description": "住院天数"
+      },
+      {
+        "field_key": "admission_diagnosis",
+        "field_label": "入院诊断",
+        "data_type": "STRING",
+        "required": false,
+        "description": "入院诊断"
+      },
+      {
+        "field_key": "discharge_diagnosis",
+        "field_label": "出院诊断",
+        "data_type": "STRING",
+        "required": true,
+        "description": "出院诊断"
+      },
+      {
+        "field_key": "treatment_summary",
+        "field_label": "治疗经过摘要",
+        "data_type": "STRING",
+        "required": false,
+        "description": "治疗经过摘要"
+      },
+      {
+        "field_key": "discharge_instructions",
+        "field_label": "出院医嘱",
+        "data_type": "STRING",
+        "required": false,
+        "description": "出院医嘱"
+      }
+    ]
   },
   {
     "id": "mat-13",
@@ -204,7 +797,65 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"hospital_name\": {\n      \"type\": \"string\",\n      \"description\": \"医院名称\"\n    },\n    \"patient_name\": {\n      \"type\": \"string\",\n      \"description\": \"患者姓名\"\n    },\n    \"diagnosis\": {\n      \"type\": \"string\",\n      \"description\": \"诊断结果\"\n    },\n    \"diagnosis_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"诊断日期\"\n    },\n    \"doctor_name\": {\n      \"type\": \"string\",\n      \"description\": \"诊断医生\"\n    },\n    \"treatment_advice\": {\n      \"type\": \"string\",\n      \"description\": \"治疗建议\"\n    },\n    \"rest_days\": {\n      \"type\": \"number\",\n      \"description\": \"建议休息天数\"\n    },\n    \"has_hospital_seal\": {\n      \"type\": \"boolean\",\n      \"description\": \"是否有医院公章\"\n    }\n  },\n  \"required\": [\n    \"hospital_name\",\n    \"diagnosis\",\n    \"diagnosis_date\"\n  ]\n}",
       "aiAuditPrompt": "请从诊断证明书中提取医院名称、患者姓名、诊断结果、诊断日期、诊断医生、治疗建议和建议休息天数。校验要点：1）诊断结果与事故伤情是否存在因果关系；2）医院是否为二级及以上医疗机构；3）是否有医院诊断专用章；4）建议休息天数与伤情严重程度是否匹配。若信息缺失，请指出具体缺失项。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "hospital_name",
+        "field_label": "医院名称",
+        "data_type": "STRING",
+        "required": true,
+        "description": "医院名称"
+      },
+      {
+        "field_key": "patient_name",
+        "field_label": "患者姓名",
+        "data_type": "STRING",
+        "required": false,
+        "description": "患者姓名"
+      },
+      {
+        "field_key": "diagnosis",
+        "field_label": "诊断结果",
+        "data_type": "STRING",
+        "required": true,
+        "description": "诊断结果"
+      },
+      {
+        "field_key": "diagnosis_date",
+        "field_label": "诊断日期",
+        "data_type": "DATE",
+        "required": true,
+        "description": "诊断日期"
+      },
+      {
+        "field_key": "doctor_name",
+        "field_label": "诊断医生",
+        "data_type": "STRING",
+        "required": false,
+        "description": "诊断医生"
+      },
+      {
+        "field_key": "treatment_advice",
+        "field_label": "治疗建议",
+        "data_type": "STRING",
+        "required": false,
+        "description": "治疗建议"
+      },
+      {
+        "field_key": "rest_days",
+        "field_label": "建议休息天数",
+        "data_type": "NUMBER",
+        "required": false,
+        "description": "建议休息天数"
+      },
+      {
+        "field_key": "has_hospital_seal",
+        "field_label": "是否有医院公章",
+        "data_type": "BOOLEAN",
+        "required": false,
+        "description": "是否有医院公章"
+      }
+    ]
   },
   {
     "id": "mat-14",
@@ -219,7 +870,44 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"patient_name\": {\n      \"type\": \"string\",\n      \"description\": \"患者姓名\"\n    },\n    \"original_hospital\": {\n      \"type\": \"string\",\n      \"description\": \"转出医院\"\n    },\n    \"receiving_hospital\": {\n      \"type\": \"string\",\n      \"description\": \"转入医院\"\n    },\n    \"transfer_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"转院日期\"\n    },\n    \"transfer_reason\": {\n      \"type\": \"string\",\n      \"description\": \"转院原因\"\n    }\n  },\n  \"required\": [\n    \"original_hospital\",\n    \"receiving_hospital\",\n    \"transfer_date\",\n    \"transfer_reason\"\n  ]\n}",
       "aiAuditPrompt": "请提取转院证明中的患者姓名、转出医院、转入医院、转院日期和转院原因。校验要点：1）转院原因是否合理（如原医院不具备治疗条件）；2）转出和转入医院是否均为正规医疗机构；3）转院日期与住院记录是否衔接。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "patient_name",
+        "field_label": "患者姓名",
+        "data_type": "STRING",
+        "required": false,
+        "description": "患者姓名"
+      },
+      {
+        "field_key": "original_hospital",
+        "field_label": "转出医院",
+        "data_type": "STRING",
+        "required": true,
+        "description": "转出医院"
+      },
+      {
+        "field_key": "receiving_hospital",
+        "field_label": "转入医院",
+        "data_type": "STRING",
+        "required": true,
+        "description": "转入医院"
+      },
+      {
+        "field_key": "transfer_date",
+        "field_label": "转院日期",
+        "data_type": "DATE",
+        "required": true,
+        "description": "转院日期"
+      },
+      {
+        "field_key": "transfer_reason",
+        "field_label": "转院原因",
+        "data_type": "STRING",
+        "required": true,
+        "description": "转院原因"
+      }
+    ]
   },
   {
     "id": "mat-15",
@@ -234,7 +922,58 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"hospital_name\": {\n      \"type\": \"string\",\n      \"description\": \"医院名称\"\n    },\n    \"patient_name\": {\n      \"type\": \"string\",\n      \"description\": \"患者姓名\"\n    },\n    \"diagnosis\": {\n      \"type\": \"string\",\n      \"description\": \"诊断\"\n    },\n    \"rest_start_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"休息起始日期\"\n    },\n    \"rest_end_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"休息截止日期\"\n    },\n    \"rest_days\": {\n      \"type\": \"number\",\n      \"description\": \"建议休息天数\"\n    },\n    \"doctor_name\": {\n      \"type\": \"string\",\n      \"description\": \"医生姓名\"\n    }\n  },\n  \"required\": [\n    \"hospital_name\",\n    \"patient_name\",\n    \"rest_days\"\n  ]\n}",
       "aiAuditPrompt": "请提取医嘱休息证明中的医院名称、患者姓名、诊断、休息起止日期和休息天数。校验要点：1）建休天数是否与伤情严重程度匹配（轻微伤一般不超过15天，骨折通常3-6个月）；2）休息期与住院期是否有重叠（住院期间已包含在误工期内）；3）是否有医生签名和医院盖章。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "hospital_name",
+        "field_label": "医院名称",
+        "data_type": "STRING",
+        "required": true,
+        "description": "医院名称"
+      },
+      {
+        "field_key": "patient_name",
+        "field_label": "患者姓名",
+        "data_type": "STRING",
+        "required": true,
+        "description": "患者姓名"
+      },
+      {
+        "field_key": "diagnosis",
+        "field_label": "诊断",
+        "data_type": "STRING",
+        "required": false,
+        "description": "诊断"
+      },
+      {
+        "field_key": "rest_start_date",
+        "field_label": "休息起始日期",
+        "data_type": "DATE",
+        "required": false,
+        "description": "休息起始日期"
+      },
+      {
+        "field_key": "rest_end_date",
+        "field_label": "休息截止日期",
+        "data_type": "DATE",
+        "required": false,
+        "description": "休息截止日期"
+      },
+      {
+        "field_key": "rest_days",
+        "field_label": "建议休息天数",
+        "data_type": "NUMBER",
+        "required": true,
+        "description": "建议休息天数"
+      },
+      {
+        "field_key": "doctor_name",
+        "field_label": "医生姓名",
+        "data_type": "STRING",
+        "required": false,
+        "description": "医生姓名"
+      }
+    ]
   },
   {
     "id": "mat-16",
@@ -249,7 +988,58 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"hospital_name\": {\n      \"type\": \"string\",\n      \"description\": \"医院名称\"\n    },\n    \"patient_name\": {\n      \"type\": \"string\",\n      \"description\": \"患者姓名\"\n    },\n    \"nursing_level\": {\n      \"type\": \"string\",\n      \"description\": \"护理等级（特级/一级/二级/三级）\"\n    },\n    \"nursing_period_start\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"护理期开始日期\"\n    },\n    \"nursing_period_end\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"护理期结束日期\"\n    },\n    \"nursing_persons\": {\n      \"type\": \"number\",\n      \"description\": \"护理人数\"\n    },\n    \"doctor_name\": {\n      \"type\": \"string\",\n      \"description\": \"医生姓名\"\n    }\n  },\n  \"required\": [\n    \"hospital_name\",\n    \"patient_name\",\n    \"nursing_level\",\n    \"nursing_persons\"\n  ]\n}",
       "aiAuditPrompt": "请提取医嘱护理证明中的医院名称、患者姓名、护理等级、护理期限和护理人数。校验要点：1）护理等级与伤情严重程度是否匹配；2）护理人数一般为1人，2人护理需要特殊医嘱说明；3）护理期限是否合理。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "hospital_name",
+        "field_label": "医院名称",
+        "data_type": "STRING",
+        "required": true,
+        "description": "医院名称"
+      },
+      {
+        "field_key": "patient_name",
+        "field_label": "患者姓名",
+        "data_type": "STRING",
+        "required": true,
+        "description": "患者姓名"
+      },
+      {
+        "field_key": "nursing_level",
+        "field_label": "护理等级（特级/一级/二级/三级）",
+        "data_type": "STRING",
+        "required": true,
+        "description": "护理等级（特级/一级/二级/三级）"
+      },
+      {
+        "field_key": "nursing_period_start",
+        "field_label": "护理期开始日期",
+        "data_type": "DATE",
+        "required": false,
+        "description": "护理期开始日期"
+      },
+      {
+        "field_key": "nursing_period_end",
+        "field_label": "护理期结束日期",
+        "data_type": "DATE",
+        "required": false,
+        "description": "护理期结束日期"
+      },
+      {
+        "field_key": "nursing_persons",
+        "field_label": "护理人数",
+        "data_type": "NUMBER",
+        "required": true,
+        "description": "护理人数"
+      },
+      {
+        "field_key": "doctor_name",
+        "field_label": "医生姓名",
+        "data_type": "STRING",
+        "required": false,
+        "description": "医生姓名"
+      }
+    ]
   },
   {
     "id": "mat-17",
@@ -264,7 +1054,51 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"hospital_name\": {\n      \"type\": \"string\",\n      \"description\": \"医院名称\"\n    },\n    \"patient_name\": {\n      \"type\": \"string\",\n      \"description\": \"患者姓名\"\n    },\n    \"nutrition_period_start\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"营养期开始日期\"\n    },\n    \"nutrition_period_end\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"营养期结束日期\"\n    },\n    \"nutrition_days\": {\n      \"type\": \"number\",\n      \"description\": \"营养期天数\"\n    },\n    \"doctor_name\": {\n      \"type\": \"string\",\n      \"description\": \"医生姓名\"\n    }\n  },\n  \"required\": [\n    \"hospital_name\",\n    \"patient_name\",\n    \"nutrition_days\"\n  ]\n}",
       "aiAuditPrompt": "请提取营养费医嘱中的医院名称、患者姓名、营养期限和天数。校验要点：1）营养期天数是否有医嘱明确支持；2）营养期限与住院/恢复期是否合理衔接；3）是否有医生签名。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "hospital_name",
+        "field_label": "医院名称",
+        "data_type": "STRING",
+        "required": true,
+        "description": "医院名称"
+      },
+      {
+        "field_key": "patient_name",
+        "field_label": "患者姓名",
+        "data_type": "STRING",
+        "required": true,
+        "description": "患者姓名"
+      },
+      {
+        "field_key": "nutrition_period_start",
+        "field_label": "营养期开始日期",
+        "data_type": "DATE",
+        "required": false,
+        "description": "营养期开始日期"
+      },
+      {
+        "field_key": "nutrition_period_end",
+        "field_label": "营养期结束日期",
+        "data_type": "DATE",
+        "required": false,
+        "description": "营养期结束日期"
+      },
+      {
+        "field_key": "nutrition_days",
+        "field_label": "营养期天数",
+        "data_type": "NUMBER",
+        "required": true,
+        "description": "营养期天数"
+      },
+      {
+        "field_key": "doctor_name",
+        "field_label": "医生姓名",
+        "data_type": "STRING",
+        "required": false,
+        "description": "医生姓名"
+      }
+    ]
   },
   {
     "id": "mat-18",
@@ -279,7 +1113,51 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"hospital_name\": {\n      \"type\": \"string\",\n      \"description\": \"医院名称\"\n    },\n    \"patient_name\": {\n      \"type\": \"string\",\n      \"description\": \"患者姓名\"\n    },\n    \"admission_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"入院日期\"\n    },\n    \"discharge_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"出院日期\"\n    },\n    \"total_days\": {\n      \"type\": \"number\",\n      \"description\": \"住院总天数\"\n    },\n    \"department\": {\n      \"type\": \"string\",\n      \"description\": \"住院科室\"\n    }\n  },\n  \"required\": [\n    \"hospital_name\",\n    \"patient_name\",\n    \"admission_date\",\n    \"discharge_date\",\n    \"total_days\"\n  ]\n}",
       "aiAuditPrompt": "请提取住院天数证明中的医院名称、患者姓名、入院日期、出院日期、住院总天数和科室。校验要点：1）住院天数计算是否正确（出院日期-入院日期）；2）与住院病历中的入院和出院日期是否一致。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "hospital_name",
+        "field_label": "医院名称",
+        "data_type": "STRING",
+        "required": true,
+        "description": "医院名称"
+      },
+      {
+        "field_key": "patient_name",
+        "field_label": "患者姓名",
+        "data_type": "STRING",
+        "required": true,
+        "description": "患者姓名"
+      },
+      {
+        "field_key": "admission_date",
+        "field_label": "入院日期",
+        "data_type": "DATE",
+        "required": true,
+        "description": "入院日期"
+      },
+      {
+        "field_key": "discharge_date",
+        "field_label": "出院日期",
+        "data_type": "DATE",
+        "required": true,
+        "description": "出院日期"
+      },
+      {
+        "field_key": "total_days",
+        "field_label": "住院总天数",
+        "data_type": "NUMBER",
+        "required": true,
+        "description": "住院总天数"
+      },
+      {
+        "field_key": "department",
+        "field_label": "住院科室",
+        "data_type": "STRING",
+        "required": false,
+        "description": "住院科室"
+      }
+    ]
   },
   {
     "id": "mat-19",
@@ -294,7 +1172,58 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"hospital_name\": {\n      \"type\": \"string\",\n      \"description\": \"开方医院\"\n    },\n    \"patient_name\": {\n      \"type\": \"string\",\n      \"description\": \"患者姓名\"\n    },\n    \"drug_name\": {\n      \"type\": \"string\",\n      \"description\": \"药品名称\"\n    },\n    \"dosage\": {\n      \"type\": \"string\",\n      \"description\": \"用法用量\"\n    },\n    \"quantity\": {\n      \"type\": \"string\",\n      \"description\": \"数量\"\n    },\n    \"prescribing_doctor\": {\n      \"type\": \"string\",\n      \"description\": \"处方医生\"\n    },\n    \"prescription_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"处方日期\"\n    }\n  },\n  \"required\": [\n    \"hospital_name\",\n    \"patient_name\",\n    \"drug_name\",\n    \"prescribing_doctor\"\n  ]\n}",
       "aiAuditPrompt": "请提取外购药处方笺中的开方医院、患者姓名、药品名称、用法用量、数量、处方医生和处方日期。校验要点：1）外购药品是否与诊断结果相关；2）处方是否由主治医师开具；3）处方日期是否在治疗期间内；4）与购药发票中的药品名称和数量是否一致。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "hospital_name",
+        "field_label": "开方医院",
+        "data_type": "STRING",
+        "required": true,
+        "description": "开方医院"
+      },
+      {
+        "field_key": "patient_name",
+        "field_label": "患者姓名",
+        "data_type": "STRING",
+        "required": true,
+        "description": "患者姓名"
+      },
+      {
+        "field_key": "drug_name",
+        "field_label": "药品名称",
+        "data_type": "STRING",
+        "required": true,
+        "description": "药品名称"
+      },
+      {
+        "field_key": "dosage",
+        "field_label": "用法用量",
+        "data_type": "STRING",
+        "required": false,
+        "description": "用法用量"
+      },
+      {
+        "field_key": "quantity",
+        "field_label": "数量",
+        "data_type": "STRING",
+        "required": false,
+        "description": "数量"
+      },
+      {
+        "field_key": "prescribing_doctor",
+        "field_label": "处方医生",
+        "data_type": "STRING",
+        "required": true,
+        "description": "处方医生"
+      },
+      {
+        "field_key": "prescription_date",
+        "field_label": "处方日期",
+        "data_type": "DATE",
+        "required": false,
+        "description": "处方日期"
+      }
+    ]
   },
   {
     "id": "mat-20",
@@ -309,7 +1238,139 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"hospital_name\": {\n      \"type\": \"string\",\n      \"description\": \"医院名称\"\n    },\n    \"patient_name\": {\n      \"type\": \"string\",\n      \"description\": \"患者姓名\"\n    },\n    \"invoice_number\": {\n      \"type\": \"string\",\n      \"description\": \"发票号码\"\n    },\n    \"invoice_code\": {\n      \"type\": \"string\",\n      \"description\": \"发票代码\"\n    },\n    \"invoice_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"开票日期\"\n    },\n    \"total_amount\": {\n      \"type\": \"number\",\n      \"description\": \"金额合计\"\n    },\n    \"self_paid\": {\n      \"type\": \"number\",\n      \"description\": \"个人自付金额\"\n    },\n    \"insurance_paid\": {\n      \"type\": \"number\",\n      \"description\": \"医保统筹支付\"\n    },\n    \"personal_account\": {\n      \"type\": \"number\",\n      \"description\": \"个人账户支付\"\n    }\n  },\n  \"required\": [\n    \"hospital_name\",\n    \"invoice_number\",\n    \"total_amount\"\n  ]\n}",
       "aiAuditPrompt": "请从医疗费发票中提取医院名称、患者姓名、发票号码、发票代码、开票日期、金额合计、个人自付、医保统筹支付和个人账户支付。校验要点：1）各项金额相加是否等于合计金额；2）发票日期是否在就诊期间内；3）发票是否为正规财政票据或税务发票；4）与费用明细清单中的总金额是否一致。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "basicInfo",
+        "field_label": "basicInfo",
+        "data_type": "OBJECT",
+        "required": true,
+        "description": "",
+        "children": [
+          {
+            "field_key": "name",
+            "field_label": "患者姓名",
+            "data_type": "STRING",
+            "required": true,
+            "description": "患者姓名"
+          },
+          {
+            "field_key": "gender",
+            "field_label": "患者性别",
+            "data_type": "STRING",
+            "required": false,
+            "description": "患者性别"
+          },
+          {
+            "field_key": "age",
+            "field_label": "患者年龄",
+            "data_type": "STRING",
+            "required": false,
+            "description": "患者年龄"
+          },
+          {
+            "field_key": "department",
+            "field_label": "科室",
+            "data_type": "STRING",
+            "required": false,
+            "description": "科室"
+          },
+          {
+            "field_key": "bedCode",
+            "field_label": "床位代码",
+            "data_type": "STRING",
+            "required": false,
+            "description": "床位代码"
+          },
+          {
+            "field_key": "hospitalizationNumber",
+            "field_label": "住院号",
+            "data_type": "STRING",
+            "required": false,
+            "description": "住院号"
+          },
+          {
+            "field_key": "dischargeDiagnosis",
+            "field_label": "出院诊断",
+            "data_type": "STRING",
+            "required": false,
+            "description": "出院诊断"
+          },
+          {
+            "field_key": "admissionDate",
+            "field_label": "入院日期，格式：YYYY-MM-DD",
+            "data_type": "STRING",
+            "required": false,
+            "description": "入院日期，格式：YYYY-MM-DD"
+          },
+          {
+            "field_key": "dischargeDate",
+            "field_label": "出院日期，格式：YYYY-MM-DD",
+            "data_type": "STRING",
+            "required": false,
+            "description": "出院日期，格式：YYYY-MM-DD"
+          },
+          {
+            "field_key": "otherInfo",
+            "field_label": "其他未分类的基本信息",
+            "data_type": "STRING",
+            "required": false,
+            "description": "其他未分类的基本信息"
+          }
+        ]
+      },
+      {
+        "field_key": "chargeItems",
+        "field_label": "收费项目信息列表",
+        "data_type": "ARRAY",
+        "required": true,
+        "description": "收费项目信息列表",
+        "item_fields": [
+          {
+            "field_key": "itemName",
+            "field_label": "收费项目名称",
+            "data_type": "STRING",
+            "required": true,
+            "description": "收费项目名称"
+          },
+          {
+            "field_key": "specifications",
+            "field_label": "规格",
+            "data_type": "STRING",
+            "required": false,
+            "description": "规格"
+          },
+          {
+            "field_key": "unitPrice",
+            "field_label": "单价",
+            "data_type": "NUMBER",
+            "required": true,
+            "description": "单价"
+          },
+          {
+            "field_key": "quantity",
+            "field_label": "数量",
+            "data_type": "NUMBER",
+            "required": true,
+            "description": "数量"
+          },
+          {
+            "field_key": "totalPrice",
+            "field_label": "总价",
+            "data_type": "NUMBER",
+            "required": true,
+            "description": "总价"
+          }
+        ]
+      },
+      {
+        "field_key": "totalAmount",
+        "field_label": "总费用合计金额",
+        "data_type": "NUMBER",
+        "required": false,
+        "description": "总费用合计金额"
+      }
+    ]
   },
   {
     "id": "mat-21",
@@ -324,7 +1385,74 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"hospital_name\": {\n      \"type\": \"string\",\n      \"description\": \"医院名称\"\n    },\n    \"patient_name\": {\n      \"type\": \"string\",\n      \"description\": \"患者姓名\"\n    },\n    \"items\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"item_name\": {\n            \"type\": \"string\",\n            \"description\": \"项目名称\"\n          },\n          \"category\": {\n            \"type\": \"string\",\n            \"description\": \"费用类别\"\n          },\n          \"quantity\": {\n            \"type\": \"number\",\n            \"description\": \"数量\"\n          },\n          \"unit_price\": {\n            \"type\": \"number\",\n            \"description\": \"单价\"\n          },\n          \"total_price\": {\n            \"type\": \"number\",\n            \"description\": \"金额\"\n          }\n        }\n      },\n      \"description\": \"费用明细项目列表\"\n    },\n    \"total_amount\": {\n      \"type\": \"number\",\n      \"description\": \"费用总额\"\n    }\n  },\n  \"required\": [\n    \"hospital_name\",\n    \"items\",\n    \"total_amount\"\n  ]\n}",
       "aiAuditPrompt": "请从费用明细清单中提取医院名称、患者姓名、所有费用明细项（项目名称、类别、数量、单价、金额）和费用总额。校验要点：1）各项费用金额=单价×数量；2）所有项目金额之和是否等于总额；3）与医疗费发票的总金额是否一致；4）是否存在异常高价项目。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "hospital_name",
+        "field_label": "医院名称",
+        "data_type": "STRING",
+        "required": true,
+        "description": "医院名称"
+      },
+      {
+        "field_key": "patient_name",
+        "field_label": "患者姓名",
+        "data_type": "STRING",
+        "required": false,
+        "description": "患者姓名"
+      },
+      {
+        "field_key": "items",
+        "field_label": "费用明细项目列表",
+        "data_type": "ARRAY",
+        "required": true,
+        "description": "费用明细项目列表",
+        "item_fields": [
+          {
+            "field_key": "item_name",
+            "field_label": "项目名称",
+            "data_type": "STRING",
+            "required": false,
+            "description": "项目名称"
+          },
+          {
+            "field_key": "category",
+            "field_label": "费用类别",
+            "data_type": "STRING",
+            "required": false,
+            "description": "费用类别"
+          },
+          {
+            "field_key": "quantity",
+            "field_label": "数量",
+            "data_type": "NUMBER",
+            "required": false,
+            "description": "数量"
+          },
+          {
+            "field_key": "unit_price",
+            "field_label": "单价",
+            "data_type": "NUMBER",
+            "required": false,
+            "description": "单价"
+          },
+          {
+            "field_key": "total_price",
+            "field_label": "金额",
+            "data_type": "NUMBER",
+            "required": false,
+            "description": "金额"
+          }
+        ]
+      },
+      {
+        "field_key": "total_amount",
+        "field_label": "费用总额",
+        "data_type": "NUMBER",
+        "required": true,
+        "description": "费用总额"
+      }
+    ]
   },
   {
     "id": "mat-22",
@@ -339,7 +1467,74 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"pharmacy_name\": {\n      \"type\": \"string\",\n      \"description\": \"药房名称\"\n    },\n    \"invoice_number\": {\n      \"type\": \"string\",\n      \"description\": \"发票号码\"\n    },\n    \"invoice_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"购药日期\"\n    },\n    \"drug_items\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"drug_name\": {\n            \"type\": \"string\",\n            \"description\": \"药品名称\"\n          },\n          \"quantity\": {\n            \"type\": \"number\",\n            \"description\": \"数量\"\n          },\n          \"unit_price\": {\n            \"type\": \"number\",\n            \"description\": \"单价\"\n          },\n          \"amount\": {\n            \"type\": \"number\",\n            \"description\": \"金额\"\n          }\n        }\n      },\n      \"description\": \"购药明细\"\n    },\n    \"total_amount\": {\n      \"type\": \"number\",\n      \"description\": \"合计金额\"\n    }\n  },\n  \"required\": [\n    \"pharmacy_name\",\n    \"invoice_number\",\n    \"total_amount\"\n  ]\n}",
       "aiAuditPrompt": "请从购药发票中提取药房名称、发票号码、购药日期、药品明细（名称、数量、单价、金额）和合计金额。校验要点：1）购买的药品是否与外购药处方笺中开具的药品一致；2）药品数量是否与处方匹配；3）购药日期是否在治疗期间内；4）药房是否为正规药店。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "pharmacy_name",
+        "field_label": "药房名称",
+        "data_type": "STRING",
+        "required": true,
+        "description": "药房名称"
+      },
+      {
+        "field_key": "invoice_number",
+        "field_label": "发票号码",
+        "data_type": "STRING",
+        "required": true,
+        "description": "发票号码"
+      },
+      {
+        "field_key": "invoice_date",
+        "field_label": "购药日期",
+        "data_type": "DATE",
+        "required": false,
+        "description": "购药日期"
+      },
+      {
+        "field_key": "drug_items",
+        "field_label": "购药明细",
+        "data_type": "ARRAY",
+        "required": false,
+        "description": "购药明细",
+        "item_fields": [
+          {
+            "field_key": "drug_name",
+            "field_label": "药品名称",
+            "data_type": "STRING",
+            "required": false,
+            "description": "药品名称"
+          },
+          {
+            "field_key": "quantity",
+            "field_label": "数量",
+            "data_type": "NUMBER",
+            "required": false,
+            "description": "数量"
+          },
+          {
+            "field_key": "unit_price",
+            "field_label": "单价",
+            "data_type": "NUMBER",
+            "required": false,
+            "description": "单价"
+          },
+          {
+            "field_key": "amount",
+            "field_label": "金额",
+            "data_type": "NUMBER",
+            "required": false,
+            "description": "金额"
+          }
+        ]
+      },
+      {
+        "field_key": "total_amount",
+        "field_label": "合计金额",
+        "data_type": "NUMBER",
+        "required": true,
+        "description": "合计金额"
+      }
+    ]
   },
   {
     "id": "mat-23",
@@ -354,7 +1549,65 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"seller_name\": {\n      \"type\": \"string\",\n      \"description\": \"销售商名称\"\n    },\n    \"invoice_number\": {\n      \"type\": \"string\",\n      \"description\": \"发票号码\"\n    },\n    \"invoice_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"购买日期\"\n    },\n    \"item_name\": {\n      \"type\": \"string\",\n      \"description\": \"器具名称\"\n    },\n    \"specification\": {\n      \"type\": \"string\",\n      \"description\": \"规格型号\"\n    },\n    \"quantity\": {\n      \"type\": \"number\",\n      \"description\": \"数量\"\n    },\n    \"unit_price\": {\n      \"type\": \"number\",\n      \"description\": \"单价\"\n    },\n    \"total_amount\": {\n      \"type\": \"number\",\n      \"description\": \"合计金额\"\n    }\n  },\n  \"required\": [\n    \"seller_name\",\n    \"item_name\",\n    \"total_amount\"\n  ]\n}",
       "aiAuditPrompt": "请从辅助器具发票中提取销售商名称、发票号码、器具名称、规格型号、数量、单价和合计金额。校验要点：1）器具类型是否与伤残等级和伤情匹配（如截肢才需要假肢）；2）价格是否在当地辅助器具配制机构的标准范围内；3）是否有残疾辅助器具证明或医嘱支持。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "seller_name",
+        "field_label": "销售商名称",
+        "data_type": "STRING",
+        "required": true,
+        "description": "销售商名称"
+      },
+      {
+        "field_key": "invoice_number",
+        "field_label": "发票号码",
+        "data_type": "STRING",
+        "required": false,
+        "description": "发票号码"
+      },
+      {
+        "field_key": "invoice_date",
+        "field_label": "购买日期",
+        "data_type": "DATE",
+        "required": false,
+        "description": "购买日期"
+      },
+      {
+        "field_key": "item_name",
+        "field_label": "器具名称",
+        "data_type": "STRING",
+        "required": true,
+        "description": "器具名称"
+      },
+      {
+        "field_key": "specification",
+        "field_label": "规格型号",
+        "data_type": "STRING",
+        "required": false,
+        "description": "规格型号"
+      },
+      {
+        "field_key": "quantity",
+        "field_label": "数量",
+        "data_type": "NUMBER",
+        "required": false,
+        "description": "数量"
+      },
+      {
+        "field_key": "unit_price",
+        "field_label": "单价",
+        "data_type": "NUMBER",
+        "required": false,
+        "description": "单价"
+      },
+      {
+        "field_key": "total_amount",
+        "field_label": "合计金额",
+        "data_type": "NUMBER",
+        "required": true,
+        "description": "合计金额"
+      }
+    ]
   },
   {
     "id": "mat-24",
@@ -369,7 +1622,65 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"nursing_institution\": {\n      \"type\": \"string\",\n      \"description\": \"护理机构/护工姓名\"\n    },\n    \"invoice_number\": {\n      \"type\": \"string\",\n      \"description\": \"发票号码\"\n    },\n    \"invoice_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"发票日期\"\n    },\n    \"nursing_period_start\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"护理起始日期\"\n    },\n    \"nursing_period_end\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"护理结束日期\"\n    },\n    \"nursing_days\": {\n      \"type\": \"number\",\n      \"description\": \"护理天数\"\n    },\n    \"daily_rate\": {\n      \"type\": \"number\",\n      \"description\": \"日费率\"\n    },\n    \"total_amount\": {\n      \"type\": \"number\",\n      \"description\": \"合计金额\"\n    }\n  },\n  \"required\": [\n    \"nursing_institution\",\n    \"nursing_days\",\n    \"total_amount\"\n  ]\n}",
       "aiAuditPrompt": "请从护理费发票中提取护理机构/护工信息、发票号码、护理起止日期、护理天数、日费率和合计金额。校验要点：1）护理天数是否与医嘱护理证明中的护理期限一致；2）日费率是否在当地护理行业合理范围内；3）金额=天数×日费率的计算是否正确。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "nursing_institution",
+        "field_label": "护理机构/护工姓名",
+        "data_type": "STRING",
+        "required": true,
+        "description": "护理机构/护工姓名"
+      },
+      {
+        "field_key": "invoice_number",
+        "field_label": "发票号码",
+        "data_type": "STRING",
+        "required": false,
+        "description": "发票号码"
+      },
+      {
+        "field_key": "invoice_date",
+        "field_label": "发票日期",
+        "data_type": "DATE",
+        "required": false,
+        "description": "发票日期"
+      },
+      {
+        "field_key": "nursing_period_start",
+        "field_label": "护理起始日期",
+        "data_type": "DATE",
+        "required": false,
+        "description": "护理起始日期"
+      },
+      {
+        "field_key": "nursing_period_end",
+        "field_label": "护理结束日期",
+        "data_type": "DATE",
+        "required": false,
+        "description": "护理结束日期"
+      },
+      {
+        "field_key": "nursing_days",
+        "field_label": "护理天数",
+        "data_type": "NUMBER",
+        "required": true,
+        "description": "护理天数"
+      },
+      {
+        "field_key": "daily_rate",
+        "field_label": "日费率",
+        "data_type": "NUMBER",
+        "required": false,
+        "description": "日费率"
+      },
+      {
+        "field_key": "total_amount",
+        "field_label": "合计金额",
+        "data_type": "NUMBER",
+        "required": true,
+        "description": "合计金额"
+      }
+    ]
   },
   {
     "id": "mat-25",
@@ -384,7 +1695,51 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"transport_type\": {\n      \"type\": \"string\",\n      \"description\": \"交通方式（出租车/公交/地铁/火车/飞机等）\"\n    },\n    \"departure\": {\n      \"type\": \"string\",\n      \"description\": \"出发地\"\n    },\n    \"destination\": {\n      \"type\": \"string\",\n      \"description\": \"目的地\"\n    },\n    \"date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"乘车日期\"\n    },\n    \"amount\": {\n      \"type\": \"number\",\n      \"description\": \"金额\"\n    },\n    \"ticket_number\": {\n      \"type\": \"string\",\n      \"description\": \"票号\"\n    }\n  },\n  \"required\": [\n    \"transport_type\",\n    \"date\",\n    \"amount\"\n  ]\n}",
       "aiAuditPrompt": "请从交通费票据中提取交通方式、出发地、目的地、日期、金额和票号。校验要点：1）交通日期是否在就医期间内（与诊断证明、住院病历日期对应）；2）出发地或目的地是否与就诊医院所在地一致；3）交通方式是否合理（一般应选择经济便捷方式，特殊情况如伤情严重可乘坐出租车/飞机）。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "transport_type",
+        "field_label": "交通方式（出租车/公交/地铁/火车/飞机等）",
+        "data_type": "STRING",
+        "required": true,
+        "description": "交通方式（出租车/公交/地铁/火车/飞机等）"
+      },
+      {
+        "field_key": "departure",
+        "field_label": "出发地",
+        "data_type": "STRING",
+        "required": false,
+        "description": "出发地"
+      },
+      {
+        "field_key": "destination",
+        "field_label": "目的地",
+        "data_type": "STRING",
+        "required": false,
+        "description": "目的地"
+      },
+      {
+        "field_key": "date",
+        "field_label": "乘车日期",
+        "data_type": "DATE",
+        "required": true,
+        "description": "乘车日期"
+      },
+      {
+        "field_key": "amount",
+        "field_label": "金额",
+        "data_type": "NUMBER",
+        "required": true,
+        "description": "金额"
+      },
+      {
+        "field_key": "ticket_number",
+        "field_label": "票号",
+        "data_type": "STRING",
+        "required": false,
+        "description": "票号"
+      }
+    ]
   },
   {
     "id": "mat-26",
@@ -399,7 +1754,58 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"hotel_name\": {\n      \"type\": \"string\",\n      \"description\": \"住宿单位名称\"\n    },\n    \"invoice_number\": {\n      \"type\": \"string\",\n      \"description\": \"发票号码\"\n    },\n    \"check_in_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"入住日期\"\n    },\n    \"check_out_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"退房日期\"\n    },\n    \"days\": {\n      \"type\": \"number\",\n      \"description\": \"住宿天数\"\n    },\n    \"daily_rate\": {\n      \"type\": \"number\",\n      \"description\": \"日房价\"\n    },\n    \"total_amount\": {\n      \"type\": \"number\",\n      \"description\": \"合计金额\"\n    }\n  },\n  \"required\": [\n    \"hotel_name\",\n    \"days\",\n    \"total_amount\"\n  ]\n}",
       "aiAuditPrompt": "请从住宿费发票中提取住宿单位名称、发票号码、入住退房日期、天数、日房价和合计金额。校验要点：1）住宿日期是否与就医日期匹配（应为异地就医期间）；2）住宿地点是否在就诊医院附近；3）日房价是否在当地合理标准内（一般参照当地国家机关一般工作人员出差住宿标准）。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "hotel_name",
+        "field_label": "住宿单位名称",
+        "data_type": "STRING",
+        "required": true,
+        "description": "住宿单位名称"
+      },
+      {
+        "field_key": "invoice_number",
+        "field_label": "发票号码",
+        "data_type": "STRING",
+        "required": false,
+        "description": "发票号码"
+      },
+      {
+        "field_key": "check_in_date",
+        "field_label": "入住日期",
+        "data_type": "DATE",
+        "required": false,
+        "description": "入住日期"
+      },
+      {
+        "field_key": "check_out_date",
+        "field_label": "退房日期",
+        "data_type": "DATE",
+        "required": false,
+        "description": "退房日期"
+      },
+      {
+        "field_key": "days",
+        "field_label": "住宿天数",
+        "data_type": "NUMBER",
+        "required": true,
+        "description": "住宿天数"
+      },
+      {
+        "field_key": "daily_rate",
+        "field_label": "日房价",
+        "data_type": "NUMBER",
+        "required": false,
+        "description": "日房价"
+      },
+      {
+        "field_key": "total_amount",
+        "field_label": "合计金额",
+        "data_type": "NUMBER",
+        "required": true,
+        "description": "合计金额"
+      }
+    ]
   },
   {
     "id": "mat-27",
@@ -414,7 +1820,44 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"institution_name\": {\n      \"type\": \"string\",\n      \"description\": \"鉴定机构名称\"\n    },\n    \"invoice_number\": {\n      \"type\": \"string\",\n      \"description\": \"发票号码\"\n    },\n    \"invoice_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"发票日期\"\n    },\n    \"appraisal_type\": {\n      \"type\": \"string\",\n      \"description\": \"鉴定类型（伤残鉴定/劳动能力鉴定/护理依赖鉴定等）\"\n    },\n    \"total_amount\": {\n      \"type\": \"number\",\n      \"description\": \"鉴定费金额\"\n    }\n  },\n  \"required\": [\n    \"institution_name\",\n    \"appraisal_type\",\n    \"total_amount\"\n  ]\n}",
       "aiAuditPrompt": "请从鉴定费发票中提取鉴定机构名称、发票号码、日期、鉴定类型和金额。校验要点：1）鉴定机构是否具有法定资质；2）鉴定费用是否在当地收费标准范围内；3）鉴定类型与案件所需鉴定项目是否匹配。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "institution_name",
+        "field_label": "鉴定机构名称",
+        "data_type": "STRING",
+        "required": true,
+        "description": "鉴定机构名称"
+      },
+      {
+        "field_key": "invoice_number",
+        "field_label": "发票号码",
+        "data_type": "STRING",
+        "required": false,
+        "description": "发票号码"
+      },
+      {
+        "field_key": "invoice_date",
+        "field_label": "发票日期",
+        "data_type": "DATE",
+        "required": false,
+        "description": "发票日期"
+      },
+      {
+        "field_key": "appraisal_type",
+        "field_label": "鉴定类型（伤残鉴定/劳动能力鉴定/护理依赖鉴定等）",
+        "data_type": "STRING",
+        "required": true,
+        "description": "鉴定类型（伤残鉴定/劳动能力鉴定/护理依赖鉴定等）"
+      },
+      {
+        "field_key": "total_amount",
+        "field_label": "鉴定费金额",
+        "data_type": "NUMBER",
+        "required": true,
+        "description": "鉴定费金额"
+      }
+    ]
   },
   {
     "id": "mat-28",
@@ -429,7 +1872,60 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"service_provider\": {\n      \"type\": \"string\",\n      \"description\": \"殡葬服务单位\"\n    },\n    \"invoice_number\": {\n      \"type\": \"string\",\n      \"description\": \"发票号码\"\n    },\n    \"invoice_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"发票日期\"\n    },\n    \"service_items\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"item_name\": {\n            \"type\": \"string\",\n            \"description\": \"服务项目\"\n          },\n          \"amount\": {\n            \"type\": \"number\",\n            \"description\": \"金额\"\n          }\n        }\n      },\n      \"description\": \"丧葬服务明细\"\n    },\n    \"total_amount\": {\n      \"type\": \"number\",\n      \"description\": \"合计金额\"\n    }\n  },\n  \"required\": [\n    \"service_provider\",\n    \"total_amount\"\n  ]\n}",
       "aiAuditPrompt": "请从丧葬费票据中提取殡葬服务单位、发票信息、服务项目明细和合计金额。校验要点：1）丧葬费法定标准为受诉法院所在地上一年度职工月平均工资×6个月，实际费用仅作参考；2）服务项目是否合理（基本丧葬服务）。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "service_provider",
+        "field_label": "殡葬服务单位",
+        "data_type": "STRING",
+        "required": true,
+        "description": "殡葬服务单位"
+      },
+      {
+        "field_key": "invoice_number",
+        "field_label": "发票号码",
+        "data_type": "STRING",
+        "required": false,
+        "description": "发票号码"
+      },
+      {
+        "field_key": "invoice_date",
+        "field_label": "发票日期",
+        "data_type": "DATE",
+        "required": false,
+        "description": "发票日期"
+      },
+      {
+        "field_key": "service_items",
+        "field_label": "丧葬服务明细",
+        "data_type": "ARRAY",
+        "required": false,
+        "description": "丧葬服务明细",
+        "item_fields": [
+          {
+            "field_key": "item_name",
+            "field_label": "服务项目",
+            "data_type": "STRING",
+            "required": false,
+            "description": "服务项目"
+          },
+          {
+            "field_key": "amount",
+            "field_label": "金额",
+            "data_type": "NUMBER",
+            "required": false,
+            "description": "金额"
+          }
+        ]
+      },
+      {
+        "field_key": "total_amount",
+        "field_label": "合计金额",
+        "data_type": "NUMBER",
+        "required": true,
+        "description": "合计金额"
+      }
+    ]
   },
   {
     "id": "mat-29",
@@ -444,7 +1940,65 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"employer_name\": {\n      \"type\": \"string\",\n      \"description\": \"用人单位名称\"\n    },\n    \"employee_name\": {\n      \"type\": \"string\",\n      \"description\": \"员工姓名\"\n    },\n    \"position\": {\n      \"type\": \"string\",\n      \"description\": \"职务/岗位\"\n    },\n    \"absence_start_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"误工起始日期\"\n    },\n    \"absence_end_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"误工截止日期\"\n    },\n    \"absence_days\": {\n      \"type\": \"number\",\n      \"description\": \"误工天数\"\n    },\n    \"salary_deduction\": {\n      \"type\": \"number\",\n      \"description\": \"扣发工资金额\"\n    },\n    \"has_employer_seal\": {\n      \"type\": \"boolean\",\n      \"description\": \"是否有单位公章\"\n    }\n  },\n  \"required\": [\n    \"employer_name\",\n    \"employee_name\",\n    \"absence_days\"\n  ]\n}",
       "aiAuditPrompt": "请从误工证明中提取用人单位名称、员工姓名、职务、误工起止日期、误工天数和扣发工资金额。校验要点：1）误工期是否与医嘱建休期匹配（误工期不超过建休期+住院期）；2）是否有用人单位公章；3）扣发工资金额是否与收入证明中的收入水平一致。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "employer_name",
+        "field_label": "用人单位名称",
+        "data_type": "STRING",
+        "required": true,
+        "description": "用人单位名称"
+      },
+      {
+        "field_key": "employee_name",
+        "field_label": "员工姓名",
+        "data_type": "STRING",
+        "required": true,
+        "description": "员工姓名"
+      },
+      {
+        "field_key": "position",
+        "field_label": "职务/岗位",
+        "data_type": "STRING",
+        "required": false,
+        "description": "职务/岗位"
+      },
+      {
+        "field_key": "absence_start_date",
+        "field_label": "误工起始日期",
+        "data_type": "DATE",
+        "required": false,
+        "description": "误工起始日期"
+      },
+      {
+        "field_key": "absence_end_date",
+        "field_label": "误工截止日期",
+        "data_type": "DATE",
+        "required": false,
+        "description": "误工截止日期"
+      },
+      {
+        "field_key": "absence_days",
+        "field_label": "误工天数",
+        "data_type": "NUMBER",
+        "required": true,
+        "description": "误工天数"
+      },
+      {
+        "field_key": "salary_deduction",
+        "field_label": "扣发工资金额",
+        "data_type": "NUMBER",
+        "required": false,
+        "description": "扣发工资金额"
+      },
+      {
+        "field_key": "has_employer_seal",
+        "field_label": "是否有单位公章",
+        "data_type": "BOOLEAN",
+        "required": false,
+        "description": "是否有单位公章"
+      }
+    ]
   },
   {
     "id": "mat-30",
@@ -459,7 +2013,58 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"employer_name\": {\n      \"type\": \"string\",\n      \"description\": \"用人单位名称\"\n    },\n    \"employee_name\": {\n      \"type\": \"string\",\n      \"description\": \"员工姓名\"\n    },\n    \"position\": {\n      \"type\": \"string\",\n      \"description\": \"职务/岗位\"\n    },\n    \"monthly_salary\": {\n      \"type\": \"number\",\n      \"description\": \"月工资收入\"\n    },\n    \"annual_income\": {\n      \"type\": \"number\",\n      \"description\": \"年收入\"\n    },\n    \"employment_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"入职日期\"\n    },\n    \"has_employer_seal\": {\n      \"type\": \"boolean\",\n      \"description\": \"是否有单位公章\"\n    }\n  },\n  \"required\": [\n    \"employer_name\",\n    \"employee_name\",\n    \"monthly_salary\"\n  ]\n}",
       "aiAuditPrompt": "请从收入证明中提取用人单位、员工姓名、职务、月工资和年收入。校验要点：1）月收入水平是否与行业及地区平均水平大致匹配，过高需要银行流水和纳税证明佐证；2）年收入是否约等于月工资×12；3）是否有用人单位公章。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "employer_name",
+        "field_label": "用人单位名称",
+        "data_type": "STRING",
+        "required": true,
+        "description": "用人单位名称"
+      },
+      {
+        "field_key": "employee_name",
+        "field_label": "员工姓名",
+        "data_type": "STRING",
+        "required": true,
+        "description": "员工姓名"
+      },
+      {
+        "field_key": "position",
+        "field_label": "职务/岗位",
+        "data_type": "STRING",
+        "required": false,
+        "description": "职务/岗位"
+      },
+      {
+        "field_key": "monthly_salary",
+        "field_label": "月工资收入",
+        "data_type": "NUMBER",
+        "required": true,
+        "description": "月工资收入"
+      },
+      {
+        "field_key": "annual_income",
+        "field_label": "年收入",
+        "data_type": "NUMBER",
+        "required": false,
+        "description": "年收入"
+      },
+      {
+        "field_key": "employment_date",
+        "field_label": "入职日期",
+        "data_type": "DATE",
+        "required": false,
+        "description": "入职日期"
+      },
+      {
+        "field_key": "has_employer_seal",
+        "field_label": "是否有单位公章",
+        "data_type": "BOOLEAN",
+        "required": false,
+        "description": "是否有单位公章"
+      }
+    ]
   },
   {
     "id": "mat-31",
@@ -474,7 +2079,58 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"employer_name\": {\n      \"type\": \"string\",\n      \"description\": \"用人单位名称\"\n    },\n    \"employee_name\": {\n      \"type\": \"string\",\n      \"description\": \"劳动者姓名\"\n    },\n    \"contract_start_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"合同起始日期\"\n    },\n    \"contract_end_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"合同终止日期\"\n    },\n    \"position\": {\n      \"type\": \"string\",\n      \"description\": \"工作岗位\"\n    },\n    \"salary\": {\n      \"type\": \"number\",\n      \"description\": \"劳动报酬（月薪）\"\n    },\n    \"contract_type\": {\n      \"type\": \"string\",\n      \"description\": \"合同类型（固定期限/无固定期限/以完成一定工作任务为期限）\"\n    }\n  },\n  \"required\": [\n    \"employer_name\",\n    \"employee_name\",\n    \"contract_start_date\"\n  ]\n}",
       "aiAuditPrompt": "请从劳动合同中提取用人单位、劳动者姓名、合同期限、工作岗位、劳动报酬和合同类型。校验要点：1）合同有效期是否覆盖事故发生日期（证明事故时存在劳动关系）；2）合同中约定的工资是否与收入证明一致；3）用人单位是否与误工证明中的单位一致。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "employer_name",
+        "field_label": "用人单位名称",
+        "data_type": "STRING",
+        "required": true,
+        "description": "用人单位名称"
+      },
+      {
+        "field_key": "employee_name",
+        "field_label": "劳动者姓名",
+        "data_type": "STRING",
+        "required": true,
+        "description": "劳动者姓名"
+      },
+      {
+        "field_key": "contract_start_date",
+        "field_label": "合同起始日期",
+        "data_type": "DATE",
+        "required": true,
+        "description": "合同起始日期"
+      },
+      {
+        "field_key": "contract_end_date",
+        "field_label": "合同终止日期",
+        "data_type": "DATE",
+        "required": false,
+        "description": "合同终止日期"
+      },
+      {
+        "field_key": "position",
+        "field_label": "工作岗位",
+        "data_type": "STRING",
+        "required": false,
+        "description": "工作岗位"
+      },
+      {
+        "field_key": "salary",
+        "field_label": "劳动报酬（月薪）",
+        "data_type": "NUMBER",
+        "required": false,
+        "description": "劳动报酬（月薪）"
+      },
+      {
+        "field_key": "contract_type",
+        "field_label": "合同类型（固定期限/无固定期限/以完成一定工作任务为期限）",
+        "data_type": "STRING",
+        "required": false,
+        "description": "合同类型（固定期限/无固定期限/以完成一定工作任务为期限）"
+      }
+    ]
   },
   {
     "id": "mat-32",
@@ -489,7 +2145,74 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"account_holder\": {\n      \"type\": \"string\",\n      \"description\": \"账户持有人\"\n    },\n    \"bank_name\": {\n      \"type\": \"string\",\n      \"description\": \"开户银行\"\n    },\n    \"period_start\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"流水起始日期\"\n    },\n    \"period_end\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"流水截止日期\"\n    },\n    \"monthly_entries\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"date\": {\n            \"type\": \"string\",\n            \"format\": \"date\",\n            \"description\": \"交易日期\"\n          },\n          \"description\": {\n            \"type\": \"string\",\n            \"description\": \"摘要/交易对方\"\n          },\n          \"amount\": {\n            \"type\": \"number\",\n            \"description\": \"金额\"\n          }\n        }\n      },\n      \"description\": \"工资入账明细\"\n    },\n    \"average_monthly_income\": {\n      \"type\": \"number\",\n      \"description\": \"月均工资收入\"\n    }\n  },\n  \"required\": [\n    \"account_holder\",\n    \"bank_name\",\n    \"average_monthly_income\"\n  ]\n}",
       "aiAuditPrompt": "请从工资银行流水中提取账户持有人、开户银行、流水期间和每月工资入账记录。校验要点：1）工资入账记录是否来自与误工证明、劳动合同中一致的用人单位；2）月均工资是否与收入证明中声称的月薪大致一致；3）事故后是否出现工资减少或停发情况（佐证误工损失）。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "account_holder",
+        "field_label": "账户持有人",
+        "data_type": "STRING",
+        "required": true,
+        "description": "账户持有人"
+      },
+      {
+        "field_key": "bank_name",
+        "field_label": "开户银行",
+        "data_type": "STRING",
+        "required": true,
+        "description": "开户银行"
+      },
+      {
+        "field_key": "period_start",
+        "field_label": "流水起始日期",
+        "data_type": "DATE",
+        "required": false,
+        "description": "流水起始日期"
+      },
+      {
+        "field_key": "period_end",
+        "field_label": "流水截止日期",
+        "data_type": "DATE",
+        "required": false,
+        "description": "流水截止日期"
+      },
+      {
+        "field_key": "monthly_entries",
+        "field_label": "工资入账明细",
+        "data_type": "ARRAY",
+        "required": false,
+        "description": "工资入账明细",
+        "item_fields": [
+          {
+            "field_key": "date",
+            "field_label": "交易日期",
+            "data_type": "DATE",
+            "required": false,
+            "description": "交易日期"
+          },
+          {
+            "field_key": "description",
+            "field_label": "摘要/交易对方",
+            "data_type": "STRING",
+            "required": false,
+            "description": "摘要/交易对方"
+          },
+          {
+            "field_key": "amount",
+            "field_label": "金额",
+            "data_type": "NUMBER",
+            "required": false,
+            "description": "金额"
+          }
+        ]
+      },
+      {
+        "field_key": "average_monthly_income",
+        "field_label": "月均工资收入",
+        "data_type": "NUMBER",
+        "required": true,
+        "description": "月均工资收入"
+      }
+    ]
   },
   {
     "id": "mat-33",
@@ -504,7 +2227,58 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"taxpayer_name\": {\n      \"type\": \"string\",\n      \"description\": \"纳税人姓名\"\n    },\n    \"id_number\": {\n      \"type\": \"string\",\n      \"description\": \"身份证号\"\n    },\n    \"tax_period_start\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"纳税期间起\"\n    },\n    \"tax_period_end\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"纳税期间止\"\n    },\n    \"total_income\": {\n      \"type\": \"number\",\n      \"description\": \"收入总额\"\n    },\n    \"total_tax\": {\n      \"type\": \"number\",\n      \"description\": \"已缴税额\"\n    },\n    \"issuing_authority\": {\n      \"type\": \"string\",\n      \"description\": \"出具机关\"\n    }\n  },\n  \"required\": [\n    \"taxpayer_name\",\n    \"total_income\",\n    \"total_tax\"\n  ]\n}",
       "aiAuditPrompt": "请从纳税证明中提取纳税人姓名、身份证号、纳税期间、收入总额、已缴税额和出具机关。校验要点：1）纳税记录中的收入水平是否与收入证明、银行流水一致；2）纳税期间是否覆盖事故前的连续收入时段；3）通过税额反推的税前收入是否与声称的月薪匹配。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "taxpayer_name",
+        "field_label": "纳税人姓名",
+        "data_type": "STRING",
+        "required": true,
+        "description": "纳税人姓名"
+      },
+      {
+        "field_key": "id_number",
+        "field_label": "身份证号",
+        "data_type": "STRING",
+        "required": false,
+        "description": "身份证号"
+      },
+      {
+        "field_key": "tax_period_start",
+        "field_label": "纳税期间起",
+        "data_type": "DATE",
+        "required": false,
+        "description": "纳税期间起"
+      },
+      {
+        "field_key": "tax_period_end",
+        "field_label": "纳税期间止",
+        "data_type": "DATE",
+        "required": false,
+        "description": "纳税期间止"
+      },
+      {
+        "field_key": "total_income",
+        "field_label": "收入总额",
+        "data_type": "NUMBER",
+        "required": true,
+        "description": "收入总额"
+      },
+      {
+        "field_key": "total_tax",
+        "field_label": "已缴税额",
+        "data_type": "NUMBER",
+        "required": true,
+        "description": "已缴税额"
+      },
+      {
+        "field_key": "issuing_authority",
+        "field_label": "出具机关",
+        "data_type": "STRING",
+        "required": false,
+        "description": "出具机关"
+      }
+    ]
   },
   {
     "id": "mat-34",
@@ -519,7 +2293,51 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"employer_name\": {\n      \"type\": \"string\",\n      \"description\": \"用人单位名称\"\n    },\n    \"employee_name\": {\n      \"type\": \"string\",\n      \"description\": \"护理人员姓名\"\n    },\n    \"position\": {\n      \"type\": \"string\",\n      \"description\": \"职务/岗位\"\n    },\n    \"monthly_salary\": {\n      \"type\": \"number\",\n      \"description\": \"月工资收入\"\n    },\n    \"has_employer_seal\": {\n      \"type\": \"boolean\",\n      \"description\": \"是否有单位公章\"\n    },\n    \"issue_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"开具日期\"\n    }\n  },\n  \"required\": [\n    \"employer_name\",\n    \"employee_name\",\n    \"monthly_salary\"\n  ]\n}",
       "aiAuditPrompt": "请从护理人员收入证明中提取单位名称、护理人员姓名、职务和月收入。校验要点：1）护理人员是否为被保险人的亲属或朋友（非专业护工）；2）月收入水平是否合理；3）护理天数对应的误工损失=月收入÷21.75×护理天数。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "employer_name",
+        "field_label": "用人单位名称",
+        "data_type": "STRING",
+        "required": true,
+        "description": "用人单位名称"
+      },
+      {
+        "field_key": "employee_name",
+        "field_label": "护理人员姓名",
+        "data_type": "STRING",
+        "required": true,
+        "description": "护理人员姓名"
+      },
+      {
+        "field_key": "position",
+        "field_label": "职务/岗位",
+        "data_type": "STRING",
+        "required": false,
+        "description": "职务/岗位"
+      },
+      {
+        "field_key": "monthly_salary",
+        "field_label": "月工资收入",
+        "data_type": "NUMBER",
+        "required": true,
+        "description": "月工资收入"
+      },
+      {
+        "field_key": "has_employer_seal",
+        "field_label": "是否有单位公章",
+        "data_type": "BOOLEAN",
+        "required": false,
+        "description": "是否有单位公章"
+      },
+      {
+        "field_key": "issue_date",
+        "field_label": "开具日期",
+        "data_type": "DATE",
+        "required": false,
+        "description": "开具日期"
+      }
+    ]
   },
   {
     "id": "mat-35",
@@ -534,7 +2352,65 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"institution_name\": {\n      \"type\": \"string\",\n      \"description\": \"鉴定机构名称\"\n    },\n    \"appraisal_number\": {\n      \"type\": \"string\",\n      \"description\": \"鉴定文书编号\"\n    },\n    \"appraisal_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"鉴定日期\"\n    },\n    \"subject_name\": {\n      \"type\": \"string\",\n      \"description\": \"被鉴定人姓名\"\n    },\n    \"disability_grade\": {\n      \"type\": \"string\",\n      \"description\": \"伤残等级（一级~十级）\"\n    },\n    \"injury_description\": {\n      \"type\": \"string\",\n      \"description\": \"伤情描述\"\n    },\n    \"conclusions\": {\n      \"type\": \"string\",\n      \"description\": \"鉴定结论\"\n    },\n    \"appraiser_names\": {\n      \"type\": \"string\",\n      \"description\": \"鉴定人\"\n    }\n  },\n  \"required\": [\n    \"institution_name\",\n    \"subject_name\",\n    \"disability_grade\",\n    \"conclusions\"\n  ]\n}",
       "aiAuditPrompt": "请从伤残鉴定意见书中提取鉴定机构、文书编号、鉴定日期、被鉴定人、伤残等级、伤情描述和鉴定结论。校验要点：1）鉴定机构是否具有司法鉴定资质（应在司法行政部门登记）；2）伤残等级与伤情描述是否匹配（如十级为最轻，一级为最重）；3）鉴定日期是否在伤情稳定后（一般出院后3-6个月）；4）伤残等级直接影响残疾赔偿金计算（十级=10%，九级=20%，依此类推）。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "institution_name",
+        "field_label": "鉴定机构名称",
+        "data_type": "STRING",
+        "required": true,
+        "description": "鉴定机构名称"
+      },
+      {
+        "field_key": "appraisal_number",
+        "field_label": "鉴定文书编号",
+        "data_type": "STRING",
+        "required": false,
+        "description": "鉴定文书编号"
+      },
+      {
+        "field_key": "appraisal_date",
+        "field_label": "鉴定日期",
+        "data_type": "DATE",
+        "required": false,
+        "description": "鉴定日期"
+      },
+      {
+        "field_key": "subject_name",
+        "field_label": "被鉴定人姓名",
+        "data_type": "STRING",
+        "required": true,
+        "description": "被鉴定人姓名"
+      },
+      {
+        "field_key": "disability_grade",
+        "field_label": "伤残等级（一级~十级）",
+        "data_type": "STRING",
+        "required": true,
+        "description": "伤残等级（一级~十级）"
+      },
+      {
+        "field_key": "injury_description",
+        "field_label": "伤情描述",
+        "data_type": "STRING",
+        "required": false,
+        "description": "伤情描述"
+      },
+      {
+        "field_key": "conclusions",
+        "field_label": "鉴定结论",
+        "data_type": "STRING",
+        "required": true,
+        "description": "鉴定结论"
+      },
+      {
+        "field_key": "appraiser_names",
+        "field_label": "鉴定人",
+        "data_type": "STRING",
+        "required": false,
+        "description": "鉴定人"
+      }
+    ]
   },
   {
     "id": "mat-36",
@@ -549,7 +2425,58 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"committee_name\": {\n      \"type\": \"string\",\n      \"description\": \"鉴定委员会名称\"\n    },\n    \"conclusion_number\": {\n      \"type\": \"string\",\n      \"description\": \"鉴定结论编号\"\n    },\n    \"subject_name\": {\n      \"type\": \"string\",\n      \"description\": \"被鉴定人姓名\"\n    },\n    \"employer\": {\n      \"type\": \"string\",\n      \"description\": \"用人单位\"\n    },\n    \"disability_level\": {\n      \"type\": \"string\",\n      \"description\": \"伤残等级\"\n    },\n    \"nursing_dependency_level\": {\n      \"type\": \"string\",\n      \"description\": \"生活自理障碍等级\"\n    },\n    \"conclusion_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"鉴定日期\"\n    }\n  },\n  \"required\": [\n    \"committee_name\",\n    \"subject_name\",\n    \"disability_level\"\n  ]\n}",
       "aiAuditPrompt": "请从劳动能力鉴定结论中提取鉴定委员会、被鉴定人、用人单位、伤残等级、生活自理障碍等级和鉴定日期。校验要点：1）鉴定结论是否由设区的市级以上劳动能力鉴定委员会出具；2）与认定工伤决定书中的人员信息是否一致；3）伤残等级是否合理。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "committee_name",
+        "field_label": "鉴定委员会名称",
+        "data_type": "STRING",
+        "required": true,
+        "description": "鉴定委员会名称"
+      },
+      {
+        "field_key": "conclusion_number",
+        "field_label": "鉴定结论编号",
+        "data_type": "STRING",
+        "required": false,
+        "description": "鉴定结论编号"
+      },
+      {
+        "field_key": "subject_name",
+        "field_label": "被鉴定人姓名",
+        "data_type": "STRING",
+        "required": true,
+        "description": "被鉴定人姓名"
+      },
+      {
+        "field_key": "employer",
+        "field_label": "用人单位",
+        "data_type": "STRING",
+        "required": false,
+        "description": "用人单位"
+      },
+      {
+        "field_key": "disability_level",
+        "field_label": "伤残等级",
+        "data_type": "STRING",
+        "required": true,
+        "description": "伤残等级"
+      },
+      {
+        "field_key": "nursing_dependency_level",
+        "field_label": "生活自理障碍等级",
+        "data_type": "STRING",
+        "required": false,
+        "description": "生活自理障碍等级"
+      },
+      {
+        "field_key": "conclusion_date",
+        "field_label": "鉴定日期",
+        "data_type": "DATE",
+        "required": false,
+        "description": "鉴定日期"
+      }
+    ]
   },
   {
     "id": "mat-37",
@@ -564,7 +2491,58 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"institution_name\": {\n      \"type\": \"string\",\n      \"description\": \"配制机构名称\"\n    },\n    \"subject_name\": {\n      \"type\": \"string\",\n      \"description\": \"申请人姓名\"\n    },\n    \"device_type\": {\n      \"type\": \"string\",\n      \"description\": \"器具类型（假肢/矫形器/轮椅/助听器等）\"\n    },\n    \"device_specification\": {\n      \"type\": \"string\",\n      \"description\": \"器具规格型号\"\n    },\n    \"replacement_cycle\": {\n      \"type\": \"string\",\n      \"description\": \"更换周期\"\n    },\n    \"price_limit\": {\n      \"type\": \"number\",\n      \"description\": \"价格限额\"\n    },\n    \"issue_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"出具日期\"\n    }\n  },\n  \"required\": [\n    \"institution_name\",\n    \"subject_name\",\n    \"device_type\"\n  ]\n}",
       "aiAuditPrompt": "请从残疾辅助器具证明中提取配制机构、申请人、器具类型、规格、更换周期和价格限额。校验要点：1）器具类型是否与伤残情况匹配；2）配制机构是否具有相应资质；3）价格限额是否在国产普及型标准范围内；4）更换周期对于计算后续费用很重要。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "institution_name",
+        "field_label": "配制机构名称",
+        "data_type": "STRING",
+        "required": true,
+        "description": "配制机构名称"
+      },
+      {
+        "field_key": "subject_name",
+        "field_label": "申请人姓名",
+        "data_type": "STRING",
+        "required": true,
+        "description": "申请人姓名"
+      },
+      {
+        "field_key": "device_type",
+        "field_label": "器具类型（假肢/矫形器/轮椅/助听器等）",
+        "data_type": "STRING",
+        "required": true,
+        "description": "器具类型（假肢/矫形器/轮椅/助听器等）"
+      },
+      {
+        "field_key": "device_specification",
+        "field_label": "器具规格型号",
+        "data_type": "STRING",
+        "required": false,
+        "description": "器具规格型号"
+      },
+      {
+        "field_key": "replacement_cycle",
+        "field_label": "更换周期",
+        "data_type": "STRING",
+        "required": false,
+        "description": "更换周期"
+      },
+      {
+        "field_key": "price_limit",
+        "field_label": "价格限额",
+        "data_type": "NUMBER",
+        "required": false,
+        "description": "价格限额"
+      },
+      {
+        "field_key": "issue_date",
+        "field_label": "出具日期",
+        "data_type": "DATE",
+        "required": false,
+        "description": "出具日期"
+      }
+    ]
   },
   {
     "id": "mat-38",
@@ -579,7 +2557,51 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"institution_name\": {\n      \"type\": \"string\",\n      \"description\": \"鉴定机构名称\"\n    },\n    \"subject_name\": {\n      \"type\": \"string\",\n      \"description\": \"被鉴定人姓名\"\n    },\n    \"nursing_dependency_level\": {\n      \"type\": \"string\",\n      \"description\": \"护理依赖等级（完全/大部分/部分护理依赖）\"\n    },\n    \"evaluation_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"评定日期\"\n    },\n    \"daily_activities_assessment\": {\n      \"type\": \"string\",\n      \"description\": \"日常生活能力评估\"\n    },\n    \"conclusions\": {\n      \"type\": \"string\",\n      \"description\": \"鉴定结论\"\n    }\n  },\n  \"required\": [\n    \"institution_name\",\n    \"subject_name\",\n    \"nursing_dependency_level\"\n  ]\n}",
       "aiAuditPrompt": "请从护理依赖鉴定中提取鉴定机构、被鉴定人、护理依赖等级、评定日期和日常生活能力评估结论。校验要点：1）护理依赖等级分为完全（100%）、大部分（80%）和部分（50%）三级；2）鉴定机构是否有资质；3）等级认定与后续护理费计算标准直接相关。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "institution_name",
+        "field_label": "鉴定机构名称",
+        "data_type": "STRING",
+        "required": true,
+        "description": "鉴定机构名称"
+      },
+      {
+        "field_key": "subject_name",
+        "field_label": "被鉴定人姓名",
+        "data_type": "STRING",
+        "required": true,
+        "description": "被鉴定人姓名"
+      },
+      {
+        "field_key": "nursing_dependency_level",
+        "field_label": "护理依赖等级（完全/大部分/部分护理依赖）",
+        "data_type": "STRING",
+        "required": true,
+        "description": "护理依赖等级（完全/大部分/部分护理依赖）"
+      },
+      {
+        "field_key": "evaluation_date",
+        "field_label": "评定日期",
+        "data_type": "DATE",
+        "required": false,
+        "description": "评定日期"
+      },
+      {
+        "field_key": "daily_activities_assessment",
+        "field_label": "日常生活能力评估",
+        "data_type": "STRING",
+        "required": false,
+        "description": "日常生活能力评估"
+      },
+      {
+        "field_key": "conclusions",
+        "field_label": "鉴定结论",
+        "data_type": "STRING",
+        "required": false,
+        "description": "鉴定结论"
+      }
+    ]
   },
   {
     "id": "mat-39",
@@ -594,7 +2616,58 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"name\": {\n      \"type\": \"string\",\n      \"description\": \"姓名\"\n    },\n    \"id_number\": {\n      \"type\": \"string\",\n      \"description\": \"身份证号\"\n    },\n    \"residence_address\": {\n      \"type\": \"string\",\n      \"description\": \"居住地址\"\n    },\n    \"residence_type\": {\n      \"type\": \"string\",\n      \"description\": \"居住证类型\"\n    },\n    \"valid_from\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"有效期起始\"\n    },\n    \"valid_until\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"有效期截止\"\n    },\n    \"issuing_authority\": {\n      \"type\": \"string\",\n      \"description\": \"发证机关\"\n    }\n  },\n  \"required\": [\n    \"name\",\n    \"residence_address\"\n  ]\n}",
       "aiAuditPrompt": "请提取居住证明中的姓名、身份证号、居住地址、有效期限和发证机关。校验要点：1）是否在城镇连续居住满一年以上（可结合居住证有效期判断）；2）如果户籍为农村但在城镇居住满一年且有固定收入，可适用城镇标准计算赔偿金；3）居住证是否在有效期内。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "name",
+        "field_label": "姓名",
+        "data_type": "STRING",
+        "required": true,
+        "description": "姓名"
+      },
+      {
+        "field_key": "id_number",
+        "field_label": "身份证号",
+        "data_type": "STRING",
+        "required": false,
+        "description": "身份证号"
+      },
+      {
+        "field_key": "residence_address",
+        "field_label": "居住地址",
+        "data_type": "STRING",
+        "required": true,
+        "description": "居住地址"
+      },
+      {
+        "field_key": "residence_type",
+        "field_label": "居住证类型",
+        "data_type": "STRING",
+        "required": false,
+        "description": "居住证类型"
+      },
+      {
+        "field_key": "valid_from",
+        "field_label": "有效期起始",
+        "data_type": "DATE",
+        "required": false,
+        "description": "有效期起始"
+      },
+      {
+        "field_key": "valid_until",
+        "field_label": "有效期截止",
+        "data_type": "DATE",
+        "required": false,
+        "description": "有效期截止"
+      },
+      {
+        "field_key": "issuing_authority",
+        "field_label": "发证机关",
+        "data_type": "STRING",
+        "required": false,
+        "description": "发证机关"
+      }
+    ]
   },
   {
     "id": "mat-40",
@@ -609,7 +2682,51 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"dependent_name\": {\n      \"type\": \"string\",\n      \"description\": \"被扶养人姓名\"\n    },\n    \"gender\": {\n      \"type\": \"string\",\n      \"description\": \"性别\"\n    },\n    \"birth_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"出生日期\"\n    },\n    \"id_number\": {\n      \"type\": \"string\",\n      \"description\": \"身份证号\"\n    },\n    \"relationship_to_victim\": {\n      \"type\": \"string\",\n      \"description\": \"与受害人关系\"\n    },\n    \"dependent_type\": {\n      \"type\": \"string\",\n      \"description\": \"被扶养人类型（未成年子女/无劳动能力配偶/年迈父母等）\"\n    }\n  },\n  \"required\": [\n    \"dependent_name\",\n    \"birth_date\",\n    \"relationship_to_victim\"\n  ]\n}",
       "aiAuditPrompt": "请提取被扶养人身份证明中的姓名、性别、出生日期、身份证号、与受害人关系和被扶养人类型。校验要点：1）未成年人扶养至18周岁（扶养年限=18-现年龄）；2）无劳动能力又无其他生活来源的成年人扶养20年，60周岁以上每增加一岁减少一年，75周岁以上为5年；3）多个被扶养人的年赔偿总额不超过上一年度城镇/农村居民人均消费支出。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "dependent_name",
+        "field_label": "被扶养人姓名",
+        "data_type": "STRING",
+        "required": true,
+        "description": "被扶养人姓名"
+      },
+      {
+        "field_key": "gender",
+        "field_label": "性别",
+        "data_type": "STRING",
+        "required": false,
+        "description": "性别"
+      },
+      {
+        "field_key": "birth_date",
+        "field_label": "出生日期",
+        "data_type": "DATE",
+        "required": true,
+        "description": "出生日期"
+      },
+      {
+        "field_key": "id_number",
+        "field_label": "身份证号",
+        "data_type": "STRING",
+        "required": false,
+        "description": "身份证号"
+      },
+      {
+        "field_key": "relationship_to_victim",
+        "field_label": "与受害人关系",
+        "data_type": "STRING",
+        "required": true,
+        "description": "与受害人关系"
+      },
+      {
+        "field_key": "dependent_type",
+        "field_label": "被扶养人类型（未成年子女/无劳动能力配偶/年迈父母等）",
+        "data_type": "STRING",
+        "required": false,
+        "description": "被扶养人类型（未成年子女/无劳动能力配偶/年迈父母等）"
+      }
+    ]
   },
   {
     "id": "mat-41",
@@ -624,7 +2741,51 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"supporter_name\": {\n      \"type\": \"string\",\n      \"description\": \"扶养人（受害人）姓名\"\n    },\n    \"dependent_name\": {\n      \"type\": \"string\",\n      \"description\": \"被扶养人姓名\"\n    },\n    \"relationship\": {\n      \"type\": \"string\",\n      \"description\": \"扶养关系\"\n    },\n    \"other_supporters_count\": {\n      \"type\": \"number\",\n      \"description\": \"其他扶养义务人数\"\n    },\n    \"issuing_authority\": {\n      \"type\": \"string\",\n      \"description\": \"出具机关\"\n    },\n    \"issue_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"开具日期\"\n    }\n  },\n  \"required\": [\n    \"supporter_name\",\n    \"dependent_name\",\n    \"relationship\"\n  ]\n}",
       "aiAuditPrompt": "请提取扶养关系证明中的扶养人、被扶养人、扶养关系、其他扶养义务人数和出具机关。校验要点：1）确认扶养关系真实性（如父母子女关系、配偶关系）；2）其他共同扶养义务人数直接影响赔偿金分摊（被扶养人生活费÷共同扶养人数）；3）出具机关是否为户籍所在地村委会/居委会或民政部门。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "supporter_name",
+        "field_label": "扶养人（受害人）姓名",
+        "data_type": "STRING",
+        "required": true,
+        "description": "扶养人（受害人）姓名"
+      },
+      {
+        "field_key": "dependent_name",
+        "field_label": "被扶养人姓名",
+        "data_type": "STRING",
+        "required": true,
+        "description": "被扶养人姓名"
+      },
+      {
+        "field_key": "relationship",
+        "field_label": "扶养关系",
+        "data_type": "STRING",
+        "required": true,
+        "description": "扶养关系"
+      },
+      {
+        "field_key": "other_supporters_count",
+        "field_label": "其他扶养义务人数",
+        "data_type": "NUMBER",
+        "required": false,
+        "description": "其他扶养义务人数"
+      },
+      {
+        "field_key": "issuing_authority",
+        "field_label": "出具机关",
+        "data_type": "STRING",
+        "required": false,
+        "description": "出具机关"
+      },
+      {
+        "field_key": "issue_date",
+        "field_label": "开具日期",
+        "data_type": "DATE",
+        "required": false,
+        "description": "开具日期"
+      }
+    ]
   },
   {
     "id": "mat-42",
@@ -639,7 +2800,51 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"dependent_name\": {\n      \"type\": \"string\",\n      \"description\": \"被扶养人姓名\"\n    },\n    \"id_number\": {\n      \"type\": \"string\",\n      \"description\": \"身份证号\"\n    },\n    \"has_income\": {\n      \"type\": \"boolean\",\n      \"description\": \"是否有收入（应为false）\"\n    },\n    \"reason_no_income\": {\n      \"type\": \"string\",\n      \"description\": \"无收入原因（残疾/年幼/年迈等）\"\n    },\n    \"issuing_authority\": {\n      \"type\": \"string\",\n      \"description\": \"出具机关\"\n    },\n    \"issue_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"开具日期\"\n    }\n  },\n  \"required\": [\n    \"dependent_name\",\n    \"reason_no_income\"\n  ]\n}",
       "aiAuditPrompt": "请提取被扶养人无收入证明中的被扶养人姓名、身份证号、无收入原因和出具机关。校验要点：1）无收入原因是否合理（未成年、在校学生、残疾人、年迈丧失劳动能力等）；2）确认被扶养人确实丧失劳动能力或无其他生活来源；3）证明是否由相关部门���社区出具并盖章。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "dependent_name",
+        "field_label": "被扶养人姓名",
+        "data_type": "STRING",
+        "required": true,
+        "description": "被扶养人姓名"
+      },
+      {
+        "field_key": "id_number",
+        "field_label": "身份证号",
+        "data_type": "STRING",
+        "required": false,
+        "description": "身份证号"
+      },
+      {
+        "field_key": "has_income",
+        "field_label": "是否有收入（应为false）",
+        "data_type": "BOOLEAN",
+        "required": false,
+        "description": "是否有收入（应为false）"
+      },
+      {
+        "field_key": "reason_no_income",
+        "field_label": "无收入原因（残疾/年幼/年迈等）",
+        "data_type": "STRING",
+        "required": true,
+        "description": "无收入原因（残疾/年幼/年迈等）"
+      },
+      {
+        "field_key": "issuing_authority",
+        "field_label": "出具机关",
+        "data_type": "STRING",
+        "required": false,
+        "description": "出具机关"
+      },
+      {
+        "field_key": "issue_date",
+        "field_label": "开具日期",
+        "data_type": "DATE",
+        "required": false,
+        "description": "开具日期"
+      }
+    ]
   },
   {
     "id": "mat-43",
@@ -654,7 +2859,51 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"deceased_name\": {\n      \"type\": \"string\",\n      \"description\": \"死者姓名\"\n    },\n    \"id_number\": {\n      \"type\": \"string\",\n      \"description\": \"身份证号\"\n    },\n    \"death_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"死亡日期\"\n    },\n    \"death_cause\": {\n      \"type\": \"string\",\n      \"description\": \"死亡原因\"\n    },\n    \"death_location\": {\n      \"type\": \"string\",\n      \"description\": \"死亡地点\"\n    },\n    \"certifying_institution\": {\n      \"type\": \"string\",\n      \"description\": \"出具机构\"\n    }\n  },\n  \"required\": [\n    \"deceased_name\",\n    \"death_date\",\n    \"death_cause\"\n  ]\n}",
       "aiAuditPrompt": "请从死亡证明中提取死者姓名、身份证号、死亡日期、死亡原因、死亡地点和出具机构。校验要点：1）死亡原因是否与事故存在因果关系（如交通事故致死、工伤致死）；2）死亡日期与事故日期的逻辑关系是否合理；3）出具机构应为医院或公安机关。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "deceased_name",
+        "field_label": "死者姓名",
+        "data_type": "STRING",
+        "required": true,
+        "description": "死者姓名"
+      },
+      {
+        "field_key": "id_number",
+        "field_label": "身份证号",
+        "data_type": "STRING",
+        "required": false,
+        "description": "身份证号"
+      },
+      {
+        "field_key": "death_date",
+        "field_label": "死亡日期",
+        "data_type": "DATE",
+        "required": true,
+        "description": "死亡日期"
+      },
+      {
+        "field_key": "death_cause",
+        "field_label": "死亡原因",
+        "data_type": "STRING",
+        "required": true,
+        "description": "死亡原因"
+      },
+      {
+        "field_key": "death_location",
+        "field_label": "死亡地点",
+        "data_type": "STRING",
+        "required": false,
+        "description": "死亡地点"
+      },
+      {
+        "field_key": "certifying_institution",
+        "field_label": "出具机构",
+        "data_type": "STRING",
+        "required": false,
+        "description": "出具机构"
+      }
+    ]
   },
   {
     "id": "mat-44",
@@ -669,7 +2918,37 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"deceased_name\": {\n      \"type\": \"string\",\n      \"description\": \"死者姓名\"\n    },\n    \"id_number\": {\n      \"type\": \"string\",\n      \"description\": \"身份证号\"\n    },\n    \"cancellation_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"户籍注销日期\"\n    },\n    \"issuing_authority\": {\n      \"type\": \"string\",\n      \"description\": \"出具机关（派出所）\"\n    }\n  },\n  \"required\": [\n    \"deceased_name\",\n    \"cancellation_date\"\n  ]\n}",
       "aiAuditPrompt": "请从户籍注销证明中提取死者姓名、身份证号、户籍注销日期和出具机关。校验要点：1）户籍注销日期应在死亡日期之后；2）姓名和身份证号与死亡证明一致；3）出具机关应为户籍所在地公安派出所。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "deceased_name",
+        "field_label": "死者姓名",
+        "data_type": "STRING",
+        "required": true,
+        "description": "死者姓名"
+      },
+      {
+        "field_key": "id_number",
+        "field_label": "身份证号",
+        "data_type": "STRING",
+        "required": false,
+        "description": "身份证号"
+      },
+      {
+        "field_key": "cancellation_date",
+        "field_label": "户籍注销日期",
+        "data_type": "DATE",
+        "required": true,
+        "description": "户籍注销日期"
+      },
+      {
+        "field_key": "issuing_authority",
+        "field_label": "出具机关（派出所）",
+        "data_type": "STRING",
+        "required": false,
+        "description": "出具机关（派出所）"
+      }
+    ]
   },
   {
     "id": "mat-45",
@@ -684,7 +2963,44 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"deceased_name\": {\n      \"type\": \"string\",\n      \"description\": \"死者姓名\"\n    },\n    \"claimant_name\": {\n      \"type\": \"string\",\n      \"description\": \"申请人姓名\"\n    },\n    \"relationship\": {\n      \"type\": \"string\",\n      \"description\": \"亲属关系（配偶/子女/父母等）\"\n    },\n    \"issuing_authority\": {\n      \"type\": \"string\",\n      \"description\": \"出具机关\"\n    },\n    \"issue_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"开具日期\"\n    }\n  },\n  \"required\": [\n    \"deceased_name\",\n    \"claimant_name\",\n    \"relationship\"\n  ]\n}",
       "aiAuditPrompt": "请从亲属关系证明中提取死者姓名、申请人姓名、亲属关系、出具机关和开具日期。校验要点：1）确认申请人为法定赔偿权利人（配偶、父母、子女为第一顺序继承人）；2）亲属关系真实性由户籍所在地相关部门证明；3）若有多个权利人，需全部出具关系证明。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "deceased_name",
+        "field_label": "死者姓名",
+        "data_type": "STRING",
+        "required": true,
+        "description": "死者姓名"
+      },
+      {
+        "field_key": "claimant_name",
+        "field_label": "申请人姓名",
+        "data_type": "STRING",
+        "required": true,
+        "description": "申请人姓名"
+      },
+      {
+        "field_key": "relationship",
+        "field_label": "亲属关系（配偶/子女/父母等）",
+        "data_type": "STRING",
+        "required": true,
+        "description": "亲属关系（配偶/子女/父母等）"
+      },
+      {
+        "field_key": "issuing_authority",
+        "field_label": "出具机关",
+        "data_type": "STRING",
+        "required": false,
+        "description": "出具机关"
+      },
+      {
+        "field_key": "issue_date",
+        "field_label": "开具日期",
+        "data_type": "DATE",
+        "required": false,
+        "description": "开具日期"
+      }
+    ]
   },
   {
     "id": "mat-46",
@@ -699,7 +3015,90 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"case_number\": {\n      \"type\": \"string\",\n      \"description\": \"案号/文书编号\"\n    },\n    \"document_type\": {\n      \"type\": \"string\",\n      \"description\": \"文书类型（调解协议/民事判决书/民事调解书）\"\n    },\n    \"parties\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"role\": {\n            \"type\": \"string\",\n            \"description\": \"当事人角色（原告/被告/申请人/被申请人）\"\n          },\n          \"name\": {\n            \"type\": \"string\",\n            \"description\": \"姓名/名称\"\n          }\n        }\n      },\n      \"description\": \"当事人信息\"\n    },\n    \"agreement_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"协议/判决日期\"\n    },\n    \"compensation_items\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"item\": {\n            \"type\": \"string\",\n            \"description\": \"赔偿项目\"\n          },\n          \"amount\": {\n            \"type\": \"number\",\n            \"description\": \"金额\"\n          }\n        }\n      },\n      \"description\": \"赔偿明细\"\n    },\n    \"total_compensation\": {\n      \"type\": \"number\",\n      \"description\": \"赔偿总额\"\n    },\n    \"court_or_mediator\": {\n      \"type\": \"string\",\n      \"description\": \"法院/调解机构\"\n    }\n  },\n  \"required\": [\n    \"document_type\",\n    \"total_compensation\"\n  ]\n}",
       "aiAuditPrompt": "请从调解协议书或判决书中提取案号、文书类型、各方当事人、协议/判决日期、赔偿明细（各项赔偿项目及金额）和赔偿总额。校验要点：1）各项赔偿金额之和是否等于赔偿总额；2）赔偿项目是否完整（医疗费、误工费、护理费、残疾赔偿金等）；3）被保险人在案件中的角色及应承担的赔偿比例。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "case_number",
+        "field_label": "案号/文书编号",
+        "data_type": "STRING",
+        "required": false,
+        "description": "案号/文书编号"
+      },
+      {
+        "field_key": "document_type",
+        "field_label": "文书类型（调解协议/民事判决书/民事调解书）",
+        "data_type": "STRING",
+        "required": true,
+        "description": "文书类型（调解协议/民事判决书/民事调解书）"
+      },
+      {
+        "field_key": "parties",
+        "field_label": "当事人信息",
+        "data_type": "ARRAY",
+        "required": false,
+        "description": "当事人信息",
+        "item_fields": [
+          {
+            "field_key": "role",
+            "field_label": "当事人角色（原告/被告/申请人/被申请人）",
+            "data_type": "STRING",
+            "required": false,
+            "description": "当事人角色（原告/被告/申请人/被申请人）"
+          },
+          {
+            "field_key": "name",
+            "field_label": "姓名/名称",
+            "data_type": "STRING",
+            "required": false,
+            "description": "姓名/名称"
+          }
+        ]
+      },
+      {
+        "field_key": "agreement_date",
+        "field_label": "协议/判决日期",
+        "data_type": "DATE",
+        "required": false,
+        "description": "协议/判决日期"
+      },
+      {
+        "field_key": "compensation_items",
+        "field_label": "赔偿明细",
+        "data_type": "ARRAY",
+        "required": false,
+        "description": "赔偿明细",
+        "item_fields": [
+          {
+            "field_key": "item",
+            "field_label": "赔偿项目",
+            "data_type": "STRING",
+            "required": false,
+            "description": "赔偿项目"
+          },
+          {
+            "field_key": "amount",
+            "field_label": "金额",
+            "data_type": "NUMBER",
+            "required": false,
+            "description": "金额"
+          }
+        ]
+      },
+      {
+        "field_key": "total_compensation",
+        "field_label": "赔偿总额",
+        "data_type": "NUMBER",
+        "required": true,
+        "description": "赔偿总额"
+      },
+      {
+        "field_key": "court_or_mediator",
+        "field_label": "法院/调解机构",
+        "data_type": "STRING",
+        "required": false,
+        "description": "法院/调解机构"
+      }
+    ]
   },
   {
     "id": "mat-47",
@@ -714,6 +3113,472 @@
       "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"law_firm_name\": {\n      \"type\": \"string\",\n      \"description\": \"律师事务所名称\"\n    },\n    \"lawyer_name\": {\n      \"type\": \"string\",\n      \"description\": \"律师姓名\"\n    },\n    \"contract_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"合同签订日期\"\n    },\n    \"fee_type\": {\n      \"type\": \"string\",\n      \"description\": \"收费方式（固定/风险代理/计时等）\"\n    },\n    \"fee_amount\": {\n      \"type\": \"number\",\n      \"description\": \"律师费金额\"\n    },\n    \"invoice_number\": {\n      \"type\": \"string\",\n      \"description\": \"发票号码\"\n    },\n    \"invoice_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\",\n      \"description\": \"发票日期\"\n    }\n  },\n  \"required\": [\n    \"law_firm_name\",\n    \"fee_amount\"\n  ]\n}",
       "aiAuditPrompt": "请从律师费发票及合同中提取律师事务所名称、律师姓名、合同日期、收费方式、律师费金额和发票信息。校验要点：1）律师费是否在当地律师收费指导价标准范围内；2）律师服务合同与发票金额是否一致；3）发票是否为正规律师事务所开具的增值税发票。",
       "validationRules": []
-    }
+    },
+    "schemaFields": [
+      {
+        "field_key": "law_firm_name",
+        "field_label": "律师事务所名称",
+        "data_type": "STRING",
+        "required": true,
+        "description": "律师事务所名称"
+      },
+      {
+        "field_key": "lawyer_name",
+        "field_label": "律师姓名",
+        "data_type": "STRING",
+        "required": false,
+        "description": "律师姓名"
+      },
+      {
+        "field_key": "contract_date",
+        "field_label": "合同签订日期",
+        "data_type": "DATE",
+        "required": false,
+        "description": "合同签订日期"
+      },
+      {
+        "field_key": "fee_type",
+        "field_label": "收费方式（固定/风险代理/计时等）",
+        "data_type": "STRING",
+        "required": false,
+        "description": "收费方式（固定/风险代理/计时等）"
+      },
+      {
+        "field_key": "fee_amount",
+        "field_label": "律师费金额",
+        "data_type": "NUMBER",
+        "required": true,
+        "description": "律师费金额"
+      },
+      {
+        "field_key": "invoice_number",
+        "field_label": "发票号码",
+        "data_type": "STRING",
+        "required": false,
+        "description": "发票号码"
+      },
+      {
+        "field_key": "invoice_date",
+        "field_label": "发票日期",
+        "data_type": "DATE",
+        "required": false,
+        "description": "发票日期"
+      }
+    ]
+  },
+  {
+    "id": "mat-48",
+    "name": "报案信息",
+    "description": "记录报案号、保单号、出险时间地点、联系人等报案基础信息的页面截图或通知。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"claim_number\": { \"type\": \"string\", \"description\": \"报案号\" },\n    \"policy_number\": { \"type\": \"string\", \"description\": \"保单号\" },\n    \"insured_name\": { \"type\": \"string\", \"description\": \"被保险人\" },\n    \"loss_time\": { \"type\": \"string\", \"description\": \"出险时间\" },\n    \"loss_location\": { \"type\": \"string\", \"description\": \"出险地点\" },\n    \"contact_name\": { \"type\": \"string\", \"description\": \"联系人\" },\n    \"contact_phone\": { \"type\": \"string\", \"description\": \"联系电话\" }\n  },\n  \"required\": [\"claim_number\", \"insured_name\"]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从报案信息材料中提取报案号、保单号、被保险人、出险时间、出险地点、联系人和联系电话。校验要点：1）报案号与案件一致；2）保单号格式完整；3）出险时间地点是否明确。",
+    "category": "claim_notice",
+    "processingStrategy": "structured_doc",
+    "extractionConfig": {
+      "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"claim_number\": { \"type\": \"string\", \"description\": \"报案号\" },\n    \"policy_number\": { \"type\": \"string\", \"description\": \"保单号\" },\n    \"insured_name\": { \"type\": \"string\", \"description\": \"被保险人\" },\n    \"loss_time\": { \"type\": \"string\", \"description\": \"出险时间\" },\n    \"loss_location\": { \"type\": \"string\", \"description\": \"出险地点\" },\n    \"contact_name\": { \"type\": \"string\", \"description\": \"联系人\" },\n    \"contact_phone\": { \"type\": \"string\", \"description\": \"联系电话\" }\n  },\n  \"required\": [\"claim_number\", \"insured_name\"]\n}",
+      "aiAuditPrompt": "请从报案信息材料中提取报案号、保单号、被保险人、出险时间、出险地点、联系人和联系电话。校验要点：1）报案号与案件一致；2）保单号格式完整；3）出险时间地点是否明确。",
+      "validationRules": []
+    },
+    "schemaFields": [
+      { "field_key": "claim_number", "field_label": "报案号", "data_type": "STRING", "required": true, "description": "报案号" },
+      { "field_key": "policy_number", "field_label": "保单号", "data_type": "STRING", "required": false, "description": "保单号" },
+      { "field_key": "insured_name", "field_label": "被保险人", "data_type": "STRING", "required": true, "description": "被保险人" },
+      { "field_key": "loss_time", "field_label": "出险时间", "data_type": "STRING", "required": false, "description": "出险时间" },
+      { "field_key": "loss_location", "field_label": "出险地点", "data_type": "STRING", "required": false, "description": "出险地点" },
+      { "field_key": "contact_name", "field_label": "联系人", "data_type": "STRING", "required": false, "description": "联系人" },
+      { "field_key": "contact_phone", "field_label": "联系电话", "data_type": "STRING", "required": false, "description": "联系电话" }
+    ]
+  },
+  {
+    "id": "mat-49",
+    "name": "出险通知书",
+    "description": "向保险公司报送的出险通知书，包含保单信息、出险时间地点及事故经过。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"insured_name\": { \"type\": \"string\", \"description\": \"被保险人\" },\n    \"policy_number\": { \"type\": \"string\", \"description\": \"保单号\" },\n    \"loss_time\": { \"type\": \"string\", \"description\": \"出险时间\" },\n    \"loss_location\": { \"type\": \"string\", \"description\": \"出险地点\" },\n    \"accident_summary\": { \"type\": \"string\", \"description\": \"事故经过\" },\n    \"sum_insured\": { \"type\": \"number\", \"description\": \"保险金额\" }\n  },\n  \"required\": [\"insured_name\", \"policy_number\"]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从出险通知书中提取被保险人、保单号、出险时间、出险地点、事故经过和保险金额。校验要点：1）保单号与报案信息一致；2）事故经过是否完整；3）出险时间地点是否明确。",
+    "category": "claim_notice",
+    "processingStrategy": "structured_doc",
+    "extractionConfig": {
+      "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"insured_name\": { \"type\": \"string\", \"description\": \"被保险人\" },\n    \"policy_number\": { \"type\": \"string\", \"description\": \"保单号\" },\n    \"loss_time\": { \"type\": \"string\", \"description\": \"出险时间\" },\n    \"loss_location\": { \"type\": \"string\", \"description\": \"出险地点\" },\n    \"accident_summary\": { \"type\": \"string\", \"description\": \"事故经过\" },\n    \"sum_insured\": { \"type\": \"number\", \"description\": \"保险金额\" }\n  },\n  \"required\": [\"insured_name\", \"policy_number\"]\n}",
+      "aiAuditPrompt": "请从出险通知书中提取被保险人、保单号、出险时间、出险地点、事故经过和保险金额。校验要点：1）保单号与报案信息一致；2）事故经过是否完整；3）出险时间地点是否明确。",
+      "validationRules": []
+    },
+    "schemaFields": [
+      { "field_key": "insured_name", "field_label": "被保险人", "data_type": "STRING", "required": true, "description": "被保险人" },
+      { "field_key": "policy_number", "field_label": "保单号", "data_type": "STRING", "required": true, "description": "保单号" },
+      { "field_key": "loss_time", "field_label": "出险时间", "data_type": "STRING", "required": false, "description": "出险时间" },
+      { "field_key": "loss_location", "field_label": "出险地点", "data_type": "STRING", "required": false, "description": "出险地点" },
+      { "field_key": "accident_summary", "field_label": "事故经过", "data_type": "STRING", "required": false, "description": "事故经过" },
+      { "field_key": "sum_insured", "field_label": "保险金额", "data_type": "NUMBER", "required": false, "description": "保险金额" }
+    ]
+  },
+  {
+    "id": "mat-50",
+    "name": "保险单/保单",
+    "description": "保险单或保单截图，用于核验险种、保单号、保险期间和承保标的。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"policy_number\": { \"type\": \"string\", \"description\": \"保单号\" },\n    \"insured_name\": { \"type\": \"string\", \"description\": \"被保险人\" },\n    \"product_name\": { \"type\": \"string\", \"description\": \"险种名称\" },\n    \"coverage_period\": { \"type\": \"string\", \"description\": \"保险期间\" },\n    \"insured_object\": { \"type\": \"string\", \"description\": \"承保标的\" }\n  },\n  \"required\": [\"policy_number\", \"insured_name\"]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从保险单/保单中提取保单号、被保险人、险种名称、保险期间和承保标的。校验要点：1）保单号完整；2）保险期间覆盖出险日期；3）承保标的与案件一致。",
+    "category": "policy",
+    "processingStrategy": "structured_doc",
+    "extractionConfig": {
+      "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"policy_number\": { \"type\": \"string\", \"description\": \"保单号\" },\n    \"insured_name\": { \"type\": \"string\", \"description\": \"被保险人\" },\n    \"product_name\": { \"type\": \"string\", \"description\": \"险种名称\" },\n    \"coverage_period\": { \"type\": \"string\", \"description\": \"保险期间\" },\n    \"insured_object\": { \"type\": \"string\", \"description\": \"承保标的\" }\n  },\n  \"required\": [\"policy_number\", \"insured_name\"]\n}",
+      "aiAuditPrompt": "请从保险单/保单中提取保单号、被保险人、险种名称、保险期间和承保标的。校验要点：1）保单号完整；2）保险期间覆盖出险日期；3）承保标的与案件一致。",
+      "validationRules": []
+    },
+    "schemaFields": [
+      { "field_key": "policy_number", "field_label": "保单号", "data_type": "STRING", "required": true, "description": "保单号" },
+      { "field_key": "insured_name", "field_label": "被保险人", "data_type": "STRING", "required": true, "description": "被保险人" },
+      { "field_key": "product_name", "field_label": "险种名称", "data_type": "STRING", "required": false, "description": "险种名称" },
+      { "field_key": "coverage_period", "field_label": "保险期间", "data_type": "STRING", "required": false, "description": "保险期间" },
+      { "field_key": "insured_object", "field_label": "承保标的", "data_type": "STRING", "required": false, "description": "承保标的" }
+    ]
+  },
+  {
+    "id": "mat-51",
+    "name": "初期报告",
+    "description": "事故初期调查或公估初期报告，用于记录事故经过、责任初判和预估损失。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"report_date\": { \"type\": \"string\", \"description\": \"报告日期\" },\n    \"loss_time\": { \"type\": \"string\", \"description\": \"出险时间\" },\n    \"loss_location\": { \"type\": \"string\", \"description\": \"出险地点\" },\n    \"accident_cause\": { \"type\": \"string\", \"description\": \"事故原因\" },\n    \"loss_summary\": { \"type\": \"string\", \"description\": \"损失情况\" },\n    \"liability_conclusion\": { \"type\": \"string\", \"description\": \"责任结论\" },\n    \"estimated_amount\": { \"type\": \"number\", \"description\": \"初步预估金额\" }\n  },\n  \"required\": [\"report_date\", \"loss_summary\"]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从初期报告中提取报告日期、出险时间、出险地点、事故原因、损失情况、责任结论和初步预估金额。校验要点：1）事故经过是否完整；2）责任结论是否明确；3）金额字段是否可识别。",
+    "category": "survey_report",
+    "processingStrategy": "structured_doc",
+    "extractionConfig": {
+      "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"report_date\": { \"type\": \"string\", \"description\": \"报告日期\" },\n    \"loss_time\": { \"type\": \"string\", \"description\": \"出险时间\" },\n    \"loss_location\": { \"type\": \"string\", \"description\": \"出险地点\" },\n    \"accident_cause\": { \"type\": \"string\", \"description\": \"事故原因\" },\n    \"loss_summary\": { \"type\": \"string\", \"description\": \"损失情况\" },\n    \"liability_conclusion\": { \"type\": \"string\", \"description\": \"责任结论\" },\n    \"estimated_amount\": { \"type\": \"number\", \"description\": \"初步预估金额\" }\n  },\n  \"required\": [\"report_date\", \"loss_summary\"]\n}",
+      "aiAuditPrompt": "请从初期报告中提取报告日期、出险时间、出险地点、事故原因、损失情况、责任结论和初步预估金额。校验要点：1）事故经过是否完整；2）责任结论是否明确；3）金额字段是否可识别。",
+      "validationRules": []
+    },
+    "schemaFields": [
+      { "field_key": "report_date", "field_label": "报告日期", "data_type": "STRING", "required": true, "description": "报告日期" },
+      { "field_key": "loss_time", "field_label": "出险时间", "data_type": "STRING", "required": false, "description": "出险时间" },
+      { "field_key": "loss_location", "field_label": "出险地点", "data_type": "STRING", "required": false, "description": "出险地点" },
+      { "field_key": "accident_cause", "field_label": "事故原因", "data_type": "STRING", "required": false, "description": "事故原因" },
+      { "field_key": "loss_summary", "field_label": "损失情况", "data_type": "STRING", "required": true, "description": "损失情况" },
+      { "field_key": "liability_conclusion", "field_label": "责任结论", "data_type": "STRING", "required": false, "description": "责任结论" },
+      { "field_key": "estimated_amount", "field_label": "初步预估金额", "data_type": "NUMBER", "required": false, "description": "初步预估金额" }
+    ]
+  },
+  {
+    "id": "mat-52",
+    "name": "公估报告",
+    "description": "终期公估报告或正式调查报告，用于记录责任认定、赔偿建议和协商金额。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"report_date\": { \"type\": \"string\", \"description\": \"报告日期\" },\n    \"survey_date\": { \"type\": \"string\", \"description\": \"查勘日期\" },\n    \"liability_conclusion\": { \"type\": \"string\", \"description\": \"责任认定\" },\n    \"settlement_advice\": { \"type\": \"string\", \"description\": \"赔偿建议\" },\n    \"settlement_amount\": { \"type\": \"number\", \"description\": \"协商金额\" },\n    \"risk_points\": { \"type\": \"string\", \"description\": \"风险点\" }\n  },\n  \"required\": [\"report_date\", \"liability_conclusion\"]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从公估报告中提取报告日期、查勘日期、责任认定、赔偿建议、协商金额和风险点。校验要点：1）责任认定是否明确；2）赔偿金额是否清晰；3）是否存在明显风险提示。",
+    "category": "survey_report",
+    "processingStrategy": "structured_doc",
+    "extractionConfig": {
+      "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"report_date\": { \"type\": \"string\", \"description\": \"报告日期\" },\n    \"survey_date\": { \"type\": \"string\", \"description\": \"查勘日期\" },\n    \"liability_conclusion\": { \"type\": \"string\", \"description\": \"责任认定\" },\n    \"settlement_advice\": { \"type\": \"string\", \"description\": \"赔偿建议\" },\n    \"settlement_amount\": { \"type\": \"number\", \"description\": \"协商金额\" },\n    \"risk_points\": { \"type\": \"string\", \"description\": \"风险点\" }\n  },\n  \"required\": [\"report_date\", \"liability_conclusion\"]\n}",
+      "aiAuditPrompt": "请从公估报告中提取报告日期、查勘日期、责任认定、赔偿建议、协商金额和风险点。校验要点：1）责任认定是否明确；2）赔偿金额是否清晰；3）是否存在明显风险提示。",
+      "validationRules": []
+    },
+    "schemaFields": [
+      { "field_key": "report_date", "field_label": "报告日期", "data_type": "STRING", "required": true, "description": "报告日期" },
+      { "field_key": "survey_date", "field_label": "查勘日期", "data_type": "STRING", "required": false, "description": "查勘日期" },
+      { "field_key": "liability_conclusion", "field_label": "责任认定", "data_type": "STRING", "required": true, "description": "责任认定" },
+      { "field_key": "settlement_advice", "field_label": "赔偿建议", "data_type": "STRING", "required": false, "description": "赔偿建议" },
+      { "field_key": "settlement_amount", "field_label": "协商金额", "data_type": "NUMBER", "required": false, "description": "协商金额" },
+      { "field_key": "risk_points", "field_label": "风险点", "data_type": "STRING", "required": false, "description": "风险点" }
+    ]
+  },
+  {
+    "id": "mat-53",
+    "name": "事故现场照片",
+    "description": "记录出险现场、受损设备、吊物或周边环境的现场照片。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"scene_type\": { \"type\": \"string\", \"description\": \"现场类型\" },\n    \"shoot_time\": { \"type\": \"string\", \"description\": \"拍摄时间\" },\n    \"scene_description\": { \"type\": \"string\", \"description\": \"现场描述\" },\n    \"risk_observation\": { \"type\": \"string\", \"description\": \"风险观察\" }\n  },\n  \"required\": [\"scene_description\"]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从事故现场照片中概括现场类型、拍摄时间、现场描述和风险观察。校验要点：1）识别是否为事故现场；2）是否能看到关键设备或作业区域；3）是否存在明显安全隐患。",
+    "category": "accident_scene",
+    "processingStrategy": "general_doc",
+    "extractionConfig": {
+      "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"scene_type\": { \"type\": \"string\", \"description\": \"现场类型\" },\n    \"shoot_time\": { \"type\": \"string\", \"description\": \"拍摄时间\" },\n    \"scene_description\": { \"type\": \"string\", \"description\": \"现场描述\" },\n    \"risk_observation\": { \"type\": \"string\", \"description\": \"风险观察\" }\n  },\n  \"required\": [\"scene_description\"]\n}",
+      "aiAuditPrompt": "请从事故现场照片中概括现场类型、拍摄时间、现场描述和风险观察。校验要点：1）识别是否为事故现场；2）是否能看到关键设备或作业区域；3）是否存在明显安全隐患。",
+      "validationRules": []
+    },
+    "schemaFields": [
+      { "field_key": "scene_type", "field_label": "现场类型", "data_type": "STRING", "required": false, "description": "现场类型" },
+      { "field_key": "shoot_time", "field_label": "拍摄时间", "data_type": "STRING", "required": false, "description": "拍摄时间" },
+      { "field_key": "scene_description", "field_label": "现场描述", "data_type": "STRING", "required": true, "description": "现场描述" },
+      { "field_key": "risk_observation", "field_label": "风险观察", "data_type": "STRING", "required": false, "description": "风险观察" }
+    ]
+  },
+  {
+    "id": "mat-54",
+    "name": "设备铭牌/车架号照片",
+    "description": "用于核验工程机械设备铭牌、车架号、型号等标的信息的照片。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"device_model\": { \"type\": \"string\", \"description\": \"设备型号\" },\n    \"frame_number\": { \"type\": \"string\", \"description\": \"车架号/机身编号\" },\n    \"engine_number\": { \"type\": \"string\", \"description\": \"发动机号\" },\n    \"manufacturer\": { \"type\": \"string\", \"description\": \"制造商\" }\n  },\n  \"required\": [\"frame_number\"]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从设备铭牌或车架号照片中提取设备型号、车架号/机身编号、发动机号和制造商。校验要点：1）车架号是否清晰；2）设备型号与保单是否一致；3）是否能确认是承保标的。",
+    "category": "accident_scene",
+    "processingStrategy": "structured_doc",
+    "extractionConfig": {
+      "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"device_model\": { \"type\": \"string\", \"description\": \"设备型号\" },\n    \"frame_number\": { \"type\": \"string\", \"description\": \"车架号/机身编号\" },\n    \"engine_number\": { \"type\": \"string\", \"description\": \"发动机号\" },\n    \"manufacturer\": { \"type\": \"string\", \"description\": \"制造商\" }\n  },\n  \"required\": [\"frame_number\"]\n}",
+      "aiAuditPrompt": "请从设备铭牌或车架号照片中提取设备型号、车架号/机身编号、发动机号和制造商。校验要点：1）车架号是否清晰；2）设备型号与保单是否一致；3）是否能确认是承保标的。",
+      "validationRules": []
+    },
+    "schemaFields": [
+      { "field_key": "device_model", "field_label": "设备型号", "data_type": "STRING", "required": false, "description": "设备型号" },
+      { "field_key": "frame_number", "field_label": "车架号/机身编号", "data_type": "STRING", "required": true, "description": "车架号/机身编号" },
+      { "field_key": "engine_number", "field_label": "发动机号", "data_type": "STRING", "required": false, "description": "发动机号" },
+      { "field_key": "manufacturer", "field_label": "制造商", "data_type": "STRING", "required": false, "description": "制造商" }
+    ]
+  },
+  {
+    "id": "mat-55",
+    "name": "操作证",
+    "description": "特种设备或工程机械操作人员的资格证件。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"holder_name\": { \"type\": \"string\", \"description\": \"持证人姓名\" },\n    \"certificate_number\": { \"type\": \"string\", \"description\": \"证件号码\" },\n    \"certificate_type\": { \"type\": \"string\", \"description\": \"证件类型\" },\n    \"issuing_authority\": { \"type\": \"string\", \"description\": \"发证机关\" },\n    \"expiry_date\": { \"type\": \"string\", \"description\": \"有效期\" }\n  },\n  \"required\": [\"holder_name\", \"certificate_number\"]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从操作证中提取持证人姓名、证件号码、证件类型、发证机关和有效期。校验要点：1）证件是否在有效期内；2）持证人与操作员是否一致；3）证件类型是否匹配工程机械作业。",
+    "category": "qualification",
+    "processingStrategy": "structured_doc",
+    "extractionConfig": {
+      "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"holder_name\": { \"type\": \"string\", \"description\": \"持证人姓名\" },\n    \"certificate_number\": { \"type\": \"string\", \"description\": \"证件号码\" },\n    \"certificate_type\": { \"type\": \"string\", \"description\": \"证件类型\" },\n    \"issuing_authority\": { \"type\": \"string\", \"description\": \"发证机关\" },\n    \"expiry_date\": { \"type\": \"string\", \"description\": \"有效期\" }\n  },\n  \"required\": [\"holder_name\", \"certificate_number\"]\n}",
+      "aiAuditPrompt": "请从操作证中提取持证人姓名、证件号码、证件类型、发证机关和有效期。校验要点：1）证件是否在有效期内；2）持证人与操作员是否一致；3）证件类型是否匹配工程机械作业。",
+      "validationRules": []
+    },
+    "schemaFields": [
+      { "field_key": "holder_name", "field_label": "持证人姓名", "data_type": "STRING", "required": true, "description": "持证人姓名" },
+      { "field_key": "certificate_number", "field_label": "证件号码", "data_type": "STRING", "required": true, "description": "证件号码" },
+      { "field_key": "certificate_type", "field_label": "证件类型", "data_type": "STRING", "required": false, "description": "证件类型" },
+      { "field_key": "issuing_authority", "field_label": "发证机关", "data_type": "STRING", "required": false, "description": "发证机关" },
+      { "field_key": "expiry_date", "field_label": "有效期", "data_type": "STRING", "required": false, "description": "有效期" }
+    ]
+  },
+  {
+    "id": "mat-56",
+    "name": "操作证查询结果",
+    "description": "操作资格证在线查询结果截图或打印件。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"holder_name\": { \"type\": \"string\", \"description\": \"持证人姓名\" },\n    \"query_platform\": { \"type\": \"string\", \"description\": \"查询平台\" },\n    \"query_time\": { \"type\": \"string\", \"description\": \"查询时间\" },\n    \"certificate_status\": { \"type\": \"string\", \"description\": \"证件状态\" },\n    \"expiry_date\": { \"type\": \"string\", \"description\": \"有效期\" }\n  },\n  \"required\": [\"certificate_status\"]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从操作证查询结果中提取持证人姓名、查询平台、查询时间、证件状态和有效期。校验要点：1）证件状态是否有效；2）查询结果与操作证是否一致；3）查询时间是否可识别。",
+    "category": "qualification",
+    "processingStrategy": "structured_doc",
+    "extractionConfig": {
+      "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"holder_name\": { \"type\": \"string\", \"description\": \"持证人姓名\" },\n    \"query_platform\": { \"type\": \"string\", \"description\": \"查询平台\" },\n    \"query_time\": { \"type\": \"string\", \"description\": \"查询时间\" },\n    \"certificate_status\": { \"type\": \"string\", \"description\": \"证件状态\" },\n    \"expiry_date\": { \"type\": \"string\", \"description\": \"有效期\" }\n  },\n  \"required\": [\"certificate_status\"]\n}",
+      "aiAuditPrompt": "请从操作证查询结果中提取持证人姓名、查询平台、查询时间、证件状态和有效期。校验要点：1）证件状态是否有效；2）查询结果与操作证是否一致；3）查询时间是否可识别。",
+      "validationRules": []
+    },
+    "schemaFields": [
+      { "field_key": "holder_name", "field_label": "持证人姓名", "data_type": "STRING", "required": false, "description": "持证人姓名" },
+      { "field_key": "query_platform", "field_label": "查询平台", "data_type": "STRING", "required": false, "description": "查询平台" },
+      { "field_key": "query_time", "field_label": "查询时间", "data_type": "STRING", "required": false, "description": "查询时间" },
+      { "field_key": "certificate_status", "field_label": "证件状态", "data_type": "STRING", "required": true, "description": "证件状态" },
+      { "field_key": "expiry_date", "field_label": "有效期", "data_type": "STRING", "required": false, "description": "有效期" }
+    ]
+  },
+  {
+    "id": "mat-57",
+    "name": "报警记录",
+    "description": "110/119/120 等报警、接警或出警相关记录。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"record_type\": { \"type\": \"string\", \"description\": \"记录类型\" },\n    \"call_time\": { \"type\": \"string\", \"description\": \"报警时间\" },\n    \"handling_unit\": { \"type\": \"string\", \"description\": \"处理单位\" },\n    \"incident_summary\": { \"type\": \"string\", \"description\": \"事件摘要\" }\n  },\n  \"required\": [\"incident_summary\"]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从报警记录中提取记录类型、报警时间、处理单位和事件摘要。校验要点：1）是否与事故时间接近；2）处理单位是否清晰；3）事件摘要是否与案件一致。",
+    "category": "police_record",
+    "processingStrategy": "structured_doc",
+    "extractionConfig": {
+      "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"record_type\": { \"type\": \"string\", \"description\": \"记录类型\" },\n    \"call_time\": { \"type\": \"string\", \"description\": \"报警时间\" },\n    \"handling_unit\": { \"type\": \"string\", \"description\": \"处理单位\" },\n    \"incident_summary\": { \"type\": \"string\", \"description\": \"事件摘要\" }\n  },\n  \"required\": [\"incident_summary\"]\n}",
+      "aiAuditPrompt": "请从报警记录中提取记录类型、报警时间、处理单位和事件摘要。校验要点：1）是否与事故时间接近；2）处理单位是否清晰；3）事件摘要是否与案件一致。",
+      "validationRules": []
+    },
+    "schemaFields": [
+      { "field_key": "record_type", "field_label": "记录类型", "data_type": "STRING", "required": false, "description": "记录类型" },
+      { "field_key": "call_time", "field_label": "报警时间", "data_type": "STRING", "required": false, "description": "报警时间" },
+      { "field_key": "handling_unit", "field_label": "处理单位", "data_type": "STRING", "required": false, "description": "处理单位" },
+      { "field_key": "incident_summary", "field_label": "事件摘要", "data_type": "STRING", "required": true, "description": "事件摘要" }
+    ]
+  },
+  {
+    "id": "mat-58",
+    "name": "事故笔录",
+    "description": "事故询问笔录、谈话记录或调查笔录。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"record_date\": { \"type\": \"string\", \"description\": \"笔录日期\" },\n    \"record_person\": { \"type\": \"string\", \"description\": \"笔录对象\" },\n    \"recording_unit\": { \"type\": \"string\", \"description\": \"制作单位\" },\n    \"incident_statement\": { \"type\": \"string\", \"description\": \"事故陈述\" }\n  },\n  \"required\": [\"incident_statement\"]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从事故笔录中提取笔录日期、笔录对象、制作单位和事故陈述。校验要点：1）陈述内容是否与事故经过一致；2）是否存在关键责任描述；3）日期和对象是否明确。",
+    "category": "police_record",
+    "processingStrategy": "structured_doc",
+    "extractionConfig": {
+      "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"record_date\": { \"type\": \"string\", \"description\": \"笔录日期\" },\n    \"record_person\": { \"type\": \"string\", \"description\": \"笔录对象\" },\n    \"recording_unit\": { \"type\": \"string\", \"description\": \"制作单位\" },\n    \"incident_statement\": { \"type\": \"string\", \"description\": \"事故陈述\" }\n  },\n  \"required\": [\"incident_statement\"]\n}",
+      "aiAuditPrompt": "请从事故笔录中提取笔录日期、笔录对象、制作单位和事故陈述。校验要点：1）陈述内容是否与事故经过一致；2）是否存在关键责任描述；3）日期和对象是否明确。",
+      "validationRules": []
+    },
+    "schemaFields": [
+      { "field_key": "record_date", "field_label": "笔录日期", "data_type": "STRING", "required": false, "description": "笔录日期" },
+      { "field_key": "record_person", "field_label": "笔录对象", "data_type": "STRING", "required": false, "description": "笔录对象" },
+      { "field_key": "recording_unit", "field_label": "制作单位", "data_type": "STRING", "required": false, "description": "制作单位" },
+      { "field_key": "incident_statement", "field_label": "事故陈述", "data_type": "STRING", "required": true, "description": "事故陈述" }
+    ]
+  },
+  {
+    "id": "mat-59",
+    "name": "户口本",
+    "description": "户口簿或常住人口登记页，用于核验家庭成员和户籍关系。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"householder\": { \"type\": \"string\", \"description\": \"户主\" },\n    \"member_name\": { \"type\": \"string\", \"description\": \"成员姓名\" },\n    \"relationship\": { \"type\": \"string\", \"description\": \"与户主关系\" },\n    \"registered_address\": { \"type\": \"string\", \"description\": \"户籍地址\" }\n  },\n  \"required\": [\"member_name\"]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从户口本中提取户主、成员姓名、与户主关系和户籍地址。校验要点：1）是否能确认关系链；2）姓名是否清晰；3）地址信息是否完整。",
+    "category": "family_relation",
+    "processingStrategy": "structured_doc",
+    "extractionConfig": {
+      "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"householder\": { \"type\": \"string\", \"description\": \"户主\" },\n    \"member_name\": { \"type\": \"string\", \"description\": \"成员姓名\" },\n    \"relationship\": { \"type\": \"string\", \"description\": \"与户主关系\" },\n    \"registered_address\": { \"type\": \"string\", \"description\": \"户籍地址\" }\n  },\n  \"required\": [\"member_name\"]\n}",
+      "aiAuditPrompt": "请从户口本中提取户主、成员姓名、与户主关系和户籍地址。校验要点：1）是否能确认关系链；2）姓名是否清晰；3）地址信息是否完整。",
+      "validationRules": []
+    },
+    "schemaFields": [
+      { "field_key": "householder", "field_label": "户主", "data_type": "STRING", "required": false, "description": "户主" },
+      { "field_key": "member_name", "field_label": "成员姓名", "data_type": "STRING", "required": true, "description": "成员姓名" },
+      { "field_key": "relationship", "field_label": "与户主关系", "data_type": "STRING", "required": false, "description": "与户主关系" },
+      { "field_key": "registered_address", "field_label": "户籍地址", "data_type": "STRING", "required": false, "description": "户籍地址" }
+    ]
+  },
+  {
+    "id": "mat-60",
+    "name": "家庭关系证明",
+    "description": "由公安、社区、村委或民政等单位出具的亲属关系或家庭关系证明。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"subject_name\": { \"type\": \"string\", \"description\": \"被证明人\" },\n    \"related_person\": { \"type\": \"string\", \"description\": \"关系人\" },\n    \"relationship\": { \"type\": \"string\", \"description\": \"关系类型\" },\n    \"issuing_authority\": { \"type\": \"string\", \"description\": \"出具机构\" },\n    \"issue_date\": { \"type\": \"string\", \"description\": \"出具日期\" }\n  },\n  \"required\": [\"subject_name\", \"related_person\", \"relationship\"]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从家庭关系证明中提取被证明人、关系人、关系类型、出具机构和出具日期。校验要点：1）关系表述是否明确；2）机构和日期是否清晰；3）与案件当事人是否匹配。",
+    "category": "family_relation",
+    "processingStrategy": "structured_doc",
+    "extractionConfig": {
+      "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"subject_name\": { \"type\": \"string\", \"description\": \"被证明人\" },\n    \"related_person\": { \"type\": \"string\", \"description\": \"关系人\" },\n    \"relationship\": { \"type\": \"string\", \"description\": \"关系类型\" },\n    \"issuing_authority\": { \"type\": \"string\", \"description\": \"出具机构\" },\n    \"issue_date\": { \"type\": \"string\", \"description\": \"出具日期\" }\n  },\n  \"required\": [\"subject_name\", \"related_person\", \"relationship\"]\n}",
+      "aiAuditPrompt": "请从家庭关系证明中提取被证明人、关系人、关系类型、出具机构和出具日期。校验要点：1）关系表述是否明确；2）机构和日期是否清晰；3）与案件当事人是否匹配。",
+      "validationRules": []
+    },
+    "schemaFields": [
+      { "field_key": "subject_name", "field_label": "被证明人", "data_type": "STRING", "required": true, "description": "被证明人" },
+      { "field_key": "related_person", "field_label": "关系人", "data_type": "STRING", "required": true, "description": "关系人" },
+      { "field_key": "relationship", "field_label": "关系类型", "data_type": "STRING", "required": true, "description": "关系类型" },
+      { "field_key": "issuing_authority", "field_label": "出具机构", "data_type": "STRING", "required": false, "description": "出具机构" },
+      { "field_key": "issue_date", "field_label": "出具日期", "data_type": "STRING", "required": false, "description": "出具日期" }
+    ]
+  },
+  {
+    "id": "mat-61",
+    "name": "赔偿协议书",
+    "description": "双方就赔偿金额、赔偿对象和支付安排达成的一致协议。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"agreement_date\": { \"type\": \"string\", \"description\": \"协议日期\" },\n    \"payee_name\": { \"type\": \"string\", \"description\": \"赔偿对象\" },\n    \"settlement_amount\": { \"type\": \"number\", \"description\": \"赔偿金额\" },\n    \"signing_parties\": { \"type\": \"string\", \"description\": \"签署方\" }\n  },\n  \"required\": [\"payee_name\", \"settlement_amount\"]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从赔偿协议书中提取协议日期、赔偿对象、赔偿金额和签署方。校验要点：1）金额是否清晰；2）签署主体是否完整；3）协议是否与案件损失对象一致。",
+    "category": "settlement",
+    "processingStrategy": "structured_doc",
+    "extractionConfig": {
+      "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"agreement_date\": { \"type\": \"string\", \"description\": \"协议日期\" },\n    \"payee_name\": { \"type\": \"string\", \"description\": \"赔偿对象\" },\n    \"settlement_amount\": { \"type\": \"number\", \"description\": \"赔偿金额\" },\n    \"signing_parties\": { \"type\": \"string\", \"description\": \"签署方\" }\n  },\n  \"required\": [\"payee_name\", \"settlement_amount\"]\n}",
+      "aiAuditPrompt": "请从赔偿协议书中提取协议日期、赔偿对象、赔偿金额和签署方。校验要点：1）金额是否清晰；2）签署主体是否完整；3）协议是否与案件损失对象一致。",
+      "validationRules": []
+    },
+    "schemaFields": [
+      { "field_key": "agreement_date", "field_label": "协议日期", "data_type": "STRING", "required": false, "description": "协议日期" },
+      { "field_key": "payee_name", "field_label": "赔偿对象", "data_type": "STRING", "required": true, "description": "赔偿对象" },
+      { "field_key": "settlement_amount", "field_label": "赔偿金额", "data_type": "NUMBER", "required": true, "description": "赔偿金额" },
+      { "field_key": "signing_parties", "field_label": "签署方", "data_type": "STRING", "required": false, "description": "签署方" }
+    ]
+  },
+  {
+    "id": "mat-62",
+    "name": "赔款收条",
+    "description": "收款人确认收到赔偿款的收条、收据或确认函。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"payee_name\": { \"type\": \"string\", \"description\": \"收款人\" },\n    \"received_amount\": { \"type\": \"number\", \"description\": \"收款金额\" },\n    \"received_date\": { \"type\": \"string\", \"description\": \"收款日期\" },\n    \"claim_number\": { \"type\": \"string\", \"description\": \"对应报案号\" }\n  },\n  \"required\": [\"payee_name\", \"received_amount\"]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从赔款收条中提取收款人、收款金额、收款日期和对应报案号。校验要点：1）金额是否与协议一致；2）收款人身份是否明确；3）是否能关联到案件。",
+    "category": "settlement",
+    "processingStrategy": "structured_doc",
+    "extractionConfig": {
+      "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"payee_name\": { \"type\": \"string\", \"description\": \"收款人\" },\n    \"received_amount\": { \"type\": \"number\", \"description\": \"收款金额\" },\n    \"received_date\": { \"type\": \"string\", \"description\": \"收款日期\" },\n    \"claim_number\": { \"type\": \"string\", \"description\": \"对应报案号\" }\n  },\n  \"required\": [\"payee_name\", \"received_amount\"]\n}",
+      "aiAuditPrompt": "请从赔款收条中提取收款人、收款金额、收款日期和对应报案号。校验要点：1）金额是否与协议一致；2）收款人身份是否明确；3）是否能关联到案件。",
+      "validationRules": []
+    },
+    "schemaFields": [
+      { "field_key": "payee_name", "field_label": "收款人", "data_type": "STRING", "required": true, "description": "收款人" },
+      { "field_key": "received_amount", "field_label": "收款金额", "data_type": "NUMBER", "required": true, "description": "收款金额" },
+      { "field_key": "received_date", "field_label": "收款日期", "data_type": "STRING", "required": false, "description": "收款日期" },
+      { "field_key": "claim_number", "field_label": "对应报案号", "data_type": "STRING", "required": false, "description": "对应报案号" }
+    ]
+  },
+  {
+    "id": "mat-63",
+    "name": "谅解书",
+    "description": "事故相关方出具的谅解书或和解确认材料。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"issuer_name\": { \"type\": \"string\", \"description\": \"出具人\" },\n    \"target_name\": { \"type\": \"string\", \"description\": \"谅解对象\" },\n    \"issue_date\": { \"type\": \"string\", \"description\": \"出具日期\" },\n    \"statement\": { \"type\": \"string\", \"description\": \"主要表述\" }\n  },\n  \"required\": [\"issuer_name\", \"statement\"]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从谅解书中提取出具人、谅解对象、出具日期和主要表述。校验要点：1）是否明确表达谅解/和解；2）主体是否清晰；3）日期是否可识别。",
+    "category": "settlement",
+    "processingStrategy": "structured_doc",
+    "extractionConfig": {
+      "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"issuer_name\": { \"type\": \"string\", \"description\": \"出具人\" },\n    \"target_name\": { \"type\": \"string\", \"description\": \"谅解对象\" },\n    \"issue_date\": { \"type\": \"string\", \"description\": \"出具日期\" },\n    \"statement\": { \"type\": \"string\", \"description\": \"主要表述\" }\n  },\n  \"required\": [\"issuer_name\", \"statement\"]\n}",
+      "aiAuditPrompt": "请从谅解书中提取出具人、谅解对象、出具日期和主要表述。校验要点：1）是否明确表达谅解/和解；2）主体是否清晰；3）日期是否可识别。",
+      "validationRules": []
+    },
+    "schemaFields": [
+      { "field_key": "issuer_name", "field_label": "出具人", "data_type": "STRING", "required": true, "description": "出具人" },
+      { "field_key": "target_name", "field_label": "谅解对象", "data_type": "STRING", "required": false, "description": "谅解对象" },
+      { "field_key": "issue_date", "field_label": "出具日期", "data_type": "STRING", "required": false, "description": "出具日期" },
+      { "field_key": "statement", "field_label": "主要表述", "data_type": "STRING", "required": true, "description": "主要表述" }
+    ]
+  },
+  {
+    "id": "mat-64",
+    "name": "派工记录/聊天记录",
+    "description": "微信聊天、派工通知、作业安排或对接沟通记录，用于识别派工关系和作业安排。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"communication_date\": { \"type\": \"string\", \"description\": \"沟通日期\" },\n    \"participants\": { \"type\": \"string\", \"description\": \"沟通双方/参与人\" },\n    \"task_summary\": { \"type\": \"string\", \"description\": \"派工或沟通内容摘要\" },\n    \"relation_hint\": { \"type\": \"string\", \"description\": \"反映的派工/雇佣关系\" }\n  },\n  \"required\": [\"task_summary\"]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从派工记录或聊天记录中提取沟通日期、参与人、任务安排摘要和体现的派工/雇佣关系。校验要点：1）是否能看出谁安排作业；2）是否包含作业地点、时间或对象；3）是否与事故经过相关。",
+    "category": "identity_chain_evidence",
+    "processingStrategy": "structured_doc",
+    "extractionConfig": {
+      "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"communication_date\": { \"type\": \"string\", \"description\": \"沟通日期\" },\n    \"participants\": { \"type\": \"string\", \"description\": \"沟通双方/参与人\" },\n    \"task_summary\": { \"type\": \"string\", \"description\": \"派工或沟通内容摘要\" },\n    \"relation_hint\": { \"type\": \"string\", \"description\": \"反映的派工/雇佣关系\" }\n  },\n  \"required\": [\"task_summary\"]\n}",
+      "aiAuditPrompt": "请从派工记录或聊天记录中提取沟通日期、参与人、任务安排摘要和体现的派工/雇佣关系。校验要点：1）是否能看出谁安排作业；2）是否包含作业地点、时间或对象；3）是否与事故经过相关。",
+      "validationRules": []
+    },
+    "schemaFields": [
+      { "field_key": "communication_date", "field_label": "沟通日期", "data_type": "STRING", "required": false, "description": "沟通日期" },
+      { "field_key": "participants", "field_label": "参与人", "data_type": "STRING", "required": false, "description": "沟通双方/参与人" },
+      { "field_key": "task_summary", "field_label": "任务摘要", "data_type": "STRING", "required": true, "description": "派工或沟通内容摘要" },
+      { "field_key": "relation_hint", "field_label": "关系线索", "data_type": "STRING", "required": false, "description": "反映的派工/雇佣关系" }
+    ]
+  },
+  {
+    "id": "mat-65",
+    "name": "赔偿支付凭证",
+    "description": "银行转账记录、电子回单或付款凭证，用于核验已垫付或已支付赔偿款事实。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"payer_name\": { \"type\": \"string\", \"description\": \"付款人\" },\n    \"payee_name\": { \"type\": \"string\", \"description\": \"收款人\" },\n    \"paid_amount\": { \"type\": \"number\", \"description\": \"付款金额\" },\n    \"paid_at\": { \"type\": \"string\", \"description\": \"付款时间\" },\n    \"voucher_number\": { \"type\": \"string\", \"description\": \"凭证号\" },\n    \"payment_note\": { \"type\": \"string\", \"description\": \"附言/用途\" }\n  },\n  \"required\": [\"paid_amount\"]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从赔偿支付凭证中提取付款人、收款人、付款金额、付款时间、凭证号和附言。校验要点：1）金额是否清晰；2）是否能确认属于本案赔偿支付；3）是否存在重复截图或同笔转账多页展示。",
+    "category": "settlement",
+    "processingStrategy": "structured_doc",
+    "extractionConfig": {
+      "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"payer_name\": { \"type\": \"string\", \"description\": \"付款人\" },\n    \"payee_name\": { \"type\": \"string\", \"description\": \"收款人\" },\n    \"paid_amount\": { \"type\": \"number\", \"description\": \"付款金额\" },\n    \"paid_at\": { \"type\": \"string\", \"description\": \"付款时间\" },\n    \"voucher_number\": { \"type\": \"string\", \"description\": \"凭证号\" },\n    \"payment_note\": { \"type\": \"string\", \"description\": \"附言/用途\" }\n  },\n  \"required\": [\"paid_amount\"]\n}",
+      "aiAuditPrompt": "请从赔偿支付凭证中提取付款人、收款人、付款金额、付款时间、凭证号和附言。校验要点：1）金额是否清晰；2）是否能确认属于本案赔偿支付；3）是否存在重复截图或同笔转账多页展示。",
+      "validationRules": []
+    },
+    "schemaFields": [
+      { "field_key": "payer_name", "field_label": "付款人", "data_type": "STRING", "required": false, "description": "付款人" },
+      { "field_key": "payee_name", "field_label": "收款人", "data_type": "STRING", "required": false, "description": "收款人" },
+      { "field_key": "paid_amount", "field_label": "付款金额", "data_type": "NUMBER", "required": true, "description": "付款金额" },
+      { "field_key": "paid_at", "field_label": "付款时间", "data_type": "STRING", "required": false, "description": "付款时间" },
+      { "field_key": "voucher_number", "field_label": "凭证号", "data_type": "STRING", "required": false, "description": "凭证号" },
+      { "field_key": "payment_note", "field_label": "附言/用途", "data_type": "STRING", "required": false, "description": "附言/用途" }
+    ]
+  },
+  {
+    "id": "mat-66",
+    "name": "事故证明/情况说明",
+    "description": "政府、村镇、单位或相关机构出具的事故经过、调查走访或情况说明材料。",
+    "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"issue_date\": { \"type\": \"string\", \"description\": \"出具日期\" },\n    \"issuing_authority\": { \"type\": \"string\", \"description\": \"出具机构\" },\n    \"incident_summary\": { \"type\": \"string\", \"description\": \"事故经过摘要\" },\n    \"liability_hint\": { \"type\": \"string\", \"description\": \"责任线索\" }\n  },\n  \"required\": [\"incident_summary\"]\n}",
+    "required": false,
+    "aiAuditPrompt": "请从事故证明或情况说明中提取出具日期、出具机构、事故经过摘要和责任线索。校验要点：1）是否明确说明事故经过；2）是否能识别责任倾向或管理缺陷；3）机构和日期是否清晰。",
+    "category": "incident_statement",
+    "processingStrategy": "structured_doc",
+    "extractionConfig": {
+      "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"issue_date\": { \"type\": \"string\", \"description\": \"出具日期\" },\n    \"issuing_authority\": { \"type\": \"string\", \"description\": \"出具机构\" },\n    \"incident_summary\": { \"type\": \"string\", \"description\": \"事故经过摘要\" },\n    \"liability_hint\": { \"type\": \"string\", \"description\": \"责任线索\" }\n  },\n  \"required\": [\"incident_summary\"]\n}",
+      "aiAuditPrompt": "请从事故证明或情况说明中提取出具日期、出具机构、事故经过摘要和责任线索。校验要点：1）是否明确说明事故经过；2）是否能识别责任倾向或管理缺陷；3）机构和日期是否清晰。",
+      "validationRules": []
+    },
+    "schemaFields": [
+      { "field_key": "issue_date", "field_label": "出具日期", "data_type": "STRING", "required": false, "description": "出具日期" },
+      { "field_key": "issuing_authority", "field_label": "出具机构", "data_type": "STRING", "required": false, "description": "出具机构" },
+      { "field_key": "incident_summary", "field_label": "事故摘要", "data_type": "STRING", "required": true, "description": "事故经过摘要" },
+      { "field_key": "liability_hint", "field_label": "责任线索", "data_type": "STRING", "required": false, "description": "责任线索" }
+    ]
   }
 ]

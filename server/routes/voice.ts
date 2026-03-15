@@ -31,6 +31,7 @@ router.post('/session/start', async (req, res) => {
       success: true,
       sessionId,
       wsUrl: `ws://${req.headers.host}/voice/ws/${sessionId}`,
+      services: voiceGateway.getServiceStatus(),
       expiresAt: new Date(Date.now() + 3600000).toISOString() // 1小时过期
     });
   } catch (error) {
@@ -110,6 +111,7 @@ router.get('/health', (req, res) => {
   res.json({
     success: true,
     status: voiceGateway ? 'running' : 'not_initialized',
+    services: voiceGateway?.getServiceStatus(),
     timestamp: new Date().toISOString()
   });
 });

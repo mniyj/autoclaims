@@ -196,6 +196,39 @@
   margin-top: 4px;
 }
 
+/* 消息操作按钮 */
+.message-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background-color: #f5f5f5;
+}
+
+.action-btn.active {
+  background-color: #e3f2fd;
+}
+
+.action-icon {
+  font-size: 14px;
+}
+
+.action-text {
+  font-size: 12px;
+  color: #666;
+}
+
+.action-btn.active .action-text {
+  color: #1890ff;
+}
+
 .typing-indicator {
   padding: 10px 20px;
   text-align: center;

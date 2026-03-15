@@ -501,5 +501,133 @@
     "createdAt": "2026-02-18T03:55:25.232Z",
     "updatedAt": "2026-02-18T03:55:25.232Z",
     "operator": "admin"
+  },
+  {
+    "id": "policy-R261123052024800086",
+    "policyNumber": "12611230520230000499",
+    "status": "生效中",
+    "productCode": "SUN_EML_TPL_2023",
+    "productName": "阳光工程机械设备保险（附加第三者责任）",
+    "companyName": "阳光财产保险股份有限公司武汉中心支公司",
+    "policyholder": {
+      "name": "黄山永顺起重设备安装有限公司",
+      "idType": "统一社会信用代码",
+      "idNumber": "91341022MA2N9MPY8G",
+      "phone": "13272055799",
+      "address": "海阳镇松萝路三五九后门"
+    },
+    "insureds": [
+      {
+        "id": "insured-R261123052024800086-1",
+        "name": "黄山永顺起重设备安装有限公司",
+        "idType": "统一社会信用代码",
+        "idNumber": "91341022MA2N9MPY8G",
+        "relationship": "被保险人"
+      }
+    ],
+    "mainClause": {
+      "clauseCode": "SUN-EML-BASE-2022",
+      "clauseName": "阳光财产保险股份有限公司工程机械设备保险（2022版）条款",
+      "clauseType": "主险",
+      "sumInsured": 532000,
+      "premium": 9292,
+      "paymentFrequency": "年缴"
+    },
+    "riderClauses": [
+      {
+        "clauseCode": "SUN-EML-TPL-2022",
+        "clauseName": "阳光财产保险股份有限公司工程机械设备保险附加第三者责任保险（2022版）条款",
+        "clauseType": "附加险",
+        "sumInsured": 1000000,
+        "premium": 0,
+        "paymentFrequency": "年缴"
+      },
+      {
+        "clauseCode": "SUN-EML-COLLISION-2023",
+        "clauseName": "阳光财产保险股份有限公司工程机械设备保险附加碰撞、倾覆保险（2023版）条款",
+        "clauseType": "附加险",
+        "sumInsured": 532000,
+        "premium": 0,
+        "paymentFrequency": "年缴"
+      },
+      {
+        "clauseCode": "SUN-EML-EMPLOYER-2022",
+        "clauseName": "阳光财产保险股份有限公司工程机械设备保险附加雇主责任保险（2022版）条款",
+        "clauseType": "附加险",
+        "sumInsured": 100000,
+        "premium": 0,
+        "paymentFrequency": "年缴"
+      }
+    ],
+    "specialAgreements": [
+      {
+        "id": "agreement-R261123052024800086-1",
+        "title": "作业区域约定",
+        "content": "机械设备施工区域为中华人民共和国境内（不含港澳台）。",
+        "category": "特约事项"
+      },
+      {
+        "id": "agreement-R261123052024800086-2",
+        "title": "第三者责任适用条款",
+        "content": "在保险期间内，被保险工程机械由被保险人或其允许的合格操作人员在施工场地操作过程中发生意外事故，致使第三者遭受人身伤亡或财产损失，依法应由被保险人承担的经济赔偿责任，保险人依约负责赔偿。",
+        "category": "保险责任"
+      },
+      {
+        "id": "agreement-R261123052024800086-3",
+        "title": "免责事项",
+        "content": "操作人员无有效资格证、设备无有效检验证件、饮酒吸毒或利用标的从事违法活动造成的事故，保险人不负责赔偿。",
+        "category": "限制责任"
+      }
+    ],
+    "deductionRules": [
+      {
+        "id": "deduction-R261123052024800086-1",
+        "name": "第三者责任免赔",
+        "type": "绝对免赔额",
+        "value": 0,
+        "unit": "元",
+        "description": "附加第三者责任保险条款每次事故免赔额为0元。",
+        "applicableScope": "每次事故"
+      }
+    ],
+    "schedule": {
+      "version": "1.0",
+      "generatedAt": "2023-11-20T08:00:00Z",
+      "items": [
+        {
+          "id": "schedule-item-R261123052024800086-1",
+          "category": "主险",
+          "itemName": "工程机械设备保险",
+          "sumInsured": 532000,
+          "deductible": 0,
+          "reimbursementRatio": 100,
+          "remarks": "三一牌SYM5345JQZ(STC25汽车起重机"
+        },
+        {
+          "id": "schedule-item-R261123052024800086-2",
+          "category": "附加险",
+          "itemName": "附加第三者责任保险",
+          "sumInsured": 1000000,
+          "deductible": 0,
+          "reimbursementRatio": 100,
+          "remarks": "第三者人身伤亡或财产损失责任"
+        }
+      ],
+      "totalSumInsured": 1532000,
+      "totalPremium": 9292
+    },
+    "effectiveDate": "2023-11-21",
+    "expiryDate": "2024-11-20",
+    "issueDate": "2023-11-20",
+    "paymentDueDate": "2023-11-20",
+    "totalPremium": 9292,
+    "paymentFrequency": "年缴",
+    "paidPremium": 9292,
+    "claimCount": 1,
+    "totalClaimAmount": 1000000,
+    "createdAt": "2026-03-15T08:00:00Z",
+    "updatedAt": "2026-03-15T08:00:00Z",
+    "operator": "system",
+    "notes": "根据保单号 12611230520230000499、公估报告及出险通知书回填。"
   }
 ]

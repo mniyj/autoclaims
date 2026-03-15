@@ -1,0 +1,85 @@
+[
+  {
+    "fact_id": "policy.is_within_coverage_period",
+    "label": "保障期间内",
+    "description": "根据事故日期或结果日期与保单生效终止日期比较得到。",
+    "data_type": "BOOLEAN",
+    "scope": "policy",
+    "source": "fact_catalog",
+    "source_type": "derived",
+    "applicable_domains": ["ELIGIBILITY"],
+    "derivation": "claim.accident_date 或 claim.result_date 与 policy.effective_date / policy.expiry_date 比较",
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.accident_date",
+    "label": "事故日期",
+    "description": "案件事故发生日期。",
+    "data_type": "DATE",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "material",
+    "applicable_domains": ["ELIGIBILITY"],
+    "required_evidence": true,
+    "allowed_material_categories": ["accident", "medical"],
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.result_type",
+    "label": "结果类型",
+    "description": "如医疗治疗、身故、伤残、财产损失。",
+    "data_type": "ENUM",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": ["ELIGIBILITY"],
+    "enum_values": [
+      { "code": "MEDICAL_TREATMENT", "label": "医疗治疗" },
+      { "code": "DEATH", "label": "身故" },
+      { "code": "DISABILITY", "label": "伤残" },
+      { "code": "PROPERTY_DAMAGE", "label": "财产损失" }
+    ],
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.cause_type",
+    "label": "事故原因",
+    "description": "标准化后的事故或疾病原因。",
+    "data_type": "ENUM",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": ["ELIGIBILITY"],
+    "enum_values": [
+      { "code": "ACCIDENT", "label": "意外" },
+      { "code": "DISEASE", "label": "疾病" }
+    ],
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.expense_items",
+    "label": "费用明细集合",
+    "description": "用于定损域的费用项集合。",
+    "data_type": "ARRAY",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "system",
+    "applicable_domains": ["ASSESSMENT"],
+    "system_source": "案件费用明细",
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "expense_item.amount",
+    "label": "费用金额",
+    "description": "单笔费用项金额。",
+    "data_type": "NUMBER",
+    "scope": "expense_item",
+    "source": "fact_catalog",
+    "source_type": "material",
+    "applicable_domains": ["ASSESSMENT", "POST_PROCESS"],
+    "required_evidence": true,
+    "allowed_material_categories": ["medical"],
+    "status": "ACTIVE"
+  }
+]

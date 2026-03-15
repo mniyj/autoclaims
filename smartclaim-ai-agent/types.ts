@@ -90,6 +90,9 @@ export interface HistoricalClaim {
   incidentReason?: string;
   insuredName?: string;
   documents?: ClaimDocument[];
+  requiredMaterials?: ClaimRequiredMaterial[];
+  fileCategories?: ClaimFileCategory[];
+  materialUploads?: ClaimMaterialUpload[];
   timeline?: ClaimEvent[];
   assessment?: ClaimAssessment;
 }
@@ -112,6 +115,29 @@ export interface CalculatedMaterial {
   required: boolean;
   source: string;
   sourceDetails: string;
+}
+
+export interface ClaimRequiredMaterial extends CalculatedMaterial {
+  uploaded?: boolean;
+}
+
+export interface ClaimFileCategory {
+  name: string;
+  files: {
+    name: string;
+    url: string;
+    ossKey?: string;
+  }[];
+}
+
+export interface ClaimMaterialUpload {
+  materialId: string;
+  materialName: string;
+  files: {
+    name: string;
+    url: string;
+    ossKey?: string;
+  }[];
 }
 
 export interface Message {
@@ -313,6 +339,25 @@ export interface PolicyTerm {
 
 export interface ClaimState {
   status: ClaimStatus;
+  claimant?: {
+    userId?: string;
+    username?: string;
+    companyCode?: string;
+  };
+  claimOrchestrator?: {
+    state: string;
+    claimant: {
+      userId?: string;
+      username?: string;
+      companyCode?: string;
+    };
+    availablePolicies: Policy[];
+    selectedPolicy: Policy | null;
+    intakeConfig: IntakeConfig | null;
+    collectedFields: Record<string, unknown>;
+    pendingFieldId: string | null;
+    lastResponse?: string;
+  };
   incidentType?: string;
   selectedPolicyId?: string;
   reportInfo: {
@@ -570,6 +615,7 @@ export interface MaterialItem {
   description: string;
   required: boolean;
   sampleUrl?: string;
+  ossKey?: string;
   uploaded: boolean;
   documentId?: string;
 }

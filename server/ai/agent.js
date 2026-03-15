@@ -7,12 +7,12 @@ import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { getAllTools } from './tools/index.js';
 import {
-  CLAIM_ADJUSTER_SYSTEM_PROMPT,
-  CLAIM_ADJUSTER_HUMAN_PROMPT,
   formatOcrDataSummary,
   formatInvoiceItemsSummary
 } from './prompts/claimAdjuster.js';
 import { logAIReview, aiCostTracker } from '../middleware/index.js';
+import { renderPromptTemplate, resolveAICapability } from '../services/aiConfigService.js';
+import { invokeLoggedLangChainModel } from '../services/aiRuntime.js';
 
 // 获取 API Key
 const getApiKey = () => process.env.GEMINI_API_KEY || process.env.API_KEY;
@@ -26,10 +26,11 @@ export function createClaimAdjusterAgent() {
   if (!apiKey) {
     throw new Error('GEMINI_API_KEY not found');
   }
+  const { binding } = resolveAICapability('admin.claim.review_agent');
   
   const model = new ChatGoogleGenerativeAI({
     apiKey,
-    model: 'gemini-2.5-flash',
+    model: binding.model || 'gemini-2.5-flash',
     temperature: 0.3,
     maxRetries: 2,
   });
@@ -187,16 +188,18 @@ export async function executeSmartReview({
   // 构建消息
   const ocrDataSummary = formatOcrDataSummary(ocrData);
   const invoiceItemsSummary = formatInvoiceItemsSummary(invoiceItems);
-  
-  const humanPrompt = CLAIM_ADJUSTER_HUMAN_PROMPT
-    .replace('{productCode}', productCode || '未指定')
-    .replace('{claimCaseId}', claimCaseId || '未指定')
-    .replace('{ocrDataSummary}', ocrDataSummary)
-    .replace('{invoiceItemsSummary}', invoiceItemsSummary);
+  const { binding } = resolveAICapability('admin.claim.review_agent');
+  const systemPrompt = renderPromptTemplate('claim_adjuster_system');
+  const renderedHumanPrompt = renderPromptTemplate('claim_adjuster_human', {
+    productCode: productCode || '未指定',
+    claimCaseId: claimCaseId || '未指定',
+    ocrDataSummary,
+    invoiceItemsSummary,
+  });
   
   const messages = [
-    new SystemMessage(CLAIM_ADJUSTER_SYSTEM_PROMPT),
-    new HumanMessage(humanPrompt)
+    new SystemMessage(systemPrompt),
+    new HumanMessage(renderedHumanPrompt)
   ];
   
   // 记录工具调用
@@ -212,7 +215,31 @@ export async function executeSmartReview({
     iterations++;
     
     // 调用模型
-    const response = await model.invoke(messages);
+    const { response } = await invokeLoggedLangChainModel({
+      model,
+      messages,
+      meta: {
+        sourceApp: 'admin-system',
+        module: 'ai.agent',
+        operation: 'claim_adjuster_iteration',
+        model: binding.model || 'gemini-2.5-flash',
+        provider: 'langchain-google-genai',
+        capabilityId: 'admin.claim.review_agent',
+        promptTemplateId: 'claim_adjuster_system',
+        promptSourceType: 'template',
+        context: {
+          claimCaseId,
+          productCode,
+          iteration: iterations,
+        },
+      },
+      request: {
+        tools: tools.map((tool) => ({
+          name: tool.name,
+          description: tool.description,
+        })),
+      },
+    });
     
     // 检查是否有工具调用
     const toolCalls = response.tool_calls || [];

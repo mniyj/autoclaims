@@ -2,10 +2,8 @@
 // 从 smartclaim-ai-agent/geminiService.ts 迁移并适配到Taro
 
 import Taro from '@tarojs/taro';
-import { GoogleGenAI } from '@google/genai';
 import { ClaimState, ClaimStatus, PolicyTerm, DocumentAnalysis, Message } from '../types';
-
-const getAI = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
+import { generateContentViaProxy } from './aiProxyService';
 
 // 分析缓存（小程序端可用）
 const analysisCache = new Map<string, DocumentAnalysis>();
@@ -18,8 +16,6 @@ export const getAIResponse = async (
   state: ClaimState,
   userLocation?: { latitude: number; longitude: number }
 ): Promise<Message> => {
-  const ai = getAI();
-
   // 使用 gemini-2.5-flash 支持地图定位
   const model = 'gemini-2.5-flash';
 
@@ -47,13 +43,17 @@ History: ${messages.map(m => `${m.role}: ${m.content}`).join('\n')}
 Task: Respond to the user's latest message.
 `;
 
-  const startTime = Date.now();
-  const response = await ai.models.generateContent({
+  const { response } = await generateContentViaProxy({
     model,
     contents: [{ parts: [{ text: prompt }] }],
-    config
+    config,
+    operation: 'wechat_chat_response',
+    context: {
+      hasUserLocation: Boolean(userLocation),
+      messageCount: messages.length,
+      claimStatus: state.status,
+    },
   });
-  const duration = Date.now() - startTime;
 
   // 尝试解析响应
   let content = response.text || "我暂时无法回答。";
@@ -95,19 +95,21 @@ Task: Respond to the user's latest message.
  * 语音转文字（小程序语音输入）
  */
 export const transcribeAudio = async (audioBase64: string): Promise<string> => {
-  const ai = getAI();
-
   // 使用 gemini-3-flash-preview 支持音频
   const model = 'gemini-3-flash-preview';
 
-  const response = await ai.models.generateContent({
+  const { response } = await generateContentViaProxy({
     model,
     contents: [{
       parts: [
         { inlineData: { data: audioBase64, mimeType: 'audio/wav' } },
         { text: "请精准转录这段语音内容，仅返回转录的文本，不要有其他解释。" }
       ]
-    }]
+    }],
+    operation: 'wechat_transcribe_audio',
+    context: {
+      mimeType: 'audio/wav',
+    },
   });
 
   return response.text || "";
@@ -117,8 +119,6 @@ export const transcribeAudio = async (audioBase64: string): Promise<string> => {
  * 获取保单条款
  */
 export const fetchPolicyTerms = async (incidentType: string): Promise<PolicyTerm[]> => {
-  const ai = getAI();
-
   const model = 'gemini-3-flash-preview';
 
   const prompt = `
@@ -141,12 +141,16 @@ Return ONLY JSON array format:
 ]
 `;
 
-  const response = await ai.models.generateContent({
+  const { response } = await generateContentViaProxy({
     model,
     contents: [{ parts: [{ text: prompt }] }],
     config: {
       responseMimeType: "application/json"
-    }
+    },
+    operation: 'wechat_fetch_policy_terms',
+    context: {
+      incidentType,
+    },
   });
 
   try {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
   type ClaimCase,
+  type ClaimProcessTimeline,
   ClaimStatus,
   type UserOperationLog,
   UserOperationType,
@@ -15,65 +16,251 @@ import {
 import OfflineMaterialImportButton from "./OfflineMaterialImportButton";
 import OfflineMaterialImportDialog from "./OfflineMaterialImportDialog";
 import DocumentViewer, { type DocumentViewerRef } from "./ui/DocumentViewer";
-import AnchoredField, { AnchoredSection } from "./ui/AnchoredField";
-import MaterialReviewPanel from "./material-review/MaterialReviewPanel";
-import { toMaterialViewItem } from "../types/material-review";
-import { getSignedUrl } from "../services/ossService";
+import Modal from "./ui/Modal";
+import {
+  MaterialManagementPanel,
+  StageDecisionPanel,
+} from "./claim-adjuster/ClaimAdjusterPanels";
+import DecisionBadge from "./ruleset/DecisionBadge";
+import ItemLedgerTimeline from "./ruleset/ItemLedgerTimeline";
+import ManualReviewReasonList from "./ruleset/ManualReviewReasonList";
+import { getPreviewUrl, getSignedUrl } from "../services/ossService";
 import { api } from "../services/api";
+import {
+  type SmartReviewResultView as SmartReviewResult,
+  formatCoverageCode,
+  formatManualReviewCode,
+  getCoverageResults,
+  getReviewExplanationCards,
+  getReviewOutcome,
+  getReviewSummary,
+  groupManualReviewReasons,
+  mergeSmartReviewResults,
+} from "../utils/claimReviewPresentation";
+import {
+  formatTimelineEventTime,
+  getStageViews,
+  getTimelineEventActorLabel,
+  getTimelineEventBadge,
+  groupTimelineEvents,
+} from "../utils/claimTimelinePresentation";
 
 type ActiveTab = "case_info" | "material_review" | "damage_report";
 
-interface SmartReviewResult {
-  decision: "APPROVE" | "REJECT" | "MANUAL_REVIEW";
-  amount: number | null;
-  reasoning: string;
-  missingMaterials?: string[];
-  manualReviewReasons?: Array<{
-    code: string;
-    stage: string;
-    source: string;
-    category: string;
-    message: string;
+type MaterialValidationResult = {
+  type: string;
+  passed: boolean;
+  severity: string;
+  message: string;
+  details?: {
+    ruleId?: string;
+    reasonCode?: string;
+    field?: string;
+    failureAction?: string;
+    expected?: unknown;
+    actual?: unknown;
+  };
+};
+
+type LedgerTimelineItem = {
+  id: string;
+  title: string;
+  claimedAmount: number;
+  payableAmount: number;
+  status: "PAYABLE" | "ZERO_PAY" | "MANUAL_REVIEW";
+  entries: Array<{
+    step: string;
+    beforeAmount: number;
+    afterAmount: number;
+    reason: string;
+    ruleId?: string;
   }>;
-  eligibility?: {
-    eligible: boolean;
-    matchedRules: string[];
-    rejectionReasons: any[];
-    warnings: any[];
-    manualReviewReasons?: Array<{
-      code: string;
-      stage: string;
-      source: string;
-      category: string;
-      message: string;
-    }>;
+};
+
+function buildLedgerTimelineItems(reviewResult: SmartReviewResult | null): LedgerTimelineItem[] {
+  if (!reviewResult?.calculation) return [];
+
+  const lossLedger = reviewResult.calculation.lossLedger || [];
+  const benefitLedger = reviewResult.calculation.benefitLedger || [];
+
+  if (lossLedger.length > 0 || benefitLedger.length > 0) {
+    return [
+      ...lossLedger.map((item) => ({
+        id: item.itemKey,
+        title: item.coverageCode ? `${item.itemName} · ${formatCoverageCode(item.coverageCode)}` : item.itemName,
+        claimedAmount: Number(item.claimedAmount || 0),
+        payableAmount: Number(item.payableAmount || 0),
+        status: item.status,
+        entries: (item.entries || []).map((entry) => ({
+          step: entry.step,
+          beforeAmount: Number(entry.beforeAmount || 0),
+          afterAmount: Number(entry.afterAmount || 0),
+          reason: entry.message || entry.reasonCode || "账本步骤",
+          ruleId: entry.ruleId,
+        })),
+      })),
+      ...benefitLedger.map((item, index) => ({
+        id: `${item.coverageCode}_${index}`,
+        title: formatCoverageCode(item.coverageCode),
+        claimedAmount: Number(item.claimedAmount || 0),
+        payableAmount: Number(item.payableAmount || 0),
+        status: item.status,
+        entries: (item.entries || []).map((entry) => ({
+          step: entry.step,
+          beforeAmount: Number(entry.beforeAmount || 0),
+          afterAmount: Number(entry.afterAmount || 0),
+          reason: entry.message || entry.reasonCode || "账本步骤",
+          ruleId: entry.ruleId,
+        })),
+      })),
+    ];
+  }
+
+  return reviewResult.calculation.itemBreakdown?.map((item, index) => ({
+    id: `review-ledger-${index}`,
+    title: item.item,
+    claimedAmount: Number(item.claimed || 0),
+    payableAmount: Number(item.approved || 0),
+    status:
+      reviewResult.decision === "MANUAL_REVIEW"
+        ? "MANUAL_REVIEW"
+        : Number(item.approved || 0) > 0
+          ? "PAYABLE"
+          : "ZERO_PAY",
+    entries: [
+      {
+        step: "申报",
+        beforeAmount: Number(item.claimed || 0),
+        afterAmount: Number(item.claimed || 0),
+        reason: "案件申报金额",
+      },
+      {
+        step: "核定",
+        beforeAmount: Number(item.claimed || 0),
+        afterAmount: Number(item.approved || 0),
+        reason: item.reason || "规则核定结果",
+      },
+    ],
+  })) || [];
+}
+
+function normalizeFileCategories(fileCategories: ClaimCase["fileCategories"]) {
+  if (!Array.isArray(fileCategories)) return [];
+  return fileCategories.map((category) => ({
+    name:
+      typeof category?.name === "string" && category.name.trim()
+        ? category.name.trim()
+        : "未分类",
+    files: Array.isArray(category?.files) ? category.files.filter(Boolean) : [],
+  }));
+}
+
+function getCategoryFiles(category: { files?: Array<{ name: string; url: string; ossKey?: string }> }) {
+  return Array.isArray(category.files) ? category.files : [];
+}
+
+function getImportedDocumentClassification(
+  classification?: {
+    materialName?: string;
+    materialId?: string;
+    errorMessage?: string;
+  } | null,
+) {
+  return {
+    materialName: classification?.materialName || "未分类",
+    materialId: classification?.materialId || "unknown",
+    errorMessage: classification?.errorMessage,
   };
-  calculation?: {
-    totalClaimable: number;
-    deductible: number;
-    reimbursementRatio: number;
-    finalAmount: number;
-    manualReviewReasons?: Array<{
-      code: string;
-      stage: string;
-      source: string;
-      category: string;
-      message: string;
-    }>;
-    itemBreakdown: Array<{
-      item: string;
-      claimed: number;
-      approved: number;
-      reason: string;
-    }>;
-  };
-  ruleTrace: string[];
-  duration: number;
+}
+
+function formatDateTime(timestamp?: string | null) {
+  if (!timestamp) return "待处理";
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) return "待处理";
+  return date.toLocaleString("zh-CN", {
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function buildParsedResultsFromMaterials(materials: ClaimMaterial[]) {
+  const nextResults: Record<string, any> = {};
+
+  for (const material of materials) {
+    if (material.source !== "direct_upload") continue;
+    if (!material.fileName) continue;
+
+    const fileKey = `${material.category || material.materialName || "未分类"}-${material.fileName}`;
+    nextResults[fileKey] = {
+      extractedData: material.extractedData || {},
+      structuredData: material.extractedData || {},
+      auditConclusion: material.auditConclusion,
+      confidence: material.confidence,
+      materialName: material.materialName,
+      materialId: material.materialId,
+      parsedAt: material.processedAt,
+    };
+  }
+
+  return nextResults;
+}
+
+function buildLegacyParsedResults(fileParseResults?: Record<string, any> | null) {
+  const nextResults: Record<string, any> = {};
+  if (!fileParseResults || typeof fileParseResults !== "object") {
+    return nextResults;
+  }
+
+  Object.entries(fileParseResults).forEach(([key, value]: [string, any]) => {
+    if (!value || typeof value !== "object") return;
+    nextResults[key] = {
+      extractedData: value.extractedData || {},
+      structuredData: value.extractedData || {},
+      auditConclusion: value.auditConclusion,
+      confidence: value.confidence,
+      materialName: value.materialName,
+      materialId: value.materialId,
+      parsedAt: value.parsedAt,
+    };
+  });
+
+  return nextResults;
 }
 
 interface ClaimCaseDetailPageProps {
   claim: ClaimCase;
   onBack: () => void;
+}
+
+function toPersistedReviewResult(claim: ClaimCase): SmartReviewResult | null {
+  const snapshot = claim.latestReviewSnapshot;
+  if (!snapshot) {
+    return null;
+  }
+
+  const normalizedAmount =
+    typeof snapshot.payableAmount === "number"
+      ? snapshot.payableAmount
+      : typeof snapshot.amount === "number"
+        ? snapshot.amount
+        : null;
+
+  return {
+    decision: snapshot.decision || "MANUAL_REVIEW",
+    amount: normalizedAmount,
+    payableAmount: normalizedAmount,
+    intakeDecision: snapshot.intakeDecision,
+    liabilityDecision: snapshot.liabilityDecision,
+    assessmentDecision: snapshot.assessmentDecision,
+    settlementDecision: snapshot.settlementDecision,
+    missingMaterials: snapshot.missingMaterials || [],
+    coverageResults: snapshot.coverageResults || [],
+    reasoning: "展示最近一次自动审核快照",
+    ruleTrace: [],
+    duration: 0,
+  };
 }
 
 // 根据文件名推断 MIME 类型
@@ -95,6 +282,310 @@ const inferFileType = (fileName: string): string => {
   return typeMap[ext] || 'application/octet-stream';
 };
 
+function pickFirstNonEmpty(values: unknown[]): string | null {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+  }
+  return null;
+}
+
+function formatClaimFactCurrency(value: unknown) {
+  const numeric = Number(value || 0);
+  if (!Number.isFinite(numeric) || numeric <= 0) return null;
+  return `¥${numeric.toLocaleString("zh-CN", { minimumFractionDigits: 2 })}`;
+}
+
+type ClaimFactCard = {
+  code: string;
+  title: string;
+  tone: "sky" | "amber" | "emerald" | "indigo" | "slate";
+  content: string;
+  meta: string | null;
+  sourceDocIds: string[];
+  confirmKey?: "liability_apportionment" | "third_party_identity_chain";
+  confirmed?: boolean;
+  confirmedAt?: string | null;
+  editableRatio?: number | null;
+};
+
+function buildClaimFactCards(aggregationResult: Record<string, unknown> | null) {
+  if (!aggregationResult) return [] as ClaimFactCard[];
+
+  const incidentStatements = Array.isArray(aggregationResult.incidentStatements)
+    ? (aggregationResult.incidentStatements as Array<Record<string, unknown>>)
+    : [];
+  const identityChainEvidence = Array.isArray(aggregationResult.identityChainEvidence)
+    ? (aggregationResult.identityChainEvidence as Array<Record<string, unknown>>)
+    : Array.isArray(aggregationResult.employmentEvidence)
+      ? (aggregationResult.employmentEvidence as Array<Record<string, unknown>>)
+      : [];
+  const policeCallRecords = Array.isArray(aggregationResult.policeCallRecords)
+    ? (aggregationResult.policeCallRecords as Array<Record<string, unknown>>)
+    : [];
+  const paymentEvidenceNormalized = Array.isArray(aggregationResult.paymentEvidenceNormalized)
+    ? (aggregationResult.paymentEvidenceNormalized as Array<Record<string, unknown>>)
+    : [];
+  const liabilitySuggestion =
+    aggregationResult.liabilitySuggestion &&
+    typeof aggregationResult.liabilitySuggestion === "object"
+      ? (aggregationResult.liabilitySuggestion as Record<string, unknown>)
+      : null;
+  const paymentSummary =
+    aggregationResult.paymentSummary && typeof aggregationResult.paymentSummary === "object"
+      ? (aggregationResult.paymentSummary as Record<string, unknown>)
+      : null;
+  const factConfirmations =
+    aggregationResult.factConfirmations && typeof aggregationResult.factConfirmations === "object"
+      ? (aggregationResult.factConfirmations as Record<string, Record<string, unknown>>)
+      : {};
+  const factModel =
+    aggregationResult.factModel && typeof aggregationResult.factModel === "object"
+      ? (aggregationResult.factModel as Record<string, unknown>)
+      : undefined;
+  const legacyFactAliases =
+    factModel?.legacyAliases && typeof factModel.legacyAliases === "object"
+      ? (factModel.legacyAliases as Record<string, unknown>)
+      : undefined;
+  const handlingProfile =
+    aggregationResult.handlingProfile && typeof aggregationResult.handlingProfile === "object"
+      ? (aggregationResult.handlingProfile as Record<string, unknown>)
+      : null;
+  const enabledFactCards = Array.isArray((handlingProfile?.uiModules as Record<string, unknown> | undefined)?.factCards)
+    ? new Set(
+        ((((handlingProfile?.uiModules as Record<string, unknown> | undefined)?.factCards as unknown[]) || []).map((item) =>
+          String(item),
+        )),
+      )
+    : null;
+
+  const leadIncident = incidentStatements[0] || null;
+  const leadIdentityChain = identityChainEvidence[0] || null;
+  const leadPayment = paymentEvidenceNormalized[0] || null;
+  const leadPolice = policeCallRecords[0] || null;
+  const injuryProfile =
+    aggregationResult.injuryProfile && typeof aggregationResult.injuryProfile === "object"
+      ? (aggregationResult.injuryProfile as Record<string, unknown>)
+      : null;
+  const expenseAggregation =
+    aggregationResult.expenseAggregation && typeof aggregationResult.expenseAggregation === "object"
+      ? (aggregationResult.expenseAggregation as Record<string, unknown>)
+      : null;
+  const deathProfile =
+    aggregationResult.deathProfile && typeof aggregationResult.deathProfile === "object"
+      ? (aggregationResult.deathProfile as Record<string, unknown>)
+      : null;
+
+  return [
+    {
+      code: "medical_summary",
+      title: "就医摘要",
+      tone: "sky",
+      content:
+        pickFirstNonEmpty([
+          injuryProfile?.injuryDescription,
+          Array.isArray(injuryProfile?.diagnosisNames)
+            ? (injuryProfile?.diagnosisNames as string[]).join("、")
+            : null,
+        ]) || "暂未形成就医摘要",
+      meta: pickFirstNonEmpty([
+        Number.isFinite(Number(injuryProfile?.hospitalizationDays ?? NaN))
+          ? `住院 ${Number(injuryProfile?.hospitalizationDays || 0)} 天`
+          : null,
+        injuryProfile?.primaryDiagnosisDate
+          ? `首个诊断日期 ${String(injuryProfile.primaryDiagnosisDate)}`
+          : null,
+      ]),
+      sourceDocIds: Array.isArray(expenseAggregation?.sourceDocIds)
+        ? (expenseAggregation?.sourceDocIds as string[]).filter(Boolean)
+        : [],
+    },
+    {
+      code: "expense_summary",
+      title: "费用摘要",
+      tone: "indigo",
+      content:
+        Number(expenseAggregation?.medicalTotal || 0) > 0
+          ? `已识别医疗费用 ${formatClaimFactCurrency(expenseAggregation?.medicalTotal) || "¥0.00"}`
+          : "暂未识别可核定的医疗费用",
+      meta: pickFirstNonEmpty([
+        Number(expenseAggregation?.transportationTotal || 0) > 0
+          ? `交通费 ${formatClaimFactCurrency(expenseAggregation?.transportationTotal) || "¥0.00"}`
+          : null,
+        Number(expenseAggregation?.assessmentFees || 0) > 0
+          ? `鉴定费 ${formatClaimFactCurrency(expenseAggregation?.assessmentFees) || "¥0.00"}`
+          : null,
+      ]),
+      sourceDocIds: Array.isArray(expenseAggregation?.sourceDocIds)
+        ? (expenseAggregation?.sourceDocIds as string[]).filter(Boolean)
+        : [],
+    },
+    {
+      code: "incident_summary",
+      title: "事故经过",
+      tone: "sky",
+      content:
+        pickFirstNonEmpty([
+          leadIncident?.incidentSummary,
+          aggregationResult.aggregationSummary,
+        ]) || "暂未形成案件经过摘要",
+      meta: pickFirstNonEmpty([
+        leadIncident?.issuingAuthority,
+        leadIncident?.issueDate ? `出具日期 ${String(leadIncident.issueDate)}` : null,
+      ]),
+      sourceDocIds: incidentStatements
+        .map((item) => String(item.docId || ""))
+        .filter(Boolean),
+    },
+    {
+      code: "liability_clue",
+      title: "责任线索",
+      tone: "amber",
+      content:
+        pickFirstNonEmpty([
+          liabilitySuggestion?.conclusion,
+          leadIncident?.liabilityHint,
+        ]) || "暂未形成明确责任线索",
+      meta: pickFirstNonEmpty([
+        liabilitySuggestion?.status ? `状态 ${String(liabilitySuggestion.status)}` : null,
+      ]),
+      sourceDocIds: [
+        ...((Array.isArray(liabilitySuggestion?.basis)
+          ? (liabilitySuggestion?.basis as Array<Record<string, unknown>>)
+              .map((item) => String(item.sourceDocId || ""))
+              .filter(Boolean)
+          : []) as string[]),
+        ...incidentStatements.map((item) => String(item.docId || "")).filter(Boolean),
+      ],
+      confirmKey: "liability_apportionment",
+      confirmed: Boolean(
+        factConfirmations.liability_apportionment?.confirmed ||
+          (aggregationResult.liabilityApportionment as Record<string, unknown> | undefined)?.confirmed,
+      ),
+      confirmedAt: pickFirstNonEmpty([
+        factConfirmations.liability_apportionment?.confirmedAt,
+        (aggregationResult.liabilityApportionment as Record<string, unknown> | undefined)?.confirmedAt,
+      ]),
+      editableRatio: Number(
+        (aggregationResult.liabilityApportionment as Record<string, unknown> | undefined)
+          ?.thirdPartyLiabilityPct ?? 0,
+      ),
+    },
+    {
+      code: "third_party_identity_chain",
+      title: "第三者身份与责任链",
+      tone: "emerald",
+      content:
+        pickFirstNonEmpty([
+          leadIdentityChain?.relationHint,
+          leadIdentityChain?.taskSummary,
+        ]) || "暂未形成明确第三者身份及责任链摘要",
+      meta:
+        Array.isArray(leadIdentityChain?.participants) &&
+        (leadIdentityChain?.participants as unknown[]).length > 0
+          ? `参与人 ${String((leadIdentityChain?.participants as string[]).join("、"))}`
+          : null,
+      sourceDocIds: identityChainEvidence
+        .map((item) => String(item.docId || ""))
+        .filter(Boolean),
+      confirmKey: "third_party_identity_chain",
+      confirmed: Boolean(
+        factConfirmations.third_party_identity_chain?.confirmed ||
+          factConfirmations.employment_relation?.confirmed ||
+          factModel?.thirdPartyIdentityChainConfirmed ||
+          legacyFactAliases?.employmentRelationConfirmed,
+      ),
+      confirmedAt: pickFirstNonEmpty([
+        factConfirmations.third_party_identity_chain?.confirmedAt,
+        factConfirmations.employment_relation?.confirmedAt,
+        factModel?.thirdPartyIdentityChainConfirmedAt,
+        legacyFactAliases?.employmentRelationConfirmedAt,
+      ]),
+    },
+    {
+      code: "claimant_relationship",
+      title: "索赔关系",
+      tone: "emerald",
+      content:
+        Array.isArray(deathProfile?.claimants) && (deathProfile?.claimants as Array<Record<string, unknown>>).length > 0
+          ? (deathProfile?.claimants as Array<Record<string, unknown>>)
+              .map((item) => `${String(item.name || "关系人")}(${String(item.relationship || item.beneficiaryType || "待确认")})`)
+              .join("、")
+          : "暂未形成索赔关系摘要",
+      meta: deathProfile?.deceasedName ? `关联死者 ${String(deathProfile.deceasedName)}` : null,
+      sourceDocIds: Array.isArray(deathProfile?.sourceDocIds)
+        ? (deathProfile?.sourceDocIds as string[]).filter(Boolean)
+        : [],
+    },
+    {
+      code: "beneficiary_summary",
+      title: "受益人摘要",
+      tone: "amber",
+      content:
+        Array.isArray(deathProfile?.claimants) && (deathProfile?.claimants as Array<Record<string, unknown>>).length > 0
+          ? (deathProfile?.claimants as Array<Record<string, unknown>>)
+              .map((item) => String(item.beneficiaryType || item.relationship || "待确认"))
+              .join("、")
+          : "暂未形成受益人口径摘要",
+      meta: deathProfile?.deathDate ? `死亡日期 ${String(deathProfile.deathDate)}` : null,
+      sourceDocIds: Array.isArray(deathProfile?.sourceDocIds)
+        ? (deathProfile?.sourceDocIds as string[]).filter(Boolean)
+        : [],
+    },
+    {
+      code: "payment_summary",
+      title: "已付款",
+      tone: "indigo",
+      content:
+        pickFirstNonEmpty([
+          paymentSummary
+            ? `已识别付款 ${formatClaimFactCurrency(paymentSummary.confirmedPaidAmount) || "¥0.00"}，当前抵扣 ${formatClaimFactCurrency(
+                (aggregationResult.deductionSummary as Record<string, unknown> | undefined)?.deductionTotal,
+              ) || "¥0.00"}`
+            : null,
+          leadPayment
+            ? `${formatClaimFactCurrency(leadPayment.amount) || ""} ${String(leadPayment.description || "").trim()}`
+            : null,
+        ]) || "暂未识别赔偿支付记录",
+      meta: pickFirstNonEmpty([
+        leadPayment?.payee ? `收款人 ${String(leadPayment.payee)}` : null,
+        leadPayment?.paidAt ? `付款日期 ${String(leadPayment.paidAt)}` : null,
+      ]),
+      sourceDocIds: paymentEvidenceNormalized
+        .map((item) => String(item.sourceDocId || ""))
+        .filter(Boolean),
+    },
+    {
+      code: "police_record",
+      title: "报警/接警",
+      tone: "slate",
+      content:
+        pickFirstNonEmpty([
+          leadPolice?.incidentSummary,
+          "暂未识别报警或接警事实",
+        ]) || "暂未识别报警或接警事实",
+      meta: pickFirstNonEmpty([
+        leadPolice?.handlingUnit ? `处理单位 ${String(leadPolice.handlingUnit)}` : null,
+        leadPolice?.callTime ? `报警时间 ${String(leadPolice.callTime)}` : null,
+      ]),
+      sourceDocIds: policeCallRecords
+        .map((item) => String(item.docId || ""))
+        .filter(Boolean),
+    },
+  ].filter((card) => !enabledFactCards || enabledFactCards.has(card.code)) as ClaimFactCard[];
+}
+
+function getDecisionTraceStages(aggregationResult: Record<string, unknown> | null) {
+  const trace =
+    aggregationResult?.decisionTrace && typeof aggregationResult.decisionTrace === "object"
+      ? (aggregationResult.decisionTrace as Record<string, unknown>)
+      : null;
+  return Array.isArray(trace?.stages)
+    ? (trace?.stages as Array<Record<string, unknown>>)
+    : [];
+}
+
 const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
   claim,
   onBack,
@@ -104,7 +595,7 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
   });
   const [localFileCategories, setLocalFileCategories] = useState<
     { name: string; files: { name: string; url: string; ossKey?: string }[] }[]
-  >(claim.fileCategories || []);
+  >(() => normalizeFileCategories(claim.fileCategories));
   const [fileCategoriesLoading, setFileCategoriesLoading] = useState(false);
   
   // 文件解析相关状态
@@ -114,39 +605,34 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
   
   // 当 claim.fileCategories 变化时，更新 localFileCategories
   useEffect(() => {
-    if (claim.fileCategories) {
-      setLocalFileCategories(claim.fileCategories);
-      console.log("[FileCategories] Updated from claim:", claim.fileCategories.length, "categories");
-    }
+    const normalizedCategories = normalizeFileCategories(claim.fileCategories);
+    setLocalFileCategories(normalizedCategories);
+    console.log(
+      "[FileCategories] Updated from claim:",
+      normalizedCategories.length,
+      "categories",
+    );
   }, [claim.fileCategories]);
   
-  // 当 claim.fileParseResults 变化时，更新 parsedResults
-  useEffect(() => {
-    if (claim.fileParseResults) {
-      console.log("[Parse] claim.fileParseResults changed:", Object.keys(claim.fileParseResults));
-      const savedResults: Record<string, any> = {};
-      Object.entries(claim.fileParseResults).forEach(([key, value]: [string, any]) => {
-        savedResults[key] = {
-          extractedData: value.extractedData,
-          structuredData: value.extractedData,
-          auditConclusion: value.auditConclusion,
-          confidence: value.confidence,
-          materialName: value.materialName,
-          materialId: value.materialId,
-          parsedAt: value.parsedAt,
-        };
-      });
-      setParsedResults(savedResults);
-    }
-  }, [claim.fileParseResults]);
   const [reviewing, setReviewing] = useState(false);
   const [reviewResult, setReviewResult] = useState<SmartReviewResult | null>(
-    null,
+    () => toPersistedReviewResult(claim),
   );
   const [showLogsModal, setShowLogsModal] = useState(false);
   const [operationLogs, setOperationLogs] = useState<UserOperationLog[]>([]);
   const [logsLoading, setLogsLoading] = useState(false);
+  const [timelineLoading, setTimelineLoading] = useState(false);
+  const [processTimeline, setProcessTimeline] =
+    useState<ClaimProcessTimeline | null>(null);
+  const [manualStageNote, setManualStageNote] = useState("");
+  const [manualStageSubmitting, setManualStageSubmitting] = useState<
+    "liability" | "assessment" | null
+  >(null);
+  const [stageDecisionModalMode, setStageDecisionModalMode] = useState<
+    "liability" | "assessment" | null
+  >(null);
   const [showImportDialog, setShowImportDialog] = useState(false);
+  const [suggestedImportMaterials, setSuggestedImportMaterials] = useState<string[]>([]);
   const [importedDocuments, setImportedDocuments] = useState<
     Array<{
       documentId: string;
@@ -165,15 +651,55 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
   >([]);
   const [importedCompleteness, setImportedCompleteness] =
     useState<CompletenessResult | null>(null);
+  const [latestImportMeta, setLatestImportMeta] = useState<{
+    id: string;
+    taskId: string | null;
+    importedAt: string | null;
+    taskStatus: string | null;
+    postProcessedAt: string | null;
+    failureCategory?: string | null;
+    failureHint?: string | null;
+  } | null>(null);
+  const [recoveringImportTask, setRecoveringImportTask] = useState(false);
   const [previewDoc, setPreviewDoc] = useState<{
     fileName: string;
     fileType?: string;
     ossUrl?: string;
+    ossKey?: string;
     classification: { materialName: string };
     structuredData?: Record<string, unknown>;
     auditConclusion?: string;
     confidence?: number;
   } | null>(null);
+
+  useEffect(() => {
+    if (!previewDoc?.ossKey) return;
+    let cancelled = false;
+
+    void (async () => {
+      try {
+        const previewUrl = await getPreviewUrl(
+          previewDoc.ossKey,
+          previewDoc.fileType,
+          3600,
+        );
+        if (cancelled) return;
+        setPreviewDoc((current) => {
+          if (!current || current.ossKey !== previewDoc.ossKey) return current;
+          return {
+            ...current,
+            ossUrl: previewUrl,
+          };
+        });
+      } catch (error) {
+        console.error("[PreviewModal] Failed to refresh preview URL:", error);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [previewDoc?.ossKey]);
 
   // --- 材料审核 Tab 状态 ---
   const [activeTab, setActiveTab] = useState<ActiveTab>("case_info");
@@ -192,8 +718,20 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
   const [reviewSummaries, setReviewSummaries] = useState<AnyDocumentSummary[]>(
     [],
   );
-  const [useNewMaterialView, setUseNewMaterialView] = useState(true);
+  const [selectedReviewDocumentId, setSelectedReviewDocumentId] = useState<
+    string | null
+  >(null);
   const [aggregationResult, setAggregationResult] = useState<Record<
+    string,
+    unknown
+  > | null>(null);
+  const [validationFacts, setValidationFacts] = useState<Record<string, unknown>>(
+    {},
+  );
+  const [materialValidationResults, setMaterialValidationResults] = useState<
+    MaterialValidationResult[]
+  >([]);
+  const [validationChecklist, setValidationChecklist] = useState<Record<
     string,
     unknown
   > | null>(null);
@@ -202,10 +740,14 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
     unknown
   > | null>(null);
   const [generatingReport, setGeneratingReport] = useState(false);
+  const [updatingDeduction, setUpdatingDeduction] = useState(false);
+  const [updatingFactKey, setUpdatingFactKey] = useState<string | null>(null);
+  const [liabilityPctDraft, setLiabilityPctDraft] = useState("50");
+  const [deductionAmountDraft, setDeductionAmountDraft] = useState("0");
   /** 当前在右栏展示的文件 */
   const [selectedViewerDoc, setSelectedViewerDoc] = useState<{
     fileUrl: string;
-    fileType: "pdf" | "image" | "word" | "excel" | "other";
+    fileType: "pdf" | "image" | "word" | "excel" | "video" | "other";
     fileName: string;
   } | null>(null);
   /** 触发跳转的锚点 */
@@ -226,6 +768,11 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
       if (response.ok) {
         const data = await response.json();
         setImportedDocuments(data.documents || []);
+        setAggregationResult(data.aggregation || null);
+        setValidationFacts(data.validationFacts || {});
+        setMaterialValidationResults(data.materialValidationResults || []);
+        setValidationChecklist(data.validationChecklist || null);
+        setLatestImportMeta(data.latestImport || null);
         if (data.completeness) {
           setImportedCompleteness({
             isComplete: data.completeness.isComplete ?? false,
@@ -239,9 +786,48 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
             warnings: data.completeness.warnings ?? [],
           });
         }
+      } else {
+        setAggregationResult(null);
+        setValidationFacts({});
+        setMaterialValidationResults([]);
+        setValidationChecklist(null);
+        setLatestImportMeta(null);
       }
     } catch (error) {
       console.error("Failed to fetch imported documents:", error);
+      setAggregationResult(null);
+      setValidationFacts({});
+      setMaterialValidationResults([]);
+      setValidationChecklist(null);
+      setLatestImportMeta(null);
+    }
+  };
+
+  const handleRecoverImportTask = async () => {
+    if (!latestImportMeta?.taskId || recoveringImportTask) return;
+
+    setRecoveringImportTask(true);
+    try {
+      const response = await fetch("/api/offline-import/recover-task", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ taskId: latestImportMeta.taskId }),
+      });
+
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result?.error || "恢复任务失败");
+      }
+
+      await fetchImportedDocuments();
+      await loadReviewData();
+      const latestTimeline = await fetchProcessTimeline();
+      await syncClaimMilestonesFromTimeline(latestTimeline);
+    } catch (error) {
+      console.error("Recover import task failed:", error);
+      alert(error instanceof Error ? error.message : "恢复任务失败");
+    } finally {
+      setRecoveringImportTask(false);
     }
   };
 
@@ -252,18 +838,34 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
       if (resp.ok) {
         const data = await resp.json();
         if (data?.fileCategories) {
-          setLocalFileCategories(data.fileCategories);
-          console.log("[FileCategories] Loaded:", data.fileCategories.length, "categories");
+          const normalizedCategories = normalizeFileCategories(data.fileCategories);
+          setLocalFileCategories(normalizedCategories);
+          console.log("[FileCategories] Loaded:", normalizedCategories.length, "categories");
         }
-        // 同时更新 claim 的 fileParseResults（如果后端返回了）
         if (data?.fileParseResults) {
-          console.log("[FileCategories] Found fileParseResults:", Object.keys(data.fileParseResults));
+          console.log("[FileCategories] Found legacy fileParseResults:", Object.keys(data.fileParseResults));
         }
       }
     } catch (err) {
       console.error("Failed to fetch file categories:", err);
     } finally {
       setFileCategoriesLoading(false);
+    }
+  };
+
+  const fetchProcessTimeline = async () => {
+    setTimelineLoading(true);
+    try {
+      const data = await api.getClaimProcessTimeline(claim.id);
+      const nextTimeline = data.processTimeline || null;
+      setProcessTimeline(nextTimeline);
+      return nextTimeline;
+    } catch (error) {
+      console.error("Failed to fetch claim process timeline:", error);
+      setProcessTimeline(null);
+      return null;
+    } finally {
+      setTimelineLoading(false);
     }
   };
 
@@ -289,26 +891,20 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
       
       // 更新本地文件分类状态
       if (freshClaim?.fileCategories) {
-        setLocalFileCategories(freshClaim.fileCategories);
-        console.log("[Claim] Updated localFileCategories:", freshClaim.fileCategories.length, "categories");
+        const normalizedCategories = normalizeFileCategories(freshClaim.fileCategories);
+        setLocalFileCategories(normalizedCategories);
+        console.log(
+          "[Claim] Updated localFileCategories:",
+          normalizedCategories.length,
+          "categories",
+        );
       }
       
-      // 如果有 fileParseResults，设置到 parsedResults
       if (freshClaim?.fileParseResults) {
-        const savedResults: Record<string, any> = {};
-        Object.entries(freshClaim.fileParseResults).forEach(([key, value]: [string, any]) => {
-          savedResults[key] = {
-            extractedData: value.extractedData,
-            structuredData: value.extractedData,
-            auditConclusion: value.auditConclusion,
-            confidence: value.confidence,
-            materialName: value.materialName,
-            materialId: value.materialId,
-            parsedAt: value.parsedAt,
-          };
-        });
-        setParsedResults(savedResults);
-        console.log("[Claim] Set parsedResults from fresh data:", Object.keys(savedResults));
+        console.log(
+          "[Claim] Legacy fileParseResults still present:",
+          Object.keys(freshClaim.fileParseResults),
+        );
       } else {
         console.log("[Claim] No fileParseResults in fresh data");
       }
@@ -321,6 +917,106 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
       return null;
     } finally {
       setFileCategoriesLoading(false);
+    }
+  };
+
+  const syncClaimMilestonesFromTimeline = async (
+    timeline: ClaimProcessTimeline | null,
+    latestReviewResult?: SmartReviewResult | null,
+  ) => {
+    if (!timeline?.stages?.length) {
+      return;
+    }
+
+    try {
+      const currentClaim = await api.claimCases.getById(claim.id);
+      const patch: Partial<ClaimCase> = {};
+      const stageMap = new Map(timeline.stages.map((stage) => [stage.key, stage]));
+      const getCompletedBy = (
+        status?: string,
+      ): "system" | "manual" | undefined => {
+        if (status === "manual_completed") {
+          return "manual";
+        }
+        if (status === "completed") {
+          return "system";
+        }
+        return undefined;
+      };
+
+      const intakeStage = stageMap.get("intake");
+      if (
+        intakeStage?.completedAt &&
+        (!currentClaim.acceptedAt || !currentClaim.acceptedBy)
+      ) {
+        patch.acceptedAt = currentClaim.acceptedAt || intakeStage.completedAt;
+        patch.acceptedBy =
+          currentClaim.acceptedBy ||
+          getCompletedBy(intakeStage.status) ||
+          "system";
+      }
+
+      const parseStage = stageMap.get("parse");
+      if (
+        parseStage?.completedAt &&
+        (!currentClaim.parsedAt || !currentClaim.parsedBy)
+      ) {
+        patch.parsedAt = currentClaim.parsedAt || parseStage.completedAt;
+        patch.parsedBy =
+          currentClaim.parsedBy ||
+          getCompletedBy(parseStage.status) ||
+          "system";
+      }
+
+      const liabilityStage = stageMap.get("liability");
+      if (
+        liabilityStage?.completedAt &&
+        (!currentClaim.liabilityCompletedAt ||
+          !currentClaim.liabilityCompletedBy ||
+          !currentClaim.liabilityDecision)
+      ) {
+        patch.liabilityCompletedAt =
+          currentClaim.liabilityCompletedAt || liabilityStage.completedAt;
+        patch.liabilityCompletedBy =
+          currentClaim.liabilityCompletedBy ||
+          getCompletedBy(liabilityStage.status) ||
+          "system";
+        if (!currentClaim.liabilityDecision && latestReviewResult?.liabilityDecision) {
+          patch.liabilityDecision = latestReviewResult.liabilityDecision;
+        }
+      }
+
+      const assessmentStage = stageMap.get("assessment");
+      if (
+        assessmentStage?.completedAt &&
+        (!currentClaim.assessmentCompletedAt ||
+          !currentClaim.assessmentCompletedBy ||
+          !currentClaim.assessmentDecision ||
+          (currentClaim.approvedAmount == null &&
+            latestReviewResult?.amount != null))
+      ) {
+        patch.assessmentCompletedAt =
+          currentClaim.assessmentCompletedAt || assessmentStage.completedAt;
+        patch.assessmentCompletedBy =
+          currentClaim.assessmentCompletedBy ||
+          getCompletedBy(assessmentStage.status) ||
+          "system";
+        if (!currentClaim.assessmentDecision && latestReviewResult?.assessmentDecision) {
+          patch.assessmentDecision = latestReviewResult.assessmentDecision;
+        }
+        if (
+          currentClaim.approvedAmount == null &&
+          latestReviewResult?.amount != null
+        ) {
+          patch.approvedAmount = Number(latestReviewResult.amount);
+        }
+      }
+
+      if (Object.keys(patch).length > 0) {
+        await api.claimCases.update(claim.id, patch);
+      }
+    } catch (error) {
+      console.error("Failed to sync claim milestones:", error);
     }
   };
 
@@ -347,28 +1043,9 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
           return;
         }
         
-        // 将保存的解析结果转换为前端状态格式
-        const savedResults: Record<string, any> = {};
-        Object.entries(currentClaim.fileParseResults).forEach(([key, value]: [string, any]) => {
-          // 防御性检查
-          if (!value || typeof value !== 'object') {
-            console.warn(`[Parse] Invalid parse result for key ${key}:`, value);
-            return;
-          }
-          
-          savedResults[key] = {
-            extractedData: value.extractedData || {},
-            structuredData: value.extractedData || {},
-            auditConclusion: value.auditConclusion,
-            confidence: value.confidence,
-            materialName: value.materialName,
-            materialId: value.materialId,
-            parsedAt: value.parsedAt,
-          };
-        });
-        
+        const savedResults = buildLegacyParsedResults(currentClaim.fileParseResults);
         setParsedResults(prev => {
-          const merged = { ...prev, ...savedResults };
+          const merged = { ...savedResults, ...prev };
           console.log("[Parse] Set parsedResults:", Object.keys(merged), "previous:", Object.keys(prev));
           return merged;
         });
@@ -382,13 +1059,20 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
   };
 
   useEffect(() => {
+    setReviewResult(toPersistedReviewResult(claim));
+  }, [claim.id, claim.latestReviewSnapshot]);
+
+  useEffect(() => {
     const init = async () => {
       console.log("[ClaimDetail] Initializing with claim.id:", claim.id);
       console.log("[ClaimDetail] Starting data fetch sequence");
       fetchImportedDocuments();
-      // 先刷新 claim 数据，确保获取最新的 fileParseResults
+      await loadReviewData();
+      const initialTimeline = await fetchProcessTimeline();
+      await syncClaimMilestonesFromTimeline(initialTimeline);
+      // 先刷新 claim 数据，兼容旧的 fileParseResults 存量数据
       await refreshClaimData();
-      // 然后再加载已保存的解析结果（作为后备）
+      // 然后再加载已保存的解析结果（仅作为后备）
       await loadSavedParseResults();
       // 记录查看赔案详情操作
       logOperation({
@@ -405,17 +1089,32 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
     setReviewResult(null);
     const startTime = Date.now();
     try {
-      const response = await fetch("/api/ai/smart-review", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          claimCaseId: claim.id,
-          productCode: claim.productCode || "PROD001",
-          ocrData: claim.ocrData || {},
-          invoiceItems: claim.calculationItems || [],
+      const payload = {
+        claimCaseId: claim.id,
+        productCode: claim.productCode || "PROD001",
+        ocrData: claim.ocrData || {},
+        invoiceItems: claim.calculationItems || [],
+      };
+      const [smartReviewResponse, fullReviewResponse] = await Promise.all([
+        fetch("/api/ai/smart-review", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
         }),
-      });
-      const result = await response.json();
+        fetch("/api/claim/full-review", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }),
+      ]);
+      const smartReviewResult = await smartReviewResponse.json();
+      const fullReviewResult = fullReviewResponse.ok
+        ? await fullReviewResponse.json()
+        : {};
+      const result = mergeSmartReviewResults(
+        smartReviewResult,
+        fullReviewResult,
+      );
       setReviewResult(result);
       // 记录 AI 审核操作
       await logOperation({
@@ -425,10 +1124,19 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
           decision: result.decision,
           amount: result.amount,
           reasoning: result.reasoning?.slice(0, 500), // 限制长度
+          intakeDecision: result.intakeDecision,
+          liabilityDecision: result.liabilityDecision,
+          assessmentDecision: result.assessmentDecision,
+          settlementDecision: result.settlementDecision,
+          manualReviewReasons: result.manualReviewReasons || [],
+          missingMaterials: result.missingMaterials || [],
+          coverageResults: result.coverageResults || [],
         },
         success: true,
         duration: Date.now() - startTime,
       });
+      const latestTimeline = await fetchProcessTimeline();
+      await syncClaimMilestonesFromTimeline(latestTimeline, result);
     } catch (error) {
       console.error("Smart review failed:", error);
       setReviewResult({
@@ -445,6 +1153,8 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
         success: false,
         duration: Date.now() - startTime,
       });
+      const latestTimeline = await fetchProcessTimeline();
+      await syncClaimMilestonesFromTimeline(latestTimeline);
     } finally {
       setReviewing(false);
     }
@@ -453,6 +1163,8 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
   const handleImportComplete = (result: {
     documents: ProcessedFile[];
     completeness: CompletenessResult;
+    validationFacts?: Record<string, unknown>;
+    materialValidationResults?: MaterialValidationResult[];
   }) => {
     const nowIso = new Date().toISOString();
     setImportedDocuments((result.documents || []).map((d) => ({
@@ -469,13 +1181,21 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
       importedAt: nowIso,
     })));
     setImportedCompleteness(result.completeness || null);
+    setValidationFacts(result.validationFacts || {});
+    setMaterialValidationResults(result.materialValidationResults || []);
+    setShowImportDialog(false);
 
     // Refresh the imported documents list from backend
     fetchImportedDocuments();
     loadReviewData();
     setTimeout(() => {
-      fetchImportedDocuments();
-      loadReviewData();
+      void (async () => {
+        fetchImportedDocuments();
+        loadReviewData();
+        const latestTimeline = await fetchProcessTimeline();
+        await syncClaimMilestonesFromTimeline(latestTimeline);
+        await handleSmartReview();
+      })();
     }, 1500);
     // 记录材料导入操作（包含详细的文件解析信息）
     const successCount = result.documents?.filter((d) => d.status === "completed").length || 0;
@@ -541,6 +1261,37 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
     });
   };
 
+  const groupedManualReviewReasons = reviewResult
+    ? groupManualReviewReasons(
+        (reviewResult.manualReviewReasons || []).filter(
+          (reason) => reason.code !== "MISSING_REQUIRED_MATERIALS",
+        ),
+      )
+    : [];
+  const coverageResults = reviewResult ? getCoverageResults(reviewResult) : [];
+  const explanationCards = reviewResult ? getReviewExplanationCards(reviewResult) : [];
+  const reviewSummary = reviewResult ? getReviewSummary(reviewResult) : null;
+  const reviewOutcome = reviewResult ? getReviewOutcome(reviewResult) : null;
+  const stageViews = getStageViews(processTimeline, reviewResult);
+  const ruleAuditLedger = buildLedgerTimelineItems(reviewResult);
+  const timelineEventGroups = groupTimelineEvents(processTimeline);
+  const liabilityStage = processTimeline?.stages.find(
+    (stage) => stage.key === "liability",
+  );
+  const assessmentStage = processTimeline?.stages.find(
+    (stage) => stage.key === "assessment",
+  );
+  const settlementStageView = stageViews.find((stage) => stage.key === "settlement");
+  const canShowAssessmentAmount =
+    settlementStageView == null ||
+    settlementStageView.status === "completed" ||
+    settlementStageView.status === "manual_completed";
+  const canManualCompleteLiability = liabilityStage?.status === "processing";
+  const canManualCompleteAssessment =
+    assessmentStage?.status === "processing" &&
+    (liabilityStage?.status === "completed" ||
+      liabilityStage?.status === "manual_completed");
+
   // 加载材料审核数据（统一从 claim-materials API 获取）
   const loadReviewData = async () => {
     try {
@@ -597,6 +1348,10 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
 
       setReviewDocuments(allDocs);
       setReviewSummaries(allSummaries);
+      setParsedResults((prev) => ({
+        ...prev,
+        ...buildParsedResultsFromMaterials((data.materials || []) as ClaimMaterial[]),
+      }));
     } catch {
       // 静默失败
     }
@@ -635,10 +1390,87 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
     }
   };
 
-  // 跳转到文件并高亮锚点
-  const handleJumpTo = async (
+  const handleTogglePaymentDeduction = async (
+    applyDeduction: boolean,
+    customAmount?: number | null,
+  ) => {
+    const startTime = Date.now();
+    const beforeDeduction = Number(
+      ((aggregationResult as Record<string, unknown> | null)?.deductionSummary as Record<string, unknown> | undefined)
+        ?.deductionTotal || 0,
+    );
+    setUpdatingDeduction(true);
+    try {
+      const resp = await fetch("/api/claim-payment-deduction", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          claimCaseId: claim.id,
+          applyDeduction,
+          deductionAmount: customAmount,
+        }),
+      });
+      if (!resp.ok) {
+        const error = await resp.json().catch(() => ({}));
+        throw new Error(error.error || "更新抵扣状态失败");
+      }
+
+      const data = await resp.json();
+      setAggregationResult(data.aggregation || null);
+      setDamageReport(data.report || null);
+      await fetchImportedDocuments();
+      setActiveTab("damage_report");
+      await logOperation({
+        operationType: UserOperationType.CLAIM_ACTION,
+        operationLabel: "更新抵扣金额",
+        inputData: {
+          applyDeduction,
+          deductionAmount: customAmount ?? null,
+          beforeDeduction,
+        },
+        outputData: {
+          afterDeduction: Number(
+            (data.aggregation?.deductionSummary as Record<string, unknown> | undefined)?.deductionTotal || 0,
+          ),
+          finalAmount: data.report?.finalAmount,
+        },
+        success: true,
+        duration: Date.now() - startTime,
+      });
+    } catch (error) {
+      console.error("[payment deduction] Failed:", error);
+      alert((error as Error).message || "更新抵扣状态失败");
+      await logOperation({
+        operationType: UserOperationType.CLAIM_ACTION,
+        operationLabel: "更新抵扣金额失败",
+        inputData: {
+          applyDeduction,
+          deductionAmount: customAmount ?? null,
+          beforeDeduction,
+        },
+        outputData: {
+          error: error instanceof Error ? error.message : "更新抵扣状态失败",
+        },
+        success: false,
+        duration: Date.now() - startTime,
+      });
+    } finally {
+      setUpdatingDeduction(false);
+    }
+  };
+
+  const handleUpdateDeductionAmount = async () => {
+    const amount = Number(deductionAmountDraft);
+    if (!Number.isFinite(amount) || amount < 0) {
+      alert("抵扣金额必须是大于等于 0 的数字");
+      return;
+    }
+    await handleTogglePaymentDeduction(amount > 0, amount);
+  };
+
+  const openViewerForDocument = async (
     doc: { ossUrl?: string; ossKey?: string; fileType: string; fileName: string },
-    anchor: SourceAnchor,
+    anchor?: SourceAnchor,
   ) => {
     if (!doc.ossUrl && !doc.ossKey) return;
     
@@ -646,7 +1478,7 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
     let fileUrl = doc.ossUrl;
     if (doc.ossKey) {
       try {
-        fileUrl = await getSignedUrl(doc.ossKey, 3600);
+        fileUrl = await getPreviewUrl(doc.ossKey, doc.fileType, 3600);
       } catch (e) {
         console.error("[Viewer] Failed to get signed URL:", e);
         // 如果获取失败，尝试使用现有的 ossUrl
@@ -659,6 +1491,8 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
     
     const fileCategory = doc.fileType?.startsWith("image/")
       ? "image"
+      : doc.fileType?.startsWith("video/")
+        ? "video"
       : doc.fileType?.includes("pdf")
         ? "pdf"
         : doc.fileType?.includes("word")
@@ -668,16 +1502,166 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
             : "other";
     setSelectedViewerDoc({
       fileUrl,
-      fileType: fileCategory as "pdf" | "image" | "word" | "excel" | "other",
+      fileType: fileCategory as "pdf" | "image" | "word" | "excel" | "video" | "other",
       fileName: doc.fileName,
     });
     setActiveAnchor(anchor);
-    // 如果 ref 已挂载，直接调用
-    setTimeout(() => viewerRef.current?.jumpTo(anchor), 100);
+    if (anchor) {
+      setTimeout(() => viewerRef.current?.jumpTo(anchor), 100);
+    }
+  };
+
+  // 跳转到文件并高亮锚点
+  const handleJumpTo = async (
+    doc: { ossUrl?: string; ossKey?: string; fileType: string; fileName: string },
+    anchor: SourceAnchor,
+  ) => {
+    await openViewerForDocument(doc, anchor);
   };
 
   const approveField = (docId: string, fieldName: string) => {
     setApprovedFields((prev) => new Set([...prev, `${docId}.${fieldName}`]));
+  };
+
+  useEffect(() => {
+    const ratio = Number(
+      (aggregationResult as Record<string, unknown> | null)?.liabilityApportionment &&
+        ((aggregationResult as Record<string, unknown>).liabilityApportionment as Record<string, unknown>)
+          ?.thirdPartyLiabilityPct,
+    );
+    if (Number.isFinite(ratio)) {
+      setLiabilityPctDraft(String(ratio));
+    }
+  }, [aggregationResult]);
+
+  useEffect(() => {
+    const deduction = Number(
+      (aggregationResult as Record<string, unknown> | null)?.deductionSummary &&
+        ((aggregationResult as Record<string, unknown>).deductionSummary as Record<string, unknown>)
+          ?.deductionTotal,
+    );
+    const recommended = Number(
+      (aggregationResult as Record<string, unknown> | null)?.paymentSummary &&
+        ((aggregationResult as Record<string, unknown>).paymentSummary as Record<string, unknown>)
+          ?.deductionRecommendedAmount,
+    );
+    if (Number.isFinite(deduction) && deduction > 0) {
+      setDeductionAmountDraft(String(deduction));
+    } else if (Number.isFinite(recommended)) {
+      setDeductionAmountDraft(String(recommended));
+    }
+  }, [aggregationResult]);
+
+  const handleConfirmFact = async (
+    factKey: "liability_apportionment" | "third_party_identity_chain",
+    confirmed: boolean,
+  ) => {
+    const startTime = Date.now();
+    try {
+      setUpdatingFactKey(factKey);
+      const resp = await fetch("/api/claim-fact-confirmation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          claimCaseId: claim.id,
+          factKey,
+          confirmed,
+        }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) {
+        throw new Error(data?.error || "更新事实确认失败");
+      }
+      setAggregationResult((data.aggregation as Record<string, unknown>) || null);
+      setDamageReport((data.report as Record<string, unknown>) || null);
+      await logOperation({
+        operationType: UserOperationType.CLAIM_ACTION,
+        operationLabel: `人工确认案件事实 - ${factKey}`,
+        inputData: { factKey, confirmed },
+        outputData: {
+          factConfirmations: data.aggregation?.factConfirmations || null,
+          finalAmount: data.report?.finalAmount,
+        },
+        success: true,
+        duration: Date.now() - startTime,
+      });
+    } catch (error) {
+      console.error("[FactConfirmation] Failed to update:", error);
+      alert(error instanceof Error ? error.message : "更新事实确认失败");
+      await logOperation({
+        operationType: UserOperationType.CLAIM_ACTION,
+        operationLabel: `人工确认案件事实失败 - ${factKey}`,
+        inputData: { factKey, confirmed },
+        outputData: {
+          error: error instanceof Error ? error.message : "更新事实确认失败",
+        },
+        success: false,
+        duration: Date.now() - startTime,
+      });
+    } finally {
+      setUpdatingFactKey(null);
+    }
+  };
+
+  const handleUpdateLiabilityApportionment = async () => {
+    const startTime = Date.now();
+    const beforeRatio = Number(
+      ((aggregationResult as Record<string, unknown> | null)?.liabilityApportionment as Record<string, unknown> | undefined)
+        ?.thirdPartyLiabilityPct || 0,
+    );
+    try {
+      setUpdatingFactKey("liability_apportionment_ratio");
+      const ratio = Number(liabilityPctDraft);
+      if (!Number.isFinite(ratio) || ratio < 0 || ratio > 100) {
+        throw new Error("责任比例必须是 0 到 100 之间的数字");
+      }
+      const resp = await fetch("/api/claim-liability-apportionment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          claimCaseId: claim.id,
+          thirdPartyLiabilityPct: ratio,
+        }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) {
+        throw new Error(data?.error || "更新责任比例失败");
+      }
+      setAggregationResult((data.aggregation as Record<string, unknown>) || null);
+      setDamageReport((data.report as Record<string, unknown>) || null);
+      await logOperation({
+        operationType: UserOperationType.CLAIM_ACTION,
+        operationLabel: "更新责任比例",
+        inputData: {
+          beforeRatio,
+          afterRatio: ratio,
+        },
+        outputData: {
+          liabilityApportionment: data.aggregation?.liabilityApportionment || null,
+          finalAmount: data.report?.finalAmount,
+        },
+        success: true,
+        duration: Date.now() - startTime,
+      });
+    } catch (error) {
+      console.error("[LiabilityApportionment] Failed to update:", error);
+      alert(error instanceof Error ? error.message : "更新责任比例失败");
+      await logOperation({
+        operationType: UserOperationType.CLAIM_ACTION,
+        operationLabel: "更新责任比例失败",
+        inputData: {
+          beforeRatio,
+          attemptedRatio: liabilityPctDraft,
+        },
+        outputData: {
+          error: error instanceof Error ? error.message : "更新责任比例失败",
+        },
+        success: false,
+        duration: Date.now() - startTime,
+      });
+    } finally {
+      setUpdatingFactKey(null);
+    }
   };
 
   const isFieldApproved = (docId: string, fieldName: string) =>
@@ -695,8 +1679,80 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
     setApprovedFields(newApproved);
   };
 
+  useEffect(() => {
+    if (reviewDocuments.length === 0) {
+      setSelectedReviewDocumentId(null);
+      return;
+    }
+
+    const fallbackDocument =
+      reviewDocuments.find((doc) => doc.documentId === selectedReviewDocumentId) ||
+      reviewDocuments[0];
+
+    if (!fallbackDocument) return;
+
+    if (fallbackDocument.documentId !== selectedReviewDocumentId) {
+      setSelectedReviewDocumentId(fallbackDocument.documentId);
+    }
+
+    if (selectedViewerDoc?.fileName === fallbackDocument.fileName) return;
+
+    void openViewerForDocument(
+      {
+        ossUrl: fallbackDocument.ossUrl,
+        ossKey: fallbackDocument.ossKey,
+        fileType: fallbackDocument.fileType || "",
+        fileName: fallbackDocument.fileName,
+      },
+      {
+        pageIndex: 0,
+        highlightLevel: "page_only",
+      },
+    );
+  }, [reviewDocuments, selectedReviewDocumentId, selectedViewerDoc?.fileName]);
+
+  const failedMaterialValidations = materialValidationResults.filter(
+    (item) => !item.passed,
+  );
+  const passedMaterialValidations = materialValidationResults.filter(
+    (item) => item.passed,
+  );
+  const claimFactCards = buildClaimFactCards(aggregationResult);
+  const decisionTraceStages = getDecisionTraceStages(aggregationResult);
+  const recognizedReviewDocuments = reviewDocuments.filter(
+    (doc) => doc.classification?.materialId && doc.classification.materialId !== "unknown",
+  );
+  const unknownReviewDocuments = reviewDocuments.filter(
+    (doc) => !doc.classification?.materialId || doc.classification.materialId === "unknown",
+  );
+
   const toggleFileCategory = (name: string) => {
     setOpenFiles((prev) => ({ ...prev, [name]: !prev[name] }));
+  };
+
+  const openImportDialogWithSuggestions = (materials: string[] = []) => {
+    setSuggestedImportMaterials(materials.filter(Boolean));
+    setActiveTab("material_review");
+    setShowImportDialog(true);
+  };
+
+  const openRulesetManagementForCurrentProduct = (coverageCode?: string) => {
+    const productCode = claim.productCode || "";
+    if (productCode) {
+      window.sessionStorage.setItem("ruleset_management_search", productCode);
+      window.sessionStorage.setItem(
+        "ruleset_management_focus",
+        JSON.stringify({
+          productCode,
+          coverageCode,
+        }),
+      );
+    }
+    window.dispatchEvent(
+      new CustomEvent("app:navigate", {
+        detail: { view: "ruleset_management" },
+      }),
+    );
   };
 
   // 根据分类名称匹配材料配置
@@ -756,28 +1812,60 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
       const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name);
       const isPdf = /\.pdf$/i.test(file.name);
       
-      console.log("[Parse] Calling parse API for:", file.name, "type:", isImage ? "image" : isPdf ? "pdf" : "unknown");
-      
-      // 调用解析 API，传入材料配置的 schema 和 prompt
-      const response = await fetch("/api/parse-document", {
-        method: "POST",
+      console.log("[Parse] Calling unified parse pipeline for:", file.name, "type:", isImage ? "image" : isPdf ? "pdf" : "unknown");
+
+      const materialsResp = await fetch(`/api/claim-materials?claimCaseId=${claim.id}`);
+      const materialsData = materialsResp.ok ? await materialsResp.json() : { materials: [] };
+      let existingMaterial = materialsData.materials?.find(
+        (m: ClaimMaterial) => m.fileName === file.name && m.source === 'direct_upload'
+      );
+
+      if (!existingMaterial) {
+        const createResp = await fetch('/api/claim-materials', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            claimCaseId: claim.id,
+            fileName: file.name,
+            fileType: inferFileType(file.name),
+            url: file.url || '#',
+            ossKey: file.ossKey,
+            category: categoryName,
+            materialId: materialConfig.id,
+            materialName: materialConfig.name,
+            source: 'direct_upload',
+            status: 'pending',
+            uploadedAt: new Date().toISOString(),
+          }),
+        });
+
+        if (!createResp.ok) {
+          const error = await createResp.json().catch(() => ({}));
+          throw new Error(error.error || "创建材料记录失败");
+        }
+
+        const createData = await createResp.json();
+        existingMaterial = createData.material;
+      }
+
+      const response = await fetch(`/api/claim-materials/${existingMaterial.id}/parse`, {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          fileUrl,
-          fileName: file.name,
-          fileType: isImage ? "image" : isPdf ? "pdf" : "unknown",
+          materialId: materialConfig.id,
           materialName: materialConfig.name,
-          jsonSchema: materialConfig.jsonSchema,
-          aiAuditPrompt: materialConfig.aiAuditPrompt || "请提取图片中的关键信息",
+          category: categoryName,
+          fileUrl,
         }),
       });
-      
+
       if (!response.ok) {
         const error = await response.json().catch(() => ({}));
-        throw new Error(error.message || "解析失败");
+        throw new Error(error.error || error.message || "解析失败");
       }
-      
-      const result = await response.json();
+
+      const responseData = await response.json();
+      const result = responseData.parseResult || {};
       
       // 构建解析结果对象
       const parseResultData = {
@@ -793,86 +1881,8 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
         [fileKey]: parseResultData,
       }));
       
-      // 保存解析结果到后端（持久化）
-      try {
-        const currentClaim = await api.claimCases.getById(claim.id);
-        const existingParseResults = currentClaim?.fileParseResults || {};
-        
-        await api.claimCases.update(claim.id, {
-          fileParseResults: {
-            ...existingParseResults,
-            [fileKey]: {
-              extractedData: result.extractedData || {},
-              auditConclusion: result.auditConclusion,
-              confidence: result.confidence,
-              materialName: materialConfig.name,
-              materialId: materialConfig.id,
-              parsedAt: new Date().toISOString(),
-            },
-          },
-        });
-        console.log("[Parse] Result saved to backend:", fileKey);
-        
-        // 同步到 claim-materials（确保材料审核页能看到）
-        try {
-          // 先检查是否已存在
-          const materialsResp = await fetch(`/api/claim-materials?claimCaseId=${claim.id}`);
-          if (materialsResp.ok) {
-            const materialsData = await materialsResp.json();
-            const existingMaterial = materialsData.materials?.find(
-              (m: ClaimMaterial) => m.fileName === file.name && m.source === 'direct_upload'
-            );
-            
-            if (existingMaterial) {
-              // 更新现有记录（添加解析结果）
-              await fetch(`/api/claim-materials/${existingMaterial.id}/parse`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  extractedData: result.extractedData,
-                  auditConclusion: result.auditConclusion,
-                  confidence: result.confidence,
-                  materialId: materialConfig.id,
-                  materialName: materialConfig.name,
-                  status: 'completed',
-                  processedAt: new Date().toISOString(),
-                }),
-              });
-              console.log("[Parse] Updated existing material:", existingMaterial.id);
-            } else {
-              // 创建新记录
-              await fetch('/api/claim-materials', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  claimCaseId: claim.id,
-                  fileName: file.name,
-                  fileType: inferFileType(file.name),
-                  url: file.url || '#',
-                  ossKey: file.ossKey,
-                  category: categoryName,
-                  materialId: materialConfig.id,
-                  materialName: materialConfig.name,
-                  extractedData: result.extractedData,
-                  auditConclusion: result.auditConclusion,
-                  confidence: result.confidence,
-                  source: 'direct_upload',
-                  status: 'completed',
-                  uploadedAt: new Date().toISOString(),
-                  processedAt: new Date().toISOString(),
-                }),
-              });
-              console.log("[Parse] Created new material for:", file.name);
-            }
-          }
-        } catch (syncError) {
-          console.error("[Parse] Failed to sync to claim-materials:", syncError);
-          // 同步失败不影响主流程
-        }
-      } catch (saveError) {
-        console.error("[Parse] Failed to save result to backend:", saveError);
-        // 保存失败不影响用户体验，继续执行
-      }
+      console.log("[Parse] Unified pipeline result saved to material:", existingMaterial.id);
+      await loadReviewData();
       
       // 记录操作日志
       await logOperation({
@@ -882,6 +1892,8 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
         outputData: { success: true, hasExtractedData: !!result.extractedData },
         success: true,
       });
+      const latestTimeline = await fetchProcessTimeline();
+      await syncClaimMilestonesFromTimeline(latestTimeline);
     } catch (error: any) {
       console.error("[Parse] Failed:", error);
       alert(`解析失败: ${error.message || "未知错误"}`);
@@ -972,6 +1984,64 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
   const handleShowLogs = () => {
     setShowLogsModal(true);
     fetchOperationLogs();
+  };
+
+  const handleManualStageComplete = async (
+    stageKey: "liability" | "assessment",
+  ) => {
+    const stageLabel = stageKey === "liability" ? "定责" : "定损";
+    setManualStageSubmitting(stageKey);
+    try {
+      const currentUser = getCurrentUser();
+      const completedAt = new Date().toISOString();
+      await api.claimCases.update(claim.id, {
+        ...(stageKey === "liability"
+          ? {
+              liabilityCompletedAt: completedAt,
+              liabilityCompletedBy: "manual",
+              liabilityDecision: reviewResult?.liabilityDecision || "MANUAL_REVIEW",
+            }
+          : {
+              assessmentCompletedAt: completedAt,
+              assessmentCompletedBy: "manual",
+              assessmentDecision:
+                reviewResult?.assessmentDecision || "ASSESSED",
+              approvedAmount:
+                reviewResult?.amount != null ? Number(reviewResult.amount) : undefined,
+            }),
+      });
+      await logOperation({
+        operationType: UserOperationType.CLAIM_ACTION,
+        operationLabel: `人工完成${stageLabel}`,
+        inputData: {
+          stageKey,
+        },
+        outputData: {
+          actionType:
+            stageKey === "liability"
+              ? "MANUAL_LIABILITY_COMPLETED"
+              : "MANUAL_ASSESSMENT_COMPLETED",
+          manualReviewNotes: manualStageNote,
+          completedAt,
+          reviewerName: currentUser.userName || "人工处理",
+          liabilityDecision:
+            stageKey === "liability" ? reviewResult?.liabilityDecision || null : null,
+          assessmentDecision:
+            stageKey === "assessment"
+              ? reviewResult?.assessmentDecision || null
+              : null,
+        },
+        success: true,
+      });
+      setManualStageNote("");
+      await fetchOperationLogs();
+      await fetchProcessTimeline();
+    } catch (error) {
+      console.error(`Failed to save manual ${stageKey}:`, error);
+      alert(`人工${stageLabel}记录失败`);
+    } finally {
+      setManualStageSubmitting(null);
+    }
   };
 
   // 格式化时间
@@ -1091,7 +2161,10 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
               </>
             )}
           </button>
-          <button className="flex items-center px-4 py-2 bg-[#4f46e5] text-white rounded-md text-sm font-medium hover:bg-[#4338ca] shadow-sm">
+          <button
+            onClick={() => setStageDecisionModalMode("liability")}
+            className="flex items-center px-4 py-2 bg-[#4f46e5] text-white rounded-md text-sm font-medium hover:bg-[#4338ca] shadow-sm"
+          >
             <svg
               className="w-4 h-4 mr-2"
               fill="none"
@@ -1105,7 +2178,7 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
                 d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
               />
             </svg>
-            处理索赔
+            定责 / 定损
           </button>
         </div>
       </div>
@@ -1117,7 +2190,7 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
           ).map((tabId) => {
             const labels: Record<ActiveTab, string> = {
               case_info: "案件信息",
-              material_review: "材料审核",
+              material_review: "材料管理",
               damage_report: "定损报告",
             };
             return (
@@ -1183,20 +2256,416 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
               </div>
             </div>
 
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-5">
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">阶段进度</h2>
+                  <p className="text-sm text-gray-500 mt-1">
+                    受理 → 解析/OCR → 责任判定 → 事实核定 → 赔付计算 → 案件结论
+                  </p>
+                </div>
+                {timelineLoading && (
+                  <div className="flex items-center text-sm text-gray-500">
+                    <div className="w-4 h-4 mr-2 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+                    更新中
+                  </div>
+                )}
+              </div>
+
+              {stageViews.length > 0 ? (
+                <>
+                  <div className="hidden lg:flex items-center mb-6 px-6">
+                    {stageViews.map((stage, index) => (
+                      <React.Fragment key={stage.key}>
+                        <div className="flex flex-col items-center">
+                          <div
+                            className={`w-5 h-5 rounded-full border-4 ${stage.dotClass}`}
+                          ></div>
+                          <div className="mt-2 text-xs font-medium text-gray-600">
+                            {stage.label}
+                          </div>
+                        </div>
+                        {index < stageViews.length - 1 && (
+                          <div className="flex-1 h-1 mx-3 rounded-full bg-gray-200 overflow-hidden">
+                            <div className={`h-full ${stage.lineClass}`}></div>
+                          </div>
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {stageViews.map((stage) => {
+                      const isDecisionStage =
+                        stage.key === "liability" ||
+                        stage.key === "fact_assessment";
+                      const displayLabel = stage.label;
+                      return (
+                      <div
+                        key={stage.key}
+                        className={`rounded-xl border p-4 ${stage.toneClass} ${
+                          isDecisionStage
+                            ? "cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-sm"
+                            : ""
+                        }`}
+                        onClick={() => {
+                          if (stage.key === "liability") {
+                            setStageDecisionModalMode("liability");
+                          }
+                          if (stage.key === "fact_assessment") {
+                            setStageDecisionModalMode("assessment");
+                          }
+                        }}
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <p className="text-xs font-semibold opacity-80">
+                              {displayLabel}
+                            </p>
+                            <p className="text-base font-bold mt-1">
+                              {stage.status === "completed" && "已完成"}
+                              {stage.status === "manual_completed" && "人工完成"}
+                              {stage.status === "processing" && "处理中"}
+                              {stage.status === "failed" && "失败"}
+                              {stage.status === "pending" && "待上一阶段"}
+                            </p>
+                          </div>
+                          <span className="text-[11px] px-2 py-1 rounded-full bg-white/70">
+                            {stage.methodLabel}
+                          </span>
+                        </div>
+                        <div className="mt-4 space-y-1 text-xs opacity-90">
+                          <p>时间：{stage.displayTime}</p>
+                          <p>{stage.summary || stage.blockingReason || "待处理"}</p>
+                          {stage.blockingReason && stage.status !== "failed" && (
+                            <p className="opacity-75">阻塞：{stage.blockingReason}</p>
+                          )}
+                          {isDecisionStage && (
+                            <p className="font-medium opacity-100">
+                              点击查看{displayLabel}面板
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      );
+                    })}
+                  </div>
+
+                  {processTimeline?.source === "derived" && (
+                    <div className="mt-4 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                      当前阶段时间由案件材料与处理日志推导生成，后续会逐步切换为标准落库时间。
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="text-sm text-gray-500 py-8 text-center bg-gray-50 rounded-lg border border-dashed border-gray-200">
+                  暂无阶段进度数据
+                </div>
+              )}
+            </div>
+
             {/* AI Review Result */}
             {reviewResult && (
-              <div
-                className={`bg-white rounded-xl shadow-sm border-2 p-6 ${
-                  reviewResult.decision === "APPROVE"
-                    ? "border-green-200 bg-green-50/30"
-                    : reviewResult.decision === "REJECT"
-                      ? "border-red-200 bg-red-50/30"
-                      : "border-amber-200 bg-amber-50/30"
-                }`}
-              >
+              <div className="space-y-6">
+                <div className="grid gap-4 xl:grid-cols-3">
+                  <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <h2 className="text-base font-bold text-gray-900">责任结论卡</h2>
+                        <p className="mt-1 text-sm text-gray-500">
+                          查看责任结论、责任代码和命中依据。
+                        </p>
+                      </div>
+                      <DecisionBadge decision={reviewResult.decision} />
+                    </div>
+                    <div className="mt-4 space-y-3">
+                      <div className="rounded-lg bg-slate-50 px-4 py-3">
+                        <div className="text-xs text-slate-500">责任判断</div>
+                        <div className="mt-1 text-sm font-semibold text-slate-900">
+                          {reviewResult.liabilityDecision || "MANUAL_REVIEW"}
+                        </div>
+                      </div>
+                      <div className="rounded-lg bg-slate-50 px-4 py-3">
+                        <div className="text-xs text-slate-500">适用责任代码</div>
+                        <div className="mt-1 text-sm font-semibold text-slate-900">
+                          {coverageResults.length > 0
+                            ? coverageResults.map((item) => formatCoverageCode(item.coverageCode)).join("、")
+                            : "待识别"}
+                        </div>
+                      </div>
+                      <div className="rounded-lg bg-slate-50 px-4 py-3">
+                        <div className="text-xs text-slate-500">命中依据</div>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {(reviewResult.eligibility?.matchedRules || []).length > 0 ? (
+                            (reviewResult.eligibility?.matchedRules || []).map((rule) => (
+                              <span key={rule} className="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-slate-700">
+                                {rule}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-sm text-slate-500">暂无规则命中</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm xl:col-span-2">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <h2 className="text-base font-bold text-gray-900">赔付轨迹卡</h2>
+                        <p className="mt-1 text-sm text-gray-500">
+                          追踪责任项金额、明细核定和限价影响。
+                        </p>
+                      </div>
+                      {reviewResult.amount !== null && (
+                        <div className="text-right">
+                          <div className="text-xs text-gray-500">建议金额</div>
+                          <div className="text-lg font-bold text-indigo-600">
+                            ¥{reviewResult.amount.toLocaleString()}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="mt-4">
+                      {reviewResult.calculation?.settlementMode && (
+                        <div className="mb-4 flex flex-wrap gap-2">
+                          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
+                            结算模式：
+                            {reviewResult.calculation.settlementMode === "LOSS"
+                              ? "损失补偿账本"
+                              : reviewResult.calculation.settlementMode === "BENEFIT"
+                                ? "给付账本"
+                                : "混合账本"}
+                          </span>
+                          {reviewResult.calculation.settlementBreakdown && (
+                            <>
+                              <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
+                                定损 ¥{Number(reviewResult.calculation.settlementBreakdown.lossPayableAmount || 0).toLocaleString()}
+                              </span>
+                              <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
+                                给付 ¥{Number(reviewResult.calculation.settlementBreakdown.benefitPayableAmount || 0).toLocaleString()}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      )}
+                      <ItemLedgerTimeline items={ruleAuditLedger} />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <h2 className="text-base font-bold text-gray-900">证据与缺口卡</h2>
+                      <p className="mt-1 text-sm text-gray-500">
+                        汇总事实来源、缺失材料、人工复核原因和建议补件。
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => openImportDialogWithSuggestions(reviewResult.missingMaterials || [])}
+                      className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    >
+                      补充材料
+                    </button>
+                  </div>
+                  <div className="mt-4 grid gap-4 xl:grid-cols-3">
+                    <div className="rounded-lg bg-slate-50 px-4 py-4">
+                      <div className="text-xs text-slate-500">事实来源材料</div>
+                      <div className="mt-2 text-sm text-slate-800">
+                        已导入 {importedDocuments.length} 份材料，已识别 {recognizedReviewDocuments.length} 份材料，已入库 {reviewSummaries.length} 份摘要
+                      </div>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <span className="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-emerald-700">
+                          已识别 {recognizedReviewDocuments.length}
+                        </span>
+                        <span className="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-indigo-700">
+                          已摘要 {reviewSummaries.length}
+                        </span>
+                        <span className="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-amber-700">
+                          未识别 {unknownReviewDocuments.length}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="rounded-lg bg-slate-50 px-4 py-4">
+                      <div className="text-xs text-slate-500">缺失事实 / 材料</div>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {(reviewResult.missingMaterials || []).length > 0 ? (
+                          (reviewResult.missingMaterials || []).map((material, index) => (
+                            <button
+                              key={`${material}-${index}`}
+                              type="button"
+                              onClick={() => openImportDialogWithSuggestions([material])}
+                              className="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-indigo-50 hover:text-indigo-700"
+                            >
+                              {material}
+                            </button>
+                          ))
+                        ) : (
+                          <span className="text-sm text-slate-500">暂无缺失材料</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="rounded-lg bg-slate-50 px-4 py-4">
+                      <div className="text-xs text-slate-500">建议补充</div>
+                      <div className="mt-2 text-sm text-slate-800">
+                        {(reviewResult.missingMaterials || []).length > 0
+                          ? `建议优先补充 ${reviewResult.missingMaterials.slice(0, 3).join("、")}`
+                          : "当前可继续进入人工审核或赔付确认"}
+                      </div>
+                    </div>
+                  </div>
+                  {explanationCards.length > 0 && (
+                    <div className="mt-4 grid gap-4 xl:grid-cols-3">
+                      {explanationCards.map((card) => (
+                        <div
+                          key={card.id}
+                          className={`rounded-xl border p-4 ${
+                            card.tone === "danger"
+                              ? "border-rose-200 bg-rose-50"
+                              : card.tone === "warning"
+                                ? "border-amber-200 bg-amber-50"
+                                : "border-slate-200 bg-slate-50"
+                          }`}
+                        >
+                          <div
+                            className={`text-sm font-semibold ${
+                              card.tone === "danger"
+                                ? "text-rose-700"
+                                : card.tone === "warning"
+                                  ? "text-amber-700"
+                                  : "text-slate-700"
+                            }`}
+                          >
+                            {card.title}
+                          </div>
+                          <div className="mt-3 space-y-2">
+                            {card.items.map((item, index) => (
+                              <div
+                                key={`${card.id}-${index}`}
+                                className="rounded-lg bg-white/80 px-3 py-2 text-sm text-slate-700"
+                              >
+                                {item.actionType === "material_import" ? (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      openImportDialogWithSuggestions([
+                                        item.materialName || item.label.replace(/^缺少材料：/, "").trim(),
+                                      ])
+                                    }
+                                    className="text-left text-sm font-medium text-slate-700 hover:text-indigo-700"
+                                  >
+                                    {item.label}
+                                  </button>
+                                ) : item.actionType === "open_ruleset" ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => openRulesetManagementForCurrentProduct(item.coverageCode)}
+                                    className="text-left text-sm font-medium text-slate-700 hover:text-indigo-700"
+                                  >
+                                    {item.label}
+                                  </button>
+                                ) : (
+                                  item.label
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {materialValidationResults.length > 0 && (
+                    <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <div className="text-sm font-semibold text-slate-900">
+                            材料一致性校验
+                          </div>
+                          <div className="mt-1 text-xs text-slate-500">
+                            跨材料字段比对结果会先沉淀为校验事实，再供规则引擎消费。
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-xs text-slate-500">通过 / 未通过</div>
+                          <div className="text-sm font-semibold text-slate-900">
+                            {passedMaterialValidations.length} / {failedMaterialValidations.length}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="mt-3 grid gap-3 xl:grid-cols-2">
+                        {materialValidationResults.map((item, index) => (
+                          <div
+                            key={`${item.details?.ruleId || item.type}-${index}`}
+                            className={`rounded-lg border px-3 py-3 ${
+                              item.passed
+                                ? "border-emerald-200 bg-white"
+                                : "border-amber-200 bg-amber-50"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="text-sm font-medium text-slate-900">
+                                {item.message}
+                              </div>
+                              <span
+                                className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                                  item.passed
+                                    ? "bg-emerald-100 text-emerald-700"
+                                    : "bg-amber-100 text-amber-700"
+                                }`}
+                              >
+                                {item.passed ? "通过" : "待处理"}
+                              </span>
+                            </div>
+                            <div className="mt-2 space-y-1 text-xs text-slate-600">
+                              {item.details?.field && <div>校验字段：{item.details.field}</div>}
+                              {item.details?.reasonCode && (
+                                <div>原因码：{item.details.reasonCode}</div>
+                              )}
+                              {item.details?.failureAction && !item.passed && (
+                                <div>失败处理：{item.details.failureAction}</div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      {Object.keys(validationFacts).length > 0 && (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {Object.entries(validationFacts).map(([factKey, value]) => (
+                            <span
+                              key={factKey}
+                              className="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-slate-700"
+                            >
+                              {factKey}: {value === true ? "true" : value === false ? "false" : "待确认"}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  <div className="mt-4">
+                    <ManualReviewReasonList
+                      reasons={(reviewResult.manualReviewReasons || []).map((reason) => ({
+                        code: reason.code,
+                        message: reason.message,
+                      }))}
+                    />
+                  </div>
+                </div>
+
+                <div
+                  className={`bg-white rounded-xl shadow-sm border-2 p-6 ${
+                    reviewSummary?.tone === "success"
+                      ? "border-green-200 bg-green-50/30"
+                      : reviewSummary?.tone === "danger"
+                        ? "border-red-200 bg-red-50/30"
+                        : "border-amber-200 bg-amber-50/30"
+                  }`}
+                >
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                    🤖 AI 智能审核结果
+                    🤖 责任判定 / 事实核定摘要
                   </h2>
                   <span className="text-sm text-gray-500">
                     耗时: {reviewResult.duration}ms
@@ -1208,25 +2677,43 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
                     <p className="text-sm text-gray-500 mb-1">审核建议</p>
                     <p
                       className={`text-lg font-bold ${
-                        reviewResult.decision === "APPROVE"
-                          ? "text-green-600"
-                          : reviewResult.decision === "REJECT"
-                            ? "text-red-600"
-                            : "text-amber-600"
+                        reviewSummary?.accentClass || "text-amber-600"
                       }`}
                     >
-                      {reviewResult.decision === "APPROVE"
-                        ? "✅ 建议通过"
-                        : reviewResult.decision === "REJECT"
-                          ? "❌ 建议拒赔"
-                          : "🔍 需人工复核"}
+                      {reviewSummary?.label === "建议通过" && "✅ 建议通过"}
+                      {reviewSummary?.label === "建议拒赔" && "❌ 建议拒赔"}
+                      {reviewSummary?.label === "补充材料" && "📎 补充材料"}
+                      {reviewSummary?.label === "已初算待补件" && "🧾 已初算待补件"}
+                      {reviewSummary?.label === "需人工复核" && "🔍 需人工复核"}
                     </p>
                   </div>
-                  {reviewResult.amount !== null && (
+                  {reviewOutcome?.showEstimatedAmount &&
+                    reviewResult.amount !== null &&
+                    canShowAssessmentAmount && (
                     <div>
-                      <p className="text-sm text-gray-500 mb-1">建议金额</p>
-                      <p className="text-lg font-bold text-indigo-600">
+                      <p className="text-sm text-gray-500 mb-1">
+                        {reviewOutcome.amountLabel}
+                      </p>
+                      <p
+                        className={`text-lg font-bold ${
+                          reviewOutcome.highlightAmount
+                            ? "text-indigo-600"
+                            : "text-gray-700"
+                        }`}
+                      >
                         ¥{reviewResult.amount.toLocaleString()}
+                      </p>
+                    </div>
+                  )}
+                  {reviewOutcome?.showEstimatedAmount &&
+                    reviewResult.amount !== null &&
+                    !canShowAssessmentAmount && (
+                    <div>
+                      <p className="text-sm text-gray-500 mb-1">
+                        {reviewOutcome.amountLabel}
+                      </p>
+                      <p className="text-sm font-medium text-gray-500">
+                        待赔付计算完成后展示
                       </p>
                     </div>
                   )}
@@ -1243,6 +2730,18 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
                     </div>
                   )}
                 </div>
+
+                {reviewOutcome?.detail && (
+                  <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 p-4">
+                    <p className="text-sm font-medium text-slate-800">当前处置</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-700">
+                      {reviewOutcome.detail}
+                    </p>
+                    <p className="mt-2 text-xs font-medium text-slate-500">
+                      下一步：{reviewOutcome.nextAction}
+                    </p>
+                  </div>
+                )}
 
                 {reviewResult.eligibility?.matchedRules &&
                   reviewResult.eligibility.matchedRules.length > 0 && (
@@ -1263,43 +2762,115 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
                     </div>
                   )}
 
-                {reviewResult.manualReviewReasons &&
-                  reviewResult.manualReviewReasons.length > 0 && (
-                    <div className="mb-4 rounded-lg border border-orange-100 bg-orange-50 p-4">
-                      <p className="text-sm font-medium text-orange-800 mb-2">
-                        🔍 人工复核原因
-                      </p>
-                      <div className="space-y-2">
-                        {reviewResult.manualReviewReasons.map((reason, i) => (
-                          <div key={`${reason.code}-${i}`} className="text-sm text-orange-700">
-                            <div className="font-medium">{reason.message}</div>
-                            <div className="text-xs text-orange-600 mt-0.5">
-                              {reason.stage} · {reason.code}
-                            </div>
+                {groupedManualReviewReasons.length > 0 && (
+                  <div className="mb-4 rounded-lg border border-orange-100 bg-orange-50 p-4">
+                    <p className="text-sm font-medium text-orange-800 mb-3">
+                      🔍 人工复核原因
+                    </p>
+                    <div className="space-y-3">
+                      {groupedManualReviewReasons.map((group) => (
+                        <div key={group.stage}>
+                          <p className="text-xs font-semibold text-orange-700 mb-2">
+                            {group.label}
+                          </p>
+                          <div className="space-y-2">
+                            {group.reasons.map((reason, i) => (
+                              <div key={`${reason.code}-${i}`} className="text-sm text-orange-700 bg-white/70 rounded-md p-3">
+                                <div className="font-medium">{reason.message}</div>
+                                <div className="text-xs text-orange-600 mt-1">
+                                  {formatManualReviewCode(reason.code)} · {reason.code}
+                                </div>
+                              </div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
+                        </div>
+                      ))}
                     </div>
-                  )}
+                  </div>
+                )}
 
                 {reviewResult.missingMaterials &&
                   reviewResult.missingMaterials.length > 0 && (
                     <div className="mb-4 rounded-lg border border-red-100 bg-red-50 p-4">
-                      <p className="text-sm font-medium text-red-800 mb-2">
-                        缺失材料
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {reviewResult.missingMaterials.map((material, i) => (
-                          <span
-                            key={`${material}-${i}`}
-                            className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs"
-                          >
-                            {material}
-                          </span>
-                        ))}
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-red-800 mb-2">
+                            {reviewSummary?.label === "已初算待补件"
+                              ? "终审前待补材料"
+                              : "缺失材料"}
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {reviewResult.missingMaterials.map((material, i) => (
+                              <span
+                                key={`${material}-${i}`}
+                                className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs"
+                              >
+                                {material}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => setShowImportDialog(true)}
+                          className="flex-shrink-0 px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700"
+                        >
+                          立即补件
+                        </button>
                       </div>
                     </div>
                   )}
+
+                {coverageResults.length > 0 && canShowAssessmentAmount && (
+                  <div className="mb-4 rounded-lg border border-indigo-100 bg-indigo-50/50 p-4">
+                    <p className="text-sm font-medium text-indigo-900 mb-3">
+                      责任项赔付明细
+                    </p>
+                    <div className="space-y-2">
+                      {coverageResults.map((item, index) => (
+                        <div
+                          key={`${item.coverageCode}-${index}`}
+                          className="rounded-lg border border-indigo-100 bg-white p-3"
+                        >
+                          <div className="flex items-center justify-between gap-4">
+                            <div>
+                              <div className="text-sm font-semibold text-gray-900">
+                                {formatCoverageCode(item.coverageCode)}
+                              </div>
+                              <div className="text-xs text-gray-500 mt-1">
+                                状态: {item.status || "待确认"}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-sm text-gray-500">
+                                赔付金额
+                              </div>
+                              <div className="text-base font-bold text-indigo-600">
+                                ¥{Number(item.approvedAmount || 0).toLocaleString()}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-3 text-xs text-gray-600">
+                            <div>申请金额: ¥{Number(item.claimedAmount || 0).toLocaleString()}</div>
+                            <div>赔付比例: {((item.reimbursementRatio || 0) * 100).toFixed(0)}%</div>
+                            <div>保额上限: {item.sumInsured != null ? `¥${Number(item.sumInsured).toLocaleString()}` : "不限"}</div>
+                            <div>责任编码: {item.coverageCode}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {coverageResults.length > 0 && !canShowAssessmentAmount && (
+                  <div className="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
+                    <p className="text-sm font-medium text-gray-800">
+                      责任项赔付明细待赔付计算完成后展示
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      当前阶段尚未完成赔付计算，金额与责任项明细暂不展示。
+                    </p>
+                  </div>
+                )}
 
                 <div className="bg-white/60 rounded-lg p-4 border border-gray-100">
                   <p className="text-sm text-gray-500 mb-2">审核意见</p>
@@ -1307,8 +2878,100 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
                     {reviewResult.reasoning}
                   </p>
                 </div>
+                </div>
               </div>
             )}
+
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-5">
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">处理轨迹</h2>
+                  <p className="text-sm text-gray-500 mt-1">
+                    覆盖补件、完整性校验、OCR/提取、责任判定、事实核定与赔付计算全过程
+                  </p>
+                </div>
+                <button
+                  onClick={handleShowLogs}
+                  className="text-sm font-medium text-indigo-600 hover:text-indigo-700"
+                >
+                  查看完整操作日志
+                </button>
+              </div>
+
+              {timelineEventGroups.length > 0 ? (
+                <div className="space-y-4">
+                  {timelineEventGroups.map((group) => (
+                    <details
+                      key={group.key}
+                      className="rounded-xl border border-gray-200 bg-gray-50/60"
+                      open={group.key === "intake" || group.key === "parse"}
+                    >
+                      <summary className="cursor-pointer list-none px-4 py-3 flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-semibold text-gray-900">
+                            {group.label}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {group.events.length} 条记录
+                          </p>
+                        </div>
+                        <span className="text-xs text-gray-400">展开查看</span>
+                      </summary>
+                      <div className="px-4 pb-4 space-y-3">
+                        {group.events.map((event) => (
+                          <div
+                            key={event.id}
+                            className="rounded-lg border border-gray-200 bg-white p-4"
+                          >
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span
+                                    className={`px-2 py-0.5 rounded-full text-xs font-medium ${getTimelineEventBadge(event)}`}
+                                  >
+                                    {event.summary}
+                                  </span>
+                                  {event.materialName && (
+                                    <span className="text-xs text-gray-500">
+                                      {event.materialName}
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="mt-2 text-sm text-gray-700">
+                                  {event.details?.missingMaterials &&
+                                  Array.isArray(event.details.missingMaterials) &&
+                                  event.details.missingMaterials.length > 0
+                                    ? `缺失材料：${event.details.missingMaterials.join("、")}`
+                                    : event.details?.error
+                                      ? `失败原因：${String(event.details.error)}`
+                                      : event.details?.fileName
+                                        ? `文件：${String(event.details.fileName)}`
+                                        : event.details?.extractedFieldCount
+                                          ? `提取字段 ${String(event.details.extractedFieldCount)} 项`
+                                          : "已记录处理结果"}
+                                </div>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <div className="text-xs text-gray-500">
+                                  {formatTimelineEventTime(event.timestamp)}
+                                </div>
+                                <div className="text-xs text-gray-400 mt-1">
+                                  {getTimelineEventActorLabel(event)}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </details>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-sm text-gray-500 py-8 text-center bg-gray-50 rounded-lg border border-dashed border-gray-200">
+                  暂无处理轨迹
+                </div>
+              )}
+            </div>
 
             {/* Policy Info Card */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -1386,221 +3049,6 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
               </div>
             </div>
 
-            {/* Claim Calculation Card */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-                <h2 className="text-lg font-bold text-gray-900">理赔计算</h2>
-                <button className="flex items-center px-4 py-2 bg-[#4f46e5] text-white rounded-md text-sm font-medium hover:bg-[#4338ca]">
-                  <svg
-                    className="w-4 h-4 mr-2"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                    />
-                  </svg>
-                  编辑表格
-                </button>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
-                        责任类型
-                      </th>
-                      <th className="px-6 py-3 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
-                        文件名
-                      </th>
-                      <th className="px-6 py-3 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
-                        日期
-                      </th>
-                      <th className="px-6 py-3 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
-                        项目
-                      </th>
-                      <th className="px-6 py-3 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
-                        金额 (¥)
-                      </th>
-                      <th className="px-6 py-3 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
-                        理赔 (¥)
-                      </th>
-                      <th className="px-6 py-3 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
-                        依据
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-100">
-                    {/* Group 1: 医疗费用 */}
-                    <tr>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
-                        医疗费用
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        发票1.jpg
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        2025-1-1
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        色甘酸钠
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        17
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        17
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        乙类药，保险覆盖，100%报销
-                      </td>
-                    </tr>
-                    <tr>
-                      <td></td>
-                      <td></td>
-                      <td></td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        急诊诊疗
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        25
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        25
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        甲类药，保险覆盖，100%报销
-                      </td>
-                    </tr>
-                    <tr>
-                      <td></td>
-                      <td></td>
-                      <td></td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        氯胆乳膏
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        30
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        24
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        丙类药，不属保险范围，80%报销
-                      </td>
-                    </tr>
-                    <tr className="bg-gray-50/50 font-bold">
-                      <td colSpan={3}></td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        小计
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        72
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        66
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-500">
-                        单日限额¥200，总限额¥10,000
-                      </td>
-                    </tr>
-
-                    {/* Group 2: Medical */}
-                    <tr>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
-                        Medical
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        Invoice 2.jpg
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        2025-1-2
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        Sodium Cromoglicate
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        17
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        17
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        Class B, covered by insurance, 100% reimbursement
-                      </td>
-                    </tr>
-                    <tr>
-                      <td></td>
-                      <td></td>
-                      <td></td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        Emergency Consultation
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        25
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        25
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        Class A, covered by insurance, 100% reimbursement
-                      </td>
-                    </tr>
-                    <tr>
-                      <td></td>
-                      <td></td>
-                      <td></td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        Hydroquinone Cream
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        30
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        24
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        Class C, not covered by insurance, 80% reimbursement
-                      </td>
-                    </tr>
-                    <tr className="bg-gray-50/50 font-bold">
-                      <td colSpan={3}></td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        Subtotal
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        72
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        66
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-500">
-                        Daily limit within ¥200, total limit within ¥10,000
-                      </td>
-                    </tr>
-
-                    {/* Grand Total */}
-                    <tr className="bg-[#f8f9fc] font-bold">
-                      <td colSpan={3}></td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#2d3a8c]">
-                        总计
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#2d3a8c]">
-                        144
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#2d3a8c]">
-                        132
-                      </td>
-                      <td></td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
           </div>
 
           {/* Right Column */}
@@ -1642,17 +3090,19 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
               {/* 索赔人上传的文件（报案时提交） */}
               {localFileCategories && localFileCategories.length > 0 ? (
                 <div className="space-y-2 mb-4">
-                  {localFileCategories.map((cat, i) => (
-                    <div
-                      key={i}
-                      className="border border-gray-100 rounded-lg overflow-hidden"
-                    >
+                  {localFileCategories.map((cat, i) => {
+                    const categoryFiles = getCategoryFiles(cat);
+                    return (
+                      <div
+                        key={`${cat.name}-${i}`}
+                        className="border border-gray-100 rounded-lg overflow-hidden"
+                      >
                       <button
                         onClick={() => toggleFileCategory(cat.name)}
                         className="w-full flex justify-between items-center px-4 py-3 bg-white hover:bg-gray-50 text-sm font-medium text-gray-700 transition-colors"
                       >
                         <span>
-                          {cat.name} ({cat.files.length}个文件)
+                          {cat.name} ({categoryFiles.length}个文件)
                         </span>
                         <svg
                           className={`w-4 h-4 text-gray-400 transform transition-transform ${openFiles[cat.name] ? "rotate-180" : ""}`}
@@ -1669,11 +3119,13 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
                         </svg>
                       </button>
                       {openFiles[cat.name] !== false &&
-                        cat.files.length > 0 && (
+                        categoryFiles.length > 0 && (
                           <div className="px-4 py-2 space-y-2 bg-gray-50/30">
-                            {cat.files.map((file, idx) => {
+                            {categoryFiles.map((file, idx) => {
                               const isImage =
                                 /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name);
+                              const isVideo =
+                                /\.(mp4|mov|avi|mkv|webm)$/i.test(file.name);
                               const isPdf = /\.pdf$/i.test(file.name);
                               const isExcel = /\.(xlsx|xls)$/i.test(file.name);
                               const isWord = /\.(docx|doc)$/i.test(file.name);
@@ -1699,7 +3151,19 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
                                         // 如果有 ossKey，实时获取新的签名 URL
                                         if (file.ossKey) {
                                           try {
-                                            previewUrl = await getSignedUrl(file.ossKey, 3600);
+                                            previewUrl = await getPreviewUrl(
+                                              file.ossKey,
+                                              isPdf
+                                                ? "application/pdf"
+                                                : isVideo
+                                                  ? "video/mp4"
+                                                : isWord
+                                                  ? "application/msword"
+                                                  : isExcel
+                                                    ? "application/vnd.ms-excel"
+                                                    : "image/jpeg",
+                                              3600,
+                                            );
                                           } catch (e) {
                                             console.error("[Preview] Failed to get signed URL:", e);
                                             alert("获取文件预览链接失败，请稍后重试");
@@ -1711,8 +3175,17 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
                                           fileName: file.name,
                                           fileType: isImage
                                             ? "image/jpeg"
-                                            : "application/octet-stream",
+                                            : isVideo
+                                              ? "video/mp4"
+                                              : isPdf
+                                                ? "application/pdf"
+                                                : isWord
+                                                  ? "application/msword"
+                                                  : isExcel
+                                                    ? "application/vnd.ms-excel"
+                                                    : "application/octet-stream",
                                           ossUrl: previewUrl,
+                                          ossKey: file.ossKey,
                                           classification: {
                                             materialName: cat.name,
                                           },
@@ -1832,7 +3305,19 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
                                               // 如果有 ossKey，实时获取新的签名 URL
                                               if (file.ossKey) {
                                                 try {
-                                                  previewUrl = await getSignedUrl(file.ossKey, 3600);
+                                                  previewUrl = await getPreviewUrl(
+                                                    file.ossKey,
+                                                    isPdf
+                                                      ? "application/pdf"
+                                                      : isVideo
+                                                        ? "video/mp4"
+                                                      : isWord
+                                                        ? "application/msword"
+                                                        : isExcel
+                                                          ? "application/vnd.ms-excel"
+                                                          : "image/jpeg",
+                                                    3600,
+                                                  );
                                                 } catch (e) {
                                                   console.error("[Preview] Failed to get signed URL:", e);
                                                   alert("获取文件预览链接失败，请稍后重试");
@@ -1842,8 +3327,19 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
                                               
                                               setPreviewDoc({
                                                 fileName: file.name,
-                                                fileType: isImage ? "image/jpeg" : "application/octet-stream",
+                                                fileType: isImage
+                                                  ? "image/jpeg"
+                                                  : isVideo
+                                                    ? "video/mp4"
+                                                    : isPdf
+                                                      ? "application/pdf"
+                                                      : isWord
+                                                        ? "application/msword"
+                                                        : isExcel
+                                                          ? "application/vnd.ms-excel"
+                                                          : "application/octet-stream",
                                                 ossUrl: previewUrl,
+                                                ossKey: file.ossKey,
                                                 classification: { materialName: cat.name },
                                                 structuredData: parseResult.structuredData,
                                                 auditConclusion: parseResult.auditConclusion,
@@ -1870,8 +3366,9 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
                             })}
                           </div>
                         )}
-                    </div>
-                  ))}
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="text-xs text-gray-400 mb-4">暂无上传文件</p>
@@ -1881,19 +3378,54 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
               {importedDocuments.length > 0 && (
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-sm font-bold text-indigo-700">
-                      离线导入材料 ({importedDocuments.length})
-                    </h3>
-                    <button
-                      onClick={() => toggleFileCategory("导入材料")}
-                      className="text-xs text-gray-500 hover:text-gray-700"
-                    >
-                      {openFiles["导入材料"] !== false ? "收起" : "展开"}
-                    </button>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <h3 className="text-sm font-bold text-indigo-700">
+                        离线导入材料 ({importedDocuments.length})
+                      </h3>
+                      {latestImportMeta?.taskId && (
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700">
+                            任务 {latestImportMeta.taskStatus || "未知"}
+                          </span>
+                          <button
+                            onClick={handleRecoverImportTask}
+                            disabled={recoveringImportTask}
+                            className={`text-[11px] px-2 py-1 rounded border transition-colors ${
+                              recoveringImportTask
+                                ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                                : "bg-white text-indigo-700 border-indigo-200 hover:bg-indigo-50"
+                            }`}
+                          >
+                            {recoveringImportTask ? "恢复中..." : "恢复任务"}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {latestImportMeta?.postProcessedAt && (
+                        <span className="text-[10px] text-gray-500">
+                          最近刷新: {formatDateTime(latestImportMeta.postProcessedAt)}
+                        </span>
+                      )}
+                      <button
+                        onClick={() => toggleFileCategory("导入材料")}
+                        className="text-xs text-gray-500 hover:text-gray-700"
+                      >
+                        {openFiles["导入材料"] !== false ? "收起" : "展开"}
+                      </button>
+                    </div>
                   </div>
+                  {latestImportMeta?.failureHint &&
+                    ["failed", "partial_success"].includes(latestImportMeta.taskStatus || "") && (
+                      <p className="text-[11px] text-amber-700 mb-2">
+                        恢复提示: {latestImportMeta.failureHint}
+                      </p>
+                    )}
                   {openFiles["导入材料"] !== false && (
                     <div className="space-y-1.5">
-                      {importedDocuments.map((doc) => (
+                      {importedDocuments.map((doc) => {
+                        const classification = getImportedDocumentClassification(doc.classification);
+                        return (
                         <div
                           key={doc.documentId}
                           onClick={() => setPreviewDoc(doc)}
@@ -1918,11 +3450,11 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
                                 {doc.fileName}
                               </p>
                               <p className="text-[10px] text-indigo-600">
-                                {doc.classification.materialName}
+                                {classification.materialName}
                               </p>
-                              {doc.classification.errorMessage && (
+                              {classification.errorMessage && (
                                 <p className="text-[10px] text-red-600 truncate">
-                                  分类失败: {doc.classification.errorMessage}
+                                  分类失败: {classification.errorMessage}
                                 </p>
                               )}
                             </div>
@@ -1931,23 +3463,24 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
                             className={`text-[10px] px-1.5 py-0.5 rounded flex-shrink-0 ${
                               doc.status !== "completed"
                                 ? "bg-red-100 text-red-700"
-                                : doc.classification?.errorMessage
+                                : classification.errorMessage
                                   ? "bg-red-100 text-red-700"
-                                : doc.classification?.materialId === "unknown"
+                                : classification.materialId === "unknown"
                                   ? "bg-gray-100 text-gray-600"
                                   : "bg-green-100 text-green-700"
                             }`}
                           >
                             {doc.status !== "completed"
                               ? "失败"
-                              : doc.classification?.errorMessage
+                              : classification.errorMessage
                                 ? "分类失败"
-                              : doc.classification?.materialId === "unknown"
+                              : classification.materialId === "unknown"
                                 ? "未识别"
                                 : "已识别"}
                           </span>
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -2069,10 +3602,9 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
       {/* 材料审核 Tab */}
       {activeTab === "material_review" && (
         <div className="max-w-[1400px] mx-auto px-8 mt-6">
-          {/* 审核操作栏 */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <h2 className="text-base font-bold text-gray-900">材料审核</h2>
+              <h2 className="text-base font-bold text-gray-900">材料管理</h2>
               {reviewDocuments.length > 0 && (
                 <span className="text-sm text-gray-500">
                   共 {reviewDocuments.length} 份材料
@@ -2128,16 +3660,9 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
                   </>
                 )}
               </button>
-              <button
-                onClick={() => setUseNewMaterialView(!useNewMaterialView)}
-                className="flex items-center px-3 py-1.5 text-sm bg-gray-100 text-gray-700 border border-gray-200 rounded-md hover:bg-gray-200"
-              >
-                {useNewMaterialView ? "传统视图" : "新视图"}
-              </button>
             </div>
           </div>
 
-          {/* 矛盾警告 */}
           {aggregationResult &&
             (aggregationResult as Record<string, unknown>).conflictsDetected &&
             (
@@ -2187,12 +3712,468 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
               </div>
             )}
 
-          {useNewMaterialView ? (
-            <MaterialReviewPanel
-              materials={reviewDocuments.map(toMaterialViewItem)}
-              claimCase={claim}
-            />
-          ) : reviewDocuments.length === 0 ? (
+          {claimFactCards.length > 0 && (
+            <div className="mb-4 rounded-lg border border-slate-200 bg-white p-4">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="text-sm font-semibold text-slate-900">
+                    案件事实摘要
+                  </div>
+                  <div className="mt-1 text-xs text-slate-500">
+                    基于已识别材料生成，方便先看案件主结论，再逐份下钻核验。
+                  </div>
+                </div>
+                <div className="text-xs text-slate-400">
+                  {reviewSummaries.length} 份摘要已入库
+                </div>
+              </div>
+              <div className="mt-3 grid gap-3 xl:grid-cols-2">
+                {claimFactCards.map((card) => (
+                  <div
+                    key={card.title}
+                    className={`rounded-lg border px-4 py-3 ${
+                      card.tone === "sky"
+                        ? "border-sky-200 bg-sky-50"
+                        : card.tone === "amber"
+                          ? "border-amber-200 bg-amber-50"
+                          : card.tone === "emerald"
+                            ? "border-emerald-200 bg-emerald-50"
+                            : card.tone === "indigo"
+                              ? "border-indigo-200 bg-indigo-50"
+                              : "border-slate-200 bg-slate-50"
+                    }`}
+                  >
+                    <div className="text-sm font-medium text-slate-900">
+                      {card.title}
+                    </div>
+                    <div className="mt-1 text-sm leading-6 text-slate-700">
+                      {card.content}
+                    </div>
+                    {card.meta && (
+                      <div className="mt-2 text-xs text-slate-500">
+                        {card.meta}
+                      </div>
+                    )}
+                    {card.confirmed && card.confirmedAt && (
+                      <div className="mt-2 text-xs text-emerald-700">
+                        已确认时间：{new Date(card.confirmedAt).toLocaleString("zh-CN")}
+                      </div>
+                    )}
+                    {card.confirmKey === "liability_apportionment" && (
+                      <div className="mt-3 flex items-center gap-2">
+                        <input
+                          type="number"
+                          min={0}
+                          max={100}
+                          step={1}
+                          value={liabilityPctDraft}
+                          onChange={(e) => setLiabilityPctDraft(e.target.value)}
+                          className="w-20 rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-700"
+                        />
+                        <span className="text-sm text-slate-500">第三方责任 %</span>
+                        <button
+                          type="button"
+                          onClick={handleUpdateLiabilityApportionment}
+                          disabled={updatingFactKey === "liability_apportionment_ratio"}
+                          className="rounded-md border border-indigo-200 bg-white px-2.5 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-50 disabled:opacity-50"
+                        >
+                          {updatingFactKey === "liability_apportionment_ratio" ? "重算中..." : "更新并重算"}
+                        </button>
+                      </div>
+                    )}
+                    {card.confirmKey && (
+                      <div className="mt-3 flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleConfirmFact(card.confirmKey!, true)}
+                          disabled={updatingFactKey === card.confirmKey || card.confirmed}
+                          className={`rounded-md px-2.5 py-1 text-xs font-medium ${
+                            card.confirmed
+                              ? "border border-emerald-200 bg-emerald-50 text-emerald-700"
+                              : "bg-slate-900 text-white hover:bg-slate-800"
+                          }`}
+                        >
+                          {card.confirmed
+                            ? "已人工确认"
+                            : updatingFactKey === card.confirmKey
+                              ? "确认中..."
+                              : "人工确认"}
+                        </button>
+                        {card.confirmed && (
+                          <button
+                            type="button"
+                            onClick={() => handleConfirmFact(card.confirmKey!, false)}
+                            disabled={updatingFactKey === card.confirmKey}
+                            className="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                          >
+                            取消确认
+                          </button>
+                        )}
+                      </div>
+                    )}
+                    {card.sourceDocIds.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {card.sourceDocIds.slice(0, 3).map((docId) => {
+                          const sourceDoc = reviewDocuments.find(
+                            (doc) => doc.documentId === docId,
+                          );
+                          if (!sourceDoc) return null;
+                          return (
+                            <button
+                              key={`${card.title}-${docId}`}
+                              type="button"
+                              onClick={() => {
+                                setSelectedReviewDocumentId(sourceDoc.documentId);
+                                void openViewerForDocument(
+                                  {
+                                    ossUrl: sourceDoc.ossUrl,
+                                    ossKey: sourceDoc.ossKey,
+                                    fileType: sourceDoc.fileType || "",
+                                    fileName: sourceDoc.fileName,
+                                  },
+                                  {
+                                    pageIndex: 0,
+                                    highlightLevel: "page_only",
+                                  },
+                                );
+                              }}
+                              className="rounded-md border border-white/70 bg-white/80 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-white"
+                            >
+                              查看来源：{sourceDoc.fileName.length > 18
+                                ? `${sourceDoc.fileName.slice(0, 18)}...`
+                                : sourceDoc.fileName}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {decisionTraceStages.length > 0 && (
+            <div className="mb-4 rounded-lg border border-slate-200 bg-white p-4">
+              <div className="text-sm font-semibold text-slate-900">决策轨迹</div>
+              <div className="mt-1 text-xs text-slate-500">
+                用于审计系统处理过程，并作为理算报告生成的结构化依据。
+              </div>
+              <div className="mt-3 space-y-3">
+                {decisionTraceStages.map((stage, index) => (
+                  <div
+                    key={`${String(stage.stage || "trace")}-${index}`}
+                    className="rounded-lg border border-slate-200 bg-slate-50 p-3"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="text-sm font-medium text-slate-900">
+                        {String(stage.title || stage.stage || "决策阶段")}
+                      </div>
+                      <span className="text-[11px] uppercase tracking-wide text-slate-500">
+                        {String(stage.status || "completed")}
+                      </span>
+                    </div>
+                    {stage.summary && (
+                      <div className="mt-1 text-sm text-slate-700">
+                        {String(stage.summary)}
+                      </div>
+                    )}
+                    {Array.isArray(stage.facts) && stage.facts.length > 0 && (
+                      <div className="mt-2 grid gap-2 xl:grid-cols-2">
+                        {(stage.facts as Array<Record<string, unknown>>).map((fact, factIndex) => (
+                          <div
+                            key={`${String(fact.label || "fact")}-${factIndex}`}
+                            className="rounded-md border border-white bg-white px-3 py-2"
+                          >
+                            <div className="text-xs text-slate-500">
+                              {String(fact.label || "字段")}
+                            </div>
+                            <div className="mt-1 text-sm text-slate-900 break-words">
+                              {String(fact.value || "-")}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {Array.isArray(stage.manualActions) && stage.manualActions.length > 0 && (
+                      <div className="mt-3 rounded-md border border-slate-200 bg-white px-3 py-2">
+                        <div className="text-xs font-medium text-slate-600">人工动作</div>
+                        <div className="mt-2 space-y-1.5">
+                          {(stage.manualActions as Array<Record<string, unknown>>).slice(-5).map((action, actionIndex) => (
+                            <div
+                              key={`${String(action.label || "manual")}-${actionIndex}`}
+                              className="text-xs text-slate-600"
+                            >
+                              <span className="font-medium text-slate-700">
+                                {String(action.label || "人工处理")}
+                              </span>
+                              {action.detail ? `：${String(action.detail)}` : ""}
+                              {action.timestamp
+                                ? `（${new Date(String(action.timestamp)).toLocaleString("zh-CN")}）`
+                                : ""}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {Array.isArray(stage.sourceDocIds) && stage.sourceDocIds.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {(stage.sourceDocIds as string[]).slice(0, 3).map((docId) => {
+                          const sourceDoc = reviewDocuments.find((doc) => doc.documentId === docId);
+                          if (!sourceDoc) return null;
+                          return (
+                            <button
+                              key={`${String(stage.stage || "trace")}-${docId}`}
+                              type="button"
+                              onClick={() =>
+                                void openViewerForDocument(
+                                  {
+                                    ossUrl: sourceDoc.ossUrl,
+                                    ossKey: sourceDoc.ossKey,
+                                    fileType: sourceDoc.fileType || "",
+                                    fileName: sourceDoc.fileName,
+                                  },
+                                  {
+                                    pageIndex: 0,
+                                    highlightLevel: "page_only",
+                                  },
+                                )
+                              }
+                              className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-600 hover:bg-slate-100"
+                            >
+                              查看来源：{sourceDoc.fileName.length > 18
+                                ? `${sourceDoc.fileName.slice(0, 18)}...`
+                                : sourceDoc.fileName}
+                            </button>
+                          );
+                        })}
+                        {(stage.sourceDocIds as string[]).length > 3 && (
+                          <span className="self-center text-xs text-slate-400">
+                            另有 {(stage.sourceDocIds as string[]).length - 3} 份来源材料
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {validationChecklist &&
+            Array.isArray((validationChecklist as Record<string, unknown>).issues) &&
+            ((validationChecklist as Record<string, unknown>).issues as unknown[]).length > 0 && (
+              <div className="mb-4 rounded-lg border border-slate-200 bg-white p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <div className="text-sm font-semibold text-slate-900">
+                      案件校验发现
+                    </div>
+                    <div className="mt-1 text-xs text-slate-500">
+                      这里汇总材料归并、责任依据、赔偿标准、已付款抵扣等案件级校验结果。
+                    </div>
+                  </div>
+                  <div className="text-right text-xs text-slate-500">
+                    <div>
+                      共{" "}
+                      {((validationChecklist as Record<string, unknown>).summary as Record<string, unknown>)?.total ?? 0}{" "}
+                      项
+                    </div>
+                    <div className="text-red-600">
+                      错误{" "}
+                      {((validationChecklist as Record<string, unknown>).summary as Record<string, unknown>)?.errorCount ?? 0}
+                    </div>
+                    <div className="text-amber-600">
+                      警告{" "}
+                      {((validationChecklist as Record<string, unknown>).summary as Record<string, unknown>)?.warningCount ?? 0}
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-3 space-y-2">
+                  {((validationChecklist as Record<string, unknown>).handlingProfile as Record<string, unknown>) && (
+                    <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="text-sm font-medium text-slate-900">
+                          当前处理画像：{String((((validationChecklist as Record<string, unknown>).handlingProfile as Record<string, unknown>).profileName) || "通用案件审核")}
+                        </div>
+                        <span className="text-[11px] uppercase tracking-wide text-emerald-700">
+                          profile
+                        </span>
+                      </div>
+                      <div className="mt-1 text-xs text-slate-600">
+                        {String((((validationChecklist as Record<string, unknown>).handlingProfile as Record<string, unknown>).description) || "根据险种、报案原因和案件事实自动匹配的处理画像。")}
+                      </div>
+                      {Array.isArray((((validationChecklist as Record<string, unknown>).handlingProfile as Record<string, unknown>).reviewTasks as unknown[])) &&
+                        ((((validationChecklist as Record<string, unknown>).handlingProfile as Record<string, unknown>).reviewTasks as unknown[]).length > 0) && (
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            {((((validationChecklist as Record<string, unknown>).handlingProfile as Record<string, unknown>).reviewTasks as Array<Record<string, unknown>>) || [])
+                              .slice(0, 4)
+                              .map((task, index) => (
+                                <span
+                                  key={`${String(task.code || "task")}-${index}`}
+                                  className="rounded-full border border-emerald-200 bg-white px-2 py-1 text-[11px] text-emerald-700"
+                                >
+                                  {String(task.title || "待确认")}
+                                  {task.blocking ? "·必核" : ""}
+                                </span>
+                              ))}
+                          </div>
+                        )}
+                    </div>
+                  )}
+                  {(((validationChecklist as Record<string, unknown>).issues as Array<Record<string, unknown>>) || [])
+                    .slice(0, 8)
+                    .map((issue, index) => (
+                      <div
+                        key={`${issue.code || "issue"}-${index}`}
+                        className={`rounded-md border px-3 py-2 ${
+                          issue.severity === "error"
+                            ? "border-red-200 bg-red-50"
+                            : issue.severity === "warning"
+                              ? "border-amber-200 bg-amber-50"
+                              : "border-sky-200 bg-sky-50"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="text-sm font-medium text-slate-900">
+                            {String(issue.title || "校验提醒")}
+                          </div>
+                          <span className="text-[11px] uppercase tracking-wide text-slate-500">
+                            {String(issue.severity || "info")}
+                          </span>
+                        </div>
+                        <div className="mt-1 text-xs text-slate-600">
+                          {String(issue.description || "")}
+                        </div>
+                        {issue.action && (
+                          <div className="mt-1 text-xs text-slate-500">
+                            建议：{String(issue.action)}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                </div>
+                {aggregationResult &&
+                  (aggregationResult as Record<string, unknown>).paymentSummary && (
+                    <div className="mt-4 rounded-md border border-indigo-200 bg-indigo-50 p-3">
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <div className="text-sm font-medium text-slate-900">
+                            已付款抵扣确认
+                          </div>
+                          <div className="mt-1 text-xs text-slate-600">
+                            已识别付款{" "}
+                            ¥
+                            {Number(
+                              ((aggregationResult as Record<string, unknown>).paymentSummary as Record<string, unknown>)
+                                ?.confirmedPaidAmount || 0,
+                            ).toLocaleString("zh-CN", { minimumFractionDigits: 2 })}
+                            ，当前实际抵扣{" "}
+                            ¥
+                            {Number(
+                              ((aggregationResult as Record<string, unknown>).deductionSummary as Record<string, unknown>)
+                                ?.deductionTotal || 0,
+                            ).toLocaleString("zh-CN", { minimumFractionDigits: 2 })}
+                            。
+                          </div>
+                          <div className="mt-1 text-xs text-slate-500">
+                            仅在确认该付款应从本次保险赔款中扣减时开启。
+                          </div>
+                          <div className="mt-3 flex items-center gap-2">
+                            <input
+                              type="number"
+                              min={0}
+                              step={0.01}
+                              value={deductionAmountDraft}
+                              onChange={(e) => setDeductionAmountDraft(e.target.value)}
+                              className="w-28 rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-700"
+                            />
+                            <span className="text-xs text-slate-500">自定义抵扣金额</span>
+                            <button
+                              onClick={handleUpdateDeductionAmount}
+                              disabled={updatingDeduction}
+                              className="px-3 py-1.5 text-xs border border-indigo-200 rounded-md text-indigo-700 hover:bg-white disabled:opacity-50"
+                            >
+                              {updatingDeduction ? "更新中..." : "按金额重算"}
+                            </button>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleTogglePaymentDeduction(false)}
+                            disabled={updatingDeduction}
+                            className="px-3 py-1.5 text-xs border border-slate-300 rounded-md text-slate-700 hover:bg-white disabled:opacity-50"
+                          >
+                            不抵扣
+                          </button>
+                          <button
+                            onClick={() => handleTogglePaymentDeduction(true)}
+                            disabled={updatingDeduction}
+                            className="px-3 py-1.5 text-xs bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
+                          >
+                            {updatingDeduction ? "更新中..." : "确认抵扣"}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+              </div>
+            )}
+
+          {materialValidationResults.length > 0 && (
+            <div className="mb-4 rounded-lg border border-slate-200 bg-white p-4">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="text-sm font-semibold text-slate-900">
+                    材料一致性校验结果
+                  </div>
+                  <div className="mt-1 text-xs text-slate-500">
+                    这里展示跨材料规则的执行结果，例如发票姓名与病历患者姓名是否一致。
+                  </div>
+                </div>
+                <div className="text-right text-xs text-slate-500">
+                  <div>通过 {passedMaterialValidations.length}</div>
+                  <div className="text-amber-600">未通过 {failedMaterialValidations.length}</div>
+                </div>
+              </div>
+              <div className="mt-3 grid gap-3 xl:grid-cols-2">
+                {materialValidationResults.map((item, index) => (
+                  <div
+                    key={`${item.details?.ruleId || item.type}-${index}`}
+                    className={`rounded-lg border px-3 py-3 ${
+                      item.passed
+                        ? "border-emerald-200 bg-emerald-50"
+                        : "border-amber-200 bg-amber-50"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="text-sm font-medium text-slate-900">
+                        {item.message}
+                      </div>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                          item.passed
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-amber-100 text-amber-700"
+                        }`}
+                      >
+                        {item.passed ? "一致" : "不一致"}
+                      </span>
+                    </div>
+                    <div className="mt-2 space-y-1 text-xs text-slate-600">
+                      {item.details?.field && <div>字段对：{item.details.field}</div>}
+                      {item.details?.reasonCode && <div>原因码：{item.details.reasonCode}</div>}
+                      {item.details?.failureAction && !item.passed && (
+                        <div>失败处理：{item.details.failureAction}</div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {reviewDocuments.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-gray-400">
               <svg
                 className="w-16 h-16 mb-4 text-gray-200"
@@ -2211,515 +4192,34 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
               <p className="text-xs mt-1">点击右下角按钮批量导入案件材料</p>
             </div>
           ) : (
-            <div className="flex gap-4 h-[calc(100vh-220px)]">
-              {/* 左栏：AI 提取结果 */}
-              <div className="w-[380px] shrink-0 overflow-y-auto pr-1">
-                {reviewDocuments.map((doc) => {
-                  const summary = reviewSummaries.find(
-                    (s) => s.docId === doc.documentId,
-                  );
-                  const makeJump = (anchor: SourceAnchor) =>
-                    handleJumpTo(
-                      {
-                        ossUrl: doc.ossUrl,
-                        ossKey: doc.ossKey,
-                        fileType: doc.fileType || "",
-                        fileName: doc.fileName,
-                      },
-                      anchor,
-                    );
-                  return (
-                    <AnchoredSection
-                      key={doc.documentId}
-                      title={doc.classification?.materialName || doc.fileName}
-                      docId={doc.documentId}
-                      confidence={summary?.confidence}
-                      onViewSource={
-                        doc.ossUrl || doc.ossKey
-                          ? () =>
-                              makeJump({
-                                pageIndex: 0,
-                                highlightLevel: "page_only",
-                              })
-                          : undefined
-                      }
-                    >
-                      {/* 重复文件警告 */}
-                      {doc.duplicateWarning && (
-                        <div className="text-xs text-amber-600 px-2 py-1 bg-amber-50 rounded mb-1">
-                          ⚠️ {doc.duplicateWarning.message}（相似度{" "}
-                          {Math.round(doc.duplicateWarning.similarity * 100)}%）
-                        </div>
-                      )}
-
-                      {summary ? (
-                        <>
-                          {/* 交警责任认定书 */}
-                          {summary.summaryType === "accident_liability" &&
-                            (() => {
-                              const s =
-                                summary as import("../types").AccidentLiabilitySummary;
-                              return (
-                                <>
-                                  {s.accidentDate && (
-                                    <AnchoredField
-                                      label="事故日期"
-                                      value={s.accidentDate}
-                                      anchor={
-                                        summary.sourceAnchors?.accidentDate
-                                      }
-                                      confidence={summary.confidence}
-                                      onJumpTo={makeJump}
-                                      approved={isFieldApproved(
-                                        doc.documentId,
-                                        "accidentDate",
-                                      )}
-                                      onApprove={() =>
-                                        approveField(
-                                          doc.documentId,
-                                          "accidentDate",
-                                        )
-                                      }
-                                    />
-                                  )}
-                                  {s.parties?.map((p, i) => (
-                                    <AnchoredField
-                                      key={i}
-                                      label={`${p.role}责任`}
-                                      value={`${p.liabilityPct}%`}
-                                      anchor={
-                                        summary.sourceAnchors?.[
-                                          `liabilityPct_${i}`
-                                        ]
-                                      }
-                                      confidence={summary.confidence}
-                                      onJumpTo={makeJump}
-                                      approved={isFieldApproved(
-                                        doc.documentId,
-                                        `liabilityPct_${i}`,
-                                      )}
-                                      onApprove={() =>
-                                        approveField(
-                                          doc.documentId,
-                                          `liabilityPct_${i}`,
-                                        )
-                                      }
-                                    />
-                                  ))}
-                                  {s.liabilityBasis && (
-                                    <AnchoredField
-                                      label="定责依据"
-                                      value={s.liabilityBasis}
-                                      anchor={
-                                        summary.sourceAnchors?.liabilityBasis
-                                      }
-                                      confidence={summary.confidence}
-                                      onJumpTo={makeJump}
-                                      approved={isFieldApproved(
-                                        doc.documentId,
-                                        "liabilityBasis",
-                                      )}
-                                      onApprove={() =>
-                                        approveField(
-                                          doc.documentId,
-                                          "liabilityBasis",
-                                        )
-                                      }
-                                    />
-                                  )}
-                                </>
-                              );
-                            })()}
-
-                          {/* 住院病历 */}
-                          {summary.summaryType === "inpatient_record" &&
-                            (() => {
-                              const s =
-                                summary as import("../types").InpatientRecordSummary;
-                              return (
-                                <>
-                                  {s.admissionDate && (
-                                    <AnchoredField
-                                      label="入院日期"
-                                      value={s.admissionDate}
-                                      anchor={
-                                        summary.sourceAnchors?.admissionDate
-                                      }
-                                      confidence={summary.confidence}
-                                      onJumpTo={makeJump}
-                                      approved={isFieldApproved(
-                                        doc.documentId,
-                                        "admissionDate",
-                                      )}
-                                      onApprove={() =>
-                                        approveField(
-                                          doc.documentId,
-                                          "admissionDate",
-                                        )
-                                      }
-                                    />
-                                  )}
-                                  {s.dischargeDate && (
-                                    <AnchoredField
-                                      label="出院日期"
-                                      value={s.dischargeDate}
-                                      anchor={
-                                        summary.sourceAnchors?.dischargeDate
-                                      }
-                                      confidence={summary.confidence}
-                                      onJumpTo={makeJump}
-                                      approved={isFieldApproved(
-                                        doc.documentId,
-                                        "dischargeDate",
-                                      )}
-                                      onApprove={() =>
-                                        approveField(
-                                          doc.documentId,
-                                          "dischargeDate",
-                                        )
-                                      }
-                                    />
-                                  )}
-                                  {s.hospitalizationDays != null && (
-                                    <AnchoredField
-                                      label="住院天数"
-                                      value={`${s.hospitalizationDays} 天`}
-                                      anchor={
-                                        summary.sourceAnchors
-                                          ?.hospitalizationDays
-                                      }
-                                      confidence={summary.confidence}
-                                      onJumpTo={makeJump}
-                                      approved={isFieldApproved(
-                                        doc.documentId,
-                                        "hospitalizationDays",
-                                      )}
-                                      onApprove={() =>
-                                        approveField(
-                                          doc.documentId,
-                                          "hospitalizationDays",
-                                        )
-                                      }
-                                    />
-                                  )}
-                                  {s.diagnoses?.map((d, i) => (
-                                    <AnchoredField
-                                      key={i}
-                                      label={`诊断${i + 1}`}
-                                      value={d.name}
-                                      anchor={
-                                        summary.sourceAnchors?.[
-                                          `diagnosis_${i}`
-                                        ]
-                                      }
-                                      confidence={summary.confidence}
-                                      onJumpTo={makeJump}
-                                      approved={isFieldApproved(
-                                        doc.documentId,
-                                        `diagnosis_${i}`,
-                                      )}
-                                      onApprove={() =>
-                                        approveField(
-                                          doc.documentId,
-                                          `diagnosis_${i}`,
-                                        )
-                                      }
-                                    />
-                                  ))}
-                                  {s.surgeries?.map((op, i) => (
-                                    <AnchoredField
-                                      key={i}
-                                      label={`手术${i + 1}`}
-                                      value={op.name}
-                                      anchor={
-                                        summary.sourceAnchors?.[`surgery_${i}`]
-                                      }
-                                      confidence={summary.confidence}
-                                      onJumpTo={makeJump}
-                                      approved={isFieldApproved(
-                                        doc.documentId,
-                                        `surgery_${i}`,
-                                      )}
-                                      onApprove={() =>
-                                        approveField(
-                                          doc.documentId,
-                                          `surgery_${i}`,
-                                        )
-                                      }
-                                    />
-                                  ))}
-                                </>
-                              );
-                            })()}
-
-                          {/* 费用发票 */}
-                          {summary.summaryType === "expense_invoice" &&
-                            (() => {
-                              const s =
-                                summary as import("../types").ExpenseInvoiceSummary;
-                              return (
-                                <>
-                                  {s.invoiceDate && (
-                                    <AnchoredField
-                                      label="开票日期"
-                                      value={s.invoiceDate}
-                                      anchor={
-                                        summary.sourceAnchors?.invoiceDate
-                                      }
-                                      confidence={summary.confidence}
-                                      onJumpTo={makeJump}
-                                      approved={isFieldApproved(
-                                        doc.documentId,
-                                        "invoiceDate",
-                                      )}
-                                      onApprove={() =>
-                                        approveField(
-                                          doc.documentId,
-                                          "invoiceDate",
-                                        )
-                                      }
-                                    />
-                                  )}
-                                  {s.totalAmount != null && (
-                                    <AnchoredField
-                                      label="发票金额"
-                                      value={s.totalAmount}
-                                      anchor={
-                                        summary.sourceAnchors?.totalAmount
-                                      }
-                                      confidence={summary.confidence}
-                                      format={(v) =>
-                                        `¥${Number(v).toLocaleString("zh-CN", { minimumFractionDigits: 2 })}`
-                                      }
-                                      onJumpTo={makeJump}
-                                      approved={isFieldApproved(
-                                        doc.documentId,
-                                        "totalAmount",
-                                      )}
-                                      onApprove={() =>
-                                        approveField(
-                                          doc.documentId,
-                                          "totalAmount",
-                                        )
-                                      }
-                                    />
-                                  )}
-                                  {s.institution && (
-                                    <AnchoredField
-                                      label="开票机构"
-                                      value={s.institution}
-                                      anchor={
-                                        summary.sourceAnchors?.institution
-                                      }
-                                      confidence={summary.confidence}
-                                      onJumpTo={makeJump}
-                                      approved={isFieldApproved(
-                                        doc.documentId,
-                                        "institution",
-                                      )}
-                                      onApprove={() =>
-                                        approveField(
-                                          doc.documentId,
-                                          "institution",
-                                        )
-                                      }
-                                    />
-                                  )}
-                                </>
-                              );
-                            })()}
-
-                          {/* 伤残鉴定 */}
-                          {summary.summaryType === "disability_assessment" &&
-                            (() => {
-                              const s =
-                                summary as import("../types").DisabilityAssessmentSummary;
-                              return (
-                                <>
-                                  {s.disabilityLevel && (
-                                    <AnchoredField
-                                      label="伤残等级"
-                                      value={s.disabilityLevel}
-                                      anchor={
-                                        summary.sourceAnchors?.disabilityLevel
-                                      }
-                                      confidence={summary.confidence}
-                                      onJumpTo={makeJump}
-                                      approved={isFieldApproved(
-                                        doc.documentId,
-                                        "disabilityLevel",
-                                      )}
-                                      onApprove={() =>
-                                        approveField(
-                                          doc.documentId,
-                                          "disabilityLevel",
-                                        )
-                                      }
-                                    />
-                                  )}
-                                  {s.assessmentDate && (
-                                    <AnchoredField
-                                      label="鉴定日期"
-                                      value={s.assessmentDate}
-                                      anchor={
-                                        summary.sourceAnchors?.assessmentDate
-                                      }
-                                      confidence={summary.confidence}
-                                      onJumpTo={makeJump}
-                                      approved={isFieldApproved(
-                                        doc.documentId,
-                                        "assessmentDate",
-                                      )}
-                                      onApprove={() =>
-                                        approveField(
-                                          doc.documentId,
-                                          "assessmentDate",
-                                        )
-                                      }
-                                    />
-                                  )}
-                                  {s.assessmentInstitution && (
-                                    <AnchoredField
-                                      label="鉴定机构"
-                                      value={s.assessmentInstitution}
-                                      anchor={
-                                        summary.sourceAnchors
-                                          ?.assessmentInstitution
-                                      }
-                                      confidence={summary.confidence}
-                                      onJumpTo={makeJump}
-                                      approved={isFieldApproved(
-                                        doc.documentId,
-                                        "assessmentInstitution",
-                                      )}
-                                      onApprove={() =>
-                                        approveField(
-                                          doc.documentId,
-                                          "assessmentInstitution",
-                                        )
-                                      }
-                                    />
-                                  )}
-                                </>
-                              );
-                            })()}
-
-                          {/* 误工证明 */}
-                          {summary.summaryType === "income_lost" &&
-                            (() => {
-                              const s =
-                                summary as import("../types").IncomeLostSummary;
-                              return (
-                                <>
-                                  {s.monthlyIncome != null && (
-                                    <AnchoredField
-                                      label="月收入"
-                                      value={s.monthlyIncome}
-                                      anchor={
-                                        summary.sourceAnchors?.monthlyIncome
-                                      }
-                                      confidence={summary.confidence}
-                                      format={(v) =>
-                                        `¥${Number(v).toLocaleString("zh-CN")}`
-                                      }
-                                      onJumpTo={makeJump}
-                                      approved={isFieldApproved(
-                                        doc.documentId,
-                                        "monthlyIncome",
-                                      )}
-                                      onApprove={() =>
-                                        approveField(
-                                          doc.documentId,
-                                          "monthlyIncome",
-                                        )
-                                      }
-                                    />
-                                  )}
-                                  {s.lostWorkDays != null && (
-                                    <AnchoredField
-                                      label="误工天数"
-                                      value={`${s.lostWorkDays} 天`}
-                                      anchor={
-                                        summary.sourceAnchors?.lostWorkDays
-                                      }
-                                      confidence={summary.confidence}
-                                      onJumpTo={makeJump}
-                                      approved={isFieldApproved(
-                                        doc.documentId,
-                                        "lostWorkDays",
-                                      )}
-                                      onApprove={() =>
-                                        approveField(
-                                          doc.documentId,
-                                          "lostWorkDays",
-                                        )
-                                      }
-                                    />
-                                  )}
-                                  {s.employer && (
-                                    <AnchoredField
-                                      label="工作单位"
-                                      value={s.employer}
-                                      anchor={summary.sourceAnchors?.employer}
-                                      confidence={summary.confidence}
-                                      onJumpTo={makeJump}
-                                      approved={isFieldApproved(
-                                        doc.documentId,
-                                        "employer",
-                                      )}
-                                      onApprove={() =>
-                                        approveField(doc.documentId, "employer")
-                                      }
-                                    />
-                                  )}
-                                </>
-                              );
-                            })()}
-
-                          {/* 其他类型：通用展示 sourceAnchors 中的字段 */}
-                          {![
-                            "accident_liability",
-                            "inpatient_record",
-                            "expense_invoice",
-                            "disability_assessment",
-                            "income_lost",
-                          ].includes(summary.summaryType) &&
-                            Object.keys(summary.sourceAnchors || {})
-                              .slice(0, 6)
-                              .map((key) => (
-                                <AnchoredField
-                                  key={key}
-                                  label={key}
-                                  value={String(
-                                    (summary as Record<string, unknown>)[key] ??
-                                      "—",
-                                  )}
-                                  anchor={summary.sourceAnchors?.[key]}
-                                  confidence={summary.confidence}
-                                  onJumpTo={makeJump}
-                                  approved={isFieldApproved(
-                                    doc.documentId,
-                                    key,
-                                  )}
-                                  onApprove={() =>
-                                    approveField(doc.documentId, key)
-                                  }
-                                />
-                              ))}
-                        </>
-                      ) : (
-                        <div className="text-xs text-gray-400 px-2 py-2">
-                          暂无 AI 提取结果
-                        </div>
-                      )}
-                    </AnchoredSection>
-                  );
-                })}
-              </div>
-
-              {/* 右栏：文件查看器 */}
-              <div className="flex-1 min-w-0 bg-white border border-gray-200 rounded-xl overflow-hidden">
-                {selectedViewerDoc ? (
+            <MaterialManagementPanel
+              claim={claim}
+              documents={reviewDocuments}
+              selectedDocumentId={selectedReviewDocumentId}
+              onSelectDocument={(documentId) => {
+                setSelectedReviewDocumentId(documentId);
+                const nextDocument = reviewDocuments.find(
+                  (doc) => doc.documentId === documentId,
+                );
+                if (!nextDocument) return;
+                void openViewerForDocument(
+                  {
+                    ossUrl: nextDocument.ossUrl,
+                    ossKey: nextDocument.ossKey,
+                    fileType: nextDocument.fileType || "",
+                    fileName: nextDocument.fileName,
+                  },
+                  {
+                    pageIndex: 0,
+                    highlightLevel: "page_only",
+                  },
+                );
+              }}
+              onJumpTo={handleJumpTo}
+              onApproveField={approveField}
+              isFieldApproved={isFieldApproved}
+              previewContent={
+                selectedViewerDoc ? (
                   <DocumentViewer
                     ref={viewerRef}
                     fileUrl={selectedViewerDoc.fileUrl}
@@ -2743,12 +4243,12 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
                         d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                       />
                     </svg>
-                    <p className="text-sm">点击左栏字段右侧的跳转图标</p>
-                    <p className="text-sm">即可在此处查看对应源文件位置</p>
+                    <p className="text-sm">点击左侧材料或结构化字段</p>
+                    <p className="text-sm">即可在这里查看对应原始文件</p>
                   </div>
-                )}
-              </div>
-            </div>
+                )
+              }
+            />
           )}
         </div>
       )}{" "}
@@ -2953,7 +4453,35 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
         </div>
       )}{" "}
       {/* end damage_report */}
-      {/* 操作日志模态框 */}
+      <Modal
+        isOpen={stageDecisionModalMode !== null}
+        onClose={() => setStageDecisionModalMode(null)}
+        title={stageDecisionModalMode === "assessment" ? "定损" : "定责"}
+        width="max-w-6xl"
+      >
+        {stageDecisionModalMode && (
+          <StageDecisionPanel
+            mode={stageDecisionModalMode}
+            claim={claim}
+            reviewResult={reviewResult}
+            reviewSummary={reviewSummary}
+            stageViews={stageViews}
+            groupedManualReviewReasons={groupedManualReviewReasons}
+            coverageResults={coverageResults}
+            damageReport={damageReport}
+            canSubmit={
+              stageDecisionModalMode === "liability"
+                ? canManualCompleteLiability
+                : canManualCompleteAssessment
+            }
+            submitting={manualStageSubmitting === stageDecisionModalMode}
+            note={manualStageNote}
+            onNoteChange={setManualStageNote}
+            onSubmit={() => handleManualStageComplete(stageDecisionModalMode)}
+          />
+        )}
+      </Modal>
+
       {showLogsModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-2xl w-[700px] max-h-[80vh] flex flex-col">
@@ -3086,7 +4614,7 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
                             {/* 文件导入类型 - 详细展示 */}
                             {(log.operationType === UserOperationType.UPLOAD_FILE || 
                               log.operationType === UserOperationType.IMPORT_MATERIALS) && 
-                              log.outputData?.files && (
+                              Array.isArray(log.outputData?.files) && (
                               <div className="mt-2">
                                 <div className="text-xs font-medium text-gray-700 mb-2">
                                   解析文件 ({log.outputData.files.length}个):
@@ -3292,30 +4820,23 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
               {/* 左侧：文件预览 */}
               <div className="w-1/2 border-r border-gray-200 p-4 bg-gray-50">
                 <div className="h-full flex items-center justify-center">
-                  {previewDoc.ossUrl && previewDoc.fileType?.startsWith("image/") ? (
-                    <img
-                      src={previewDoc.ossUrl}
-                      alt={previewDoc.fileName}
-                      className="max-w-full max-h-full object-contain rounded-lg shadow-sm"
+                  {previewDoc.ossUrl ? (
+                    <DocumentViewer
+                      fileUrl={previewDoc.ossUrl}
+                      fileType={
+                        previewDoc.fileType?.startsWith("image/")
+                          ? "image"
+                          : previewDoc.fileType?.includes("pdf")
+                            ? "pdf"
+                            : previewDoc.fileType?.includes("word") || previewDoc.fileType?.includes("officedocument")
+                              ? "word"
+                              : previewDoc.fileType?.includes("excel") || previewDoc.fileType?.includes("sheet")
+                                ? "excel"
+                                : "other"
+                      }
+                      fileName={previewDoc.fileName}
+                      className="h-full w-full"
                     />
-                  ) : previewDoc.ossUrl ? (
-                    <div className="text-center">
-                      <svg className="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      <p className="text-gray-500 mb-4">此文件类型不支持预览</p>
-                      <a
-                        href={previewDoc.ossUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
-                      >
-                        <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                        </svg>
-                        在新窗口打开
-                      </a>
-                    </div>
                   ) : (
                     <div className="text-center text-gray-400">
                       <svg className="w-16 h-16 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -3424,12 +4945,16 @@ const ClaimCaseDetailPage: React.FC<ClaimCaseDetailPageProps> = ({
         </div>
       )}
       {/* 离线材料导入 */}
-      <OfflineMaterialImportButton onClick={() => setShowImportDialog(true)} />
+      <OfflineMaterialImportButton onClick={() => openImportDialogWithSuggestions([])} />
       <OfflineMaterialImportDialog
         isOpen={showImportDialog}
-        onClose={() => setShowImportDialog(false)}
+        onClose={() => {
+          setShowImportDialog(false);
+          setSuggestedImportMaterials([]);
+        }}
         claimCaseId={claim.id}
         productCode={claim.productCode || "PROD001"}
+        suggestedMaterials={suggestedImportMaterials}
         onImportComplete={handleImportComplete}
       />
     </div>

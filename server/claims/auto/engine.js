@@ -91,13 +91,13 @@ export function getAutoFaultRatio(context) {
   );
 }
 
-export function getAutoCoverageConfig(productCode, coverageCode) {
-  const exact = getCoverageConfig(productCode, coverageCode);
+export function getAutoCoverageConfig(productCode, coverageCode, rulesetOverride = null) {
+  const exact = getCoverageConfig(productCode, coverageCode, rulesetOverride);
   if (exact) return exact;
 
   const aliases = AUTO_COVERAGE_ALIASES[coverageCode] || [];
   for (const alias of aliases) {
-    const matched = getCoverageConfig(productCode, alias);
+    const matched = getCoverageConfig(productCode, alias, rulesetOverride);
     if (matched) return matched;
   }
 
