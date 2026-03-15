@@ -1,6 +1,6 @@
 import React from 'react';
 import { type ExecutionPipeline } from '../../types';
-import { DOMAIN_LABELS, EXECUTION_MODE_LABELS, INPUT_GRANULARITY_LABELS, CATEGORY_LABELS } from '../../constants';
+import { DOMAIN_LABELS, EXECUTION_MODE_LABELS, INPUT_GRANULARITY_LABELS } from '../../constants';
 
 interface ExecutionPipelineTabProps {
   pipeline: ExecutionPipeline;
@@ -10,6 +10,20 @@ const DOMAIN_COLORS: Record<string, { bg: string; border: string; text: string; 
   ELIGIBILITY: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', dot: 'bg-blue-500' },
   ASSESSMENT: { bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-700', dot: 'bg-green-500' },
   POST_PROCESS: { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700', dot: 'bg-purple-500' },
+};
+
+const RULE_KIND_LABELS: Record<string, string> = {
+  GATE: '准入',
+  TRIGGER: '触发',
+  EXCLUSION: '免责',
+  ADJUSTMENT: '调整',
+  BENEFIT: '给付规则',
+  ITEM_ELIGIBILITY: '费用项准入',
+  ITEM_RATIO: '比例规则',
+  ITEM_PRICING: '限价规则',
+  ITEM_CAP: '限额规则',
+  ITEM_FLAG: '复核标记',
+  POST_PROCESS: '后处理',
 };
 
 const ExecutionPipelineTab: React.FC<ExecutionPipelineTabProps> = ({ pipeline }) => {
@@ -65,14 +79,14 @@ const ExecutionPipelineTab: React.FC<ExecutionPipelineTabProps> = ({ pipeline })
                   )}
                 </div>
 
-                {/* Category sequence */}
+                {/* Semantic sequence */}
                 <div className="mt-3 pt-3 border-t border-gray-200">
-                  <p className="text-xs text-gray-500 mb-1.5">类别执行顺序</p>
+                  <p className="text-xs text-gray-500 mb-1.5">语义执行顺序</p>
                   <div className="space-y-1">
-                    {domain.category_sequence.map((cat, catIdx) => (
-                      <div key={cat} className="flex items-center text-xs">
-                        <span className="text-gray-400 w-4 text-right mr-2">{catIdx + 1}.</span>
-                        <span className="text-gray-700">{CATEGORY_LABELS[cat as keyof typeof CATEGORY_LABELS] || cat}</span>
+                    {(domain.semantic_sequence && domain.semantic_sequence.length > 0 ? domain.semantic_sequence : domain.category_sequence).map((item, itemIdx) => (
+                      <div key={item} className="flex items-center text-xs">
+                        <span className="text-gray-400 w-4 text-right mr-2">{itemIdx + 1}.</span>
+                        <span className="text-gray-700">{RULE_KIND_LABELS[item] || item}</span>
                       </div>
                     ))}
                   </div>

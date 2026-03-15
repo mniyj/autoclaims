@@ -6,19 +6,14 @@
 import { readFileSync, existsSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { GoogleGenAI } from '@google/genai';
+import { invokeAICapability } from './aiRuntime.js';
+import { renderPromptTemplate } from './aiConfigService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // 缓存标准数据
 let standardsCache = null;
-
-// 获取 API Key
-const getGeminiApiKey = () =>
-  process.env.GEMINI_API_KEY ||
-  process.env.VITE_GEMINI_API_KEY ||
-  process.env.API_KEY;
 
 /**
  * 加载伤害/伤残标准知识库
@@ -80,37 +75,28 @@ function matchByKeywords(text, standards) {
  * @returns {Promise<object>} AI 判断结果
  */
 async function aiAssistedJudgment(diagnosisText, injuryDescription) {
-  const apiKey = getGeminiApiKey();
-  if (!apiKey) {
-    console.warn('未配置 Gemini API Key，跳过 AI 辅助判断');
-    return null;
-  }
-
   try {
-    const genai = new GoogleGenAI({ apiKey });
-    const model = genai.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const prompt = renderPromptTemplate('injury_assessment', {
+      diagnosisText: diagnosisText || '未提供',
+      injuryDescription: injuryDescription || '未提供',
+    });
 
-    const prompt = `请根据以下诊断和伤害描述，判断适用的伤残等级（1-10级，1级最高，10级最低）：
-
-诊断：${diagnosisText || '未提供'}
-伤害描述：${injuryDescription || '未提供'}
-
-参考标准：
-- 1级：颅脑损伤导致植物生存状态、四肢完全缺失等
-- 2-3级：双目失明、双耳失聪、重要器官功能完全丧失
-- 4-5级：单目失明、单耳失聪、肢体功能部分丧失
-- 6-7级：拇指指间关节离断、听力部分丧失
-- 8-10级：手指离断、轻微软组织损伤等
-
-请按以下JSON格式返回（仅返回JSON，不要其他文字）：
-{
-  "suggestedGrade": 数字,
-  "confidence": 0-1之间的数,
-  "reasoning": "判断理由（简要）"
-}`;
-
-    const result = await model.generateContent(prompt);
-    const responseText = result.response.text();
+    const { response } = await invokeAICapability({
+      capabilityId: 'admin.claim.risk_assessment',
+      request: {
+        contents: { parts: [{ text: prompt }] },
+      },
+      meta: {
+        sourceApp: 'admin-system',
+        module: 'injuryAssessment.aiAssistedJudgment',
+        operation: 'injury_assessment',
+        context: {
+          diagnosisText,
+          injuryDescription,
+        },
+      },
+    });
+    const responseText = response.text || '';
 
     // 提取 JSON
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);

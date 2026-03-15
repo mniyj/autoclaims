@@ -2,6 +2,12 @@ import { z } from 'zod';
 import { checkPolicyTool } from './checkPolicy.js';
 import { submitClaimTool } from './submitClaim.js';
 import { getProgressTool } from './getProgress.js';
+import { listUserPoliciesTool } from './listUserPolicies.js';
+import { getProductIntakeConfigTool } from './getProductIntakeConfig.js';
+import { getClaimMaterialsTool } from './getClaimMaterials.js';
+import { getMissingClaimMaterialsTool } from './getMissingClaimMaterials.js';
+import { getCoverageInfoTool } from './getCoverageInfo.js';
+import { estimateSettlementTool } from './estimateSettlement.js';
 
 // Tool registry
 const tools = new Map<string, ToolDefinition>();
@@ -12,6 +18,12 @@ function initializeTools(): void {
     registerTool(checkPolicyTool);
     registerTool(submitClaimTool);
     registerTool(getProgressTool);
+    registerTool(listUserPoliciesTool);
+    registerTool(getProductIntakeConfigTool);
+    registerTool(getClaimMaterialsTool);
+    registerTool(getMissingClaimMaterialsTool);
+    registerTool(getCoverageInfoTool);
+    registerTool(estimateSettlementTool);
   }
 }
 
@@ -19,7 +31,7 @@ export interface ToolDefinition {
   name: string;
   description: string;
   inputSchema: z.ZodSchema;
-  handler: (params: any) => Promise<ToolResult>;
+  handler: (params: any, context?: any) => Promise<ToolResult>;
   requiresConfirmation?: boolean;
 }
 
@@ -36,10 +48,10 @@ export function registerTool(def: ToolDefinition): void {
   tools.set(def.name, def);
 }
 
-export async function executeTool(name: string, params: any): Promise<ToolResult> {
+export async function executeTool(name: string, params: any, context?: any): Promise<ToolResult> {
   initializeTools();
   const tool = tools.get(name);
-  
+
   if (!tool) {
     return {
       success: false,
@@ -49,7 +61,7 @@ export async function executeTool(name: string, params: any): Promise<ToolResult
 
   try {
     const validated = tool.inputSchema.parse(params);
-    return await tool.handler(validated);
+    return await tool.handler(validated, context);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return {
@@ -57,7 +69,7 @@ export async function executeTool(name: string, params: any): Promise<ToolResult
         error: `参数错误: ${error.message}`
       };
     }
-    
+
     return {
       success: false,
       error: error instanceof Error ? error.message : '未知错误'
@@ -70,4 +82,14 @@ export function getAllTools(): ToolDefinition[] {
   return Array.from(tools.values());
 }
 
-export { checkPolicyTool, submitClaimTool, getProgressTool };
+export {
+  checkPolicyTool,
+  submitClaimTool,
+  getProgressTool,
+  listUserPoliciesTool,
+  getProductIntakeConfigTool,
+  getClaimMaterialsTool,
+  getMissingClaimMaterialsTool,
+  getCoverageInfoTool,
+  estimateSettlementTool,
+};

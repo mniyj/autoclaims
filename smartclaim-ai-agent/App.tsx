@@ -15,12 +15,21 @@ import {
   IntakeConfig,
   IntakeField,
   CalculatedMaterial,
+  ClaimRequiredMaterial,
+  ClaimFileCategory,
+  ClaimMaterialUpload,
   IntentType,
   UIComponentType,
   ClaimProgressInfo,
   MaterialsListInfo,
   MissingMaterialsInfo,
   PremiumImpactInfo,
+  SettlementEstimateInfo,
+  SettlementDetailInfo,
+  PolicyInfoData,
+  ClaimHistoryInfo,
+  PaymentStatusInfo,
+  CoverageInfo,
 } from "./types";
 import { MOCK_HISTORICAL_CLAIMS } from "./constants";
 
@@ -39,12 +48,15 @@ import {
   getAIResponse,
   analyzeDocument,
   quickAnalyze,
-  connectLive,
-  transcribeAudio,
   smartChat,
 } from "./geminiService";
 import { getIntentLabel } from "./intentService";
-import { executeTool } from "./intentTools";
+import {
+  cancelActiveClaimOrchestrator,
+  continueClaimOrchestratorWithText,
+  executeClaimOrchestratorSelection,
+  executeTool,
+} from "./intentTools";
 import { getSignedUrl } from "./ossService";
 import { logUserOperation } from "./logService";
 import { UserOperationType } from "../types";
@@ -101,6 +113,209 @@ function createBlob(data: Float32Array): any {
   };
 }
 
+function downsampleAudioBuffer(
+  input: Float32Array,
+  inputSampleRate: number,
+  outputSampleRate = 16000,
+): Float32Array {
+  if (inputSampleRate <= outputSampleRate) {
+    return input;
+  }
+
+  const ratio = inputSampleRate / outputSampleRate;
+  const outputLength = Math.round(input.length / ratio);
+  const output = new Float32Array(outputLength);
+
+  let outputOffset = 0;
+  let inputOffset = 0;
+
+  while (outputOffset < outputLength) {
+    const nextInputOffset = Math.round((outputOffset + 1) * ratio);
+    let accumulator = 0;
+    let count = 0;
+
+    for (
+      let i = inputOffset;
+      i < nextInputOffset && i < input.length;
+      i += 1
+    ) {
+      accumulator += input[i];
+      count += 1;
+    }
+
+    output[outputOffset] = count > 0 ? accumulator / count : 0;
+    outputOffset += 1;
+    inputOffset = nextInputOffset;
+  }
+
+  return output;
+}
+
+type BrowserSpeechRecognitionEvent = {
+  resultIndex: number;
+  results: ArrayLike<
+    ArrayLike<{
+      transcript: string;
+    }> & {
+      isFinal: boolean;
+    }
+  >;
+};
+
+type BrowserSpeechRecognitionErrorEvent = {
+  error?: string;
+};
+
+type BrowserSpeechRecognition = {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: ((event: BrowserSpeechRecognitionEvent) => void) | null;
+  onerror: ((event: BrowserSpeechRecognitionErrorEvent) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+};
+
+type BrowserSpeechRecognitionConstructor = new () => BrowserSpeechRecognition;
+
+type VoiceTransportMode = "server" | "browser";
+type VoiceOutputChannel = "aliyun" | "browser" | "degraded" | "connecting";
+
+type VoiceServiceStatus = {
+  geminiConfigured?: boolean;
+  nlsMode?: "aliyun" | "mock";
+  ttsMode?: "aliyun" | "mock";
+};
+
+type VoiceServerMessage = {
+  type: "audio" | "text" | "control" | "event";
+  payload: {
+    source?: "stt" | "llm" | "system";
+    content?: string;
+    isFinal?: boolean;
+    format?: "pcm" | "opus";
+    event?: string;
+    seq?: number;
+    data?: any;
+  };
+};
+
+declare global {
+  interface Window {
+    SpeechRecognition?: BrowserSpeechRecognitionConstructor;
+    webkitSpeechRecognition?: BrowserSpeechRecognitionConstructor;
+    webkitAudioContext?: typeof AudioContext;
+  }
+}
+
+function stripMarkdownForSpeech(text: string): string {
+  return text
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/[*_`>#-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function describeVoiceServicesStatus(services?: VoiceServiceStatus): string | null {
+  if (!services) {
+    return null;
+  }
+
+  if (services.nlsMode === "aliyun" && services.ttsMode === "aliyun") {
+    return "阿里云语音服务已连接，当前播报使用阿里云音色。";
+  }
+
+  if (services.nlsMode === "aliyun" && services.ttsMode !== "aliyun") {
+    return "语音识别已接入阿里云，但语音播报未启用阿里云 TTS，当前会退回默认播报。";
+  }
+
+  if (services.nlsMode !== "aliyun" && services.ttsMode === "aliyun") {
+    return "语音播报已接入阿里云 TTS，但语音识别仍处于模拟模式。";
+  }
+
+  return "当前语音服务处于降级模式，阿里云语音识别或播报配置未生效。";
+}
+
+function getVoiceOutputBadge(channel: VoiceOutputChannel): {
+  label: string;
+  className: string;
+} {
+  switch (channel) {
+    case "aliyun":
+      return {
+        label: "阿里云播报",
+        className: "bg-emerald-100 text-emerald-700 border border-emerald-200",
+      };
+    case "browser":
+      return {
+        label: "浏览器播报",
+        className: "bg-amber-100 text-amber-700 border border-amber-200",
+      };
+    case "degraded":
+      return {
+        label: "降级模式",
+        className: "bg-rose-100 text-rose-700 border border-rose-200",
+      };
+    default:
+      return {
+        label: "连接中",
+        className: "bg-slate-100 text-slate-700 border border-slate-200",
+      };
+  }
+}
+
+function getVoiceRecognitionErrorMessage(error?: string): {
+  statusText: string;
+  assistantMessage?: string;
+  shouldExitVoiceMode: boolean;
+  shouldRetry: boolean;
+} {
+  switch (error) {
+    case "no-speech":
+      return {
+        statusText: "没有听清，请再说一次",
+        shouldExitVoiceMode: false,
+        shouldRetry: true,
+      };
+    case "aborted":
+      return {
+        statusText: "语音识别已中断，正在重试",
+        shouldExitVoiceMode: false,
+        shouldRetry: true,
+      };
+    case "audio-capture":
+      return {
+        statusText: "未检测到麦克风",
+        assistantMessage: "未检测到可用麦克风，请检查设备后再试，或改用文字输入。",
+        shouldExitVoiceMode: true,
+        shouldRetry: false,
+      };
+    case "not-allowed":
+    case "service-not-allowed":
+      return {
+        statusText: "麦克风权限未开启",
+        assistantMessage: "麦克风权限未开启，请允许浏览器访问麦克风后重试，或改用文字输入。",
+        shouldExitVoiceMode: true,
+        shouldRetry: false,
+      };
+    case "network":
+      return {
+        statusText: "语音服务连接失败",
+        assistantMessage: "当前浏览器语音服务连接失败，请稍后再试；如果仍无法恢复，再改用文字输入。",
+        shouldExitVoiceMode: true,
+        shouldRetry: false,
+      };
+    default:
+      return {
+        statusText: "语音识别出错，请重试",
+        assistantMessage: "语音识别暂时不可用，请改用文字输入或稍后重试。",
+        shouldExitVoiceMode: true,
+        shouldRetry: false,
+      };
+  }
+}
+
 type BackendPolicy = {
   id?: string;
   policyNumber?: string;
@@ -113,8 +328,37 @@ type BackendPolicy = {
   expiryDate?: string;
 };
 
+type BackendClaimCase = {
+  id: string;
+  reportNumber?: string;
+  reportTime?: string;
+  productName?: string;
+  productCode?: string;
+  accidentReason?: string;
+  insured?: string;
+  status?: string;
+  fileCategories?: ClaimFileCategory[];
+  requiredMaterials?: ClaimRequiredMaterial[];
+  materialUploads?: ClaimMaterialUpload[];
+  timeline?: HistoricalClaim["timeline"];
+  assessment?: HistoricalClaim["assessment"];
+};
+
 const fetchPoliciesFromBackend = async (): Promise<Policy[]> => {
-  const response = await fetch("/api/policies");
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), 8000);
+  let response: Response;
+  try {
+    response = await fetch("/api/policies", { signal: controller.signal });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new Error("POLICY_REQUEST_TIMEOUT");
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
+
   if (!response.ok) throw new Error("Failed to load policies");
   const data = await response.json();
   const policies = Array.isArray(data) ? data : [];
@@ -130,6 +374,431 @@ const fetchPoliciesFromBackend = async (): Promise<Policy[]> => {
       productCode: policy.productCode || "",
     }))
     .filter((p) => p.id);
+};
+
+const mapBackendClaimStatus = (status?: string): ClaimStatus => {
+  switch (status) {
+    case "已报案":
+    case "REPORTED":
+      return ClaimStatus.REPORTING;
+    case "补充材料":
+    case "材料待补":
+    case "DOCUMENTING":
+      return ClaimStatus.DOCUMENTING;
+    case "审核中":
+    case "REVIEWING":
+      return ClaimStatus.REVIEWING;
+    case "待打款":
+    case "PAYING":
+      return ClaimStatus.PAYING;
+    case "已结案":
+    case "已赔付":
+    case "PAID":
+      return ClaimStatus.PAID;
+    case "已拒赔":
+    case "REJECTED":
+      return ClaimStatus.REJECTED;
+    default:
+      return ClaimStatus.REPORTING;
+  }
+};
+
+const markUploadedMaterials = (
+  materials: ClaimRequiredMaterial[] = [],
+  fileCategories: ClaimFileCategory[] = [],
+  materialUploads: ClaimMaterialUpload[] = [],
+): ClaimRequiredMaterial[] => {
+  const uploadedCategoryNames = new Set(
+    fileCategories
+      .filter((category) => Array.isArray(category.files) && category.files.length > 0)
+      .map((category) => category.name),
+  );
+  const uploadedMaterialIds = new Set(
+    materialUploads
+      .filter((item) => Array.isArray(item.files) && item.files.length > 0)
+      .map((item) => item.materialId),
+  );
+  const uploadedMaterialNames = new Set(
+    materialUploads
+      .filter((item) => Array.isArray(item.files) && item.files.length > 0)
+      .map((item) => item.materialName),
+  );
+
+  return materials.map((material) => ({
+    ...material,
+    uploaded:
+      material.uploaded ||
+      uploadedMaterialIds.has(material.materialId) ||
+      uploadedMaterialNames.has(material.materialName) ||
+      uploadedCategoryNames.has(material.materialName) ||
+      uploadedCategoryNames.has(material.materialId),
+  }));
+};
+
+const MATERIAL_MATCH_STOP_WORDS = [
+  "材料",
+  "证明",
+  "资料",
+  "文件",
+  "复印件",
+  "原件",
+  "照片",
+  "影像",
+  "扫描件",
+  "上传",
+  "电子版",
+];
+
+const MATERIAL_MATCH_ALIASES: Record<string, string[]> = {
+  发票: ["发票", "票据", "收据", "医疗发票", "住院发票", "门诊发票"],
+  清单: ["费用清单", "明细", "明细清单", "费用明细", "住院清单"],
+  病历: ["病历", "门诊病历", "病历本", "病案"],
+  出院小结: ["出院小结", "出院记录", "出院证明", "出院摘要"],
+  诊断证明: ["诊断证明", "诊断书", "疾病诊断证明"],
+  身份证: ["身份证", "身份证件", "证件", "身份证明"],
+  银行卡: ["银行卡", "银行账户", "收款账户", "开户行"],
+  事故认定: ["事故认定", "事故证明", "责任认定", "交通事故责任认定书"],
+  保单: ["保单", "保险合同", "投保单"],
+  委托书: ["委托书", "授权书"],
+  死亡证明: ["死亡证明", "死亡医学证明"],
+  医嘱: ["医嘱", "医嘱单"],
+  化验报告: ["化验单", "检验报告", "检验单", "化验结果"],
+  检查报告: ["检查单", "影像报告", "ct报告", "mri报告", "b超报告", "超声报告"],
+  住院证明: ["住院证明", "入院证明", "住院通知"],
+};
+
+const normalizeMaterialText = (value?: string): string => {
+  return (value || "").toLowerCase().replace(/\s+/g, "");
+};
+
+const tokenizeMaterialText = (value?: string): string[] => {
+  const normalized = normalizeMaterialText(value);
+  if (!normalized) {
+    return [];
+  }
+
+  const tokens = new Set<string>();
+  const chunks = normalized.split(/[\/,，、()（）\-_:：]/).filter(Boolean);
+  chunks.forEach((chunk) => {
+    if (!MATERIAL_MATCH_STOP_WORDS.some((word) => chunk.includes(word))) {
+      tokens.add(chunk);
+    }
+  });
+
+  Object.entries(MATERIAL_MATCH_ALIASES).forEach(([key, aliases]) => {
+    if (normalized.includes(key.toLowerCase()) || aliases.some((alias) => normalized.includes(alias.toLowerCase()))) {
+      tokens.add(key.toLowerCase());
+      aliases.forEach((alias) => tokens.add(alias.toLowerCase()));
+    }
+  });
+
+  return Array.from(tokens).filter((token) => token.length >= 2);
+};
+
+const getAttachmentSignalTokens = (attachment: Attachment): string[] => {
+  const tokens = new Set<string>();
+  const addText = (value?: string | number) => {
+    tokenizeMaterialText(typeof value === "number" ? String(value) : value).forEach(
+      (token) => tokens.add(token),
+    );
+  };
+
+  addText(attachment.name);
+  addText(attachment.analysis?.category);
+  addText(attachment.analysis?.summary);
+  addText(attachment.analysis?.ocr?.description);
+  addText(attachment.analysis?.ocr?.merchant);
+  addText(attachment.analysis?.ocr?.invoiceNumber);
+  addText(attachment.analysis?.ocr?.idNumber);
+  addText(attachment.analysis?.ocr?.name);
+  addText(attachment.analysis?.medicalData?.documentType);
+  addText(attachment.analysis?.medicalData?.invoiceInfo?.invoiceNumber);
+  addText(attachment.analysis?.medicalData?.invoiceInfo?.hospitalName);
+  addText(attachment.analysis?.medicalData?.basicInfo?.name);
+  addText(attachment.analysis?.dischargeSummaryData?.document_type);
+  addText(attachment.analysis?.dischargeSummaryData?.hospital_info?.hospital_name);
+  addText(attachment.analysis?.dischargeSummaryData?.patient_info?.name);
+
+  if (attachment.analysis?.medicalData?.invoiceInfo?.invoiceNumber) {
+    tokens.add("发票");
+  }
+  if (attachment.analysis?.dischargeSummaryData) {
+    tokens.add("出院小结");
+    tokens.add("出院记录");
+  }
+  if (attachment.analysis?.medicalData?.documentType === "detail_list") {
+    tokens.add("清单");
+    tokens.add("明细");
+  }
+
+  return Array.from(tokens);
+};
+
+const getAttachmentHeuristicBonus = (
+  attachment: Attachment,
+  material: ClaimRequiredMaterial,
+): number => {
+  const materialText = normalizeMaterialText(
+    [material.materialName, material.materialDescription].filter(Boolean).join(" "),
+  );
+
+  let score = 0;
+
+  if (attachment.analysis?.medicalData?.invoiceInfo?.invoiceNumber) {
+    if (materialText.includes("发票")) score += 40;
+    if (materialText.includes("清单")) score -= 10;
+  }
+
+  if (attachment.analysis?.medicalData?.documentType === "detail_list") {
+    if (materialText.includes("清单") || materialText.includes("明细")) score += 45;
+  }
+
+  if (attachment.analysis?.dischargeSummaryData) {
+    if (materialText.includes("出院")) score += 55;
+    if (materialText.includes("病历")) score += 15;
+  }
+
+  if (attachment.analysis?.ocr?.idNumber) {
+    if (materialText.includes("身份证")) score += 45;
+  }
+
+  if (
+    normalizeMaterialText(attachment.analysis?.category).includes("银行卡") ||
+    normalizeMaterialText(attachment.name).includes("银行卡")
+  ) {
+    if (materialText.includes("银行卡") || materialText.includes("收款")) score += 45;
+  }
+
+  if (
+    normalizeMaterialText(attachment.analysis?.category).includes("诊断") ||
+    normalizeMaterialText(attachment.name).includes("诊断")
+  ) {
+    if (materialText.includes("诊断")) score += 45;
+  }
+
+  if (
+    normalizeMaterialText(attachment.analysis?.category).includes("病历") ||
+    normalizeMaterialText(attachment.name).includes("病历")
+  ) {
+    if (materialText.includes("病历")) score += 35;
+  }
+
+  return score;
+};
+
+const resolveMaterialCategoryName = (
+  attachment: Attachment,
+  requiredMaterials: ClaimRequiredMaterial[],
+  explicitMaterialName?: string,
+): string => {
+  return resolveMaterialMatch(attachment, requiredMaterials, explicitMaterialName)
+    .materialName;
+};
+
+const buildMaterialMatchSummary = (
+  matchedFiles: Array<{
+    attachment: Attachment;
+    match: { materialId?: string; materialName: string };
+  }>,
+): string | null => {
+  if (matchedFiles.length === 0) {
+    return null;
+  }
+
+  const matchedGroups = new Map<string, string[]>();
+  const unmatchedFiles: string[] = [];
+
+  matchedFiles.forEach(({ attachment, match }) => {
+    if (!match.materialId) {
+      unmatchedFiles.push(attachment.name);
+      return;
+    }
+
+    const current = matchedGroups.get(match.materialName) || [];
+    current.push(attachment.name);
+    matchedGroups.set(match.materialName, current);
+  });
+
+  const matchedLines = Array.from(matchedGroups.entries()).map(
+    ([materialName, fileNames]) =>
+      `- ${materialName}: ${fileNames.join("、")}`,
+  );
+  const unmatchedSection =
+    unmatchedFiles.length > 0
+      ? `\n未命中任何材料项：\n${unmatchedFiles.map((fileName) => `- ${fileName}`).join("\n")}`
+      : "";
+
+  if (matchedLines.length === 0 && unmatchedFiles.length === 0) {
+    return null;
+  }
+
+  if (matchedLines.length === 0) {
+    return `本次上传未命中任何材料项，已暂存为“其他材料”。${unmatchedSection}`;
+  }
+
+  return `已按材料项完成归类。\n${matchedLines.join("\n")}${unmatchedSection}`;
+};
+
+const resolveMaterialMatch = (
+  attachment: Attachment,
+  requiredMaterials: ClaimRequiredMaterial[],
+  explicitMaterialName?: string,
+): { materialId?: string; materialName: string } => {
+  if (explicitMaterialName) {
+    const explicitMaterial = requiredMaterials.find(
+      (material) => material.materialName === explicitMaterialName,
+    );
+    return {
+      materialId: explicitMaterial?.materialId,
+      materialName: explicitMaterialName,
+    };
+  }
+
+  if (requiredMaterials.length === 0) {
+    return { materialName: attachment.analysis?.category || "其他材料" };
+  }
+
+  const candidateText = [
+    attachment.analysis?.category,
+    attachment.analysis?.summary,
+    attachment.analysis?.ocr?.description,
+    attachment.name,
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const normalizedCandidate = normalizeMaterialText(candidateText);
+  const candidateTokens = [
+    ...new Set([
+      ...tokenizeMaterialText(candidateText),
+      ...getAttachmentSignalTokens(attachment),
+    ]),
+  ];
+
+  let bestMatch: { materialId: string; materialName: string; score: number } | null = null;
+
+  requiredMaterials.forEach((material) => {
+    const materialTexts = [
+      material.materialName,
+      material.materialDescription,
+      material.source,
+      material.sourceDetails,
+    ].filter(Boolean);
+    const materialTokens = materialTexts.flatMap((text) => tokenizeMaterialText(text));
+    let score = 0;
+
+    if (normalizedCandidate.includes(normalizeMaterialText(material.materialName))) {
+      score += 100;
+    }
+
+    materialTokens.forEach((token) => {
+      if (!token) {
+        return;
+      }
+      if (normalizedCandidate.includes(token)) {
+        score += token.length >= 4 ? 20 : 10;
+      }
+      if (candidateTokens.includes(token)) {
+        score += 8;
+      }
+    });
+
+    score += getAttachmentHeuristicBonus(attachment, material);
+
+    if (!bestMatch || score > bestMatch.score) {
+      bestMatch = {
+        materialId: material.materialId,
+        materialName: material.materialName,
+        score,
+      };
+    }
+  });
+
+  if (bestMatch && bestMatch.score >= 20) {
+    return {
+      materialId: bestMatch.materialId,
+      materialName: bestMatch.materialName,
+    };
+  }
+
+  return { materialName: attachment.analysis?.category || "其他材料" };
+};
+
+const mapFileCategoriesToDocuments = (
+  fileCategories: ClaimFileCategory[] = [],
+): ClaimDocument[] => {
+  return fileCategories.flatMap((category, categoryIndex) =>
+    (category.files || []).map((file, fileIndex) => ({
+      id: `CAT-${categoryIndex}-${fileIndex}-${file.name}`,
+      name: file.name,
+      type: detectMimeType(file.name),
+      status: "verified" as const,
+      url: file.url,
+      ossKey: file.ossKey,
+      category: category.name,
+    })),
+  );
+};
+
+const isSameStoredFile = (
+  left: { name: string; url?: string; ossKey?: string },
+  right: { name: string; url?: string; ossKey?: string },
+): boolean => {
+  if (left.ossKey && right.ossKey) {
+    return left.ossKey === right.ossKey;
+  }
+  if (left.url && right.url) {
+    return left.url === right.url;
+  }
+  return left.name === right.name;
+};
+
+const mergeClaimDetail = (
+  baseClaim: HistoricalClaim,
+  backendClaim?: BackendClaimCase | null,
+): HistoricalClaim => {
+  if (!backendClaim) {
+    return baseClaim;
+  }
+
+  const fileCategories = backendClaim.fileCategories || baseClaim.fileCategories || [];
+  const materialUploads = backendClaim.materialUploads || baseClaim.materialUploads || [];
+  const requiredMaterials = markUploadedMaterials(
+    backendClaim.requiredMaterials || baseClaim.requiredMaterials || [],
+    fileCategories,
+    materialUploads,
+  );
+
+  return {
+    ...baseClaim,
+    id: backendClaim.id || baseClaim.id,
+    date:
+      backendClaim.reportTime?.split("T")[0] ||
+      backendClaim.reportTime?.split(" ")[0] ||
+      baseClaim.date,
+    type: backendClaim.productName || backendClaim.productCode || baseClaim.type,
+    incidentReason: backendClaim.accidentReason || baseClaim.incidentReason,
+    insuredName: backendClaim.insured || baseClaim.insuredName,
+    status: mapBackendClaimStatus(backendClaim.status) || baseClaim.status,
+    timeline: backendClaim.timeline || baseClaim.timeline,
+    assessment: backendClaim.assessment || baseClaim.assessment,
+    fileCategories,
+    materialUploads,
+    requiredMaterials,
+    documents:
+      mapFileCategoriesToDocuments(fileCategories).length > 0
+        ? mapFileCategoriesToDocuments(fileCategories)
+        : baseClaim.documents,
+  };
+};
+
+const getUploadedFilesForMaterial = (
+  claim: HistoricalClaim,
+  materialId: string,
+) => {
+  return (
+    claim.materialUploads?.find((item) => item.materialId === materialId)?.files ||
+    []
+  );
 };
 
 const getDocIcon = (name: string) => {
@@ -173,6 +842,48 @@ const getStatusLabel = (status: ClaimStatus) => {
     default:
       return "处理中";
   }
+};
+
+const detectMimeType = (fileName: string): string => {
+  const lower = fileName.toLowerCase();
+  if (/\.(jpg|jpeg)$/i.test(lower)) return "image/jpeg";
+  if (/\.png$/i.test(lower)) return "image/png";
+  if (/\.webp$/i.test(lower)) return "image/webp";
+  if (/\.gif$/i.test(lower)) return "image/gif";
+  if (/\.pdf$/i.test(lower)) return "application/pdf";
+  if (/\.docx$/i.test(lower)) {
+    return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+  }
+  if (/\.doc$/i.test(lower)) return "application/msword";
+  return "application/octet-stream";
+};
+
+const shouldStartNewClaimFlow = (text: string) => {
+  const normalized = text.replace(/\s+/g, "");
+  const excludePatterns = [
+    "继续报案",
+    "恢复报案",
+    "修改报案",
+    "撤销报案",
+    "取消报案",
+    "不理赔了",
+    "不赔了",
+    "进度查询",
+  ];
+
+  if (excludePatterns.some((pattern) => normalized.includes(pattern))) {
+    return false;
+  }
+
+  return (
+    normalized.includes("我要报案") ||
+    normalized.includes("我要新报案") ||
+    normalized.includes("我要理赔") ||
+    normalized.includes("申请理赔") ||
+    normalized.includes("出险了") ||
+    normalized.includes("发生事故") ||
+    normalized.includes("报案")
+  );
 };
 
 const hasMissingFields = (doc: Attachment) => {
@@ -681,7 +1392,7 @@ const MaterialsListCard = ({
   onViewSample,
 }: {
   data: MaterialsListInfo;
-  onViewSample?: (url: string, name: string) => void;
+  onViewSample?: (url: string, name: string, ossKey?: string) => void;
 }) => {
   const [showAll, setShowAll] = useState(false);
   const requiredMaterials = data.materials.filter((m) => m.required);
@@ -731,7 +1442,7 @@ const MaterialsListCard = ({
                   {material.sampleUrl && (
                     <button
                       onClick={() =>
-                        onViewSample?.(material.sampleUrl!, material.name)
+                        onViewSample?.(material.sampleUrl!, material.name, material.ossKey)
                       }
                       className="text-xs text-blue-500 hover:text-blue-600"
                     >
@@ -917,7 +1628,7 @@ const MaterialsMessageCard = ({
   materials: CalculatedMaterial[];
   caseNumber?: string;
   onUpload: (id: string) => void;
-  onViewSample: (url: string) => void;
+  onViewSample: (url: string, ossKey?: string) => void;
   onBatchUpload: () => void;
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -1004,7 +1715,7 @@ const MaterialsMessageCard = ({
                   <div className="flex items-center gap-3 mt-2.5">
                     {mat.sampleUrl && (
                       <button
-                        onClick={() => onViewSample(mat.sampleUrl!)}
+                        onClick={() => onViewSample(mat.sampleUrl!, mat.ossKey)}
                         className="text-[10px] text-blue-600 font-bold hover:text-blue-700 flex items-center gap-1 active:scale-95 transition-transform"
                       >
                         <i className="fas fa-eye text-[9px]"></i> 示例图
@@ -1290,17 +2001,17 @@ const detectFileType = (url: string): FileType => {
   const extension = lowerUrl.split("?")[0].split("#")[0].split(".").pop() || "";
 
   // Image formats
-  if (/\.(jpg|jpeg|png|gif|bmp|webp|svg|tiff?)$/i.test(extension)) {
+  if (["jpg", "jpeg", "png", "gif", "bmp", "webp", "svg", "tif", "tiff"].includes(extension)) {
     return "image";
   }
 
   // PDF
-  if (/\.pdf$/i.test(extension)) {
+  if (extension === "pdf") {
     return "pdf";
   }
 
   // Word documents
-  if (/\.(doc|docx)$/i.test(extension)) {
+  if (extension === "doc" || extension === "docx") {
     return "word";
   }
 
@@ -1310,6 +2021,18 @@ const detectFileType = (url: string): FileType => {
   }
 
   return "unknown";
+};
+
+const extractOssKeyFromUrl = (url?: string): string | undefined => {
+  if (!url) return undefined;
+
+  try {
+    const parsed = new URL(url);
+    const pathname = decodeURIComponent(parsed.pathname || "").replace(/^\/+/, "");
+    return pathname || undefined;
+  } catch {
+    return undefined;
+  }
 };
 
 const getFileIcon = (fileType: FileType): string => {
@@ -1344,6 +2067,7 @@ interface SamplePreviewModalProps {
   onClose: () => void;
   sampleUrl: string;
   sampleName: string;
+  sampleOssKey?: string;
 }
 
 const SamplePreviewModal: React.FC<SamplePreviewModalProps> = ({
@@ -1351,41 +2075,46 @@ const SamplePreviewModal: React.FC<SamplePreviewModalProps> = ({
   onClose,
   sampleUrl,
   sampleName,
+  sampleOssKey,
 }) => {
   const [signedUrl, setSignedUrl] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const fileType = detectFileType(sampleUrl);
+  const fileType = detectFileType(sampleUrl || sampleOssKey || "");
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      setSignedUrl("");
+      setIsLoading(true);
+      setLoadError(null);
+      return;
+    }
 
     setIsLoading(true);
     setLoadError(null);
 
-    // If it's an OSS URL that needs signing, handle it
-    if (sampleUrl.includes("oss-") || sampleUrl.includes("aliyuncs")) {
-      // Extract ossKey from URL if possible
-      const ossKeyMatch = sampleUrl.match(/\/([^/]+\.(?:jpg|jpeg|png|gif|pdf|doc|docx))$/i);
-      if (ossKeyMatch) {
-        getSignedUrl(ossKeyMatch[1])
-          .then((url) => {
-            setSignedUrl(url);
-            setIsLoading(false);
-          })
-          .catch(() => {
-            setSignedUrl(sampleUrl);
-            setIsLoading(false);
-          });
-      } else {
-        setSignedUrl(sampleUrl);
-        setIsLoading(false);
-      }
-    } else {
+    const resolvedOssKey =
+      sampleOssKey ||
+      (sampleUrl.includes("oss-") || sampleUrl.includes("aliyuncs")
+        ? extractOssKeyFromUrl(sampleUrl)
+        : undefined);
+
+    if (!resolvedOssKey) {
       setSignedUrl(sampleUrl);
       setIsLoading(false);
+      return;
     }
-  }, [isOpen, sampleUrl]);
+
+    getSignedUrl(resolvedOssKey)
+      .then((url) => {
+        setSignedUrl(url);
+        setIsLoading(false);
+      })
+      .catch(() => {
+        setSignedUrl(sampleUrl);
+        setIsLoading(false);
+      });
+  }, [isOpen, sampleOssKey, sampleUrl]);
 
   // Handle escape key
   useEffect(() => {
@@ -1919,6 +2648,10 @@ export const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isVoiceMode, setIsVoiceMode] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
+  const [voiceTranscript, setVoiceTranscript] = useState("");
+  const [voiceStatusText, setVoiceStatusText] = useState("请直接描述您的事故情况");
+  const [voiceOutputChannel, setVoiceOutputChannel] =
+    useState<VoiceOutputChannel>("connecting");
   const [showReportingForm, setShowReportingForm] = useState(false);
   const [selectedDetailClaim, setSelectedDetailClaim] =
     useState<HistoricalClaim | null>(null);
@@ -1942,6 +2675,22 @@ export const App: React.FC = () => {
   const [expandedDocIndex, setExpandedDocIndex] = useState<number | null>(null);
   const [failedImages, setFailedImages] = useState<Set<number>>(new Set());
   const [showUploadGuide, setShowUploadGuide] = useState(false);
+  const [messageQuickActions, setMessageQuickActions] = useState<
+    Record<
+      string,
+      {
+        reaction?: "like" | "dislike";
+        copied?: boolean;
+        shared?: boolean;
+      }
+    >
+  >({});
+  const [documentMaterialSelections, setDocumentMaterialSelections] = useState<
+    Record<string, string>
+  >({});
+  const [reassigningDocumentKey, setReassigningDocumentKey] = useState<
+    string | null
+  >(null);
 
   // Policy Selection State
   const [policySearchTerm, setPolicySearchTerm] = useState("");
@@ -1997,6 +2746,7 @@ export const App: React.FC = () => {
     isOpen: boolean;
     url: string;
     name: string;
+    ossKey?: string;
   }>({ isOpen: false, url: "", name: "" });
   const materialUploadInputRef = useRef<HTMLInputElement>(null);
   const [uploadingMaterialId, setUploadingMaterialId] = useState<string | null>(
@@ -2011,10 +2761,24 @@ export const App: React.FC = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const policyUploadRef = useRef<HTMLInputElement>(null);
-  const liveSessionRef = useRef<any>(null);
-  const mediaStreamRef = useRef<MediaStream | null>(null);
-  const outputAudioContextRef = useRef<AudioContext | null>(null);
-  const nextStartTimeRef = useRef(0);
+  const speechRecognitionRef = useRef<BrowserSpeechRecognition | null>(null);
+  const voiceSocketRef = useRef<WebSocket | null>(null);
+  const voiceSessionIdRef = useRef<string | null>(null);
+  const voiceTransportModeRef = useRef<VoiceTransportMode | null>(null);
+  const voiceStreamRef = useRef<MediaStream | null>(null);
+  const voiceAudioContextRef = useRef<AudioContext | null>(null);
+  const voicePlaybackContextRef = useRef<AudioContext | null>(null);
+  const voicePlaybackChainRef = useRef(Promise.resolve());
+  const voicePlaybackPendingChunksRef = useRef(0);
+  const voiceServicesRef = useRef<VoiceServiceStatus | null>(null);
+  const voiceTtsFallbackTimerRef = useRef<number | null>(null);
+  const browserVoiceRelayRef = useRef(false);
+  const voiceSourceNodeRef = useRef<MediaStreamAudioSourceNode | null>(null);
+  const voiceProcessorNodeRef = useRef<ScriptProcessorNode | null>(null);
+  const pauseVoiceInputRef = useRef(false);
+  const shouldResumeVoiceRecognitionRef = useRef(false);
+  const isVoiceModeRef = useRef(false);
+  const voiceNetworkRetryCountRef = useRef(0);
 
   const [pendingFiles, setPendingFiles] = useState<Attachment[]>([]);
 
@@ -2046,6 +2810,39 @@ export const App: React.FC = () => {
       null;
     }
   }, [claimState.historicalClaims]);
+
+  useEffect(() => {
+    isVoiceModeRef.current = isVoiceMode;
+  }, [isVoiceMode]);
+
+  useEffect(() => {
+    return () => {
+      shouldResumeVoiceRecognitionRef.current = false;
+      voiceNetworkRetryCountRef.current = 0;
+      speechRecognitionRef.current?.stop();
+      voiceProcessorNodeRef.current?.disconnect();
+      voiceSourceNodeRef.current?.disconnect();
+      voiceStreamRef.current?.getTracks().forEach((track) => track.stop());
+      voiceAudioContextRef.current?.close().catch(() => null);
+      voicePlaybackContextRef.current?.close().catch(() => null);
+      if (voiceTtsFallbackTimerRef.current) {
+        window.clearTimeout(voiceTtsFallbackTimerRef.current);
+      }
+      voiceSocketRef.current?.close();
+      window.speechSynthesis?.cancel();
+    };
+  }, []);
+
+  useEffect(() => {
+    setClaimState((prev) => ({
+      ...prev,
+      claimant: {
+        ...prev.claimant,
+        userId: userName || prev.claimant?.userId,
+        username: userName || prev.claimant?.username,
+      },
+    }));
+  }, [userName]);
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -2208,6 +3005,69 @@ export const App: React.FC = () => {
       userName,
       userGender,
     });
+  };
+
+  const setQuickActionFlag = (
+    messageId: string,
+    flag: "copied" | "shared",
+  ) => {
+    setMessageQuickActions((prev) => ({
+      ...prev,
+      [messageId]: {
+        ...prev[messageId],
+        [flag]: true,
+      },
+    }));
+
+    window.setTimeout(() => {
+      setMessageQuickActions((prev) => ({
+        ...prev,
+        [messageId]: {
+          ...prev[messageId],
+          [flag]: false,
+        },
+      }));
+    }, 1600);
+  };
+
+  const handleToggleReaction = (messageId: string, reaction: "like" | "dislike") => {
+    setMessageQuickActions((prev) => {
+      const current = prev[messageId]?.reaction;
+      return {
+        ...prev,
+        [messageId]: {
+          ...prev[messageId],
+          reaction: current === reaction ? undefined : reaction,
+        },
+      };
+    });
+  };
+
+  const handleCopyMessage = async (msg: Message) => {
+    if (!msg.content?.trim()) return;
+    try {
+      await navigator.clipboard.writeText(msg.content);
+      setQuickActionFlag(msg.id, "copied");
+    } catch (error) {
+      console.error("Copy message failed:", error);
+    }
+  };
+
+  const handleShareMessage = async (msg: Message) => {
+    if (!msg.content?.trim()) return;
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: "SmartClaim 对话",
+          text: msg.content,
+        });
+      } else {
+        await navigator.clipboard.writeText(msg.content);
+      }
+      setQuickActionFlag(msg.id, "shared");
+    } catch (error) {
+      console.error("Share message failed:", error);
+    }
   };
 
   const handleTogglePolicyExpand = (nextExpanded: boolean, total: number) => {
@@ -2391,6 +3251,877 @@ export const App: React.FC = () => {
     });
   };
 
+  const handleReassignDocumentMaterial = async (
+    claim: HistoricalClaim,
+    doc: ClaimDocument,
+  ) => {
+    const documentKey = doc.id || `${doc.name}-${doc.url || doc.ossKey || ""}`;
+    const targetMaterialId = documentMaterialSelections[documentKey];
+    const targetMaterial = claim.requiredMaterials?.find(
+      (material) => material.materialId === targetMaterialId,
+    );
+
+    if (!targetMaterial) {
+      appendAssistantMessage("请先选择要归类到的材料项。");
+      return;
+    }
+
+    setReassigningDocumentKey(documentKey);
+    try {
+      const response = await fetch(`/api/claim-cases/${claim.id}`);
+      const backendClaim = response.ok ? ((await response.json()) as BackendClaimCase) : null;
+      const existingFileCategories = backendClaim?.fileCategories || claim.fileCategories || [];
+      const existingMaterialUploads = backendClaim?.materialUploads || claim.materialUploads || [];
+
+      const fileRecord = {
+        name: doc.name,
+        url: doc.url || "",
+        ossKey: doc.ossKey,
+      };
+
+      const sanitizedCategories = existingFileCategories
+        .map((category) => ({
+          ...category,
+          files: (category.files || []).filter(
+            (file) => !isSameStoredFile(file, fileRecord),
+          ),
+        }))
+        .filter((category) => category.files.length > 0);
+
+      const targetCategoryIndex = sanitizedCategories.findIndex(
+        (category) => category.name === targetMaterial.materialName,
+      );
+      let updatedCategories =
+        targetCategoryIndex >= 0
+          ? sanitizedCategories.map((category, index) =>
+              index === targetCategoryIndex
+                ? { ...category, files: [...category.files, fileRecord] }
+                : category,
+            )
+          : [
+              ...sanitizedCategories,
+              { name: targetMaterial.materialName, files: [fileRecord] },
+            ];
+
+      const sanitizedMaterialUploads = existingMaterialUploads
+        .map((item) => ({
+          ...item,
+          files: (item.files || []).filter((file) => !isSameStoredFile(file, fileRecord)),
+        }))
+        .filter((item) => item.files.length > 0);
+
+      const targetUploadIndex = sanitizedMaterialUploads.findIndex(
+        (item) => item.materialId === targetMaterial.materialId,
+      );
+      const updatedMaterialUploads =
+        targetUploadIndex >= 0
+          ? sanitizedMaterialUploads.map((item, index) =>
+              index === targetUploadIndex
+                ? { ...item, files: [...item.files, fileRecord] }
+                : item,
+            )
+          : [
+              ...sanitizedMaterialUploads,
+              {
+                materialId: targetMaterial.materialId,
+                materialName: targetMaterial.materialName,
+                files: [fileRecord],
+              },
+            ];
+
+      await fetch(`/api/claim-cases/${claim.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fileCategories: updatedCategories,
+          materialUploads: updatedMaterialUploads,
+        }),
+      });
+
+      const nextClaim = mergeClaimDetail(claim, {
+        ...(backendClaim || { id: claim.id }),
+        fileCategories: updatedCategories,
+        materialUploads: updatedMaterialUploads,
+        requiredMaterials: claim.requiredMaterials,
+      });
+
+      nextClaim.documents = (nextClaim.documents || []).map((item) =>
+        item.id === doc.id || isSameStoredFile(item, fileRecord)
+          ? { ...item, category: targetMaterial.materialName }
+          : item,
+      );
+
+      setClaimState((prev) => ({
+        ...prev,
+        historicalClaims: (prev.historicalClaims || []).map((item) =>
+          item.id === claim.id ? nextClaim : item,
+        ),
+      }));
+      setSelectedDetailClaim(nextClaim);
+      setDocumentMaterialSelections((prev) => {
+        const next = { ...prev };
+        delete next[documentKey];
+        return next;
+      });
+      appendAssistantMessage(`已将 ${doc.name} 归类到“${targetMaterial.materialName}”。`);
+    } catch (error) {
+      console.error("[Claim Detail] Failed to reassign document material:", error);
+      appendAssistantMessage("调整材料归类失败，请稍后重试。");
+    } finally {
+      setReassigningDocumentKey(null);
+    }
+  };
+
+  const restartVoiceRecognition = () => {
+    if (!isVoiceModeRef.current || isLoading || isTranscribing) {
+      return;
+    }
+
+    const recognition = speechRecognitionRef.current;
+    if (!recognition) {
+      return;
+    }
+
+    try {
+      recognition.start();
+      setVoiceStatusText("正在聆听...");
+    } catch {
+      null;
+    }
+  };
+
+  const startBrowserVoiceRecognition = (
+    relayToServer = false,
+  ): BrowserSpeechRecognition | null => {
+    const RecognitionCtor =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!RecognitionCtor) {
+      return null;
+    }
+
+    browserVoiceRelayRef.current = relayToServer;
+    if (relayToServer) {
+      pauseVoiceInputRef.current = true;
+    }
+
+    const recognition = new RecognitionCtor();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "zh-CN";
+
+    recognition.onresult = (event) => {
+      let interimTranscript = "";
+      let finalTranscript = "";
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        const transcript = result[0]?.transcript?.trim() || "";
+        if (!transcript) {
+          continue;
+        }
+        if (result.isFinal) {
+          finalTranscript += transcript;
+        } else {
+          interimTranscript += transcript;
+        }
+      }
+
+      if (interimTranscript) {
+        voiceNetworkRetryCountRef.current = 0;
+        setVoiceTranscript(interimTranscript);
+      }
+
+      if (finalTranscript) {
+        voiceNetworkRetryCountRef.current = 0;
+        shouldResumeVoiceRecognitionRef.current = false;
+        setVoiceTranscript(finalTranscript);
+        setVoiceStatusText("正在处理...");
+        setIsTranscribing(true);
+        recognition.stop();
+
+        const finalize = relayToServer
+          ? Promise.resolve().then(() => {
+              appendVoiceUserMessage(finalTranscript);
+              if (
+                voiceSocketRef.current &&
+                voiceSocketRef.current.readyState === WebSocket.OPEN
+              ) {
+                voiceSocketRef.current.send(
+                  JSON.stringify({
+                    type: "text",
+                    payload: {
+                      source: "stt",
+                      content: finalTranscript,
+                      isFinal: true,
+                    },
+                  }),
+                );
+              } else {
+                return handleSend(finalTranscript);
+              }
+            })
+          : Promise.resolve(handleSend(finalTranscript));
+
+        finalize
+          .catch((error) => {
+            console.error("[Voice HandleSend Error]", error);
+          })
+          .finally(() => {
+            setIsTranscribing(false);
+            setVoiceTranscript("");
+            if (isVoiceModeRef.current && !window.speechSynthesis?.speaking) {
+              shouldResumeVoiceRecognitionRef.current = true;
+              restartVoiceRecognition();
+            }
+          });
+      }
+    };
+
+    recognition.onerror = (event) => {
+      if (event.error === "network") {
+        voiceNetworkRetryCountRef.current += 1;
+        const shouldRetry = voiceNetworkRetryCountRef.current <= 2;
+        if (shouldRetry) {
+          console.warn(
+            `[Voice Recognition Error] network (retry ${voiceNetworkRetryCountRef.current})`,
+          );
+        } else {
+          console.error("[Voice Recognition Error] network");
+        }
+        setVoiceStatusText(
+          shouldRetry ? "语音网络波动，正在重试..." : "语音识别网络异常",
+        );
+        shouldResumeVoiceRecognitionRef.current = shouldRetry;
+
+        if (shouldRetry && isVoiceModeRef.current && !window.speechSynthesis?.speaking) {
+          window.setTimeout(() => {
+            restartVoiceRecognition();
+          }, 400 * voiceNetworkRetryCountRef.current);
+          return;
+        }
+      } else {
+        console.error("[Voice Recognition Error]", event.error);
+      }
+
+      if (relayToServer) {
+        setVoiceOutputChannel("degraded");
+        setVoiceStatusText("本地语音识别也不可用");
+        shouldResumeVoiceRecognitionRef.current = false;
+        return;
+      }
+
+      const handling = getVoiceRecognitionErrorMessage(event.error);
+      setVoiceStatusText(handling.statusText);
+      shouldResumeVoiceRecognitionRef.current = handling.shouldRetry;
+
+      if (handling.shouldExitVoiceMode) {
+        setIsVoiceMode(false);
+        voiceTransportModeRef.current = null;
+      }
+
+      if (handling.assistantMessage) {
+        appendAssistantMessage(handling.assistantMessage);
+      }
+
+      if (
+        handling.shouldRetry &&
+        isVoiceModeRef.current &&
+        !window.speechSynthesis?.speaking
+      ) {
+        restartVoiceRecognition();
+      }
+    };
+
+    recognition.onend = () => {
+      if (
+        isVoiceModeRef.current &&
+        shouldResumeVoiceRecognitionRef.current &&
+        !window.speechSynthesis?.speaking
+      ) {
+        restartVoiceRecognition();
+      }
+    };
+
+    speechRecognitionRef.current = recognition;
+    recognition.start();
+    return recognition;
+  };
+
+  const stopServerVoiceTransport = async (notifyServer = true) => {
+    const sessionId = voiceSessionIdRef.current;
+    const socket = voiceSocketRef.current;
+
+    pauseVoiceInputRef.current = true;
+    voiceProcessorNodeRef.current?.disconnect();
+    voiceProcessorNodeRef.current = null;
+    voiceSourceNodeRef.current?.disconnect();
+    voiceSourceNodeRef.current = null;
+    voiceStreamRef.current?.getTracks().forEach((track) => track.stop());
+    voiceStreamRef.current = null;
+
+    if (voiceAudioContextRef.current) {
+      await voiceAudioContextRef.current.close().catch(() => null);
+      voiceAudioContextRef.current = null;
+    }
+
+    if (voicePlaybackContextRef.current) {
+      await voicePlaybackContextRef.current.close().catch(() => null);
+      voicePlaybackContextRef.current = null;
+    }
+    voicePlaybackChainRef.current = Promise.resolve();
+    voicePlaybackPendingChunksRef.current = 0;
+    voiceServicesRef.current = null;
+    if (voiceTtsFallbackTimerRef.current) {
+      window.clearTimeout(voiceTtsFallbackTimerRef.current);
+      voiceTtsFallbackTimerRef.current = null;
+    }
+
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(
+        JSON.stringify({
+          type: "control",
+          payload: { action: "stop" },
+        }),
+      );
+    }
+
+    socket?.close();
+    voiceSocketRef.current = null;
+    voiceSessionIdRef.current = null;
+    voiceTransportModeRef.current = null;
+    browserVoiceRelayRef.current = false;
+    setVoiceOutputChannel("connecting");
+
+    if (notifyServer && sessionId) {
+      fetch(`/api/voice/session/${encodeURIComponent(sessionId)}/end`, {
+        method: "POST",
+      }).catch(() => null);
+    }
+  };
+
+  const appendVoiceUserMessage = (content: string) => {
+    const trimmed = content.trim();
+    if (!trimmed) {
+      return;
+    }
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: Date.now().toString(),
+        role: "user",
+        content: trimmed,
+        timestamp: Date.now(),
+      },
+    ]);
+  };
+
+  const appendAssistantMessageSilently = (
+    content: string,
+    extra?: Partial<Message>,
+  ) => {
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: Date.now().toString(),
+        role: "assistant",
+        content,
+        timestamp: Date.now(),
+        ...extra,
+      },
+    ]);
+  };
+
+  const playServerVoiceAudio = (base64Audio: string, sampleRate = 16000) => {
+    if (!base64Audio || typeof window === "undefined") {
+      return;
+    }
+
+    window.speechSynthesis?.cancel();
+    if (voiceTtsFallbackTimerRef.current) {
+      window.clearTimeout(voiceTtsFallbackTimerRef.current);
+      voiceTtsFallbackTimerRef.current = null;
+    }
+
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) {
+      return;
+    }
+
+    if (!voicePlaybackContextRef.current) {
+      voicePlaybackContextRef.current = new AudioCtx();
+    }
+
+    const playbackContext = voicePlaybackContextRef.current;
+    voicePlaybackPendingChunksRef.current += 1;
+    pauseVoiceInputRef.current = true;
+    setVoiceStatusText("正在播报...");
+
+    voicePlaybackChainRef.current = voicePlaybackChainRef.current
+      .catch(() => null)
+      .then(async () => {
+        setVoiceOutputChannel("aliyun");
+        const audioBytes = decode(base64Audio);
+        const audioBuffer = await decodeAudioData(
+          audioBytes,
+          playbackContext,
+          sampleRate,
+          1,
+        );
+
+        await playbackContext.resume().catch(() => null);
+
+        await new Promise<void>((resolve) => {
+          const source = playbackContext.createBufferSource();
+          source.buffer = audioBuffer;
+          source.connect(playbackContext.destination);
+          source.onended = () => resolve();
+          source.start(0);
+        });
+      })
+      .finally(() => {
+        voicePlaybackPendingChunksRef.current = Math.max(
+          0,
+          voicePlaybackPendingChunksRef.current - 1,
+        );
+
+        if (voicePlaybackPendingChunksRef.current === 0) {
+          pauseVoiceInputRef.current = false;
+          setVoiceStatusText("请直接描述您的事故情况");
+        }
+      });
+  };
+
+  const handleServerVoiceMessage = (message: VoiceServerMessage) => {
+    if (message.type === "audio" && typeof message.payload.data === "string") {
+      playServerVoiceAudio(message.payload.data);
+      return;
+    }
+
+    if (message.type === "text") {
+      if (message.payload.source === "stt") {
+        const transcript = message.payload.content?.trim() || "";
+        if (!transcript) {
+          return;
+        }
+
+        setVoiceTranscript(transcript);
+        setVoiceStatusText(message.payload.isFinal ? "正在处理..." : "正在聆听...");
+
+        if (message.payload.isFinal) {
+          appendVoiceUserMessage(transcript);
+        }
+        return;
+      }
+
+      if (message.payload.source === "llm" && message.payload.content?.trim()) {
+        setVoiceTranscript("");
+        setVoiceStatusText("请直接描述您的事故情况");
+        if (voiceTransportModeRef.current === "server") {
+          appendAssistantMessageSilently(message.payload.content);
+          if (voiceServicesRef.current?.ttsMode !== "aliyun") {
+            setVoiceOutputChannel("browser");
+            speakAssistantReply(message.payload.content);
+          }
+        } else {
+          appendAssistantMessage(message.payload.content);
+        }
+      }
+      return;
+    }
+
+    if (message.type === "event") {
+      if (message.payload.event === "error") {
+        const errorMessage =
+          typeof message.payload.data?.message === "string"
+            ? message.payload.data.message
+            : "语音服务暂不可用，请稍后重试。";
+        if (
+          voiceTransportModeRef.current === "server" &&
+          !browserVoiceRelayRef.current &&
+          startBrowserVoiceRecognition(true)
+        ) {
+          setVoiceOutputChannel("browser");
+          setVoiceStatusText("已切换为本地语音识别");
+        } else {
+          appendAssistantMessage(errorMessage);
+        }
+      }
+    }
+  };
+
+  const startServerVoiceMode = async (): Promise<boolean> => {
+    try {
+      setVoiceStatusText("正在连接语音服务...");
+
+      const sessionResponse = await fetch("/api/voice/session/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: userName || "anonymous" }),
+      });
+
+      if (!sessionResponse.ok) {
+        return false;
+      }
+
+      const sessionData = await sessionResponse.json();
+      const wsUrl = sessionData?.wsUrl;
+      const sessionId = sessionData?.sessionId;
+      voiceServicesRef.current =
+        (sessionData?.services as VoiceServiceStatus | undefined) || null;
+      setVoiceOutputChannel(
+        voiceServicesRef.current?.ttsMode === "aliyun" ? "connecting" : "degraded",
+      );
+      const serviceMessage = describeVoiceServicesStatus(
+        sessionData?.services as VoiceServiceStatus | undefined,
+      );
+
+      if (!wsUrl || !sessionId) {
+        return false;
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          channelCount: 1,
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      });
+
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) {
+        stream.getTracks().forEach((track) => track.stop());
+        return false;
+      }
+
+      const audioContext = new AudioCtx();
+      const sourceNode = audioContext.createMediaStreamSource(stream);
+      const processorNode = audioContext.createScriptProcessor(4096, 1, 1);
+      const socket = new WebSocket(
+        `${wsUrl}${wsUrl.includes("?") ? "&" : "?"}userId=${encodeURIComponent(userName || "anonymous")}`,
+      );
+
+      await new Promise<void>((resolve, reject) => {
+        socket.onopen = () => resolve();
+        socket.onerror = () => reject(new Error("voice_socket_connect_failed"));
+      });
+
+      voiceTransportModeRef.current = "server";
+      voiceSessionIdRef.current = sessionId;
+      voiceSocketRef.current = socket;
+      voiceStreamRef.current = stream;
+      voiceAudioContextRef.current = audioContext;
+      voiceSourceNodeRef.current = sourceNode;
+      voiceProcessorNodeRef.current = processorNode;
+      pauseVoiceInputRef.current = false;
+
+      processorNode.onaudioprocess = (event) => {
+        if (
+          voiceTransportModeRef.current !== "server" ||
+          pauseVoiceInputRef.current ||
+          !voiceSocketRef.current ||
+          voiceSocketRef.current.readyState !== WebSocket.OPEN
+        ) {
+          return;
+        }
+
+        const inputData = event.inputBuffer.getChannelData(0);
+        const downsampled = downsampleAudioBuffer(
+          inputData,
+          audioContext.sampleRate,
+          16000,
+        );
+        const chunk = createBlob(downsampled);
+
+        voiceSocketRef.current.send(
+          JSON.stringify({
+            type: "audio",
+            payload: {
+              format: "pcm",
+              data: chunk.data,
+              seq: Date.now(),
+              isFinal: false,
+            },
+          }),
+        );
+      };
+
+      sourceNode.connect(processorNode);
+      processorNode.connect(audioContext.destination);
+
+      socket.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data) as VoiceServerMessage;
+          handleServerVoiceMessage(message);
+        } catch (error) {
+          console.error("[Voice Socket] Failed to parse message:", error);
+        }
+      };
+
+      socket.onclose = () => {
+        if (voiceTransportModeRef.current === "server") {
+          stopServerVoiceTransport(false).catch(() => null);
+        }
+      };
+
+      socket.onerror = (error) => {
+        console.error("[Voice Socket] WebSocket error:", error);
+      };
+
+      setIsVoiceMode(true);
+      setVoiceTranscript("");
+      setVoiceStatusText("正在聆听...");
+      if (serviceMessage) {
+        appendAssistantMessageSilently(serviceMessage, {
+          role: "system",
+        });
+      }
+      return true;
+    } catch (error) {
+      console.warn("[Voice Service] Failed to start server voice mode:", error);
+      await stopServerVoiceTransport(false);
+      return false;
+    }
+  };
+
+  const speakAssistantReply = (content: string) => {
+    const text = stripMarkdownForSpeech(content);
+    if (!text || typeof window === "undefined" || !window.speechSynthesis) {
+      if (voiceTransportModeRef.current === "server") {
+        pauseVoiceInputRef.current = false;
+        setVoiceStatusText("请直接描述您的事故情况");
+      } else {
+        restartVoiceRecognition();
+      }
+      return;
+    }
+
+    shouldResumeVoiceRecognitionRef.current =
+      isVoiceModeRef.current &&
+      (voiceTransportModeRef.current !== "server" || browserVoiceRelayRef.current);
+    pauseVoiceInputRef.current = voiceTransportModeRef.current === "server";
+    speechRecognitionRef.current?.stop();
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "zh-CN";
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    utterance.onstart = () => {
+      setVoiceStatusText("正在播报...");
+    };
+    utterance.onend = () => {
+      setVoiceStatusText("请直接描述您的事故情况");
+      if (voiceTransportModeRef.current === "server") {
+        pauseVoiceInputRef.current = browserVoiceRelayRef.current;
+        if (browserVoiceRelayRef.current && shouldResumeVoiceRecognitionRef.current) {
+          restartVoiceRecognition();
+        }
+      } else if (shouldResumeVoiceRecognitionRef.current) {
+        restartVoiceRecognition();
+      }
+    };
+    utterance.onerror = () => {
+      setVoiceStatusText("请直接描述您的事故情况");
+      if (voiceTransportModeRef.current === "server") {
+        pauseVoiceInputRef.current = browserVoiceRelayRef.current;
+        if (browserVoiceRelayRef.current && shouldResumeVoiceRecognitionRef.current) {
+          restartVoiceRecognition();
+        }
+      } else if (shouldResumeVoiceRecognitionRef.current) {
+        restartVoiceRecognition();
+      }
+    };
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const appendAssistantMessage = (
+    content: string,
+    extra?: Partial<Message>,
+  ) => {
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: Date.now().toString(),
+        role: "assistant",
+        content,
+        timestamp: Date.now(),
+        ...extra,
+      },
+    ]);
+
+    if (isVoiceModeRef.current) {
+      speakAssistantReply(content);
+    }
+  };
+
+  const resolveClaimMaterialSelection = (
+    intakeConfig: IntakeConfig | null | undefined,
+    fieldData: Record<string, unknown> | undefined,
+  ) => {
+    if (!intakeConfig?.claimMaterials || !fieldData) {
+      return { claimItemIds: [] as string[], accidentCauseId: undefined as string | undefined };
+    }
+
+    const claimItemFieldId =
+      intakeConfig.claimMaterials.claimItemFieldId || "claim_item";
+    const accidentCauseFieldId =
+      intakeConfig.claimMaterials.accidentCauseFieldId || "accident_reason";
+
+    const claimItemValue = fieldData[claimItemFieldId];
+    const accidentCauseValue = fieldData[accidentCauseFieldId];
+
+    return {
+      claimItemIds: claimItemValue
+        ? Array.isArray(claimItemValue)
+          ? claimItemValue.map((item) => String(item))
+          : [String(claimItemValue)]
+        : [],
+      accidentCauseId: accidentCauseValue
+        ? String(accidentCauseValue)
+        : undefined,
+    };
+  };
+
+  const handleClaimSubmissionMaterials = async (options: {
+    claimId: string;
+    productCode?: string;
+    successMessage: string;
+    intakeConfig?: IntakeConfig | null;
+    fieldData?: Record<string, unknown>;
+  }) => {
+    const { claimId, productCode, successMessage, intakeConfig, fieldData } = options;
+    setSubmittedClaimId(claimId);
+
+    const { claimItemIds, accidentCauseId } = resolveClaimMaterialSelection(
+      intakeConfig,
+      fieldData,
+    );
+    const updateLocalClaimMaterials = (
+      materials: ClaimRequiredMaterial[],
+      fileCategories?: ClaimFileCategory[],
+    ) => {
+      setClaimState((prev) => ({
+        ...prev,
+        historicalClaims: (prev.historicalClaims || []).map((claim) =>
+          claim.id === claimId
+            ? {
+                ...claim,
+                requiredMaterials: markUploadedMaterials(
+                  materials,
+                  fileCategories || claim.fileCategories || [],
+                ),
+                fileCategories: fileCategories || claim.fileCategories,
+              }
+            : claim,
+        ),
+      }));
+
+      setSelectedDetailClaim((prev) => {
+        if (!prev || prev.id !== claimId) {
+          return prev;
+        }
+        return {
+          ...prev,
+          requiredMaterials: markUploadedMaterials(
+            materials,
+            fileCategories || prev.fileCategories || [],
+          ),
+          fileCategories: fileCategories || prev.fileCategories,
+        };
+      });
+    };
+
+    if (!productCode || claimItemIds.length === 0) {
+      setSubmittedMaterials([]);
+      updateLocalClaimMaterials([]);
+      appendAssistantMessage(
+        `${successMessage}\n\n您的报案已提交。请继续上传相关理赔材料，系统会在案件详情中展示所需清单。`,
+        {
+          reportSuccess: { caseNumber: claimId },
+        },
+      );
+      return;
+    }
+
+    try {
+      let categoryCode = "";
+      const productResponse = await fetch(
+        `/api/products/${encodeURIComponent(productCode)}`,
+      );
+      if (productResponse.ok) {
+        const product = await productResponse.json();
+        categoryCode = product?.racewayId || product?.categoryLevel3Code || "";
+      }
+
+      const materialsResponse = await fetch("/api/claim-materials/calculate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productCode,
+          categoryCode,
+          claimItemIds,
+          accidentCauseId,
+        }),
+      });
+
+      const materialsResult = await materialsResponse.json();
+      const materials =
+        materialsResponse.ok && materialsResult.success && Array.isArray(materialsResult.materials)
+          ? (materialsResult.materials as CalculatedMaterial[])
+          : [];
+
+      if (materials.length > 0) {
+        setSubmittedMaterials(materials);
+        updateLocalClaimMaterials(materials);
+        await fetch(`/api/claim-cases/${claimId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            selectedClaimItems: claimItemIds,
+            selectedAccidentCauseId: accidentCauseId,
+            requiredMaterials: materials.map((material) => ({
+              ...material,
+              uploaded: false,
+            })),
+          }),
+        }).catch((error) => {
+          console.warn("[Claim] Failed to persist calculated materials:", error);
+        });
+
+        appendAssistantMessage(
+          `${successMessage}\n\n为了尽快为您处理理赔，请按下方清单上传相关证明材料。`,
+          {
+            reportSuccess: { caseNumber: claimId },
+            calculatedMaterials: materials,
+          },
+        );
+        return;
+      }
+
+      setSubmittedMaterials([]);
+      updateLocalClaimMaterials([]);
+      appendAssistantMessage(
+        `${successMessage}\n\n您的报案已提交。当前未能计算出动态材料清单，请稍后在案件详情中查看或直接上传材料。`,
+        {
+          reportSuccess: { caseNumber: claimId },
+        },
+      );
+    } catch (error) {
+      console.warn("[Claim] Failed to calculate materials for orchestrator:", error);
+      setSubmittedMaterials([]);
+      updateLocalClaimMaterials([]);
+      appendAssistantMessage(
+        `${successMessage}\n\n您的报案已提交，但暂时无法获取动态材料清单，请稍后在案件详情中查看。`,
+        {
+          reportSuccess: { caseNumber: claimId },
+        },
+      );
+    }
+  };
+
   const handleSend = async (overrideInput?: string) => {
     const textToSend = overrideInput || input;
     if (!textToSend.trim() || isLoading) return;
@@ -2407,57 +4138,120 @@ export const App: React.FC = () => {
     setInput("");
     setIsLoading(true);
 
+    const orchestratorState = claimState.claimOrchestrator?.state;
+    const trimmedText = textToSend.trim();
+    const isClaimFlowActive =
+      Boolean(orchestratorState) &&
+      !["IDLE", "ENDED", "ERROR"].includes(orchestratorState);
+    const isCancelClaimFlow = /撤销报案|取消报案|不赔了|不理赔了|算了/.test(trimmedText);
+    const confirmMatch = /确认|确认提交|提交|继续报案|继续提交/.test(trimmedText);
+
+    if (isClaimFlowActive && isCancelClaimFlow) {
+      try {
+        const toolResponse = await cancelActiveClaimOrchestrator(claimState);
+        if (toolResponse.data?.claimStatePatch) {
+          setClaimState(toolResponse.data.claimStatePatch as ClaimState);
+        }
+        appendAssistantMessage(toolResponse.message);
+      } catch (error) {
+        console.error("[Claim Orchestrator Cancel Error]", error);
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+
+    if (orchestratorState === "SELECTING_POLICY") {
+      const indexMatch = trimmedText.match(/^(?:第\s*)?(\d+)(?:\s*张)?$/);
+      if (indexMatch) {
+        try {
+          const toolResponse = await executeClaimOrchestratorSelection(
+            Number(indexMatch[1]),
+            claimState,
+          );
+          if (toolResponse.data?.claimStatePatch) {
+            setClaimState(toolResponse.data.claimStatePatch as ClaimState);
+          }
+          appendAssistantMessage(toolResponse.message);
+        } catch (error) {
+          console.error("[Claim Orchestrator Selection Error]", error);
+        } finally {
+          setIsLoading(false);
+        }
+        return;
+      }
+    }
+
     if (
-      textToSend.includes("报案") &&
-      claimState.status === ClaimStatus.REPORTING
+      orchestratorState === "COLLECTING_FIELDS" ||
+      orchestratorState === "MODIFYING_FIELD" ||
+      (orchestratorState === "CONFIRMING_SUBMISSION" && confirmMatch)
     ) {
       try {
+        const toolResponse = await continueClaimOrchestratorWithText(
+          trimmedText,
+          claimState,
+        );
+        if (toolResponse.data?.claimStatePatch) {
+          setClaimState(toolResponse.data.claimStatePatch as ClaimState);
+        }
+        if (toolResponse.data?.submittedClaim?.claimId) {
+          await handleClaimSubmissionMaterials({
+            claimId: toolResponse.data.submittedClaim.claimId as string,
+            productCode: toolResponse.data.submittedClaim.productCode as string | undefined,
+            successMessage: toolResponse.message,
+            intakeConfig:
+              (toolResponse.data.claimStatePatch as ClaimState | undefined)?.claimOrchestrator
+                ?.intakeConfig || claimState.claimOrchestrator?.intakeConfig,
+            fieldData:
+              ((toolResponse.data.claimStatePatch as ClaimState | undefined)?.claimOrchestrator
+                ?.collectedFields as Record<string, unknown> | undefined) ||
+              claimState.claimOrchestrator?.collectedFields,
+          });
+        } else {
+          appendAssistantMessage(toolResponse.message);
+        }
+      } catch (error) {
+        console.error("[Claim Orchestrator Continue Error]", error);
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+
+    if (orchestratorState === "CONFIRMING_SUBMISSION" && !confirmMatch) {
+      appendAssistantMessage(
+        "报案信息已经收集完成。输入“确认提交”即可提交，输入“取消报案”可结束当前流程。",
+      );
+      setIsLoading(false);
+      return;
+    }
+
+    if (shouldStartNewClaimFlow(textToSend)) {
+      try {
+        const toolResponse = await executeTool(
+          IntentType.REPORT_NEW_CLAIM,
+          {},
+          claimState,
+        );
+        if (toolResponse.data?.claimStatePatch) {
+          setClaimState(toolResponse.data.claimStatePatch as ClaimState);
+        }
         setPolicySearchTerm("");
         setIsPolicyExpanded(false);
-        const policies = await fetchPoliciesFromBackend();
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: Date.now().toString(),
-            role: "assistant",
-            content: `为您找到 ${policies.length} 份保单。请选择：`,
-            timestamp: Date.now(),
-            policySelection: true,
-            policies,
-          },
-        ]);
-        logUserOperation({
-          operationType: UserOperationType.REPORT_CLAIM,
-          operationLabel: "发起报案",
-          userName,
-          userGender,
-          inputData: {
-            message: messagePreview,
-            messageLength: textToSend.length,
-          },
-          outputData: { policyCount: policies.length },
-          duration: Date.now() - operationStart,
+        appendAssistantMessage(toolResponse.message, {
+          policies:
+            toolResponse.data?.policies && Array.isArray(toolResponse.data.policies)
+              ? toolResponse.data.policies
+              : undefined,
+          policySelection:
+            toolResponse.data?.policies && Array.isArray(toolResponse.data.policies)
+              ? true
+              : undefined,
         });
       } catch (error) {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: Date.now().toString(),
-            role: "assistant",
-            content: "暂未获取到保单数据，请稍后重试或上传保单 PDF。",
-            timestamp: Date.now(),
-            policySelection: true,
-            policies: [],
-          },
-        ]);
-        logUserOperation({
-          operationType: UserOperationType.REPORT_CLAIM,
-          operationLabel: "发起报案失败",
-          userName,
-          userGender,
-          success: false,
-          errorMessage: String(error),
-        });
+        console.error("[Claim Orchestrator Start Error]", error);
+        appendAssistantMessage("暂未获取到保单数据，请稍后重试或上传保单 PDF。");
       } finally {
         setIsLoading(false);
       }
@@ -2490,6 +4284,25 @@ export const App: React.FC = () => {
       if (usedIntentTool && toolResponse) {
         uiComponent = toolResponse.uiComponent;
         uiData = toolResponse.uiData;
+        if (toolResponse.data?.claimStatePatch) {
+          setClaimState(toolResponse.data.claimStatePatch as ClaimState);
+        }
+        if (toolResponse.data?.submittedClaim?.claimId) {
+          await handleClaimSubmissionMaterials({
+            claimId: toolResponse.data.submittedClaim.claimId as string,
+            productCode: toolResponse.data.submittedClaim.productCode as string | undefined,
+            successMessage: text,
+            intakeConfig:
+              (toolResponse.data.claimStatePatch as ClaimState | undefined)?.claimOrchestrator
+                ?.intakeConfig || claimState.claimOrchestrator?.intakeConfig,
+            fieldData:
+              ((toolResponse.data.claimStatePatch as ClaimState | undefined)?.claimOrchestrator
+                ?.collectedFields as Record<string, unknown> | undefined) ||
+              claimState.claimOrchestrator?.collectedFields,
+          });
+          setIsLoading(false);
+          return;
+        }
 
         // 记录意图识别操作
         logUserOperation({
@@ -2540,36 +4353,51 @@ export const App: React.FC = () => {
         });
       }
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now().toString(),
-          role: "assistant",
-          content: text,
-          timestamp: Date.now(),
-          groundingLinks,
-          attachments: responseAttachments,
-          intentResult: intentResult
+      appendAssistantMessage(text, {
+        groundingLinks,
+        attachments: responseAttachments,
+        policies:
+          (toolResponse?.data?.policies && Array.isArray(toolResponse.data.policies)
+            ? toolResponse.data.policies
+            : toolResponse?.nextAction?.data && Array.isArray(toolResponse.nextAction.data)
+              ? toolResponse.nextAction.data
+            : undefined,
+          )
+            ? ((toolResponse?.data?.policies && Array.isArray(toolResponse.data.policies)
+                ? toolResponse.data.policies
+                : toolResponse?.nextAction?.data) as Policy[])
+            : undefined,
+        policySelection:
+          (toolResponse?.data?.policies && Array.isArray(toolResponse.data.policies)) ||
+          (toolResponse?.nextAction?.data && Array.isArray(toolResponse.nextAction.data))
+            ? true
+            : undefined,
+        claimsList:
+          toolResponse?.data?.claims && Array.isArray(toolResponse.data.claims)
+            ? toolResponse.data.claims
+            : toolResponse?.uiData?.claims && Array.isArray(toolResponse.uiData.claims)
+              ? toolResponse.uiData.claims
+              : toolResponse?.uiData?.claims && toolResponse.uiComponent === UIComponentType.CLAIM_HISTORY
+                ? toolResponse.uiData.claims
+                : undefined,
+        intentResult: intentResult
+          ? {
+              intent: intentResult.intent,
+              confidence: intentResult.confidence,
+            }
+          : undefined,
+        reportSuccess:
+          toolResponse?.data?.submittedClaim?.claimId
             ? {
-                intent: intentResult.intent,
-                confidence: intentResult.confidence,
+                caseNumber: toolResponse.data.submittedClaim.claimId as string,
               }
             : undefined,
-          uiComponent,
-          uiData,
-        },
-      ]);
+        uiComponent,
+        uiData,
+      });
     } catch (error) {
       console.error("[Smart Chat Error]", error);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now().toString(),
-          role: "assistant",
-          content: "网络连接似乎有些问题，请稍后再试。",
-          timestamp: Date.now(),
-        },
-      ]);
+      appendAssistantMessage("网络连接似乎有些问题，请稍后再试。");
       logUserOperation({
         operationType: UserOperationType.SEND_MESSAGE,
         operationLabel: "发送消息",
@@ -2786,6 +4614,10 @@ export const App: React.FC = () => {
           name: string;
           files: { name: string; url: string; ossKey?: string }[];
         }[] = existingClaim.fileCategories || [];
+        const existingRequiredMaterials: ClaimRequiredMaterial[] =
+          existingClaim.requiredMaterials || [];
+        const existingMaterialUploads: ClaimMaterialUpload[] =
+          existingClaim.materialUploads || [];
 
         const validFiles = cleanedAttachments.filter(
           (att) =>
@@ -2805,15 +4637,24 @@ export const App: React.FC = () => {
           string,
           { name: string; url: string; ossKey?: string }[]
         >();
-        validFiles.forEach((att) => {
-          const catName =
-            postClaimMeta?.materialName ||
-            att.analysis?.category ||
-            "其他材料";
+        const matchedFiles = validFiles.map((att) => {
+          const match = resolveMaterialMatch(
+            att,
+            existingRequiredMaterials,
+            postClaimMeta?.materialName,
+          );
+          return { attachment: att, match };
+        });
+        matchedFiles.forEach(({ attachment, match }) => {
+          const catName = match.materialName;
           if (!grouped.has(catName)) grouped.set(catName, []);
           grouped
             .get(catName)!
-            .push({ name: att.name, url: att.url!, ossKey: att.ossKey || "" });
+            .push({
+              name: attachment.name,
+              url: attachment.url!,
+              ossKey: attachment.ossKey || "",
+            });
         });
 
         // 合并到现有 fileCategories
@@ -2829,10 +4670,114 @@ export const App: React.FC = () => {
           }
         });
 
+        let updatedMaterialUploads = [...existingMaterialUploads];
+        matchedFiles.forEach(({ attachment, match }) => {
+          if (!match.materialId) {
+            return;
+          }
+          const fileRecord = {
+            name: attachment.name,
+            url: attachment.url!,
+            ossKey: attachment.ossKey || "",
+          };
+          const idx = updatedMaterialUploads.findIndex(
+            (item) => item.materialId === match.materialId,
+          );
+          if (idx >= 0) {
+            updatedMaterialUploads = updatedMaterialUploads.map((item, itemIndex) =>
+              itemIndex === idx
+                ? {
+                    ...item,
+                    files: [...item.files, fileRecord],
+                  }
+                : item,
+            );
+          } else {
+            updatedMaterialUploads = [
+              ...updatedMaterialUploads,
+              {
+                materialId: match.materialId,
+                materialName: match.materialName,
+                files: [fileRecord],
+              },
+            ];
+          }
+        });
+
         await fetch(`/api/claim-cases/${claimIdToSync}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ fileCategories: updatedCategories }),
+          body: JSON.stringify({
+            fileCategories: updatedCategories,
+            materialUploads: updatedMaterialUploads,
+          }),
+        });
+        const materialMatchSummary = buildMaterialMatchSummary(matchedFiles);
+        setClaimState((prev) => ({
+          ...prev,
+          historicalClaims: (prev.historicalClaims || []).map((claim) =>
+            claim.id === claimIdToSync
+              ? {
+                  ...claim,
+                  fileCategories: updatedCategories,
+                  materialUploads: updatedMaterialUploads,
+                  requiredMaterials: markUploadedMaterials(
+                    claim.requiredMaterials || [],
+                    updatedCategories,
+                    updatedMaterialUploads,
+                  ),
+                  documents: [
+                    ...(claim.documents || []),
+                    ...matchedFiles.map(({ attachment, match }, index) => ({
+                      id: `POST-${Date.now()}-${index}`,
+                      name: attachment.name,
+                      type: attachment.type,
+                      status: "verified" as const,
+                      url: attachment.url,
+                      ossKey: attachment.ossKey,
+                      category: match.materialName,
+                      ocrData: attachment.analysis?.ocr,
+                      medicalData: attachment.analysis?.medicalData,
+                      dischargeSummaryData: attachment.analysis?.dischargeSummaryData,
+                      missingFields: attachment.analysis?.missingFields,
+                      analysis: attachment.analysis,
+                    })),
+                  ],
+                }
+              : claim,
+          ),
+        }));
+        setSelectedDetailClaim((prev) => {
+          if (!prev || prev.id !== claimIdToSync) {
+            return prev;
+          }
+          return {
+            ...prev,
+            fileCategories: updatedCategories,
+            materialUploads: updatedMaterialUploads,
+            requiredMaterials: markUploadedMaterials(
+              prev.requiredMaterials || [],
+              updatedCategories,
+              updatedMaterialUploads,
+            ),
+            documents: [
+              ...(prev.documents || []),
+              ...matchedFiles.map(({ attachment, match }, index) => ({
+                id: `POST-DETAIL-${Date.now()}-${index}`,
+                name: attachment.name,
+                type: attachment.type,
+                status: "verified" as const,
+                url: attachment.url,
+                ossKey: attachment.ossKey,
+                category: match.materialName,
+                ocrData: attachment.analysis?.ocr,
+                medicalData: attachment.analysis?.medicalData,
+                dischargeSummaryData: attachment.analysis?.dischargeSummaryData,
+                missingFields: attachment.analysis?.missingFields,
+                analysis: attachment.analysis,
+              })),
+            ],
+          };
         });
         console.log(
           "[Claim] Post-claim files saved to backend:",
@@ -2840,6 +4785,9 @@ export const App: React.FC = () => {
           validFiles.length,
           "files",
         );
+        if (materialMatchSummary) {
+          appendAssistantMessage(materialMatchSummary);
+        }
       } catch (err) {
         console.error("[Claim] Failed to save post-claim files:", err);
       }
@@ -3004,7 +4952,26 @@ export const App: React.FC = () => {
         duration: Date.now() - attachStart,
       });
     } else {
-      setSelectedDetailClaim(claim);
+      let nextClaim = claim;
+      try {
+        const response = await fetch(`/api/claim-cases/${claim.id}`);
+        if (response.ok) {
+          const backendClaim = (await response.json()) as BackendClaimCase;
+          nextClaim = mergeClaimDetail(claim, backendClaim);
+          setClaimState((prev) => ({
+            ...prev,
+            historicalClaims: (prev.historicalClaims || []).map((item) =>
+              item.id === claim.id ? nextClaim : item,
+            ),
+          }));
+        }
+      } catch (error) {
+        console.warn("[Claim Detail] Failed to fetch latest claim detail:", error);
+      }
+
+      setSelectedDetailClaim(nextClaim);
+      setSubmittedClaimId(nextClaim.id);
+      setSubmittedMaterials(nextClaim.requiredMaterials || []);
       logUserOperation({
         operationType: UserOperationType.VIEW_CLAIM_DETAIL,
         operationLabel: "查看案件详情",
@@ -3083,11 +5050,19 @@ export const App: React.FC = () => {
 
   const toggleVoiceMode = async () => {
     if (isVoiceMode) {
-      liveSessionRef.current?.close();
-      mediaStreamRef.current
-        ?.getTracks()
-        .forEach((t: MediaStreamTrack) => t.stop());
+      shouldResumeVoiceRecognitionRef.current = false;
+      voiceNetworkRetryCountRef.current = 0;
+      speechRecognitionRef.current?.stop();
+      if (voiceTransportModeRef.current === "server") {
+        await stopServerVoiceTransport();
+      } else {
+        voiceTransportModeRef.current = null;
+      }
+      window.speechSynthesis?.cancel();
       setIsVoiceMode(false);
+      setIsTranscribing(false);
+      setVoiceTranscript("");
+      setVoiceStatusText("请直接描述您的事故情况");
       logUserOperation({
         operationType: UserOperationType.LIVE_AUDIO_SESSION,
         operationLabel: "结束语音会话",
@@ -3097,58 +5072,34 @@ export const App: React.FC = () => {
     } else {
       const voiceStart = Date.now();
       try {
-        setIsVoiceMode(true);
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-        });
-        mediaStreamRef.current = stream;
-        const inputCtx = new (
-          window.AudioContext || (window as any).webkitAudioContext
-        )({ sampleRate: 16000 });
-        const outputCtx = new (
-          window.AudioContext || (window as any).webkitAudioContext
-        )({ sampleRate: 24000 });
-        outputAudioContextRef.current = outputCtx;
+        const startedServerVoice = await startServerVoiceMode();
+        if (startedServerVoice) {
+          logUserOperation({
+            operationType: UserOperationType.LIVE_AUDIO_SESSION,
+            operationLabel: "开始语音会话",
+            userName,
+            userGender,
+            duration: Date.now() - voiceStart,
+          });
+          return;
+        }
 
-        const sessionPromise = connectLive({
-          onopen: () => {
-            const source = inputCtx.createMediaStreamSource(stream);
-            const scriptProcessor = inputCtx.createScriptProcessor(4096, 1, 1);
-            scriptProcessor.onaudioprocess = (e) => {
-              const inputData = e.inputBuffer.getChannelData(0);
-              const pcmBlob = createBlob(inputData);
-              sessionPromise.then((session: any) =>
-                session.sendRealtimeInput({ media: pcmBlob }),
-              );
-            };
-            source.connect(scriptProcessor);
-            scriptProcessor.connect(inputCtx.destination);
-          },
-          onmessage: async (msg: any) => {
-            const base64Audio =
-              msg.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
-            if (base64Audio) {
-              const buffer = await decodeAudioData(
-                decode(base64Audio),
-                outputCtx,
-                24000,
-                1,
-              );
-              const source = outputCtx.createBufferSource();
-              source.buffer = buffer;
-              source.connect(outputCtx.destination);
-              nextStartTimeRef.current = Math.max(
-                nextStartTimeRef.current,
-                outputCtx.currentTime,
-              );
-              source.start(nextStartTimeRef.current);
-              nextStartTimeRef.current += buffer.duration;
-            }
-          },
-          onerror: () => setIsVoiceMode(false),
-          onclose: () => setIsVoiceMode(false),
-        });
-        liveSessionRef.current = await sessionPromise;
+        const RecognitionCtor =
+          window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        if (!RecognitionCtor) {
+          appendAssistantMessage("当前语音服务不可用，且浏览器不支持本地语音识别，请改用文字输入。");
+          return;
+        }
+
+        setIsVoiceMode(true);
+        voiceTransportModeRef.current = "browser";
+        setVoiceOutputChannel("browser");
+        voiceNetworkRetryCountRef.current = 0;
+        setVoiceTranscript("");
+        setVoiceStatusText("正在聆听...");
+        shouldResumeVoiceRecognitionRef.current = true;
+        startBrowserVoiceRecognition(false);
         logUserOperation({
           operationType: UserOperationType.LIVE_AUDIO_SESSION,
           operationLabel: "开始语音会话",
@@ -3158,6 +5109,8 @@ export const App: React.FC = () => {
         });
       } catch (err) {
         setIsVoiceMode(false);
+        voiceTransportModeRef.current = null;
+        setVoiceStatusText("请直接描述您的事故情况");
         logUserOperation({
           operationType: UserOperationType.LIVE_AUDIO_SESSION,
           operationLabel: "开始语音会话失败",
@@ -3171,8 +5124,66 @@ export const App: React.FC = () => {
   };
 
   const handlePolicySelect = async (policy: Policy) => {
-    setClaimState((prev) => ({ ...prev, selectedPolicyId: policy.id }));
-    setSelectedPolicyForForm(policy);
+    if (
+      isVoiceModeRef.current &&
+      claimState.claimOrchestrator?.state === "SELECTING_POLICY"
+    ) {
+      const policies = claimState.claimOrchestrator.availablePolicies || [];
+      const policyIndex = policies.findIndex((item) => item.id === policy.id);
+
+      if (policyIndex >= 0) {
+        setIsLoading(true);
+        try {
+          const toolResponse = await executeClaimOrchestratorSelection(
+            policyIndex + 1,
+            claimState,
+          );
+          if (toolResponse.data?.claimStatePatch) {
+            setClaimState(toolResponse.data.claimStatePatch as ClaimState);
+          }
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: Date.now().toString(),
+              role: "user",
+              content: `选择保单：${policy.type}`,
+              timestamp: Date.now(),
+            },
+            {
+              id: (Date.now() + 1).toString(),
+              role: "assistant",
+              content: toolResponse.message,
+              timestamp: Date.now(),
+            },
+          ]);
+          if (isVoiceModeRef.current) {
+            speakAssistantReply(toolResponse.message);
+          }
+        } catch (error) {
+          console.error("[Claim Orchestrator Policy Select Error]", error);
+        } finally {
+          setIsLoading(false);
+        }
+        return;
+      }
+    }
+
+    setClaimState((prev) => ({
+      ...prev,
+      selectedPolicyId: policy.id,
+      claimOrchestrator: prev.claimOrchestrator
+        ? {
+            ...prev.claimOrchestrator,
+            state: "IDLE",
+            availablePolicies: [],
+            selectedPolicy: null,
+            intakeConfig: null,
+            collectedFields: {},
+            pendingFieldId: null,
+            lastResponse: undefined,
+          }
+        : prev.claimOrchestrator,
+    }));
 
     // 1. Add User Message
     const userMsg: Message = {
@@ -3201,20 +5212,77 @@ export const App: React.FC = () => {
         console.warn("Failed to fetch intakeConfig:", err);
       }
     }
-    setSelectedIntakeConfig(intakeConfig);
     setDynamicFormValues({});
     setFormErrors({});
+    setSelectedIntakeConfig(intakeConfig);
 
-    // 3. Add Assistant Message with Choice (conditionally show “在线填单”)
     const hasIntakeFields = !!intakeConfig;
+
+    if (!isVoiceModeRef.current) {
+      if (!hasIntakeFields) {
+        setSelectedPolicyForForm(null);
+        setShowReportingForm(false);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: (Date.now() + 1).toString(),
+            role: "assistant",
+            content: `收到，已为您锁定保单 **${policy.type}** (${policy.id})。✅\n\n该产品未配置在线报案字段，当前无法继续在线报案。`,
+            timestamp: Date.now() + 1,
+          },
+        ]);
+        setIsLoading(false);
+
+        logUserOperation({
+          operationType: UserOperationType.SUBMIT_FORM,
+          operationLabel: "选择保单",
+          userName,
+          userGender,
+          inputData: {
+            policyId: policy.id,
+            policyType: policy.type,
+            hasIntakeConfig: false,
+          },
+        });
+        return;
+      }
+
+      setSelectedPolicyForForm(policy);
+      setShowReportingForm(true);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content: `收到，已为您锁定保单 **${policy.type}** (${policy.id})。✅\n\n已为您打开在线报案卡片，请填写事故信息并提交。`,
+          timestamp: Date.now() + 1,
+        },
+      ]);
+      setIsLoading(false);
+
+      logUserOperation({
+        operationType: UserOperationType.SUBMIT_FORM,
+        operationLabel: "选择保单",
+        userName,
+        userGender,
+        inputData: {
+          policyId: policy.id,
+          policyType: policy.type,
+          hasIntakeConfig: true,
+        },
+      });
+      return;
+    }
+
+    setSelectedPolicyForForm(policy);
+    setShowReportingForm(false);
+
+    // 3. Voice flow continues with conversational collection
     const aiMsg: Message = {
       id: (Date.now() + 1).toString(),
       role: "assistant",
-      content: hasIntakeFields
-        ? `收到，已为您锁定保单 **${policy.type}** (${policy.id})。✅\n\n为了更准确地记录事故信息，您可以选择以下方式继续：`
-        : `收到，已为您锁定保单 **${policy.type}** (${policy.id})。✅\n\n请通过语音描述您的事故情况：`,
+      content: `收到，已为您锁定保单 **${policy.type}** (${policy.id})。✅\n\n请通过语音描述您的事故情况：`,
       timestamp: Date.now() + 1,
-      reportingChoice: true,
     };
     setMessages((prev) => [...prev, aiMsg]);
     setIsLoading(false);
@@ -3406,13 +5474,21 @@ export const App: React.FC = () => {
       { name: string; url: string; ossKey?: string }[]
     >();
     pendingFiles.forEach((file) => {
+      const persistedUrl =
+        file.url &&
+        (file.url.startsWith("/uploads/") || file.url.startsWith("http"))
+          ? file.url
+          : "";
+      if (!persistedUrl && !file.ossKey) {
+        return;
+      }
       const category = file.analysis?.category || "其他材料";
       if (!fileCategoriesMap.has(category)) {
         fileCategoriesMap.set(category, []);
       }
       fileCategoriesMap.get(category)!.push({
         name: file.name,
-        url: file.url || file.base64 || "",
+        url: persistedUrl,
         ossKey: file.ossKey,
       });
     });
@@ -3426,6 +5502,7 @@ export const App: React.FC = () => {
 
     // Create backend claim case record
     let claimCaseCreated = false;
+    let claimCaseErrorMessage = "";
     try {
       const response = await fetch("/api/claim-cases", {
         method: "POST",
@@ -3471,13 +5548,37 @@ export const App: React.FC = () => {
         const errorData = await response
           .json()
           .catch(() => ({ error: "Unknown error" }));
+        claimCaseErrorMessage = errorData.error || "Unknown error";
         console.error(
           "[Claim] Failed to create backend claim case:",
           errorData,
         );
       }
     } catch (err) {
+      claimCaseErrorMessage =
+        err instanceof Error ? err.message : "Network error";
       console.error("[Claim] Network error creating backend claim case:", err);
+    }
+
+    if (!claimCaseCreated) {
+      setClaimState((prev) => ({
+        ...prev,
+        historicalClaims: (prev.historicalClaims || []).filter(
+          (claim) => claim.id !== newClaimId,
+        ),
+      }));
+      setSubmittedClaimId(null);
+      setSubmittedMaterials([]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          role: "assistant",
+          content: `报案提交失败，案件尚未同步到后台。${claimCaseErrorMessage ? `\n\n原因：${claimCaseErrorMessage}` : ""}\n\n请重试提交；已上传的材料仍会保留在当前页面。`,
+          timestamp: Date.now(),
+        },
+      ]);
+      return;
     }
 
     setPendingFiles([]);
@@ -3710,7 +5811,13 @@ export const App: React.FC = () => {
               className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"} animate-enter`}
             >
               <div
-                className={`p-4 max-w-[85%] sm:max-w-[75%] ${msg.role === "assistant" ? "msg-bubble-ai" : "msg-bubble-user"}`}
+                className={`p-4 max-w-[85%] sm:max-w-[75%] ${
+                  msg.role === "assistant"
+                    ? "msg-bubble-ai"
+                    : msg.role === "system"
+                      ? "rounded-2xl border border-blue-200 bg-blue-50/90 text-blue-900 shadow-sm"
+                      : "msg-bubble-user"
+                }`}
               >
                 <div className="prose-content">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>
@@ -3925,11 +6032,12 @@ export const App: React.FC = () => {
                     {msg.uiComponent === UIComponentType.MATERIALS_LIST && (
                       <MaterialsListCard
                         data={msg.uiData as MaterialsListInfo}
-                        onViewSample={(url, name) =>
+                        onViewSample={(url, name, ossKey) =>
                           setSamplePreviewData({
                             isOpen: true,
                             url,
                             name: `${name}样例`,
+                            ossKey,
                           })
                         }
                       />
@@ -3945,6 +6053,272 @@ export const App: React.FC = () => {
                       <PremiumImpactCard
                         data={msg.uiData as PremiumImpactInfo}
                       />
+                    )}
+                    {msg.uiComponent === UIComponentType.SETTLEMENT_ESTIMATE && (
+                      <div className="rounded-2xl border border-emerald-100 bg-emerald-50/80 p-4 text-slate-700 shadow-sm">
+                        {(() => {
+                          const data = msg.uiData as SettlementEstimateInfo;
+                          return (
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <div className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-600">
+                                    赔付预估
+                                  </div>
+                                  <div className="mt-1 text-sm font-semibold text-slate-800">
+                                    {data.claimType} · {data.claimId}
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <div className="text-xs text-slate-500">预估金额</div>
+                                  <div className="text-xl font-bold text-emerald-700">
+                                    ¥{data.estimatedAmount.toLocaleString()}
+                                  </div>
+                                </div>
+                              </div>
+                              {data.breakdown.length > 0 && (
+                                <div className="space-y-2">
+                                  {data.breakdown.map((item, index) => (
+                                    <div
+                                      key={`${item.item}-${index}`}
+                                      className="rounded-xl border border-white/80 bg-white/80 px-3 py-2"
+                                    >
+                                      <div className="flex items-center justify-between gap-3 text-sm">
+                                        <span className="font-medium text-slate-700">
+                                          {item.item}
+                                        </span>
+                                        <span className="font-semibold text-slate-900">
+                                          ¥{item.amount.toLocaleString()}
+                                        </span>
+                                      </div>
+                                      {item.note && (
+                                        <div className="mt-1 text-xs text-slate-500">
+                                          {item.note}
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              <div className="text-xs text-slate-500">
+                                {data.disclaimer}
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    )}
+                    {msg.uiComponent === UIComponentType.SETTLEMENT_DETAIL && (
+                      <div className="rounded-2xl border border-sky-100 bg-sky-50/80 p-4 text-slate-700 shadow-sm">
+                        {(() => {
+                          const data = msg.uiData as SettlementDetailInfo;
+                          return (
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <div className="text-xs font-bold uppercase tracking-[0.2em] text-sky-600">
+                                    赔付明细
+                                  </div>
+                                  <div className="mt-1 text-sm font-semibold text-slate-800">
+                                    案件 {data.claimId}
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <div className="text-xs text-slate-500">核定金额</div>
+                                  <div className="text-xl font-bold text-sky-700">
+                                    ¥{data.finalAmount.toLocaleString()}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="space-y-2">
+                                {data.items.map((item, index) => (
+                                  <div
+                                    key={`${item.name}-${index}`}
+                                    className="rounded-xl border border-white/80 bg-white/80 px-3 py-2"
+                                  >
+                                    <div className="flex items-center justify-between gap-3 text-sm">
+                                      <span className="font-medium text-slate-700">
+                                        {item.name}
+                                      </span>
+                                      <span className="text-slate-500">
+                                        ¥{item.claimed.toLocaleString()} → ¥
+                                        {item.approved.toLocaleString()}
+                                      </span>
+                                    </div>
+                                    <div className="mt-1 text-xs text-slate-500">
+                                      {item.deduction}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                              <div className="flex items-center justify-between rounded-xl bg-white/70 px-3 py-2 text-sm">
+                                <span className="text-slate-500">
+                                  申请金额 ¥{data.totalClaimed.toLocaleString()}
+                                </span>
+                                <span className="font-semibold text-slate-800">
+                                  核定金额 ¥{data.totalApproved.toLocaleString()}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    )}
+                    {msg.uiComponent === UIComponentType.POLICY_INFO && (
+                      <div className="rounded-2xl border border-amber-100 bg-amber-50/80 p-4 text-slate-700 shadow-sm">
+                        {(() => {
+                          const data = msg.uiData as PolicyInfoData;
+                          return (
+                            <div className="space-y-3">
+                              <div>
+                                <div className="text-xs font-bold uppercase tracking-[0.2em] text-amber-600">
+                                  保单信息
+                                </div>
+                                <div className="mt-1 text-sm font-semibold text-slate-800">
+                                  {data.productName}
+                                </div>
+                                <div className="text-xs text-slate-500">
+                                  保单号 {data.policyId} · 被保人 {data.insuredName}
+                                </div>
+                              </div>
+                              <div className="rounded-xl bg-white/80 px-3 py-2 text-xs text-slate-600">
+                                保障期限：{data.validFrom || "未知"} 至 {data.validUntil || "未知"}
+                              </div>
+                              {data.coverages.length > 0 && (
+                                <div className="space-y-2">
+                                  {data.coverages.map((coverage, index) => (
+                                    <div
+                                      key={`${coverage.name}-${index}`}
+                                      className="rounded-xl border border-white/80 bg-white/80 px-3 py-2"
+                                    >
+                                      <div className="flex items-center justify-between gap-3 text-sm">
+                                        <span className="font-medium text-slate-700">
+                                          {coverage.name}
+                                        </span>
+                                        <span className="text-slate-500">
+                                          {coverage.limit
+                                            ? `保额 ¥${coverage.limit.toLocaleString()}`
+                                            : "详见条款"}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    )}
+                    {msg.uiComponent === UIComponentType.PAYMENT_STATUS && (
+                      <div className="rounded-2xl border border-lime-100 bg-lime-50/80 p-4 text-slate-700 shadow-sm">
+                        {(() => {
+                          const data = msg.uiData as PaymentStatusInfo;
+                          const statusLabelMap = {
+                            pending: "待打款",
+                            processing: "打款处理中",
+                            success: "已到账",
+                            failed: "打款失败",
+                          } as const;
+                          return (
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <div className="text-xs font-bold uppercase tracking-[0.2em] text-lime-600">
+                                    打款状态
+                                  </div>
+                                  <div className="mt-1 text-sm font-semibold text-slate-800">
+                                    案件 {data.claimId}
+                                  </div>
+                                </div>
+                                <div className="rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-slate-700">
+                                  {statusLabelMap[data.paymentStatus]}
+                                </div>
+                              </div>
+                              {data.amount ? (
+                                <div className="rounded-xl bg-white/80 px-3 py-2 text-sm font-semibold text-slate-800">
+                                  打款金额 ¥{data.amount.toLocaleString()}
+                                </div>
+                              ) : null}
+                              <div className="space-y-1 text-xs text-slate-500">
+                                {data.bankName ? <div>收款银行：{data.bankName}</div> : null}
+                                {data.accountTail ? <div>尾号：{data.accountTail}</div> : null}
+                                {data.transactionId ? <div>流水号：{data.transactionId}</div> : null}
+                                {data.estimatedDate ? <div>{data.estimatedDate}</div> : null}
+                                {data.completedDate ? <div>到账日期：{data.completedDate}</div> : null}
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    )}
+                    {msg.uiComponent === UIComponentType.COVERAGE_INFO && (
+                      <div className="rounded-2xl border border-violet-100 bg-violet-50/80 p-4 text-slate-700 shadow-sm">
+                        {(() => {
+                          const data = msg.uiData as CoverageInfo;
+                          return (
+                            <div className="space-y-3">
+                              <div className="text-xs font-bold uppercase tracking-[0.2em] text-violet-600">
+                                保障范围
+                              </div>
+                              <div className="text-sm text-slate-700">{data.explanation}</div>
+                              {data.coverageItems.length > 0 && (
+                                <div className="space-y-2">
+                                  {data.coverageItems.map((item, index) => (
+                                    <div
+                                      key={`${item.name}-${index}`}
+                                      className="rounded-xl border border-white/80 bg-white/80 px-3 py-2"
+                                    >
+                                      <div className="flex items-center justify-between gap-3 text-sm">
+                                        <span className="font-medium text-slate-700">
+                                          {item.name}
+                                        </span>
+                                        <span
+                                          className={
+                                            item.covered ? "text-emerald-600" : "text-rose-500"
+                                          }
+                                        >
+                                          {item.covered ? "可赔" : "不赔"}
+                                        </span>
+                                      </div>
+                                      {item.note ? (
+                                        <div className="mt-1 text-xs text-slate-500">{item.note}</div>
+                                      ) : null}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              {data.exclusions.length > 0 && (
+                                <div className="rounded-xl bg-white/80 px-3 py-2 text-xs text-slate-500">
+                                  重点注意：{data.exclusions.join("；")}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    )}
+                    {msg.uiComponent === UIComponentType.CLAIM_HISTORY && (
+                      <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 text-slate-700 shadow-sm">
+                        {(() => {
+                          const data = msg.uiData as ClaimHistoryInfo;
+                          return (
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between">
+                                <div className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
+                                  历史理赔
+                                </div>
+                                <div className="text-xs text-slate-500">
+                                  共 {data.totalCount} 件
+                                </div>
+                              </div>
+                              <div className="text-sm text-slate-700">
+                                累计申请金额 ¥{data.totalAmount.toLocaleString()}
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
                     )}
                   </div>
                 )}
@@ -3969,6 +6343,41 @@ export const App: React.FC = () => {
 
               {/* Interactive Elements (Below Bubble) */}
               <div className="mt-2 w-full max-w-[85%] sm:max-w-[75%]">
+                {msg.role === "assistant" && (
+                  <div className="mb-2 flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleReaction(msg.id, "like")}
+                      className={`glass-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${messageQuickActions[msg.id]?.reaction === "like" ? "text-emerald-600 bg-emerald-50/80 border-emerald-200" : "text-slate-600"}`}
+                    >
+                      <i className="fas fa-thumbs-up mr-1"></i> 点赞
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleReaction(msg.id, "dislike")}
+                      className={`glass-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${messageQuickActions[msg.id]?.reaction === "dislike" ? "text-rose-600 bg-rose-50/80 border-rose-200" : "text-slate-600"}`}
+                    >
+                      <i className="fas fa-thumbs-down mr-1"></i> 点踩
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyMessage(msg)}
+                      className="glass-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600"
+                    >
+                      <i className="fas fa-copy mr-1"></i>
+                      {messageQuickActions[msg.id]?.copied ? "已复制" : "复制"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleShareMessage(msg)}
+                      className="glass-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600"
+                    >
+                      <i className="fas fa-share-nodes mr-1"></i>
+                      {messageQuickActions[msg.id]?.shared ? "已分享" : "分享"}
+                    </button>
+                  </div>
+                )}
+
                 {msg.reportingChoice && (
                   <div className="flex gap-2">
                     <button
@@ -4081,6 +6490,7 @@ export const App: React.FC = () => {
                                         isOpen: true,
                                         url: material.sampleUrl,
                                         name: `${material.materialName}样例`,
+                                        ossKey: material.ossKey,
                                       })
                                     }
                                     className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 transition-colors"
@@ -4556,6 +6966,7 @@ export const App: React.FC = () => {
         }
         sampleUrl={samplePreviewData.url}
         sampleName={samplePreviewData.name}
+        sampleOssKey={samplePreviewData.ossKey}
       />
 
       {/* Upload Guide Modal */}
@@ -5077,10 +7488,17 @@ export const App: React.FC = () => {
               <i className="fas fa-microphone"></i>
             </div>
           </div>
+          <div
+            className={`mt-6 rounded-full px-3 py-1 text-xs font-semibold ${getVoiceOutputBadge(voiceOutputChannel).className}`}
+          >
+            {getVoiceOutputBadge(voiceOutputChannel).label}
+          </div>
           <h3 className="mt-8 text-2xl font-bold text-slate-800">
-            正在聆听...
+            {isTranscribing ? "正在处理..." : voiceStatusText}
           </h3>
-          <p className="text-slate-500 mt-2">请直接描述您的事故情况</p>
+          <p className="text-slate-500 mt-2">
+            {voiceTranscript || "请直接描述您的事故情况"}
+          </p>
           <button
             onClick={toggleVoiceMode}
             className="mt-12 w-16 h-16 rounded-full bg-red-100 text-red-500 flex items-center justify-center text-xl hover:bg-red-200 transition-colors"
@@ -5177,6 +7595,91 @@ export const App: React.FC = () => {
                   </div>
                 )}
 
+              {/* Required Materials Section */}
+              {selectedDetailClaim.requiredMaterials &&
+                selectedDetailClaim.requiredMaterials.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                      <i className="fas fa-clipboard-list"></i> 材料清单
+                    </h4>
+                    <div className="space-y-3">
+                      {selectedDetailClaim.requiredMaterials.map((material) => {
+                        const uploadedFiles = getUploadedFilesForMaterial(
+                          selectedDetailClaim,
+                          material.materialId,
+                        );
+
+                        return (
+                          <div
+                            key={material.materialId}
+                            className="p-4 rounded-2xl bg-white border border-slate-100 shadow-sm"
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="text-sm font-bold text-slate-800">
+                                    {material.materialName}
+                                  </span>
+                                  <span
+                                    className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                                      material.required
+                                        ? "bg-red-100 text-red-600"
+                                        : "bg-slate-100 text-slate-500"
+                                    }`}
+                                  >
+                                    {material.required ? "必传" : "选传"}
+                                  </span>
+                                  <span
+                                    className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                                      material.uploaded
+                                        ? "bg-emerald-100 text-emerald-600"
+                                        : "bg-amber-100 text-amber-600"
+                                    }`}
+                                  >
+                                    {material.uploaded ? "已上传" : "待上传"}
+                                  </span>
+                                  {uploadedFiles.length > 0 && (
+                                    <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-blue-100 text-blue-600">
+                                      已挂接 {uploadedFiles.length} 份
+                                    </span>
+                                  )}
+                                </div>
+                                {material.materialDescription && (
+                                  <p className="mt-2 text-xs text-slate-500 leading-relaxed">
+                                    {material.materialDescription}
+                                  </p>
+                                )}
+                              </div>
+                              <button
+                                onClick={() =>
+                                  handleMaterialUploadForType(material.materialId)
+                                }
+                                className="shrink-0 px-3 py-1.5 rounded-lg bg-blue-500 text-white text-xs font-bold hover:bg-blue-600 transition-colors"
+                              >
+                                上传
+                              </button>
+                            </div>
+
+                            {uploadedFiles.length > 0 && (
+                              <div className="mt-3 pt-3 border-t border-slate-100 space-y-2">
+                                {uploadedFiles.map((file, index) => (
+                                  <div
+                                    key={`${material.materialId}-${index}-${file.name}`}
+                                    className="flex items-center gap-2 text-xs text-slate-600 bg-slate-50 rounded-lg px-3 py-2"
+                                  >
+                                    <i className="fas fa-file-lines text-slate-400"></i>
+                                    <span className="truncate">{file.name}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
               {/* Documents Section */}
               <div>
                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
@@ -5186,21 +7689,79 @@ export const App: React.FC = () => {
                   {selectedDetailClaim.documents?.map((d, i) => (
                     <div
                       key={i}
-                      onClick={() => handleDocumentClick(d)}
-                      className="p-3 bg-white rounded-xl border border-slate-100 flex items-center gap-3 hover:shadow-md transition-shadow cursor-pointer active:scale-95"
+                      className="p-3 bg-white rounded-xl border border-slate-100 flex flex-col gap-3 hover:shadow-md transition-shadow"
                     >
-                      <div className="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 shrink-0">
-                        <i className={`fas ${getDocIcon(d.name)}`}></i>
-                      </div>
-                      <div className="overflow-hidden min-w-0">
-                        <div className="text-sm font-bold text-slate-700 truncate">
-                          {d.name}
+                      <div
+                        onClick={() => handleDocumentClick(d)}
+                        className="flex items-center gap-3 cursor-pointer active:scale-95"
+                      >
+                        <div className="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 shrink-0">
+                          <i className={`fas ${getDocIcon(d.name)}`}></i>
                         </div>
-                        <div className="text-xs text-slate-400 flex items-center gap-1">
-                          <i className="fas fa-check-circle text-green-500 text-[10px]"></i>{" "}
-                          已验证
+                        <div className="overflow-hidden min-w-0">
+                          <div className="text-sm font-bold text-slate-700 truncate">
+                            {d.name}
+                          </div>
+                          <div className="text-xs text-slate-400 flex items-center gap-1">
+                            <i className="fas fa-check-circle text-green-500 text-[10px]"></i>{" "}
+                            已验证
+                          </div>
+                          <div className="text-[10px] text-slate-500 mt-1">
+                            当前归类：{d.category || "未分类"}
+                          </div>
                         </div>
                       </div>
+                      {selectedDetailClaim.requiredMaterials &&
+                        selectedDetailClaim.requiredMaterials.length > 0 && (
+                          <div
+                            className="flex items-center gap-2"
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            <select
+                              value={
+                                documentMaterialSelections[
+                                  d.id || `${d.name}-${d.url || d.ossKey || ""}`
+                                ] || ""
+                              }
+                              onChange={(event) =>
+                                setDocumentMaterialSelections((prev) => ({
+                                  ...prev,
+                                  [d.id || `${d.name}-${d.url || d.ossKey || ""}`]:
+                                    event.target.value,
+                                }))
+                              }
+                              className="flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700 outline-none focus:border-blue-400"
+                            >
+                              <option value="">重新归类到材料项</option>
+                              {selectedDetailClaim.requiredMaterials.map((material) => (
+                                <option
+                                  key={material.materialId}
+                                  value={material.materialId}
+                                >
+                                  {material.materialName}
+                                </option>
+                              ))}
+                            </select>
+                            <button
+                              onClick={() =>
+                                handleReassignDocumentMaterial(
+                                  selectedDetailClaim,
+                                  d,
+                                )
+                              }
+                              disabled={
+                                reassigningDocumentKey ===
+                                  (d.id || `${d.name}-${d.url || d.ossKey || ""}`) ||
+                                !documentMaterialSelections[
+                                  d.id || `${d.name}-${d.url || d.ossKey || ""}`
+                                ]
+                              }
+                              className="shrink-0 rounded-lg bg-slate-900 px-3 py-2 text-xs font-bold text-white disabled:opacity-40"
+                            >
+                              保存
+                            </button>
+                          </div>
+                        )}
                     </div>
                   ))}
                   {!selectedDetailClaim.documents?.length && (

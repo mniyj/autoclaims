@@ -1,0 +1,381 @@
+[
+  {
+    "profileCode": "liability_death_third_party",
+    "profileName": "责任型死亡案件",
+    "description": "适用于第三者责任、雇主责任、作业责任等场景下的人身死亡案件，重点关注责任比例、关系事实、赔偿项目与抵扣口径。",
+    "priority": 100,
+    "triggers": {
+      "deathConfirmed": true,
+        "requiresAny": [
+          "hasLiabilityEvidence",
+          "hasLiabilityRatio",
+          "hasIdentityChainEvidence"
+        ]
+    },
+    "factSchema": {
+      "groups": [
+        {
+          "code": "policy_facts",
+          "name": "保单事实",
+          "fields": [
+            "insuranceType",
+            "productCode",
+            "policyNumber",
+            "insuredEntity",
+            "coverageList",
+            "limitPerPerson",
+            "aggregateLimit"
+          ]
+        },
+        {
+          "code": "incident_facts",
+          "name": "事故事实",
+          "fields": [
+            "accidentDateTime",
+            "accidentLocation",
+            "incidentSummary",
+            "incidentType"
+          ]
+        },
+        {
+          "code": "victim_facts",
+          "name": "伤亡事实",
+          "fields": [
+            "victimName",
+            "victimIdentity",
+            "deathConfirmed",
+            "deathDate"
+          ]
+        },
+        {
+          "code": "relationship_facts",
+          "name": "关系事实",
+          "fields": [
+            "claimants",
+            "claimantRelationship",
+            "victimRole",
+            "insuredSideOperator",
+            "workAssignmentRelation",
+            "onsiteControlRelation",
+            "liabilityLinkEstablished"
+          ]
+        },
+        {
+          "code": "liability_facts",
+          "name": "责任事实",
+          "fields": [
+            "liabilityBasis",
+            "liabilityRatio",
+            "liabilitySource",
+            "liabilityConflicts"
+          ]
+        },
+        {
+          "code": "payment_facts",
+          "name": "支付事实",
+          "fields": [
+            "paidAmountRecognized",
+            "paymentReceipts",
+            "deductionSuggested",
+            "deductionConfirmed"
+          ]
+        },
+        {
+          "code": "damage_facts",
+          "name": "损失事实",
+          "fields": [
+            "deathCompensation",
+            "funeralExpense",
+            "dependentExpense",
+            "medicalExpense",
+            "otherDamageItems"
+          ]
+        }
+      ]
+    },
+    "processingStrategy": {
+      "extract_fact": [
+        "case_initial_report",
+        "case_public_adjuster_report",
+        "mat-43",
+        "mat-44",
+        "mat-45",
+        "mat-65"
+      ],
+      "summarize": [
+        "mat-57",
+        "mat-58",
+        "mat-64",
+        "mat-66"
+      ],
+      "ocr_only": [
+        "mat-1",
+        "mat-2",
+        "mat-6"
+      ],
+      "archive_only": [
+        "video"
+      ]
+    },
+    "reviewChecklistTemplate": [
+      {
+        "code": "liability_ratio_source",
+        "title": "责任比例来源确认",
+        "severity": "warning",
+        "blocking": true,
+        "when": "hasLiabilityRatio",
+        "question": "责任比例是否采纳当前证据来源"
+      },
+      {
+        "code": "third_party_identity_chain",
+        "title": "第三者身份与责任链确认",
+        "severity": "warning",
+        "blocking": false,
+        "when": "hasIdentityChainEvidence",
+        "question": "是否采纳当前第三者身份及被保险人责任链事实"
+      },
+      {
+        "code": "payment_deduction",
+        "title": "已付款抵扣确认",
+        "severity": "warning",
+        "blocking": true,
+        "when": "hasRecognizedPayment",
+        "question": "已识别付款是否纳入抵扣"
+      },
+      {
+        "code": "dependent_needed",
+        "title": "被扶养人核验",
+        "severity": "info",
+        "blocking": false,
+        "when": "deathConfirmed",
+        "question": "是否存在应计入的被扶养人生活费"
+      },
+      {
+        "code": "regional_standard_check",
+        "title": "赔偿标准确认",
+        "severity": "warning",
+        "blocking": true,
+        "when": "hasRegionalStandards",
+        "question": "当前地区年度赔偿标准是否正确"
+      }
+    ],
+    "uiModules": {
+      "factCards": [
+        "incident_summary",
+        "liability_clue",
+        "payment_summary",
+        "police_record",
+        "third_party_identity_chain"
+      ],
+      "editableFacts": [
+        "liability_ratio",
+        "deduction_amount",
+        "third_party_identity_chain"
+      ],
+      "reportSections": [
+        "decision_summary",
+        "damage_items",
+        "decision_trace",
+        "pending_reviews"
+      ]
+    }
+  },
+  {
+    "profileCode": "accident_death_benefit",
+    "profileName": "意外身故给付案件",
+    "description": "适用于意外险、人寿险中的身故给付案件，重点关注保险责任成立、被保险人身份、受益人关系与给付金额。",
+    "priority": 80,
+    "triggers": {
+      "deathConfirmed": true,
+      "requiresAll": [
+        "hasNoLiabilityEvidence"
+      ]
+    },
+    "factSchema": {
+      "groups": [
+        {
+          "code": "policy_facts",
+          "name": "保单事实",
+          "fields": [
+            "insuranceType",
+            "productCode",
+            "policyNumber",
+            "insuredPerson",
+            "beneficiaryInfo",
+            "sumInsured"
+          ]
+        },
+        {
+          "code": "incident_facts",
+          "name": "事故事实",
+          "fields": [
+            "accidentDateTime",
+            "accidentLocation",
+            "incidentSummary",
+            "causeOfDeath"
+          ]
+        },
+        {
+          "code": "identity_facts",
+          "name": "身份事实",
+          "fields": [
+            "deceasedName",
+            "deathDate",
+            "claimantRelationship",
+            "beneficiaryIdentity"
+          ]
+        }
+      ]
+    },
+    "processingStrategy": {
+      "extract_fact": [
+        "mat-43",
+        "mat-44",
+        "mat-45"
+      ],
+      "summarize": [
+        "case_initial_report",
+        "mat-66"
+      ],
+      "ocr_only": [
+        "mat-1",
+        "mat-2",
+        "mat-6"
+      ],
+      "archive_only": [
+        "video"
+      ]
+    },
+    "reviewChecklistTemplate": [
+      {
+        "code": "beneficiary_relation",
+        "title": "受益人关系确认",
+        "severity": "warning",
+        "blocking": true,
+        "when": "hasClaimantRelationship",
+        "question": "是否采纳当前受益人或法定继承人口径"
+      },
+      {
+        "code": "coverage_period",
+        "title": "保险期间核验",
+        "severity": "warning",
+        "blocking": true,
+        "when": "deathConfirmed",
+        "question": "事故发生时间是否落在保险期间内"
+      }
+    ],
+    "uiModules": {
+      "factCards": [
+        "incident_summary",
+        "claimant_relationship",
+        "beneficiary_summary"
+      ],
+      "editableFacts": [
+        "beneficiary_confirmation"
+      ],
+      "reportSections": [
+        "decision_summary",
+        "benefit_amount",
+        "decision_trace",
+        "pending_reviews"
+      ]
+    }
+  },
+  {
+    "profileCode": "medical_expense_reimbursement",
+    "profileName": "医疗费用报销案件",
+    "description": "适用于医疗险、意外医疗及门急诊/住院费用报销案件，重点关注保险责任、票据、目录匹配和免赔/比例规则。",
+    "priority": 60,
+    "triggers": {
+      "requiresAny": [
+        "hasMedicalExpense"
+      ]
+    },
+    "factSchema": {
+      "groups": [
+        {
+          "code": "policy_facts",
+          "name": "保单事实",
+          "fields": [
+            "insuranceType",
+            "productCode",
+            "policyNumber",
+            "coverageCode",
+            "deductible",
+            "reimbursementRatio"
+          ]
+        },
+        {
+          "code": "medical_facts",
+          "name": "就医事实",
+          "fields": [
+            "visitDate",
+            "hospitalName",
+            "diagnosis",
+            "hospitalizationDays"
+          ]
+        },
+        {
+          "code": "expense_facts",
+          "name": "费用事实",
+          "fields": [
+            "medicalExpense",
+            "catalogMatchedAmount",
+            "selfPaidAmount",
+            "invoiceCount"
+          ]
+        }
+      ]
+    },
+    "processingStrategy": {
+      "extract_fact": [
+        "mat-20",
+        "mat-21"
+      ],
+      "summarize": [
+        "mat-7"
+      ],
+      "ocr_only": [
+        "mat-1",
+        "mat-2",
+        "mat-6"
+      ],
+      "archive_only": [
+        "video"
+      ]
+    },
+    "reviewChecklistTemplate": [
+      {
+        "code": "invoice_integrity",
+        "title": "票据完整性确认",
+        "severity": "warning",
+        "blocking": true,
+        "when": "hasMedicalExpense",
+        "question": "发票、清单、结算单是否完整可用"
+      },
+      {
+        "code": "medical_catalog",
+        "title": "目录匹配核验",
+        "severity": "info",
+        "blocking": false,
+        "when": "hasMedicalExpense",
+        "question": "是否需要复核医保目录和责任除外项"
+      }
+    ],
+    "uiModules": {
+      "factCards": [
+        "medical_summary",
+        "expense_summary"
+      ],
+      "editableFacts": [
+        "invoice_adjustment"
+      ],
+      "reportSections": [
+        "decision_summary",
+        "expense_items",
+        "decision_trace",
+        "pending_reviews"
+      ]
+    }
+  }
+]

@@ -35,7 +35,21 @@ export function resolveValue(value, context) {
   // 检查是否是变量引用 ${...}
   const varMatch = value.match(/^\$\{(.+)\}$/);
   if (varMatch) {
-    return getFieldValue(context, varMatch[1]);
+    const expression = varMatch[1].trim();
+    const offsetMatch = expression.match(/^([a-zA-Z0-9_.]+)\s*([+-])\s*(\d+)\s*d$/);
+    if (offsetMatch) {
+      const [, fieldPath, operator, daysText] = offsetMatch;
+      const baseValue = getFieldValue(context, fieldPath);
+      const baseDate = new Date(baseValue);
+      if (Number.isNaN(baseDate.getTime())) {
+        return undefined;
+      }
+      const deltaDays = Number(daysText) * (operator === '-' ? -1 : 1);
+      baseDate.setDate(baseDate.getDate() + deltaDays);
+      return baseDate.toISOString().split('T')[0];
+    }
+
+    return getFieldValue(context, expression);
   }
   
   return value;

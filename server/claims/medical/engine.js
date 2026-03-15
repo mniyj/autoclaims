@@ -8,8 +8,8 @@ export function inferMedicalCoverageCode() {
   return MEDICAL_COVERAGE_CODES.INPATIENT;
 }
 
-export function getMedicalCoverageConfig(productCode, coverageCode = MEDICAL_COVERAGE_CODES.INPATIENT) {
-  return getCoverageConfig(productCode, coverageCode);
+export function getMedicalCoverageConfig(productCode, coverageCode = MEDICAL_COVERAGE_CODES.INPATIENT, rulesetOverride = null) {
+  return getCoverageConfig(productCode, coverageCode, rulesetOverride);
 }
 
 export function isMedicalCoverageCode(coverageCode) {

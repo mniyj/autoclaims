@@ -22,7 +22,7 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
  */
 export const recognizeMedicalInvoice = async (
   imageSource: string | Blob,
-  model: 'gemini' | 'glm-ocr' | 'glm-ocr-structured' | 'paddle-ocr' = 'gemini'
+  model?: 'gemini' | 'glm-ocr' | 'glm-ocr-structured' | 'paddle-ocr'
 ): Promise<{ data: MedicalInvoiceData; log: AIInteractionLog }> => {
   const geminiModel = 'gemini-2.5-flash';
 
@@ -153,14 +153,14 @@ ${JSON.stringify(invoiceSchema, null, 2)}
     let usageMetadata: any;
 
     console.group('Invoice OCR Request');
-    console.log('Model:', model === 'glm-ocr' ? `glm-ocr + ${geminiModel}` : model === 'glm-ocr-structured' ? 'glm-ocr + glm' : model === 'paddle-ocr' ? `rapid-ocr + ${geminiModel}` : geminiModel);
+    console.log('Model:', model === 'glm-ocr' ? `glm-ocr + ${geminiModel}` : model === 'glm-ocr-structured' ? 'glm-ocr + glm' : model === 'paddle-ocr' ? `rapid-ocr + ${geminiModel}` : model === 'gemini' ? geminiModel : 'configured-by-server');
     console.groupEnd();
 
     const response = await fetch('/api/invoice-ocr', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        mode: model,
+        ...(model ? { mode: model } : {}),
         base64Data,
         mimeType,
         prompt,
@@ -226,7 +226,7 @@ ${JSON.stringify(invoiceSchema, null, 2)}
  */
 export const recognizeMultipleInvoiceImages = async (
   images: Array<{ source: File | string | Blob; fileName: string }>,
-  model: 'gemini' | 'glm-ocr' | 'glm-ocr-structured' | 'paddle-ocr' = 'gemini',
+  model?: 'gemini' | 'glm-ocr' | 'glm-ocr-structured' | 'paddle-ocr',
   onImageProgress?: (completedCount: number, total: number) => void
 ): Promise<Array<{ data: MedicalInvoiceData; log: AIInteractionLog; fileName: string }>> => {
   const CONCURRENCY = 2; // 最大并发数（避免触发 API 限流）
@@ -266,7 +266,7 @@ export const recognizeClaimMaterial = async (
   materialName: string,
   aiAuditPrompt: string,
   jsonSchema: string,
-  model: 'gemini' | 'glm-ocr' | 'paddle-ocr' = 'gemini'
+  model?: 'gemini' | 'glm-ocr' | 'paddle-ocr'
 ): Promise<{ extractedData: Record<string, any>; auditConclusion: string; log: AIInteractionLog }> => {
   const geminiModel = 'gemini-2.5-flash';
 
@@ -324,7 +324,7 @@ ${aiAuditPrompt}
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        mode: model,
+        ...(model ? { mode: model } : {}),
         base64Data,
         mimeType,
         prompt,

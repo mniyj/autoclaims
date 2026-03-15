@@ -1,4 +1,4 @@
-import RPCClient from '@alicloud/pop-core';
+import RPCClient from "@alicloud/pop-core";
 
 interface TokenInfo {
   token: string;
@@ -9,20 +9,24 @@ class AliyunTokenManager {
   private client: RPCClient;
   private cachedToken: TokenInfo | null = null;
   private tokenRefreshTimer: NodeJS.Timeout | null = null;
+  private pendingRefresh: Promise<string> | null = null; // deduplicate concurrent requests
 
   constructor() {
     const accessKeyId = process.env.ALIYUN_ACCESS_KEY_ID;
     const accessKeySecret = process.env.ALIYUN_ACCESS_KEY_SECRET;
 
     if (!accessKeyId || !accessKeySecret) {
-      throw new Error('阿里云 AccessKey 未配置');
+      throw new Error("阿里云 AccessKey 未配置");
     }
 
     this.client = new RPCClient({
       accessKeyId,
       accessKeySecret,
-      endpoint: 'http://nls-meta.cn-shanghai.aliyuncs.com',
-      apiVersion: '2019-02-28'
+      endpoint: "http://nls-meta.cn-shanghai.aliyuncs.com",
+      apiVersion: "2019-02-28",
+      opts: {
+        timeout: 15000, // 15 seconds (default 3s is too short when going through proxies)
+      },
     });
   }
 
@@ -32,7 +36,10 @@ class AliyunTokenManager {
    */
   async getToken(): Promise<string> {
     // 检查缓存的 Token 是否有效（提前5分钟刷新）
-    if (this.cachedToken && this.cachedToken.expireTime > Date.now() / 1000 + 300) {
+    if (
+      this.cachedToken &&
+      this.cachedToken.expireTime > Date.now() / 1000 + 300
+    ) {
       return this.cachedToken.token;
     }
 
@@ -41,32 +48,54 @@ class AliyunTokenManager {
   }
 
   /**
-   * 强制刷新 Token
+   * 强制刷新 Token（去重：并发调用只发一个 HTTP 请求）
    */
   private async refreshToken(): Promise<string> {
+    // If a refresh is already in progress, wait for it instead of making another HTTP request
+    if (this.pendingRefresh) {
+      return this.pendingRefresh;
+    }
+
+    this.pendingRefresh = this.doRefreshToken();
     try {
-      console.log('[AliyunTokenManager] 正在获取新 Token...');
-      
-      const result: any = await this.client.request('CreateToken', {}, { method: 'POST' });
-      
+      return await this.pendingRefresh;
+    } finally {
+      this.pendingRefresh = null;
+    }
+  }
+
+  private async doRefreshToken(): Promise<string> {
+    try {
+      console.log("[AliyunTokenManager] 正在获取新 Token...");
+
+      const result: any = await this.client.request(
+        "CreateToken",
+        {},
+        { method: "POST" },
+      );
+
       if (result.Token && result.Token.Id) {
         this.cachedToken = {
           token: result.Token.Id,
-          expireTime: result.Token.ExpireTime
+          expireTime: result.Token.ExpireTime,
         };
 
-        console.log('[AliyunTokenManager] Token 获取成功，有效期至:', 
-          new Date(result.Token.ExpireTime * 1000).toLocaleString());
+        console.log(
+          "[AliyunTokenManager] Token 获取成功，有效期至:",
+          new Date(result.Token.ExpireTime * 1000).toLocaleString(),
+        );
 
         // 设置自动刷新定时器（在过期前10分钟刷新）
-        this.scheduleRefresh(result.Token.ExpireTime * 1000 - Date.now() - 600000);
+        this.scheduleRefresh(
+          result.Token.ExpireTime * 1000 - Date.now() - 600000,
+        );
 
         return result.Token.Id;
       } else {
-        throw new Error('Token 响应格式错误');
+        throw new Error("Token 响应格式错误");
       }
     } catch (error) {
-      console.error('[AliyunTokenManager] 获取 Token 失败:', error);
+      console.error("[AliyunTokenManager] 获取 Token 失败:", error);
       throw error;
     }
   }
@@ -87,11 +116,13 @@ class AliyunTokenManager {
       try {
         await this.refreshToken();
       } catch (error) {
-        console.error('[AliyunTokenManager] 自动刷新 Token 失败:', error);
+        console.error("[AliyunTokenManager] 自动刷新 Token 失败:", error);
       }
     }, delay);
 
-    console.log(`[AliyunTokenManager] 已设置 Token 自动刷新，${Math.floor(delay / 60000)} 分钟后刷新`);
+    console.log(
+      `[AliyunTokenManager] 已设置 Token 自动刷新，${Math.floor(delay / 60000)} 分钟后刷新`,
+    );
   }
 
   /**

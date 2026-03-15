@@ -16,6 +16,55 @@ function toNumber(value) {
   return Number.isFinite(parsed) ? parsed : undefined;
 }
 
+function extractAgeLike(value) {
+  if (value === null || value === undefined || value === '') return undefined;
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string') {
+    const matched = value.match(/(\d{1,3})/);
+    if (matched) {
+      const parsed = Number(matched[1]);
+      return Number.isFinite(parsed) ? parsed : undefined;
+    }
+  }
+  return undefined;
+}
+
+function normalizeDiagnosisNames(...values) {
+  const names = [];
+  const append = (value) => {
+    if (!value) return;
+    if (Array.isArray(value)) {
+      value.forEach(append);
+      return;
+    }
+    if (typeof value === 'object') {
+      append(value.name);
+      return;
+    }
+    if (typeof value === 'string') {
+      value
+        .split(/[；;、,\n]/)
+        .map((item) => item.trim())
+        .filter(Boolean)
+        .forEach((item) => names.push(item));
+    }
+  };
+  values.forEach(append);
+  return [...new Set(names)];
+}
+
+function toBooleanLike(value, fallback = undefined) {
+  if (value === null || value === undefined || value === '') return fallback;
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') return value !== 0;
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (['true', '1', 'yes', 'y', '是'].includes(normalized)) return true;
+    if (['false', '0', 'no', 'n', '否'].includes(normalized)) return false;
+  }
+  return fallback;
+}
+
 export function calculateClaimedTotal(items) {
   if (!Array.isArray(items)) return 0;
   return items.reduce((sum, item) => {
@@ -76,6 +125,15 @@ export function normalizeClaimContext(claimCase = {}, ocrData = {}, invoiceItems
     claimCase.deathConfirmed
   );
 
+  normalized.is_drunk_driving =
+    toBooleanLike(
+      ocrData.is_drunk_driving ??
+      ocrData.isDrunkDriving ??
+      claimCase.is_drunk_driving ??
+      claimCase.isDrunkDriving,
+      false
+    );
+
   normalized.hospital_days =
     toNumber(
       ocrData.hospital_days ||
@@ -83,6 +141,48 @@ export function normalizeClaimContext(claimCase = {}, ocrData = {}, invoiceItems
       claimCase.hospital_days ||
       claimCase.hospitalDays
     ) || 0;
+
+  normalized.insured_age =
+    extractAgeLike(
+      ocrData.insured_age ||
+      ocrData.insuredAge ||
+      ocrData.age ||
+      ocrData.basicInfo?.age ||
+      claimCase.insured_age ||
+      claimCase.insuredAge ||
+      claimCase.age
+    );
+
+  normalized.insured_birth_date = toDateOnly(
+    ocrData.insured_birth_date ||
+    ocrData.insuredBirthDate ||
+    ocrData.birth_date ||
+    ocrData.birthDate ||
+    claimCase.insured_birth_date ||
+    claimCase.insuredBirthDate ||
+    claimCase.birthDate
+  );
+
+  normalized.special_disease_confirmed =
+    ocrData.special_disease_confirmed ??
+    ocrData.specialDiseaseConfirmed ??
+    claimCase.special_disease_confirmed ??
+    claimCase.specialDiseaseConfirmed ??
+    null;
+
+  normalized.diagnosis_names = normalizeDiagnosisNames(
+    ocrData.diagnosis_names,
+    ocrData.diagnosisNames,
+    ocrData.diagnoses,
+    ocrData.diagnosis,
+    ocrData.diagnosis_result,
+    ocrData.diagnosisResult,
+    claimCase.diagnosis_names,
+    claimCase.diagnosisNames,
+    claimCase.diagnosis,
+    claimCase.diagnosis_result,
+    claimCase.diagnosisResult
+  );
 
   normalized.auto_coverage_type =
     ocrData.auto_coverage_type ||

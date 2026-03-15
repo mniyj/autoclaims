@@ -1,4 +1,3 @@
-import { GoogleGenAI } from "@google/genai";
 import { MedicalInsuranceCatalogItem, InvoiceItemAudit } from '../types';
 
 // ============================================================
@@ -15,13 +14,35 @@ export interface BatchMatchOptions {
   onProgress?: (phase: 'sync' | 'ai', detail: string) => void;
 }
 
-// 获取 Gemini AI 实例
-const getAI = () => {
-  const apiKey = (import.meta as any).env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    throw new Error('Gemini API Key not found');
+const invokeCatalogMatch = async (templateVariables: Record<string, string | number>) => {
+  const response = await fetch('/api/ai/proxy', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      capabilityId: 'admin.catalog.semantic_match',
+      promptTemplateId: 'catalog_semantic_match',
+      templateVariables,
+      config: {
+        responseMimeType: 'application/json',
+        temperature: 0.1,
+      },
+      meta: {
+        sourceApp: 'admin-system',
+        module: 'services.catalogMatchService',
+        operation: 'catalog_semantic_match',
+        context: {
+          route: 'catalogMatchService',
+        },
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    const errorPayload = await response.json().catch(() => ({}));
+    throw new Error(errorPayload.error || 'Catalog match proxy failed');
   }
-  return new GoogleGenAI({ apiKey });
+
+  return response.json();
 };
 
 // ============================================================
@@ -364,46 +385,18 @@ const batchAiSemanticMatch = async (
       const batch = items.slice(i, i + batchSize);
 
       try {
-        const ai = getAI();
-        const model = 'gemini-2.5-flash';
-
         const itemListStr = batch
           .map((item, idx) => `${idx + 1}. "${item.itemName}"`)
           .join('\n');
-
-        const prompt = `你是一位中国医保药品/诊疗项目专家。请从以下医保目录中找出与每个给定项目最匹配的条目。
-
-注意事项：
-1. 药品可能使用商品名、通用名或别名，需要识别它们之间的对应关系
-2. 如"泰诺林"="对乙酰氨基酚"，"芬必得"="布洛芬缓释胶囊"
-3. 注意规格表述差异：如"500mg"="0.5g"
-4. 注意简称缩写：如"MRI"="核磁共振检查"
-5. 考虑剂型差异：同通用名不同剂型也算匹配（如胶囊vs片剂）
-
-医保目录：
-${catalogList}
-
-待匹配项目：
-${itemListStr}
-
-请返回 JSON 数组格式（每项一个结果）：
+        const { response } = await invokeCatalogMatch({
+          catalogList,
+          itemList: itemListStr,
+          resultShape: ` 数组格式（每项一个结果）：
 [
   { "index": 1, "matchedCode": "医保编码或null", "confidence": 0-100, "reason": "匹配理由" },
   ...
-]
-
-规则：
-- 置信度低于 ${aiConfidenceThreshold} 时 matchedCode 必须为 null
-- 必须为每个待匹配项目返回一条结果
-- index 对应待匹配项目的序号（从 1 开始）`;
-
-        const response = await ai.models.generateContent({
-          model,
-          contents: [{ parts: [{ text: prompt }] }],
-          config: {
-            responseMimeType: "application/json",
-            temperature: 0.1
-          }
+]`,
+          aiConfidenceThreshold,
         });
 
         const batchResults = JSON.parse(response.text || '[]');
@@ -493,9 +486,6 @@ export const matchCatalogItem = async (
 
   // ─── Level 4: AI 语义匹配 ─────────────────────
   try {
-    const ai = getAI();
-    const model = 'gemini-2.5-flash';
-
     // 筛选相关省份和类别的目录项
     const relevantCatalog = catalogData
       .filter(item =>
@@ -519,34 +509,16 @@ export const matchCatalogItem = async (
       })
       .join('\n');
 
-    const prompt = `你是一位中国医保药品/诊疗项目专家。请从以下医保目录中找出与"${itemName}"最匹配的项目。
-
-注意事项：
-1. 药品可能使用商品名、通用名或别名，需要识别它们之间的对应关系
-2. 如"泰诺林"="对乙酰氨基酚"，"芬必得"="布洛芬缓释胶囊"
-3. 注意规格表述差异：如"500mg"="0.5g"
-4. 注意简称缩写：如"MRI"="核磁共振检查"
-5. 考虑剂型差异：同通用名不同剂型也算匹配（如胶囊vs片剂）
-
-医保目录：
-${catalogList}
-
-请返回 JSON 格式：
+    const { response } = await invokeCatalogMatch({
+      catalogList,
+      itemList: `"${itemName}"`,
+      resultShape: ` 格式：
 {
   "matchedCode": "医保编码（如果找到匹配项）或 null（如果没有匹配项）",
   "confidence": 0-100,
   "reason": "匹配理由或不匹配原因"
-}
-
-置信度低于 ${aiConfidenceThreshold} 时返回 matchedCode 为 null。`;
-
-    const response = await ai.models.generateContent({
-      model,
-      contents: [{ parts: [{ text: prompt }] }],
-      config: {
-        responseMimeType: "application/json",
-        temperature: 0.1
-      }
+}`,
+      aiConfidenceThreshold,
     });
 
     const result = JSON.parse(response.text || '{}');

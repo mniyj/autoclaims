@@ -86,6 +86,36 @@ const CATEGORY_COLORS: Record<string, string> = {
   POST_ADJUSTMENT: 'bg-neutral-50 border-neutral-400 text-neutral-700',
 };
 
+const SEMANTIC_LABELS: Record<string, string> = {
+  GATE: '准入',
+  TRIGGER: '触发',
+  EXCLUSION: '免责',
+  ADJUSTMENT: '调整',
+  BENEFIT: '给付规则',
+  ITEM_ELIGIBILITY: '费用项准入',
+  ITEM_RATIO: '比例规则',
+  ITEM_PRICING: '限价规则',
+  ITEM_CAP: '限额规则',
+  ITEM_FLAG: '复核标记',
+  POST_PROCESS: '后处理',
+  AUXILIARY: '辅助规则',
+};
+
+const SEMANTIC_COLORS: Record<string, string> = {
+  GATE: 'bg-blue-50 border-blue-400 text-blue-700',
+  TRIGGER: 'bg-emerald-50 border-emerald-400 text-emerald-700',
+  EXCLUSION: 'bg-red-50 border-red-400 text-red-700',
+  ADJUSTMENT: 'bg-amber-50 border-amber-400 text-amber-700',
+  BENEFIT: 'bg-cyan-50 border-cyan-400 text-cyan-700',
+  ITEM_ELIGIBILITY: 'bg-teal-50 border-teal-400 text-teal-700',
+  ITEM_RATIO: 'bg-violet-50 border-violet-400 text-violet-700',
+  ITEM_PRICING: 'bg-lime-50 border-lime-400 text-lime-700',
+  ITEM_CAP: 'bg-sky-50 border-sky-400 text-sky-700',
+  ITEM_FLAG: 'bg-fuchsia-50 border-fuchsia-400 text-fuchsia-700',
+  POST_PROCESS: 'bg-slate-50 border-slate-400 text-slate-700',
+  AUXILIARY: 'bg-gray-50 border-gray-400 text-gray-700',
+};
+
 const DOMAIN_LABELS: Record<string, string> = {
   ELIGIBILITY: '定责',
   ASSESSMENT: '定损',
@@ -118,6 +148,32 @@ function countConditionNodes(conditions: RuleConditions): number {
     }
   });
   return count;
+}
+
+function inferSemanticKey(rule: RulesetRule): string {
+  if (rule.rule_kind) return rule.rule_kind;
+  const action = rule.action?.action_type;
+  const category = String(rule.category || '').toUpperCase();
+
+  if (rule.execution?.domain === 'POST_PROCESS') return 'POST_PROCESS';
+  if (rule.execution?.domain === 'ASSESSMENT') {
+    if (action === 'REJECT_ITEM' || action === 'APPROVE_ITEM') return 'ITEM_ELIGIBILITY';
+    if (action === 'SET_ITEM_RATIO') return 'ITEM_RATIO';
+    if (action === 'ADJUST_ITEM_AMOUNT') return 'ITEM_PRICING';
+    if (action === 'APPLY_CAP' || action === 'APPLY_DEDUCTIBLE') return 'ITEM_CAP';
+    return 'ITEM_FLAG';
+  }
+  if (action === 'REJECT_CLAIM' || action === 'TERMINATE_CONTRACT' || category.includes('EXCLUSION')) return 'EXCLUSION';
+  if (action === 'SET_CLAIM_RATIO' || category.includes('PAYOUT') || category.includes('PROPORTIONAL')) return 'ADJUSTMENT';
+  if (
+    category.includes('WAITING') ||
+    category.includes('COVERAGE_PERIOD') ||
+    category.includes('POLICY_STATUS') ||
+    category.includes('CLAIM_TIMELINE')
+  ) {
+    return 'GATE';
+  }
+  return 'TRIGGER';
 }
 
 export function rulesetToFlowElements(ruleset: InsuranceRuleset): FlowElementsResult {
@@ -178,7 +234,7 @@ export function rulesetToFlowElements(ruleset: InsuranceRuleset): FlowElementsRe
     const laneBgId = `lane_bg_${domainKey}`;
     const maxNodesInLane = Math.max(
       1,
-      domainRules.length + (domainConfig?.category_sequence?.length || 0)
+      domainRules.length + (domainConfig?.semantic_sequence?.length || domainConfig?.category_sequence?.length || 0)
     );
     const laneHeight = Math.max(500, maxNodesInLane * 70 + 250);
     
@@ -219,7 +275,7 @@ export function rulesetToFlowElements(ruleset: InsuranceRuleset): FlowElementsRe
         colorClass: `${colors.bg} ${colors.border} ${colors.text}`,
         laneColor: colors.laneColor,
         details: {
-          categories: domainConfig?.category_sequence || [],
+          semantics: domainConfig?.semantic_sequence || domainConfig?.category_sequence || [],
           inputGranularity: domainConfig?.input_granularity,
           loopCollection: domainConfig?.loop_collection,
         },
@@ -237,49 +293,52 @@ export function rulesetToFlowElements(ruleset: InsuranceRuleset): FlowElementsRe
       style: { stroke: colors.edgeColor, strokeWidth: 3 },
     });
 
-    // Group rules by category and layout horizontally within the lane
-    const categories = domainConfig?.category_sequence || [];
-    const categoriesWithRules = categories.filter(cat => 
-      domainRules.some(r => r.category === cat)
+    // Group rules by semantic sequence and layout horizontally within the lane
+    const semantics = domainConfig?.semantic_sequence || domainConfig?.category_sequence || [];
+    const semanticsWithRules = semantics.filter((semantic) =>
+      domainRules.some((r) => inferSemanticKey(r) === semantic)
     );
     
-    if (categoriesWithRules.length === 0) return;
+    if (semanticsWithRules.length === 0) return;
     
-    // Calculate horizontal spacing for categories within the lane
+    // Calculate horizontal spacing for semantic groups within the lane
     const availableWidth = laneWidth - 60;
-    const categorySpacing = categoriesWithRules.length > 1 
-      ? availableWidth / (categoriesWithRules.length - 1)
+    const semanticSpacing = semanticsWithRules.length > 1 
+      ? availableWidth / (semanticsWithRules.length - 1)
       : 0;
     
-    categoriesWithRules.forEach((categoryKey, catIndex) => {
-      const categoryRules = domainRules.filter((r) => r.category === categoryKey);
+    semanticsWithRules.forEach((semanticKey, semanticIndex) => {
+      const semanticRules = domainRules.filter((r) => inferSemanticKey(r) === semanticKey);
       
-      if (categoryRules.length === 0) return;
+      if (semanticRules.length === 0) return;
       
-      // Calculate category X position - spread horizontally within lane
-      const categoryOffset = categoriesWithRules.length > 1
-        ? (catIndex - (categoriesWithRules.length - 1) / 2) * Math.min(categorySpacing, 140)
+      // Calculate semantic group X position - spread horizontally within lane
+      const semanticOffset = semanticsWithRules.length > 1
+        ? (semanticIndex - (semanticsWithRules.length - 1) / 2) * Math.min(semanticSpacing, 140)
         : 0;
-      const categoryX = laneCenterX + categoryOffset;
+      const categoryX = laneCenterX + semanticOffset;
       
-      const categoryId = generateNodeId(`cat_${domainKey}`, categoryKey);
-      const colorClass = CATEGORY_COLORS[categoryKey] || 'bg-gray-50 border-gray-400 text-gray-700';
+      const categoryId = generateNodeId(`cat_${domainKey}`, semanticKey);
+      const colorClass =
+        SEMANTIC_COLORS[semanticKey] ||
+        CATEGORY_COLORS[semanticKey] ||
+        'bg-gray-50 border-gray-400 text-gray-700';
       
-      // Add category node
+      // Add semantic group node
       const categoryNode: RulesetFlowNode = {
         id: categoryId,
         type: 'category',
         position: { x: categoryX, y: categoryY },
         data: {
-          label: categoryKey,
-          description: `${categoryRules.length} 条规则`,
-          category: categoryKey,
+          label: SEMANTIC_LABELS[semanticKey] || semanticKey,
+          description: `${semanticRules.length} 条规则`,
+          category: semanticKey,
           domain: domainKey,
-          count: categoryRules.length,
+          count: semanticRules.length,
           colorClass,
           laneColor: colors.laneColor,
           details: {
-            rules: categoryRules.map((r) => ({
+            rules: semanticRules.map((r) => ({
               id: r.rule_id,
               name: r.rule_name,
               status: r.status,
@@ -298,9 +357,9 @@ export function rulesetToFlowElements(ruleset: InsuranceRuleset): FlowElementsRe
         style: { stroke: colors.edgeColor, strokeWidth: 2, opacity: 0.6 },
       });
       
-      // Add rules under this category - vertically stacked with slight horizontal offset
+      // Add rules under this semantic group - vertically stacked with slight horizontal offset
       let ruleY = ruleStartY;
-      categoryRules.forEach((rule, ruleIndex) => {
+      semanticRules.forEach((rule, ruleIndex) => {
         const ruleId = generateNodeId('rule', rule.rule_id);
         const conditionCount = countConditionNodes(rule.conditions);
         

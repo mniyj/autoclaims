@@ -9,10 +9,12 @@ import {
   getTask,
   updateTask,
   getQueueStats,
+  updateFileStatus,
 } from './queue.js';
 import { processFileWithRetry, processStagedFile } from './worker.js';
 import { writeAuditLog } from '../middleware/index.js';
 import { createTaskCompleteMessage } from '../messageCenter/messageService.js';
+import { createTaskRecoveryNeededMessage } from '../messageCenter/messageService.js';
 import {
   recordTaskCreated,
   recordTaskCompleted,
@@ -22,6 +24,9 @@ import {
 } from '../monitoring/metrics.js';
 import { runAllChecks } from '../monitoring/alerts.js';
 import { readData, writeData } from '../utils/fileStore.js';
+import { extractDocumentSummaries } from '../services/summaryExtractors/index.js';
+import { aggregateCase } from '../services/caseAggregator.js';
+import { analyzeMultiFiles } from '../services/multiFileAnalyzer.js';
 
 const MAX_CONCURRENT_PER_USER = 10;
 const POLL_INTERVAL = 1000;
@@ -176,7 +181,9 @@ class TaskScheduler {
         f => f.status === 'completed' || f.status === 'failed'
       );
 
-      if (allProcessed && updatedTask.status === 'processing') {
+      // Files may finalize task status in queue layer before scheduler post-processing.
+      // Always run completion hooks once when all files are finished.
+      if (allProcessed && !updatedTask.postProcessedAt) {
         await this.completeTask(updatedTask);
       }
     }
@@ -195,7 +202,7 @@ class TaskScheduler {
         await processStagedFile(task.id, file, file.index);
       } else {
         // 使用传统处理流程
-        await processFileWithRetry(task.id, file, file.index, file.retryCount || 0);
+        await processFileWithRetry(task.id, file, file.index, file.retryCount || 0, task.options || {});
       }
       console.log(`[Scheduler] File ${file.fileName} processed successfully`);
     } catch (error) {
@@ -241,6 +248,7 @@ class TaskScheduler {
     await updateTask(task.id, {
       status: finalStatus,
       completedAt: new Date().toISOString(),
+      postProcessedAt: new Date().toISOString(),
     });
 
     const duration = new Date().getTime() - new Date(task.createdAt).getTime();
@@ -259,6 +267,14 @@ class TaskScheduler {
       files: task.files,
     });
 
+    if (finalStatus === 'partial_success' || finalStatus === 'failed') {
+      createTaskRecoveryNeededMessage(task.createdBy, {
+        ...task,
+        status: finalStatus,
+        files: task.files,
+      });
+    }
+
     writeAuditLog({
       type: 'TASK_COMPLETE',
       taskId: task.id,
@@ -270,53 +286,209 @@ class TaskScheduler {
       timestamp: new Date().toISOString(),
     });
 
-    await this.saveMaterialsToClaimCase(task);
+    const analysis = await this.buildTaskAnalysis(task);
+
+    await this.saveImportRecordToClaimDocuments(task, finalStatus, analysis);
+    await this.saveMaterialsToClaimCase(task, analysis);
 
     this.emitTaskComplete(task);
   }
 
-  async saveMaterialsToClaimCase(task) {
+  async buildTaskAnalysis(task) {
+      const documents = task.files.map((file) => ({
+      documentId: `${task.id}-${file.index}`,
+      fileName: file.fileName,
+      fileType: file.mimeType,
+      mimeType: file.mimeType,
+      ossKey: file.ossKey,
+      classification: file.result?.classification || {
+        materialId: 'unknown',
+        materialName: '未识别',
+        confidence: 0,
+      },
+      status: file.status,
+      extractedText: file.result?.extractedText || '',
+      structuredData: file.result?.structuredData || {},
+      auditConclusion: file.result?.auditConclusion || '',
+      confidence: file.result?.confidence ?? file.result?.classification?.confidence ?? 0,
+      errorMessage: file.errorMessage || file.result?.classification?.errorMessage || null,
+    }));
+
+    const completedDocs = documents.filter((doc) => doc.status === 'completed');
+    const summaries = completedDocs.length > 0
+      ? await extractDocumentSummaries(completedDocs, { skipImages: true })
+      : [];
+
+    completedDocs.forEach((doc, index) => {
+      if (summaries[index]) {
+        doc.documentSummary = summaries[index];
+      }
+    });
+
+    const analysisResult = completedDocs.length > 0
+      ? await analyzeMultiFiles(documents, {
+          claimCaseId: task.claimCaseId,
+          productCode: task.productCode,
+        })
+      : null;
+
+    const aggregation = completedDocs.length > 0
+      ? aggregateCase({
+          summaries,
+          claimCaseId: task.claimCaseId,
+          validationFacts: analysisResult?.validationFacts || {},
+          validationResults: analysisResult?.materialValidationResults || [],
+          documents,
+        })
+      : null;
+
+    return {
+      documents,
+      completedDocs,
+      summaries,
+      aggregation,
+      analysisResult,
+    };
+  }
+
+  async saveMaterialsToClaimCase(task, analysis = {}) {
     try {
       const allMaterials = readData('claim-materials');
       const newMaterials = [];
+      let updatedCount = 0;
+      const documentsById = new Map((analysis.documents || []).map((doc) => [doc.documentId, doc]));
 
       for (const file of task.files) {
         if (file.status !== 'completed') continue;
 
-
-        const exists = allMaterials.some(
+        const documentId = `${task.id}-${file.index}`;
+        const document = documentsById.get(documentId) || {};
+        const classification = file.result?.classification || {};
+        const existingIndex = allMaterials.findIndex(
           (m) => m.claimCaseId === task.claimCaseId &&
                  m.fileName === file.fileName &&
                  m.source === 'offline_import'
         );
 
-        if (!exists) {
-          const classification = file.result?.classification || {};
+        if (existingIndex !== -1) {
+          const existing = allMaterials[existingIndex];
+          const next = { ...existing };
+
+          // Backfill missing preview fields for old records.
+          if (!next.ossKey && file.ossKey) next.ossKey = file.ossKey;
+          if ((!next.url || next.url === '#') && file.result?.ossUrl) next.url = file.result.ossUrl;
+          if ((!next.fileType || next.fileType === 'unknown') && file.mimeType) next.fileType = file.mimeType;
+
+          // Keep latest parse/classification result for same file import.
+          next.category = classification.materialName || next.category || '未分类';
+          next.materialName = classification.materialName || next.materialName || '未分类';
+          next.materialId = classification.materialId || next.materialId || 'unknown';
+          next.classificationError = classification.errorMessage || null;
+          next.status = 'completed';
+          next.ocrText = file.result?.extractedText || next.ocrText || '';
+          next.structuredData = file.result?.structuredData || next.structuredData || {};
+          next.auditConclusion = file.result?.auditConclusion || next.auditConclusion;
+          next.confidence = file.result?.confidence ?? classification.confidence ?? next.confidence;
+          next.documentSummary = document.documentSummary || next.documentSummary;
+          next.sourceDetail = {
+            importId: analysis.importId,
+            importedAt: analysis.importedAt,
+            taskId: task.id,
+          };
+          next.taskId = task.id;
+          next.uploadedAt = analysis.importedAt || new Date().toISOString();
+
+          allMaterials[existingIndex] = next;
+          updatedCount += 1;
+        } else {
           newMaterials.push({
-            id: `mat-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            id: document.documentId || `mat-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             claimCaseId: task.claimCaseId,
             fileName: file.fileName,
             fileType: file.mimeType || 'unknown',
+            // Keep url field for backward compatibility; preview should prefer ossKey.
+            url: file.result?.ossUrl || '#',
+            ossKey: file.ossKey,
             category: classification.materialName || '未分类',
             materialName: classification.materialName || '未分类',
             materialId: classification.materialId || 'unknown',
+            classificationError: classification.errorMessage || null,
             source: 'offline_import',
             status: 'completed',
-            uploadedAt: new Date().toISOString(),
+            uploadedAt: analysis.importedAt || new Date().toISOString(),
             ocrText: file.result?.extractedText || '',
             structuredData: file.result?.structuredData || {},
+            auditConclusion: file.result?.auditConclusion || '',
+            confidence: file.result?.confidence ?? classification.confidence ?? 0,
+            documentSummary: document.documentSummary || null,
+            sourceDetail: {
+              importId: analysis.importId,
+              importedAt: analysis.importedAt,
+              taskId: task.id,
+            },
             taskId: task.id,
           });
         }
       }
 
-      if (newMaterials.length > 0) {
+      if (newMaterials.length > 0 || updatedCount > 0) {
         allMaterials.push(...newMaterials);
         writeData('claim-materials', allMaterials);
-        console.log(`[Scheduler] Saved ${newMaterials.length} materials to claim case ${task.claimCaseId}`);
+        console.log(
+          `[Scheduler] Saved ${newMaterials.length} and updated ${updatedCount} materials for claim case ${task.claimCaseId}`
+        );
       }
     } catch (error) {
       console.error('[Scheduler] Failed to save materials:', error);
+    }
+  }
+
+  async saveImportRecordToClaimDocuments(task, finalStatus, analysis = {}) {
+    try {
+      const allClaimDocs = readData('claim-documents');
+      const documents = analysis.documents || [];
+      const completed = documents.filter((d) => d.status === 'completed').length;
+      const total = documents.length || 1;
+      const existingIndex = allClaimDocs.findIndex((r) => r.taskId === task.id);
+      const importedAt = existingIndex !== -1
+        ? allClaimDocs[existingIndex].importedAt || new Date().toISOString()
+        : new Date().toISOString();
+      const importId = existingIndex !== -1
+        ? allClaimDocs[existingIndex].id
+        : `import-${Date.now()}`;
+
+      const nextRecord = {
+        id: importId,
+        taskId: task.id,
+        claimCaseId: task.claimCaseId,
+        productCode: task.productCode,
+        importedAt,
+        documents,
+        aggregation: analysis.aggregation || null,
+        completeness: {
+          isComplete: finalStatus === 'completed',
+          completenessScore: completed / total,
+          requiredMaterials: [],
+          providedMaterials: [],
+          missingMaterials: [],
+          warnings: finalStatus === 'failed' ? ['离线导入处理失败，请检查文件后重试'] : [],
+        },
+      };
+
+      if (existingIndex !== -1) {
+        allClaimDocs[existingIndex] = {
+          ...allClaimDocs[existingIndex],
+          ...nextRecord,
+        };
+      } else {
+        allClaimDocs.push(nextRecord);
+      }
+
+      writeData('claim-documents', allClaimDocs);
+      analysis.importId = importId;
+      analysis.importedAt = importedAt;
+    } catch (error) {
+      console.error('[Scheduler] Failed to save import record:', error);
     }
   }
 

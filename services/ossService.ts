@@ -85,9 +85,14 @@ type SignedUrlCacheItem = {
 const signedUrlCache: Record<string, SignedUrlCacheItem> = {};
 
  
-export const getSignedUrlWithRetry = async (objectKey: string, expires = 3600): Promise<string> => {
+export const getSignedUrlWithRetry = async (
+    objectKey: string,
+    expires = 3600,
+    mode: 'download' | 'preview' = 'download'
+): Promise<string> => {
     const now = Date.now();
-    const cached = signedUrlCache[objectKey];
+    const cacheKey = `${mode}:${objectKey}`;
+    const cached = signedUrlCache[cacheKey];
 
     // If we have a valid cached URL, return it
     if (cached && now < cached.expiresAt) {
@@ -95,10 +100,10 @@ export const getSignedUrlWithRetry = async (objectKey: string, expires = 3600): 
     }
 
     // Otherwise, fetch a fresh URL from backend
-    const refreshedUrl = await getSignedUrl(objectKey, expires);
+    const refreshedUrl = await getSignedUrl(objectKey, expires, mode);
     // Compute expiry time with a small safety margin (5 seconds)
     const expiryAt = now + expires * 1000 - 5000;
-    signedUrlCache[objectKey] = {
+    signedUrlCache[cacheKey] = {
         url: refreshedUrl,
         expiresAt: expiryAt > now ? expiryAt : now + expires * 1000,
     };
@@ -136,12 +141,27 @@ export const refreshSignedUrls = async (ossKeys: string[]): Promise<Record<strin
  * Generate a fresh signed URL for an existing OSS object.
  * Signed URLs expire after `expires` seconds (default 1 hour).
  */
-export const getSignedUrl = async (objectKey: string, expires = 3600): Promise<string> => {
-    const response = await fetch(`/api/oss-url?key=${encodeURIComponent(objectKey)}&expires=${expires}`);
+export const getSignedUrl = async (
+    objectKey: string,
+    expires = 3600,
+    mode: 'download' | 'preview' = 'download'
+): Promise<string> => {
+    const response = await fetch(`/api/oss-url?key=${encodeURIComponent(objectKey)}&expires=${expires}&mode=${mode}`);
     if (!response.ok) {
         const error = await response.json().catch(() => ({}));
         throw new Error((error as { message?: string }).message || 'Failed to generate signed URL');
     }
     const result = await response.json();
     return result.url;
+};
+
+export const getPreviewUrl = async (
+    objectKey: string,
+    fileType?: string,
+    expires = 3600
+): Promise<string> => {
+    if (fileType?.includes('pdf')) {
+        return `/api/oss-preview?key=${encodeURIComponent(objectKey)}&expires=${expires}`;
+    }
+    return getSignedUrl(objectKey, expires, 'preview');
 };

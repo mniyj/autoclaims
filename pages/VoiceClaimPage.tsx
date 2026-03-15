@@ -1,9 +1,32 @@
 import React, { useState } from 'react';
 import { VoiceClient } from '../components/voice/VoiceClient';
 
-export const VoiceClaimPage: React.FC = () => {
+declare const __VOICE_DEV_PORT__: number;
+
+interface VoiceClaimPageProps {
+  currentUser?: {
+    username: string;
+    companyCode?: string;
+  } | null;
+}
+
+export const VoiceClaimPage: React.FC<VoiceClaimPageProps> = ({ currentUser }) => {
   const [sessionId, setSessionId] = useState<string>('');
   const [showVoice, setShowVoice] = useState(false);
+  const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+  const wsHost = import.meta.env.DEV
+    ? `127.0.0.1:${__VOICE_DEV_PORT__}`
+    : window.location.host;
+  const buildWsUrl = (currentSessionId: string) => {
+    const voiceUrl = new URL(`${wsProtocol}://${wsHost}/voice/ws/${currentSessionId}`);
+    if (currentUser?.username) {
+      voiceUrl.searchParams.set('userId', currentUser.username);
+    }
+    if (currentUser?.companyCode) {
+      voiceUrl.searchParams.set('companyCode', currentUser.companyCode);
+    }
+    return voiceUrl.toString();
+  };
 
   const startSession = () => {
     const newSessionId = `voice_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -71,7 +94,7 @@ export const VoiceClaimPage: React.FC = () => {
           <>
             <VoiceClient
               sessionId={sessionId}
-              wsUrl={`ws://${window.location.host}/voice/ws/${sessionId}`}
+              wsUrl={buildWsUrl(sessionId)}
               onSessionEnd={handleSessionEnd}
             />
             

@@ -6,6 +6,8 @@
  */
 
 import crypto from "crypto";
+import { buildDecisionTraceForReport } from "./decisionTraceService.js";
+import { resolveClaimDomainModel } from "./claimDomainService.js";
 
 // 默认赔偿参数（当无法获取当地标准时使用，需管理员配置实际值）
 const DEFAULT_STANDARDS = {
@@ -13,6 +15,9 @@ const DEFAULT_STANDARDS = {
   year: 2024,
   // 上一年度城镇居民人均可支配收入（元/年）
   urbanPerCapitaIncome: 79610,
+  ruralPerCapitaIncome: 40000,
+  funeralMonthlySalary: 9000,
+  urbanPerCapitaConsumptionExpenditure: 52000,
   // 护理费日标准（元/天）
   nursingDailyRate: 200,
   // 住院伙食补助（元/天）
@@ -42,10 +47,96 @@ function getCompensationYears(age = 35) {
   return 20 - (age - 60);
 }
 
+function getDependentCompensationYears(age = 10) {
+  if (age < 18) return 18 - age;
+  if (age < 60) return 20;
+  if (age > 75) return 5;
+  return 20 - (age - 60);
+}
+
+function resolveLiabilityContext(aggregationResult = {}) {
+  if (aggregationResult?.liabilityResult && Number.isFinite(aggregationResult.liabilityResult.thirdPartyLiabilityPct)) {
+    return {
+      thirdPartyLiabilityPct: aggregationResult.liabilityResult.thirdPartyLiabilityPct,
+      claimantLiabilityPct: aggregationResult.liabilityResult.claimantLiabilityPct,
+      basis: aggregationResult.liabilityResult.basis || "",
+      source: "liability_result",
+    };
+  }
+
+  const applied = aggregationResult?.liabilityApportionment;
+  if (applied && Number.isFinite(applied.thirdPartyLiabilityPct)) {
+    return {
+      thirdPartyLiabilityPct: applied.thirdPartyLiabilityPct,
+      claimantLiabilityPct: applied.claimantLiabilityPct,
+      basis: applied.basis || "",
+      source: applied.source || "manual",
+    };
+  }
+
+  return null;
+}
+
+function resolveReportDomainModel({ claimCaseId, claimCase = {}, aggregationResult = {} }) {
+  return (
+    aggregationResult?.domainModel ||
+    aggregationResult?.handlingProfile?.domainModel ||
+    resolveClaimDomainModel({
+      claimCase: { ...claimCase, id: claimCase?.id || claimCaseId },
+      aggregation: aggregationResult,
+      materials: [],
+      handlingProfile: aggregationResult?.handlingProfile || null,
+    })
+  );
+}
+
+function buildDecisionSummary({ report, aggregationResult = {}, claimCase = {} }) {
+  const traceStages = Array.isArray(report.decisionTrace?.stages)
+    ? report.decisionTrace.stages
+    : [];
+  const manualStage = traceStages.find((stage) => stage.stage === "manual_review") || null;
+  const manualActions = Array.isArray(manualStage?.manualActions)
+    ? manualStage.manualActions
+    : [];
+  const liabilityContext = report.liabilityResult || {};
+  const deductionSummary = aggregationResult?.deductionSummary || {};
+  const standards = aggregationResult?.regionalStandards || {};
+  const pendingItems = Array.isArray(aggregationResult?.manualReviewItems)
+    ? aggregationResult.manualReviewItems
+    : [];
+
+  return {
+    claimNumber: claimCase?.reportNumber || report.claimCaseId,
+    liabilityRatioText: Number.isFinite(liabilityContext.thirdPartyLiabilityPct)
+      ? `第三方责任 ${liabilityContext.thirdPartyLiabilityPct}% / 自身责任 ${liabilityContext.claimantLiabilityPct}%`
+      : "责任比例待人工确认",
+    liabilitySourceText: liabilityContext.basis || liabilityContext.source || "未形成明确责任依据",
+    deductionText: `已识别付款 ¥${Number(deductionSummary.confirmedPaidAmount || 0).toFixed(2)}；当前抵扣 ¥${Number(deductionSummary.deductionTotal || 0).toFixed(2)}`,
+    standardsText: standards?.region
+      ? `${standards.region}${standards.year || ""}年标准，城镇居民人均可支配收入 ¥${Number(standards.urbanPerCapitaIncome || 0).toLocaleString("zh-CN")} / 年`
+      : report.regionalStandards,
+    manualActions,
+    pendingItems,
+  };
+}
+
+function buildMedicalDecisionSummary({ report, aggregationResult = {}, claimCase = {} }) {
+  const deductionSummary = aggregationResult?.deductionSummary || {};
+  const standards = aggregationResult?.regionalStandards || {};
+  return {
+    claimNumber: claimCase?.reportNumber || report.claimCaseId,
+    medicalExpenseText: `医疗费用合计 ¥${Number(report.subTotal || 0).toFixed(2)}`,
+    deductionText: `已识别付款 ¥${Number(deductionSummary.confirmedPaidAmount || 0).toFixed(2)}；当前抵扣 ¥${Number(deductionSummary.deductionTotal || 0).toFixed(2)}`,
+    standardsText: standards?.region
+      ? `${standards.region}${standards.year || ""}年标准`
+      : report.regionalStandards,
+  };
+}
+
 /**
  * 计算各项赔偿条目
  */
-function calculateDamageItems({ injuryProfile, liabilityResult, expenseAggregation, standards, claimantAge = 35, summaries = [] }) {
+function calculateDamageItems({ injuryProfile, liabilityResult, expenseAggregation, deathProfile, standards, claimantAge = 35, summaries = [] }) {
   const std = { ...DEFAULT_STANDARDS, ...standards };
   const items = [];
   let itemIndex = 0;
@@ -166,6 +257,61 @@ function calculateDamageItems({ injuryProfile, liabilityResult, expenseAggregati
     });
   }
 
+  // 8. 死亡赔偿相关
+  if (deathProfile?.deathConfirmed) {
+    const incomeBase = std.urbanPerCapitaIncome;
+    const deathCompensation = getCompensationYears(claimantAge) * incomeBase;
+    items.push({
+      id: makeId(),
+      category: "死亡赔偿金",
+      itemName: "死亡赔偿金",
+      originalAmount: parseFloat(deathCompensation.toFixed(2)),
+      approvedAmount: parseFloat(deathCompensation.toFixed(2)),
+      formula: `${getCompensationYears(claimantAge)}年 × ¥${incomeBase.toFixed(2)}/年`,
+      basis: `参照${std.region}${std.year}年城镇居民人均可支配收入标准`,
+      sourceDocIds: deathProfile.sourceDocIds || [],
+    });
+
+    const funeralStandard = std.funeralMonthlySalary * 6;
+    const funeralAmount = deathProfile.funeralExpenseTotal > 0
+      ? Math.min(deathProfile.funeralExpenseTotal, funeralStandard)
+      : funeralStandard;
+    items.push({
+      id: makeId(),
+      category: "丧葬费",
+      itemName: "丧葬费",
+      originalAmount: parseFloat(funeralAmount.toFixed(2)),
+      approvedAmount: parseFloat(funeralAmount.toFixed(2)),
+      formula: deathProfile.funeralExpenseTotal > 0
+        ? `票据金额与法定上限孰低（上限 ¥${funeralStandard.toFixed(2)}）`
+        : `¥${std.funeralMonthlySalary.toFixed(2)}/月 × 6个月`,
+      basis: "依据丧葬费法定标准并结合实际票据核定",
+      sourceDocIds: deathProfile.sourceDocIds || [],
+    });
+
+    const dependents = deathProfile.dependents || [];
+    for (const dependent of dependents) {
+      const dependentYears = Number(dependent.compensationYears);
+      if (!Number.isFinite(dependentYears) || dependentYears <= 0) {
+        continue;
+      }
+
+      const divisor = Math.max(1, (dependent.otherSupportersCount || 0) + 1);
+      const dependentAmount =
+        (std.urbanPerCapitaConsumptionExpenditure * dependentYears) / divisor;
+      items.push({
+        id: makeId(),
+        category: "被扶养人生活费",
+        itemName: dependent.dependentName || dependent.relationship || "被扶养人",
+        originalAmount: parseFloat(dependentAmount.toFixed(2)),
+        approvedAmount: parseFloat(dependentAmount.toFixed(2)),
+        formula: `${dependentYears}年 × ¥${std.urbanPerCapitaConsumptionExpenditure.toFixed(2)}/年 ÷ ${divisor}`,
+        basis: "依据扶养关系证明和已确认扶养年限试算",
+        sourceDocIds: [dependent.sourceDocId].filter(Boolean),
+      });
+    }
+  }
+
   return items;
 }
 
@@ -184,6 +330,15 @@ function generateReportHtml({ report, claimCase, summaries }) {
 
   const liabilityResult = report.liabilityResult;
   const injuryProfile = report.injuryProfile;
+  const decisionSummary = buildDecisionSummary({
+    report,
+    aggregationResult: {
+      deductionSummary: report.deductionSummary,
+      regionalStandards: report.standardsSnapshot,
+      manualReviewItems: report.manualReviewItems,
+    },
+    claimCase,
+  });
 
   const rows = items.map((item) => `
     <tr>
@@ -194,6 +349,45 @@ function generateReportHtml({ report, claimCase, summaries }) {
       <td>${item.basis}</td>
     </tr>
   `).join("");
+  const decisionTraceHtml = Array.isArray(report.decisionTrace?.stages)
+    ? report.decisionTrace.stages
+        .map(
+          (stage) => `
+      <div style="margin-bottom: 12px; padding: 12px; border: 1px solid #e8ecf0; border-radius: 4px;">
+        <div style="font-weight: bold; margin-bottom: 6px;">${stage.title}</div>
+        <div style="font-size: 13px; color: #555; margin-bottom: 6px;">${stage.summary || ""}</div>
+        ${(stage.facts || [])
+          .map((fact) => `<div style="font-size:12px; color:#666;">${fact.label}：${fact.value}</div>`)
+          .join("")}
+        ${Array.isArray(stage.manualActions) && stage.manualActions.length > 0
+          ? `<div style="margin-top:6px; font-size:12px; color:#666;">${stage.manualActions
+              .map(
+                (action) =>
+                  `<div>• ${action.label}${action.detail ? `：${action.detail}` : ""}${action.timestamp ? `（${new Date(action.timestamp).toLocaleString("zh-CN")}）` : ""}</div>`
+              )
+              .join("")}</div>`
+          : ""}
+        ${Array.isArray(stage.sourceDocIds) && stage.sourceDocIds.length > 0
+          ? `<div style="margin-top:6px; font-size:12px; color:#8c8c8c;">来源材料 ${stage.sourceDocIds.length} 份</div>`
+          : ""}
+      </div>
+    `,
+        )
+        .join("")
+    : "";
+  const manualActionHtml = Array.isArray(decisionSummary.manualActions) && decisionSummary.manualActions.length > 0
+    ? decisionSummary.manualActions
+        .map(
+          (action) =>
+            `<div class="summary-item"><label>${action.label}</label><span>${action.detail || "已处理"}${action.timestamp ? `（${new Date(action.timestamp).toLocaleString("zh-CN")}）` : ""}</span></div>`
+        )
+        .join("")
+    : `<div class="summary-item"><label>人工动作</label><span>暂无人工确认或调整记录</span></div>`;
+  const pendingItemsHtml = Array.isArray(decisionSummary.pendingItems) && decisionSummary.pendingItems.length > 0
+    ? decisionSummary.pendingItems
+        .map((item) => `<div class="conflict-item">⚠ ${item}</div>`)
+        .join("")
+    : `<div class="conflict-item">当前未识别到额外待核实事项</div>`;
 
   return `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -209,6 +403,10 @@ function generateReportHtml({ report, claimCase, summaries }) {
     .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .info-item label { color: #666; font-size: 12px; }
     .info-item span { font-size: 14px; }
+    .summary-box { background: #f8fafc; border: 1px solid #dbe7f3; border-radius: 6px; padding: 14px 16px; }
+    .summary-item { display: grid; grid-template-columns: 150px 1fr; gap: 10px; margin-bottom: 8px; }
+    .summary-item label { color: #667085; font-size: 12px; }
+    .summary-item span { font-size: 13px; color: #1f2937; }
     table { width: 100%; border-collapse: collapse; margin-top: 8px; }
     th { background: #f0f5ff; padding: 8px 12px; text-align: left; font-size: 13px; border: 1px solid #d6e4ff; }
     td { padding: 8px 12px; border: 1px solid #e8ecf0; font-size: 13px; }
@@ -248,7 +446,19 @@ function generateReportHtml({ report, claimCase, summaries }) {
   </div>
 
   <div class="section">
-    <div class="section-title">三、损失明细</div>
+    <div class="section-title">三、决策摘要</div>
+    <div class="summary-box">
+      <div class="summary-item"><label>案件编号</label><span>${decisionSummary.claimNumber}</span></div>
+      <div class="summary-item"><label>责任折算口径</label><span>${decisionSummary.liabilityRatioText}</span></div>
+      <div class="summary-item"><label>责任依据</label><span>${decisionSummary.liabilitySourceText}</span></div>
+      <div class="summary-item"><label>抵扣口径</label><span>${decisionSummary.deductionText}</span></div>
+      <div class="summary-item"><label>地区标准</label><span>${decisionSummary.standardsText}</span></div>
+      ${manualActionHtml}
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">四、损失明细</div>
     <table>
       <thead>
         <tr>
@@ -271,7 +481,7 @@ function generateReportHtml({ report, claimCase, summaries }) {
   </div>
 
   <div class="section">
-    <div class="section-title">四、赔偿计算</div>
+    <div class="section-title">五、赔偿计算</div>
     <table>
       <tbody>
         <tr><td>损失总额</td><td style="text-align:right">¥${subTotal.toLocaleString("zh-CN", { minimumFractionDigits: 2 })}</td></tr>
@@ -285,18 +495,160 @@ function generateReportHtml({ report, claimCase, summaries }) {
     </p>
   </div>
 
-  ${report.conflicts && report.conflicts.length > 0 ? `
+  ${decisionTraceHtml ? `
   <div class="section">
-    <div class="section-title">五、待核实事项</div>
-    <div class="conflict-box">
-      ${report.conflicts.map((c) => `<div class="conflict-item">⚠ ${c.description}</div>`).join("")}
-    </div>
+    <div class="section-title">六、决策轨迹</div>
+    ${decisionTraceHtml}
   </div>
   ` : ""}
+
+  <div class="section">
+    <div class="section-title">七、待核实事项</div>
+    <div class="conflict-box">
+      ${pendingItemsHtml}
+      ${report.conflicts && report.conflicts.length > 0
+        ? report.conflicts.map((c) => `<div class="conflict-item">⚠ ${c.description}</div>`).join("")
+        : ""}
+    </div>
+  </div>
 
   <div class="footer">
     本报告由 AI 自动生成，仅供参考，最终赔偿金额以人工审核确认为准。<br>
     生成模型：Gemini 2.5 Flash &nbsp;|&nbsp; 报告状态：${report.status === "confirmed" ? "已确认" : "草稿"}
+  </div>
+</body>
+</html>`;
+}
+
+function generateMedicalExpenseReportHtml({ report, claimCase }) {
+  const decisionSummary = buildMedicalDecisionSummary({
+    report,
+    aggregationResult: {
+      deductionSummary: report.deductionSummary,
+      regionalStandards: report.standardsSnapshot,
+    },
+    claimCase,
+  });
+  const rows = report.items
+    .map((item) => `
+      <tr>
+        <td>${item.category}</td>
+        <td>${item.itemName}</td>
+        <td style="text-align:right">¥${item.originalAmount.toLocaleString("zh-CN", { minimumFractionDigits: 2 })}</td>
+        <td>${item.formula}</td>
+        <td>${item.basis}</td>
+      </tr>
+    `)
+    .join("");
+  const decisionTraceHtml = Array.isArray(report.decisionTrace?.stages)
+    ? report.decisionTrace.stages
+        .map(
+          (stage) => `
+      <div style="margin-bottom: 12px; padding: 12px; border: 1px solid #e8ecf0; border-radius: 4px;">
+        <div style="font-weight: bold; margin-bottom: 6px;">${stage.title}</div>
+        <div style="font-size: 13px; color: #555; margin-bottom: 6px;">${stage.summary || ""}</div>
+        ${(stage.facts || [])
+          .map((fact) => `<div style="font-size:12px; color:#666;">${fact.label}：${fact.value}</div>`)
+          .join("")}
+      </div>
+    `,
+        )
+        .join("")
+    : "";
+
+  return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>医疗费用审核报告 - ${claimCase?.reportNumber || report.claimCaseId}</title>
+  <style>
+    body { font-family: "PingFang SC", "Microsoft YaHei", sans-serif; font-size: 14px; margin: 40px; color: #1a1a1a; }
+    h1 { text-align: center; font-size: 20px; margin-bottom: 8px; }
+    .subtitle { text-align: center; font-size: 13px; color: #666; margin-bottom: 24px; }
+    .section { margin-bottom: 24px; }
+    .section-title { font-size: 15px; font-weight: bold; border-left: 4px solid #0f766e; padding-left: 8px; margin-bottom: 12px; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .summary-box { background: #f8fafc; border: 1px solid #dbe7f3; border-radius: 6px; padding: 14px 16px; }
+    .summary-item { display: grid; grid-template-columns: 150px 1fr; gap: 10px; margin-bottom: 8px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+    th { background: #ecfeff; padding: 8px 12px; text-align: left; font-size: 13px; border: 1px solid #bae6fd; }
+    td { padding: 8px 12px; border: 1px solid #e8ecf0; font-size: 13px; }
+    tr:nth-child(even) td { background: #fafbfc; }
+    .total-row td { font-weight: bold; background: #ecfeff; }
+    .final-row td { font-weight: bold; font-size: 15px; background: #f0fdfa; color: #115e59; }
+    .footer { margin-top: 40px; font-size: 12px; color: #999; text-align: center; border-top: 1px solid #e8e8e8; padding-top: 16px; }
+  </style>
+</head>
+<body>
+  <h1>医疗费用审核报告</h1>
+  <div class="subtitle">报告编号：${report.reportId} &nbsp;|&nbsp; 生成时间：${new Date(report.generatedAt).toLocaleString("zh-CN")}</div>
+
+  <div class="section">
+    <div class="section-title">一、基本信息</div>
+    <div class="info-grid">
+      <div>报案号：${claimCase?.reportNumber || "-"}</div>
+      <div>被保险人：${claimCase?.insured || claimCase?.reporter || "-"}</div>
+      <div>就诊时间：${claimCase?.accidentTime || "-"}</div>
+      <div>报案原因：${claimCase?.accidentReason || "-"}</div>
+      <div>诊断摘要：${report.injuryProfile?.injuryDescription || "-"}</div>
+      <div>住院天数：${report.injuryProfile?.hospitalizationDays || 0}</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">二、审核摘要</div>
+    <div class="summary-box">
+      <div class="summary-item"><label>案件编号</label><span>${decisionSummary.claimNumber}</span></div>
+      <div class="summary-item"><label>医疗费用</label><span>${decisionSummary.medicalExpenseText}</span></div>
+      <div class="summary-item"><label>抵扣口径</label><span>${decisionSummary.deductionText}</span></div>
+      <div class="summary-item"><label>地区标准</label><span>${decisionSummary.standardsText}</span></div>
+      <div class="summary-item"><label>审核口径</label><span>按医疗费用报销案件生成，不适用责任比例折算。</span></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">三、费用明细</div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:12%">类别</th>
+          <th style="width:20%">项目</th>
+          <th style="width:12%">金额</th>
+          <th style="width:28%">计算方式</th>
+          <th style="width:28%">核定依据</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows}
+        <tr class="total-row">
+          <td colspan="2">费用合计</td>
+          <td style="text-align:right">¥${report.subTotal.toLocaleString("zh-CN", { minimumFractionDigits: 2 })}</td>
+          <td colspan="2"></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-title">四、结论</div>
+    <table>
+      <tbody>
+        <tr><td>核定费用</td><td style="text-align:right">¥${report.subTotal.toLocaleString("zh-CN", { minimumFractionDigits: 2 })}</td></tr>
+        <tr><td>已确认抵扣</td><td style="text-align:right">¥${report.deductionTotal.toLocaleString("zh-CN", { minimumFractionDigits: 2 })}</td></tr>
+        <tr class="final-row"><td>报告结论金额</td><td style="text-align:right">¥${report.finalAmount.toLocaleString("zh-CN", { minimumFractionDigits: 2 })}</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  ${decisionTraceHtml ? `
+  <div class="section">
+    <div class="section-title">五、决策轨迹</div>
+    ${decisionTraceHtml}
+  </div>
+  ` : ""}
+
+  <div class="footer">
+    本报告由系统自动生成，仅供审核参考。医疗费用最终赔付金额以规则审核结果和人工确认结论为准。
   </div>
 </body>
 </html>`;
@@ -320,23 +672,36 @@ export function generateDamageReport({
   standards = {},
   claimantAge = 35,
 }) {
-  const { injuryProfile, liabilityResult, expenseAggregation, conflictsDetected } = aggregationResult;
+  const domainModel = resolveReportDomainModel({ claimCaseId, claimCase, aggregationResult });
+  const { injuryProfile, liabilityResult, expenseAggregation, conflictsDetected, deathProfile } = aggregationResult;
+  const standardsSnapshot = {
+    ...(aggregationResult?.regionalStandards || {}),
+    ...standards,
+  };
+  const liabilityContext = resolveLiabilityContext(aggregationResult);
 
   const items = calculateDamageItems({
     injuryProfile,
     liabilityResult,
     expenseAggregation,
-    standards,
+    deathProfile,
+    standards: standardsSnapshot,
     claimantAge,
   });
 
   const subTotal = items.reduce((sum, item) => sum + item.approvedAmount, 0);
-  const liabilityFactor = liabilityResult
-    ? liabilityResult.thirdPartyLiabilityPct / 100
+  const hasLiabilityRatio =
+    !domainModel?.isMedicalScenario &&
+    liabilityContext &&
+    Number.isFinite(liabilityContext.thirdPartyLiabilityPct);
+  const liabilityFactor = hasLiabilityRatio
+    ? liabilityContext.thirdPartyLiabilityPct / 100
     : 1;
-  const finalAmount = parseFloat((subTotal * liabilityFactor).toFixed(2));
+  const adjustedAmount = parseFloat((subTotal * liabilityFactor).toFixed(2));
+  const deductionTotal = parseFloat(((aggregationResult?.deductionSummary?.deductionTotal) || 0).toFixed(2));
+  const finalAmount = parseFloat(Math.max(0, adjustedAmount - deductionTotal).toFixed(2));
 
-  const std = { ...DEFAULT_STANDARDS, ...standards };
+  const std = { ...DEFAULT_STANDARDS, ...standardsSnapshot };
 
   const report = {
     reportId: `RPT-${Date.now()}-${crypto.randomBytes(3).toString("hex")}`,
@@ -346,17 +711,43 @@ export function generateDamageReport({
     items,
     subTotal: parseFloat(subTotal.toFixed(2)),
     liabilityAdjustment: liabilityFactor,
+    adjustedAmount,
+    deductionTotal,
     finalAmount,
-    calculationFormula: `损失合计 × 第三方责任比例`,
+    calculationFormula: hasLiabilityRatio
+      ? `损失合计 × 第三方责任比例${deductionTotal > 0 ? ` - 已确认抵扣` : ""}`
+      : `损失合计${deductionTotal > 0 ? ` - 已确认抵扣` : "（责任比例待人工确认，未折减）"}`,
     regionalStandards: `${std.region} ${std.year}年，城镇居民人均可支配收入 ¥${std.urbanPerCapitaIncome.toLocaleString("zh-CN")}/年`,
     status: "draft",
+    domainModel,
     // 附加聚合结果（用于 HTML 渲染）
     injuryProfile,
-    liabilityResult,
+    liabilityResult: liabilityContext
+      ? {
+          claimantLiabilityPct: liabilityContext.claimantLiabilityPct,
+          thirdPartyLiabilityPct: liabilityContext.thirdPartyLiabilityPct,
+          basis: liabilityContext.basis,
+          source: liabilityContext.source,
+        }
+      : liabilityResult,
+    deathProfile,
+    deductionSummary: aggregationResult?.deductionSummary || null,
+    manualReviewItems: aggregationResult?.manualReviewItems || [],
+    standardsSnapshot: aggregationResult?.regionalStandards || {},
+    decisionTrace: buildDecisionTraceForReport({ aggregationResult, report: {
+      claimCaseId,
+      generatedAt: new Date().toISOString(),
+      subTotal: parseFloat(subTotal.toFixed(2)),
+      liabilityAdjustment: liabilityFactor,
+      deductionTotal,
+      finalAmount,
+    } }),
     conflicts: conflictsDetected,
   };
 
-  report.reportHtml = generateReportHtml({ report, claimCase, summaries: [] });
+  report.reportHtml = domainModel?.isMedicalScenario
+    ? generateMedicalExpenseReportHtml({ report, claimCase })
+    : generateReportHtml({ report, claimCase, summaries: [] });
 
   return report;
 }

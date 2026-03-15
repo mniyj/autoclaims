@@ -1,6 +1,6 @@
 import React from 'react';
 import { type RuleConditions, type LeafCondition, type GroupCondition, type FieldDefinition, ConditionLogic, ConditionOperator, ExecutionDomain } from '../../types';
-import { OPERATOR_LABELS } from '../../constants';
+import { FIELD_SOURCE_TYPE_LABELS, OPERATOR_LABELS } from '../../constants';
 
 interface ConditionTreeBuilderProps {
   conditions: RuleConditions;
@@ -44,7 +44,9 @@ const LeafConditionRow: React.FC<{
       >
         <option value="">选择字段</option>
         {availableFields.map(([key, def]) => (
-          <option key={key} value={key}>{def.label} ({key})</option>
+          <option key={key} value={key}>
+            {def.label} ({key}){def.source_type ? ` · ${FIELD_SOURCE_TYPE_LABELS[def.source_type] || def.source_type}` : ''}
+          </option>
         ))}
       </select>
 

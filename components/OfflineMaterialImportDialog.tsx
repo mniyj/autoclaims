@@ -6,6 +6,7 @@ interface OfflineMaterialImportDialogProps {
   onClose: () => void;
   claimCaseId: string;
   productCode: string;
+  suggestedMaterials?: string[];
   onImportComplete?: (result: { documents: ProcessedFile[]; completeness: CompletenessResult }) => void;
 }
 
@@ -29,6 +30,7 @@ const ACCEPTED_TYPES = [
   'application/pdf',
   'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'video/mp4', 'video/quicktime', 'video/webm', 'video/x-msvideo', 'video/x-matroska',
 ];
 
 const OfflineMaterialImportDialog: React.FC<OfflineMaterialImportDialogProps> = ({
@@ -36,6 +38,7 @@ const OfflineMaterialImportDialog: React.FC<OfflineMaterialImportDialogProps> = 
   onClose,
   claimCaseId,
   productCode,
+  suggestedMaterials = [],
   onImportComplete,
 }) => {
   // State definitions - MUST be at the top
@@ -81,11 +84,11 @@ const OfflineMaterialImportDialog: React.FC<OfflineMaterialImportDialogProps> = 
 
   const addFiles = useCallback(async (newFiles: FileList | File[]) => {
     const validFiles = Array.from(newFiles).filter(f =>
-      ACCEPTED_TYPES.includes(f.type) || f.name.match(/\.(jpg|jpeg|png|gif|bmp|webp|pdf)$/i)
+      ACCEPTED_TYPES.includes(f.type) || f.name.match(/\.(jpg|jpeg|png|gif|bmp|webp|pdf|doc|docx|xls|xlsx|mp4|mov|avi|mkv|webm)$/i)
     );
 
     if (validFiles.length === 0) {
-      setError('不支持的文件格式，请上传图片或PDF文件');
+      setError('不支持的文件格式，请上传图片、PDF、Word、Excel 或视频文件');
       return;
     }
 
@@ -290,6 +293,13 @@ const OfflineMaterialImportDialog: React.FC<OfflineMaterialImportDialogProps> = 
       setTaskProgress(task.progress || { total: 0, completed: 0, failed: 0 });
 
       if (task.status === 'completed' || task.status === 'failed' || task.status === 'partial_success') {
+        // 收集失败的文件错误信息
+        const failedFiles = task.files?.filter((f: any) => f.status === 'failed') || [];
+        if (failedFiles.length > 0) {
+          const errorMessages = failedFiles.map((f: any) => `${f.fileName}: ${f.errorMessage || '未知错误'}`).join(', ');
+          console.error('[OfflineImport] Failed files:', errorMessages);
+        }
+        
         onImportComplete?.({
           documents: task.files?.map((f: any) => ({
             documentId: `${id}-${f.index}`,
@@ -299,6 +309,7 @@ const OfflineMaterialImportDialog: React.FC<OfflineMaterialImportDialogProps> = 
             classification: f.result?.classification || { materialId: 'unknown', materialName: '未识别', confidence: 0 },
             extractedText: f.result?.extractedText || '',
             structuredData: f.result?.extractedData || {},
+            errorMessage: f.errorMessage || f.result?.classification?.errorMessage || undefined,
           })) || [],
           completeness: {
             isComplete: true,
@@ -401,6 +412,22 @@ const OfflineMaterialImportDialog: React.FC<OfflineMaterialImportDialogProps> = 
 
         {/* Content */}
         <div className="p-4 overflow-y-auto max-h-[calc(90vh-8rem)]">
+          {suggestedMaterials.length > 0 && (
+            <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+              <div className="text-sm font-medium text-amber-800">建议优先补充以下材料</div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {suggestedMaterials.map((material, index) => (
+                  <span
+                    key={`${material}-${index}`}
+                    className="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-amber-800"
+                  >
+                    {material}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Drag & Drop Zone */}
           <div
             onDrop={handleDrop}
@@ -414,7 +441,7 @@ const OfflineMaterialImportDialog: React.FC<OfflineMaterialImportDialogProps> = 
               ref={fileInputRef}
               type="file"
               multiple
-              accept=".jpg,.jpeg,.png,.gif,.bmp,.webp,.pdf"
+              accept=".jpg,.jpeg,.png,.gif,.bmp,.webp,.pdf,.doc,.docx,.xls,.xlsx,.mp4,.mov,.avi,.mkv,.webm"
               onChange={handleFileSelect}
               className="hidden"
             />
@@ -425,7 +452,7 @@ const OfflineMaterialImportDialog: React.FC<OfflineMaterialImportDialogProps> = 
             >
               点击选择文件
             </button>
-            <p className="text-sm text-gray-400 mt-2">支持图片和PDF格式</p>
+            <p className="text-sm text-gray-400 mt-2">支持图片、PDF、Word、Excel 和视频格式</p>
           </div>
 
           {/* Error Message */}

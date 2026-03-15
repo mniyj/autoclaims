@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { readData } from '../../../server/utils/fileStore.js';
+import { normalizeClaimType } from '../../../shared/claimRouting.js';
 
 // Progress query schema
 const ProgressSchema = z.object({
@@ -35,7 +36,7 @@ export const getProgressTool = {
   name: '查询理赔进度',
   description: '查询理赔案件的处理进度',
   inputSchema: ProgressSchema,
-  handler: async (params: z.infer<typeof ProgressSchema>) => {
+  handler: async (params: z.infer<typeof ProgressSchema>, context?: { userId?: string }) => {
     try {
       // Read claims from jsonlist
       const claims = await readData('claim-cases') || [];
@@ -50,6 +51,12 @@ export const getProgressTool = {
         matched = claims.filter((c: any) => 
           c.productCode === params.policyNumber
         );
+      } else if (context?.userId && !['admin', 'test', 'gclife'].includes(context.userId)) {
+        matched = claims.filter((c: any) =>
+          c.reporter === context.userId ||
+          c.insured === context.userId ||
+          c.userId === context.userId
+        );
       }
       
       if (matched.length === 0) {
@@ -59,9 +66,12 @@ export const getProgressTool = {
         };
       }
       
-      const results = matched.map((c: any) => ({
+      const results = matched.map((c: any, index: number) => ({
+        index: index + 1,
         claimId: c.id,
         reportNumber: c.reportNumber,
+        productCode: c.productCode,
+        claimType: normalizeClaimType(c.claimType || c.incidentType || c.productName || c.productCode),
         status: c.status,
         statusLabel: getStatusLabel(c.status),
         accidentReason: c.accidentReason,

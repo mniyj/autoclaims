@@ -50,19 +50,36 @@ export class VoiceGateway {
 
   private handleConnection(ws: WebSocket, req: any) {
     const sessionId = this.extractSessionId(req);
+    const { userId, companyCode } = this.extractConnectionContext(req);
 
-    console.log(`[VoiceGateway] New connection: ${sessionId}`);
+    console.log(
+      `[VoiceGateway] New connection: ${sessionId}, userId=${userId || "anonymous"}, companyCode=${companyCode || "-"}`,
+    );
+
+    // Clean up any existing session with the same ID before creating new one
+    // This prevents orphaned async operations from interfering with the new session
+    if (this.sessions.has(sessionId)) {
+      console.log(
+        `[VoiceGateway] Cleaning up existing session before reconnect: ${sessionId}`,
+      );
+      this.cleanupSession(sessionId);
+    }
+
+    // Create a new pipeline per session to isolate NLS stream state
+    const sessionPipeline = new VoicePipeline();
 
     // Create new session
     const session = new VoiceSession({
       sessionId,
       ws,
-      pipeline: this.pipeline,
+      pipeline: sessionPipeline,
+      userId,
+      companyCode,
     });
 
     this.sessions.set(sessionId, {
       session,
-      userId: "anonymous", // Will be set during authentication
+      userId: userId || "anonymous",
       createdAt: new Date(),
       lastActivity: new Date(),
     });
@@ -87,6 +104,7 @@ export class VoiceGateway {
     session.sendEvent("session_started", {
       sessionId,
       message: "语音会话已启动",
+      services: session.getServiceStatus(),
     });
   }
 
@@ -109,8 +127,23 @@ export class VoiceGateway {
 
   private extractSessionId(req: any): string {
     const url = req.url || "";
-    const match = url.match(/\/voice\/ws\/(.+)/);
+    const match = url.match(/\/voice\/ws\/([^?]+)/);
     return match ? match[1] : `session_${Date.now()}`;
+  }
+
+  private extractConnectionContext(req: any): {
+    userId?: string;
+    companyCode?: string;
+  } {
+    try {
+      const requestUrl = new URL(req.url || "", "http://localhost");
+      return {
+        userId: requestUrl.searchParams.get("userId") || undefined,
+        companyCode: requestUrl.searchParams.get("companyCode") || undefined,
+      };
+    } catch {
+      return {};
+    }
   }
 
   private cleanupSession(sessionId: string) {
@@ -147,5 +180,9 @@ export class VoiceGateway {
 
   endSession(sessionId: string): void {
     this.cleanupSession(sessionId);
+  }
+
+  getServiceStatus() {
+    return this.pipeline.getServiceStatus();
   }
 }

@@ -39,35 +39,14 @@ import {
   formatInvoiceItemsSummary
 } from './prompts/claimAdjuster.js';
 import { checkEligibility } from '../rules/engine.js';
+import { getLatestValidationFacts } from '../rules/context.js';
 import { logAIReview, aiCostTracker } from '../middleware/index.js';
 import { createClaimAdjusterAgent } from './agent.js';
+import { invokeAICapability } from '../services/aiRuntime.js';
 
 // 导入多文件处理服务
 import { processFiles } from '../services/fileProcessor.js';
 import { analyzeMultiFiles } from '../services/multiFileAnalyzer.js';
-
-// 获取 API Key
-const getApiKey = () => process.env.GEMINI_API_KEY || process.env.API_KEY;
-
-// 创建 LLM 模型（用于风险评估）
-let riskAssessmentModel = null;
-
-async function getRiskAssessmentModel() {
-  if (!riskAssessmentModel) {
-    const apiKey = getApiKey();
-    if (!apiKey) {
-      throw new Error('GEMINI_API_KEY not found');
-    }
-    const { ChatGoogleGenerativeAI } = await import('@langchain/google-genai');
-    riskAssessmentModel = new ChatGoogleGenerativeAI({
-      apiKey,
-      model: 'gemini-2.5-flash',
-      temperature: 0.3,
-      maxRetries: 2,
-    });
-  }
-  return riskAssessmentModel;
-}
 
 // ============================================================================
 // 节点函数
@@ -112,7 +91,8 @@ export async function checkEligibilityNode(state) {
     const result = await checkEligibility({
       claimCaseId: state.claimCaseId,
       productCode: state.productCode,
-      ocrData: state.ocrData
+      ocrData: state.ocrData,
+      validationFacts: state.claimCaseId ? getLatestValidationFacts(state.claimCaseId) : null,
     });
 
     debug.nodeExecutions[debug.nodeExecutions.length - 1].duration = Date.now() - startTime;
@@ -158,7 +138,8 @@ export async function calculateAmountNode(state) {
       productCode: state.productCode,
       eligibilityResult: state.eligibility,
       invoiceItems: state.invoiceItems,
-      ocrData: state.ocrData
+      ocrData: state.ocrData,
+      validationFacts: state.claimCaseId ? getLatestValidationFacts(state.claimCaseId) : null,
     });
 
     debug.nodeExecutions[debug.nodeExecutions.length - 1].duration = Date.now() - startTime;
@@ -196,8 +177,6 @@ export async function assessRiskNode(state) {
   });
 
   try {
-    const model = await getRiskAssessmentModel();
-
     // 构建风险评估 prompt
     const riskPrompt = `
 基于以下信息评估理赔案件的风险等级：
@@ -233,13 +212,29 @@ ${formatInvoiceItemsSummary(state.invoiceItems)}
 - HIGH: 欺诈风险标记、重大异常、或金额异常
 `;
 
-    const response = await model.invoke([
-      new HumanMessage(riskPrompt)
-    ]);
+    const { response } = await invokeAICapability({
+      capabilityId: 'admin.claim.risk_assessment',
+      request: {
+        contents: [{ parts: [{ text: riskPrompt }] }],
+        config: {
+          temperature: 0.1,
+        },
+      },
+      meta: {
+        sourceApp: 'admin-system',
+        module: 'ai.graph.assessRisk',
+        operation: 'assess_risk',
+        promptSourceType: 'runtime_only',
+        context: {
+          claimCaseId: state.claimCaseId,
+          productCode: state.productCode,
+        },
+      },
+    });
 
     // 解析风险等级
     let riskLevel = 'MEDIUM';
-    const content = response.content;
+    const content = response.text || '';
     if (content.includes('HIGH')) {
       riskLevel = 'HIGH';
     } else if (content.includes('LOW')) {
@@ -494,8 +489,6 @@ export async function aiEligibilityReviewNode(state) {
   });
 
   try {
-    const model = await getRiskAssessmentModel();
-
     // 构建复核 prompt
     const reviewPrompt = `
 作为资深理赔审核员，请对以下案件进行责任复核：
@@ -530,11 +523,27 @@ ${state.crossValidationResults?.map(v => `- ${v.type}: ${v.passed ? '✅' : '❌
 **建议**: [处理建议]
 `;
 
-    const response = await model.invoke([
-      new HumanMessage(reviewPrompt)
-    ]);
+    const { response } = await invokeAICapability({
+      capabilityId: 'admin.claim.risk_assessment',
+      request: {
+        contents: [{ parts: [{ text: reviewPrompt }] }],
+        config: {
+          temperature: 0.1,
+        },
+      },
+      meta: {
+        sourceApp: 'admin-system',
+        module: 'ai.graph.aiEligibilityReview',
+        operation: 'ai_eligibility_review',
+        promptSourceType: 'runtime_only',
+        context: {
+          claimCaseId: state.claimCaseId,
+          productCode: state.productCode,
+        },
+      },
+    });
 
-    const content = response.content;
+    const content = response.text || '';
 
     // 判断是否需要人工介入
     const needsHumanReview = content.includes('需要人工') || content.includes('存疑');
@@ -544,7 +553,7 @@ ${state.crossValidationResults?.map(v => `- ${v.type}: ${v.passed ? '✅' : '❌
     return {
       reasoning: content,
       humanReviewRequired: needsHumanReview,
-      messages: [response],
+      messages: [new HumanMessage(content)],
       debug,
     };
   } catch (error) {

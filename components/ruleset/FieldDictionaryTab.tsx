@@ -1,103 +1,159 @@
-import React, { useState, useMemo } from 'react';
-import { type FieldDefinition } from '../../types';
-import { DOMAIN_LABELS, FIELD_SCOPE_LABELS, FIELD_DATA_TYPE_LABELS } from '../../constants';
+import React, { useMemo, useState } from 'react';
+import { type ClaimsMaterial, type FieldDefinition } from '../../types';
+import {
+  DOMAIN_LABELS,
+  FIELD_DATA_TYPE_LABELS,
+  FIELD_SCOPE_LABELS,
+  FIELD_SOURCE_TYPE_LABELS,
+} from '../../constants';
 
 interface FieldDictionaryTabProps {
   dictionary: Record<string, FieldDefinition>;
+  claimsMaterials: ClaimsMaterial[];
 }
 
-const FieldDictionaryTab: React.FC<FieldDictionaryTabProps> = ({ dictionary }) => {
+function collectSchemaFactBindings(
+  fields: NonNullable<ClaimsMaterial["schemaFields"]> = [],
+  prefix = '',
+): Array<{ fact_id: string; field_key?: string }> {
+  const bindings: Array<{ fact_id: string; field_key?: string }> = [];
+  fields.forEach((field) => {
+    const key = String(field.field_key || '').trim();
+    if (!key) return;
+    const path = prefix ? `${prefix}.${key}` : key;
+    if (field.fact_id) {
+      bindings.push({ fact_id: field.fact_id, field_key: path });
+    }
+    if (field.data_type === 'OBJECT' && field.children) {
+      bindings.push(...collectSchemaFactBindings(field.children as NonNullable<ClaimsMaterial["schemaFields"]>, path));
+    }
+    if (field.data_type === 'ARRAY' && field.item_fields) {
+      bindings.push(...collectSchemaFactBindings(field.item_fields as NonNullable<ClaimsMaterial["schemaFields"]>, `${path}[]`));
+    }
+  });
+  return bindings;
+}
+
+const FieldDictionaryTab: React.FC<FieldDictionaryTabProps> = ({ dictionary, claimsMaterials }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [scopeFilter, setScopeFilter] = useState<string>('');
+  const [sourceTypeFilter, setSourceTypeFilter] = useState<string>('');
 
   const entries = useMemo(() => {
     let result = Object.entries(dictionary) as [string, FieldDefinition][];
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
-      result = result.filter(([key, def]) =>
-        key.toLowerCase().includes(q) || def.label.toLowerCase().includes(q)
-      );
+      result = result.filter(([key, def]) => key.toLowerCase().includes(q) || def.label.toLowerCase().includes(q));
     }
-    if (scopeFilter) {
-      result = result.filter(([, def]) => def.scope === scopeFilter);
+    if (sourceTypeFilter) {
+      result = result.filter(([, def]) => (def.source_type || 'manual') === sourceTypeFilter);
     }
     return result;
-  }, [dictionary, searchQuery, scopeFilter]);
+  }, [dictionary, searchQuery, sourceTypeFilter]);
+
+  const bindingsByFact = useMemo(() => {
+    return claimsMaterials.reduce<Record<string, Array<{ materialId: string; materialName: string; fieldKey?: string }>>>((acc, material) => {
+      const bindings = collectSchemaFactBindings((material.schemaFields || []) as NonNullable<ClaimsMaterial["schemaFields"]>);
+      bindings.forEach((binding) => {
+        const current = acc[binding.fact_id] || [];
+        current.push({
+          materialId: material.id,
+          materialName: material.name,
+          fieldKey: binding.field_key || binding.alias,
+        });
+        acc[binding.fact_id] = current;
+      });
+      return acc;
+    }, {});
+  }, [claimsMaterials]);
 
   return (
     <div className="space-y-4">
-      {/* Filters */}
-      <div className="flex items-center space-x-3">
-        <div className="flex-1">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="搜索字段键名或标签..."
-            className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2"
-          />
-        </div>
+      <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
+        事实字段元数据已前置到“事实元数据中心”统一维护。这里仅展示当前规则集引用了哪些标准事实，以及这些事实已绑定到哪些理赔材料。
+      </div>
+
+      <div className="grid gap-3 lg:grid-cols-[2fr_1fr]">
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="搜索标准事实字段..."
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+        />
         <select
-          value={scopeFilter}
-          onChange={(e) => setScopeFilter(e.target.value)}
-          className="text-sm border border-gray-300 rounded-lg px-3 py-2"
+          value={sourceTypeFilter}
+          onChange={(e) => setSourceTypeFilter(e.target.value)}
+          className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
         >
-          <option value="">全部作用域</option>
-          {Object.entries(FIELD_SCOPE_LABELS).map(([key, label]) => (
+          <option value="">全部来源类型</option>
+          {Object.entries(FIELD_SOURCE_TYPE_LABELS).map(([key, label]) => (
             <option key={key} value={key}>{label}</option>
           ))}
         </select>
       </div>
 
-      {/* Table */}
-      <div className="border border-gray-200 rounded-lg overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">字段键名</th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">标签</th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">数据类型</th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">作用域</th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">适用域</th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">来源</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {entries.map(([key, def]) => (
-              <tr key={key} className="hover:bg-gray-50">
-                <td className="px-4 py-2.5 font-mono text-xs text-gray-700">{key}</td>
-                <td className="px-4 py-2.5 text-gray-900">{def.label}</td>
-                <td className="px-4 py-2.5">
-                  <span className="px-1.5 py-0.5 bg-gray-100 rounded text-xs text-gray-600">
-                    {FIELD_DATA_TYPE_LABELS[def.data_type] || def.data_type}
-                  </span>
-                  {def.enum_values && def.enum_values.length > 0 && (
-                    <div className="mt-1 flex flex-wrap gap-1">
-                      {def.enum_values.map((ev) => (
-                        <span key={ev.code} className="px-1 py-0.5 bg-blue-50 text-blue-600 rounded text-xs">{ev.label}</span>
+      <div className="space-y-4">
+        {entries.map(([fieldKey, definition]) => {
+          const bindings = bindingsByFact[fieldKey] || [];
+          return (
+            <section key={fieldKey} className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <div className="text-xs font-medium text-slate-500">{fieldKey}</div>
+                  <div className="mt-1 text-base font-semibold text-slate-900">{definition.label}</div>
+                  <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                    <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-600">
+                      {FIELD_DATA_TYPE_LABELS[definition.data_type] || definition.data_type}
+                    </span>
+                    <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-600">
+                      {FIELD_SCOPE_LABELS[definition.scope] || definition.scope}
+                    </span>
+                    <span className="rounded-full bg-blue-50 px-2 py-1 text-blue-700">
+                      {FIELD_SOURCE_TYPE_LABELS[definition.source_type || 'manual'] || definition.source_type || 'manual'}
+                    </span>
+                    {definition.required_evidence && (
+                      <span className="rounded-full bg-amber-50 px-2 py-1 text-amber-700">需材料佐证</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 grid gap-4 xl:grid-cols-[1fr_1fr]">
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                  <div className="text-sm font-semibold text-slate-900">字段来源说明</div>
+                  <div className="mt-2 text-sm text-slate-600">
+                    {definition.derivation || definition.source_refs?.join('、') || definition.source || '未登记'}
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-1">
+                    {definition.applicable_domains.map((domain) => (
+                      <span key={domain} className="rounded-full bg-white px-2 py-1 text-xs text-slate-600">
+                        {DOMAIN_LABELS[domain] || domain}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                  <div className="text-sm font-semibold text-slate-900">材料绑定</div>
+                  {bindings.length === 0 ? (
+                    <div className="mt-2 text-sm text-slate-500">当前没有材料直接绑定这个事实字段。</div>
+                  ) : (
+                    <div className="mt-2 space-y-2">
+                      {bindings.map((binding) => (
+                        <div key={`${binding.materialId}-${binding.fieldKey || ''}`} className="rounded-lg bg-white px-3 py-2">
+                          <div className="text-sm font-medium text-slate-900">{binding.materialName}</div>
+                          <div className="mt-1 text-xs text-slate-500">
+                            {binding.fieldKey ? `材料 schema 字段：${binding.fieldKey}` : '使用事实后缀生成 schema 字段'}
+                          </div>
+                        </div>
                       ))}
                     </div>
                   )}
-                </td>
-                <td className="px-4 py-2.5 text-xs text-gray-600">{FIELD_SCOPE_LABELS[def.scope] || def.scope}</td>
-                <td className="px-4 py-2.5">
-                  <div className="flex flex-wrap gap-1">
-                    {def.applicable_domains.map((d) => (
-                      <span key={d} className="px-1.5 py-0.5 bg-indigo-50 text-indigo-600 rounded text-xs">{DOMAIN_LABELS[d]}</span>
-                    ))}
-                  </div>
-                </td>
-                <td className="px-4 py-2.5 text-xs text-gray-500">{def.source}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {entries.length === 0 && (
-          <div className="text-center py-8 text-sm text-gray-400">未找到匹配的字段</div>
-        )}
+                </div>
+              </div>
+            </section>
+          );
+        })}
       </div>
-
-      <p className="text-xs text-gray-400">共 {entries.length} / {Object.keys(dictionary).length} 个字段</p>
     </div>
   );
 };

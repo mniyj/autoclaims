@@ -6,6 +6,7 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { calculateAmount } from '../../rules/engine.js';
+import { getLatestValidationFacts } from '../../rules/context.js';
 
 export const calculateAmountTool = new DynamicStructuredTool({
   name: 'calculate_claim_amount',
@@ -24,12 +25,32 @@ export const calculateAmountTool = new DynamicStructuredTool({
       itemName: z.string().describe('费用项目名称'),
       category: z.string().optional().describe('费用类别（治疗费、检查费、药品费等）'),
       totalPrice: z.number().describe('金额'),
-    })).describe('发票费用明细列表'),
+    })).optional().default([]).describe('发票费用明细列表，纯身故给付案件可为空'),
     totalAmount: z.number().optional().describe('发票总金额'),
     socialInsurancePaid: z.number().optional().describe('医保已支付金额'),
+    deathConfirmed: z.boolean().optional().describe('是否已确认身故'),
+    deathDate: z.string().optional().describe('死亡日期 YYYY-MM-DD'),
+    priorDisabilityPaid: z.number().optional().describe('身故前已赔伤残金'),
+    causeType: z.string().optional().describe('事故原因类型，如 ACCIDENT'),
+    resultType: z.string().optional().describe('结果类型，如 DEATH'),
+    scenario: z.string().optional().describe('事故场景，如 PUBLIC_TRANSPORT_PASSENGER'),
+    transportType: z.string().optional().describe('交通工具类型，如 BUS、TRAIN、AIRCRAFT'),
   }),
   
-  func: async ({ claimCaseId, productCode, invoiceItems, totalAmount, socialInsurancePaid }) => {
+  func: async ({
+    claimCaseId,
+    productCode,
+    invoiceItems = [],
+    totalAmount,
+    socialInsurancePaid,
+    deathConfirmed,
+    deathDate,
+    priorDisabilityPaid,
+    causeType,
+    resultType,
+    scenario,
+    transportType
+  }) => {
     try {
       // 确保每个项目都有 category 字段
       const processedItems = invoiceItems.map(item => ({
@@ -46,12 +67,35 @@ export const calculateAmountTool = new DynamicStructuredTool({
           governmentFundPayment: socialInsurancePaid
         };
       }
+      if (deathConfirmed !== undefined) {
+        ocrData.death_confirmed = deathConfirmed;
+      }
+      if (deathDate) {
+        ocrData.death_date = deathDate;
+        ocrData.result_date = deathDate;
+      }
+      if (priorDisabilityPaid !== undefined) {
+        ocrData.prior_disability_paid = priorDisabilityPaid;
+      }
+      if (causeType) {
+        ocrData.cause_type = causeType;
+      }
+      if (resultType) {
+        ocrData.result_type = resultType;
+      }
+      if (scenario) {
+        ocrData.scenario = scenario;
+      }
+      if (transportType) {
+        ocrData.transport_type = transportType;
+      }
       
       const result = await calculateAmount({
         claimCaseId,
         productCode,
         invoiceItems: processedItems,
-        ocrData
+        ocrData,
+        validationFacts: claimCaseId ? getLatestValidationFacts(claimCaseId) : null,
       });
       
       // 格式化输出

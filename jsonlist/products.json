@@ -442,5 +442,98 @@
         "description": "意外导致的门诊、住院医疗费用报销"
       }
     ]
+  },
+  {
+    "productCode": "SUN_EML_TPL_2023",
+    "regulatoryName": "阳光工程机械设备保险（附加第三者责任）",
+    "marketingName": "阳光工程机械三责作业责任险",
+    "companyName": "阳光财产保险股份有限公司",
+    "version": "1.0",
+    "salesRegions": "中国大陆",
+    "effectiveDate": "2023-11-21",
+    "discontinuationDate": "2024-11-20",
+    "status": "生效",
+    "primaryCategory": "责任保险",
+    "secondaryCategory": "工程机械第三者责任",
+    "primaryCategoryCode": "AUTO",
+    "secondaryCategoryCode": "L01",
+    "racewayId": "L0101",
+    "racewayName": "工程机械作业责任",
+    "clauseType": "主险+附加险",
+    "operator": "system",
+    "coverageDetails": [
+      {
+        "mandatory": true,
+        "id": "eng-1",
+        "name": "工程机械设备保险",
+        "amount": "53.2万",
+        "details": "承保被保险工程机械设备自身损失。"
+      },
+      {
+        "mandatory": true,
+        "id": "eng-2",
+        "name": "附加第三者责任保险",
+        "amount": "100万",
+        "details": "承保施工场地作业过程中造成第三者人身伤亡或财产损失的依法赔偿责任。"
+      }
+    ],
+    "coveragePlans": [
+      {
+        "planType": "标准方案",
+        "annualLimit": 1000000,
+        "coverageDetails": [
+          {
+            "mandatory": true,
+            "item_code": "AUTO_THIRD_PARTY",
+            "item_name": "第三者责任赔偿",
+            "description": "按责任比例赔付第三者人身伤亡或财产损失。",
+            "details": {
+              "limit": 1000000,
+              "deductible": 0,
+              "reimbursement_ratio": 1,
+              "coverage_scope": "第三者人身伤亡/财产损失",
+              "hospital_requirements": "依法应承担赔偿责任"
+            }
+          }
+        ]
+      }
+    ],
+    "underwritingAge": "企业投保",
+    "coveragePeriod": "1年",
+    "coverageArea": "中华人民共和国境内（不含港澳台）",
+    "claimScope": "施工场地作业责任",
+    "occupationScope": "工程机械设备操作及吊装作业",
+    "policyEffectiveDate": "投保次日零时",
+    "purchaseLimit": 1,
+    "annualPremium": 9292,
+    "valueAddedServices": [],
+    "tags": [
+      "工程机械",
+      "第三者责任",
+      "作业事故"
+    ],
+    "promoTag": "工程机械作业责任保障",
+    "cardMetric1Label": "三者保额",
+    "cardMetric1Value": "100万",
+    "cardMetric2Label": "设备保额",
+    "cardMetric2Value": "53.2万",
+    "cardMetric3Label": "保障期限",
+    "cardMetric3Value": "1年",
+    "supportsOnlineClaim": false,
+    "isOnline": false,
+    "productAttachments": [
+      "阳光财产保险股份有限公司工程机械设备保险（2022版）条款.pdf",
+      "阳光财产保险股份有限公司工程机械设备保险附加第三者责任保险（2022版）条款.pdf"
+    ],
+    "productSummary": "适用于起重机等工程机械设备在施工场地作业过程中造成第三者损害的责任赔偿案件。",
+    "selectedResponsibilities": [
+      {
+        "id": "resp-19",
+        "code": "ENGINEERING_TPL_DEATH",
+        "name": "工程机械第三者人身死亡赔偿责任",
+        "category": "责任保险",
+        "description": "工程机械设备在施工场地作业过程中致第三者死亡，依法应由被保险人承担的经济赔偿责任"
+      }
+    ]
   }
 ]

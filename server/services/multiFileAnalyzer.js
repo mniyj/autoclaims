@@ -3,10 +3,10 @@
  * 实现跨文件数据交叉验证和材料完整性检查
  */
 
-import { GoogleGenAI } from '@google/genai';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { executeMaterialValidationRules } from './materialValidationEngine.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,6 +14,13 @@ const projectRoot = path.resolve(__dirname, '..', '..');
 const dataDir = path.join(projectRoot, 'jsonlist');
 
 const getGeminiApiKey = () => process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || process.env.API_KEY;
+
+const MATERIAL_ID_ALIASES = {
+  'case_initial_report': ['mat-51'],
+  'case_public_adjuster_report': ['mat-52'],
+  'mat-51': ['case_initial_report'],
+  'mat-52': ['case_public_adjuster_report']
+};
 
 // ============================================================================
 // 交叉验证规则
@@ -401,12 +408,22 @@ export async function checkDocumentCompleteness(documents, productCode, claimInf
     optionalMaterials = getDefaultOptionalMaterials(claimInfo);
   }
 
-  // 已提供的材料类型
-  const providedTypes = new Set(documents.map(d => d.fileType));
+  // 已提供的材料类型与已识别材料ID
+  const providedTypes = new Set(documents.map(d => d.fileType).filter(Boolean));
+  const providedMaterialIds = new Set(
+    documents
+      .map(d => d.classification?.materialId)
+      .filter(Boolean)
+  );
+  for (const materialId of Array.from(providedMaterialIds)) {
+    for (const alias of MATERIAL_ID_ALIASES[materialId] || []) {
+      providedMaterialIds.add(alias);
+    }
+  }
 
   // 检查缺失材料
   const missingMaterials = requiredMaterials.filter(
-    materialId => !providedTypes.has(materialId)
+    materialId => !providedTypes.has(materialId) && !providedMaterialIds.has(materialId)
   );
 
   // 计算完整度评分
@@ -418,7 +435,7 @@ export async function checkDocumentCompleteness(documents, productCode, claimInf
     isComplete: missingMaterials.length === 0,
     completenessScore,
     requiredMaterials,
-    providedMaterials: Array.from(providedTypes),
+    providedMaterials: Array.from(new Set([...providedTypes, ...providedMaterialIds])),
     missingMaterials,
     optionalMaterials,
     warnings: missingMaterials.length > 0
@@ -478,14 +495,18 @@ export async function analyzeMultiFiles(documents, context = {}) {
   // 4. 时间线验证
   crossValidation.push(...validateTimeline(documents, context));
 
-  // 5. 材料完整性检查
+  // 5. 材料校验规则
+  const { validationResults, validationFacts } = executeMaterialValidationRules(documents);
+  crossValidation.push(...validationResults);
+
+  // 6. 材料完整性检查
   const completeness = await checkDocumentCompleteness(
     documents,
     context.productCode,
     context.claimInfo
   );
 
-  // 6. 生成人工介入点
+  // 7. 生成人工介入点
   const interventionPoints = generateInterventionPoints(
     crossValidation,
     completeness,
@@ -494,6 +515,8 @@ export async function analyzeMultiFiles(documents, context = {}) {
 
   return {
     crossValidation,
+    materialValidationResults: validationResults,
+    validationFacts,
     completeness,
     interventionPoints,
     summary: generateAnalysisSummary(crossValidation, completeness, interventionPoints),

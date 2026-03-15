@@ -7,12 +7,19 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
   const apiPort = Number(env.ADMIN_API_PORT || env.DEV_PORT || 8080);
   const apiTarget = env.API_PROXY_TARGET || `http://127.0.0.1:${apiPort}`;
+  const voiceApiTarget =
+    env.VOICE_API_PROXY_TARGET ||
+    `http://127.0.0.1:${env.VOICE_DEV_PORT || 8092}`;
   return {
     server: {
       port: 8081,
       host: '0.0.0.0',
       hmr: false,
       proxy: {
+        '/api/voice': {
+          target: voiceApiTarget,
+          changeOrigin: true,
+        },
         '/api': {
           target: apiTarget,
           changeOrigin: true,

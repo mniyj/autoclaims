@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { type RulesetRule, type FieldDefinition, RuleStatus, RuleActionType, ExecutionDomain } from '../../types';
+import { type RulesetRule, type FieldDefinition, RuleStatus, RuleActionType, ExecutionDomain, RuleKind } from '../../types';
 import { RULE_STATUS_LABELS, ACTION_TYPE_LABELS, DOMAIN_LABELS, SOURCE_TYPE_LABELS, PRIORITY_LEVEL_LABELS, CATEGORY_LABELS } from '../../constants';
 import ConditionTreeBuilder from './ConditionTreeBuilder';
 import ActionParamsEditor from './ActionParamsEditor';
+import { getCoverageCodes, getRuleFields, getRuleSemantic, summarizeAction, inferRuleKind } from './workbenchUtils';
 
 interface RuleDetailModalProps {
   isOpen: boolean;
@@ -25,6 +26,20 @@ const RuleDetailModal: React.FC<RuleDetailModalProps> = ({ isOpen, onClose, rule
 
   if (!isOpen || !editingRule) return null;
 
+  const recommendedCategoryByKind: Partial<Record<RuleKind, string>> = {
+    [RuleKind.GATE]: 'COVERAGE_PERIOD',
+    [RuleKind.TRIGGER]: 'COVERAGE_SCOPE',
+    [RuleKind.EXCLUSION]: 'EXCLUSION',
+    [RuleKind.ADJUSTMENT]: 'PROPORTIONAL_LIABILITY',
+    [RuleKind.BENEFIT]: 'BENEFIT_OFFSET',
+    [RuleKind.ITEM_ELIGIBILITY]: 'ITEM_CLASSIFICATION',
+    [RuleKind.ITEM_RATIO]: 'SOCIAL_INSURANCE',
+    [RuleKind.ITEM_PRICING]: 'PRICING_REASONABILITY',
+    [RuleKind.ITEM_CAP]: 'SUB_LIMIT',
+    [RuleKind.ITEM_FLAG]: 'POST_ADJUSTMENT',
+    [RuleKind.POST_PROCESS]: 'POST_ADJUSTMENT',
+  };
+
   const sections = [
     { id: 'basic', label: '基本信息' },
     { id: 'execution', label: '执行上下文' },
@@ -42,8 +57,80 @@ const RuleDetailModal: React.FC<RuleDetailModalProps> = ({ isOpen, onClose, rule
     }
   };
 
+  const semantic = getRuleSemantic(editingRule);
+  const dependentFields = getRuleFields(editingRule);
+  const coverageCodes = getCoverageCodes(editingRule);
+  const validationMessages: string[] = [];
+  const advisoryMessages: string[] = [];
+  const activeRuleKind = editingRule.rule_kind || inferRuleKind(editingRule);
+  if (dependentFields.some((field) => !fieldDictionary[field])) {
+    validationMessages.push('存在未登记到字段字典的字段');
+  }
+  if (
+    [RuleActionType.REJECT_CLAIM].includes(editingRule.action.action_type) &&
+    !editingRule.action.params.reject_reason_code
+  ) {
+    validationMessages.push('拒赔动作需要填写拒赔原因代码');
+  }
+  if (
+    [RuleActionType.SET_CLAIM_RATIO, RuleActionType.SET_ITEM_RATIO].includes(editingRule.action.action_type) &&
+    typeof editingRule.action.params.payout_ratio !== 'number'
+  ) {
+    validationMessages.push('比例动作需要填写赔付比例');
+  }
+  const allowedActionTypesByKind: Record<RuleKind, RuleActionType[]> = {
+    [RuleKind.GATE]: [RuleActionType.APPROVE_CLAIM, RuleActionType.ROUTE_CLAIM_MANUAL],
+    [RuleKind.TRIGGER]: [RuleActionType.APPROVE_CLAIM, RuleActionType.ROUTE_CLAIM_MANUAL],
+    [RuleKind.EXCLUSION]: [RuleActionType.REJECT_CLAIM, RuleActionType.TERMINATE_CONTRACT],
+    [RuleKind.ADJUSTMENT]: [RuleActionType.SET_CLAIM_RATIO, RuleActionType.ROUTE_CLAIM_MANUAL, RuleActionType.FLAG_FRAUD],
+    [RuleKind.BENEFIT]: [RuleActionType.APPLY_FORMULA, RuleActionType.APPLY_CAP, RuleActionType.DEDUCT_PRIOR_BENEFIT],
+    [RuleKind.ITEM_ELIGIBILITY]: [RuleActionType.APPROVE_ITEM, RuleActionType.REJECT_ITEM, RuleActionType.FLAG_ITEM],
+    [RuleKind.ITEM_RATIO]: [RuleActionType.SET_ITEM_RATIO],
+    [RuleKind.ITEM_PRICING]: [RuleActionType.ADJUST_ITEM_AMOUNT],
+    [RuleKind.ITEM_CAP]: [RuleActionType.APPLY_CAP, RuleActionType.APPLY_DEDUCTIBLE],
+    [RuleKind.ITEM_FLAG]: [RuleActionType.FLAG_ITEM],
+    [RuleKind.POST_PROCESS]: [RuleActionType.APPLY_FORMULA, RuleActionType.APPLY_CAP, RuleActionType.APPLY_DEDUCTIBLE, RuleActionType.SUM_COVERAGES, RuleActionType.DEDUCT_PRIOR_BENEFIT, RuleActionType.ADD_REMARK],
+  };
+  const expectedDomainByKind: Record<RuleKind, ExecutionDomain> = {
+    [RuleKind.GATE]: ExecutionDomain.ELIGIBILITY,
+    [RuleKind.TRIGGER]: ExecutionDomain.ELIGIBILITY,
+    [RuleKind.EXCLUSION]: ExecutionDomain.ELIGIBILITY,
+    [RuleKind.ADJUSTMENT]: ExecutionDomain.ELIGIBILITY,
+    [RuleKind.BENEFIT]: ExecutionDomain.ASSESSMENT,
+    [RuleKind.ITEM_ELIGIBILITY]: ExecutionDomain.ASSESSMENT,
+    [RuleKind.ITEM_RATIO]: ExecutionDomain.ASSESSMENT,
+    [RuleKind.ITEM_PRICING]: ExecutionDomain.ASSESSMENT,
+    [RuleKind.ITEM_CAP]: ExecutionDomain.ASSESSMENT,
+    [RuleKind.ITEM_FLAG]: ExecutionDomain.ASSESSMENT,
+    [RuleKind.POST_PROCESS]: ExecutionDomain.POST_PROCESS,
+  };
+  const allowedActionTypes = allowedActionTypesByKind[activeRuleKind];
+  if (!allowedActionTypes.includes(editingRule.action.action_type)) {
+    validationMessages.push(`当前规则语义不允许使用动作 ${ACTION_TYPE_LABELS[editingRule.action.action_type] || editingRule.action.action_type}`);
+  }
+  if (editingRule.execution.domain !== expectedDomainByKind[activeRuleKind]) {
+    validationMessages.push(`当前规则语义要求执行域为 ${DOMAIN_LABELS[expectedDomainByKind[activeRuleKind]]}`);
+  }
+  const recommendedCategory = recommendedCategoryByKind[activeRuleKind];
+  if (recommendedCategory && editingRule.category !== recommendedCategory) {
+    advisoryMessages.push(`当前规则语义推荐分类为 ${CATEGORY_LABELS[recommendedCategory] || recommendedCategory}`);
+  }
+
   const labelClass = 'block text-xs font-medium text-gray-600 mb-1';
   const inputClass = 'text-sm border border-gray-300 rounded-md px-3 py-1.5 w-full';
+  const ruleKindLabels: Record<RuleKind, string> = {
+    [RuleKind.GATE]: '准入',
+    [RuleKind.TRIGGER]: '触发',
+    [RuleKind.EXCLUSION]: '免责',
+    [RuleKind.ADJUSTMENT]: '调整',
+    [RuleKind.BENEFIT]: '给付规则',
+    [RuleKind.ITEM_ELIGIBILITY]: '费用项准入',
+    [RuleKind.ITEM_RATIO]: '比例规则',
+    [RuleKind.ITEM_PRICING]: '限价规则',
+    [RuleKind.ITEM_CAP]: '限额规则',
+    [RuleKind.ITEM_FLAG]: '复核标记',
+    [RuleKind.POST_PROCESS]: '后处理',
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={onClose}>
@@ -112,8 +199,70 @@ const RuleDetailModal: React.FC<RuleDetailModalProps> = ({ isOpen, onClose, rule
                   </select>
                 </div>
                 <div>
-                  <label className={labelClass}>类别</label>
-                  <input type="text" value={CATEGORY_LABELS[editingRule.category] || editingRule.category} disabled className={`${inputClass} bg-gray-100`} />
+                  <label className={labelClass}>规则语义</label>
+                  <select
+                    value={activeRuleKind}
+                    onChange={(e) => {
+                      const nextRuleKind = e.target.value as RuleKind;
+                      const nextAllowedActions = allowedActionTypesByKind[nextRuleKind];
+                      const nextActionType = nextAllowedActions.includes(editingRule.action.action_type)
+                        ? editingRule.action.action_type
+                        : nextAllowedActions[0];
+                      setEditingRule({
+                        ...editingRule,
+                        rule_kind: nextRuleKind,
+                        category: recommendedCategoryByKind[nextRuleKind] || editingRule.category,
+                        execution: {
+                          ...editingRule.execution,
+                          domain: expectedDomainByKind[nextRuleKind],
+                          loop_over: expectedDomainByKind[nextRuleKind] === ExecutionDomain.ASSESSMENT ? (editingRule.execution.loop_over || 'claim.expense_items') : null,
+                          item_alias: expectedDomainByKind[nextRuleKind] === ExecutionDomain.ASSESSMENT ? (editingRule.execution.item_alias || 'expense_item') : null,
+                          item_action_on_reject: expectedDomainByKind[nextRuleKind] === ExecutionDomain.ASSESSMENT ? editingRule.execution.item_action_on_reject : null,
+                        },
+                        action: {
+                          ...editingRule.action,
+                          action_type: nextActionType,
+                          params: nextActionType === editingRule.action.action_type ? editingRule.action.params : {},
+                        },
+                      });
+                    }}
+                    className={inputClass}
+                  >
+                    {Object.entries(ruleKindLabels).map(([value, label]) => (
+                      <option key={value} value={value}>{label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className={labelClass}>兼容分类</label>
+                  <div className="space-y-1">
+                    <input type="text" value={CATEGORY_LABELS[editingRule.category] || editingRule.category} disabled className={`${inputClass} bg-gray-100`} />
+                    {recommendedCategory && (
+                      <p className="text-xs text-gray-400">推荐分类：{CATEGORY_LABELS[recommendedCategory] || recommendedCategory}</p>
+                    )}
+                    <p className="text-xs text-gray-400">该字段仅用于兼容历史规则数据，语义判断以规则语义为准。</p>
+                  </div>
+                </div>
+                <div>
+                  <label className={labelClass}>语义摘要</label>
+                  <input type="text" value={`${semantic.label} · ${semantic.description}`} disabled className={`${inputClass} bg-gray-100`} />
+                </div>
+                <div>
+                  <label className={labelClass}>适用责任代码</label>
+                  <input
+                    type="text"
+                    value={coverageCodes.join(', ')}
+                    onChange={(e) =>
+                      setEditingRule({
+                        ...editingRule,
+                        applies_to: {
+                          coverage_codes: e.target.value.split(',').map((item) => item.trim()).filter(Boolean),
+                        },
+                      })
+                    }
+                    className={inputClass}
+                    placeholder="ACC_MEDICAL, AUTO_COMPULSORY"
+                  />
                 </div>
                 <div>
                   <label className={labelClass}>标签</label>
@@ -249,22 +398,12 @@ const RuleDetailModal: React.FC<RuleDetailModalProps> = ({ isOpen, onClose, rule
                     onChange={(e) => setEditingRule({ ...editingRule, action: { ...editingRule.action, action_type: e.target.value as RuleActionType } })}
                     className={inputClass}
                   >
-                    <optgroup label="案件级 (ELIGIBILITY)">
-                      {[RuleActionType.APPROVE_CLAIM, RuleActionType.REJECT_CLAIM, RuleActionType.SET_CLAIM_RATIO, RuleActionType.ROUTE_CLAIM_MANUAL, RuleActionType.FLAG_FRAUD, RuleActionType.TERMINATE_CONTRACT].map((t) => (
-                        <option key={t} value={t}>{ACTION_TYPE_LABELS[t]}</option>
-                      ))}
-                    </optgroup>
-                    <optgroup label="明细级 (ASSESSMENT)">
-                      {[RuleActionType.APPROVE_ITEM, RuleActionType.REJECT_ITEM, RuleActionType.ADJUST_ITEM_AMOUNT, RuleActionType.SET_ITEM_RATIO, RuleActionType.FLAG_ITEM].map((t) => (
-                        <option key={t} value={t}>{ACTION_TYPE_LABELS[t]}</option>
-                      ))}
-                    </optgroup>
-                    <optgroup label="汇总级 (POST_PROCESS)">
-                      {[RuleActionType.APPLY_FORMULA, RuleActionType.APPLY_CAP, RuleActionType.APPLY_DEDUCTIBLE, RuleActionType.SUM_COVERAGES, RuleActionType.DEDUCT_PRIOR_BENEFIT, RuleActionType.ADD_REMARK].map((t) => (
-                        <option key={t} value={t}>{ACTION_TYPE_LABELS[t]}</option>
-                      ))}
-                    </optgroup>
+                    {allowedActionTypes.map((t) => (
+                      <option key={t} value={t}>{ACTION_TYPE_LABELS[t]}</option>
+                    ))}
                   </select>
+                  <p className="text-xs text-gray-400 mt-1">动作候选会根据规则所在阶段自动限制。</p>
+                  <p className="text-xs text-gray-400 mt-1">当前已按“规则语义”限制动作选项。</p>
                 </div>
                 <div>
                   <label className={labelClass}>动作参数</label>
@@ -324,6 +463,50 @@ const RuleDetailModal: React.FC<RuleDetailModalProps> = ({ isOpen, onClose, rule
                 ) : (
                   <p className="text-sm text-gray-400">该规则没有解析置信度信息</p>
                 )}
+
+                <div className="rounded-lg border border-gray-200 bg-slate-50 p-4">
+                  <p className="text-sm font-semibold text-gray-900">字段依赖</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {dependentFields.length === 0 ? (
+                      <span className="text-xs text-gray-500">无字段依赖</span>
+                    ) : (
+                      dependentFields.map((field) => (
+                        <span key={field} className="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-slate-700">
+                          {field}
+                        </span>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                <div className="rounded-lg border border-gray-200 bg-slate-50 p-4">
+                  <p className="text-sm font-semibold text-gray-900">规则摘要</p>
+                  <p className="mt-2 text-sm text-slate-700">
+                    {semantic.label}规则，作用于{coverageCodes.length > 0 ? coverageCodes.join('、') : '案件级'}，命中后{summarizeAction(editingRule)}。
+                  </p>
+                </div>
+
+                {validationMessages.length > 0 && (
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+                    <p className="text-sm font-semibold text-amber-800">保存前校验</p>
+                    <ul className="mt-2 space-y-1 text-sm text-amber-700">
+                      {validationMessages.map((message) => (
+                        <li key={message}>- {message}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {advisoryMessages.length > 0 && (
+                  <div className="rounded-lg border border-sky-200 bg-sky-50 p-4">
+                    <p className="text-sm font-semibold text-sky-800">语义提示</p>
+                    <ul className="mt-2 space-y-1 text-sm text-sky-700">
+                      {advisoryMessages.map((message) => (
+                        <li key={message}>- {message}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -332,7 +515,7 @@ const RuleDetailModal: React.FC<RuleDetailModalProps> = ({ isOpen, onClose, rule
         {/* Footer */}
         <div className="flex justify-end space-x-3 px-6 py-4 border-t border-gray-200 shrink-0">
           <button onClick={onClose} className="px-4 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">取消</button>
-          <button onClick={handleSave} className="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700">保存</button>
+          <button onClick={handleSave} disabled={validationMessages.length > 0} className="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed">保存</button>
         </div>
       </div>
     </div>

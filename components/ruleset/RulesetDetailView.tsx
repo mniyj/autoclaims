@@ -1,409 +1,522 @@
-import React, { useState } from 'react';
-import { type InsuranceRuleset, type RulesetRule, RuleStatus } from '../../types';
-import { PRODUCT_LINE_LABELS, DOMAIN_LABELS } from '../../constants';
-import RuleListTab from './RuleListTab';
-import ExecutionPipelineTab from './ExecutionPipelineTab';
-import OverrideChainsTab from './OverrideChainsTab';
-import FieldDictionaryTab from './FieldDictionaryTab';
-import RulesetFlowCanvas from './RulesetFlowCanvas';
-import type { RulesetFlowNode } from '../../utils/rulesetFlowTransformer';
+import React, { useEffect, useMemo, useState } from "react";
+import { type ClaimsMaterial, type InsuranceRuleset, type RulesetRule, RuleStatus, ExecutionDomain } from "../../types";
+import RuleDetailModal from "./RuleDetailModal";
+import RulesetSummaryPanel from "./RulesetSummaryPanel";
+import RuleGroupSection from "./RuleGroupSection";
+import VersionDiffViewer from "./VersionDiffViewer";
+import FieldDictionaryTab from "./FieldDictionaryTab";
+import {
+  deriveRulesetHealth,
+  getRuleSemantic,
+  publishRuleset,
+  validateRuleset,
+} from "./workbenchUtils";
 
 interface RulesetDetailViewProps {
   ruleset: InsuranceRuleset;
+  previousRuleset: InsuranceRuleset | null;
+  claimsMaterials: ClaimsMaterial[];
+  initialFocusCoverageCode?: string;
   onBack: () => void;
   onUpdateRuleset: (updated: InsuranceRuleset) => void;
+  onOpenValidation: (ruleset: InsuranceRuleset) => void;
+  onPublish: (ruleset: InsuranceRuleset) => void;
+  onCreateRule: (domain: ExecutionDomain) => void;
 }
 
-type DetailTab = 'rules' | 'visualization' | 'pipeline' | 'chains' | 'dictionary' | 'metadata';
+type DetailTab = "overview" | "fields" | "liability" | "settlement" | "publish";
+type ViewMode = "business" | "technical";
 
-const TABS: { id: DetailTab; label: string }[] = [
-  { id: 'rules', label: '规则列表' },
-  { id: 'visualization', label: '可视化' },
-  { id: 'pipeline', label: '执行管道' },
-  { id: 'chains', label: '覆盖链' },
-  { id: 'dictionary', label: '字段字典' },
-  { id: 'metadata', label: '元信息' },
+const tabs: Array<{ id: DetailTab; label: string }> = [
+  { id: "overview", label: "总览" },
+  { id: "fields", label: "字段与映射" },
+  { id: "liability", label: "责任规则" },
+  { id: "settlement", label: "定损 / 给付规则" },
+  { id: "publish", label: "发布与版本" },
 ];
 
-const RulesetDetailView: React.FC<RulesetDetailViewProps> = ({ ruleset, onBack, onUpdateRuleset }) => {
-  const [activeTab, setActiveTab] = useState<DetailTab>('rules');
-  const [currentRuleset, setCurrentRuleset] = useState<InsuranceRuleset>(ruleset);
-  const [selectedRule, setSelectedRule] = useState<RulesetRule | null>(null);
-  const [selectedNode, setSelectedNode] = useState<RulesetFlowNode | null>(null);
-  const [showNodePanel, setShowNodePanel] = useState(false);
+const RulesetDetailView: React.FC<RulesetDetailViewProps> = ({
+  ruleset,
+  previousRuleset,
+  claimsMaterials,
+  initialFocusCoverageCode,
+  onBack,
+  onUpdateRuleset,
+  onOpenValidation,
+  onPublish,
+  onCreateRule,
+}) => {
+  const [activeTab, setActiveTab] = useState<DetailTab>("overview");
+  const [viewMode, setViewMode] = useState<ViewMode>("business");
+  const [editingRule, setEditingRule] = useState<RulesetRule | null>(null);
+  const [focusedField, setFocusedField] = useState<string | null>(null);
+  const health = useMemo(() => deriveRulesetHealth(ruleset), [ruleset]);
+  const issues = useMemo(() => validateRuleset(ruleset), [ruleset]);
 
-  const handleUpdateRule = (updatedRule: RulesetRule) => {
-    const newRules = currentRuleset.rules.map(r => r.rule_id === updatedRule.rule_id ? updatedRule : r);
-    const updated = { ...currentRuleset, rules: newRules };
-    setCurrentRuleset(updated);
-    onUpdateRuleset(updated);
-  };
+  useEffect(() => {
+    if (!initialFocusCoverageCode) return;
+
+    const hasLiabilityRules = ruleset.rules.some(
+      (rule) =>
+        rule.execution.domain === ExecutionDomain.ELIGIBILITY &&
+        (rule.applies_to?.coverage_codes || []).includes(initialFocusCoverageCode),
+    );
+    const hasSettlementRules = ruleset.rules.some(
+      (rule) =>
+        rule.execution.domain !== ExecutionDomain.ELIGIBILITY &&
+        (rule.applies_to?.coverage_codes || []).includes(initialFocusCoverageCode),
+    );
+
+    setActiveTab(
+      hasLiabilityRules
+        ? "liability"
+        : hasSettlementRules
+          ? "settlement"
+          : "overview",
+    );
+  }, [initialFocusCoverageCode, ruleset.rules, ruleset.ruleset_id]);
+
+  const groupedLiability = useMemo(() => {
+    const liabilityRules = ruleset.rules.filter((rule) => rule.execution.domain === "ELIGIBILITY");
+    return {
+      gate: liabilityRules.filter((rule) => getRuleSemantic(rule).key === "gate"),
+      trigger: liabilityRules.filter((rule) => getRuleSemantic(rule).key === "trigger"),
+      exclusion: liabilityRules.filter((rule) => getRuleSemantic(rule).key === "exclusion"),
+      adjustment: liabilityRules.filter((rule) => getRuleSemantic(rule).key === "adjustment"),
+    };
+  }, [ruleset.rules]);
+
+  const groupedSettlement = useMemo(() => {
+    const settlementRules = ruleset.rules.filter((rule) => rule.execution.domain !== "ELIGIBILITY");
+    return {
+      benefit: settlementRules.filter((rule) => getRuleSemantic(rule).key === "benefit"),
+      item_eligibility: settlementRules.filter((rule) => getRuleSemantic(rule).key === "item_eligibility"),
+      item_ratio: settlementRules.filter((rule) => getRuleSemantic(rule).key === "item_ratio"),
+      item_pricing: settlementRules.filter((rule) => getRuleSemantic(rule).key === "item_pricing"),
+      item_cap: settlementRules.filter((rule) => getRuleSemantic(rule).key === "item_cap"),
+      item_flag: settlementRules.filter((rule) => getRuleSemantic(rule).key === "item_flag"),
+      post_process: settlementRules.filter((rule) => getRuleSemantic(rule).key === "post_process"),
+    };
+  }, [ruleset.rules]);
 
   const handleToggleStatus = (ruleId: string) => {
-    const rule = currentRuleset.rules.find(r => r.rule_id === ruleId);
-    if (rule) {
-      handleUpdateRule({
-        ...rule,
-        status: rule.status === RuleStatus.EFFECTIVE ? RuleStatus.DISABLED : RuleStatus.EFFECTIVE,
-      });
-    }
+    const nextRules = ruleset.rules.map((rule) =>
+      rule.rule_id === ruleId
+        ? {
+            ...rule,
+            status:
+              rule.status === RuleStatus.EFFECTIVE ? RuleStatus.DISABLED : RuleStatus.EFFECTIVE,
+          }
+        : rule,
+    );
+    onUpdateRuleset({ ...ruleset, rules: nextRules });
   };
 
-  const handleExport = () => {
-    const json = JSON.stringify(currentRuleset, null, 2);
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${currentRuleset.ruleset_id}_v${currentRuleset.metadata.version}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
+  const dependencyEntries = useMemo(() => {
+    return Object.entries(ruleset.field_dictionary).slice(0, 14);
+  }, [ruleset.field_dictionary]);
 
-  const handleNodeClick = (node: RulesetFlowNode) => {
-    setSelectedNode(node);
-    setShowNodePanel(true);
-  };
-
-  const handleCloseNodePanel = () => {
-    setShowNodePanel(false);
-    setSelectedNode(null);
-  };
+  const canPublish = issues.every((issue) => issue.tone !== "error");
+  const mappingCount = ruleset.field_mappings?.length || 0;
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <button onClick={onBack} className="text-gray-400 hover:text-gray-600">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <button onClick={onBack} className="rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700">
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
           </button>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">{currentRuleset.policy_info.product_name}</h1>
-            <div className="flex items-center space-x-3 mt-1">
-              <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded text-xs font-medium">
-                {PRODUCT_LINE_LABELS[currentRuleset.product_line]}
-              </span>
-              <span className="text-xs text-gray-500">v{currentRuleset.metadata.version}</span>
-              <span className="text-xs text-gray-400 font-mono">{currentRuleset.ruleset_id}</span>
-            </div>
+            <h1 className="text-xl font-bold text-gray-900">规则设计视图</h1>
+            <p className="mt-1 text-sm text-gray-500">
+              先读总览，再按责任或定损阶段维护规则，发布前进入验证工作台。
+            </p>
           </div>
         </div>
-        <button onClick={handleExport} className="flex items-center space-x-1.5 px-3 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-          <span>导出 JSON</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1 rounded-xl border border-gray-200 bg-white p-1">
+            {[
+              { id: "business", label: "业务模式" },
+              { id: "technical", label: "技术模式" },
+            ].map((mode) => (
+              <button
+                key={mode.id}
+                onClick={() => setViewMode(mode.id as ViewMode)}
+                className={`rounded-lg px-3 py-2 text-sm font-medium ${
+                  viewMode === mode.id ? "bg-indigo-600 text-white" : "text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                {mode.label}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => onOpenValidation(ruleset)}
+            className="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-100"
+          >
+            进入验证
+          </button>
+          <button
+            onClick={() => canPublish && onPublish(publishRuleset(ruleset))}
+            disabled={!canPublish}
+            className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+          >
+            发布
+          </button>
+        </div>
       </div>
 
-      {/* Tabs */}
+      <RulesetSummaryPanel ruleset={ruleset} health={health} />
+
       <div className="border-b border-gray-200">
-        <nav className="flex space-x-6">
-          {TABS.map((tab) => (
+        <nav className="flex flex-wrap gap-6">
+          {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
+              className={`border-b-2 pb-3 text-sm font-medium ${
                 activeTab === tab.id
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  ? "border-indigo-600 text-indigo-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
             >
               {tab.label}
-        {tab.id === 'rules' && (
-          <span className="ml-1.5 px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs">{currentRuleset.rules.length}</span>
-        )}
-        {tab.id === 'visualization' && (
-          <span className="ml-1.5 px-1.5 py-0.5 bg-purple-100 text-purple-600 rounded-full text-xs">新</span>
-        )}
-              {tab.id === 'chains' && currentRuleset.override_chains.length > 0 && (
-                <span className="ml-1.5 px-1.5 py-0.5 bg-orange-100 text-orange-600 rounded-full text-xs">{currentRuleset.override_chains.length}</span>
-              )}
             </button>
           ))}
         </nav>
       </div>
 
-      {/* Tab content */}
-      <div>
-        {activeTab === 'rules' && (
-          <RuleListTab
-            rules={currentRuleset.rules}
-            fieldDictionary={currentRuleset.field_dictionary}
-            onUpdateRule={handleUpdateRule}
-            onToggleStatus={handleToggleStatus}
-            onSelectRule={(rule) => {
-              setSelectedRule(rule);
-              setActiveTab('visualization');
-            }}
-          />
-        )}
-
-        {activeTab === 'visualization' && (
-          <div className="flex h-[700px]">
-            <div className="flex-1">
-              <RulesetFlowCanvas
-                ruleset={currentRuleset}
-                onNodeClick={handleNodeClick}
-                className="h-full"
-              />
-            </div>
-
-  {showNodePanel && selectedNode && (
-              <div className="w-80 ml-4 bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden flex flex-col max-h-[700px]">
-                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-gray-50">
-                  <h3 className="text-sm font-semibold text-gray-900">节点详情</h3>
-                  <button
-                    onClick={handleCloseNodePanel}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-                <div className="p-4 space-y-4 overflow-y-auto">
-                  {/* Node type badge */}
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1">类型</p>
-                    {selectedNode.type === 'rulesetStart' && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                        规则集
-                      </span>
-                    )}
-                    {selectedNode.type === 'executionDomain' && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        执行域
-                      </span>
-                    )}
-                    {selectedNode.type === 'category' && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-100 text-cyan-800">
-                        类别
-                      </span>
-                    )}
-                    {selectedNode.type === 'rule' && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        规则
-                      </span>
-                    )}
-                    {selectedNode.type === 'logicGate' && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                        逻辑门
-                      </span>
-                    )}
-                    {selectedNode.type === 'condition' && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        条件
-                      </span>
-                    )}
-                    {selectedNode.type === 'action' && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        动作
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Label */}
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1">名称</p>
-                    <p className="text-sm font-medium text-gray-900">{selectedNode.data.label}</p>
-                  </div>
-
-                  {/* Description */}
-                  {selectedNode.data.description && (
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">描述</p>
-                      <p className="text-sm text-gray-700">{selectedNode.data.description}</p>
-                    </div>
-                  )}
-
-                  {/* Domain info */}
-                  {selectedNode.data.domain && (
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">所属域</p>
-                      <p className="text-sm font-medium text-gray-900">{selectedNode.data.domain}</p>
-                    </div>
-                  )}
-
-                  {/* Category info */}
-                  {selectedNode.data.category && (
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">类别</p>
-                      <p className="text-sm font-medium text-gray-900">{selectedNode.data.category}</p>
-                    </div>
-                  )}
-
-                  {/* Count */}
-                  {selectedNode.data.count !== undefined && (
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">数量</p>
-                      <p className="text-sm font-medium text-gray-900">{selectedNode.data.count}</p>
-                    </div>
-                  )}
-
-                  {/* Status */}
-                  {selectedNode.data.status && (
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">状态</p>
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                        selectedNode.data.status === 'EFFECTIVE' ? 'bg-green-100 text-green-800' :
-                        selectedNode.data.status === 'DISABLED' ? 'bg-gray-100 text-gray-800' :
-                        'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {selectedNode.data.status === 'EFFECTIVE' ? '生效' :
-                         selectedNode.data.status === 'DISABLED' ? '禁用' : '草稿'}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Execution mode */}
-                  {selectedNode.data.executionMode && (
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">执行模式</p>
-                      <p className="text-sm font-medium text-gray-900">{selectedNode.data.executionMode}</p>
-                    </div>
-                  )}
-
-                  {/* Condition details */}
-                  {selectedNode.data.field && (
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">字段</p>
-                      <p className="text-sm font-mono text-gray-700 bg-gray-100 px-2 py-1 rounded">{selectedNode.data.field}</p>
-                    </div>
-                  )}
-                  {selectedNode.data.operator && (
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">操作符</p>
-                      <p className="text-sm font-medium text-gray-900">{selectedNode.data.operator}</p>
-                    </div>
-                  )}
-                  {selectedNode.data.value !== undefined && (
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">值</p>
-                      <p className="text-sm font-mono text-gray-700 bg-gray-100 px-2 py-1 rounded">{String(selectedNode.data.value)}</p>
-                    </div>
-                  )}
-
-                  {/* Action */}
-                  {selectedNode.data.action && (
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">动作</p>
-                      <p className="text-sm font-medium text-gray-900">{selectedNode.data.action}</p>
-                    </div>
-                  )}
-
-                  {/* Rule ID */}
-                  {selectedNode.data.ruleId && (
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">规则ID</p>
-                      <p className="text-xs font-mono text-gray-500">{selectedNode.data.ruleId}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'pipeline' && (
-          <ExecutionPipelineTab pipeline={currentRuleset.execution_pipeline} />
-        )}
-
-        {activeTab === 'chains' && (
-          <OverrideChainsTab chains={currentRuleset.override_chains} />
-        )}
-
-        {activeTab === 'dictionary' && (
-          <FieldDictionaryTab dictionary={currentRuleset.field_dictionary} />
-        )}
-
-        {activeTab === 'metadata' && (
+      {activeTab === "overview" && (
+        <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
           <div className="space-y-6">
-            {/* Basic metadata */}
-            <div className="bg-white border border-gray-200 rounded-lg p-6">
-              <h3 className="text-sm font-semibold text-gray-900 mb-4">基本信息</h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {[
-                  { label: 'Schema 版本', value: currentRuleset.metadata.schema_version },
-                  { label: '规则集版本', value: currentRuleset.metadata.version },
-                  { label: '生成时间', value: new Date(currentRuleset.metadata.generated_at).toLocaleString('zh-CN') },
-                  { label: '生成方式', value: currentRuleset.metadata.generated_by === 'AI_PARSING' ? 'AI解析' : currentRuleset.metadata.generated_by === 'MANUAL_ENTRY' ? '手动录入' : '混合' },
-                  { label: 'AI模型', value: currentRuleset.metadata.ai_model || '-' },
-                  { label: '规则总数', value: String(currentRuleset.metadata.total_rules) },
-                ].map((item) => (
-                  <div key={item.label}>
-                    <p className="text-xs text-gray-500">{item.label}</p>
-                    <p className="text-sm font-medium text-gray-900 mt-0.5">{item.value}</p>
-                  </div>
-                ))}
+            <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+              <h2 className="text-lg font-semibold text-gray-900">产品与责任总览</h2>
+              {initialFocusCoverageCode && (
+                <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                  当前从案件缺口跳转，正在聚焦责任代码 <span className="font-semibold">{initialFocusCoverageCode}</span>。
+                </div>
+              )}
+              <div className="mt-4 grid gap-3 md:grid-cols-2">
+                <InfoCard label="产品编码" value={ruleset.policy_info.product_code} />
+                <InfoCard label="保险公司" value={ruleset.policy_info.insurer} />
+                <InfoCard label="生效日期" value={ruleset.policy_info.effective_date} />
+                <InfoCard label="终止日期" value={ruleset.policy_info.expiry_date} />
               </div>
-            </div>
 
-            {/* Statistics */}
-            <div className="bg-white border border-gray-200 rounded-lg p-6">
-              <h3 className="text-sm font-semibold text-gray-900 mb-4">统计信息</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {currentRuleset.metadata.rules_by_domain && Object.entries(currentRuleset.metadata.rules_by_domain).map(([domain, count]) => (
-                  <div key={domain} className="p-3 bg-gray-50 rounded-lg text-center">
-                    <p className="text-xs text-gray-500">{DOMAIN_LABELS[domain.toUpperCase() as keyof typeof DOMAIN_LABELS] || domain}</p>
-                    <p className="text-lg font-bold text-gray-900 mt-1">{count}</p>
-                  </div>
-                ))}
-                {(currentRuleset.metadata.low_confidence_rules ?? 0) > 0 && (
-                  <div className="p-3 bg-yellow-50 rounded-lg text-center">
-                    <p className="text-xs text-yellow-600">低置信度规则</p>
-                    <p className="text-lg font-bold text-yellow-700 mt-1">{currentRuleset.metadata.low_confidence_rules}</p>
-                  </div>
-                )}
-                {(currentRuleset.metadata.unresolved_conflicts ?? 0) > 0 && (
-                  <div className="p-3 bg-red-50 rounded-lg text-center">
-                    <p className="text-xs text-red-600">未解决冲突</p>
-                    <p className="text-lg font-bold text-red-700 mt-1">{currentRuleset.metadata.unresolved_conflicts}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Policy info */}
-            <div className="bg-white border border-gray-200 rounded-lg p-6">
-              <h3 className="text-sm font-semibold text-gray-900 mb-4">保单信息</h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {[
-                  { label: '保单号', value: currentRuleset.policy_info.policy_no },
-                  { label: '产品代码', value: currentRuleset.policy_info.product_code },
-                  { label: '保险公司', value: currentRuleset.policy_info.insurer },
-                  { label: '生效日期', value: currentRuleset.policy_info.effective_date },
-                  { label: '到期日期', value: currentRuleset.policy_info.expiry_date },
-                  { label: '保障数量', value: String(currentRuleset.policy_info.coverages.length) },
-                ].map((item) => (
-                  <div key={item.label}>
-                    <p className="text-xs text-gray-500">{item.label}</p>
-                    <p className="text-sm font-medium text-gray-900 mt-0.5">{item.value}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Audit trail */}
-            {currentRuleset.metadata.audit_trail && currentRuleset.metadata.audit_trail.length > 0 && (
-              <div className="bg-white border border-gray-200 rounded-lg p-6">
-                <h3 className="text-sm font-semibold text-gray-900 mb-4">审计日志</h3>
-                <div className="space-y-3">
-                  {currentRuleset.metadata.audit_trail.map((entry, idx) => (
-                    <div key={idx} className="flex items-start space-x-3 text-sm">
-                      <span className="text-xs text-gray-400 shrink-0 w-36">{new Date(entry.timestamp).toLocaleString('zh-CN')}</span>
-                      <span className="text-gray-600">{entry.user_id}</span>
-                      <span className="text-gray-900">{entry.action}</span>
-                      {entry.details && <span className="text-gray-500">{entry.details}</span>}
-                    </div>
+              <div className="mt-5">
+                <h3 className="text-sm font-semibold text-gray-900">责任代码清单</h3>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {ruleset.policy_info.coverages.map((coverage) => (
+                    <span
+                      key={coverage.coverage_code}
+                      className={`rounded-full px-3 py-1 text-xs font-medium ${
+                        initialFocusCoverageCode === coverage.coverage_code
+                          ? "bg-amber-100 text-amber-800 ring-1 ring-amber-300"
+                          : "bg-indigo-50 text-indigo-700"
+                      }`}
+                    >
+                      {coverage.coverage_code}
+                    </span>
                   ))}
                 </div>
               </div>
-            )}
+            </section>
+
+            <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+              <h2 className="text-lg font-semibold text-gray-900">关键字段依赖</h2>
+              <div className="mt-2 text-sm text-slate-500">已登记 {Object.keys(ruleset.field_dictionary).length} 个标准事实字段，配置 {mappingCount} 条来源映射。</div>
+              <div className="mt-4 grid gap-3 md:grid-cols-2">
+                {dependencyEntries.map(([field, definition]) => (
+                  <button
+                    key={field}
+                    type="button"
+                    onClick={() => setFocusedField(field)}
+                    className={`rounded-xl border px-4 py-3 text-left ${
+                      focusedField === field ? "border-indigo-300 bg-indigo-50" : "border-gray-200 bg-slate-50"
+                    }`}
+                  >
+                    <div className="text-xs font-medium text-slate-500">{field}</div>
+                    <div className="mt-1 text-sm font-semibold text-slate-900">{definition.label}</div>
+                    <div className="mt-1 text-xs text-slate-500">
+                      {definition.data_type} · {definition.scope} · {definition.source_type || definition.source}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </section>
           </div>
-        )}
-      </div>
+
+          <div className="space-y-6">
+            <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+              <h2 className="text-lg font-semibold text-gray-900">最近验证结果</h2>
+              <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-4">
+                <div className="text-sm font-medium text-slate-900">
+                  {ruleset.metadata.latest_validation?.summary || health.validationLabel}
+                </div>
+                <div className="mt-2 text-sm text-slate-500">
+                  {ruleset.metadata.latest_validation?.validated_at
+                    ? `最近验证时间 ${new Date(ruleset.metadata.latest_validation.validated_at).toLocaleString("zh-CN")}`
+                    : "尚未执行验证"}
+                </div>
+              </div>
+              <button
+                onClick={() => onOpenValidation(ruleset)}
+                className="mt-4 w-full rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm font-medium text-indigo-700 hover:bg-indigo-100"
+              >
+                打开执行验证视图
+              </button>
+            </section>
+
+            <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+              <h2 className="text-lg font-semibold text-gray-900">当前版本状态</h2>
+              <div className="mt-4 space-y-3">
+                <InfoLine label="版本状态" value={health.versionLabel} />
+                <InfoLine label="最近发布时间" value={ruleset.metadata.published_at ? new Date(ruleset.metadata.published_at).toLocaleString("zh-CN") : "未发布"} />
+                <InfoLine label="最近发布人" value={ruleset.metadata.published_by || "未记录"} />
+              </div>
+            </section>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "fields" && (
+        <FieldDictionaryTab
+          dictionary={ruleset.field_dictionary}
+          claimsMaterials={claimsMaterials}
+        />
+      )}
+
+      {activeTab === "liability" && (
+        <div className="space-y-6">
+          <div className="flex justify-end">
+            <button
+              onClick={() => onCreateRule(ExecutionDomain.ELIGIBILITY)}
+              className="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-100"
+            >
+              新增责任规则
+            </button>
+          </div>
+          <RuleGroupSection
+            title="准入"
+            description="保障期间、保单状态、等待期等前置条件。只能在组内调整顺序。"
+            rules={groupedLiability.gate}
+            mode={viewMode}
+            emptyText="暂无准入规则"
+            onEdit={setEditingRule}
+            onToggleStatus={handleToggleStatus}
+            onFocusField={setFocusedField}
+          />
+          <RuleGroupSection
+            title="触发"
+            description="责任成立的关键触发条件，至少命中后才进入赔付或定损。"
+            rules={groupedLiability.trigger}
+            mode={viewMode}
+            emptyText="暂无触发规则"
+            onEdit={setEditingRule}
+            onToggleStatus={handleToggleStatus}
+            onFocusField={setFocusedField}
+          />
+          <RuleGroupSection
+            title="免责"
+            description="命中即拒赔或终止责任，不允许拖到触发组。"
+            rules={groupedLiability.exclusion}
+            mode={viewMode}
+            emptyText="暂无免责规则"
+            onEdit={setEditingRule}
+            onToggleStatus={handleToggleStatus}
+            onFocusField={setFocusedField}
+          />
+          <RuleGroupSection
+            title="调整"
+            description="责任成立后对赔付比例或复核策略进行调整。"
+            rules={groupedLiability.adjustment}
+            mode={viewMode}
+            emptyText="暂无调整规则"
+            onEdit={setEditingRule}
+            onToggleStatus={handleToggleStatus}
+            onFocusField={setFocusedField}
+          />
+        </div>
+      )}
+
+      {activeTab === "settlement" && (
+        <div className="space-y-6">
+          <div className="flex flex-wrap justify-end gap-2">
+            <button
+              onClick={() => onCreateRule(ExecutionDomain.ASSESSMENT)}
+              className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-100"
+            >
+              新增定损规则
+            </button>
+            <button
+              onClick={() => onCreateRule(ExecutionDomain.POST_PROCESS)}
+              className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            >
+              新增后处理规则
+            </button>
+          </div>
+          <RuleGroupSection
+            title="给付型规则"
+            description="适用于定额或比例给付场景。"
+            rules={groupedSettlement.benefit}
+            mode={viewMode}
+            emptyText="暂无给付型规则"
+            onEdit={setEditingRule}
+            onToggleStatus={handleToggleStatus}
+            onFocusField={setFocusedField}
+          />
+          <RuleGroupSection
+            title="费用项准入"
+            description="控制哪些费用或损失项可以进入账本。"
+            rules={groupedSettlement.item_eligibility}
+            mode={viewMode}
+            emptyText="暂无费用项准入规则"
+            onEdit={setEditingRule}
+            onToggleStatus={handleToggleStatus}
+            onFocusField={setFocusedField}
+          />
+          <RuleGroupSection
+            title="比例规则"
+            description="对已准入的费用项应用赔付比例。"
+            rules={groupedSettlement.item_ratio}
+            mode={viewMode}
+            emptyText="暂无比例规则"
+            onEdit={setEditingRule}
+            onToggleStatus={handleToggleStatus}
+            onFocusField={setFocusedField}
+          />
+          <RuleGroupSection
+            title="限价规则"
+            description="按参考价、物价标准或核损结果调整单项金额。"
+            rules={groupedSettlement.item_pricing}
+            mode={viewMode}
+            emptyText="暂无限价规则"
+            onEdit={setEditingRule}
+            onToggleStatus={handleToggleStatus}
+            onFocusField={setFocusedField}
+          />
+          <RuleGroupSection
+            title="限额规则"
+            description="应用免赔额、子限额或保额上限。"
+            rules={groupedSettlement.item_cap}
+            mode={viewMode}
+            emptyText="暂无限额规则"
+            onEdit={setEditingRule}
+            onToggleStatus={handleToggleStatus}
+            onFocusField={setFocusedField}
+          />
+          <RuleGroupSection
+            title="复核标记"
+            description="保留金额结果，但向审核员标记需要人工确认的项目。"
+            rules={groupedSettlement.item_flag}
+            mode={viewMode}
+            emptyText="暂无复核标记规则"
+            onEdit={setEditingRule}
+            onToggleStatus={handleToggleStatus}
+            onFocusField={setFocusedField}
+          />
+          <RuleGroupSection
+            title="后处理"
+            description="做案件级补充调整、备注或汇总。"
+            rules={groupedSettlement.post_process}
+            mode={viewMode}
+            emptyText="暂无后处理规则"
+            onEdit={setEditingRule}
+            onToggleStatus={handleToggleStatus}
+            onFocusField={setFocusedField}
+          />
+        </div>
+      )}
+
+      {activeTab === "publish" && (
+        <div className="space-y-6">
+          <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">发布门禁</h2>
+                <p className="mt-1 text-sm text-gray-500">
+                  有高优先级字段错误时禁止发布，建议先进入验证工作台处理。
+                </p>
+              </div>
+              <button
+                onClick={() => canPublish && onPublish(publishRuleset(ruleset))}
+                disabled={!canPublish}
+                className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+              >
+                发布当前版本
+              </button>
+            </div>
+
+            <div className="mt-4 space-y-2">
+              {issues.length === 0 ? (
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                  发布前校验通过，可直接发布。
+                </div>
+              ) : (
+                issues.map((issue) => (
+                  <div
+                    key={issue.id}
+                    className={`rounded-xl border px-4 py-3 text-sm ${
+                      issue.tone === "error"
+                        ? "border-rose-200 bg-rose-50 text-rose-700"
+                        : "border-amber-200 bg-amber-50 text-amber-700"
+                    }`}
+                  >
+                    <div className="font-medium">{issue.message}</div>
+                    {(issue.ruleId || issue.field) && (
+                      <div className="mt-1 text-xs opacity-80">
+                        {issue.ruleId ? `规则 ${issue.ruleId}` : ""} {issue.field ? `· 字段 ${issue.field}` : ""}
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+            <h2 className="text-lg font-semibold text-gray-900">版本差异</h2>
+            <p className="mt-1 text-sm text-gray-500">
+              对比当前版本与上一版本的新增、变更和移除内容。
+            </p>
+            <div className="mt-4">
+              <VersionDiffViewer current={ruleset} previous={previousRuleset} />
+            </div>
+          </section>
+        </div>
+      )}
+
+      <RuleDetailModal
+        isOpen={!!editingRule}
+        onClose={() => setEditingRule(null)}
+        rule={editingRule}
+        fieldDictionary={ruleset.field_dictionary}
+        onSave={(updatedRule) => {
+          const nextRules = ruleset.rules.map((rule) =>
+            rule.rule_id === updatedRule.rule_id ? updatedRule : rule,
+          );
+          onUpdateRuleset({ ...ruleset, rules: nextRules });
+          setEditingRule(null);
+        }}
+      />
     </div>
   );
 };
+
+const InfoCard: React.FC<{ label: string; value: string }> = ({ label, value }) => (
+  <div className="rounded-xl bg-slate-50 px-4 py-3">
+    <div className="text-xs text-slate-500">{label}</div>
+    <div className="mt-1 text-sm font-semibold text-slate-900">{value}</div>
+  </div>
+);
+
+const InfoLine: React.FC<{ label: string; value: string }> = ({ label, value }) => (
+  <div className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 text-sm">
+    <span className="text-slate-500">{label}</span>
+    <span className="font-medium text-slate-900">{value}</span>
+  </div>
+);
 
 export default RulesetDetailView;

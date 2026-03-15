@@ -1,166 +1,607 @@
 /**
- * AI交互日志服务
- * 记录所有AI调用的入参、出参、耗时等信息
+ * Unified AI interaction logging.
+ * Stores raw request/response for debugging and a sanitized summary for default reads.
  */
 
+import crypto from 'crypto';
 import { readData, writeData } from '../utils/fileStore.js';
 
 const LOG_FILE = 'ai-interaction-logs';
 const MAX_LOG_ENTRIES = 10000;
+const SENSITIVE_KEYWORDS = [
+  'password',
+  'token',
+  'apikey',
+  'api_key',
+  'secret',
+  'authorization',
+  'idnumber',
+  'id_number',
+  '身份证',
+  'bankaccount',
+  'bank_account',
+  '银行卡',
+  'phone',
+  'mobile',
+  'email',
+  'patientname',
+  'insuredname',
+  'claimantname',
+];
 
-/**
- * 记录AI交互日志
- * @param {Object} logData - 日志数据
- */
-export function logInteraction(logData) {
-  try {
-    const logs = readData(LOG_FILE) || [];
-    
-    const logEntry = {
-      id: `ailog-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      timestamp: new Date().toISOString(),
-      ...logData,
-    };
-    
-    logs.push(logEntry);
-    
-    // 日志轮转：只保留最近的MAX_LOG_ENTRIES条
-    if (logs.length > MAX_LOG_ENTRIES) {
-      logs.splice(0, logs.length - MAX_LOG_ENTRIES);
-    }
-    
-    writeData(LOG_FILE, logs);
-  } catch (error) {
-    // 日志记录失败不应阻塞主流程
-    console.error('[AI Logger] Failed to log interaction:', error);
-  }
+function generateLogId() {
+  return `ailog-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-/**
- * 根据任务ID查询日志
- * @param {string} taskId - 任务ID
- * @returns {Array} 日志列表
- */
-export function getLogsByTask(taskId) {
-  try {
-    const logs = readData(LOG_FILE) || [];
-    return logs.filter(log => log.taskId === taskId);
-  } catch (error) {
-    console.error('[AI Logger] Failed to get logs:', error);
-    return [];
-  }
+function isPlainObject(value) {
+  return Object.prototype.toString.call(value) === '[object Object]';
 }
 
-/**
- * 根据文件索引查询日志
- * @param {string} taskId - 任务ID
- * @param {number} fileIndex - 文件索引
- * @returns {Array} 日志列表
- */
-export function getLogsByFile(taskId, fileIndex) {
-  try {
-    const logs = readData(LOG_FILE) || [];
-    return logs.filter(log => log.taskId === taskId && log.fileIndex === fileIndex);
-  } catch (error) {
-    console.error('[AI Logger] Failed to get logs:', error);
-    return [];
+function safeClone(value) {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    return value;
   }
+  if (typeof value === 'bigint') {
+    return Number(value);
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => safeClone(item));
+  }
+  if (Buffer.isBuffer(value)) {
+    return value.toString('base64');
+  }
+  if (value instanceof Error) {
+    return serializeError(value);
+  }
+  if (typeof value === 'object') {
+    if (typeof value.toJSON === 'function') {
+      try {
+        return safeClone(value.toJSON());
+      } catch {
+        // fall through
+      }
+    }
+    const output = {};
+    for (const [key, child] of Object.entries(value)) {
+      output[key] = safeClone(child);
+    }
+    return output;
+  }
+  return String(value);
 }
 
-/**
- * 查询所有日志（支持分页）
- * @param {Object} options - 查询选项
- * @returns {Object} 日志列表和总数
- */
-export function queryLogs(options = {}) {
-  try {
-    const { taskId, fileIndex, taskType, limit = 50, offset = 0 } = options;
-    let logs = readData(LOG_FILE) || [];
-    
-    // 过滤
-    if (taskId) {
-      logs = logs.filter(log => log.taskId === taskId);
+function serializeError(error) {
+  const normalized = error instanceof Error ? error : new Error(String(error));
+  return {
+    name: normalized.name,
+    message: normalized.message,
+    stack: normalized.stack,
+    code: normalized.code || null,
+    cause: normalized.cause ? safeClone(normalized.cause) : null,
+  };
+}
+
+function containsSensitiveKey(key) {
+  const normalized = String(key || '').toLowerCase().replace(/[^a-z0-9\u4e00-\u9fa5]/g, '');
+  return SENSITIVE_KEYWORDS.some((keyword) => normalized.includes(keyword));
+}
+
+function sanitizeString(value) {
+  if (typeof value !== 'string') return value;
+  if (value.length > 8000) {
+    return `${value.slice(0, 4000)}...[truncated:${value.length}]...${value.slice(-1000)}`;
+  }
+  return value;
+}
+
+function sanitizeData(value, forceMask = false) {
+  if (forceMask) return '***';
+  if (value === undefined || value === null) return value;
+  if (typeof value === 'string') return sanitizeString(value);
+  if (typeof value !== 'object') return value;
+  if (Array.isArray(value)) return value.map((item) => sanitizeData(item));
+
+  const output = {};
+  for (const [key, child] of Object.entries(value)) {
+    const mask = containsSensitiveKey(key);
+    output[key] = sanitizeData(child, mask);
+  }
+  return output;
+}
+
+function rotateLogs(logs) {
+  if (logs.length <= MAX_LOG_ENTRIES) return logs;
+  return logs.slice(logs.length - MAX_LOG_ENTRIES);
+}
+
+function readLogs() {
+  return readData(LOG_FILE) || [];
+}
+
+function writeLogs(logs) {
+  return writeData(LOG_FILE, rotateLogs(logs));
+}
+
+function nowIso() {
+  return new Date().toISOString();
+}
+
+function normalizeTokenUsage(tokenUsage, response) {
+  const rawUsageMetadata =
+    safeClone(tokenUsage) ||
+    safeClone(response?.usageMetadata) ||
+    safeClone(response?.usage_metadata) ||
+    safeClone(response?.response_metadata?.usageMetadata) ||
+    safeClone(response?.response_metadata?.usage_metadata) ||
+    null;
+
+  const usage = rawUsageMetadata || {};
+  const inputTokens =
+    usage.promptTokenCount ??
+    usage.input_tokens ??
+    usage.inputTokens ??
+    usage.prompt_tokens ??
+    usage.prompt_tokens_count ??
+    null;
+  const outputTokens =
+    usage.candidatesTokenCount ??
+    usage.output_tokens ??
+    usage.outputTokens ??
+    usage.completion_tokens ??
+    usage.completionTokenCount ??
+    null;
+  const totalTokens =
+    usage.totalTokenCount ??
+    usage.total_tokens ??
+    usage.totalTokens ??
+    (typeof inputTokens === 'number' && typeof outputTokens === 'number'
+      ? inputTokens + outputTokens
+      : null);
+
+  return {
+    inputTokens: typeof inputTokens === 'number' ? inputTokens : null,
+    outputTokens: typeof outputTokens === 'number' ? outputTokens : null,
+    totalTokens: typeof totalTokens === 'number' ? totalTokens : null,
+    rawUsageMetadata,
+    unavailableReason: rawUsageMetadata ? null : 'provider_did_not_return_usage_metadata',
+  };
+}
+
+function summarizeRequest(request) {
+  if (!request) return null;
+  const contents = safeClone(request.contents);
+  const textParts = [];
+  const attachmentSummary = [];
+
+  const visitPart = (part) => {
+    if (!part || typeof part !== 'object') return;
+    if (typeof part.text === 'string') {
+      textParts.push(part.text);
     }
-    if (fileIndex !== undefined) {
-      logs = logs.filter(log => log.fileIndex === fileIndex);
+    if (part.inlineData) {
+      attachmentSummary.push({
+        mimeType: part.inlineData.mimeType || null,
+        hasInlineData: true,
+        size: part.inlineData.data ? String(part.inlineData.data).length : 0,
+      });
     }
-    if (taskType) {
-      logs = logs.filter(log => log.taskType === taskType);
+    if (part.fileData) {
+      attachmentSummary.push({
+        mimeType: part.fileData.mimeType || null,
+        fileUri: part.fileData.fileUri || null,
+        hasFileData: true,
+      });
     }
-    
-    // 按时间倒序
-    logs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-    
-    const total = logs.length;
-    const paginatedLogs = logs.slice(offset, offset + limit);
-    
+  };
+
+  const visitContents = (value) => {
+    if (!value) return;
+    if (Array.isArray(value)) {
+      value.forEach(visitContents);
+      return;
+    }
+    if (value.parts && Array.isArray(value.parts)) {
+      value.parts.forEach(visitPart);
+    } else {
+      visitPart(value);
+    }
+  };
+
+  visitContents(contents);
+
+  return {
+    systemInstruction: safeClone(request.config?.systemInstruction || request.systemInstruction || null),
+    promptText: textParts.join('\n').trim() || null,
+    attachmentSummary,
+    tools: safeClone(request.config?.tools || request.tools || null),
+    toolConfig: safeClone(request.config?.toolConfig || request.toolConfig || null),
+    generationConfig: safeClone(request.config || request.generationConfig || null),
+  };
+}
+
+function summarizeResponse(response) {
+  if (!response) return null;
+  return {
+    text: response.text || response.content || null,
+    finishReason:
+      response.finishReason ||
+      response.response_metadata?.finishReason ||
+      response.response_metadata?.finish_reason ||
+      response.candidates?.[0]?.finishReason ||
+      null,
+    toolCalls: safeClone(response.tool_calls || response.toolCalls || response.candidates?.[0]?.content?.parts?.filter((part) => part.functionCall)),
+    grounding: safeClone(
+      response.candidates?.[0]?.groundingMetadata ||
+      response.response_metadata?.groundingMetadata ||
+      null,
+    ),
+  };
+}
+
+function normalizeLegacyLog(logData) {
+  const startTime = logData.performance?.startTime || Date.now();
+  const endTime = logData.performance?.endTime || startTime;
+  const response = logData.output
+    ? {
+        raw: safeClone(logData.output),
+        ...summarizeResponse(logData.output.parsedResult || logData.output),
+      }
+    : null;
+  const context = {
+    taskId: logData.taskId || null,
+    taskType: logData.taskType || null,
+    fileIndex: logData.fileIndex ?? null,
+  };
+
+  return {
+    id: generateLogId(),
+    timestamp: nowIso(),
+    traceId: logData.traceId || logData.taskId || null,
+    sessionId: logData.sessionId || logData.taskId || null,
+    requestId: logData.requestId || generateLogId(),
+    sourceApp: logData.sourceApp || 'server',
+    module: logData.module || logData.taskType || 'legacy',
+    runtime: logData.runtime || 'server',
+    provider: logData.provider || 'gemini',
+    model: logData.input?.model || logData.model || 'unknown',
+    operation: logData.operation || logData.taskType || 'legacy_interaction',
+    capabilityId: logData.capabilityId || logData.context?.capabilityId || null,
+    promptTemplateId: logData.promptTemplateId || null,
+    promptSourceType: logData.promptSourceType || null,
+    context,
+    request: {
+      raw: safeClone(logData.input),
+      summary: summarizeRequest(logData.input),
+    },
+    response: response
+      ? {
+          raw: response.raw,
+          ...summarizeResponse(response.raw),
+        }
+      : null,
+    performance: {
+      startedAt: new Date(startTime).toISOString(),
+      endedAt: new Date(endTime).toISOString(),
+      durationMs: logData.performance?.duration ?? endTime - startTime,
+      attempt: logData.performance?.attempt || 1,
+      retryCount: logData.performance?.retryCount || 0,
+    },
+    tokenUsage: normalizeTokenUsage(logData.tokenUsage, logData.output?.parsedResult),
+    success: !logData.error,
+    error: logData.error ? serializeError(logData.error) : null,
+    containsSensitiveData: true,
+    sanitized: {
+      request: sanitizeData(logData.input),
+      response: sanitizeData(logData.output),
+      context: sanitizeData(context),
+    },
+  };
+}
+
+function buildEntry(meta) {
+  const request = safeClone(meta.request || {});
+  const context = safeClone(meta.context || {});
+
+  return {
+    id: meta.id || generateLogId(),
+    timestamp: meta.timestamp || nowIso(),
+    traceId: meta.traceId || context.traceId || context.claimCaseId || context.taskId || null,
+    sessionId: meta.sessionId || context.sessionId || context.voiceSessionId || context.taskId || null,
+    requestId: meta.requestId || generateLogId(),
+    sourceApp: meta.sourceApp || 'server',
+    module: meta.module || 'unknown',
+    runtime: meta.runtime || 'server',
+    provider: meta.provider || 'gemini',
+    model: meta.model || request.model || null,
+    operation: meta.operation || 'generate_content',
+    capabilityId: meta.capabilityId || context.capabilityId || null,
+    promptTemplateId: meta.promptTemplateId || null,
+    promptSourceType: meta.promptSourceType || null,
+    context,
+    request: {
+      raw: request,
+      summary: summarizeRequest(request),
+    },
+    response: null,
+    performance: {
+      startedAt: meta.startedAt || nowIso(),
+      endedAt: null,
+      durationMs: null,
+      attempt: meta.attempt || 1,
+      retryCount: meta.retryCount || 0,
+    },
+    tokenUsage: {
+      inputTokens: null,
+      outputTokens: null,
+      totalTokens: null,
+      rawUsageMetadata: null,
+      unavailableReason: 'pending',
+    },
+    success: null,
+    error: null,
+    containsSensitiveData: meta.containsSensitiveData !== false,
+    sanitized: {
+      context: sanitizeData(context),
+      request: sanitizeData(request),
+      response: null,
+    },
+  };
+}
+
+function updateEntry(logId, updater) {
+  const logs = readLogs();
+  const index = logs.findIndex((item) => item.id === logId);
+  if (index === -1) return null;
+  logs[index] = updater(logs[index]);
+  writeLogs(logs);
+  return logs[index];
+}
+
+export function startInteraction(meta = {}) {
+  const entry = buildEntry(meta);
+  const logs = readLogs();
+  logs.push(entry);
+  writeLogs(logs);
+  return {
+    logId: entry.id,
+    startedAtMs: Date.now(),
+    entry,
+  };
+}
+
+export function finishInteraction(handle, result = {}) {
+  if (!handle?.logId) return null;
+  const endedAtMs = Date.now();
+  return updateEntry(handle.logId, (entry) => {
+    const rawResponse = safeClone(result.response || null);
+    const normalizedError = result.error ? serializeError(result.error) : null;
+    const tokenUsage = normalizeTokenUsage(result.tokenUsage, rawResponse);
     return {
-      logs: paginatedLogs,
-      total,
-      limit,
-      offset,
+      ...entry,
+      response: rawResponse
+        ? {
+            raw: rawResponse,
+            ...summarizeResponse(rawResponse),
+          }
+        : null,
+      performance: {
+        ...entry.performance,
+        endedAt: new Date(endedAtMs).toISOString(),
+        durationMs: result.durationMs ?? endedAtMs - handle.startedAtMs,
+        attempt: result.attempt || entry.performance.attempt || 1,
+        retryCount: result.retryCount ?? entry.performance.retryCount ?? 0,
+      },
+      tokenUsage,
+      success: normalizedError ? false : result.success !== false,
+      error: normalizedError,
+      sanitized: {
+        ...entry.sanitized,
+        response: sanitizeData(rawResponse),
+      },
     };
-  } catch (error) {
-    console.error('[AI Logger] Failed to query logs:', error);
-    return { logs: [], total: 0, limit: options.limit || 50, offset: options.offset || 0 };
-  }
+  });
 }
 
-/**
- * 创建AI调用包装器，自动记录日志
- * @param {Function} fn - 要包装的AI调用函数
- * @param {Object} meta - 元数据
- * @returns {Function} 包装后的函数
- */
+export function logInteraction(logData) {
+  const entry = normalizeLegacyLog(logData);
+  const logs = readLogs();
+  logs.push(entry);
+  writeLogs(logs);
+  return entry;
+}
+
+export function getLogsByTask(taskId, options = {}) {
+  return queryLogs({ ...options, taskId }).logs;
+}
+
+export function getLogsByFile(taskId, fileIndex, options = {}) {
+  return queryLogs({ ...options, taskId, fileIndex }).logs;
+}
+
+function matchesDateRange(timestamp, startTime, endTime) {
+  const time = new Date(timestamp).getTime();
+  if (startTime && time < new Date(startTime).getTime()) return false;
+  if (endTime && time > new Date(endTime).getTime()) return false;
+  return true;
+}
+
+function normalizeSearchTerm(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function buildSearchHaystack(log) {
+  return [
+    log.id,
+    log.traceId,
+    log.sessionId,
+    log.requestId,
+    log.module,
+    log.operation,
+    log.model,
+    log.sourceApp,
+    log.context?.claimCaseId,
+    log.context?.taskId,
+    log.context?.voiceSessionId,
+    log.context?.fileName,
+    log.context?.documentId,
+    log.request?.summary?.promptText,
+    log.response?.text,
+    log.sanitized?.context ? JSON.stringify(log.sanitized.context) : null,
+    log.sanitized?.request ? JSON.stringify(log.sanitized.request) : null,
+    log.sanitized?.response ? JSON.stringify(log.sanitized.response) : null,
+  ]
+    .filter(Boolean)
+    .join('\n')
+    .toLowerCase();
+}
+
+function mapForRead(log, includeRaw = false) {
+  if (includeRaw) return log;
+  return {
+    ...log,
+    request: {
+      summary: log.request?.summary || null,
+      raw: null,
+    },
+    response: {
+      text: log.response?.text || null,
+      finishReason: log.response?.finishReason || null,
+      toolCalls: log.response?.toolCalls || null,
+      grounding: log.response?.grounding || null,
+      raw: null,
+    },
+    sanitized: log.sanitized,
+  };
+}
+
+function mapForSummary(log) {
+  return {
+    id: log.id,
+    timestamp: log.timestamp,
+    traceId: log.traceId,
+    sessionId: log.sessionId,
+    requestId: log.requestId,
+    sourceApp: log.sourceApp,
+    module: log.module,
+    runtime: log.runtime,
+    provider: log.provider,
+    model: log.model,
+    operation: log.operation,
+    capabilityId: log.capabilityId,
+    promptTemplateId: log.promptTemplateId,
+    promptSourceType: log.promptSourceType,
+    success: log.success,
+    error: log.error
+      ? {
+          name: log.error.name || null,
+          message: log.error.message || String(log.error),
+        }
+      : null,
+    performance: {
+      startedAt: log.performance?.startedAt || null,
+      endedAt: log.performance?.endedAt || null,
+      durationMs: log.performance?.durationMs ?? null,
+      attempt: log.performance?.attempt ?? null,
+      retryCount: log.performance?.retryCount ?? null,
+    },
+    tokenUsage: {
+      inputTokens: log.tokenUsage?.inputTokens ?? null,
+      outputTokens: log.tokenUsage?.outputTokens ?? null,
+      totalTokens: log.tokenUsage?.totalTokens ?? null,
+      unavailableReason: log.tokenUsage?.unavailableReason ?? null,
+    },
+    context: {
+      claimCaseId: log.context?.claimCaseId || null,
+      taskId: log.context?.taskId || null,
+      fileIndex: log.context?.fileIndex ?? null,
+      voiceSessionId: log.context?.voiceSessionId || null,
+      capabilityId: log.context?.capabilityId || null,
+    },
+    request: {
+      summary: log.request?.summary || null,
+    },
+    response: {
+      text: log.response?.text || null,
+      finishReason: log.response?.finishReason || null,
+      toolCalls: log.response?.toolCalls || null,
+    },
+  };
+}
+
+export function queryLogs(options = {}) {
+  const {
+    logId,
+    keyword,
+    claimRef,
+    fileName,
+    claimCaseId,
+    taskId,
+    fileIndex,
+    sessionId,
+    traceId,
+    sourceApp,
+    module,
+    success,
+    startTime,
+    endTime,
+    includeRaw = false,
+    view = 'detail',
+    limit = 50,
+    offset = 0,
+  } = options;
+
+  let logs = readLogs();
+  logs = logs.filter((log) => {
+    if (logId && log.id !== logId) return false;
+    if (claimCaseId && log.context?.claimCaseId !== claimCaseId) return false;
+    if (taskId && log.context?.taskId !== taskId) return false;
+    if (fileIndex !== undefined && log.context?.fileIndex !== fileIndex) return false;
+    if (sessionId && log.sessionId !== sessionId) return false;
+    if (traceId && log.traceId !== traceId) return false;
+    if (sourceApp && log.sourceApp !== sourceApp) return false;
+    if (module && log.module !== module) return false;
+    if (success !== undefined && log.success !== success) return false;
+    if (!matchesDateRange(log.timestamp, startTime, endTime)) return false;
+    if (keyword || claimRef || fileName) {
+      const haystack = buildSearchHaystack(log);
+      if (keyword && !haystack.includes(normalizeSearchTerm(keyword))) return false;
+      if (claimRef && !haystack.includes(normalizeSearchTerm(claimRef))) return false;
+      if (fileName && !haystack.includes(normalizeSearchTerm(fileName))) return false;
+    }
+    return true;
+  });
+
+  logs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  const total = logs.length;
+  const paginatedLogs = logs
+    .slice(offset, offset + limit)
+    .map((item) => (view === 'summary' ? mapForSummary(item) : mapForRead(item, includeRaw)));
+
+  return {
+    logs: paginatedLogs,
+    total,
+    limit,
+    offset,
+  };
+}
+
 export function withLogging(fn, meta = {}) {
-  return async function(...args) {
-    const startTime = Date.now();
-    const { taskId, fileIndex, taskType, input } = meta;
-    
+  return async function wrappedWithLogging(...args) {
+    const handle = startInteraction(meta);
     try {
-      const result = await fn(...args);
-      const endTime = Date.now();
-      
-      logInteraction({
-        taskId,
-        fileIndex,
-        taskType,
-        input,
-        output: {
-          response: JSON.stringify(result),
-          parsedResult: result,
-        },
-        performance: {
-          startTime,
-          endTime,
-          duration: endTime - startTime,
-          retryCount: 0,
-        },
+      const response = await fn(...args);
+      finishInteraction(handle, {
+        success: true,
+        response,
       });
-      
-      return result;
+      return response;
     } catch (error) {
-      const endTime = Date.now();
-      
-      logInteraction({
-        taskId,
-        fileIndex,
-        taskType,
-        input,
-        output: null,
-        error: {
-          message: error.message,
-          code: error.code,
-          stack: error.stack,
-        },
-        performance: {
-          startTime,
-          endTime,
-          duration: endTime - startTime,
-          retryCount: 0,
-        },
+      finishInteraction(handle, {
+        success: false,
+        error,
       });
-      
       throw error;
     }
   };

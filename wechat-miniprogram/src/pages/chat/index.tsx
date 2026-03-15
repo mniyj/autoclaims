@@ -31,7 +31,13 @@ function ChatPage() {
   useEffect(() => {
     const savedMessages = Taro.getStorageSync('messages');
     if (savedMessages) {
-      setMessages(JSON.parse(savedMessages));
+      const parsedMessages = JSON.parse(savedMessages);
+      // 迁移旧消息：确保每条消息都有 role 字段
+      const migratedMessages = parsedMessages.map((msg: Message) => ({
+        ...msg,
+        role: msg.role || '' // 旧消息没有 role 字段，默认为空字符串
+      }));
+      setMessages(migratedMessages);
     }
 
     // 加载用户位置
@@ -207,11 +213,76 @@ function ChatPage() {
   };
 
   /**
-   * 渲染消息组件
+   * 点赞消息
    */
+  const handleLike = (messageId: string) => {
+    setMessages(prev => prev.map(msg => {
+      if (msg.id === messageId) {
+        const reactions = msg.reactions || {};
+        return {
+          ...msg,
+          reactions: {
+            ...reactions,
+            liked: !reactions.liked,
+            disliked: reactions.liked ? false : reactions.disliked // 取消点踩
+          }
+        };
+      }
+      return msg;
+    }));
+  };
+
+  /**
+   * 点踩消息
+   */
+  const handleDislike = (messageId: string) => {
+    setMessages(prev => prev.map(msg => {
+      if (msg.id === messageId) {
+        const reactions = msg.reactions || {};
+        return {
+          ...msg,
+          reactions: {
+            ...reactions,
+            disliked: !reactions.disliked,
+            liked: reactions.disliked ? false : reactions.liked // 取消点赞
+          }
+        };
+      }
+      return msg;
+    }));
+  };
+
+  /**
+   * 复制消息内容
+   */
+  const handleCopy = (content: string) => {
+    Taro.setClipboardData({
+      data: content,
+      success: () => {
+        showToast({ title: '已复制', icon: 'success' });
+      }
+    });
+  };
+
+  /**
+   * 分享消息
+   */
+  const handleShare = (message: Message) => {
+    Taro.showShareMenu({
+      withShareTicket: true,
+      menus: ['shareAppMessage', 'shareTimeline']
+    });
+  };
+
+  /**
+   * 渲染消息组件
+    */
   const renderMessage = (message: Message) => {
     const isUser = message.role === 'user';
     const isAI = message.role === 'assistant';
+
+    // 仅对非用户消息显示操作按钮
+    const showActions = message.role && message.role !== 'user';
 
     return (
       <View
@@ -262,6 +333,40 @@ function ChatPage() {
         <Text className="message-time">
           {new Date(message.timestamp).toLocaleString()}
         </Text>
+
+        {/* 操作按钮 - 仅AI/理赔员消息显示 */}
+        {showActions && (
+          <View className="message-actions">
+            <View 
+              className={`action-btn ${message.reactions?.liked ? 'active' : ''}`}
+              onClick={() => handleLike(message.id)}
+            >
+              <Text className="action-icon">👍</Text>
+              <Text className="action-text">点赞</Text>
+            </View>
+            <View 
+              className={`action-btn ${message.reactions?.disliked ? 'active' : ''}`}
+              onClick={() => handleDislike(message.id)}
+            >
+              <Text className="action-icon">👎</Text>
+              <Text className="action-text">点踩</Text>
+            </View>
+            <View 
+              className="action-btn"
+              onClick={() => handleCopy(message.content)}
+            >
+              <Text className="action-icon">📋</Text>
+              <Text className="action-text">复制</Text>
+            </View>
+            <View 
+              className="action-btn"
+              onClick={() => handleShare(message)}
+            >
+              <Text className="action-icon">📤</Text>
+              <Text className="action-text">分享</Text>
+            </View>
+          </View>
+        )}
       </View>
     );
   };

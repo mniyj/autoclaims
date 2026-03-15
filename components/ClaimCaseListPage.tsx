@@ -107,6 +107,34 @@ const StatusIcon: React.FC<{ status: ClaimStatus }> = ({ status }) => {
   }
 };
 
+function getImportTaskBadge(taskStatus: string | null) {
+  switch (taskStatus) {
+    case "processing":
+    case "pending":
+    case "archived":
+      return {
+        label: "导入中",
+        className: "bg-blue-50 text-blue-700 border-blue-100",
+      };
+    case "failed":
+    case "partial_success":
+      return {
+        label: "可恢复",
+        className: "bg-amber-50 text-amber-700 border-amber-100",
+      };
+    case "completed":
+      return {
+        label: "已完成",
+        className: "bg-green-50 text-green-700 border-green-100",
+      };
+    default:
+      return {
+        label: "已导入",
+        className: "bg-gray-50 text-gray-600 border-gray-100",
+      };
+  }
+}
+
 interface ClaimCaseListPageProps {
   onViewDetail: (claim: ClaimCase) => void;
 }
@@ -115,6 +143,16 @@ const ClaimCaseListPage: React.FC<ClaimCaseListPageProps> = ({
   onViewDetail,
 }) => {
   const [cases, setCases] = useState<ClaimCase[]>([]);
+  const [latestImportMap, setLatestImportMap] = useState<Record<
+    string,
+    {
+      taskId: string | null;
+      taskStatus: string | null;
+      importedAt: string | null;
+      failureHint?: string | null;
+    }
+  >>({});
+  const [recoveringTaskId, setRecoveringTaskId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -122,6 +160,34 @@ const ClaimCaseListPage: React.FC<ClaimCaseListPageProps> = ({
       try {
         const data = await api.claimCases.list();
         setCases(data as ClaimCase[]);
+
+        const importResponse = await fetch("/api/claim-documents");
+        if (importResponse.ok) {
+          const importRecords = await importResponse.json();
+          const nextMap: Record<
+            string,
+            { taskId: string | null; taskStatus: string | null; importedAt: string | null }
+          > = {};
+
+          for (const record of Array.isArray(importRecords) ? importRecords : []) {
+            if (!record?.claimCaseId) continue;
+            const importedAt = record.importedAt || null;
+            const current = nextMap[record.claimCaseId];
+            if (
+              !current ||
+              new Date(importedAt || 0).getTime() > new Date(current.importedAt || 0).getTime()
+            ) {
+              nextMap[record.claimCaseId] = {
+                taskId: record.taskId || null,
+                taskStatus: record.taskStatus || null,
+                importedAt,
+                failureHint: record.failureHint || null,
+              };
+            }
+          }
+
+          setLatestImportMap(nextMap);
+        }
       } catch (error) {
         console.error("Failed to fetch claim cases:", error);
       } finally {
@@ -130,6 +196,40 @@ const ClaimCaseListPage: React.FC<ClaimCaseListPageProps> = ({
     };
     fetchCases();
   }, []);
+
+  const handleRecoverTask = async (
+    claimCaseId: string,
+    taskId: string | null,
+  ) => {
+    if (!taskId || recoveringTaskId) return;
+
+    setRecoveringTaskId(taskId);
+    try {
+      const response = await fetch("/api/offline-import/recover-task", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ taskId }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result?.error || "恢复任务失败");
+      }
+
+      setLatestImportMap((prev) => ({
+        ...prev,
+        [claimCaseId]: {
+          taskId,
+          taskStatus: result.status || "completed",
+          importedAt: prev[claimCaseId]?.importedAt || null,
+        },
+      }));
+    } catch (error) {
+      console.error("Recover task failed:", error);
+      alert(error instanceof Error ? error.message : "恢复任务失败");
+    } finally {
+      setRecoveringTaskId(null);
+    }
+  };
 
   // Filter States
   const [reportNumber, setReportNumber] = useState("");
@@ -628,7 +728,10 @@ const ClaimCaseListPage: React.FC<ClaimCaseListPageProps> = ({
             </thead>
             <tbody className="divide-y divide-gray-100">
               {paginatedCases.length > 0 ? (
-                paginatedCases.map((c) => (
+                paginatedCases.map((c) => {
+                  const importMeta = latestImportMap[c.id];
+                  const importBadge = getImportTaskBadge(importMeta?.taskStatus || null);
+                  return (
                   <tr
                     key={c.id}
                     className="hover:bg-indigo-50/30 transition-colors group"
@@ -648,6 +751,21 @@ const ClaimCaseListPage: React.FC<ClaimCaseListPageProps> = ({
                           <p className="text-xs text-gray-500 mt-0.5">
                             {c.reporter} · {c.reportTime.split(" ")[0]}
                           </p>
+                          {importMeta?.taskId && (
+                            <div className="mt-1">
+                              <span
+                                className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] font-medium ${importBadge.className}`}
+                              >
+                                {importBadge.label}
+                              </span>
+                              {importMeta.failureHint &&
+                                ["failed", "partial_success"].includes(importMeta.taskStatus || "") && (
+                                  <p className="text-[10px] text-amber-700 mt-1 max-w-[260px] truncate" title={importMeta.failureHint}>
+                                    {importMeta.failureHint}
+                                  </p>
+                                )}
+                            </div>
+                          )}
                           {c.id && c.id.startsWith('CLM') && (
                             <p className="text-xs text-orange-600 mt-0.5 font-medium">
                               前端编号: {c.id}
@@ -692,6 +810,32 @@ const ClaimCaseListPage: React.FC<ClaimCaseListPageProps> = ({
                     </td>
                     <td className="px-6 py-5 text-center">
                       <div className="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {importMeta?.taskId && (
+                          <button
+                            onClick={() => handleRecoverTask(c.id, importMeta?.taskId || null)}
+                            disabled={recoveringTaskId === importMeta?.taskId}
+                            className={`p-2 rounded-lg transition ${
+                              recoveringTaskId === importMeta?.taskId
+                                ? "text-gray-300 bg-gray-50 cursor-not-allowed"
+                                : "text-gray-400 hover:text-amber-600 hover:bg-amber-50"
+                            }`}
+                            title="恢复导入任务"
+                          >
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                              />
+                            </svg>
+                          </button>
+                        )}
                         <button
                           onClick={() => onViewDetail(c)}
                           className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
@@ -739,7 +883,8 @@ const ClaimCaseListPage: React.FC<ClaimCaseListPageProps> = ({
                       </div>
                     </td>
                   </tr>
-                ))
+                  );
+                })
               ) : (
                 <tr>
                   <td colSpan={7} className="px-6 py-16 text-center">

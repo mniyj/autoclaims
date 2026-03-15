@@ -1,4 +1,5 @@
 import React from 'react';
+import { getSignedUrl, uploadToOSS } from '../../services/ossService';
 
 interface FileUploadProps {
   label: string;
@@ -32,7 +33,6 @@ const FileUpload: React.FC<FileUploadProps> = ({ label, id, value, onChange, hel
     if (ossKey && !hasAttemptedRefresh) {
       setHasAttemptedRefresh(true);
       try {
-        const { getSignedUrl } = await import('../../services/ossService');
         const freshUrl = await getSignedUrl(ossKey);
         setDisplayUrl(freshUrl);
         return; // 成功获取新 URL，不显示错误
@@ -55,7 +55,6 @@ const FileUpload: React.FC<FileUploadProps> = ({ label, id, value, onChange, hel
     if (file) {
       setUploading(true);
       try {
-        const { uploadToOSS } = await import('../../services/ossService');
         const { url, objectKey } = await uploadToOSS(file);
         console.log('[DEBUG] Uploaded to OSS, URL:', url, 'Key:', objectKey);
         alert('上传成功！URL: ' + url);

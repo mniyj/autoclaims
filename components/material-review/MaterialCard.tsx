@@ -55,6 +55,11 @@ const MaterialCard: React.FC<MaterialCardProps> = ({
           <p className="text-xs text-gray-500 mt-0.5">
             {material.classification?.materialName || '未识别材料'}
           </p>
+          {material.classification?.errorMessage && (
+            <p className="text-xs text-red-600 mt-0.5 truncate">
+              分类失败: {material.classification.errorMessage}
+            </p>
+          )}
           
           <div className="flex items-center gap-2 mt-2">
             <span className={`text-xs px-2 py-0.5 rounded border ${statusColors[statusInfo.color]}`}>

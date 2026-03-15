@@ -21,6 +21,8 @@ import UserListPage from "./components/UserListPage";
 import DataDashboardPage from "./components/DataDashboardPage";
 import ResponsibilityManagementPage from "./components/ResponsibilityManagementPage";
 import ClaimsMaterialManagementPage from "./components/ClaimsMaterialManagementPage";
+import FactCatalogManagementPage from "./components/FactCatalogManagementPage";
+import MaterialValidationRulesPage from "./components/MaterialValidationRulesPage";
 import ClaimItemConfigPage from "./components/ClaimItemConfigPage";
 import ClaimIntakeConfigPage from "./components/ClaimIntakeConfigPage";
 import ClaimCaseListPage from "./components/ClaimCaseListPage";
@@ -32,6 +34,8 @@ import InvoiceAuditPage from "./components/InvoiceAuditPage";
 import MedicalCatalogManagementPage from "./components/MedicalCatalogManagementPage";
 import HospitalManagementPage from "./components/HospitalManagementPage";
 import UserOperationLogsPage from "./components/UserOperationLogsPage";
+import AIInteractionLogsPage from "./components/AIInteractionLogsPage";
+import AIConfigCenterPage from "./components/AIConfigCenterPage";
 import SystemLogsPage from "./SystemLogsPage";
 import IntakeFieldPresetsManager from "./components/IntakeFieldPresetsManager";
 import MessageCenter from "./components/MessageCenter";
@@ -43,6 +47,7 @@ import PolicyDetailPage from "./components/PolicyDetailPage";
 import { AITestPanel } from "./services/ai/AITestPanel";
 import { aiService } from "./services/ai/aiService";
 import { VoiceClaimPage } from "./pages/VoiceClaimPage";
+import KnowledgeManagementPage from "./components/knowledge/KnowledgeManagementPage";
 import { GeminiProvider } from "./services/ai/providers/geminiProvider";
 import { ClaudeProvider } from "./services/ai/providers/claudeProvider";
 import {
@@ -200,6 +205,7 @@ const ChevronUpIcon = () => (
 // --- Layout Components ---
 
 type AppView =
+  | "knowledge_management"
   | "product_list"
   | "product_config"
   | "clause_management"
@@ -222,6 +228,8 @@ type AppView =
   | "user_list"
   | "data_dashboard"
   | "claims_material_management"
+  | "fact_catalog_management"
+  | "material_validation_rules"
   | "claim_item_config"
   | "claim_intake_config"
   | "intake_field_presets"
@@ -234,7 +242,9 @@ type AppView =
   | "ruleset_management"
   | "formula_management"
   | "user_operation_logs"
+  | "ai_interaction_logs"
   | "system_logs"
+  | "ai_config_center"
   | "ai_test"
   | "quote_list"
   | "quote_detail"
@@ -284,14 +294,16 @@ const navItems: NavItemData[] = [
       { name: "理赔员工作台", id: "claim_workbench" },
       { name: "语音报案", id: "voice_claim" },
       { name: "理赔项目及材料配置", id: "claim_item_config" },
+      { name: "事实元数据中心", id: "fact_catalog_management" },
+      { name: "材料校验规则", id: "material_validation_rules" },
       { name: "报案信息配置", id: "claim_intake_config" },
       { name: "报案字段预设管理", id: "intake_field_presets" },
       { name: "赔案清单", id: "claim_case_list" },
       { name: "发票审核", id: "invoice_audit" },
       { name: "医保目录管理", id: "medical_catalog_management" },
       { name: "医院信息管理", id: "hospital_management" },
-      { name: "公式配置", id: "formula_management" },
       { name: "规则集管理", id: "ruleset_management" },
+      { name: "知识库管理", id: "knowledge_management" },
     ],
   },
   {
@@ -301,8 +313,10 @@ const navItems: NavItemData[] = [
       { name: "用户清单", id: "user_list" },
       { name: "数据看板", id: "data_dashboard" },
       { name: "用户操作日志", id: "user_operation_logs" },
+      { name: "AI 交互日志", id: "ai_interaction_logs" },
       { name: "系统日志", id: "system_logs" },
       { name: "账号设置", id: "system_settings" },
+      { name: "AI 配置中心", id: "ai_config_center" },
       { name: "AI 测试", id: "ai_test" },
     ],
   },
@@ -343,6 +357,8 @@ const activeParentViews: Record<string, AppView[]> = {
     "claim_workbench",
     "voice_claim",
     "claim_item_config",
+    "fact_catalog_management",
+    "material_validation_rules",
     "claim_intake_config",
     "intake_field_presets",
     "claim_case_list",
@@ -357,8 +373,10 @@ const activeParentViews: Record<string, AppView[]> = {
     "user_list",
     "data_dashboard",
     "user_operation_logs",
+    "ai_interaction_logs",
     "system_logs",
     "ai_test",
+    "ai_config_center",
     "formula_management",
   ],
 };
@@ -713,6 +731,20 @@ const App: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    const handleExternalNavigate = (event: Event) => {
+      const customEvent = event as CustomEvent<{ view?: AppView }>;
+      if (customEvent.detail?.view) {
+        handleViewChange(customEvent.detail.view);
+      }
+    };
+
+    window.addEventListener("app:navigate", handleExternalNavigate as EventListener);
+    return () => {
+      window.removeEventListener("app:navigate", handleExternalNavigate as EventListener);
+    };
+  }, []);
+
   const handleViewQuote = (quote: QuoteRequest) => {
     setSelectedQuote(quote);
     setView("quote_detail");
@@ -970,6 +1002,10 @@ const App: React.FC = () => {
         return <ResponsibilityManagementPage />;
       case "claims_material_management":
         return <ClaimsMaterialManagementPage />;
+      case "fact_catalog_management":
+        return <FactCatalogManagementPage />;
+      case "material_validation_rules":
+        return <MaterialValidationRulesPage />;
       case "claim_item_config":
         return <ClaimItemConfigPage />;
       case "claim_intake_config":
@@ -997,7 +1033,9 @@ const App: React.FC = () => {
       case "claim_workbench":
         return <ClaimWorkbenchPage onViewClaim={handleViewClaim} />;
       case "voice_claim":
-        return <VoiceClaimPage />;
+        return <VoiceClaimPage currentUser={currentUser} />;
+      case "knowledge_management":
+        return <KnowledgeManagementPage onViewChange={setView} />;
       case "invoice_audit":
         return <InvoiceAuditPage />;
       case "medical_catalog_management":
@@ -1014,8 +1052,14 @@ const App: React.FC = () => {
         return <DataDashboardPage />;
       case "system_settings":
         return <SystemSettingsPage currentUser={currentUser || undefined} />;
+      case "ai_config_center":
+        return (
+          <AIConfigCenterPage currentUsername={currentUser?.username} />
+        );
       case "user_operation_logs":
         return <UserOperationLogsPage />;
+      case "ai_interaction_logs":
+        return <AIInteractionLogsPage />;
       case "system_logs":
         return <SystemLogsPage />;
       case "quote_list":
@@ -1067,7 +1111,7 @@ const App: React.FC = () => {
           </div>
         );
       case "message_center":
-        return <MessageCenter />;
+        return <MessageCenter onOpenClaim={handleViewClaim} />;
       default:
         return (
           <ProductListPage

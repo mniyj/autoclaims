@@ -3,14 +3,18 @@
  * 处理单个文件的 OCR、分类，支持重试机制
  */
 
+import fs from 'fs';
 import { processFile } from '../services/fileProcessor.js';
 import { updateFileStatus } from './queue.js';
 import { writeAuditLog } from '../middleware/index.js';
 import { readData } from '../utils/fileStore.js';
-import { GoogleGenAI } from '@google/genai';
 import OSS from 'ali-oss';
 import { ensureFreshSignedUrl } from '../middleware/urlRefresher.js';
 import { logInteraction } from '../services/aiInteractionLogger.js';
+import { invokeAICapability } from '../services/aiRuntime.js';
+import { renderPromptTemplate } from '../services/aiConfigService.js';
+import { classifyMaterialByRules } from '../services/materialClassificationService.js';
+import { processClaimMaterial } from '../services/claimMaterialPipeline.js';
 
 const RETRYABLE_ERRORS = [
   'ECONNRESET',
@@ -21,12 +25,14 @@ const RETRYABLE_ERRORS = [
   'TIMEOUT',
   'socket hang up',
   'network error',
+  'fetch failed',
   'OSS_URL_EXPIRED',
   'EAI_AGAIN',
 ];
 
 const MAX_RETRIES = 3;
 const BATCH_CONCURRENCY = 3;
+const DEFAULT_FILE_PROCESS_TIMEOUT_MS = Number(process.env.FILE_PROCESS_TIMEOUT_MS || 180000);
 
 function getRetryDelay(retryCount) {
   return Math.pow(2, retryCount) * 1000;
@@ -41,49 +47,70 @@ function isRetryableError(error) {
   );
 }
 
+function normalizeErrorMessage(error) {
+  const raw = error?.message || String(error || '未知错误');
+  try {
+    const parsed = JSON.parse(raw);
+    return parsed?.error?.message || raw;
+  } catch {
+    return raw;
+  }
+}
+
 async function classifyMaterial(result, fileName) {
   if (result.parseStatus !== 'completed') {
     return {
       materialId: 'unknown',
       materialName: '未识别',
       confidence: 0,
+      matchStrategy: 'fallback',
+      errorMessage: '文件解析未完成，无法分类',
     };
   }
 
-  try {
-    const materials = readData('claims-materials');
-    if (materials.length === 0) {
-      return {
-        materialId: 'unknown',
-        materialName: '未识别',
-        confidence: 0,
-      };
-    }
+  const materials = readData('claims-materials');
+  if (!Array.isArray(materials) || materials.length === 0) {
+    return {
+      materialId: 'unknown',
+      materialName: '未识别',
+      confidence: 0,
+      matchStrategy: 'fallback',
+      errorMessage: '材料目录为空，无法执行分类',
+    };
+  }
 
+  const ocrText = result.extractedText || '';
+  const ruleResult = classifyMaterialByRules(materials, fileName, ocrText);
+  if (ruleResult) {
+    return ruleResult;
+  }
+
+  try {
     const catalog = materials
-      .map((m) => `${m.id}|${m.name}|${m.description?.slice(0, 60) || ''}`)
+      .map((m) => `${m.id}|${m.name}|${m.description?.slice(0, 80) || ''}`)
       .join('\n');
 
-    const ocrText = result.extractedText || '';
-    const prompt = `你是保险理赔材料分类专家。请根据以下 OCR 文字内容，从材料目录中选出最匹配的材料类型。
+    const prompt = renderPromptTemplate('material_classifier', {
+      ocrText: ocrText.slice(0, 1800),
+      fileName,
+      catalog,
+    });
 
-【OCR 文字】
-${ocrText.slice(0, 1200)}
-
-【文件名参考】${fileName}
-
-【材料目录（格式: id|名称|说明摘要）】
-${catalog}
-
-请返回 JSON：{"materialId":"...","materialName":"...","confidence":0.0到1.0之间的小数,"reason":"简短说明"}。若无匹配则 materialId 填 "unknown"，materialName 填 "未识别"，confidence 填 0。`;
-
-    const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
-    const ai = new GoogleGenAI({ apiKey });
-    
-    const response = await ai.models.generateContent({
-      model: 'gemini-1.5-flash',
-      contents: { parts: [{ text: prompt }] },
-      config: { temperature: 0.1 },
+    const { response } = await invokeAICapability({
+      capabilityId: 'admin.material.classification',
+      request: {
+        contents: { parts: [{ text: prompt }] },
+        config: { temperature: 0.1 },
+      },
+      meta: {
+        sourceApp: 'admin-system',
+        module: 'taskQueue.worker.classifyMaterial',
+        operation: 'classify_material',
+        context: {
+          fileName,
+          materialCount: materials.length,
+        },
+      },
     });
 
     const raw = response.text || '{}';
@@ -92,19 +119,36 @@ ${catalog}
       parsed = JSON.parse(raw.replace(/```json|```/g, '').trim());
     } catch {}
 
-    const classification = {
-      materialId: parsed.materialId || 'unknown',
-      materialName: parsed.materialName || '未识别',
-      confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0,
-    };
+    const parsedId = parsed.materialId || 'unknown';
+    const matched = materials.find((m) => m.id === parsedId);
+    const confidence = typeof parsed.confidence === 'number' ? parsed.confidence : 0;
+    const classification = matched
+      ? {
+          materialId: matched.id,
+          materialName: matched.name || parsed.materialName || '未识别',
+          confidence: Math.max(0, Math.min(1, confidence)),
+          source: 'ai',
+          matchStrategy: 'ai',
+        }
+      : {
+          materialId: 'unknown',
+          materialName: '未识别',
+          confidence: 0,
+          source: 'ai',
+          matchStrategy: 'fallback',
+          errorMessage: 'AI 未匹配到有效材料目录项',
+        };
 
     return classification;
   } catch (error) {
     console.error('[Worker] classifyMaterial error:', error);
     return {
       materialId: 'unknown',
-      materialName: '未识别',
+      materialName: '分类失败',
       confidence: 0,
+      source: 'ai',
+      matchStrategy: 'fallback',
+      errorMessage: normalizeErrorMessage(error),
     };
   }
 }
@@ -159,7 +203,16 @@ async function downloadFileFromOSS(ossKey, retryCount = 0) {
   }
 }
 
-export async function processFileWithRetry(taskId, file, fileIndex, retryCount = 0) {
+async function readLocalFile(localPath) {
+  try {
+    return await fs.promises.readFile(localPath);
+  } catch (error) {
+    console.error(`[Worker] readLocalFile error for ${localPath}:`, error);
+    throw new Error(`Failed to read local file: ${error.message}`);
+  }
+}
+
+export async function processFileWithRetry(taskId, file, fileIndex, retryCount = 0, taskOptions = {}) {
   const startTime = Date.now();
   
   await updateFileStatus(taskId, fileIndex, {
@@ -188,15 +241,29 @@ export async function processFileWithRetry(taskId, file, fileIndex, retryCount =
       processOptions = {
         buffer: fileBuffer,
         extractText: true,
+        skipAI: taskOptions.skipAI ?? true,
+        skipVideo: taskOptions.skipVideo ?? false,
+      };
+    } else if (file.localPath) {
+      console.log(`[Worker] Reading local file: ${file.localPath}`);
+      fileBuffer = await readLocalFile(file.localPath);
+      processOptions = {
+        buffer: fileBuffer,
+        extractText: true,
+        videoPath: file.localPath,
+        skipAI: taskOptions.skipAI ?? true,
+        skipVideo: taskOptions.skipVideo ?? false,
       };
     } else if (file.base64Data) {
       fileBuffer = Buffer.from(file.base64Data, 'base64');
       processOptions = {
         base64Data: file.base64Data,
         extractText: true,
+        skipAI: taskOptions.skipAI ?? true,
+        skipVideo: taskOptions.skipVideo ?? false,
       };
     } else {
-      throw new Error('No file source provided (ossKey or base64Data)');
+      throw new Error('No file source provided (ossKey, localPath or base64Data)');
     }
     
     const processResult = await processWithTimeout(async () => {
@@ -213,24 +280,26 @@ export async function processFileWithRetry(taskId, file, fileIndex, retryCount =
         throw new Error(result.errorMessage || '文件处理失败');
       }
 
-      let classification = file.classification;
-      if (!classification || classification.materialId === 'unknown') {
-        console.log(`[Worker] Calling classifyMaterial for ${file.fileName}`);
-        classification = await classifyMaterial(result, file.fileName);
-        console.log(`[Worker] classifyMaterial completed for ${file.fileName}:`, classification.materialName);
-      } else {
-        console.log(`[Worker] Using frontend classification for ${file.fileName}:`, classification.materialName);
-        classification = {
-          ...classification,
-          source: 'ai',
-        };
-      }
+      console.log(`[Worker] Running unified material pipeline for ${file.fileName}`);
+      const pipelineResult = await processClaimMaterial({
+        fileName: file.fileName,
+        mimeType: file.mimeType,
+        buffer: fileBuffer,
+        parseResult: result,
+        preferredMaterialId: file.classification?.materialId,
+        preferredMaterialName: file.classification?.materialName,
+      });
+      const classification = pipelineResult.classification;
+      console.log(`[Worker] unified material pipeline completed for ${file.fileName}:`, classification.materialName);
 
       return {
         ...result,
+        structuredData: pipelineResult.extractedData,
+        auditConclusion: pipelineResult.auditConclusion,
+        confidence: pipelineResult.confidence,
         classification,
       };
-    }, 60000);
+    }, DEFAULT_FILE_PROCESS_TIMEOUT_MS);
 
     const duration = Date.now() - startTime;
 
@@ -240,9 +309,13 @@ export async function processFileWithRetry(taskId, file, fileIndex, retryCount =
       result: {
         extractedText: processResult.extractedText,
         structuredData: processResult.structuredData,
+        auditConclusion: processResult.auditConclusion,
+        confidence: processResult.confidence,
         classification: processResult.classification,
         parseDuration: processResult.parseDuration,
       },
+      classificationError: processResult.classification?.errorMessage || null,
+      errorMessage: null,
       completedAt: new Date().toISOString(),
     });
     console.log(`[Worker] File status updated, task status: ${updatedTask?.status}`);
@@ -295,7 +368,7 @@ export async function processFileWithRetry(taskId, file, fileIndex, retryCount =
       });
 
       await new Promise(resolve => setTimeout(resolve, delay));
-      return processFileWithRetry(taskId, file, fileIndex, retryCount + 1);
+      return processFileWithRetry(taskId, file, fileIndex, retryCount + 1, taskOptions);
     }
 
     await updateFileStatus(taskId, fileIndex, {
@@ -325,7 +398,7 @@ export async function processBatchFiles(taskId, files, options = {}) {
     
     const batchPromises = batch.map((file, idx) => {
       const fileIndex = i + idx;
-      return processFileWithRetry(taskId, file, fileIndex);
+      return processFileWithRetry(taskId, file, fileIndex, 0, options);
     });
     
     const batchResults = await Promise.all(batchPromises);
@@ -374,11 +447,20 @@ export async function processStagedFile(taskId, file, fileIndex) {
         console.error(`[Worker] OSS download failed:`, downloadError);
         throw new Error(`文件下载失败: ${downloadError.message}`);
       }
+    } else if (file.localPath) {
+      console.log(`[Worker] Reading local file: ${file.localPath}`);
+      try {
+        fileBuffer = await readLocalFile(file.localPath);
+        console.log(`[Worker] Read ${fileBuffer.length} bytes from local file`);
+      } catch (localError) {
+        console.error(`[Worker] Local file read failed:`, localError);
+        throw new Error(`本地文件读取失败: ${localError.message}`);
+      }
     } else if (file.base64Data) {
       console.log(`[Worker] Using base64 data`);
       fileBuffer = Buffer.from(file.base64Data, 'base64');
     } else {
-      throw new Error('No file source provided (no ossKey or base64Data)');
+      throw new Error('No file source provided (no ossKey, localPath or base64Data)');
     }
     
     console.log(`[Worker] Processing file: ${file.fileName}`);
@@ -388,7 +470,7 @@ export async function processStagedFile(taskId, file, fileIndex) {
         fileName: file.fileName,
         mimeType: file.mimeType,
         buffer: fileBuffer,
-        options: { extractText: true },
+        options: { extractText: true, videoPath: file.localPath },
       });
       console.log(`[Worker] File processed, parseStatus: ${processResult.parseStatus}`);
     } catch (processError) {
@@ -400,17 +482,39 @@ export async function processStagedFile(taskId, file, fileIndex) {
       throw new Error(processResult.errorMessage || '文件解析失败');
     }
 
-    console.log(`[Worker] Starting classification for ${file.fileName}`);
+    console.log(`[Worker] Starting unified material pipeline for ${file.fileName}`);
     const classificationStart = Date.now();
-    let classification;
+    let pipelineResult;
     try {
-      classification = await classifyMaterial(processResult, file.fileName);
-      console.log(`[Worker] Classification completed: ${classification.materialName} (${classification.confidence})`);
+      pipelineResult = await processClaimMaterial({
+        fileName: file.fileName,
+        mimeType: file.mimeType,
+        buffer: fileBuffer,
+        parseResult: processResult,
+        preferredMaterialId: file.classification?.materialId,
+        preferredMaterialName: file.classification?.materialName,
+      });
+      console.log(
+        `[Worker] Unified material pipeline completed: ${pipelineResult.classification.materialName} (${pipelineResult.classification.confidence})`
+      );
     } catch (classifyError) {
-      console.error(`[Worker] Classification failed:`, classifyError);
-      throw new Error(`材料分类失败: ${classifyError.message}`);
+      console.error(`[Worker] Unified material pipeline failed:`, classifyError);
+      pipelineResult = {
+        extractedData: processResult.structuredData || {},
+        auditConclusion: '',
+        confidence: 0,
+        classification: {
+        materialId: 'unknown',
+        materialName: '分类失败',
+        confidence: 0,
+        source: 'ai',
+        matchStrategy: 'fallback',
+        errorMessage: classifyError?.message || String(classifyError),
+        },
+      };
     }
     const classificationEnd = Date.now();
+    const classification = pipelineResult.classification;
     
     logInteraction({
       taskId,
@@ -420,7 +524,7 @@ export async function processStagedFile(taskId, file, fileIndex) {
         prompt: '材料分类',
         fileName: file.fileName,
         fileType: file.mimeType,
-        model: 'gemini-1.5-flash',
+        model: 'gemini-2.5-flash',
       },
       output: {
         response: JSON.stringify(classification),
@@ -438,7 +542,12 @@ export async function processStagedFile(taskId, file, fileIndex) {
       status: 'extracting',
       stages: {
         archive: { status: 'completed', completedAt: new Date().toISOString() },
-        classification: { status: 'completed', result: classification, completedAt: new Date().toISOString() },
+        classification: {
+          status: classification.errorMessage ? 'failed' : 'completed',
+          result: classification,
+          errorMessage: classification.errorMessage || null,
+          completedAt: new Date().toISOString(),
+        },
         extraction: { status: 'in_progress' },
       },
     });
@@ -446,7 +555,8 @@ export async function processStagedFile(taskId, file, fileIndex) {
     const extractionStart = Date.now();
     const extraction = {
       extractedText: processResult.extractedText,
-      structuredData: processResult.structuredData,
+      structuredData: pipelineResult.extractedData,
+      auditConclusion: pipelineResult.auditConclusion,
     };
     const extractionEnd = Date.now();
     
@@ -457,7 +567,7 @@ export async function processStagedFile(taskId, file, fileIndex) {
       input: {
         fileName: file.fileName,
         fileType: file.mimeType,
-        model: 'gemini-1.5-flash',
+        model: 'gemini-2.5-flash',
       },
       output: {
         response: JSON.stringify(extraction),
@@ -477,13 +587,21 @@ export async function processStagedFile(taskId, file, fileIndex) {
       status: 'completed',
       result: {
         extractedText: processResult.extractedText,
-        structuredData: processResult.structuredData,
+        structuredData: pipelineResult.extractedData,
+        auditConclusion: pipelineResult.auditConclusion,
+        confidence: pipelineResult.confidence,
         classification,
         parseDuration: processResult.parseDuration,
       },
+      classificationError: classification.errorMessage || null,
       stages: {
         archive: { status: 'completed', completedAt: new Date().toISOString() },
-        classification: { status: 'completed', result: classification, completedAt: new Date().toISOString() },
+        classification: {
+          status: classification.errorMessage ? 'failed' : 'completed',
+          result: classification,
+          errorMessage: classification.errorMessage || null,
+          completedAt: new Date().toISOString(),
+        },
         extraction: { status: 'completed', result: extraction, completedAt: new Date().toISOString() },
       },
       completedAt: new Date().toISOString(),

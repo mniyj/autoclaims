@@ -131,5 +131,12 @@
     "name": "现金价值保障",
     "category": "终身寿险",
     "description": "保单现金价值随时间增长"
+  },
+  {
+    "id": "resp-19",
+    "code": "ENGINEERING_TPL_DEATH",
+    "name": "工程机械第三者人身死亡赔偿责任",
+    "category": "责任保险",
+    "description": "工程机械设备在施工场地作业过程中致第三者死亡，依法应由被保险人承担的经济赔偿责任"
   }
 ]

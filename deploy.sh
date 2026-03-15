@@ -14,8 +14,8 @@ REMOTE_PORT=$TARGET_PORT
 
 # 根据端口确定应用名称
 APP_NAME="insurance-config-page"
-if [ "$TARGET_PORT" == "3008" ]; then
-    APP_NAME="insurance-config-page-3008"
+if [ "$TARGET_PORT" != "3005" ]; then
+    APP_NAME="insurance-config-page-$TARGET_PORT"
 fi
 
 # 检查是否提供了 IP
