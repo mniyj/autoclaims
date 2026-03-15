@@ -121,6 +121,8 @@ export function buildDecisionTrace({
   const injuryProfile = aggregation?.injuryProfile || {};
   const expenseAggregation = aggregation?.expenseAggregation || {};
   const manualActions = extractManualActions({ aggregation, operationLogs });
+  const isAutoScenario = Boolean(domainModel?.isAutoScenario);
+  const isBenefitScenario = Boolean(domainModel?.isBenefitScenario);
   const commonStages = [
     {
       stage: "material_recognition",
@@ -174,6 +176,76 @@ export function buildDecisionTrace({
         ]),
       },
     );
+  } else if (isAutoScenario) {
+    traceStages.push(
+      {
+        stage: "accident_assessment",
+        title: "事故责任归纳",
+        status: "completed",
+        summary: aggregation.aggregationSummary || "已完成事故经过与责任证据归纳",
+        sourceDocIds: uniqueValues([
+          ...identityChainEvidence.map((item) => item.docId),
+          ...(aggregation.incidentStatements || []).map((item) => item.docId),
+          ...(aggregation.policeCallRecords || []).map((item) => item.docId),
+          ...(aggregation.interviewRecords || []).map((item) => item.docId),
+        ]),
+        facts: normalizeFacts([
+          { label: "事故原因", value: claimCase?.accidentReason || "-" },
+          {
+            label: "责任比例",
+            value: aggregation.liabilityApportionment
+              ? `${aggregation.liabilityApportionment.thirdPartyLiabilityPct}%`
+              : "待确认",
+          },
+          {
+            label: "报警/笔录",
+            value: (aggregation.policeCallRecords || []).length + (aggregation.interviewRecords || []).length,
+          },
+        ]),
+      },
+      {
+        stage: "loss_assessment",
+        title: "损失核定",
+        status: "completed",
+        summary:
+          Number(expenseAggregation.medicalTotal || 0) > 0
+            ? `已识别人伤/医疗相关损失 ¥${Number(expenseAggregation.medicalTotal || 0).toFixed(2)}`
+            : "已完成车损/人伤损失归纳",
+        sourceDocIds: uniqueValues(expenseAggregation.sourceDocIds || []),
+        facts: normalizeFacts([
+          { label: "医疗费用", value: expenseAggregation.medicalTotal || 0 },
+          { label: "交通费", value: expenseAggregation.transportationTotal || 0 },
+          { label: "鉴定费", value: expenseAggregation.assessmentFees || 0 },
+          { label: "住院天数", value: injuryProfile?.hospitalizationDays || 0 },
+        ]),
+      },
+      {
+        stage: "coverage_split",
+        title: "险种分摊",
+        status: aggregation.compulsoryInsuranceOffset ? "completed" : "manual_review",
+        summary:
+          aggregation.compulsoryInsuranceOffset?.reason ||
+          "待结合交强险、商业险责任边界确认赔付分层。",
+        sourceDocIds: uniqueValues([
+          aggregation.compulsoryInsuranceOffset?.sourceDocId,
+          aggregation.liabilityApportionment?.sourceDocId,
+        ]),
+        facts: normalizeFacts([
+          {
+            label: "交强险扣减",
+            value: aggregation.compulsoryInsuranceOffset?.applicable === false ? "不适用" : "待确认",
+          },
+          {
+            label: "责任来源",
+            value: aggregation.liabilityApportionment?.source || aggregation.liabilitySuggestion?.status || "-",
+          },
+          {
+            label: "当前抵扣",
+            value: (aggregation.deductionSummary || {}).deductionTotal || 0,
+          },
+        ]),
+      },
+    );
   } else {
     traceStages.push(
       {
@@ -205,7 +277,33 @@ export function buildDecisionTrace({
     );
   }
 
-  if (domainModel?.requiresLiabilityAssessment) {
+  if (isBenefitScenario) {
+    traceStages.push({
+      stage: "benefit_assessment",
+      title: "给付核定",
+      status: "completed",
+      summary:
+        deathProfile?.deathConfirmed
+          ? "已根据死亡事实、受益人关系和给付责任形成审核口径"
+          : "待补充给付责任所需事实",
+      sourceDocIds: uniqueValues([
+        ...(deathProfile?.sourceDocIds || []),
+        ...identityChainEvidence.map((item) => item.docId),
+      ]),
+      facts: normalizeFacts([
+        { label: "死亡事实", value: deathProfile?.deathConfirmed ? "已确认" : "未确认" },
+        {
+          label: "受益人/关系人",
+          value: Array.isArray(deathProfile?.claimants)
+            ? deathProfile.claimants.map((item) => item.name || item.relationship || "待确认").join("、")
+            : "-",
+        },
+        { label: "事故原因", value: claimCase?.accidentReason || "-" },
+      ]),
+    });
+  }
+
+  if (domainModel?.requiresLiabilityAssessment && !isAutoScenario) {
     traceStages.push({
       stage: "liability_assessment",
       title: "责任评估",
@@ -289,20 +387,64 @@ export function buildDecisionTraceForReport({ aggregationResult = {}, report }) 
     generatedAt: report.generatedAt,
     stages: [],
   };
+  const domainModel =
+    aggregationResult?.domainModel ||
+    aggregationResult?.handlingProfile?.domainModel ||
+    report?.domainModel ||
+    null;
   const stages = Array.isArray(baseTrace.stages) ? [...baseTrace.stages] : [];
   const reportItems = Array.isArray(report.items) ? report.items : [];
+  const isMedicalScenario = Boolean(domainModel?.isMedicalScenario);
+  const isBenefitScenario = Boolean(domainModel?.isBenefitScenario);
+  const isAutoScenario = Boolean(domainModel?.isAutoScenario);
+  const calculationStageConfig = isMedicalScenario
+    ? {
+        title: "审核结论",
+        summary: `核定费用 ${report.subTotal.toFixed(2)}，抵扣 ${report.deductionTotal.toFixed(2)}，结论金额 ${report.finalAmount.toFixed(2)}`,
+        facts: [
+          { label: "核定费用", value: `¥${report.subTotal.toFixed(2)}` },
+          { label: "抵扣金额", value: `¥${report.deductionTotal.toFixed(2)}` },
+          { label: "报告结论金额", value: `¥${report.finalAmount.toFixed(2)}` },
+        ],
+      }
+    : isBenefitScenario
+      ? {
+          title: "给付结论",
+          summary: `核定金额 ${report.subTotal.toFixed(2)}，结论金额 ${report.finalAmount.toFixed(2)}`,
+          facts: [
+            { label: "核定金额", value: `¥${report.subTotal.toFixed(2)}` },
+            { label: "扣减金额", value: `¥${report.deductionTotal.toFixed(2)}` },
+            { label: "给付结论金额", value: `¥${report.finalAmount.toFixed(2)}` },
+          ],
+        }
+      : isAutoScenario
+        ? {
+            title: "赔付试算",
+            summary: `损失合计 ${report.subTotal.toFixed(2)}，责任系数 ${report.liabilityAdjustment.toFixed(2)}，结论金额 ${report.finalAmount.toFixed(2)}`,
+            facts: [
+              { label: "损失合计", value: `¥${report.subTotal.toFixed(2)}` },
+              { label: "责任系数", value: `${(report.liabilityAdjustment * 100).toFixed(0)}%` },
+              { label: "抵扣金额", value: `¥${report.deductionTotal.toFixed(2)}` },
+              { label: "报告结论金额", value: `¥${report.finalAmount.toFixed(2)}` },
+            ],
+          }
+        : {
+            title: "定损计算",
+            summary: `损失合计 ${report.subTotal.toFixed(2)}，责任系数 ${report.liabilityAdjustment.toFixed(2)}，最终金额 ${report.finalAmount.toFixed(2)}`,
+            facts: [
+              { label: "损失合计", value: `¥${report.subTotal.toFixed(2)}` },
+              { label: "责任系数", value: `${(report.liabilityAdjustment * 100).toFixed(0)}%` },
+              { label: "抵扣金额", value: `¥${report.deductionTotal.toFixed(2)}` },
+              { label: "最终金额", value: `¥${report.finalAmount.toFixed(2)}` },
+            ],
+          };
   stages.push({
     stage: "damage_calculation",
-    title: "定损计算",
+    title: calculationStageConfig.title,
     status: "completed",
-    summary: `损失合计 ${report.subTotal.toFixed(2)}，责任系数 ${report.liabilityAdjustment.toFixed(2)}，最终金额 ${report.finalAmount.toFixed(2)}`,
+    summary: calculationStageConfig.summary,
     sourceDocIds: uniqueValues(reportItems.flatMap((item) => item.sourceDocIds || [])),
-    facts: normalizeFacts([
-      { label: "损失合计", value: `¥${report.subTotal.toFixed(2)}` },
-      { label: "责任系数", value: `${(report.liabilityAdjustment * 100).toFixed(0)}%` },
-      { label: "抵扣金额", value: `¥${report.deductionTotal.toFixed(2)}` },
-      { label: "最终金额", value: `¥${report.finalAmount.toFixed(2)}` },
-    ]),
+    facts: normalizeFacts(calculationStageConfig.facts),
   });
   return {
     traceId: baseTrace.traceId || `trace-${report.claimCaseId}`,

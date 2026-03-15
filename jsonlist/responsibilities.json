@@ -138,5 +138,19 @@
     "name": "工程机械第三者人身死亡赔偿责任",
     "category": "责任保险",
     "description": "工程机械设备在施工场地作业过程中致第三者死亡，依法应由被保险人承担的经济赔偿责任"
+  },
+  {
+    "id": "resp-ZA-GOPD-social",
+    "code": "ZA_GRP_OPD_SOCIAL",
+    "name": "基本医疗保险范围内门急诊医疗费用保险金",
+    "category": "医疗保险",
+    "description": "被保险人因意外伤害或等待期后因疾病发生的医保范围内门诊、急诊合理且必要医疗费用，0免赔后按90%给付。"
+  },
+  {
+    "id": "resp-ZA-GOPD-nonsocial",
+    "code": "ZA_GRP_OPD_NON_SOCIAL",
+    "name": "基本医疗保险范围外门急诊医疗费用保险金",
+    "category": "医疗保险",
+    "description": "被保险人因意外伤害或等待期后因疾病发生的医保范围外门诊、急诊合理且必要医疗费用，0免赔后按90%给付。"
   }
 ]

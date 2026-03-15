@@ -629,5 +629,175 @@
     "updatedAt": "2026-03-15T08:00:00Z",
     "operator": "system",
     "notes": "根据保单号 12611230520230000499、公估报告及出险通知书回填。"
+  },
+  {
+    "id": "policy-ZA-GOPD-20260315",
+    "policyNumber": "PZA202603150001",
+    "quoteId": "quote-ZA-GOPD-20260315",
+    "quoteNumber": "QT202603150001",
+    "status": "生效中",
+    "productCode": "ZA-GOPD-2022A-90",
+    "productName": "众安互联网团体门诊急诊医疗保险（0免赔90%赔付版）",
+    "companyName": "众安在线财产保险股份有限公司",
+    "policyholder": {
+      "name": "众安门急诊团险测试企业",
+      "idType": "统一社会信用代码",
+      "idNumber": "91310000MA1K00090P",
+      "phone": "021-55556666",
+      "email": "benefits@example.com",
+      "address": "上海市黄浦区众安路90号"
+    },
+    "insureds": [
+      {
+        "id": "insured-ZA-GOPD-001",
+        "name": "赵一",
+        "idType": "身份证",
+        "idNumber": "310101199805053211",
+        "gender": "男",
+        "birthDate": "1998-05-05",
+        "relationship": "员工",
+        "phone": "13800010001",
+        "socialSecurity": "有社保",
+        "premium": 430.43
+      },
+      {
+        "id": "insured-ZA-GOPD-002",
+        "name": "钱二",
+        "idType": "身份证",
+        "idNumber": "310101199203121245",
+        "gender": "女",
+        "birthDate": "1992-03-12",
+        "relationship": "员工",
+        "phone": "13800010002",
+        "socialSecurity": "有社保",
+        "premium": 599.69
+      },
+      {
+        "id": "insured-ZA-GOPD-003",
+        "name": "孙三",
+        "idType": "身份证",
+        "idNumber": "310101198303187654",
+        "gender": "男",
+        "birthDate": "1983-03-18",
+        "relationship": "员工",
+        "phone": "13800010003",
+        "socialSecurity": "有社保",
+        "premium": 1001
+      },
+      {
+        "id": "insured-ZA-GOPD-004",
+        "name": "杨秀",
+        "idType": "身份证",
+        "idNumber": "310101199104202268",
+        "gender": "女",
+        "birthDate": "1991-04-20",
+        "relationship": "员工",
+        "phone": "13800010004",
+        "socialSecurity": "无社保",
+        "premium": 599.69
+      }
+    ],
+    "mainClause": {
+      "clauseCode": "ZA-GOPD-2022A-90",
+      "clauseName": "众安互联网团体门诊急诊医疗保险（2022版A款）",
+      "clauseType": "主险",
+      "sumInsured": 20000,
+      "premium": 2031.12,
+      "paymentFrequency": "年缴",
+      "waitingPeriod": "疾病30天，意外0天",
+      "coverageDetails": [
+        {
+          "coverageCode": "HLT_OPD_SOCIAL",
+          "coverageName": "基本医疗保险范围内门急诊医疗费用保险金",
+          "sumInsured": 10000,
+          "deductible": 0,
+          "reimbursementRatio": 90
+        },
+        {
+          "coverageCode": "HLT_OPD_NON_SOCIAL",
+          "coverageName": "基本医疗保险范围外门急诊医疗费用保险金",
+          "sumInsured": 10000,
+          "deductible": 0,
+          "reimbursementRatio": 90
+        }
+      ]
+    },
+    "riderClauses": [],
+    "specialAgreements": [
+      {
+        "id": "agreement-ZA-GOPD-001",
+        "title": "门急诊责任范围",
+        "content": "在保险期间内，被保险人因遭受意外伤害事故或在等待期后因罹患疾病，在医院接受门诊或急诊治疗的，对于个人支付的医保范围内或医保范围外必需且合理的医疗费用，保险人在扣除免赔额后按90%进行赔付。",
+        "category": "保险责任"
+      },
+      {
+        "id": "agreement-ZA-GOPD-002",
+        "title": "疾病等待期",
+        "content": "疾病等待期为30天，意外伤害等待期为0天。",
+        "category": "限制责任"
+      },
+      {
+        "id": "agreement-ZA-GOPD-003",
+        "title": "补偿原则",
+        "content": "若被保险人已从其他途径获得医疗费用补偿，保险人仅对扣除补偿后的余额按合同约定进行赔付。",
+        "category": "赔付规则"
+      },
+      {
+        "id": "agreement-ZA-GOPD-004",
+        "title": "免责事项",
+        "content": "既往症、等待期内疾病、非约定医院就诊、孕产美容体检保健、牙护理、精神疾病、遗传及先天性疾病、HIV、战争核污染等情形不承担保险责任。",
+        "category": "限制责任"
+      }
+    ],
+    "deductionRules": [
+      {
+        "id": "deduction-ZA-GOPD-001",
+        "name": "单次免赔额",
+        "type": "绝对免赔额",
+        "value": 0,
+        "unit": "元",
+        "description": "本保单医保内外门急诊责任单次免赔额均为0元。",
+        "applicableScope": "单次门急诊"
+      }
+    ],
+    "schedule": {
+      "version": "1.0",
+      "generatedAt": "2026-03-15T10:00:00+08:00",
+      "items": [
+        {
+          "id": "schedule-item-ZA-GOPD-001",
+          "category": "主险",
+          "itemName": "基本医疗保险范围内门急诊医疗费用保险金",
+          "sumInsured": 10000,
+          "deductible": 0,
+          "reimbursementRatio": 90,
+          "remarks": "医保内门急诊费用"
+        },
+        {
+          "id": "schedule-item-ZA-GOPD-002",
+          "category": "主险",
+          "itemName": "基本医疗保险范围外门急诊医疗费用保险金",
+          "sumInsured": 10000,
+          "deductible": 0,
+          "reimbursementRatio": 90,
+          "remarks": "医保外门急诊费用"
+        }
+      ],
+      "totalSumInsured": 20000,
+      "totalPremium": 2031.12
+    },
+    "effectiveDate": "2026-03-16",
+    "expiryDate": "2027-03-15",
+    "issueDate": "2026-03-15",
+    "paymentDueDate": "2026-03-15",
+    "totalPremium": 2031.12,
+    "paymentFrequency": "年缴",
+    "paidPremium": 2031.12,
+    "claimCount": 0,
+    "totalClaimAmount": 0,
+    "createdAt": "2026-03-15T10:00:00+08:00",
+    "updatedAt": "2026-03-15T10:00:00+08:00",
+    "operator": "codex",
+    "notes": "首保3人团单，有社保版，双责任各1万元，0免赔90%赔付。"
   }
 ]

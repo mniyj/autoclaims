@@ -54,6 +54,128 @@ function mergeCoverageResults(...groups) {
   return groups.flat().filter(Boolean);
 }
 
+function hasDualOutpatientCoverage(context) {
+  const coverageCodes = new Set((context?.policy?.coverages || []).map((item) => item?.coverage_code));
+  return coverageCodes.has('HLT_OPD_SOCIAL') && coverageCodes.has('HLT_OPD_NON_SOCIAL');
+}
+
+function getCoverageLimitAmount(coverageConfig) {
+  const sumInsured = coverageConfig?.sum_insured;
+  if (typeof sumInsured === 'number') return sumInsured;
+  if (sumInsured && typeof sumInsured === 'object' && typeof sumInsured.amount === 'number') {
+    return sumInsured.amount;
+  }
+  return Number(coverageConfig?.limit || 0) || 0;
+}
+
+function getCoverageRatio(coverageConfig, fallbackRatio = 1) {
+  const ruleRatio = Number(coverageConfig?.reimbursement_rules?.base_ratio);
+  if (Number.isFinite(ruleRatio)) {
+    return ruleRatio;
+  }
+  const explicitRatio = Number(coverageConfig?.reimbursement_ratio);
+  if (Number.isFinite(explicitRatio) && explicitRatio > 0 && explicitRatio <= 1) {
+    return explicitRatio;
+  }
+  if (Number.isFinite(explicitRatio) && explicitRatio > 1) {
+    return explicitRatio / 100;
+  }
+  return fallbackRatio;
+}
+
+function applyDualOutpatientCoverageSettlement({ context, productCode, adjustedLossSettlement, needsManualReview, warnings }) {
+  const socialConfig = getMedicalCoverageConfig(productCode || context.policy?.product_code, 'HLT_OPD_SOCIAL');
+  const nonSocialConfig = getMedicalCoverageConfig(productCode || context.policy?.product_code, 'HLT_OPD_NON_SOCIAL');
+  if (!socialConfig || !nonSocialConfig) {
+    return null;
+  }
+
+  const socialClaimed = roundAmount(Number(context?.claim?.social_medical_amount || 0));
+  const nonSocialClaimed = roundAmount(Number(context?.claim?.non_social_medical_amount || 0));
+  const otherReimbursement = roundAmount(Number(context?.claim?.other_reimbursement_received || 0));
+  const totalClaimed = roundAmount(socialClaimed + nonSocialClaimed);
+  const socialShare = totalClaimed > 0 ? socialClaimed / totalClaimed : 0;
+  const socialOtherDeduction = roundAmount(otherReimbursement * socialShare);
+  const nonSocialOtherDeduction = roundAmount(otherReimbursement - socialOtherDeduction);
+  const defaultRatio = Number.isFinite(Number(adjustedLossSettlement?.reimbursementRatio))
+    ? Number(adjustedLossSettlement.reimbursementRatio)
+    : 1;
+
+  const buildCoverage = (coverageCode, claimedAmount, coverageConfig, allocatedDeduction) => {
+    const preDeductedAmount = Math.max(0, roundAmount(claimedAmount - allocatedDeduction));
+    const deductible = Number(coverageConfig?.deductible || 0);
+    const afterDeductible = Math.max(0, roundAmount(preDeductedAmount - deductible));
+    const ratio = getCoverageRatio(coverageConfig, defaultRatio);
+    const afterRatio = roundAmount(afterDeductible * ratio);
+    const sumInsured = getCoverageLimitAmount(coverageConfig) || Infinity;
+    const approvedAmount = Math.min(afterRatio, sumInsured);
+    return {
+      coverageCode,
+      claimedAmount,
+      approvedAmount,
+      deductible,
+      reimbursementRatio: ratio,
+      sumInsured,
+      status: needsManualReview ? 'MANUAL_REVIEW' : (approvedAmount > 0 ? 'PAYABLE' : 'ZERO_PAY'),
+      warnings,
+    };
+  };
+
+  const coverageResults = [
+    buildCoverage('HLT_OPD_SOCIAL', socialClaimed, socialConfig, socialOtherDeduction),
+    buildCoverage('HLT_OPD_NON_SOCIAL', nonSocialClaimed, nonSocialConfig, nonSocialOtherDeduction),
+  ];
+
+  return {
+    coverageResults,
+    totalPayableAmount: roundAmount(coverageResults.reduce((sum, item) => sum + item.approvedAmount, 0)),
+  };
+}
+
+function rebalanceLossSettlement(lossSettlement, targetAmount) {
+  const currentAmount = roundAmount(lossSettlement?.lossPayableAmount || 0);
+  const normalizedTarget = roundAmount(targetAmount);
+  if (!Number.isFinite(normalizedTarget) || normalizedTarget < 0) {
+    return lossSettlement;
+  }
+  if (currentAmount === normalizedTarget) {
+    return lossSettlement;
+  }
+
+  const ledger = Array.isArray(lossSettlement?.lossLedger) ? lossSettlement.lossLedger : [];
+  const factor = currentAmount > 0 ? normalizedTarget / currentAmount : 0;
+
+  const scaledLedger = ledger.map((item) => {
+    const scaledAmount = roundAmount((Number(item?.payableAmount) || 0) * factor);
+    return {
+      ...item,
+      payableAmount: scaledAmount,
+      status: scaledAmount > 0 ? item.status : 'ZERO_PAY',
+    };
+  });
+
+  const scaledCoverageResults = (lossSettlement?.coverageResults || []).map((item) => ({
+    ...item,
+    approvedAmount: normalizedTarget,
+    status: normalizedTarget > 0 ? item.status : 'ZERO_PAY',
+  }));
+
+  const scaledBreakdown = scaledLedger.map((item) => ({
+    item: item.itemName,
+    claimed: item.claimedAmount,
+    approved: item.payableAmount,
+    reason: item.entries?.[item.entries.length - 1]?.message || (item.status === 'PAYABLE' ? '通过' : '需人工复核'),
+  }));
+
+  return {
+    ...lossSettlement,
+    lossLedger: scaledLedger,
+    coverageResults: scaledCoverageResults,
+    lossPayableAmount: normalizedTarget,
+    legacyItemBreakdown: scaledBreakdown,
+  };
+}
+
 function deriveLegacyCoverageResult(coverageResults) {
   return coverageResults.length > 0 ? coverageResults[0] : null;
 }
@@ -151,6 +273,21 @@ export function calculateSettlement({ claimCaseId, productCode, eligibilityResul
       }
     : runLossLedger(baseLedgerParams);
 
+  const postProcessBaseAmount = Number.isFinite(Number(state.calculatedAmount))
+    ? Number(state.calculatedAmount)
+    : null;
+  const postProcessRatio = Number.isFinite(Number(state.payoutRatio))
+    ? Number(state.payoutRatio)
+    : null;
+  const postProcessTargetAmount =
+    postProcessBaseAmount === null
+      ? null
+      : roundAmount(postProcessBaseAmount * (postProcessRatio ?? 1));
+  const adjustedLossSettlement =
+    settlementMode === 'BENEFIT' || postProcessTargetAmount === null
+      ? lossSettlement
+      : rebalanceLossSettlement(lossSettlement, postProcessTargetAmount);
+
   const benefitSettlement = settlementMode === 'LOSS'
     ? {
         benefitLedger: [],
@@ -169,30 +306,76 @@ export function calculateSettlement({ claimCaseId, productCode, eligibilityResul
         needsManualReview
       });
 
-  const coverageResults = mergeCoverageResults(
-    lossSettlement.coverageResults,
+  const settlementManualReviewReasons = [
+    ...(adjustedLossSettlement.manualReviewReasons || []),
+    ...(benefitSettlement.manualReviewReasons || []),
+  ];
+  if (settlementManualReviewReasons.length > 0) {
+    manualReviewReasons.push(...settlementManualReviewReasons);
+    needsManualReview = true;
+  }
+
+  const dualOutpatientSettlement =
+    claimType === 'HEALTH' && hasDualOutpatientCoverage(context)
+      ? applyDualOutpatientCoverageSettlement({
+          context,
+          productCode: productCode || context.policy?.product_code,
+          adjustedLossSettlement,
+          needsManualReview,
+          warnings,
+        })
+      : null;
+
+  let coverageResults = mergeCoverageResults(
+    adjustedLossSettlement.coverageResults,
     benefitSettlement.coverageResults
   );
-  const lossPayableAmount = roundAmount(lossSettlement.lossPayableAmount || 0);
+  let lossPayableAmount = roundAmount(adjustedLossSettlement.lossPayableAmount || 0);
+  if (dualOutpatientSettlement) {
+    coverageResults = mergeCoverageResults(
+      dualOutpatientSettlement.coverageResults,
+      benefitSettlement.coverageResults
+    );
+    lossPayableAmount = dualOutpatientSettlement.totalPayableAmount;
+  }
   const benefitPayableAmount = roundAmount(benefitSettlement.benefitPayableAmount || 0);
-  const finalAmount = roundAmount(lossPayableAmount + benefitPayableAmount);
-  const totalClaimable = roundAmount((lossSettlement.totalClaimable || 0) + (benefitSettlement.totalClaimable || 0));
-  const itemBreakdown = lossSettlement.legacyItemBreakdown || [];
+  let finalAmount = roundAmount(lossPayableAmount + benefitPayableAmount);
+  const totalClaimable = roundAmount((adjustedLossSettlement.totalClaimable || 0) + (benefitSettlement.totalClaimable || 0));
+  const itemBreakdown = adjustedLossSettlement.legacyItemBreakdown || [];
   const coverageResult = deriveLegacyCoverageResult(coverageResults);
+
+  const policyBinding = {
+    policyNumber: context.claim?.bound_policy_number || context.policy?.bound_policy_number || context.policy?.policy_no || null,
+    insuredMatched: context.claim?.bound_policy_insured_match ?? null,
+    insuredName: context.claim?.bound_policy_insured_name || context.claim?.insured || null,
+    productCode: context.policy?.product_code || null,
+    rulesetId: context.ruleset?.ruleset_id || null,
+    productSource: context.policy?.product_source || 'CLAIM_CASE',
+  };
+
+  if (policyBinding.insuredMatched === false) {
+    finalAmount = 0;
+    coverageResults = coverageResults.map((item) => ({
+      ...item,
+      approvedAmount: 0,
+      status: 'MANUAL_REVIEW',
+    }));
+    lossPayableAmount = 0;
+  }
 
   return {
     totalClaimable,
-    deductible: roundAmount(lossSettlement.deductible || 0),
+    deductible: roundAmount(adjustedLossSettlement.deductible || 0),
     reimbursementRatio: deriveReimbursementRatio(settlementMode, lossSettlement, benefitSettlement),
     finalAmount,
-    capApplied: Boolean(lossSettlement.capApplied || coverageResults.some(item => item.sumInsured !== null && item.approvedAmount < item.claimedAmount)),
+    capApplied: Boolean(adjustedLossSettlement.capApplied || coverageResults.some(item => item.sumInsured !== null && item.approvedAmount < item.claimedAmount)),
     sumInsured: coverageResult?.sumInsured ?? null,
     claimType,
     coverageCode,
     coverageResult,
     coverageResults,
     settlementMode,
-    lossLedger: lossSettlement.lossLedger || [],
+    lossLedger: adjustedLossSettlement.lossLedger || [],
     benefitLedger: benefitSettlement.benefitLedger || [],
     settlementBreakdown: {
       lossPayableAmount,
@@ -207,13 +390,16 @@ export function calculateSettlement({ claimCaseId, productCode, eligibilityResul
       totalApproved: summarizeCoverageResults(coverageResults),
       itemBreakdown,
       executionDetails: factResult.executionDetails,
-      lossLedger: lossSettlement.lossLedger || [],
+      lossLedger: adjustedLossSettlement.lossLedger || [],
       benefitLedger: benefitSettlement.benefitLedger || [],
+      medicalReview: adjustedLossSettlement.medicalReview || null,
+      policyBinding,
       duration: factResult.duration
     },
     warnings,
     manualReviewReasons,
     needsManualReview,
+    policyBinding,
     executionDetails: executionResults,
     context: {
       claim_id: claimCaseId,

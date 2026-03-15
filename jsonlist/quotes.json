@@ -99,5 +99,105 @@
     "updatedAt": "2026-02-16T15:30:00Z",
     "operator": "admin",
     "notes": "团体险询价，等待核保结果"
+  },
+  {
+    "id": "quote-ZA-GOPD-20260315",
+    "quoteNumber": "QT202603150001",
+    "type": "团体询价",
+    "status": "已报价",
+    "policyholder": {
+      "name": "众安门急诊团险测试企业",
+      "idType": "统一社会信用代码",
+      "idNumber": "91310000MA1K00090P",
+      "phone": "021-55556666",
+      "email": "benefits@example.com",
+      "address": "上海市黄浦区众安路90号"
+    },
+    "insureds": [
+      {
+        "id": "insured-ZA-GOPD-001",
+        "name": "赵一",
+        "idType": "身份证",
+        "idNumber": "310101199805053211",
+        "gender": "男",
+        "birthDate": "1998-05-05",
+        "relationship": "员工",
+        "phone": "13800010001",
+        "socialSecurity": "有社保",
+        "premium": 430.43
+      },
+      {
+        "id": "insured-ZA-GOPD-002",
+        "name": "钱二",
+        "idType": "身份证",
+        "idNumber": "310101199203121245",
+        "gender": "女",
+        "birthDate": "1992-03-12",
+        "relationship": "员工",
+        "phone": "13800010002",
+        "socialSecurity": "有社保",
+        "premium": 599.69
+      },
+      {
+        "id": "insured-ZA-GOPD-003",
+        "name": "孙三",
+        "idType": "身份证",
+        "idNumber": "310101198303187654",
+        "gender": "男",
+        "birthDate": "1983-03-18",
+        "relationship": "员工",
+        "phone": "13800010003",
+        "socialSecurity": "有社保",
+        "premium": 1001
+      }
+    ],
+    "plans": [
+      {
+        "id": "plan-ZA-GOPD-90",
+        "planName": "双责任门急诊方案",
+        "productCode": "ZA-GOPD-2022A-90",
+        "productName": "众安互联网团体门诊急诊医疗保险（0免赔90%赔付版）",
+        "companyName": "众安在线财产保险股份有限公司",
+        "premium": 2031.12,
+        "paymentPeriod": "年缴",
+        "coveragePeriod": "1年",
+        "clauses": [
+          {
+            "clauseCode": "ZA-GOPD-2022A-90",
+            "clauseName": "众安互联网团体门诊急诊医疗保险（2022版A款）",
+            "clauseType": "主险",
+            "sumInsured": 20000,
+            "premium": 2031.12,
+            "paymentFrequency": "年缴"
+          }
+        ],
+        "pricingFactors": {
+          "sharedLimit": false,
+          "socialSecurityMode": "有社保投保且有社保结算",
+          "waitingPeriodDays": 30,
+          "reimbursementRatio": 0.9,
+          "deductible": 0,
+          "adjustmentCoefficients": {
+            "sharedLimit": 1,
+            "waitingPeriod": 1,
+            "smoking": 1,
+            "healthcare": 1,
+            "environment": 1,
+            "channel": 1,
+            "lossRatio": 1,
+            "groupSize": 1,
+            "renewal": 1
+          }
+        }
+      }
+    ],
+    "selectedPlanId": "plan-ZA-GOPD-90",
+    "effectiveDate": "2026-03-16",
+    "expiryDate": "2027-03-15",
+    "validUntil": "2026-03-31",
+    "createdAt": "2026-03-15T09:00:00Z",
+    "updatedAt": "2026-03-15T09:00:00Z",
+    "operator": "codex",
+    "notes": "基于众安团体门急诊条款与费率表预设，首保3人团单、有社保、0免赔、90%赔付。"
   }
 ]

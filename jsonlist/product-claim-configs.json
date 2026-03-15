@@ -86,5 +86,22 @@
         ]
       }
     ]
+  },
+  {
+    "productCode": "ZA-GOPD-2022A-90",
+    "responsibilityConfigs": [
+      {
+        "responsibilityId": "resp-ZA-GOPD-social",
+        "claimItemIds": [
+          "item-ZA-GOPD-outpatient"
+        ]
+      },
+      {
+        "responsibilityId": "resp-ZA-GOPD-nonsocial",
+        "claimItemIds": [
+          "item-ZA-GOPD-outpatient"
+        ]
+      }
+    ]
   }
 ]

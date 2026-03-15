@@ -5570,13 +5570,817 @@
     },
     "validationFacts": {},
     "materialValidationResults": [],
-    "repairedAt": "2026-03-14T17:56:45.615Z"
+    "repairedAt": "2026-03-14T17:56:45.615Z",
+    "reviewResult": {
+      "decision": "MANUAL_REVIEW",
+      "intakeDecision": "PENDING_MATERIAL",
+      "liabilityDecision": "MANUAL_REVIEW",
+      "assessmentDecision": "PARTIAL_ASSESSED",
+      "settlementDecision": "MANUAL_REVIEW",
+      "claimType": "AUTO",
+      "coverageResults": [
+        {
+          "coverageCode": "AUTO_THIRD_PARTY",
+          "claimedAmount": 999919.5,
+          "approvedAmount": 499959.75,
+          "deductible": 0,
+          "reimbursementRatio": 0.5,
+          "sumInsured": 1000000,
+          "status": "PAYABLE",
+          "warnings": []
+        }
+      ],
+      "reasonCodes": [
+        "MISSING_REQUIRED_MATERIALS",
+        "WARN_1"
+      ],
+      "warnings": [
+        "缺少材料: 事故认定书或事故证明、身份证件、银行卡信息"
+      ],
+      "manualReviewReasons": [
+        {
+          "code": "MISSING_REQUIRED_MATERIALS",
+          "stage": "INTAKE",
+          "source": "MATERIAL_COMPLETENESS",
+          "category": "MATERIAL",
+          "message": "缺少材料: 事故认定书或事故证明、身份证件、银行卡信息",
+          "metadata": {
+            "missingMaterials": [
+              "事故认定书或事故证明",
+              "身份证件",
+              "银行卡信息"
+            ]
+          }
+        }
+      ],
+      "missingMaterials": [
+        "事故认定书或事故证明",
+        "身份证件",
+        "银行卡信息"
+      ],
+      "materialValidationResults": [],
+      "matchedRuleDetails": [
+        {
+          "ruleId": "EMT001",
+          "ruleName": "工程机械保障期间校验",
+          "ruleKind": "GATE",
+          "category": "COVERAGE_PERIOD",
+          "domain": "ELIGIBILITY",
+          "fields": [
+            "claim.accident_date"
+          ],
+          "actionType": "APPROVE_CLAIM",
+          "effect": "理赔通过",
+          "sourceText": "保险期间自2023年11月21日0时起至2024年11月20日24时止。"
+        },
+        {
+          "ruleId": "EMT002",
+          "ruleName": "第三者责任范围识别",
+          "ruleKind": "TRIGGER",
+          "category": "COVERAGE_SCOPE",
+          "domain": "ELIGIBILITY",
+          "fields": [
+            "claim.auto_coverage_type"
+          ],
+          "actionType": "APPROVE_CLAIM",
+          "effect": "理赔通过",
+          "sourceText": "在保险期间内，被保险工程机械由被保险人或其允许的合格操作人员在施工场地操作过程中发生意外事故，致使第三者遭受人身伤亡或财产损失，依法应由被保险人承担的经济赔偿责任，保险人依约负责赔偿。"
+        }
+      ],
+      "payableAmount": 499959.75,
+      "currency": "CNY",
+      "eligibility": {
+        "eligible": true,
+        "matchedRules": [
+          "EMT001",
+          "EMT002"
+        ],
+        "rejectionReasons": [],
+        "warnings": [],
+        "needsManualReview": false,
+        "manualReviewReasons": [],
+        "fraudFlagged": false
+      },
+      "amount": {
+        "totalClaimable": 999919.5,
+        "deductible": 0,
+        "reimbursementRatio": 0.5,
+        "finalAmount": 499959.75,
+        "factAssessment": {
+          "coverageCode": "AUTO_THIRD_PARTY",
+          "faultRatio": 0.5,
+          "totalApproved": 499959.75,
+          "itemBreakdown": [
+            {
+              "item": "商业三者责任",
+              "claimed": 999919.5,
+              "approved": 499959.75,
+              "reason": "按商业三者保额上限收敛"
+            }
+          ],
+          "executionDetails": [],
+          "lossLedger": [
+            {
+              "itemKey": "AUTO_THIRD_PARTY_AUTO_TPL",
+              "itemName": "商业三者责任",
+              "claimedAmount": 999919.5,
+              "payableAmount": 499959.75,
+              "status": "PAYABLE",
+              "coverageCode": "AUTO_THIRD_PARTY",
+              "entries": [
+                {
+                  "step": "INIT",
+                  "beforeAmount": 999919.5,
+                  "afterAmount": 999919.5,
+                  "message": "载入商业三者损失金额"
+                },
+                {
+                  "step": "RATIO",
+                  "beforeAmount": 999919.5,
+                  "afterAmount": 499959.75,
+                  "reasonCode": "FAULT_RATIO_APPLIED",
+                  "message": "按责任比例 0.5"
+                },
+                {
+                  "step": "CAP",
+                  "beforeAmount": 499959.75,
+                  "afterAmount": 499959.75,
+                  "reasonCode": "SUM_INSURED_CAP",
+                  "message": "按商业三者保额上限收敛"
+                }
+              ],
+              "manualReviewReasons": [],
+              "flags": []
+            }
+          ],
+          "benefitLedger": [],
+          "medicalReview": null,
+          "duration": 7
+        },
+        "itemBreakdown": [
+          {
+            "item": "商业三者责任",
+            "claimed": 999919.5,
+            "approved": 499959.75,
+            "reason": "按商业三者保额上限收敛"
+          }
+        ],
+        "settlementMode": "LOSS",
+        "lossLedger": [
+          {
+            "itemKey": "AUTO_THIRD_PARTY_AUTO_TPL",
+            "itemName": "商业三者责任",
+            "claimedAmount": 999919.5,
+            "payableAmount": 499959.75,
+            "status": "PAYABLE",
+            "coverageCode": "AUTO_THIRD_PARTY",
+            "entries": [
+              {
+                "step": "INIT",
+                "beforeAmount": 999919.5,
+                "afterAmount": 999919.5,
+                "message": "载入商业三者损失金额"
+              },
+              {
+                "step": "RATIO",
+                "beforeAmount": 999919.5,
+                "afterAmount": 499959.75,
+                "reasonCode": "FAULT_RATIO_APPLIED",
+                "message": "按责任比例 0.5"
+              },
+              {
+                "step": "CAP",
+                "beforeAmount": 499959.75,
+                "afterAmount": 499959.75,
+                "reasonCode": "SUM_INSURED_CAP",
+                "message": "按商业三者保额上限收敛"
+              }
+            ],
+            "manualReviewReasons": [],
+            "flags": []
+          }
+        ],
+        "benefitLedger": [],
+        "settlementBreakdown": {
+          "lossPayableAmount": 499959.75,
+          "benefitPayableAmount": 0,
+          "totalPayableAmount": 499959.75
+        },
+        "coverageCode": "AUTO_THIRD_PARTY",
+        "coverageResult": {
+          "coverageCode": "AUTO_THIRD_PARTY",
+          "claimedAmount": 999919.5,
+          "approvedAmount": 499959.75,
+          "deductible": 0,
+          "reimbursementRatio": 0.5,
+          "sumInsured": 1000000,
+          "status": "PAYABLE",
+          "warnings": []
+        },
+        "coverageResults": [
+          {
+            "coverageCode": "AUTO_THIRD_PARTY",
+            "claimedAmount": 999919.5,
+            "approvedAmount": 499959.75,
+            "deductible": 0,
+            "reimbursementRatio": 0.5,
+            "sumInsured": 1000000,
+            "status": "PAYABLE",
+            "warnings": []
+          }
+        ],
+        "warnings": [],
+        "needsManualReview": false,
+        "manualReviewReasons": [],
+        "medicalReview": null
+      },
+      "completeness": {
+        "claimType": "ACC_DEATH",
+        "requiredMaterials": [
+          {
+            "id": "mat-death-certificate",
+            "name": "死亡证明",
+            "required": true
+          },
+          {
+            "id": "mat-household-cancellation",
+            "name": "户籍注销证明",
+            "required": true
+          },
+          {
+            "id": "mat-accident-proof",
+            "name": "事故认定书或事故证明",
+            "required": true
+          },
+          {
+            "id": "mat-beneficiary-relationship",
+            "name": "受益人或亲属关系证明",
+            "required": true
+          },
+          {
+            "id": "mat-id-card",
+            "name": "身份证件",
+            "required": true
+          },
+          {
+            "id": "mat-bank-card",
+            "name": "银行卡信息",
+            "required": true
+          }
+        ],
+        "missingMaterials": [
+          {
+            "id": "mat-accident-proof",
+            "name": "事故认定书或事故证明",
+            "required": true
+          },
+          {
+            "id": "mat-id-card",
+            "name": "身份证件",
+            "required": true
+          },
+          {
+            "id": "mat-bank-card",
+            "name": "银行卡信息",
+            "required": true
+          }
+        ],
+        "uploadedCount": 3,
+        "totalRequired": 6
+      },
+      "ruleTrace": [
+        "EMT001",
+        "EMT002"
+      ],
+      "context": {
+        "claim_id": "R261123052024800086",
+        "product_code": "SUN_EML_TPL_2023",
+        "product_name": "阳光工程机械设备保险（附加第三者责任）",
+        "ruleset_id": "RS-SUN-EML-TPL-001",
+        "product_line": "AUTO",
+        "facts": {
+          "common": {
+            "claimId": "R261123052024800086",
+            "productCode": "SUN_EML_TPL_2023",
+            "productLine": "AUTO"
+          },
+          "policy": {
+            "productCode": "SUN_EML_TPL_2023",
+            "productName": "阳光工程机械设备保险（附加第三者责任）",
+            "effectiveDate": "2023-11-21",
+            "expiryDate": "2024-11-20",
+            "isWithinCoveragePeriod": true,
+            "coverages": [
+              {
+                "coverage_code": "AUTO_THIRD_PARTY",
+                "coverage_name": "附加第三者责任保险",
+                "sum_insured": {
+                  "amount": 1000000,
+                  "currency": "CNY",
+                  "per_unit": "PER_ACCIDENT"
+                },
+                "deductible": 0
+              }
+            ]
+          },
+          "claim": {
+            "accidentDate": "2024-03-12",
+            "reportDate": "2024-03-13",
+            "resultDate": "2024-03-12",
+            "daysFromAccidentToResult": 0,
+            "causeType": "ACCIDENT",
+            "resultType": "DEATH",
+            "disabilityGrade": null,
+            "hospitalDays": 0,
+            "diagnosisNames": [],
+            "insuredLiabilityRatio": 0.5,
+            "claimantLiabilityPct": 50,
+            "expenseItems": []
+          },
+          "validation": {}
+        }
+      },
+      "auditTrail": [
+        {
+          "stage": "LIABILITY",
+          "ruleId": "EMT001",
+          "matched": true
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "EMT003",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "EMT002",
+          "matched": true
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "EMT004",
+          "matched": false
+        }
+      ],
+      "duration": 25
+    },
+    "damageReport": {
+      "reportId": "RPT-1773558731779-7dec4d",
+      "claimCaseId": "R261123052024800086",
+      "generatedAt": "2026-03-15T07:12:11.780Z",
+      "generatedBy": "ai",
+      "items": [
+        {
+          "id": "di-1",
+          "category": "死亡赔偿金",
+          "itemName": "死亡赔偿金",
+          "originalAmount": 948920,
+          "approvedAmount": 948920,
+          "formula": "20年 × ¥47446.00/年",
+          "basis": "参照安徽省2024年城镇居民人均可支配收入标准",
+          "sourceDocIds": [
+            "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-25",
+            "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-81",
+            "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-82",
+            "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-83",
+            "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-62",
+            "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-61"
+          ]
+        },
+        {
+          "id": "di-2",
+          "category": "丧葬费",
+          "itemName": "丧葬费",
+          "originalAmount": 50999.52,
+          "approvedAmount": 50999.52,
+          "formula": "¥8499.92/月 × 6个月",
+          "basis": "依据丧葬费法定标准并结合实际票据核定",
+          "sourceDocIds": [
+            "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-25",
+            "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-81",
+            "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-82",
+            "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-83",
+            "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-62",
+            "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-61"
+          ]
+        }
+      ],
+      "subTotal": 999919.52,
+      "liabilityAdjustment": 0.5,
+      "adjustedAmount": 499959.76,
+      "deductionTotal": 0,
+      "finalAmount": 499959.76,
+      "calculationFormula": "损失合计 × 第三方责任比例",
+      "regionalStandards": "安徽省 2024年，城镇居民人均可支配收入 ¥47,446/年",
+      "status": "draft",
+      "domainModel": {
+        "claimCaseId": "R261123052024800086",
+        "productLine": "LIABILITY",
+        "claimScenario": "liability_death",
+        "reviewProfileCode": "liability_death_third_party",
+        "coverageFamily": [
+          "liability",
+          "damage"
+        ],
+        "requiresLiabilityAssessment": true,
+        "requiresExpenseAssessment": true,
+        "requiresBenefitAssessment": false,
+        "requiresDeductionAssessment": true,
+        "requiredModules": [
+          "material_overview",
+          "fact_cards",
+          "decision_trace",
+          "validation",
+          "liability_report"
+        ],
+        "isMedicalScenario": false,
+        "isLiabilityScenario": true,
+        "isBenefitScenario": false,
+        "isAutoScenario": false
+      },
+      "reportKind": "liability_damage_report",
+      "reportTitle": "定损报告",
+      "amountLabels": [
+        "损失总额",
+        "责任调整系数",
+        "应赔金额"
+      ],
+      "detailSectionTitle": "损失明细",
+      "injuryProfile": null,
+      "liabilityResult": {
+        "claimantLiabilityPct": 50,
+        "thirdPartyLiabilityPct": 50,
+        "basis": "公估报告载明“本案最终建议总损失扣除交强险死亡伤残项限额后再按照同等责任协商”",
+        "source": "public_adjuster_report"
+      },
+      "deathProfile": {
+        "deathConfirmed": true,
+        "deceasedName": "方冬九",
+        "deathDate": null,
+        "deathCause": "在工地施工意外导致死亡",
+        "deathLocation": null,
+        "cancellationDate": null,
+        "householdType": "农业家庭户口",
+        "householdAddress": "海口市南林山村居民小组45号",
+        "funeralExpenseTotal": 0,
+        "claimants": [
+          {
+            "name": "胡荣妹",
+            "relationship": "配偶",
+            "sourceDocId": "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-61"
+          }
+        ],
+        "dependents": [],
+        "sourceDocIds": [
+          "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-25",
+          "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-81",
+          "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-82",
+          "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-83",
+          "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-62",
+          "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-61"
+        ]
+      },
+      "deductionSummary": {
+        "confirmedPaidAmount": 50000,
+        "reportedAdvanceAmount": 0,
+        "deductionRecommendedAmount": 50000,
+        "deductionTotal": 0,
+        "uniqueTransferCount": 1,
+        "note": "已识别付款记录，但付款方向与保险赔付路径仍需人工确认，暂不自动抵扣"
+      },
+      "manualReviewItems": [
+        "责任比例当前采用公估报告“同等责任”口径 50%，如后续取得正式责任文书需及时覆盖",
+        "已有赔偿协商和垫付款记录，正式定损前需核对已支付金额、赔付路径与抵扣口径",
+        "死亡赔偿金已按统一城镇标准试算，如法院地或统计年度不同需调整地区标准参数"
+      ],
+      "standardsSnapshot": {
+        "region": "安徽省",
+        "year": 2024,
+        "urbanPerCapitaIncome": 47446,
+        "funeralMonthlySalary": 8499.92,
+        "sourceDocument": "2024年《安徽省道路交通事故赔偿标准》",
+        "source": "configured_standard"
+      },
+      "settlementSnapshot": {
+        "deductible": 0,
+        "reimbursementRatio": 0.5,
+        "payableAmount": 499959.75,
+        "settlementDecision": "MANUAL_REVIEW",
+        "medicalReview": null
+      },
+      "decisionTrace": {
+        "traceId": "trace-R261123052024800086",
+        "generatedAt": "2026-03-14T17:56:45.614Z",
+        "stages": [
+          {
+            "stage": "material_recognition",
+            "title": "材料识别",
+            "status": "completed",
+            "summary": "共识别 106/191 份材料，形成 21 份结构化摘要",
+            "sourceDocIds": [
+              "mat-1772977870026-9ynv494f2",
+              "mat-1772977870027-2gof0znoj",
+              "mat-1772977870027-1kmg8nu4h",
+              "mat-1772977870027-8czrv0nyt",
+              "mat-1772977870027-30xli5o1v",
+              "mat-1772977870027-a4nzuxdef",
+              "mat-1772977870027-0olvz0323",
+              "mat-1772977870027-e9r5svhj6",
+              "mat-1772977870027-te6qpxmny",
+              "mat-1772977870027-6u2yeq3q5",
+              "mat-1772977870027-nrxisn2nt",
+              "mat-1772977870027-oo6kq3aap",
+              "mat-1772977870027-7rp7on628",
+              "mat-1772977870027-l0ribfydb",
+              "mat-1772977870027-cgbl9tzmj",
+              "mat-1772977870027-3v12shway",
+              "mat-1772977870027-11kzsfsoa",
+              "mat-1772977870027-yl81ym957",
+              "mat-1772977870027-fj5h1u3mj",
+              "mat-1772977870027-54jkavvbt",
+              "mat-1772977870027-8s46ytrti",
+              "mat-1772977870028-302gdmbvv",
+              "mat-1772977870028-fwwopf5uw",
+              "mat-1772977870028-hqkbttz9i",
+              "mat-1772977870028-bjplj22my",
+              "mat-1772977870028-hip5rugv0",
+              "mat-1772977870028-nk43majz9",
+              "mat-1772977870028-xomwzid6y",
+              "mat-1772977870028-tcef38ir5",
+              "mat-1772977870028-ni5iyr5w0",
+              "mat-1772977870028-vll4czrdq",
+              "mat-1772977870028-3okxo628w",
+              "mat-1772977870028-kpomvcalg",
+              "mat-1772977870028-f7znsj3ar",
+              "mat-1772977870028-l92xmf8c7",
+              "mat-1772977870028-4fofl2r4k",
+              "mat-1772977870028-2ihtsrqqw",
+              "mat-1772977870028-alq7fprid",
+              "mat-1772977870028-dwmu19vue",
+              "mat-1772977870028-strb3m6se",
+              "mat-1772977870028-q38wqr5ky",
+              "mat-1772977870028-tmkvs4tr8",
+              "mat-1772977870028-5br2jtwdr",
+              "mat-1772977870028-kigcwe9bd",
+              "mat-1772977870028-vlcmypvrz",
+              "mat-1772977870028-i49wmytbb",
+              "mat-1772977870028-jgcn3timh",
+              "mat-1772977870028-q1srqxiuj",
+              "mat-1772977870028-cm79sx8nj",
+              "mat-1772977870029-mkf66ukwb",
+              "mat-1772977870029-h94bt81na",
+              "mat-1772977870029-pltnqokg4",
+              "mat-1772977870029-tokfzb3wx",
+              "mat-1772977870029-agy00zmoh",
+              "mat-1772977870029-l1vr879si",
+              "mat-1772977870029-1n27apdvf",
+              "mat-1772977870029-pimummf5i",
+              "mat-1772977870029-yg24hjpdl",
+              "mat-1772977870029-kynj5bstj",
+              "mat-1772977870029-ifn4gzjk3",
+              "mat-1772977870029-kkn8m85pb",
+              "mat-1772977870030-95utq6j7y",
+              "mat-1772977870030-ysxmeufhe",
+              "mat-1772977870030-8syb07r9t",
+              "mat-1772977870030-1kzn20jxc",
+              "mat-1772977870030-bvwlcvb1q",
+              "mat-1772977870030-y657h0mlc",
+              "mat-1772977870030-52reg5xlv",
+              "mat-1772977870030-dhaoa1g1d",
+              "mat-1772977870030-sr74f44uk",
+              "mat-1772977870030-ulxq5xsku",
+              "mat-1772977870031-qea4qqkkh",
+              "mat-1772977870031-to2y4d08x",
+              "mat-1772977870031-btqj5p0z6",
+              "mat-1772977870031-3uyajkdmk",
+              "mat-1772977870031-u44r0ndyx",
+              "mat-1772977870031-p4byd765r",
+              "mat-1772977870031-qwppxv2cr",
+              "mat-1772977870031-ebuddr2h9",
+              "mat-1772977870031-0pzykgeq4",
+              "mat-1772977870031-buurq0nya",
+              "mat-1772977870031-kbc9de79m",
+              "mat-1772977870031-0gu5q1uc9",
+              "mat-1772977870031-h4r6t4neo",
+              "mat-1772977870031-t4og0xgnr",
+              "mat-1772977870031-ih4zw6svy",
+              "mat-1772977870031-todelepyf",
+              "mat-1772977870031-66iojbu0t",
+              "mat-1772977870032-nr7kwwn3d",
+              "mat-1772977870032-wh6fau2yo",
+              "mat-1772977870032-0snbc14nm",
+              "mat-1772977870032-7sge45h5k",
+              "mat-1772977870032-jvmrt5wo9",
+              "mat-1772977870032-j9ty2jngs",
+              "mat-1772977870032-16ygttakn",
+              "mat-1772977870032-10ziywmsv",
+              "mat-1772977870032-uxw1kigb6",
+              "mat-1772977870032-1y06husi6",
+              "mat-1772977870032-gk115rzcx",
+              "mat-1772977870032-ufqxm088m",
+              "mat-1772977870032-wgs94jecc",
+              "mat-1772977870032-tgemzhh9h",
+              "mat-1772977870032-cladvivra",
+              "mat-1772977870032-lgxxn7u07",
+              "mat-1772977870032-5pwecok2i",
+              "mat-1772977870032-pfzy57wqq"
+            ],
+            "facts": [
+              {
+                "label": "材料总数",
+                "value": "191"
+              },
+              {
+                "label": "已识别材料",
+                "value": "106"
+              },
+              {
+                "label": "摘要数量",
+                "value": "21"
+              }
+            ]
+          },
+          {
+            "stage": "fact_aggregation",
+            "title": "案件事实归纳",
+            "status": "completed",
+            "summary": "死亡事实：方冬九死亡；报告参考：已提取 公估报告、初期报告",
+            "sourceDocIds": [
+              "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-25",
+              "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-81",
+              "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-82",
+              "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-83",
+              "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-62",
+              "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-61",
+              "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-22",
+              "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-23",
+              "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-24",
+              "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-19",
+              "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-20",
+              "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-87",
+              "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-162",
+              "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-6",
+              "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-10",
+              "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-164",
+              "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-172",
+              "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-0",
+              "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-1"
+            ],
+            "facts": [
+              {
+                "label": "死亡事实",
+                "value": "已确认死亡"
+              },
+              {
+                "label": "死者姓名",
+                "value": "方冬九"
+              },
+              {
+                "label": "关系人",
+                "value": "胡荣妹"
+              },
+              {
+                "label": "责任链证据",
+                "value": "3"
+              },
+              {
+                "label": "报警/笔录",
+                "value": "6"
+              }
+            ]
+          },
+          {
+            "stage": "liability_assessment",
+            "title": "责任评估",
+            "status": "completed",
+            "summary": "公估报告建议按第三方责任 50% 作为现阶段折算比例",
+            "sourceDocIds": [
+              "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-1",
+              "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-3",
+              "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-4",
+              "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-7",
+              "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-11",
+              "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-12",
+              "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-19",
+              "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-20",
+              "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-160",
+              "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-162",
+              "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-168",
+              "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-169",
+              "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-170"
+            ],
+            "facts": [
+              {
+                "label": "责任比例",
+                "value": "50%"
+              },
+              {
+                "label": "责任来源",
+                "value": "public_adjuster_report"
+              },
+              {
+                "label": "确认状态",
+                "value": "已人工确认"
+              }
+            ]
+          },
+          {
+            "stage": "deduction_assessment",
+            "title": "抵扣评估",
+            "status": "completed",
+            "summary": "已识别付款记录，但付款方向与保险赔付路径仍需人工确认，暂不自动抵扣",
+            "sourceDocIds": [
+              "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-176",
+              "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-177"
+            ],
+            "facts": [
+              {
+                "label": "已识别付款",
+                "value": "50000"
+              },
+              {
+                "label": "推荐抵扣",
+                "value": "50000"
+              },
+              {
+                "label": "当前抵扣",
+                "value": "0"
+              }
+            ]
+          },
+          {
+            "stage": "manual_review",
+            "title": "人工确认与调整",
+            "status": "completed",
+            "summary": "已记录 2 项人工确认/调整动作",
+            "sourceDocIds": [
+              "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-1",
+              "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-22",
+              "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-23",
+              "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-24",
+              "task-7d603a4e-24ad-4331-a835-f3bffd4067ad-176"
+            ],
+            "facts": [
+              {
+                "label": "人工确认第三者身份与责任链 (系统用户)",
+                "value": "已确认第三者身份及被保险人责任链事实 @ 2026/3/14 21:26:59"
+              },
+              {
+                "label": "人工确认责任比例 (系统用户)",
+                "value": "确认第三方责任比例 50% @ 2026/3/14 21:33:26"
+              }
+            ],
+            "manualActions": [
+              {
+                "label": "人工确认第三者身份与责任链",
+                "timestamp": "2026-03-14T13:26:59.555Z",
+                "detail": "已确认第三者身份及被保险人责任链事实",
+                "actor": "系统用户"
+              },
+              {
+                "label": "人工确认责任比例",
+                "timestamp": "2026-03-14T13:33:26.292Z",
+                "detail": "确认第三方责任比例 50%",
+                "actor": "系统用户"
+              }
+            ]
+          },
+          {
+            "stage": "damage_calculation",
+            "title": "定损计算",
+            "status": "completed",
+            "summary": "损失合计 999919.52，责任系数 0.50，最终金额 499959.76",
+            "sourceDocIds": [],
+            "facts": [
+              {
+                "label": "损失合计",
+                "value": "¥999919.52"
+              },
+              {
+                "label": "责任系数",
+                "value": "50%"
+              },
+              {
+                "label": "抵扣金额",
+                "value": "¥0.00"
+              },
+              {
+                "label": "最终金额",
+                "value": "¥499959.76"
+              }
+            ]
+          }
+        ]
+      },
+      "conflicts": []
+    },
+    "updatedAt": "2026-03-15T07:12:11.791Z"
   },
   {
     "id": "import-1773508535433",
     "taskId": "task-1e2217bc-f474-4cd6-abf1-fb693600e505",
     "claimCaseId": "CLM-MED-001",
-    "productCode": "PROD002",
+    "productCode": "ZA-GOPD-2022A-90",
     "importedAt": "2026-03-14T17:15:35.433Z",
     "documents": [
       {
@@ -5586,8 +6390,8 @@
         "mimeType": "image/jpeg",
         "ossKey": null,
         "classification": {
-          "materialId": "mat-12",
-          "materialName": "住院病历/病案",
+          "materialId": "mat-11",
+          "materialName": "门（急）诊病历",
           "confidence": 0.95,
           "source": "ai",
           "matchStrategy": "ai"
@@ -5598,9 +6402,9 @@
         "errorMessage": null,
         "documentSummary": {
           "docId": "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0",
-          "summaryType": "inpatient_record",
+          "summaryType": "outpatient_record",
           "extractedAt": "2026-03-14T17:51:34.982Z",
-          "admissionDate": "2005-03-01",
+          "admissionDate": "2026-05-20",
           "diagnoses": [
             {
               "name": "急性阑尾炎"
@@ -5609,18 +6413,13 @@
               "name": "急性弥漫性腹膜炎"
             }
           ],
-          "surgeries": [
-            {
-              "name": "急诊手术",
-              "date": "2005-03-03"
-            }
-          ],
+          "surgeries": [],
           "dischargeCondition": "恢复良好",
           "ward": "普外科",
           "sourceAnchors": {
             "admissionDate": {
               "pageIndex": 0,
-              "rawText": "日期: 05-03-01",
+              "rawText": "日期: 2026-05-20",
               "highlightLevel": "text_search"
             },
             "diagnoses": [
@@ -5689,7 +6488,7 @@
           "summaryType": "expense_invoice",
           "extractedAt": "2026-03-14T17:51:26.861Z",
           "invoiceNumber": "0799287390",
-          "invoiceDate": "2025-03-01",
+          "invoiceDate": "2026-05-20",
           "totalAmount": 18,
           "institution": "上海市东方医院",
           "breakdown": [
@@ -5741,7 +6540,7 @@
           "summaryType": "expense_invoice",
           "extractedAt": "2026-03-14T17:51:29.289Z",
           "invoiceNumber": "0799289513",
-          "invoiceDate": "2025-03-01",
+          "invoiceDate": "2026-05-20",
           "totalAmount": 130,
           "institution": "上海市东方医院",
           "breakdown": [
@@ -5789,13 +6588,8 @@
         "hospitalizationDays": 0,
         "treatmentTimeline": [
           {
-            "date": "2005-03-01",
-            "event": "入院（普外科）",
-            "sourceDocId": "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
-          },
-          {
-            "date": "2005-03-03",
-            "event": "手术：急诊手术",
+            "date": "2026-05-20",
+            "event": "门诊就诊",
             "sourceDocId": "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
           }
         ]
@@ -5840,13 +6634,8 @@
           "hospitalizationDays": 0,
           "treatmentTimeline": [
             {
-              "date": "2005-03-01",
-              "event": "入院（普外科）",
-              "sourceDocId": "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
-            },
-            {
-              "date": "2005-03-03",
-              "event": "手术：急诊手术",
+              "date": "2026-05-20",
+              "event": "门诊就诊",
               "sourceDocId": "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
             }
           ]
@@ -5879,15 +6668,1509 @@
         "confidence": 0.3,
         "basis": []
       },
-      "aggregationSummary": "伤情：急性阑尾炎；急性弥漫性腹膜炎，住院 0 天；医疗费：¥148"
+      "aggregationSummary": "伤情：急性阑尾炎；急性弥漫性腹膜炎；门急诊医疗费：¥148"
     },
     "completeness": {
       "isComplete": true,
       "completenessScore": 1,
-      "requiredMaterials": [],
-      "providedMaterials": [],
+      "requiredMaterials": [
+        {
+          "id": "mat-20",
+          "name": "医疗费发票",
+          "required": true
+        },
+        {
+          "id": "mat-21",
+          "name": "费用明细清单",
+          "required": true
+        },
+        {
+          "id": "mat-11",
+          "name": "门（急）诊病历",
+          "required": true
+        },
+        {
+          "id": "mat-13",
+          "name": "诊断证明书",
+          "required": true
+        }
+      ],
+      "providedMaterials": [
+        {
+          "id": "mat-20",
+          "name": "医疗费发票"
+        },
+        {
+          "id": "mat-21",
+          "name": "费用明细清单"
+        },
+        {
+          "id": "mat-11",
+          "name": "门（急）诊病历"
+        },
+        {
+          "id": "mat-13",
+          "name": "诊断证明书"
+        }
+      ],
       "missingMaterials": [],
       "warnings": []
-    }
+    },
+    "reviewResult": {
+      "decision": "APPROVE",
+      "intakeDecision": "PASS",
+      "liabilityDecision": "ACCEPT",
+      "assessmentDecision": "ASSESSED",
+      "settlementDecision": "PAY",
+      "claimType": "HEALTH",
+      "coverageResults": [
+        {
+          "coverageCode": "HLT_OPD_SOCIAL",
+          "claimedAmount": 145,
+          "approvedAmount": 130.5,
+          "deductible": 0,
+          "reimbursementRatio": 0.9,
+          "sumInsured": 10000,
+          "status": "PAYABLE",
+          "warnings": []
+        },
+        {
+          "coverageCode": "HLT_OPD_NON_SOCIAL",
+          "claimedAmount": 3,
+          "approvedAmount": 2.7,
+          "deductible": 0,
+          "reimbursementRatio": 0.9,
+          "sumInsured": 10000,
+          "status": "PAYABLE",
+          "warnings": []
+        }
+      ],
+      "reasonCodes": [],
+      "warnings": [],
+      "manualReviewReasons": [],
+      "missingMaterials": [],
+      "materialValidationResults": [],
+      "matchedRuleDetails": [
+        {
+          "ruleId": "ZAOPD001",
+          "ruleName": "保障期间校验",
+          "ruleKind": "GATE",
+          "category": "COVERAGE_PERIOD",
+          "domain": "ELIGIBILITY",
+          "fields": [
+            "claim.accident_date"
+          ],
+          "actionType": "APPROVE_CLAIM",
+          "effect": "理赔通过",
+          "sourceText": "保险期间自2026年3月16日零时起至2027年3月15日24时止。"
+        },
+        {
+          "ruleId": "ZAOPD004",
+          "ruleName": "疾病等待期30天校验",
+          "ruleKind": "GATE",
+          "category": "WAITING_PERIOD",
+          "domain": "ELIGIBILITY",
+          "fields": [
+            "claim.cause_type",
+            "claim.accident_date"
+          ],
+          "actionType": "APPROVE_CLAIM",
+          "effect": "理赔通过",
+          "sourceText": "在等待期后因罹患疾病，在医院接受门诊或急诊治疗。"
+        },
+        {
+          "ruleId": "ZAOPD002",
+          "ruleName": "医保内门急诊责任触发",
+          "ruleKind": "TRIGGER",
+          "category": "COVERAGE_SCOPE",
+          "domain": "ELIGIBILITY",
+          "fields": [
+            "claim.social_medical_amount"
+          ],
+          "actionType": "APPROVE_CLAIM",
+          "effect": "理赔通过",
+          "sourceText": "对于被保险人需个人支付的、符合当地基本医疗保险范围的、必需且合理的医疗费用，保险人在扣除约定的免赔额后，按照约定的给付比例进行赔付。"
+        },
+        {
+          "ruleId": "ZAOPD003",
+          "ruleName": "医保外门急诊责任触发",
+          "ruleKind": "TRIGGER",
+          "category": "COVERAGE_SCOPE",
+          "domain": "ELIGIBILITY",
+          "fields": [
+            "claim.non_social_medical_amount"
+          ],
+          "actionType": "APPROVE_CLAIM",
+          "effect": "理赔通过",
+          "sourceText": "对于被保险人需个人支付的、超出当地基本医疗保险范围的、必需且合理的医疗费用，保险人在扣除约定的免赔额后，按照约定的给付比例进行赔付。"
+        },
+        {
+          "ruleId": "ZAOPD202",
+          "ruleName": "医保内费用识别",
+          "ruleKind": "ITEM_FLAG",
+          "category": "ITEM_CLASSIFICATION",
+          "domain": "ASSESSMENT",
+          "fields": [
+            "claim.social_medical_amount"
+          ],
+          "actionType": "ADD_REMARK",
+          "effect": "添加备注: 识别到医保内费用145元",
+          "sourceText": "医保范围内门急诊费用单独识别。"
+        },
+        {
+          "ruleId": "ZAOPD203",
+          "ruleName": "医保外费用识别",
+          "ruleKind": "ITEM_FLAG",
+          "category": "ITEM_CLASSIFICATION",
+          "domain": "ASSESSMENT",
+          "fields": [
+            "claim.non_social_medical_amount"
+          ],
+          "actionType": "ADD_REMARK",
+          "effect": "添加备注: 识别到医保外费用3元",
+          "sourceText": "医保范围外门急诊费用单独识别。"
+        },
+        {
+          "ruleId": "ZAOPD301",
+          "ruleName": "其他途径补偿扣减",
+          "ruleKind": "POST_PROCESS",
+          "category": "SOCIAL_INSURANCE",
+          "domain": "POST_PROCESS",
+          "fields": [],
+          "actionType": "APPLY_FORMULA",
+          "effect": "公式计算: calculatedAmount = 148",
+          "sourceText": "保险人仅对被保险人实际发生的医疗费用扣除其所获医疗费用补偿后的余额按照本合同的约定进行赔付。"
+        },
+        {
+          "ruleId": "ZAOPD302",
+          "ruleName": "单次免赔额为0",
+          "ruleKind": "POST_PROCESS",
+          "category": "DEDUCTIBLE",
+          "domain": "POST_PROCESS",
+          "fields": [],
+          "actionType": "APPLY_DEDUCTIBLE",
+          "effect": "免赔额应用: 0",
+          "sourceText": "本合同免赔额由投保人与保险人在订立本合同时协商确定，并在本合同中载明。"
+        },
+        {
+          "ruleId": "ZAOPD303",
+          "ruleName": "统一赔付比例90%",
+          "ruleKind": "POST_PROCESS",
+          "category": "PAYOUT_RATIO",
+          "domain": "POST_PROCESS",
+          "fields": [],
+          "actionType": "SET_CLAIM_RATIO",
+          "effect": "设置理赔比例: 90%",
+          "sourceText": "本保单预设给付比例为90%。"
+        }
+      ],
+      "policyBinding": {
+        "policyNumber": "PZA202603150001",
+        "insuredMatched": true,
+        "insuredName": "杨秀",
+        "productCode": "ZA-GOPD-2022A-90",
+        "rulesetId": "RS-HEALTH-ZA-GOPD-2022A90-001",
+        "productSource": "CLAIM_CASE"
+      },
+      "payableAmount": 133.2,
+      "currency": "CNY",
+      "eligibility": {
+        "eligible": true,
+        "matchedRules": [
+          "ZAOPD001",
+          "ZAOPD004",
+          "ZAOPD002",
+          "ZAOPD003"
+        ],
+        "rejectionReasons": [],
+        "warnings": [],
+        "needsManualReview": false,
+        "manualReviewReasons": [],
+        "fraudFlagged": false
+      },
+      "amount": {
+        "totalClaimable": 148,
+        "deductible": 0,
+        "reimbursementRatio": 0.9,
+        "finalAmount": 133.2,
+        "factAssessment": {
+          "coverageCode": "HLT_INPATIENT",
+          "faultRatio": null,
+          "totalApproved": 133.2,
+          "itemBreakdown": [
+            {
+              "item": "诊查费(自费)",
+              "claimed": 3,
+              "approved": 0,
+              "reason": "项目名称包含自费/自付提示，按目录外项目处理"
+            },
+            {
+              "item": "诊查费",
+              "claimed": 15,
+              "approved": 13.78,
+              "reason": "按默认赔付比例 0.9"
+            },
+            {
+              "item": "13碳尿素呼气试验",
+              "claimed": 130,
+              "approved": 119.42,
+              "reason": "按默认赔付比例 0.9"
+            }
+          ],
+          "executionDetails": [
+            {
+              "rule_id": "ZAOPD201",
+              "rule_name": "医疗必需合理性校验",
+              "category": "PRICING_REASONABILITY",
+              "executed": false,
+              "condition_met": false,
+              "action_result": null,
+              "item_results": [],
+              "source": {
+                "source_type": "CLAUSE",
+                "source_ref": "释义七",
+                "clause_code": "ZA-GOPD-2022A-90",
+                "source_text": "仅赔付必需且合理的医疗费用。"
+              }
+            },
+            {
+              "rule_id": "ZAOPD202",
+              "rule_name": "医保内费用识别",
+              "category": "ITEM_CLASSIFICATION",
+              "executed": true,
+              "condition_met": true,
+              "action_result": {
+                "action_type": "ADD_REMARK",
+                "success": true,
+                "message": "添加备注: 识别到医保内费用145元",
+                "data": {
+                  "remark": "识别到医保内费用145元"
+                }
+              },
+              "item_results": [],
+              "source": {
+                "source_type": "CLAUSE",
+                "source_ref": "理赔录入口径",
+                "clause_code": "ZA-GOPD-2022A-90",
+                "source_text": "医保范围内门急诊费用单独识别。"
+              }
+            },
+            {
+              "rule_id": "ZAOPD203",
+              "rule_name": "医保外费用识别",
+              "category": "ITEM_CLASSIFICATION",
+              "executed": true,
+              "condition_met": true,
+              "action_result": {
+                "action_type": "ADD_REMARK",
+                "success": true,
+                "message": "添加备注: 识别到医保外费用3元",
+                "data": {
+                  "remark": "识别到医保外费用3元"
+                }
+              },
+              "item_results": [],
+              "source": {
+                "source_type": "CLAUSE",
+                "source_ref": "理赔录入口径",
+                "clause_code": "ZA-GOPD-2022A-90",
+                "source_text": "医保范围外门急诊费用单独识别。"
+              }
+            }
+          ],
+          "lossLedger": [
+            {
+              "itemKey": "doc-1-item-0",
+              "itemName": "诊查费(自费)",
+              "claimedAmount": 3,
+              "payableAmount": 0,
+              "status": "ZERO_PAY",
+              "coverageCode": "HLT_INPATIENT",
+              "category": "诊疗费",
+              "medicalReview": {
+                "status": "SELF_PAY",
+                "catalogCategory": "treatment",
+                "catalogMatch": null,
+                "ratio": 0,
+                "basis": "项目名称包含自费/自付提示，按目录外项目处理",
+                "restriction": ""
+              },
+              "entries": [
+                {
+                  "step": "INIT",
+                  "beforeAmount": 3,
+                  "afterAmount": 3,
+                  "message": "载入原始申报金额"
+                },
+                {
+                  "step": "ELIGIBILITY",
+                  "ruleId": "MEDICAL_CATALOG",
+                  "beforeAmount": 3,
+                  "afterAmount": 0,
+                  "reasonCode": "MEDICAL_CATALOG_SELF_PAY",
+                  "message": "项目名称包含自费/自付提示，按目录外项目处理"
+                }
+              ],
+              "manualReviewReasons": [],
+              "flags": []
+            },
+            {
+              "itemKey": "doc-1-item-1",
+              "itemName": "诊查费",
+              "claimedAmount": 15,
+              "payableAmount": 13.78,
+              "status": "PAYABLE",
+              "coverageCode": "HLT_INPATIENT",
+              "category": "诊疗费",
+              "medicalReview": {
+                "status": "COVERED",
+                "catalogCategory": "treatment",
+                "catalogMatch": {
+                  "id": "catalog-1771125014007",
+                  "name": "诊查费",
+                  "type": "A",
+                  "reimbursementRatio": 100,
+                  "restrictions": "",
+                  "province": "national"
+                },
+                "ratio": 1,
+                "basis": "匹配医保目录“诊查费”",
+                "restriction": ""
+              },
+              "entries": [
+                {
+                  "step": "INIT",
+                  "beforeAmount": 15,
+                  "afterAmount": 15,
+                  "message": "载入原始申报金额"
+                },
+                {
+                  "step": "RATIO",
+                  "ruleId": "SYSTEM_DEFAULT_RATIO",
+                  "beforeAmount": 15,
+                  "afterAmount": 13.5,
+                  "reasonCode": "DEFAULT_REIMBURSEMENT_RATIO",
+                  "message": "按默认赔付比例 0.9"
+                }
+              ],
+              "manualReviewReasons": [],
+              "flags": []
+            },
+            {
+              "itemKey": "doc-2-item-0",
+              "itemName": "13碳尿素呼气试验",
+              "claimedAmount": 130,
+              "payableAmount": 119.42,
+              "status": "PAYABLE",
+              "coverageCode": "HLT_INPATIENT",
+              "category": "检查费",
+              "medicalReview": {
+                "status": "COVERED",
+                "catalogCategory": "treatment",
+                "catalogMatch": {
+                  "id": "catalog-1771129665840",
+                  "name": "13碳尿素呼气试验",
+                  "type": "A",
+                  "reimbursementRatio": 100,
+                  "restrictions": "",
+                  "province": "national"
+                },
+                "ratio": 1,
+                "basis": "匹配医保目录“13碳尿素呼气试验”",
+                "restriction": ""
+              },
+              "entries": [
+                {
+                  "step": "INIT",
+                  "beforeAmount": 130,
+                  "afterAmount": 130,
+                  "message": "载入原始申报金额"
+                },
+                {
+                  "step": "RATIO",
+                  "ruleId": "SYSTEM_DEFAULT_RATIO",
+                  "beforeAmount": 130,
+                  "afterAmount": 117,
+                  "reasonCode": "DEFAULT_REIMBURSEMENT_RATIO",
+                  "message": "按默认赔付比例 0.9"
+                }
+              ],
+              "manualReviewReasons": [],
+              "flags": []
+            }
+          ],
+          "benefitLedger": [],
+          "medicalReview": {
+            "hospitalReview": {
+              "requirement": {
+                "rawText": "合法医院普通门诊及急诊",
+                "source": "explicit",
+                "minLevelRank": 0,
+                "requiresPublic": false,
+                "requiresOrdinaryWard": false
+              },
+              "hospitalName": "上海市东方医院",
+              "hospital": {
+                "id": "hosp-1772525384524-97",
+                "name": "上海市东方医院",
+                "province": "shanghai",
+                "city": "上海市",
+                "level": "三级甲等",
+                "type": "公立",
+                "address": "上海市浦东新区即墨路150号",
+                "qualifiedForInsurance": true
+              },
+              "passed": true,
+              "blockingMismatch": false,
+              "warnings": [],
+              "manualReviewReasons": []
+            },
+            "catalogSummary": {
+              "totalClaimedAmount": 148,
+              "catalogCoveredAmount": 145,
+              "selfPayAmount": 3,
+              "restrictedAmount": 0,
+              "uncertainAmount": 0,
+              "matchedItems": 2,
+              "selfPayItems": 1,
+              "uncertainItems": 0
+            }
+          },
+          "policyBinding": {
+            "policyNumber": "PZA202603150001",
+            "insuredMatched": true,
+            "insuredName": "杨秀",
+            "productCode": "ZA-GOPD-2022A-90",
+            "rulesetId": "RS-HEALTH-ZA-GOPD-2022A90-001",
+            "productSource": "CLAIM_CASE"
+          },
+          "duration": 20
+        },
+        "itemBreakdown": [
+          {
+            "item": "诊查费(自费)",
+            "claimed": 3,
+            "approved": 0,
+            "reason": "项目名称包含自费/自付提示，按目录外项目处理"
+          },
+          {
+            "item": "诊查费",
+            "claimed": 15,
+            "approved": 13.78,
+            "reason": "按默认赔付比例 0.9"
+          },
+          {
+            "item": "13碳尿素呼气试验",
+            "claimed": 130,
+            "approved": 119.42,
+            "reason": "按默认赔付比例 0.9"
+          }
+        ],
+        "settlementMode": "LOSS",
+        "lossLedger": [
+          {
+            "itemKey": "doc-1-item-0",
+            "itemName": "诊查费(自费)",
+            "claimedAmount": 3,
+            "payableAmount": 0,
+            "status": "ZERO_PAY",
+            "coverageCode": "HLT_INPATIENT",
+            "category": "诊疗费",
+            "medicalReview": {
+              "status": "SELF_PAY",
+              "catalogCategory": "treatment",
+              "catalogMatch": null,
+              "ratio": 0,
+              "basis": "项目名称包含自费/自付提示，按目录外项目处理",
+              "restriction": ""
+            },
+            "entries": [
+              {
+                "step": "INIT",
+                "beforeAmount": 3,
+                "afterAmount": 3,
+                "message": "载入原始申报金额"
+              },
+              {
+                "step": "ELIGIBILITY",
+                "ruleId": "MEDICAL_CATALOG",
+                "beforeAmount": 3,
+                "afterAmount": 0,
+                "reasonCode": "MEDICAL_CATALOG_SELF_PAY",
+                "message": "项目名称包含自费/自付提示，按目录外项目处理"
+              }
+            ],
+            "manualReviewReasons": [],
+            "flags": []
+          },
+          {
+            "itemKey": "doc-1-item-1",
+            "itemName": "诊查费",
+            "claimedAmount": 15,
+            "payableAmount": 13.78,
+            "status": "PAYABLE",
+            "coverageCode": "HLT_INPATIENT",
+            "category": "诊疗费",
+            "medicalReview": {
+              "status": "COVERED",
+              "catalogCategory": "treatment",
+              "catalogMatch": {
+                "id": "catalog-1771125014007",
+                "name": "诊查费",
+                "type": "A",
+                "reimbursementRatio": 100,
+                "restrictions": "",
+                "province": "national"
+              },
+              "ratio": 1,
+              "basis": "匹配医保目录“诊查费”",
+              "restriction": ""
+            },
+            "entries": [
+              {
+                "step": "INIT",
+                "beforeAmount": 15,
+                "afterAmount": 15,
+                "message": "载入原始申报金额"
+              },
+              {
+                "step": "RATIO",
+                "ruleId": "SYSTEM_DEFAULT_RATIO",
+                "beforeAmount": 15,
+                "afterAmount": 13.5,
+                "reasonCode": "DEFAULT_REIMBURSEMENT_RATIO",
+                "message": "按默认赔付比例 0.9"
+              }
+            ],
+            "manualReviewReasons": [],
+            "flags": []
+          },
+          {
+            "itemKey": "doc-2-item-0",
+            "itemName": "13碳尿素呼气试验",
+            "claimedAmount": 130,
+            "payableAmount": 119.42,
+            "status": "PAYABLE",
+            "coverageCode": "HLT_INPATIENT",
+            "category": "检查费",
+            "medicalReview": {
+              "status": "COVERED",
+              "catalogCategory": "treatment",
+              "catalogMatch": {
+                "id": "catalog-1771129665840",
+                "name": "13碳尿素呼气试验",
+                "type": "A",
+                "reimbursementRatio": 100,
+                "restrictions": "",
+                "province": "national"
+              },
+              "ratio": 1,
+              "basis": "匹配医保目录“13碳尿素呼气试验”",
+              "restriction": ""
+            },
+            "entries": [
+              {
+                "step": "INIT",
+                "beforeAmount": 130,
+                "afterAmount": 130,
+                "message": "载入原始申报金额"
+              },
+              {
+                "step": "RATIO",
+                "ruleId": "SYSTEM_DEFAULT_RATIO",
+                "beforeAmount": 130,
+                "afterAmount": 117,
+                "reasonCode": "DEFAULT_REIMBURSEMENT_RATIO",
+                "message": "按默认赔付比例 0.9"
+              }
+            ],
+            "manualReviewReasons": [],
+            "flags": []
+          }
+        ],
+        "benefitLedger": [],
+        "settlementBreakdown": {
+          "lossPayableAmount": 133.2,
+          "benefitPayableAmount": 0,
+          "totalPayableAmount": 133.2
+        },
+        "coverageCode": "HLT_INPATIENT",
+        "coverageResult": {
+          "coverageCode": "HLT_OPD_SOCIAL",
+          "claimedAmount": 145,
+          "approvedAmount": 130.5,
+          "deductible": 0,
+          "reimbursementRatio": 0.9,
+          "sumInsured": 10000,
+          "status": "PAYABLE",
+          "warnings": []
+        },
+        "coverageResults": [
+          {
+            "coverageCode": "HLT_OPD_SOCIAL",
+            "claimedAmount": 145,
+            "approvedAmount": 130.5,
+            "deductible": 0,
+            "reimbursementRatio": 0.9,
+            "sumInsured": 10000,
+            "status": "PAYABLE",
+            "warnings": []
+          },
+          {
+            "coverageCode": "HLT_OPD_NON_SOCIAL",
+            "claimedAmount": 3,
+            "approvedAmount": 2.7,
+            "deductible": 0,
+            "reimbursementRatio": 0.9,
+            "sumInsured": 10000,
+            "status": "PAYABLE",
+            "warnings": []
+          }
+        ],
+        "warnings": [],
+        "needsManualReview": false,
+        "manualReviewReasons": [],
+        "medicalReview": {
+          "hospitalReview": {
+            "requirement": {
+              "rawText": "合法医院普通门诊及急诊",
+              "source": "explicit",
+              "minLevelRank": 0,
+              "requiresPublic": false,
+              "requiresOrdinaryWard": false
+            },
+            "hospitalName": "上海市东方医院",
+            "hospital": {
+              "id": "hosp-1772525384524-97",
+              "name": "上海市东方医院",
+              "province": "shanghai",
+              "city": "上海市",
+              "level": "三级甲等",
+              "type": "公立",
+              "address": "上海市浦东新区即墨路150号",
+              "qualifiedForInsurance": true
+            },
+            "passed": true,
+            "blockingMismatch": false,
+            "warnings": [],
+            "manualReviewReasons": []
+          },
+          "catalogSummary": {
+            "totalClaimedAmount": 148,
+            "catalogCoveredAmount": 145,
+            "selfPayAmount": 3,
+            "restrictedAmount": 0,
+            "uncertainAmount": 0,
+            "matchedItems": 2,
+            "selfPayItems": 1,
+            "uncertainItems": 0
+          }
+        },
+        "policyBinding": {
+          "policyNumber": "PZA202603150001",
+          "insuredMatched": true,
+          "insuredName": "杨秀",
+          "productCode": "ZA-GOPD-2022A-90",
+          "rulesetId": "RS-HEALTH-ZA-GOPD-2022A90-001",
+          "productSource": "CLAIM_CASE"
+        }
+      },
+      "completeness": {
+        "claimType": "HEALTH",
+        "requiredMaterials": [
+          {
+            "id": "mat-20",
+            "name": "医疗费发票",
+            "required": true
+          },
+          {
+            "id": "mat-21",
+            "name": "费用明细清单",
+            "required": true
+          },
+          {
+            "id": "mat-11",
+            "name": "门（急）诊病历",
+            "required": true
+          },
+          {
+            "id": "mat-13",
+            "name": "诊断证明书",
+            "required": true
+          }
+        ],
+        "missingMaterials": [],
+        "uploadedCount": 4,
+        "totalRequired": 4
+      },
+      "ruleTrace": [
+        "ZAOPD001",
+        "ZAOPD004",
+        "ZAOPD002",
+        "ZAOPD003",
+        "ZAOPD202",
+        "ZAOPD203",
+        "ZAOPD301",
+        "ZAOPD302",
+        "ZAOPD303"
+      ],
+      "context": {
+        "claim_id": "CLM-MED-001",
+        "product_code": "ZA-GOPD-2022A-90",
+        "product_name": "众安互联网团体门诊急诊医疗保险（0免赔90%赔付版）",
+        "ruleset_id": "RS-HEALTH-ZA-GOPD-2022A90-001",
+        "product_line": "HEALTH",
+        "facts": {
+          "common": {
+            "claimId": "CLM-MED-001",
+            "productCode": "ZA-GOPD-2022A-90",
+            "productLine": "A"
+          },
+          "policy": {
+            "productCode": "ZA-GOPD-2022A-90",
+            "productName": "众安互联网团体门诊急诊医疗保险（0免赔90%赔付版）",
+            "effectiveDate": "2026-03-16",
+            "expiryDate": "2027-03-15",
+            "isWithinCoveragePeriod": true,
+            "coverages": [
+              {
+                "coverage_code": "HLT_INPATIENT",
+                "coverage_name": "门急诊医疗总责任（系统聚合）",
+                "sum_insured": {
+                  "amount": 20000,
+                  "currency": "CNY",
+                  "per_unit": "POLICY_YEAR"
+                },
+                "deductible": 0,
+                "reimbursement_rules": {
+                  "base_ratio": 0.9,
+                  "remark": "用于兼容当前健康险理算责任查找，详细责任仍以医保内/医保外两项为准"
+                }
+              },
+              {
+                "coverage_code": "HLT_OPD_SOCIAL",
+                "coverage_name": "基本医疗保险范围内门急诊医疗费用保险金",
+                "sum_insured": {
+                  "amount": 10000,
+                  "currency": "CNY",
+                  "per_unit": "POLICY_YEAR"
+                },
+                "deductible": 0,
+                "reimbursement_rules": {
+                  "base_ratio": 0.9
+                }
+              },
+              {
+                "coverage_code": "HLT_OPD_NON_SOCIAL",
+                "coverage_name": "基本医疗保险范围外门急诊医疗费用保险金",
+                "sum_insured": {
+                  "amount": 10000,
+                  "currency": "CNY",
+                  "per_unit": "POLICY_YEAR"
+                },
+                "deductible": 0,
+                "reimbursement_rules": {
+                  "base_ratio": 0.9
+                }
+              }
+            ]
+          },
+          "claim": {
+            "accidentDate": "2026-05-20",
+            "reportDate": "2026-03-15",
+            "resultDate": "2026-03-15",
+            "daysFromAccidentToResult": -66,
+            "causeType": "DISEASE",
+            "resultType": "MEDICAL_TREATMENT",
+            "hospitalName": "上海市东方医院",
+            "disabilityGrade": null,
+            "hospitalDays": 0,
+            "diagnosis": "急性阑尾炎；急性弥漫性腹膜炎",
+            "diagnosisNames": [
+              "急性阑尾炎",
+              "急性弥漫性腹膜炎"
+            ],
+            "expenseItems": [
+              {
+                "id": "synthetic-social-medical",
+                "itemName": "医保内门急诊费用",
+                "amount": 145,
+                "totalPrice": 145,
+                "socialInsuranceScope": "IN",
+                "source": "intake-summary"
+              },
+              {
+                "id": "synthetic-non-social-medical",
+                "itemName": "医保外门急诊费用",
+                "amount": 3,
+                "totalPrice": 3,
+                "socialInsuranceScope": "OUT",
+                "source": "intake-summary"
+              }
+            ]
+          },
+          "validation": {}
+        }
+      },
+      "auditTrail": [
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD001",
+          "matched": true
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD004",
+          "matched": true
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD004X",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD006",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD101",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD102",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD103",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD104",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD105",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD106",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD107",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD108",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD109",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD110",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD111",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD112",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD113",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD114",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD115",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD116",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD117",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD118",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD119",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD120",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD121",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD122",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD123",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD124",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD125",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD126",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD127",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD128",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD129",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD130",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD131",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD132",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD133",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD134",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD135",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD002",
+          "matched": true
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD003",
+          "matched": true
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD005",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD007",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD101M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD102M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD103M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD104M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD105M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD106M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD107M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD108M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD109M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD110M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD111M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD112M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD113M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD114M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD115M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD116M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD117M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD118M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD119M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD120M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD121M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD122M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD123M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD124M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD125M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD126M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD127M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD128M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD129M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD130M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD131M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD132M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD133M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD134M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD135M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD136",
+          "matched": false
+        },
+        {
+          "stage": "SETTLEMENT",
+          "ruleId": "ZAOPD201",
+          "matched": false
+        },
+        {
+          "stage": "SETTLEMENT",
+          "ruleId": "ZAOPD202",
+          "matched": true
+        },
+        {
+          "stage": "SETTLEMENT",
+          "ruleId": "ZAOPD203",
+          "matched": true
+        },
+        {
+          "stage": "SETTLEMENT",
+          "ruleId": "ZAOPD301",
+          "matched": true
+        },
+        {
+          "stage": "SETTLEMENT",
+          "ruleId": "ZAOPD302",
+          "matched": true
+        },
+        {
+          "stage": "SETTLEMENT",
+          "ruleId": "ZAOPD303",
+          "matched": true
+        },
+        {
+          "stage": "SETTLEMENT",
+          "ruleId": "ZAOPD304",
+          "matched": false
+        },
+        {
+          "stage": "SETTLEMENT",
+          "ruleId": "ZAOPD305",
+          "matched": false
+        },
+        {
+          "stage": "SETTLEMENT",
+          "ruleId": "ZAOPD306",
+          "matched": false
+        },
+        {
+          "stage": "SETTLEMENT",
+          "ruleId": "ZAOPD307",
+          "matched": false
+        }
+      ],
+      "duration": 72
+    },
+    "damageReport": {
+      "reportId": "RPT-1773571009936-4f39fa",
+      "claimCaseId": "CLM-MED-001",
+      "generatedAt": "2026-03-15T10:36:49.936Z",
+      "generatedBy": "ai",
+      "items": [
+        {
+          "id": "doc-1-item-0",
+          "category": "诊疗费",
+          "itemName": "诊查费(自费)",
+          "originalAmount": 3,
+          "approvedAmount": 0,
+          "formula": "目录外/不赔项目，核定为 0",
+          "basis": "项目名称包含自费/自付提示，按目录外项目处理；项目名称包含自费/自付提示，按目录外项目处理"
+        },
+        {
+          "id": "doc-1-item-1",
+          "category": "诊疗费",
+          "itemName": "诊查费",
+          "originalAmount": 15,
+          "approvedAmount": 13.5,
+          "formula": "核定金额 ¥13.50",
+          "basis": "匹配医保目录“诊查费”；按默认赔付比例 0.9"
+        },
+        {
+          "id": "doc-2-item-0",
+          "category": "检查费",
+          "itemName": "13碳尿素呼气试验",
+          "originalAmount": 130,
+          "approvedAmount": 117,
+          "formula": "核定金额 ¥117.00",
+          "basis": "匹配医保目录“13碳尿素呼气试验”；按默认赔付比例 0.9"
+        }
+      ],
+      "subTotal": 130.5,
+      "liabilityAdjustment": 1,
+      "adjustedAmount": 130.5,
+      "deductionTotal": 0,
+      "finalAmount": 133.2,
+      "calculationFormula": "损失合计（责任比例待人工确认，未折减）",
+      "regionalStandards": "上海市 2024年，城镇居民人均可支配收入 ¥79,610/年",
+      "status": "draft",
+      "domainModel": {
+        "claimCaseId": "CLM-MED-001",
+        "productLine": "HEALTH",
+        "claimScenario": "medical_expense",
+        "reviewProfileCode": "medical_expense_reimbursement",
+        "coverageFamily": [
+          "expense",
+          "medical"
+        ],
+        "requiresLiabilityAssessment": false,
+        "requiresExpenseAssessment": true,
+        "requiresBenefitAssessment": false,
+        "requiresDeductionAssessment": false,
+        "requiredModules": [
+          "material_overview",
+          "fact_cards",
+          "decision_trace",
+          "validation",
+          "expense_report"
+        ],
+        "isMedicalScenario": true,
+        "isLiabilityScenario": false,
+        "isBenefitScenario": false,
+        "isAutoScenario": false
+      },
+      "reportKind": "medical_expense_report",
+      "reportTitle": "医疗费用审核报告",
+      "amountLabels": [
+        "核定费用",
+        "抵扣金额",
+        "报告结论金额"
+      ],
+      "detailSectionTitle": "费用明细",
+      "injuryProfile": {
+        "injuryDescription": "急性阑尾炎；急性弥漫性腹膜炎",
+        "diagnoses": [
+          {
+            "name": "急性阑尾炎"
+          },
+          {
+            "name": "急性弥漫性腹膜炎"
+          }
+        ],
+        "diagnosisNames": [
+          "急性阑尾炎",
+          "急性弥漫性腹膜炎"
+        ],
+        "primaryDiagnosisDate": null,
+        "disabilityLevel": null,
+        "hospitalizationDays": 0,
+        "treatmentTimeline": [
+          {
+            "date": "2026-05-20",
+            "event": "门诊就诊",
+            "sourceDocId": "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+          }
+        ]
+      },
+      "liabilityResult": null,
+      "deathProfile": null,
+      "deductionSummary": null,
+      "manualReviewItems": [],
+      "standardsSnapshot": {},
+      "settlementSnapshot": {
+        "deductible": 0,
+        "reimbursementRatio": 0.9,
+        "payableAmount": 133.2,
+        "settlementDecision": "PAY",
+        "medicalReview": {
+          "hospitalReview": {
+            "requirement": {
+              "rawText": "合法医院普通门诊及急诊",
+              "source": "explicit",
+              "minLevelRank": 0,
+              "requiresPublic": false,
+              "requiresOrdinaryWard": false
+            },
+            "hospitalName": "上海市东方医院",
+            "hospital": {
+              "id": "hosp-1772525384524-97",
+              "name": "上海市东方医院",
+              "province": "shanghai",
+              "city": "上海市",
+              "level": "三级甲等",
+              "type": "公立",
+              "address": "上海市浦东新区即墨路150号",
+              "qualifiedForInsurance": true
+            },
+            "passed": true,
+            "blockingMismatch": false,
+            "warnings": [],
+            "manualReviewReasons": []
+          },
+          "catalogSummary": {
+            "totalClaimedAmount": 148,
+            "catalogCoveredAmount": 145,
+            "selfPayAmount": 3,
+            "restrictedAmount": 0,
+            "uncertainAmount": 0,
+            "matchedItems": 2,
+            "selfPayItems": 1,
+            "uncertainItems": 0
+          }
+        },
+        "policyBinding": {
+          "policyNumber": "PZA202603150001",
+          "insuredMatched": true,
+          "insuredName": "杨秀",
+          "productCode": "ZA-GOPD-2022A-90",
+          "rulesetId": "RS-HEALTH-ZA-GOPD-2022A90-001",
+          "productSource": "CLAIM_CASE"
+        },
+        "coverageBreakdown": [
+          {
+            "coverageCode": "HLT_OPD_SOCIAL",
+            "claimedAmount": 145,
+            "approvedAmount": 130.5,
+            "deductible": 0,
+            "reimbursementRatio": 0.9,
+            "sumInsured": 10000,
+            "status": "PAYABLE",
+            "warnings": []
+          },
+          {
+            "coverageCode": "HLT_OPD_NON_SOCIAL",
+            "claimedAmount": 3,
+            "approvedAmount": 2.7,
+            "deductible": 0,
+            "reimbursementRatio": 0.9,
+            "sumInsured": 10000,
+            "status": "PAYABLE",
+            "warnings": []
+          }
+        ]
+      },
+      "decisionTrace": {
+        "traceId": "trace-CLM-MED-001",
+        "generatedAt": "2026-03-15T10:36:49.968Z",
+        "stages": [
+          {
+            "stage": "damage_calculation",
+            "title": "定损计算",
+            "status": "completed",
+            "summary": "损失合计 130.50，责任系数 1.00，最终金额 133.20",
+            "sourceDocIds": [],
+            "facts": [
+              {
+                "label": "损失合计",
+                "value": "¥130.50"
+              },
+              {
+                "label": "责任系数",
+                "value": "100%"
+              },
+              {
+                "label": "抵扣金额",
+                "value": "¥0.00"
+              },
+              {
+                "label": "最终金额",
+                "value": "¥133.20"
+              }
+            ]
+          }
+        ]
+      },
+      "conflicts": []
+    },
+    "updatedAt": "2026-03-15T10:36:49.974Z"
   }
 ]

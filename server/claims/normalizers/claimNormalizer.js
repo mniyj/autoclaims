@@ -74,256 +74,340 @@ export function calculateClaimedTotal(items) {
 }
 
 export function normalizeClaimContext(claimCase = {}, ocrData = {}, invoiceItems = []) {
+  const safeClaimCase = claimCase || {};
+  const safeOcrData = ocrData || {};
   const normalized = {
-    ...claimCase,
-    ...ocrData
+    ...safeClaimCase,
+    ...safeOcrData
   };
 
   normalized.accident_date = toDateOnly(
-    ocrData.accident_date ||
-    ocrData.accidentDate ||
-    claimCase.accident_date ||
-    claimCase.accidentDate ||
-    claimCase.accidentTime
+    safeOcrData.accident_date ||
+    safeOcrData.accidentDate ||
+    safeClaimCase.accident_date ||
+    safeClaimCase.accidentDate ||
+    safeClaimCase.accidentTime
   );
 
   normalized.report_time = toDateOnly(
-    ocrData.report_time ||
-    ocrData.reportTime ||
-    claimCase.report_time ||
-    claimCase.reportTime
+    safeOcrData.report_time ||
+    safeOcrData.reportTime ||
+    safeClaimCase.report_time ||
+    safeClaimCase.reportTime
   );
 
   normalized.claimed_amount =
     toNumber(
-      ocrData.claimed_amount ||
-      ocrData.totalAmount ||
-      claimCase.claimed_amount ||
-      claimCase.claimAmount
+      safeOcrData.claimed_amount ||
+      safeOcrData.totalAmount ||
+      safeClaimCase.claimed_amount ||
+      safeClaimCase.claimAmount
     ) || 0;
 
   normalized.accident_reason =
-    ocrData.accident_reason ||
-    ocrData.accidentReason ||
-    claimCase.accident_reason ||
-    claimCase.accidentReason;
+    safeOcrData.accident_reason ||
+    safeOcrData.accidentReason ||
+    safeClaimCase.accident_reason ||
+    safeClaimCase.accidentReason;
 
-  normalized.expense_items = invoiceItems.length > 0 ? invoiceItems : (ocrData.chargeItems || []);
+  normalized.expense_items = invoiceItems.length > 0 ? invoiceItems : (safeOcrData.chargeItems || []);
+  if (normalized.expense_items.length === 0) {
+    const socialMedicalAmount = toNumber(
+      safeOcrData.social_medical_amount ??
+      safeOcrData.socialMedicalAmount ??
+      safeClaimCase.social_medical_amount ??
+      safeClaimCase.socialMedicalAmount
+    ) || 0;
+    const nonSocialMedicalAmount = toNumber(
+      safeOcrData.non_social_medical_amount ??
+      safeOcrData.nonSocialMedicalAmount ??
+      safeClaimCase.non_social_medical_amount ??
+      safeClaimCase.nonSocialMedicalAmount
+    ) || 0;
+
+    const synthesizedExpenseItems = [];
+    if (socialMedicalAmount > 0) {
+      synthesizedExpenseItems.push({
+        id: 'synthetic-social-medical',
+        itemName: '医保内门急诊费用',
+        amount: socialMedicalAmount,
+        totalPrice: socialMedicalAmount,
+        socialInsuranceScope: 'IN',
+        source: 'intake-summary',
+      });
+    }
+    if (nonSocialMedicalAmount > 0) {
+      synthesizedExpenseItems.push({
+        id: 'synthetic-non-social-medical',
+        itemName: '医保外门急诊费用',
+        amount: nonSocialMedicalAmount,
+        totalPrice: nonSocialMedicalAmount,
+        socialInsuranceScope: 'OUT',
+        source: 'intake-summary',
+      });
+    }
+    normalized.expense_items = synthesizedExpenseItems;
+  }
   normalized.total_claimed_amount = calculateClaimedTotal(normalized.expense_items);
 
   normalized.disability_grade =
-    ocrData.disability_grade ??
-    ocrData.disabilityGrade ??
-    claimCase.disability_grade ??
-    claimCase.disabilityGrade ??
+    safeOcrData.disability_grade ??
+    safeOcrData.disabilityGrade ??
+    safeClaimCase.disability_grade ??
+    safeClaimCase.disabilityGrade ??
     null;
 
   normalized.death_confirmed = Boolean(
-    ocrData.death_confirmed ||
-    ocrData.deathConfirmed ||
-    claimCase.death_confirmed ||
-    claimCase.deathConfirmed
+    safeOcrData.death_confirmed ||
+    safeOcrData.deathConfirmed ||
+    safeClaimCase.death_confirmed ||
+    safeClaimCase.deathConfirmed
   );
 
   normalized.is_drunk_driving =
     toBooleanLike(
-      ocrData.is_drunk_driving ??
-      ocrData.isDrunkDriving ??
-      claimCase.is_drunk_driving ??
-      claimCase.isDrunkDriving,
+      safeOcrData.is_drunk_driving ??
+      safeOcrData.isDrunkDriving ??
+      safeClaimCase.is_drunk_driving ??
+      safeClaimCase.isDrunkDriving,
       false
     );
 
   normalized.hospital_days =
     toNumber(
-      ocrData.hospital_days ||
-      ocrData.hospitalDays ||
-      claimCase.hospital_days ||
-      claimCase.hospitalDays
+      safeOcrData.hospital_days ||
+      safeOcrData.hospitalDays ||
+      safeClaimCase.hospital_days ||
+      safeClaimCase.hospitalDays
     ) || 0;
 
   normalized.insured_age =
     extractAgeLike(
-      ocrData.insured_age ||
-      ocrData.insuredAge ||
-      ocrData.age ||
-      ocrData.basicInfo?.age ||
-      claimCase.insured_age ||
-      claimCase.insuredAge ||
-      claimCase.age
+      safeOcrData.insured_age ||
+      safeOcrData.insuredAge ||
+      safeOcrData.age ||
+      safeOcrData.basicInfo?.age ||
+      safeClaimCase.insured_age ||
+      safeClaimCase.insuredAge ||
+      safeClaimCase.age
     );
 
   normalized.insured_birth_date = toDateOnly(
-    ocrData.insured_birth_date ||
-    ocrData.insuredBirthDate ||
-    ocrData.birth_date ||
-    ocrData.birthDate ||
-    claimCase.insured_birth_date ||
-    claimCase.insuredBirthDate ||
-    claimCase.birthDate
+    safeOcrData.insured_birth_date ||
+    safeOcrData.insuredBirthDate ||
+    safeOcrData.birth_date ||
+    safeOcrData.birthDate ||
+    safeClaimCase.insured_birth_date ||
+    safeClaimCase.insuredBirthDate ||
+    safeClaimCase.birthDate
   );
 
   normalized.special_disease_confirmed =
-    ocrData.special_disease_confirmed ??
-    ocrData.specialDiseaseConfirmed ??
-    claimCase.special_disease_confirmed ??
-    claimCase.specialDiseaseConfirmed ??
+    safeOcrData.special_disease_confirmed ??
+    safeOcrData.specialDiseaseConfirmed ??
+    safeClaimCase.special_disease_confirmed ??
+    safeClaimCase.specialDiseaseConfirmed ??
     null;
 
   normalized.diagnosis_names = normalizeDiagnosisNames(
-    ocrData.diagnosis_names,
-    ocrData.diagnosisNames,
-    ocrData.diagnoses,
-    ocrData.diagnosis,
-    ocrData.diagnosis_result,
-    ocrData.diagnosisResult,
-    claimCase.diagnosis_names,
-    claimCase.diagnosisNames,
-    claimCase.diagnosis,
-    claimCase.diagnosis_result,
-    claimCase.diagnosisResult
+    safeOcrData.diagnosis_names,
+    safeOcrData.diagnosisNames,
+    safeOcrData.diagnoses,
+    safeOcrData.diagnosis,
+    safeOcrData.diagnosis_result,
+    safeOcrData.diagnosisResult,
+    safeClaimCase.diagnosis_names,
+    safeClaimCase.diagnosisNames,
+    safeClaimCase.diagnosis,
+    safeClaimCase.diagnosis_result,
+    safeClaimCase.diagnosisResult
   );
 
   normalized.auto_coverage_type =
-    ocrData.auto_coverage_type ||
-    ocrData.autoCoverageType ||
-    claimCase.auto_coverage_type ||
-    claimCase.autoCoverageType ||
-    claimCase.claim_liability_type ||
-    claimCase.claimLiabilityType;
+    safeOcrData.auto_coverage_type ||
+    safeOcrData.autoCoverageType ||
+    safeClaimCase.auto_coverage_type ||
+    safeClaimCase.autoCoverageType ||
+    safeClaimCase.claim_liability_type ||
+    safeClaimCase.claimLiabilityType;
 
   normalized.fault_ratio =
     toNumber(
-      ocrData.fault_ratio ||
-      ocrData.faultRatio ||
-      claimCase.fault_ratio ||
-      claimCase.faultRatio
+      safeOcrData.fault_ratio ||
+      safeOcrData.faultRatio ||
+      safeClaimCase.fault_ratio ||
+      safeClaimCase.faultRatio
     );
 
   normalized.insured_liability_ratio =
     toNumber(
-      ocrData.insured_liability_ratio ||
-      ocrData.insuredLiabilityRatio ||
-      claimCase.insured_liability_ratio ||
-      claimCase.insuredLiabilityRatio
+      safeOcrData.insured_liability_ratio ||
+      safeOcrData.insuredLiabilityRatio ||
+      safeClaimCase.insured_liability_ratio ||
+      safeClaimCase.insuredLiabilityRatio
     );
 
   normalized.third_party_liability_ratio =
     toNumber(
-      ocrData.third_party_liability_ratio ||
-      ocrData.thirdPartyLiabilityRatio ||
-      ocrData.thirdPartyLiabilityPct ||
-      claimCase.third_party_liability_ratio ||
-      claimCase.thirdPartyLiabilityRatio ||
-      claimCase.thirdPartyLiabilityPct
+      safeOcrData.third_party_liability_ratio ||
+      safeOcrData.thirdPartyLiabilityRatio ||
+      safeOcrData.thirdPartyLiabilityPct ||
+      safeClaimCase.third_party_liability_ratio ||
+      safeClaimCase.thirdPartyLiabilityRatio ||
+      safeClaimCase.thirdPartyLiabilityPct
     );
 
   normalized.claimant_liability_pct =
     toNumber(
-      ocrData.claimant_liability_pct ||
-      ocrData.claimantLiabilityPct ||
-      claimCase.claimant_liability_pct ||
-      claimCase.claimantLiabilityPct
+      safeOcrData.claimant_liability_pct ||
+      safeOcrData.claimantLiabilityPct ||
+      safeClaimCase.claimant_liability_pct ||
+      safeClaimCase.claimantLiabilityPct
     );
 
   normalized.repair_estimate =
     toNumber(
-      ocrData.repair_estimate ||
-      ocrData.repairEstimate ||
-      claimCase.repair_estimate ||
-      claimCase.repairEstimate
+      safeOcrData.repair_estimate ||
+      safeOcrData.repairEstimate ||
+      safeClaimCase.repair_estimate ||
+      safeClaimCase.repairEstimate
     ) || 0;
 
   normalized.third_party_loss_amount =
     toNumber(
-      ocrData.third_party_loss_amount ||
-      ocrData.thirdPartyLossAmount ||
-      claimCase.third_party_loss_amount ||
-      claimCase.thirdPartyLossAmount
+      safeOcrData.third_party_loss_amount ||
+      safeOcrData.thirdPartyLossAmount ||
+      safeClaimCase.third_party_loss_amount ||
+      safeClaimCase.thirdPartyLossAmount
     );
 
   normalized.third_party_property_damage_amount =
     toNumber(
-      ocrData.third_party_property_damage_amount ||
-      ocrData.thirdPartyPropertyDamageAmount ||
-      claimCase.third_party_property_damage_amount ||
-      claimCase.thirdPartyPropertyDamageAmount
+      safeOcrData.third_party_property_damage_amount ||
+      safeOcrData.thirdPartyPropertyDamageAmount ||
+      safeClaimCase.third_party_property_damage_amount ||
+      safeClaimCase.thirdPartyPropertyDamageAmount
     );
 
   normalized.third_party_injury_amount =
     toNumber(
-      ocrData.third_party_injury_amount ||
-      ocrData.thirdPartyInjuryAmount ||
-      claimCase.third_party_injury_amount ||
-      claimCase.thirdPartyInjuryAmount
+      safeOcrData.third_party_injury_amount ||
+      safeOcrData.thirdPartyInjuryAmount ||
+      safeClaimCase.third_party_injury_amount ||
+      safeClaimCase.thirdPartyInjuryAmount
     );
 
   normalized.third_party_death_disability_amount =
     toNumber(
-      ocrData.third_party_death_disability_amount ||
-      ocrData.thirdPartyDeathDisabilityAmount ||
-      claimCase.third_party_death_disability_amount ||
-      claimCase.thirdPartyDeathDisabilityAmount
+      safeOcrData.third_party_death_disability_amount ||
+      safeOcrData.thirdPartyDeathDisabilityAmount ||
+      safeClaimCase.third_party_death_disability_amount ||
+      safeClaimCase.thirdPartyDeathDisabilityAmount
     );
 
   normalized.vehicle_damage_amount =
     toNumber(
-      ocrData.vehicle_damage_amount ||
-      ocrData.vehicleDamageAmount ||
-      claimCase.vehicle_damage_amount ||
-      claimCase.vehicleDamageAmount
+      safeOcrData.vehicle_damage_amount ||
+      safeOcrData.vehicleDamageAmount ||
+      safeClaimCase.vehicle_damage_amount ||
+      safeClaimCase.vehicleDamageAmount
     );
 
   normalized.passenger_injury_amount =
     toNumber(
-      ocrData.passenger_injury_amount ||
-      ocrData.passengerInjuryAmount ||
-      claimCase.passenger_injury_amount ||
-      claimCase.passengerInjuryAmount
+      safeOcrData.passenger_injury_amount ||
+      safeOcrData.passengerInjuryAmount ||
+      safeClaimCase.passenger_injury_amount ||
+      safeClaimCase.passengerInjuryAmount
     );
 
   normalized.injury_grade =
-    ocrData.injury_grade ||
-    ocrData.injuryGrade ||
-    claimCase.injury_grade ||
-    claimCase.injuryGrade;
+    safeOcrData.injury_grade ||
+    safeOcrData.injuryGrade ||
+    safeClaimCase.injury_grade ||
+    safeClaimCase.injuryGrade;
 
   normalized.vehicle = {
-    ...(claimCase.vehicle || {}),
-    ...(ocrData.vehicle || {})
+    ...(safeClaimCase.vehicle || {}),
+    ...(safeOcrData.vehicle || {})
   };
 
   const normalizedActualValue = toNumber(
     normalized.vehicle.actual_value ||
     normalized.vehicle.actualValue ||
-    ocrData.actual_value ||
-    ocrData.actualValue ||
-    claimCase.actual_value ||
-    claimCase.actualValue
+    safeOcrData.actual_value ||
+    safeOcrData.actualValue ||
+    safeClaimCase.actual_value ||
+    safeClaimCase.actualValue
   );
   if (normalizedActualValue !== undefined) {
     normalized.vehicle.actual_value = normalizedActualValue;
   }
 
-  if (ocrData.basicInfo) {
-    normalized.patient_name = ocrData.basicInfo.name;
-    normalized.patient_gender = ocrData.basicInfo.gender;
-    normalized.admission_date = toDateOnly(ocrData.basicInfo.admissionDate);
-    normalized.discharge_date = toDateOnly(ocrData.basicInfo.dischargeDate);
-    normalized.diagnosis = ocrData.basicInfo.dischargeDiagnosis;
-    normalized.department = ocrData.basicInfo.department;
+  if (safeOcrData.basicInfo) {
+    normalized.patient_name = safeOcrData.basicInfo.name;
+    normalized.patient_gender = safeOcrData.basicInfo.gender;
+    normalized.admission_date = toDateOnly(safeOcrData.basicInfo.admissionDate);
+    normalized.discharge_date = toDateOnly(safeOcrData.basicInfo.dischargeDate);
+    normalized.diagnosis = safeOcrData.basicInfo.dischargeDiagnosis;
+    normalized.department = safeOcrData.basicInfo.department;
   }
 
-  if (ocrData.invoiceInfo) {
-    normalized.hospital_name = ocrData.invoiceInfo.hospitalName;
-    normalized.invoice_date = toDateOnly(ocrData.invoiceInfo.issueDate);
+  if (safeOcrData.invoiceInfo) {
+    normalized.hospital_name = safeOcrData.invoiceInfo.hospitalName;
+    normalized.invoice_date = toDateOnly(safeOcrData.invoiceInfo.issueDate);
   }
 
-  if (ocrData.insurancePayment) {
-    normalized.social_insurance_paid = ocrData.insurancePayment.governmentFundPayment || 0;
-    normalized.personal_payment = ocrData.insurancePayment.personalPayment || 0;
-    normalized.personal_self_pay = ocrData.insurancePayment.personalSelfPayment || 0;
-    normalized.personal_self_expense = ocrData.insurancePayment.personalSelfExpense || 0;
+  if (safeOcrData.insurancePayment) {
+    normalized.social_insurance_paid = safeOcrData.insurancePayment.governmentFundPayment || 0;
+    normalized.personal_payment = safeOcrData.insurancePayment.personalPayment || 0;
+    normalized.personal_self_pay = safeOcrData.insurancePayment.personalSelfPayment || 0;
+    normalized.personal_self_expense = safeOcrData.insurancePayment.personalSelfExpense || 0;
+  }
+
+  // Default unsupported/negative exclusion facts to false so product-level review can
+  // run without requiring every exclusion field to be explicitly supplied.
+  const booleanFactDefaults = [
+    'policyholder_intentional_harm',
+    'self_inflicted',
+    'criminal_act',
+    'detained_or_imprisoned',
+    'intoxicated_or_drug',
+    'illegal_drug_use',
+    'illegal_driving',
+    'pre_existing_condition',
+    'exam_within_waiting_period',
+    'waiting_period_allergy_or_infection',
+    'experimental_treatment',
+    'unapproved_treatment',
+    'gene_or_cell_therapy',
+    'medical_appraisal_fee',
+    'occupational_disease',
+    'medical_malpractice',
+    'self_purchased_drug_without_prescription',
+    'non_prescribing_institution_purchase',
+    'non_medical_institution_treatment',
+    'prescription_over_30_days',
+    'off_label_cancer_drug',
+    'cancer_drug_not_effective',
+    'cancer_drug_resistant',
+    'obesity_treatment',
+    'cosmetic_treatment',
+    'pregnancy_related',
+    'vision_correction',
+    'preventive_or_wellness',
+    'rehabilitation_device',
+    'non_covered_genital_treatment',
+    'non_listed_artificial_organ',
+    'dental_care_only',
+    'genetic_or_psychiatric',
+    'hiv_related',
+    'war_related',
+    'dental_exception_covered',
+  ];
+
+  for (const key of booleanFactDefaults) {
+    normalized[key] = toBooleanLike(normalized[key], false);
   }
 
   return normalized;

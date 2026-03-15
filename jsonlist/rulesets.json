@@ -8470,5 +8470,4135 @@
       "generated_by": "CODEX",
       "total_rules": 4
     }
+  },
+  {
+    "ruleset_id": "RS-HEALTH-ZA-GOPD-2022A90-001",
+    "product_line": "HEALTH",
+    "policy_info": {
+      "policy_no": "PZA202603150001",
+      "product_code": "ZA-GOPD-2022A-90",
+      "product_name": "众安互联网团体门诊急诊医疗保险（0免赔90%赔付版）",
+      "insurer": "众安在线财产保险股份有限公司",
+      "effective_date": "2026-03-16",
+      "expiry_date": "2027-03-15",
+      "coverages": [
+        {
+          "coverage_code": "HLT_INPATIENT",
+          "coverage_name": "门急诊医疗总责任（系统聚合）",
+          "sum_insured": {
+            "amount": 20000,
+            "currency": "CNY",
+            "per_unit": "POLICY_YEAR"
+          },
+          "deductible": 0,
+          "reimbursement_rules": {
+            "base_ratio": 0.9,
+            "remark": "用于兼容当前健康险理算责任查找，详细责任仍以医保内/医保外两项为准"
+          }
+        },
+        {
+          "coverage_code": "HLT_OPD_SOCIAL",
+          "coverage_name": "基本医疗保险范围内门急诊医疗费用保险金",
+          "sum_insured": {
+            "amount": 10000,
+            "currency": "CNY",
+            "per_unit": "POLICY_YEAR"
+          },
+          "deductible": 0,
+          "reimbursement_rules": {
+            "base_ratio": 0.9
+          }
+        },
+        {
+          "coverage_code": "HLT_OPD_NON_SOCIAL",
+          "coverage_name": "基本医疗保险范围外门急诊医疗费用保险金",
+          "sum_insured": {
+            "amount": 10000,
+            "currency": "CNY",
+            "per_unit": "POLICY_YEAR"
+          },
+          "deductible": 0,
+          "reimbursement_rules": {
+            "base_ratio": 0.9
+          }
+        }
+      ]
+    },
+    "rules": [
+      {
+        "rule_id": "ZAOPD001",
+        "rule_name": "保障期间校验",
+        "description": "就诊或出险日期需在保险期间内。",
+        "category": "COVERAGE_PERIOD",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "保单约定",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "保险期间自2026年3月16日零时起至2027年3月15日24时止。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 10
+        },
+        "conditions": {
+          "logic": "AND",
+          "expressions": [
+            {
+              "field": "claim.accident_date",
+              "operator": "GTE",
+              "value": "${policy.effective_date}"
+            },
+            {
+              "field": "claim.accident_date",
+              "operator": "LTE",
+              "value": "${policy.expiry_date}"
+            }
+          ]
+        },
+        "action": {
+          "action_type": "APPROVE_CLAIM",
+          "params": {}
+        },
+        "rule_kind": "GATE"
+      },
+      {
+        "rule_id": "ZAOPD002",
+        "rule_name": "医保内门急诊责任触发",
+        "description": "存在医保内门急诊费用时触发责任。",
+        "category": "COVERAGE_SCOPE",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第六条第（一）项",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "对于被保险人需个人支付的、符合当地基本医疗保险范围的、必需且合理的医疗费用，保险人在扣除约定的免赔额后，按照约定的给付比例进行赔付。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 20
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.social_medical_amount",
+              "operator": "GT",
+              "value": 0
+            }
+          ]
+        },
+        "action": {
+          "action_type": "APPROVE_CLAIM",
+          "params": {}
+        },
+        "rule_kind": "TRIGGER"
+      },
+      {
+        "rule_id": "ZAOPD003",
+        "rule_name": "医保外门急诊责任触发",
+        "description": "存在医保外门急诊费用时触发责任。",
+        "category": "COVERAGE_SCOPE",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第六条第（二）项",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "对于被保险人需个人支付的、超出当地基本医疗保险范围的、必需且合理的医疗费用，保险人在扣除约定的免赔额后，按照约定的给付比例进行赔付。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 21
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.non_social_medical_amount",
+              "operator": "GT",
+              "value": 0
+            }
+          ]
+        },
+        "action": {
+          "action_type": "APPROVE_CLAIM",
+          "params": {}
+        },
+        "rule_kind": "TRIGGER"
+      },
+    {
+      "rule_id": "ZAOPD004",
+      "rule_name": "疾病等待期30天校验",
+      "description": "疾病案件需超过30天等待期。",
+        "category": "WAITING_PERIOD",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第六条",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "在等待期后因罹患疾病，在医院接受门诊或急诊治疗。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 30
+        },
+        "conditions": {
+          "logic": "OR",
+          "expressions": [
+            {
+              "logic": "SINGLE",
+              "expressions": [
+                {
+                  "field": "claim.cause_type",
+                  "operator": "EQ",
+                  "value": "ACCIDENT"
+                }
+              ]
+            },
+            {
+              "logic": "AND",
+              "expressions": [
+                {
+                  "field": "claim.cause_type",
+                  "operator": "EQ",
+                  "value": "DISEASE"
+                },
+                {
+                  "field": "claim.accident_date",
+                  "operator": "GT",
+                  "value": "${policy.effective_date + 30d}"
+                }
+              ]
+            }
+          ]
+        },
+        "action": {
+          "action_type": "APPROVE_CLAIM",
+          "params": {}
+      },
+      "rule_kind": "GATE"
+    },
+    {
+      "rule_id": "ZAOPD004X",
+      "rule_name": "疾病等待期内拒赔",
+      "description": "疾病门急诊发生在保单生效后30天内时不承担保险责任。",
+      "category": "EXCLUSION",
+      "status": "EFFECTIVE",
+      "execution": {
+        "domain": "ELIGIBILITY",
+        "loop_over": null,
+        "item_alias": null,
+        "item_action_on_reject": null
+      },
+      "source": {
+        "source_type": "CLAUSE",
+        "source_ref": "第六条",
+        "clause_code": "ZA-GOPD-2022A-90",
+        "source_text": "在等待期后因罹患疾病，在医院接受门诊或急诊治疗。"
+      },
+      "priority": {
+        "level": 1,
+        "rank": 31
+      },
+      "conditions": {
+        "logic": "AND",
+        "expressions": [
+          {
+            "field": "claim.cause_type",
+            "operator": "EQ",
+            "value": "DISEASE"
+          },
+          {
+            "field": "claim.accident_date",
+            "operator": "LTE",
+            "value": "${policy.effective_date + 30d}"
+          }
+        ]
+      },
+      "action": {
+        "action_type": "REJECT_CLAIM",
+        "params": {
+          "reject_reason_code": "WAITING_PERIOD_NOT_MET"
+        }
+      },
+      "rule_kind": "EXCLUSION"
+    },
+    {
+      "rule_id": "ZAOPD005",
+      "rule_name": "未明确疾病或意外原因转人工",
+      "category": "CLAIM_TIMELINE",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "理赔审核口径",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "责任成立需先确认属于意外伤害或疾病门急诊。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 31
+        },
+        "conditions": {
+          "logic": "AND",
+          "expressions": [
+            {
+              "field": "claim.cause_type",
+              "operator": "NOT_IN",
+              "value": [
+                "ACCIDENT",
+                "DISEASE"
+              ]
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ROUTE_CLAIM_MANUAL",
+          "params": {
+            "route_reason": "缺少明确出险原因，需确认疾病或意外属性"
+          }
+        },
+        "rule_kind": "ADJUSTMENT"
+      },
+      {
+        "rule_id": "ZAOPD006",
+        "rule_name": "医院范围校验",
+        "category": "COVERAGE_SCOPE",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除第（二）项",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "被保险人在不符合本合同约定的医院就诊发生的医疗费用。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 40
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.hospital_qualified",
+              "operator": "IS_FALSE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "NON_QUALIFIED_HOSPITAL"
+          }
+        },
+        "rule_kind": "EXCLUSION"
+      },
+      {
+        "rule_id": "ZAOPD007",
+        "rule_name": "医院资质缺失转人工",
+        "category": "COVERAGE_SCOPE",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "释义五",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "需确认是否为合同约定医院。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 41
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.hospital_qualified",
+              "operator": "IS_NULL",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ROUTE_CLAIM_MANUAL",
+          "params": {
+            "route_reason": "缺少医院资质信息，需人工确认是否属于约定医院"
+          }
+        },
+        "rule_kind": "ADJUSTMENT"
+      },
+      {
+        "rule_id": "ZAOPD101",
+        "rule_name": "投保人故意伤害免责",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "投保人对被保险人的故意杀害或故意伤害。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 60
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.policyholder_intentional_harm",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "POLICYHOLDER_INTENTIONAL_HARM"
+          }
+        },
+        "rule_kind": "EXCLUSION"
+      },
+      {
+        "rule_id": "ZAOPD101M",
+        "rule_name": "投保人故意伤害免责事实缺失转人工",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "投保人对被保险人的故意杀害或故意伤害。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 61
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.policyholder_intentional_harm",
+              "operator": "IS_NULL",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ROUTE_CLAIM_MANUAL",
+          "params": {
+            "route_reason": "免责事实缺失：投保人故意伤害免责"
+          }
+        },
+        "rule_kind": "ADJUSTMENT"
+      },
+      {
+        "rule_id": "ZAOPD102",
+        "rule_name": "被保险人自杀自伤免责",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "被保险人故意自杀、自伤，但被保险人自杀时为无民事行为能力人的除外。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 62
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.self_inflicted",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "SELF_INFLICTED"
+          }
+        },
+        "rule_kind": "EXCLUSION"
+      },
+      {
+        "rule_id": "ZAOPD102M",
+        "rule_name": "被保险人自杀自伤免责事实缺失转人工",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "被保险人故意自杀、自伤，但被保险人自杀时为无民事行为能力人的除外。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 63
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.self_inflicted",
+              "operator": "IS_NULL",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ROUTE_CLAIM_MANUAL",
+          "params": {
+            "route_reason": "免责事实缺失：被保险人自杀自伤免责"
+          }
+        },
+        "rule_kind": "ADJUSTMENT"
+      },
+      {
+        "rule_id": "ZAOPD103",
+        "rule_name": "故意犯罪免责",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "被保险人故意犯罪或者抗拒依法采取的刑事强制措施。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 64
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.criminal_act",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "CRIMINAL_ACT"
+          }
+        },
+        "rule_kind": "EXCLUSION"
+      },
+      {
+        "rule_id": "ZAOPD103M",
+        "rule_name": "故意犯罪免责事实缺失转人工",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "被保险人故意犯罪或者抗拒依法采取的刑事强制措施。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 65
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.criminal_act",
+              "operator": "IS_NULL",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ROUTE_CLAIM_MANUAL",
+          "params": {
+            "route_reason": "免责事实缺失：故意犯罪免责"
+          }
+        },
+        "rule_kind": "ADJUSTMENT"
+      },
+      {
+        "rule_id": "ZAOPD104",
+        "rule_name": "拘禁入狱期间免责",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "被政府依法拘禁或入狱期间伤病。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 66
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.detained_or_imprisoned",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "DETENTION_OR_IMPRISONMENT"
+          }
+        },
+        "rule_kind": "EXCLUSION"
+      },
+      {
+        "rule_id": "ZAOPD104M",
+        "rule_name": "拘禁入狱期间免责事实缺失转人工",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "被政府依法拘禁或入狱期间伤病。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 67
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.detained_or_imprisoned",
+              "operator": "IS_NULL",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ROUTE_CLAIM_MANUAL",
+          "params": {
+            "route_reason": "免责事实缺失：拘禁入狱期间免责"
+          }
+        },
+        "rule_kind": "ADJUSTMENT"
+      },
+      {
+        "rule_id": "ZAOPD105",
+        "rule_name": "殴斗醉酒吸毒免责",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "被保险人殴斗、醉酒、主动吸食或注射毒品。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 68
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.intoxicated_or_drug",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "INTOXICATION_OR_DRUG"
+          }
+        },
+        "rule_kind": "EXCLUSION"
+      },
+      {
+        "rule_id": "ZAOPD105M",
+        "rule_name": "殴斗醉酒吸毒免责事实缺失转人工",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "被保险人殴斗、醉酒、主动吸食或注射毒品。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 69
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.intoxicated_or_drug",
+              "operator": "IS_NULL",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ROUTE_CLAIM_MANUAL",
+          "params": {
+            "route_reason": "免责事实缺失：殴斗醉酒吸毒免责"
+          }
+        },
+        "rule_kind": "ADJUSTMENT"
+      },
+      {
+        "rule_id": "ZAOPD106",
+        "rule_name": "违规药品使用免责",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "违反规定使用麻醉或精神药品；未遵医嘱擅自服用、涂用、注射药物。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 70
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.illegal_drug_use",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "ILLEGAL_DRUG_USE"
+          }
+        },
+        "rule_kind": "EXCLUSION"
+      },
+      {
+        "rule_id": "ZAOPD106M",
+        "rule_name": "违规药品使用免责事实缺失转人工",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "违反规定使用麻醉或精神药品；未遵医嘱擅自服用、涂用、注射药物。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 71
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.illegal_drug_use",
+              "operator": "IS_NULL",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ROUTE_CLAIM_MANUAL",
+          "params": {
+            "route_reason": "免责事实缺失：违规药品使用免责"
+          }
+        },
+        "rule_kind": "ADJUSTMENT"
+      },
+      {
+        "rule_id": "ZAOPD107",
+        "rule_name": "酒驾无证无证照免责",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "酒后驾驶、无有效驾驶证驾驶或者驾驶无有效行驶证的机动交通工具。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 72
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.illegal_driving",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "ILLEGAL_DRIVING"
+          }
+        },
+        "rule_kind": "EXCLUSION"
+      },
+      {
+        "rule_id": "ZAOPD107M",
+        "rule_name": "酒驾无证无证照免责事实缺失转人工",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "酒后驾驶、无有效驾驶证驾驶或者驾驶无有效行驶证的机动交通工具。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 73
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.illegal_driving",
+              "operator": "IS_NULL",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ROUTE_CLAIM_MANUAL",
+          "params": {
+            "route_reason": "免责事实缺失：酒驾无证无证照免责"
+          }
+        },
+        "rule_kind": "ADJUSTMENT"
+      },
+      {
+        "rule_id": "ZAOPD108",
+        "rule_name": "既往症免责",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "被保险人所患既往症，及保险单中特别约定的除外疾病引起的相关费用。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 74
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.pre_existing_condition",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "PRE_EXISTING_CONDITION"
+          }
+        },
+        "rule_kind": "EXCLUSION"
+      },
+      {
+        "rule_id": "ZAOPD108M",
+        "rule_name": "既往症免责事实缺失转人工",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "被保险人所患既往症，及保险单中特别约定的除外疾病引起的相关费用。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 75
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.pre_existing_condition",
+              "operator": "IS_NULL",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ROUTE_CLAIM_MANUAL",
+          "params": {
+            "route_reason": "免责事实缺失：既往症免责"
+          }
+        },
+        "rule_kind": "ADJUSTMENT"
+      },
+      {
+        "rule_id": "ZAOPD109",
+        "rule_name": "等待期内检查后确诊免责",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "等待期内接受检查但在等待期后确诊的疾病。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 76
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.exam_within_waiting_period",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "EXAM_WITHIN_WAITING_PERIOD"
+          }
+        },
+        "rule_kind": "EXCLUSION"
+      },
+      {
+        "rule_id": "ZAOPD109M",
+        "rule_name": "等待期内检查后确诊免责事实缺失转人工",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "等待期内接受检查但在等待期后确诊的疾病。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 77
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.exam_within_waiting_period",
+              "operator": "IS_NULL",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ROUTE_CLAIM_MANUAL",
+          "params": {
+            "route_reason": "免责事实缺失：等待期内检查后确诊免责"
+          }
+        },
+        "rule_kind": "ADJUSTMENT"
+      },
+      {
+        "rule_id": "ZAOPD110",
+        "rule_name": "等待期内过敏中毒感染免责",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "等待期内药物过敏、食物中毒、细菌或病毒感染。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 78
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.waiting_period_allergy_or_infection",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "WAITING_PERIOD_DISEASE"
+          }
+        },
+        "rule_kind": "EXCLUSION"
+      },
+      {
+        "rule_id": "ZAOPD110M",
+        "rule_name": "等待期内过敏中毒感染免责事实缺失转人工",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "等待期内药物过敏、食物中毒、细菌或病毒感染。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 79
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.waiting_period_allergy_or_infection",
+              "operator": "IS_NULL",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ROUTE_CLAIM_MANUAL",
+          "params": {
+            "route_reason": "免责事实缺失：等待期内过敏中毒感染免责"
+          }
+        },
+        "rule_kind": "ADJUSTMENT"
+      },
+      {
+        "rule_id": "ZAOPD111",
+        "rule_name": "试验性治疗免责",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "未经科学或者医学认可的试验性或者研究性治疗及其产生的后果。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 80
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.experimental_treatment",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "EXPERIMENTAL_TREATMENT"
+          }
+        },
+        "rule_kind": "EXCLUSION"
+      },
+      {
+        "rule_id": "ZAOPD111M",
+        "rule_name": "试验性治疗免责事实缺失转人工",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "未经科学或者医学认可的试验性或者研究性治疗及其产生的后果。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 81
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.experimental_treatment",
+              "operator": "IS_NULL",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ROUTE_CLAIM_MANUAL",
+          "params": {
+            "route_reason": "免责事实缺失：试验性治疗免责"
+          }
+        },
+        "rule_kind": "ADJUSTMENT"
+      },
+      {
+        "rule_id": "ZAOPD112",
+        "rule_name": "未批准治疗或药品免责",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "未被治疗所在地权威部门批准的治疗，未获得治疗所在地政府许可或批准的药品或药物。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 82
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.unapproved_treatment",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "UNAPPROVED_TREATMENT"
+          }
+        },
+        "rule_kind": "EXCLUSION"
+      },
+      {
+        "rule_id": "ZAOPD112M",
+        "rule_name": "未批准治疗或药品免责事实缺失转人工",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "未被治疗所在地权威部门批准的治疗，未获得治疗所在地政府许可或批准的药品或药物。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 83
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.unapproved_treatment",
+              "operator": "IS_NULL",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ROUTE_CLAIM_MANUAL",
+          "params": {
+            "route_reason": "免责事实缺失：未批准治疗或药品免责"
+          }
+        },
+        "rule_kind": "ADJUSTMENT"
+      },
+      {
+        "rule_id": "ZAOPD113",
+        "rule_name": "基因疗法免责",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "所有基因疗法和细胞免疫疗法造成的医疗费用。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 84
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.gene_or_cell_therapy",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "GENE_CELL_THERAPY"
+          }
+        },
+        "rule_kind": "EXCLUSION"
+      },
+      {
+        "rule_id": "ZAOPD113M",
+        "rule_name": "基因疗法免责事实缺失转人工",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "所有基因疗法和细胞免疫疗法造成的医疗费用。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 85
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.gene_or_cell_therapy",
+              "operator": "IS_NULL",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ROUTE_CLAIM_MANUAL",
+          "params": {
+            "route_reason": "免责事实缺失：基因疗法免责"
+          }
+        },
+        "rule_kind": "ADJUSTMENT"
+      },
+      {
+        "rule_id": "ZAOPD114",
+        "rule_name": "鉴定费用免责",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "各类医疗鉴定、检测费用。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 86
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.medical_appraisal_fee",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "MEDICAL_APPRAISAL_FEE"
+          }
+        },
+        "rule_kind": "EXCLUSION"
+      },
+      {
+        "rule_id": "ZAOPD114M",
+        "rule_name": "鉴定费用免责事实缺失转人工",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "各类医疗鉴定、检测费用。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 87
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.medical_appraisal_fee",
+              "operator": "IS_NULL",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ROUTE_CLAIM_MANUAL",
+          "params": {
+            "route_reason": "免责事实缺失：鉴定费用免责"
+          }
+        },
+        "rule_kind": "ADJUSTMENT"
+      },
+      {
+        "rule_id": "ZAOPD115",
+        "rule_name": "职业病免责",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "因职业病导致的医疗费用。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 88
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.occupational_disease",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "OCCUPATIONAL_DISEASE"
+          }
+        },
+        "rule_kind": "EXCLUSION"
+      },
+      {
+        "rule_id": "ZAOPD115M",
+        "rule_name": "职业病免责事实缺失转人工",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "因职业病导致的医疗费用。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 89
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.occupational_disease",
+              "operator": "IS_NULL",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ROUTE_CLAIM_MANUAL",
+          "params": {
+            "route_reason": "免责事实缺失：职业病免责"
+          }
+        },
+        "rule_kind": "ADJUSTMENT"
+      },
+      {
+        "rule_id": "ZAOPD116",
+        "rule_name": "医疗事故免责",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "因医疗事故导致的医疗费用。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 90
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.medical_malpractice",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "MEDICAL_MALPRACTICE"
+          }
+        },
+        "rule_kind": "EXCLUSION"
+      },
+      {
+        "rule_id": "ZAOPD116M",
+        "rule_name": "医疗事故免责事实缺失转人工",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "因医疗事故导致的医疗费用。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 91
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.medical_malpractice",
+              "operator": "IS_NULL",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ROUTE_CLAIM_MANUAL",
+          "params": {
+            "route_reason": "免责事实缺失：医疗事故免责"
+          }
+        },
+        "rule_kind": "ADJUSTMENT"
+      },
+      {
+        "rule_id": "ZAOPD117",
+        "rule_name": "自行治疗购药免责",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "未经医生建议自行进行任何治疗或未经医生处方自行购买药品产生的费用。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 92
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.self_purchased_drug_without_prescription",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "SELF_PURCHASED_DRUG"
+          }
+        },
+        "rule_kind": "EXCLUSION"
+      },
+      {
+        "rule_id": "ZAOPD117M",
+        "rule_name": "自行治疗购药免责事实缺失转人工",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "未经医生建议自行进行任何治疗或未经医生处方自行购买药品产生的费用。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 93
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.self_purchased_drug_without_prescription",
+              "operator": "IS_NULL",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ROUTE_CLAIM_MANUAL",
+          "params": {
+            "route_reason": "免责事实缺失：自行治疗购药免责"
+          }
+        },
+        "rule_kind": "ADJUSTMENT"
+      },
+      {
+        "rule_id": "ZAOPD118",
+        "rule_name": "非开方医疗机构购药免责",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "未在开具处方的医生执业的医疗机构购买药品、医疗器械或医疗耗材产生的费用。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 94
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.non_prescribing_institution_purchase",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "NON_PRESCRIBING_PURCHASE"
+          }
+        },
+        "rule_kind": "EXCLUSION"
+      },
+      {
+        "rule_id": "ZAOPD118M",
+        "rule_name": "非开方医疗机构购药免责事实缺失转人工",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "未在开具处方的医生执业的医疗机构购买药品、医疗器械或医疗耗材产生的费用。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 95
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.non_prescribing_institution_purchase",
+              "operator": "IS_NULL",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ROUTE_CLAIM_MANUAL",
+          "params": {
+            "route_reason": "免责事实缺失：非开方医疗机构购药免责"
+          }
+        },
+        "rule_kind": "ADJUSTMENT"
+      },
+      {
+        "rule_id": "ZAOPD119",
+        "rule_name": "非医疗机构治疗免责",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "治疗在非医疗机构进行或费用由非医疗机构收取。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 96
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.non_medical_institution_treatment",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "NON_MEDICAL_INSTITUTION"
+          }
+        },
+        "rule_kind": "EXCLUSION"
+      },
+      {
+        "rule_id": "ZAOPD119M",
+        "rule_name": "非医疗机构治疗免责事实缺失转人工",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "治疗在非医疗机构进行或费用由非医疗机构收取。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 97
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.non_medical_institution_treatment",
+              "operator": "IS_NULL",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ROUTE_CLAIM_MANUAL",
+          "params": {
+            "route_reason": "免责事实缺失：非医疗机构治疗免责"
+          }
+        },
+        "rule_kind": "ADJUSTMENT"
+      },
+      {
+        "rule_id": "ZAOPD120",
+        "rule_name": "超30天处方剂量免责",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "处方剂量超过30天部分的药品费用。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 98
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.prescription_over_30_days",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "PRESCRIPTION_OVER_30_DAYS"
+          }
+        },
+        "rule_kind": "EXCLUSION"
+      },
+      {
+        "rule_id": "ZAOPD120M",
+        "rule_name": "超30天处方剂量免责事实缺失转人工",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "处方剂量超过30天部分的药品费用。"
+        },
+        "priority": {
+          "level": 1,
+          "rank": 99
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.prescription_over_30_days",
+              "operator": "IS_NULL",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ROUTE_CLAIM_MANUAL",
+          "params": {
+            "route_reason": "免责事实缺失：超30天处方剂量免责"
+          }
+        },
+        "rule_kind": "ADJUSTMENT"
+      },
+      {
+        "rule_id": "ZAOPD121",
+        "rule_name": "恶性肿瘤特药适应症不符免责",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "恶性肿瘤特定药品的使用与批准适应症及用法用量不符。"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 100
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.off_label_cancer_drug",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "OFF_LABEL_CANCER_DRUG"
+          }
+        },
+        "rule_kind": "EXCLUSION"
+      },
+      {
+        "rule_id": "ZAOPD121M",
+        "rule_name": "恶性肿瘤特药适应症不符免责事实缺失转人工",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "恶性肿瘤特定药品的使用与批准适应症及用法用量不符。"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 101
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.off_label_cancer_drug",
+              "operator": "IS_NULL",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ROUTE_CLAIM_MANUAL",
+          "params": {
+            "route_reason": "免责事实缺失：恶性肿瘤特药适应症不符免责"
+          }
+        },
+        "rule_kind": "ADJUSTMENT"
+      },
+      {
+        "rule_id": "ZAOPD122",
+        "rule_name": "临床无效特药免责",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "临床不能证明医嘱或处方所列恶性肿瘤特定药品对治疗有效。"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 102
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.cancer_drug_not_effective",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "CANCER_DRUG_NOT_EFFECTIVE"
+          }
+        },
+        "rule_kind": "EXCLUSION"
+      },
+      {
+        "rule_id": "ZAOPD122M",
+        "rule_name": "临床无效特药免责事实缺失转人工",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "临床不能证明医嘱或处方所列恶性肿瘤特定药品对治疗有效。"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 103
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.cancer_drug_not_effective",
+              "operator": "IS_NULL",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ROUTE_CLAIM_MANUAL",
+          "params": {
+            "route_reason": "免责事实缺失：临床无效特药免责"
+          }
+        },
+        "rule_kind": "ADJUSTMENT"
+      },
+      {
+        "rule_id": "ZAOPD123",
+        "rule_name": "恶性肿瘤特药耐药免责",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "被保险人的疾病状况对购买或领取的恶性肿瘤特定药品已经形成耐药。"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 104
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.cancer_drug_resistant",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "CANCER_DRUG_RESISTANT"
+          }
+        },
+        "rule_kind": "EXCLUSION"
+      },
+      {
+        "rule_id": "ZAOPD123M",
+        "rule_name": "恶性肿瘤特药耐药免责事实缺失转人工",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "被保险人的疾病状况对购买或领取的恶性肿瘤特定药品已经形成耐药。"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 105
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.cancer_drug_resistant",
+              "operator": "IS_NULL",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ROUTE_CLAIM_MANUAL",
+          "params": {
+            "route_reason": "免责事实缺失：恶性肿瘤特药耐药免责"
+          }
+        },
+        "rule_kind": "ADJUSTMENT"
+      },
+      {
+        "rule_id": "ZAOPD124",
+        "rule_name": "肥胖及减重手术免责",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "肥胖症相关手术、袖状胃切除术（用于治疗糖尿病时除外）。"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 106
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.obesity_treatment",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "OBESITY_TREATMENT"
+          }
+        },
+        "rule_kind": "EXCLUSION"
+      },
+      {
+        "rule_id": "ZAOPD124M",
+        "rule_name": "肥胖及减重手术免责事实缺失转人工",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "肥胖症相关手术、袖状胃切除术（用于治疗糖尿病时除外）。"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 107
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.obesity_treatment",
+              "operator": "IS_NULL",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ROUTE_CLAIM_MANUAL",
+          "params": {
+            "route_reason": "免责事实缺失：肥胖及减重手术免责"
+          }
+        },
+        "rule_kind": "ADJUSTMENT"
+      },
+      {
+        "rule_id": "ZAOPD125",
+        "rule_name": "整形美容变性免责",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "整形手术、美容或整容手术、变性手术及其并发症。"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 108
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.cosmetic_treatment",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "COSMETIC_TREATMENT"
+          }
+        },
+        "rule_kind": "EXCLUSION"
+      },
+      {
+        "rule_id": "ZAOPD125M",
+        "rule_name": "整形美容变性免责事实缺失转人工",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "整形手术、美容或整容手术、变性手术及其并发症。"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 109
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.cosmetic_treatment",
+              "operator": "IS_NULL",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ROUTE_CLAIM_MANUAL",
+          "params": {
+            "route_reason": "免责事实缺失：整形美容变性免责"
+          }
+        },
+        "rule_kind": "ADJUSTMENT"
+      },
+      {
+        "rule_id": "ZAOPD126",
+        "rule_name": "孕产相关免责",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "怀孕、流产、分娩、避孕、节育、绝育、绝育后复通、治疗不孕不育症、人工受孕、产前产后检查及并发症。"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 110
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.pregnancy_related",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "PREGNANCY_RELATED"
+          }
+        },
+        "rule_kind": "EXCLUSION"
+      },
+      {
+        "rule_id": "ZAOPD126M",
+        "rule_name": "孕产相关免责事实缺失转人工",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "怀孕、流产、分娩、避孕、节育、绝育、绝育后复通、治疗不孕不育症、人工受孕、产前产后检查及并发症。"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 111
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.pregnancy_related",
+              "operator": "IS_NULL",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ROUTE_CLAIM_MANUAL",
+          "params": {
+            "route_reason": "免责事实缺失：孕产相关免责"
+          }
+        },
+        "rule_kind": "ADJUSTMENT"
+      },
+      {
+        "rule_id": "ZAOPD127",
+        "rule_name": "视力矫正免责",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "视力矫正手术，但因意外所致的不受此限。"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 112
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.vision_correction",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "VISION_CORRECTION"
+          }
+        },
+        "rule_kind": "EXCLUSION"
+      },
+      {
+        "rule_id": "ZAOPD127M",
+        "rule_name": "视力矫正免责事实缺失转人工",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "视力矫正手术，但因意外所致的不受此限。"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 113
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.vision_correction",
+              "operator": "IS_NULL",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ROUTE_CLAIM_MANUAL",
+          "params": {
+            "route_reason": "免责事实缺失：视力矫正免责"
+          }
+        },
+        "rule_kind": "ADJUSTMENT"
+      },
+      {
+        "rule_id": "ZAOPD128",
+        "rule_name": "预防康复体检免责",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "预防、康复、休养或疗养、医疗咨询、健康体检、非处方药物、保健性或非疾病治疗类项目。"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 114
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.preventive_or_wellness",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "PREVENTIVE_WELLNESS"
+          }
+        },
+        "rule_kind": "EXCLUSION"
+      },
+      {
+        "rule_id": "ZAOPD128M",
+        "rule_name": "预防康复体检免责事实缺失转人工",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "预防、康复、休养或疗养、医疗咨询、健康体检、非处方药物、保健性或非疾病治疗类项目。"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 115
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.preventive_or_wellness",
+              "operator": "IS_NULL",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ROUTE_CLAIM_MANUAL",
+          "params": {
+            "route_reason": "免责事实缺失：预防康复体检免责"
+          }
+        },
+        "rule_kind": "ADJUSTMENT"
+      },
+      {
+        "rule_id": "ZAOPD129",
+        "rule_name": "康复器具免责",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "眼镜、隐形眼镜、义齿、义眼、义肢、轮椅、拐杖、助听器等康复性器具，所有非处方医疗器械。"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 116
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.rehabilitation_device",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "REHABILITATION_DEVICE"
+          }
+        },
+        "rule_kind": "EXCLUSION"
+      },
+      {
+        "rule_id": "ZAOPD129M",
+        "rule_name": "康复器具免责事实缺失转人工",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "眼镜、隐形眼镜、义齿、义眼、义肢、轮椅、拐杖、助听器等康复性器具，所有非处方医疗器械。"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 117
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.rehabilitation_device",
+              "operator": "IS_NULL",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ROUTE_CLAIM_MANUAL",
+          "params": {
+            "route_reason": "免责事实缺失：康复器具免责"
+          }
+        },
+        "rule_kind": "ADJUSTMENT"
+      },
+      {
+        "rule_id": "ZAOPD130",
+        "rule_name": "包皮及性功能治疗免责",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "包皮环切术、包皮剥离术、包皮气囊扩张术、性功能障碍治疗。"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 118
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.non_covered_genital_treatment",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "NON_COVERED_GENITAL_TREATMENT"
+          }
+        },
+        "rule_kind": "EXCLUSION"
+      },
+      {
+        "rule_id": "ZAOPD130M",
+        "rule_name": "包皮及性功能治疗免责事实缺失转人工",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "包皮环切术、包皮剥离术、包皮气囊扩张术、性功能障碍治疗。"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 119
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.non_covered_genital_treatment",
+              "operator": "IS_NULL",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ROUTE_CLAIM_MANUAL",
+          "params": {
+            "route_reason": "免责事实缺失：包皮及性功能治疗免责"
+          }
+        },
+        "rule_kind": "ADJUSTMENT"
+      },
+      {
+        "rule_id": "ZAOPD131",
+        "rule_name": "非列明人工器官材料免责",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "除列明人工器官外的人工器官材料费、安装和置换等费用。"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 120
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.non_listed_artificial_organ",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "NON_LISTED_ARTIFICIAL_ORGAN"
+          }
+        },
+        "rule_kind": "EXCLUSION"
+      },
+      {
+        "rule_id": "ZAOPD131M",
+        "rule_name": "非列明人工器官材料免责事实缺失转人工",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "除列明人工器官外的人工器官材料费、安装和置换等费用。"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 121
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.non_listed_artificial_organ",
+              "operator": "IS_NULL",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ROUTE_CLAIM_MANUAL",
+          "params": {
+            "route_reason": "免责事实缺失：非列明人工器官材料免责"
+          }
+        },
+        "rule_kind": "ADJUSTMENT"
+      },
+      {
+        "rule_id": "ZAOPD132",
+        "rule_name": "口腔护理免责",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "牙护理、洗牙、牙移植、义齿、镶牙、牙体缺损修复、烤瓷牙、口腔修复、口腔正畸、口腔保健。"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 122
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.dental_care_only",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "DENTAL_CARE"
+          }
+        },
+        "rule_kind": "EXCLUSION"
+      },
+      {
+        "rule_id": "ZAOPD132M",
+        "rule_name": "口腔护理免责事实缺失转人工",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "牙护理、洗牙、牙移植、义齿、镶牙、牙体缺损修复、烤瓷牙、口腔修复、口腔正畸、口腔保健。"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 123
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.dental_care_only",
+              "operator": "IS_NULL",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ROUTE_CLAIM_MANUAL",
+          "params": {
+            "route_reason": "免责事实缺失：口腔护理免责"
+          }
+        },
+        "rule_kind": "ADJUSTMENT"
+      },
+      {
+        "rule_id": "ZAOPD133",
+        "rule_name": "性病精神遗传先天免责",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "性病，精神和行为障碍，遗传性疾病，先天性畸形、变形或染色体异常。"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 124
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.genetic_or_psychiatric",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "GENETIC_OR_PSYCHIATRIC"
+          }
+        },
+        "rule_kind": "EXCLUSION"
+      },
+      {
+        "rule_id": "ZAOPD133M",
+        "rule_name": "性病精神遗传先天免责事实缺失转人工",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "性病，精神和行为障碍，遗传性疾病，先天性畸形、变形或染色体异常。"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 125
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.genetic_or_psychiatric",
+              "operator": "IS_NULL",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ROUTE_CLAIM_MANUAL",
+          "params": {
+            "route_reason": "免责事实缺失：性病精神遗传先天免责"
+          }
+        },
+        "rule_kind": "ADJUSTMENT"
+      },
+      {
+        "rule_id": "ZAOPD134",
+        "rule_name": "HIV免责",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "被保险人感染艾滋病病毒或患艾滋病。"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 126
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.hiv_related",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "HIV_RELATED"
+          }
+        },
+        "rule_kind": "EXCLUSION"
+      },
+      {
+        "rule_id": "ZAOPD134M",
+        "rule_name": "HIV免责事实缺失转人工",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "被保险人感染艾滋病病毒或患艾滋病。"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 127
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.hiv_related",
+              "operator": "IS_NULL",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ROUTE_CLAIM_MANUAL",
+          "params": {
+            "route_reason": "免责事实缺失：HIV免责"
+          }
+        },
+        "rule_kind": "ADJUSTMENT"
+      },
+      {
+        "rule_id": "ZAOPD135",
+        "rule_name": "战争暴乱核化学污染免责",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "战争、军事行动、暴乱或者武装叛乱；核爆炸、核辐射、核污染、化学污染。"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 128
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.war_related",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "REJECT_CLAIM",
+          "params": {
+            "reject_reason_code": "WAR_OR_POLLUTION"
+          }
+        },
+        "rule_kind": "EXCLUSION"
+      },
+      {
+        "rule_id": "ZAOPD135M",
+        "rule_name": "战争暴乱核化学污染免责事实缺失转人工",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "战争、军事行动、暴乱或者武装叛乱；核爆炸、核辐射、核污染、化学污染。"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 129
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.war_related",
+              "operator": "IS_NULL",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ROUTE_CLAIM_MANUAL",
+          "params": {
+            "route_reason": "免责事实缺失：战争暴乱核化学污染免责"
+          }
+        },
+        "rule_kind": "ADJUSTMENT"
+      },
+      {
+        "rule_id": "ZAOPD136",
+        "rule_name": "牙科例外放行规则",
+        "description": "牙科治疗属于条款例外时不适用牙护理免责。",
+        "category": "EXCLUSION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ELIGIBILITY",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十条责任免除第（五）项",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "因龋齿、牙髓病、牙隐裂、拔牙、阻生齿治疗以及牙周组织疾病所发生的合理医疗费用除外。"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 140
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.dental_exception_covered",
+              "operator": "IS_TRUE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "APPROVE_CLAIM",
+          "params": {}
+        },
+        "rule_kind": "ADJUSTMENT"
+      },
+      {
+        "rule_id": "ZAOPD201",
+        "rule_name": "医疗必需合理性校验",
+        "category": "PRICING_REASONABILITY",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ASSESSMENT",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "释义七",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "仅赔付必需且合理的医疗费用。"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 200
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.medically_necessary",
+              "operator": "IS_FALSE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ROUTE_CLAIM_MANUAL",
+          "params": {
+            "route_reason": "缺少医疗必需合理性结论，需人工审核费用项目"
+          }
+        },
+        "rule_kind": "ITEM_FLAG"
+      },
+      {
+        "rule_id": "ZAOPD202",
+        "rule_name": "医保内费用识别",
+        "category": "ITEM_CLASSIFICATION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ASSESSMENT",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "理赔录入口径",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "医保范围内门急诊费用单独识别。"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 201
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.social_medical_amount",
+              "operator": "GT",
+              "value": 0
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ADD_REMARK",
+          "params": {
+            "remark_template": "识别到医保内费用{claim.social_medical_amount}元"
+          }
+        },
+        "rule_kind": "ITEM_FLAG"
+      },
+      {
+        "rule_id": "ZAOPD203",
+        "rule_name": "医保外费用识别",
+        "category": "ITEM_CLASSIFICATION",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "ASSESSMENT",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "理赔录入口径",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "医保范围外门急诊费用单独识别。"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 202
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.non_social_medical_amount",
+              "operator": "GT",
+              "value": 0
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ADD_REMARK",
+          "params": {
+            "remark_template": "识别到医保外费用{claim.non_social_medical_amount}元"
+          }
+        },
+        "rule_kind": "ITEM_FLAG"
+      },
+      {
+        "rule_id": "ZAOPD301",
+        "rule_name": "其他途径补偿扣减",
+        "category": "SOCIAL_INSURANCE",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "POST_PROCESS",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第九条补偿原则",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "保险人仅对被保险人实际发生的医疗费用扣除其所获医疗费用补偿后的余额按照本合同的约定进行赔付。"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 300
+        },
+        "conditions": {
+          "logic": "ALWAYS_TRUE",
+          "expressions": []
+        },
+        "action": {
+          "action_type": "APPLY_FORMULA",
+          "params": {
+            "formula": {
+              "expression": "(({claim.social_medical_amount}+{claim.non_social_medical_amount})-({claim.other_reimbursement_received}))",
+              "output_field": "calculatedAmount"
+            }
+          }
+        },
+        "rule_kind": "POST_PROCESS"
+      },
+      {
+        "rule_id": "ZAOPD302",
+        "rule_name": "单次免赔额为0",
+        "category": "DEDUCTIBLE",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "POST_PROCESS",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第八条免赔额",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "本合同免赔额由投保人与保险人在订立本合同时协商确定，并在本合同中载明。"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 301
+        },
+        "conditions": {
+          "logic": "ALWAYS_TRUE",
+          "expressions": []
+        },
+        "action": {
+          "action_type": "APPLY_DEDUCTIBLE",
+          "params": {
+            "deductible_amount": 0
+          }
+        },
+        "rule_kind": "POST_PROCESS"
+      },
+      {
+        "rule_id": "ZAOPD303",
+        "rule_name": "统一赔付比例90%",
+        "category": "PAYOUT_RATIO",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "POST_PROCESS",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "费率表给付比例系数",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "本保单预设给付比例为90%。"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 302
+        },
+        "conditions": {
+          "logic": "ALWAYS_TRUE",
+          "expressions": []
+        },
+        "action": {
+          "action_type": "SET_CLAIM_RATIO",
+          "params": {
+            "payout_ratio": 0.9
+          }
+        },
+        "rule_kind": "POST_PROCESS"
+      },
+      {
+        "rule_id": "ZAOPD304",
+        "rule_name": "社保身份未按社保结算转人工",
+        "category": "SOCIAL_INSURANCE",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "POST_PROCESS",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第九条第（二）项",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "若被保险人以参加基本医疗保险或公费医疗身份投保，但未以参加基本医疗保险或公费医疗身份就诊并结算的，则保险人根据本合同单独约定的给付比例进行赔付。"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 303
+        },
+        "conditions": {
+          "logic": "AND",
+          "expressions": [
+            {
+              "field": "claim.insured_social_security",
+              "operator": "IS_TRUE",
+              "value": null
+            },
+            {
+              "field": "claim.settled_with_social_security",
+              "operator": "IS_FALSE",
+              "value": null
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ROUTE_CLAIM_MANUAL",
+          "params": {
+            "route_reason": "已按社保身份投保但未按社保结算，需确认适用赔付比例"
+          }
+        },
+        "rule_kind": "POST_PROCESS"
+      },
+      {
+        "rule_id": "ZAOPD305",
+        "rule_name": "医保内责任限额1万元",
+        "category": "AGGREGATE_CAP",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "POST_PROCESS",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十一条保险金额",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "基本医疗保险范围内门急诊医疗费用保险金额10000元。"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 304
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.social_medical_amount",
+              "operator": "GT",
+              "value": 10000
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ROUTE_CLAIM_MANUAL",
+          "params": {
+            "route_reason": "医保内责任超过1万元限额，需人工确认封顶处理"
+          }
+        },
+        "rule_kind": "POST_PROCESS"
+      },
+      {
+        "rule_id": "ZAOPD306",
+        "rule_name": "医保外责任限额1万元",
+        "category": "AGGREGATE_CAP",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "POST_PROCESS",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第十一条保险金额",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "基本医疗保险范围外门急诊医疗费用保险金额10000元。"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 305
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.non_social_medical_amount",
+              "operator": "GT",
+              "value": 10000
+            }
+          ]
+        },
+        "action": {
+          "action_type": "ROUTE_CLAIM_MANUAL",
+          "params": {
+            "route_reason": "医保外责任超过1万元限额，需人工确认封顶处理"
+          }
+        },
+        "rule_kind": "POST_PROCESS"
+      },
+      {
+        "rule_id": "ZAOPD307",
+        "rule_name": "合同总保额封顶校验",
+        "category": "AGGREGATE_CAP",
+        "status": "EFFECTIVE",
+        "execution": {
+          "domain": "POST_PROCESS",
+          "loop_over": null,
+          "item_alias": null,
+          "item_action_on_reject": null
+        },
+        "source": {
+          "source_type": "CLAUSE",
+          "source_ref": "第六条、第十一条",
+          "clause_code": "ZA-GOPD-2022A-90",
+          "source_text": "若上述两项责任下的累计给付保险金总额达到本合同载明的总保险金额时，本合同终止。"
+        },
+        "priority": {
+          "level": 2,
+          "rank": 306
+        },
+        "conditions": {
+          "logic": "SINGLE",
+          "expressions": [
+            {
+              "field": "claim.claimed_total_amount",
+              "operator": "GT",
+              "value": 20000
+            }
+          ]
+        },
+        "action": {
+          "action_type": "TERMINATE_CONTRACT",
+          "params": {}
+        },
+        "rule_kind": "POST_PROCESS"
+      }
+    ],
+    "execution_pipeline": {
+      "domains": [
+        {
+          "domain": "ELIGIBILITY",
+          "label": "定责",
+          "execution_mode": "ALL_MATCH",
+          "input_granularity": "CLAIM",
+          "short_circuit_on": [
+            "REJECT_CLAIM"
+          ],
+          "category_sequence": [
+            "COVERAGE_PERIOD",
+            "WAITING_PERIOD",
+            "COVERAGE_SCOPE",
+            "EXCLUSION"
+          ],
+          "semantic_sequence": [
+            "GATE",
+            "TRIGGER",
+            "EXCLUSION",
+            "ADJUSTMENT"
+          ]
+        },
+        {
+          "domain": "ASSESSMENT",
+          "label": "定损",
+          "execution_mode": "ALL_MATCH",
+          "input_granularity": "ITEM",
+          "loop_collection": "claim.expense_items",
+          "short_circuit_on": [],
+          "category_sequence": [
+            "ITEM_CLASSIFICATION",
+            "PRICING_REASONABILITY"
+          ],
+          "semantic_sequence": [
+            "ITEM_ELIGIBILITY",
+            "ITEM_RATIO",
+            "ITEM_PRICING",
+            "ITEM_CAP",
+            "ITEM_FLAG"
+          ]
+        },
+        {
+          "domain": "POST_PROCESS",
+          "label": "后处理",
+          "execution_mode": "PRIORITY_ORDERED",
+          "input_granularity": "CLAIM",
+          "short_circuit_on": [],
+          "category_sequence": [
+            "SOCIAL_INSURANCE",
+            "DEDUCTIBLE",
+            "PAYOUT_RATIO",
+            "AGGREGATE_CAP"
+          ],
+          "semantic_sequence": [
+            "POST_PROCESS"
+          ]
+        }
+      ]
+    },
+    "override_chains": [],
+    "field_dictionary": {
+      "claim.accident_date": {
+        "label": "出险/就诊日期",
+        "data_type": "DATE",
+        "scope": "claim",
+        "source": "intake",
+        "applicable_domains": [
+          "ELIGIBILITY",
+          "POST_PROCESS"
+        ],
+        "source_type": "material",
+        "required_evidence": true
+      },
+      "claim.cause_type": {
+        "label": "出险原因类型",
+        "data_type": "STRING",
+        "scope": "claim",
+        "source": "intake",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source_type": "user_input",
+        "required_evidence": true
+      },
+      "claim.hospital_qualified": {
+        "label": "医院是否符合约定范围",
+        "data_type": "BOOLEAN",
+        "scope": "claim",
+        "source": "material_validation",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source_type": "material",
+        "required_evidence": true
+      },
+      "claim.social_medical_amount": {
+        "label": "医保内费用",
+        "data_type": "NUMBER",
+        "scope": "claim",
+        "source": "invoice",
+        "applicable_domains": [
+          "ELIGIBILITY",
+          "ASSESSMENT",
+          "POST_PROCESS"
+        ],
+        "source_type": "material",
+        "required_evidence": true
+      },
+      "claim.non_social_medical_amount": {
+        "label": "医保外费用",
+        "data_type": "NUMBER",
+        "scope": "claim",
+        "source": "invoice",
+        "applicable_domains": [
+          "ELIGIBILITY",
+          "ASSESSMENT",
+          "POST_PROCESS"
+        ],
+        "source_type": "material",
+        "required_evidence": true
+      },
+      "claim.other_reimbursement_received": {
+        "label": "其他途径已补偿金额",
+        "data_type": "NUMBER",
+        "scope": "claim",
+        "source": "intake",
+        "applicable_domains": [
+          "POST_PROCESS"
+        ],
+        "source_type": "user_input",
+        "required_evidence": false
+      },
+      "claim.insured_social_security": {
+        "label": "是否社保身份投保",
+        "data_type": "BOOLEAN",
+        "scope": "claim",
+        "source": "policy",
+        "applicable_domains": [
+          "POST_PROCESS"
+        ],
+        "source_type": "policy",
+        "required_evidence": false
+      },
+      "claim.settled_with_social_security": {
+        "label": "是否按社保结算",
+        "data_type": "BOOLEAN",
+        "scope": "claim",
+        "source": "intake",
+        "applicable_domains": [
+          "POST_PROCESS"
+        ],
+        "source_type": "material",
+        "required_evidence": false
+      },
+      "claim.medically_necessary": {
+        "label": "是否必需且合理",
+        "data_type": "BOOLEAN",
+        "scope": "claim",
+        "source": "medical_review",
+        "applicable_domains": [
+          "ASSESSMENT"
+        ],
+        "source_type": "material",
+        "required_evidence": false
+      },
+      "claim.claimed_total_amount": {
+        "label": "本次索赔总额",
+        "data_type": "NUMBER",
+        "scope": "claim",
+        "source": "system",
+        "applicable_domains": [
+          "POST_PROCESS"
+        ],
+        "source_type": "derived",
+        "required_evidence": false
+      },
+      "claim.dental_exception_covered": {
+        "label": "牙科例外是否适用",
+        "data_type": "BOOLEAN",
+        "scope": "claim",
+        "source": "medical_review",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source_type": "material",
+        "required_evidence": false
+      },
+      "claim.policyholder_intentional_harm": {
+        "label": "投保人故意伤害",
+        "data_type": "BOOLEAN",
+        "scope": "claim",
+        "source": "fact_catalog",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source_type": "material",
+        "required_evidence": false
+      },
+      "claim.self_inflicted": {
+        "label": "被保险人自杀自伤",
+        "data_type": "BOOLEAN",
+        "scope": "claim",
+        "source": "fact_catalog",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source_type": "material",
+        "required_evidence": false
+      },
+      "claim.criminal_act": {
+        "label": "故意犯罪",
+        "data_type": "BOOLEAN",
+        "scope": "claim",
+        "source": "fact_catalog",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source_type": "material",
+        "required_evidence": false
+      },
+      "claim.detained_or_imprisoned": {
+        "label": "拘禁入狱期间",
+        "data_type": "BOOLEAN",
+        "scope": "claim",
+        "source": "fact_catalog",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source_type": "material",
+        "required_evidence": false
+      },
+      "claim.intoxicated_or_drug": {
+        "label": "殴斗醉酒吸毒",
+        "data_type": "BOOLEAN",
+        "scope": "claim",
+        "source": "fact_catalog",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source_type": "material",
+        "required_evidence": false
+      },
+      "claim.illegal_drug_use": {
+        "label": "违规药品使用",
+        "data_type": "BOOLEAN",
+        "scope": "claim",
+        "source": "fact_catalog",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source_type": "material",
+        "required_evidence": false
+      },
+      "claim.illegal_driving": {
+        "label": "酒驾无证无证照",
+        "data_type": "BOOLEAN",
+        "scope": "claim",
+        "source": "fact_catalog",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source_type": "material",
+        "required_evidence": false
+      },
+      "claim.pre_existing_condition": {
+        "label": "既往症",
+        "data_type": "BOOLEAN",
+        "scope": "claim",
+        "source": "fact_catalog",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source_type": "material",
+        "required_evidence": false
+      },
+      "claim.exam_within_waiting_period": {
+        "label": "等待期内检查后确诊",
+        "data_type": "BOOLEAN",
+        "scope": "claim",
+        "source": "fact_catalog",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source_type": "material",
+        "required_evidence": false
+      },
+      "claim.waiting_period_allergy_or_infection": {
+        "label": "等待期内过敏中毒感染",
+        "data_type": "BOOLEAN",
+        "scope": "claim",
+        "source": "fact_catalog",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source_type": "material",
+        "required_evidence": false
+      },
+      "claim.experimental_treatment": {
+        "label": "试验性治疗",
+        "data_type": "BOOLEAN",
+        "scope": "claim",
+        "source": "fact_catalog",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source_type": "material",
+        "required_evidence": false
+      },
+      "claim.unapproved_treatment": {
+        "label": "未批准治疗或药品",
+        "data_type": "BOOLEAN",
+        "scope": "claim",
+        "source": "fact_catalog",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source_type": "material",
+        "required_evidence": false
+      },
+      "claim.gene_or_cell_therapy": {
+        "label": "基因疗法",
+        "data_type": "BOOLEAN",
+        "scope": "claim",
+        "source": "fact_catalog",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source_type": "material",
+        "required_evidence": false
+      },
+      "claim.medical_appraisal_fee": {
+        "label": "鉴定费用",
+        "data_type": "BOOLEAN",
+        "scope": "claim",
+        "source": "fact_catalog",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source_type": "material",
+        "required_evidence": false
+      },
+      "claim.occupational_disease": {
+        "label": "职业病",
+        "data_type": "BOOLEAN",
+        "scope": "claim",
+        "source": "fact_catalog",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source_type": "material",
+        "required_evidence": false
+      },
+      "claim.medical_malpractice": {
+        "label": "医疗事故",
+        "data_type": "BOOLEAN",
+        "scope": "claim",
+        "source": "fact_catalog",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source_type": "material",
+        "required_evidence": false
+      },
+      "claim.self_purchased_drug_without_prescription": {
+        "label": "自行治疗购药",
+        "data_type": "BOOLEAN",
+        "scope": "claim",
+        "source": "fact_catalog",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source_type": "material",
+        "required_evidence": false
+      },
+      "claim.non_prescribing_institution_purchase": {
+        "label": "非开方医疗机构购药",
+        "data_type": "BOOLEAN",
+        "scope": "claim",
+        "source": "fact_catalog",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source_type": "material",
+        "required_evidence": false
+      },
+      "claim.non_medical_institution_treatment": {
+        "label": "非医疗机构治疗",
+        "data_type": "BOOLEAN",
+        "scope": "claim",
+        "source": "fact_catalog",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source_type": "material",
+        "required_evidence": false
+      },
+      "claim.prescription_over_30_days": {
+        "label": "超30天处方剂量",
+        "data_type": "BOOLEAN",
+        "scope": "claim",
+        "source": "fact_catalog",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source_type": "material",
+        "required_evidence": false
+      },
+      "claim.off_label_cancer_drug": {
+        "label": "恶性肿瘤特药适应症不符",
+        "data_type": "BOOLEAN",
+        "scope": "claim",
+        "source": "fact_catalog",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source_type": "material",
+        "required_evidence": false
+      },
+      "claim.cancer_drug_not_effective": {
+        "label": "临床无效特药",
+        "data_type": "BOOLEAN",
+        "scope": "claim",
+        "source": "fact_catalog",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source_type": "material",
+        "required_evidence": false
+      },
+      "claim.cancer_drug_resistant": {
+        "label": "恶性肿瘤特药耐药",
+        "data_type": "BOOLEAN",
+        "scope": "claim",
+        "source": "fact_catalog",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source_type": "material",
+        "required_evidence": false
+      },
+      "claim.obesity_treatment": {
+        "label": "肥胖及减重手术",
+        "data_type": "BOOLEAN",
+        "scope": "claim",
+        "source": "fact_catalog",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source_type": "material",
+        "required_evidence": false
+      },
+      "claim.cosmetic_treatment": {
+        "label": "整形美容变性",
+        "data_type": "BOOLEAN",
+        "scope": "claim",
+        "source": "fact_catalog",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source_type": "material",
+        "required_evidence": false
+      },
+      "claim.pregnancy_related": {
+        "label": "孕产相关",
+        "data_type": "BOOLEAN",
+        "scope": "claim",
+        "source": "fact_catalog",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source_type": "material",
+        "required_evidence": false
+      },
+      "claim.vision_correction": {
+        "label": "视力矫正",
+        "data_type": "BOOLEAN",
+        "scope": "claim",
+        "source": "fact_catalog",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source_type": "material",
+        "required_evidence": false
+      },
+      "claim.preventive_or_wellness": {
+        "label": "预防康复体检",
+        "data_type": "BOOLEAN",
+        "scope": "claim",
+        "source": "fact_catalog",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source_type": "material",
+        "required_evidence": false
+      },
+      "claim.rehabilitation_device": {
+        "label": "康复器具",
+        "data_type": "BOOLEAN",
+        "scope": "claim",
+        "source": "fact_catalog",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source_type": "material",
+        "required_evidence": false
+      },
+      "claim.non_covered_genital_treatment": {
+        "label": "包皮及性功能治疗",
+        "data_type": "BOOLEAN",
+        "scope": "claim",
+        "source": "fact_catalog",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source_type": "material",
+        "required_evidence": false
+      },
+      "claim.non_listed_artificial_organ": {
+        "label": "非列明人工器官材料",
+        "data_type": "BOOLEAN",
+        "scope": "claim",
+        "source": "fact_catalog",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source_type": "material",
+        "required_evidence": false
+      },
+      "claim.dental_care_only": {
+        "label": "口腔护理",
+        "data_type": "BOOLEAN",
+        "scope": "claim",
+        "source": "fact_catalog",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source_type": "material",
+        "required_evidence": false
+      },
+      "claim.genetic_or_psychiatric": {
+        "label": "性病精神遗传先天",
+        "data_type": "BOOLEAN",
+        "scope": "claim",
+        "source": "fact_catalog",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source_type": "material",
+        "required_evidence": false
+      },
+      "claim.hiv_related": {
+        "label": "HIV",
+        "data_type": "BOOLEAN",
+        "scope": "claim",
+        "source": "fact_catalog",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source_type": "material",
+        "required_evidence": false
+      },
+      "claim.war_related": {
+        "label": "战争暴乱核化学污染",
+        "data_type": "BOOLEAN",
+        "scope": "claim",
+        "source": "fact_catalog",
+        "applicable_domains": [
+          "ELIGIBILITY"
+        ],
+        "source_type": "material",
+        "required_evidence": false
+      }
+    },
+    "metadata": {
+      "schema_version": "2.0",
+      "version": "1",
+      "generated_at": "2026-03-15T10:00:00+08:00",
+      "generated_by": "CODEX",
+      "total_rules": 88,
+      "rules_by_domain": {
+        "eligibility": 78,
+        "assessment": 3,
+        "post_process": 7
+      }
+    }
   }
 ]

@@ -6,27 +6,93 @@ function includesAnyText(target, candidates = []) {
   return candidates.some((item) => normalized.includes(String(item || "").toLowerCase()));
 }
 
-function inferProductLine({ claimCase = null, aggregation = null } = {}) {
+function buildProductContext(claimCase = null) {
   const products = readData("products") || [];
   const product = claimCase?.productCode
     ? products.find((item) => item.productCode === claimCase.productCode)
     : null;
-  const text = [
-    product?.primaryCategory,
-    product?.secondaryCategory,
-    product?.racewayName,
-    product?.marketingName,
-    product?.regulatoryName,
-    claimCase?.productName,
-    claimCase?.insuranceType,
-  ]
-    .filter(Boolean)
-    .join(" ");
 
-  if (includesAnyText(text, ["车险", "机动车", "汽车", "交强", "三者", "车损"])) {
+  return {
+    product,
+    categoryText: [
+      product?.primaryCategory,
+      product?.secondaryCategory,
+      product?.racewayName,
+      product?.primaryCategoryCode,
+      product?.secondaryCategoryCode,
+      product?.racewayId,
+    ]
+      .filter(Boolean)
+      .join(" "),
+    text: [
+      product?.primaryCategory,
+      product?.secondaryCategory,
+      product?.racewayName,
+      product?.marketingName,
+      product?.regulatoryName,
+      product?.productSummary,
+      Array.isArray(product?.tags) ? product.tags.join(" ") : "",
+      claimCase?.productName,
+      claimCase?.insuranceType,
+      claimCase?.accidentReason,
+    ]
+      .filter(Boolean)
+      .join(" "),
+  };
+}
+
+function inferProductLine({ claimCase = null, aggregation = null } = {}) {
+  const { product, categoryText, text } = buildProductContext(claimCase);
+
+  if (includesAnyText(product?.primaryCategory, ["健康保险", "医疗保险", "健康"])) {
+    return "HEALTH";
+  }
+  if (includesAnyText(product?.primaryCategory, ["意外保险", "意外"])) {
+    return "ACCIDENT";
+  }
+  if (includesAnyText(product?.primaryCategory, ["责任保险", "责任"])) {
+    return "LIABILITY";
+  }
+  if (includesAnyText(product?.primaryCategory, ["机动车", "车险"])) {
     return "AUTO";
   }
-  if (includesAnyText(text, ["责任", "雇主责任", "公众责任", "机械责任"])) {
+
+  if (
+    includesAnyText(categoryText, [
+      "工程机械第三者责任",
+      "工程机械作业责任",
+      "雇主责任",
+      "公众责任",
+      "产品责任",
+      "责任保险",
+      "L01",
+      "L0101",
+    ])
+  ) {
+    return "LIABILITY";
+  }
+  if (includesAnyText(categoryText, ["机动车", "车险", "交强", "车损", "AUTO"])) {
+    return "AUTO";
+  }
+  if (includesAnyText(categoryText, ["健康", "医疗", "A01"])) {
+    return "HEALTH";
+  }
+  if (includesAnyText(categoryText, ["意外", "C01"])) {
+    return "ACCIDENT";
+  }
+
+  if (
+    includesAnyText(text, [
+      "责任保险",
+      "雇主责任",
+      "公众责任",
+      "机械责任",
+      "作业责任",
+      "工程机械第三者责任",
+      "工程机械作业责任",
+      "第三者责任",
+    ])
+  ) {
     return "LIABILITY";
   }
   if (includesAnyText(text, ["医疗", "健康", "住院", "门诊", "重疾"])) {
@@ -34,6 +100,12 @@ function inferProductLine({ claimCase = null, aggregation = null } = {}) {
   }
   if (includesAnyText(text, ["意外", "身故", "伤残"])) {
     return "ACCIDENT";
+  }
+  if (includesAnyText(text, ["车险", "机动车", "汽车", "交强", "车损", "商业车险"])) {
+    return "AUTO";
+  }
+  if (String(claimCase?.insuranceType || "").toUpperCase() === "AUTO") {
+    return "AUTO";
   }
 
   if (aggregation?.deathProfile?.deathConfirmed) {

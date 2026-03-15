@@ -27,6 +27,7 @@ import { readData, writeData } from '../utils/fileStore.js';
 import { extractDocumentSummaries } from '../services/summaryExtractors/index.js';
 import { aggregateCase } from '../services/caseAggregator.js';
 import { analyzeMultiFiles } from '../services/multiFileAnalyzer.js';
+import { syncClaimReviewArtifacts } from '../services/claimReviewService.js';
 
 const MAX_CONCURRENT_PER_USER = 10;
 const POLL_INTERVAL = 1000;
@@ -290,6 +291,18 @@ class TaskScheduler {
 
     await this.saveImportRecordToClaimDocuments(task, finalStatus, analysis);
     await this.saveMaterialsToClaimCase(task, analysis);
+    if (analysis.aggregation) {
+      try {
+        await syncClaimReviewArtifacts({
+          claimCaseId: task.claimCaseId,
+          stageOptions: {
+            parseCompleted: true,
+          },
+        });
+      } catch (reviewSyncError) {
+        console.error('[Scheduler] Failed to sync review artifacts:', reviewSyncError);
+      }
+    }
 
     this.emitTaskComplete(task);
   }

@@ -90,6 +90,10 @@ import { buildCaseValidationChecklist } from "./services/caseValidationService.j
 import { buildDecisionTrace } from "./services/decisionTraceService.js";
 import { summarizeHandlingProfile } from "./services/handlingProfileService.js";
 import {
+  getLatestClaimDocumentRecord,
+  syncClaimReviewArtifacts,
+} from "./services/claimReviewService.js";
+import {
   generateGeminiContent,
   invokeAICapability,
   toLegacyAIInteractionLog,
@@ -2659,6 +2663,21 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
             liabilityStatus: timeline?.stages?.find((stage) => stage.key === "liability")?.status,
             assessmentStatus: timeline?.stages?.find((stage) => stage.key === "assessment")?.status,
           });
+          try {
+            await syncClaimReviewArtifacts({
+              claimCaseId,
+              claimCase,
+              stageOptions: {
+                parseCompleted: ["completed", "manual_completed"].includes(
+                  timeline?.stages?.find((stage) => stage.key === "parse")?.status,
+                ),
+                liabilityStatus: timeline?.stages?.find((stage) => stage.key === "liability")?.status,
+                assessmentStatus: timeline?.stages?.find((stage) => stage.key === "assessment")?.status,
+              },
+            });
+          } catch (reviewSyncError) {
+            console.error("[claim/full-review] Failed to sync review artifacts:", reviewSyncError);
+          }
         }
       }
       res.setHeader("Content-Type", "application/json");
@@ -3372,33 +3391,55 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
     if (claimCaseId) {
       // Return all import records for this claim, flattened into a single document list
       const records = allDocs
-        .filter((r) => r.claimCaseId === claimCaseId)
+        .map((record, index) => ({ record, index }))
+        .filter(({ record }) => record.claimCaseId === claimCaseId)
         .sort(
           (a, b) =>
-            new Date(a.importedAt || 0).getTime() -
-            new Date(b.importedAt || 0).getTime(),
+            new Date(a.record.importedAt || 0).getTime() -
+            new Date(b.record.importedAt || 0).getTime(),
         );
       const documents = records.flatMap((r) =>
-        (r.documents || []).map((d) => ({
+        ((r.record.documents || []).map((d) => ({
           ...d,
-          importedAt: r.importedAt,
-          importId: r.id,
-        })),
+          importedAt: r.record.importedAt,
+          importId: r.record.id,
+        }))),
       );
       const latestCompleteness =
-        records.length > 0 ? records[records.length - 1].completeness : null;
-      const latestAggregation =
-        records.length > 0 ? records[records.length - 1].aggregation || null : null;
+        records.length > 0 ? records[records.length - 1].record.completeness : null;
       const latestValidationFacts =
-        records.length > 0 ? records[records.length - 1].validationFacts || {} : {};
+        records.length > 0 ? records[records.length - 1].record.validationFacts || {} : {};
       const latestMaterialValidationResults =
         records.length > 0
-          ? records[records.length - 1].materialValidationResults || []
+          ? records[records.length - 1].record.materialValidationResults || []
           : [];
-      const latestRecord = records.length > 0 ? records[records.length - 1] : null;
+      const latestRecordInfo = records.length > 0 ? records[records.length - 1] : null;
+      let latestRecord = latestRecordInfo?.record || null;
+      const claimCase = (readData("claim-cases") || []).find((item) => item.id === claimCaseId) || null;
+      if (
+        latestRecordInfo &&
+        latestRecord?.aggregation &&
+        (!latestRecord.reviewResult || !latestRecord.damageReport)
+      ) {
+        try {
+          const syncedArtifacts = await syncClaimReviewArtifacts({
+            claimCaseId,
+            recordIndex: latestRecordInfo.index,
+            claimCase,
+            stageOptions: {
+              parseCompleted: true,
+            },
+          });
+          if (syncedArtifacts?.record) {
+            latestRecord = syncedArtifacts.record;
+          }
+        } catch (error) {
+          console.error("[claim-documents] Failed to sync review artifacts:", error);
+        }
+      }
+      const latestAggregation = latestRecord?.aggregation || null;
       const latestTask = latestRecord?.taskId ? getTask(latestRecord.taskId) : null;
       const latestRecoveryIssue = latestTask ? classifyTaskRecoveryIssue(latestTask) : null;
-      const claimCase = (readData("claim-cases") || []).find((item) => item.id === claimCaseId) || null;
       const claimMaterials = (readData("claim-materials") || []).filter(
         (item) => item.claimCaseId === claimCaseId,
       );
@@ -3442,6 +3483,8 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
           validationFacts: latestValidationFacts,
           materialValidationResults: latestMaterialValidationResults,
           validationChecklist,
+          reviewResult: latestRecord?.reviewResult || null,
+          damageReport: latestRecord?.damageReport || null,
           latestImport: latestRecord
             ? {
                 id: latestRecord.id,
@@ -4172,6 +4215,21 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
       };
       allClaimDocs.push(importRecord);
       writeData("claim-documents", allClaimDocs);
+      if (aggregationResult) {
+        try {
+          const claimCase = (readData("claim-cases") || []).find((item) => item.id === claimCaseId) || {};
+          await syncClaimReviewArtifacts({
+            claimCaseId,
+            recordIndex: allClaimDocs.length - 1,
+            claimCase,
+            stageOptions: {
+              parseCompleted: true,
+            },
+          });
+        } catch (reviewSyncError) {
+          console.error("[import-offline-materials] Failed to sync review artifacts:", reviewSyncError);
+        }
+      }
 
       // 4.5. 同步到 claim-materials
       try {
@@ -4710,6 +4768,21 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
       };
       allClaimDocs.push(importRecord);
       writeData("claim-documents", allClaimDocs);
+      if (aggregationResult) {
+        try {
+          const claimCase = (readData("claim-cases") || []).find((item) => item.id === claimCaseId) || {};
+          await syncClaimReviewArtifacts({
+            claimCaseId,
+            recordIndex: allClaimDocs.length - 1,
+            claimCase,
+            stageOptions: {
+              parseCompleted: true,
+            },
+          });
+        } catch (reviewSyncError) {
+          console.error("[import-injury-case] Failed to sync review artifacts:", reviewSyncError);
+        }
+      }
 
       const processingTime = Date.now() - startTime;
       const summary = `成功处理 ${importRecord.successCount} 个文件${importRecord.failCount > 0 ? `，${importRecord.failCount} 个失败` : ""}${exactDuplicateFiles.length > 0 ? `，${exactDuplicateFiles.length} 个跳过（重复）` : ""}，耗时 ${processingTime}ms`;
@@ -4774,13 +4847,8 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
         return;
       }
 
-      // 读取最新的聚合数据
-      const allClaimDocs = readData("claim-documents");
-      const latestImport = allClaimDocs
-        .filter((r) => r.claimCaseId === claimCaseId && r.aggregation)
-        .sort((a, b) => new Date(b.importedAt) - new Date(a.importedAt))[0];
-
-      if (!latestImport?.aggregation) {
+      const latestImportInfo = getLatestClaimDocumentRecord(claimCaseId);
+      if (!latestImportInfo?.record?.aggregation) {
         res.statusCode = 404;
         res.end(
           JSON.stringify({ error: "未找到该案件的聚合数据，请先执行批量导入" }),
@@ -4791,19 +4859,23 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
       // 读取案件基础信息
       const claimCases = readData("claim-cases");
       const claimCase = claimCases.find((c) => c.id === claimCaseId) || {};
-
-      const report = generateDamageReport({
+      const syncedArtifacts = await syncClaimReviewArtifacts({
         claimCaseId,
-        aggregationResult: latestImport.aggregation,
+        recordIndex: latestImportInfo.index,
+        claimCase,
+        standards: standards || {},
+        claimantAge: claimantAge || 35,
+        stageOptions: {
+          parseCompleted: true,
+        },
+      });
+      const report = syncedArtifacts?.report || generateDamageReport({
+        claimCaseId,
+        aggregationResult: latestImportInfo.record.aggregation,
         claimCase,
         standards: standards || {},
         claimantAge: claimantAge || 35,
       });
-
-      // 保存报告
-      const reports = readData("damage-reports") || [];
-      reports.push({ ...report, reportHtml: undefined }); // 不存 HTML 到 JSON
-      writeData("damage-reports", reports);
 
       // 写审计日志
       writeAuditLog({
@@ -4818,7 +4890,10 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
       });
 
       res.setHeader("Content-Type", "application/json");
-      res.end(JSON.stringify(report));
+      res.end(JSON.stringify({
+        ...report,
+        reviewResult: syncedArtifacts?.reviewResult || null,
+      }));
     } catch (error) {
       console.error("[generate-damage-report error]", error);
       res.statusCode = 500;
@@ -4886,21 +4961,18 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
 
       const allClaimCases = readData("claim-cases");
       const claimCase = allClaimCases.find((item) => item.id === claimCaseId) || {};
-      const report = generateDamageReport({
+      const syncedArtifacts = await syncClaimReviewArtifacts({
         claimCaseId,
-        aggregationResult: aggregation,
+        recordIndex: latestIndex.index,
         claimCase,
+        recordPatch: {
+          aggregation,
+        },
+        stageOptions: {
+          parseCompleted: true,
+        },
       });
-
-      allClaimDocs[latestIndex.index] = {
-        ...latestIndex.record,
-        aggregation,
-      };
-      writeData("claim-documents", allClaimDocs);
-
-      const reports = (readData("damage-reports") || []).filter((item) => item.claimCaseId !== claimCaseId);
-      reports.push({ ...report, reportHtml: undefined });
-      writeData("damage-reports", reports);
+      const report = syncedArtifacts?.report || null;
 
       res.setHeader("Content-Type", "application/json");
       res.end(
@@ -4908,6 +4980,7 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
           success: true,
           aggregation,
           report,
+          reviewResult: syncedArtifacts?.reviewResult || null,
         }),
       );
     } catch (error) {
@@ -4992,21 +5065,18 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
 
       const allClaimCases = readData("claim-cases");
       const claimCase = allClaimCases.find((item) => item.id === claimCaseId) || {};
-      const report = generateDamageReport({
+      const syncedArtifacts = await syncClaimReviewArtifacts({
         claimCaseId,
-        aggregationResult: aggregation,
+        recordIndex: latestIndex.index,
         claimCase,
+        recordPatch: {
+          aggregation,
+        },
+        stageOptions: {
+          parseCompleted: true,
+        },
       });
-
-      allClaimDocs[latestIndex.index] = {
-        ...latestIndex.record,
-        aggregation,
-      };
-      writeData("claim-documents", allClaimDocs);
-
-      const reports = (readData("damage-reports") || []).filter((item) => item.claimCaseId !== claimCaseId);
-      reports.push({ ...report, reportHtml: undefined });
-      writeData("damage-reports", reports);
+      const report = syncedArtifacts?.report || null;
 
       res.setHeader("Content-Type", "application/json");
       res.end(
@@ -5014,6 +5084,7 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
           success: true,
           aggregation,
           report,
+          reviewResult: syncedArtifacts?.reviewResult || null,
         }),
       );
     } catch (error) {
@@ -5084,21 +5155,18 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
 
       const allClaimCases = readData("claim-cases");
       const claimCase = allClaimCases.find((item) => item.id === claimCaseId) || {};
-      const report = generateDamageReport({
+      const syncedArtifacts = await syncClaimReviewArtifacts({
         claimCaseId,
-        aggregationResult: aggregation,
+        recordIndex: latestIndex.index,
         claimCase,
+        recordPatch: {
+          aggregation,
+        },
+        stageOptions: {
+          parseCompleted: true,
+        },
       });
-
-      allClaimDocs[latestIndex.index] = {
-        ...latestIndex.record,
-        aggregation,
-      };
-      writeData("claim-documents", allClaimDocs);
-
-      const reports = (readData("damage-reports") || []).filter((item) => item.claimCaseId !== claimCaseId);
-      reports.push({ ...report, reportHtml: undefined });
-      writeData("damage-reports", reports);
+      const report = syncedArtifacts?.report || null;
 
       res.setHeader("Content-Type", "application/json");
       res.end(
@@ -5106,6 +5174,7 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
           success: true,
           aggregation,
           report,
+          reviewResult: syncedArtifacts?.reviewResult || null,
         }),
       );
     } catch (error) {

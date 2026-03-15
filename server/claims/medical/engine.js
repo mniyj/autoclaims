@@ -1,7 +1,9 @@
 import { getCoverageConfig } from '../../rules/context.js';
 
 const MEDICAL_COVERAGE_CODES = {
-  INPATIENT: 'HLT_INPATIENT'
+  INPATIENT: 'HLT_INPATIENT',
+  OPD_SOCIAL: 'HLT_OPD_SOCIAL',
+  OPD_NON_SOCIAL: 'HLT_OPD_NON_SOCIAL'
 };
 
 export function inferMedicalCoverageCode() {
