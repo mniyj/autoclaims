@@ -431,6 +431,181 @@ function normalizeSearchTerm(value) {
   return String(value || '').trim().toLowerCase();
 }
 
+function extractTaskIdFromDocumentRef(value) {
+  const match = String(value || '').match(/(task-[a-f0-9-]+)-\d+$/i);
+  return match ? match[1] : null;
+}
+
+function createAssociationIndexes() {
+  const claimDocuments = readData('claim-documents');
+  const claimMaterials = readData('claim-materials');
+  const documents = Array.isArray(claimDocuments) ? claimDocuments : [];
+  const materials = Array.isArray(claimMaterials) ? claimMaterials : [];
+
+  const documentsById = new Map();
+  const documentsByTaskDocumentId = new Map();
+  const documentsByFileName = new Map();
+  const materialsByFileName = new Map();
+
+  for (const doc of documents) {
+    if (doc?.documentId) {
+      documentsById.set(doc.documentId, doc);
+      documentsByTaskDocumentId.set(String(doc.documentId), doc);
+    }
+    if (doc?.fileName) {
+      const key = String(doc.fileName);
+      if (!documentsByFileName.has(key)) documentsByFileName.set(key, []);
+      documentsByFileName.get(key).push(doc);
+    }
+  }
+
+  for (const material of materials) {
+    if (material?.fileName) {
+      const key = String(material.fileName);
+      if (!materialsByFileName.has(key)) materialsByFileName.set(key, []);
+      materialsByFileName.get(key).push(material);
+    }
+  }
+
+  return {
+    documentsById,
+    documentsByTaskDocumentId,
+    documentsByFileName,
+    materialsByFileName,
+  };
+}
+
+function pickSingleAssociation(records, predicate = null) {
+  if (!Array.isArray(records) || records.length === 0) return null;
+  const filtered = predicate ? records.filter(predicate) : records;
+  if (filtered.length === 1) return filtered[0];
+  return null;
+}
+
+function getAttachmentSignature(log) {
+  const firstAttachment = log?.request?.summary?.attachmentSummary?.[0];
+  if (!firstAttachment?.mimeType || !firstAttachment?.size) return null;
+  return `${firstAttachment.mimeType}:${firstAttachment.size}`;
+}
+
+function enrichLogAssociation(log, indexes) {
+  if (!log || !indexes) return log;
+
+  const context = isPlainObject(log.context) ? { ...log.context } : {};
+  const fileName = context.fileName || null;
+  const materialId = context.materialId || null;
+  const documentId = context.documentId || context.docId || null;
+  const taskDocumentId = context.docId || context.documentId || null;
+
+  let matchedDocument =
+    (documentId && indexes.documentsById.get(String(documentId))) ||
+    (taskDocumentId && indexes.documentsByTaskDocumentId.get(String(taskDocumentId))) ||
+    null;
+
+  if (!matchedDocument && fileName) {
+    matchedDocument = pickSingleAssociation(indexes.documentsByFileName.get(String(fileName)));
+  }
+
+  let matchedMaterial = null;
+  if (fileName) {
+    matchedMaterial = pickSingleAssociation(
+      indexes.materialsByFileName.get(String(fileName)),
+      (item) => !materialId || item?.materialId === materialId
+    );
+  }
+
+  const parsedTaskId =
+    context.taskId ||
+    extractTaskIdFromDocumentRef(documentId) ||
+    extractTaskIdFromDocumentRef(taskDocumentId) ||
+    null;
+
+  const taskId =
+    context.taskId ||
+    matchedDocument?.taskId ||
+    matchedMaterial?.taskId ||
+    parsedTaskId ||
+    null;
+
+  const claimCaseId =
+    context.claimCaseId ||
+    matchedDocument?.claimCaseId ||
+    matchedMaterial?.claimCaseId ||
+    null;
+
+  const traceId =
+    log.traceId ||
+    context.traceId ||
+    matchedDocument?.traceId ||
+    (claimCaseId ? `trace-${claimCaseId}` : null);
+
+  return {
+    ...log,
+    traceId,
+    context: {
+      ...context,
+      taskId,
+      claimCaseId,
+    },
+  };
+}
+
+function createAttachmentAssociationIndex(logs) {
+  const index = new Map();
+
+  for (const log of logs) {
+    const signature = getAttachmentSignature(log);
+    if (!signature) continue;
+    if (!log?.context?.fileName) continue;
+
+    const entry = {
+      fileName: log.context.fileName || null,
+      taskId: log.context.taskId || null,
+      claimCaseId: log.context.claimCaseId || null,
+      traceId: log.traceId || null,
+    };
+
+    if (!index.has(signature)) index.set(signature, []);
+    index.get(signature).push(entry);
+  }
+
+  return index;
+}
+
+function enrichLogByAttachment(log, attachmentIndex) {
+  if (!log || !attachmentIndex) return log;
+  if (log.context?.taskId || log.context?.claimCaseId || log.traceId) return log;
+
+  const signature = getAttachmentSignature(log);
+  if (!signature) return log;
+
+  const candidates = attachmentIndex.get(signature) || [];
+  const uniqueCandidates = [];
+  const seen = new Set();
+
+  for (const candidate of candidates) {
+    const key = JSON.stringify(candidate);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    uniqueCandidates.push(candidate);
+  }
+
+  if (uniqueCandidates.length !== 1) return log;
+  const matched = uniqueCandidates[0];
+  if (!matched?.taskId && !matched?.claimCaseId && !matched?.traceId) return log;
+
+  return {
+    ...log,
+    traceId: log.traceId || matched.traceId || (matched.claimCaseId ? `trace-${matched.claimCaseId}` : null),
+    context: {
+      ...(isPlainObject(log.context) ? log.context : {}),
+      fileName: log.context?.fileName || matched.fileName || null,
+      taskId: log.context?.taskId || matched.taskId || null,
+      claimCaseId: log.context?.claimCaseId || matched.claimCaseId || null,
+    },
+  };
+}
+
 function buildSearchHaystack(log) {
   return [
     log.id,
@@ -553,6 +728,10 @@ export function queryLogs(options = {}) {
   } = options;
 
   let logs = readLogs();
+  const associationIndexes = createAssociationIndexes();
+  logs = logs.map((log) => enrichLogAssociation(log, associationIndexes));
+  const attachmentIndex = createAttachmentAssociationIndex(logs);
+  logs = logs.map((log) => enrichLogByAttachment(log, attachmentIndex));
   logs = logs.filter((log) => {
     if (logId && log.id !== logId) return false;
     if (claimCaseId && log.context?.claimCaseId !== claimCaseId) return false;

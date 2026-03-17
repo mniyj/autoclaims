@@ -1419,7 +1419,7 @@
     "claimAmount": 148,
     "productCode": "ZA-GOPD-2022A-90",
     "productName": "众安互联网团体门诊急诊医疗保险（0免赔90%赔付版）",
-    "status": "已结案-给付",
+    "status": "处理中",
     "operator": "系统导入",
     "policyholder": "杨秀",
     "insured": "杨秀",
@@ -1446,14 +1446,14 @@
       "claim_item": "门急诊医疗理赔"
     },
     "latestReviewSnapshot": {
-      "updatedAt": "2026-03-15T10:36:49.979Z",
-      "decision": "APPROVE",
+      "updatedAt": "2026-03-15T11:17:22.343Z",
+      "decision": "MANUAL_REVIEW",
       "amount": 133.2,
       "payableAmount": 133.2,
       "intakeDecision": "PASS",
-      "liabilityDecision": "ACCEPT",
-      "assessmentDecision": "ASSESSED",
-      "settlementDecision": "PAY",
+      "liabilityDecision": "MANUAL_REVIEW",
+      "assessmentDecision": "PARTIAL_ASSESSED",
+      "settlementDecision": "MANUAL_REVIEW",
       "missingMaterials": [],
       "coverageResults": [
         {

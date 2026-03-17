@@ -170,6 +170,7 @@ export async function processImageWithAI(base64Data, mimeType, prompt, options =
         module: 'fileProcessor.processImageWithAI',
         operation: 'process_image_with_ai',
         context: {
+          ...(options.logContext || {}),
           mimeType,
           promptType: options.promptType || 'default',
         },
@@ -308,6 +309,12 @@ export async function processFile(params) {
 
   const category = getFileCategory(mimeType, fileName);
   const documentType = options.documentType || inferDocumentType(fileName, options.context);
+  const baseLogContext = {
+    ...(options.logContext || {}),
+    ...(options.context || {}),
+    fileName,
+    documentId,
+  };
 
   // 初始化结果
   const result = {
@@ -337,7 +344,10 @@ export async function processFile(params) {
             imageBase64,
             mimeType,
             options.prompt,
-            options
+            {
+              ...options,
+              logContext: baseLogContext,
+            }
           );
           result.extractedText = imageResult.text;
           result.structuredData = imageResult.structuredData;
@@ -453,7 +463,13 @@ export async function processFile(params) {
 
     // AI 分析（如果启用且解析成功）
     if (!options.skipAI && result.parseStatus === 'completed' && result.extractedText) {
-      const aiAnalysis = await analyzeDocumentContent(result, options);
+      const aiAnalysis = await analyzeDocumentContent(result, {
+        ...options,
+        logContext: {
+          ...baseLogContext,
+          fileType: documentType,
+        },
+      });
       if (aiAnalysis) {
         result.aiAnalysis = aiAnalysis;
         result.confidence = Math.max(result.confidence, aiAnalysis.confidence);
@@ -533,6 +549,7 @@ ${text?.substring(0, 2000)}`
         module: 'fileProcessor.analyzeDocumentContent',
         operation: 'analyze_document_content',
         context: {
+          ...(options.logContext || {}),
           documentId: document.documentId,
           fileType,
           fileName: document.fileName,

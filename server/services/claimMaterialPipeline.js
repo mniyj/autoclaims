@@ -7,6 +7,7 @@ import { readData } from '../utils/fileStore.js';
 import { classifyMaterialByRules } from './materialClassificationService.js';
 import { invokeAICapability, generateGeminiContent } from './aiRuntime.js';
 import { renderPromptTemplate } from './aiConfigService.js';
+import { logInteraction } from './aiInteractionLogger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -95,16 +96,72 @@ function findMaterialConfig(materialId, materialName) {
   return null;
 }
 
-export async function classifyClaimMaterial({ parseResult, fileName, preferredMaterialId, preferredMaterialName }) {
+function logNonAiClassification({
+  classification,
+  context,
+  fileName,
+  materialCount,
+  matchStrategy,
+}) {
+  const timestamp = Date.now();
+  logInteraction({
+    taskId: context?.taskId || null,
+    traceId: context?.traceId || null,
+    sourceApp: 'admin-system',
+    module: 'claimMaterialPipeline.classifyClaimMaterial',
+    runtime: 'server',
+    provider: matchStrategy === 'rules' ? 'rule-engine' : 'preset',
+    model: matchStrategy === 'rules' ? 'material-classification-rules' : 'preferred-material',
+    operation: 'classify_material',
+    context: {
+      ...(context || {}),
+      fileName,
+      materialCount,
+      classificationMode: matchStrategy,
+    },
+    input: {
+      fileName,
+      materialCount,
+      matchStrategy,
+    },
+    output: {
+      response: JSON.stringify(classification),
+      parsedResult: classification,
+    },
+    performance: {
+      startTime: timestamp,
+      endTime: timestamp,
+      duration: 0,
+      retryCount: 0,
+    },
+  });
+}
+
+export async function classifyClaimMaterial({
+  parseResult,
+  fileName,
+  preferredMaterialId,
+  preferredMaterialName,
+  context = {},
+}) {
+  const materials = getClaimsMaterialsCatalog();
   const directConfig = findMaterialConfig(preferredMaterialId, preferredMaterialName);
   if (directConfig) {
-    return {
+    const classification = {
       materialId: directConfig.id,
       materialName: directConfig.name,
       confidence: 1,
       source: 'manual',
       matchStrategy: 'preset',
     };
+    logNonAiClassification({
+      classification,
+      context,
+      fileName,
+      materialCount: materials.length,
+      matchStrategy: 'preset',
+    });
+    return classification;
   }
 
   if (parseResult?.parseStatus !== 'completed') {
@@ -117,7 +174,6 @@ export async function classifyClaimMaterial({ parseResult, fileName, preferredMa
     };
   }
 
-  const materials = getClaimsMaterialsCatalog();
   if (materials.length === 0) {
     return {
       materialId: 'unknown',
@@ -131,6 +187,13 @@ export async function classifyClaimMaterial({ parseResult, fileName, preferredMa
   const ocrText = parseResult.extractedText || '';
   const ruleResult = classifyMaterialByRules(materials, fileName, ocrText);
   if (ruleResult) {
+    logNonAiClassification({
+      classification: ruleResult,
+      context,
+      fileName,
+      materialCount: materials.length,
+      matchStrategy: 'rules',
+    });
     return ruleResult;
   }
 
@@ -155,6 +218,7 @@ export async function classifyClaimMaterial({ parseResult, fileName, preferredMa
         module: 'claimMaterialPipeline.classifyClaimMaterial',
         operation: 'classify_material',
         context: {
+          ...context,
           fileName,
           materialCount: materials.length,
         },
@@ -235,6 +299,7 @@ export async function extractClaimMaterial({
   mimeType,
   buffer,
   materialConfig,
+  context = {},
 }) {
   const fallback = {
     extractedData: {},
@@ -311,6 +376,7 @@ ${aiAuditPrompt}
       module: 'claimMaterialPipeline.extractClaimMaterial',
       operation: 'extract_claim_material',
       context: {
+        ...context,
         fileName,
         materialId: materialConfig.id,
         materialName: materialConfig.name,
@@ -335,6 +401,7 @@ export async function processClaimMaterial({
   parseResult,
   preferredMaterialId,
   preferredMaterialName,
+  context = {},
 }) {
   const baseParseResult =
     parseResult ||
@@ -367,6 +434,7 @@ export async function processClaimMaterial({
     fileName,
     preferredMaterialId: preferredMaterialId || materialRecord?.materialId,
     preferredMaterialName: preferredMaterialName || materialRecord?.materialName || materialRecord?.category,
+    context,
   });
 
   const materialConfig = findMaterialConfig(
@@ -378,6 +446,7 @@ export async function processClaimMaterial({
     mimeType,
     buffer,
     materialConfig,
+    context,
   });
 
   return {

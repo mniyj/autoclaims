@@ -200,10 +200,18 @@ class TaskScheduler {
       // 根据文件状态选择合适的处理方式
       if (file.status === 'archived') {
         // 使用分阶段处理流程：archived -> classifying -> extracting -> completed
-        await processStagedFile(task.id, file, file.index);
+        await processStagedFile(task.id, file, file.index, {
+          ...task.options,
+          claimCaseId: task.claimCaseId,
+          traceId: task.claimCaseId ? `trace-${task.claimCaseId}` : null,
+        });
       } else {
         // 使用传统处理流程
-        await processFileWithRetry(task.id, file, file.index, file.retryCount || 0, task.options || {});
+        await processFileWithRetry(task.id, file, file.index, file.retryCount || 0, {
+          ...(task.options || {}),
+          claimCaseId: task.claimCaseId,
+          traceId: task.claimCaseId ? `trace-${task.claimCaseId}` : null,
+        });
       }
       console.log(`[Scheduler] File ${file.fileName} processed successfully`);
     } catch (error) {

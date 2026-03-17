@@ -450,46 +450,37 @@
     "conflicts": []
   },
   {
-    "reportId": "RPT-1773571009936-4f39fa",
+    "reportId": "RPT-1773573442304-002925",
     "claimCaseId": "CLM-MED-001",
-    "generatedAt": "2026-03-15T10:36:49.936Z",
+    "generatedAt": "2026-03-15T11:17:22.305Z",
     "generatedBy": "ai",
     "items": [
       {
-        "id": "doc-1-item-0",
-        "category": "诊疗费",
-        "itemName": "诊查费(自费)",
+        "id": "synthetic-social-medical",
+        "category": "医疗费",
+        "itemName": "医保内门急诊费用",
+        "originalAmount": 145,
+        "approvedAmount": 130.5,
+        "formula": "核定金额 ¥130.50",
+        "basis": "基于报案汇总金额生成的门急诊费用，暂按可赔费用保留，待后续票据明细补充时再做目录细分；按默认赔付比例 0.9"
+      },
+      {
+        "id": "synthetic-non-social-medical",
+        "category": "医疗费",
+        "itemName": "医保外门急诊费用",
         "originalAmount": 3,
-        "approvedAmount": 0,
-        "formula": "目录外/不赔项目，核定为 0",
-        "basis": "项目名称包含自费/自付提示，按目录外项目处理；项目名称包含自费/自付提示，按目录外项目处理"
-      },
-      {
-        "id": "doc-1-item-1",
-        "category": "诊疗费",
-        "itemName": "诊查费",
-        "originalAmount": 15,
-        "approvedAmount": 13.5,
-        "formula": "核定金额 ¥13.50",
-        "basis": "匹配医保目录“诊查费”；按默认赔付比例 0.9"
-      },
-      {
-        "id": "doc-2-item-0",
-        "category": "检查费",
-        "itemName": "13碳尿素呼气试验",
-        "originalAmount": 130,
-        "approvedAmount": 117,
-        "formula": "核定金额 ¥117.00",
-        "basis": "匹配医保目录“13碳尿素呼气试验”；按默认赔付比例 0.9"
+        "approvedAmount": 2.7,
+        "formula": "核定金额 ¥2.70",
+        "basis": "基于报案汇总金额生成的门急诊费用，暂按可赔费用保留，待后续票据明细补充时再做目录细分；按默认赔付比例 0.9"
       }
     ],
-    "subTotal": 130.5,
+    "subTotal": 133.2,
     "liabilityAdjustment": 1,
-    "adjustedAmount": 130.5,
+    "adjustedAmount": 133.2,
     "deductionTotal": 0,
     "finalAmount": 133.2,
     "calculationFormula": "损失合计（责任比例待人工确认，未折减）",
-    "regionalStandards": "上海市 2024年，城镇居民人均可支配收入 ¥79,610/年",
+    "regionalStandards": "安徽省 2024年，城镇居民人均可支配收入 ¥47,446/年",
     "status": "draft",
     "domainModel": {
       "claimCaseId": "CLM-MED-001",
@@ -524,46 +515,34 @@
       "报告结论金额"
     ],
     "detailSectionTitle": "费用明细",
-    "injuryProfile": {
-      "injuryDescription": "急性阑尾炎；急性弥漫性腹膜炎",
-      "diagnoses": [
-        {
-          "name": "急性阑尾炎"
-        },
-        {
-          "name": "急性弥漫性腹膜炎"
-        }
-      ],
-      "diagnosisNames": [
-        "急性阑尾炎",
-        "急性弥漫性腹膜炎"
-      ],
-      "primaryDiagnosisDate": null,
-      "disabilityLevel": null,
-      "hospitalizationDays": 0,
-      "treatmentTimeline": [
-        {
-          "date": "2005-03-01",
-          "event": "入院（普外科）",
-          "sourceDocId": "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
-        },
-        {
-          "date": "2005-03-03",
-          "event": "手术：急诊手术",
-          "sourceDocId": "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
-        }
-      ]
-    },
+    "injuryProfile": null,
     "liabilityResult": null,
     "deathProfile": null,
-    "deductionSummary": null,
-    "manualReviewItems": [],
-    "standardsSnapshot": {},
+    "deductionSummary": {
+      "confirmedPaidAmount": 0,
+      "reportedAdvanceAmount": 0,
+      "deductionRecommendedAmount": 0,
+      "deductionTotal": 0,
+      "uniqueTransferCount": 0,
+      "note": "未识别可直接抵扣的已付款项"
+    },
+    "manualReviewItems": [
+      "缺少公安/安监正式责任划分文书，责任比例仍需人工确认",
+      "死亡赔偿金已按统一城镇标准试算，如法院地或统计年度不同需调整地区标准参数"
+    ],
+    "standardsSnapshot": {
+      "region": "安徽省",
+      "year": 2024,
+      "urbanPerCapitaIncome": 47446,
+      "funeralMonthlySalary": 8499.92,
+      "sourceDocument": "2024年《安徽省道路交通事故赔偿标准》",
+      "source": "configured_standard"
+    },
     "settlementSnapshot": {
       "deductible": 0,
       "reimbursementRatio": 0.9,
       "payableAmount": 133.2,
-      "settlementDecision": "PAY",
+      "settlementDecision": "MANUAL_REVIEW",
       "medicalReview": {
         "hospitalReview": {
           "requirement": {
@@ -591,12 +570,12 @@
         },
         "catalogSummary": {
           "totalClaimedAmount": 148,
-          "catalogCoveredAmount": 145,
-          "selfPayAmount": 3,
+          "catalogCoveredAmount": 148,
+          "selfPayAmount": 0,
           "restrictedAmount": 0,
           "uncertainAmount": 0,
           "matchedItems": 2,
-          "selfPayItems": 1,
+          "selfPayItems": 0,
           "uncertainItems": 0
         }
       },
@@ -633,29 +612,103 @@
     },
     "decisionTrace": {
       "traceId": "trace-CLM-MED-001",
-      "generatedAt": "2026-03-15T10:36:49.968Z",
+      "generatedAt": "2026-03-15T11:17:11.282Z",
       "stages": [
         {
-          "stage": "damage_calculation",
-          "title": "定损计算",
+          "stage": "material_recognition",
+          "title": "材料识别",
           "status": "completed",
-          "summary": "损失合计 130.50，责任系数 1.00，最终金额 133.20",
+          "summary": "共识别 6/6 份材料，形成 0 份结构化摘要",
+          "sourceDocIds": [
+            "mat-1773508535449-wqg0z3050",
+            "mat-1773508535449-8jzm23u4k",
+            "mat-1773508535449-1f7wucee8",
+            "mat-mmrmdo7j-mat-11",
+            "mat-mmrmdo7k-mat-21",
+            "mat-mmrmdo7k-mat-13"
+          ],
+          "facts": [
+            {
+              "label": "材料总数",
+              "value": "6"
+            },
+            {
+              "label": "已识别材料",
+              "value": "6"
+            },
+            {
+              "label": "摘要数量",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "stage": "medical_fact_aggregation",
+          "title": "医疗事实归纳",
+          "status": "completed",
+          "summary": "材料校验规则异常 1 项",
           "sourceDocIds": [],
           "facts": [
             {
-              "label": "损失合计",
-              "value": "¥130.50"
+              "label": "诊断",
+              "value": "-"
             },
             {
-              "label": "责任系数",
-              "value": "100%"
+              "label": "医疗费用",
+              "value": "0"
+            },
+            {
+              "label": "住院天数",
+              "value": "0"
+            },
+            {
+              "label": "发票张数",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "stage": "expense_assessment",
+          "title": "费用核定",
+          "status": "completed",
+          "summary": "尚未识别可核定的医疗费用",
+          "sourceDocIds": [],
+          "facts": [
+            {
+              "label": "医疗费用合计",
+              "value": "0"
+            },
+            {
+              "label": "交通费",
+              "value": "0"
+            },
+            {
+              "label": "护理天数",
+              "value": "0"
+            },
+            {
+              "label": "误工天数",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "stage": "damage_calculation",
+          "title": "审核结论",
+          "status": "completed",
+          "summary": "核定费用 133.20，抵扣 0.00，结论金额 133.20",
+          "sourceDocIds": [],
+          "facts": [
+            {
+              "label": "核定费用",
+              "value": "¥133.20"
             },
             {
               "label": "抵扣金额",
               "value": "¥0.00"
             },
             {
-              "label": "最终金额",
+              "label": "报告结论金额",
               "value": "¥133.20"
             }
           ]

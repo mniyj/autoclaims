@@ -6388,231 +6388,145 @@
         "fileName": "Weixin Image_20260315010815_170_66.jpg",
         "fileType": "image/jpeg",
         "mimeType": "image/jpeg",
-        "ossKey": null,
+        "ossKey": "claims/CLM-MED-001/offline-import/12867941-8234-4488-b730-4c7f36a808eb-Weixin_Image_20260315010815_170_66.jpg",
         "classification": {
           "materialId": "mat-11",
           "materialName": "门（急）诊病历",
-          "confidence": 0.95,
-          "source": "ai",
-          "matchStrategy": "ai"
+          "confidence": 0.95
         },
         "status": "completed",
-        "extractedText": "就诊记录\n\n**日期:** 05-03-01\n**医院名称:** 上海市东方医院 普外科\n**记录:**\n下腹部疼痛，伴发热，恶心，呕吐，腹泻，腹部压痛。\n查体：T38.5℃，腹部膨隆，肠鸣音减弱。\n诊断：急性阑尾炎？\n处理：抗感染，补液，对症治疗。\n**医师签章:** [签名/印章]\n\n**日期:** 05-03-03\n**记录:**\n患者腹痛加重，伴腹胀，停止排气排便。\n查体：T39.0℃，腹部压痛反跳痛，肌紧张。\n诊断：急性弥漫性腹膜炎。\n处理：急诊手术。\n\n**记录:**\n术后恢复良好，已出院。",
-        "structuredData": {},
-        "errorMessage": null,
-        "documentSummary": {
-          "docId": "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0",
-          "summaryType": "outpatient_record",
-          "extractedAt": "2026-03-14T17:51:34.982Z",
-          "admissionDate": "2026-05-20",
-          "diagnoses": [
-            {
-              "name": "急性阑尾炎"
-            },
-            {
-              "name": "急性弥漫性腹膜炎"
-            }
-          ],
-          "surgeries": [],
-          "dischargeCondition": "恢复良好",
-          "ward": "普外科",
-          "sourceAnchors": {
-            "admissionDate": {
-              "pageIndex": 0,
-              "rawText": "日期: 2026-05-20",
-              "highlightLevel": "text_search"
-            },
-            "diagnoses": [
-              {
-                "name": {
-                  "pageIndex": 0,
-                  "rawText": "急性阑尾炎",
-                  "highlightLevel": "text_search"
-                }
-              },
-              {
-                "name": {
-                  "pageIndex": 0,
-                  "rawText": "急性弥漫性腹膜炎",
-                  "highlightLevel": "text_search"
-                }
-              }
-            ],
-            "surgeries": [
-              {
-                "name": {
-                  "pageIndex": 0,
-                  "rawText": "急诊手术",
-                  "highlightLevel": "text_search"
-                },
-                "date": {
-                  "pageIndex": 0,
-                  "rawText": "日期: 05-03-03",
-                  "highlightLevel": "text_search"
-                }
-              }
-            ],
-            "dischargeCondition": {
-              "pageIndex": 0,
-              "rawText": "恢复良好",
-              "highlightLevel": "text_search"
-            },
-            "ward": {
-              "pageIndex": 0,
-              "rawText": "普外科",
-              "highlightLevel": "text_search"
-            }
-          },
-          "confidence": 0.75
-        }
+        "structuredData": {
+          "hospital_name": "上海市东方医院(南院)",
+          "department": "",
+          "visit_date": "2023-03-01",
+          "patient_name": "马华",
+          "chief_complaint": "左膝关节疼痛伴活动受限3天。",
+          "present_illness": "左膝关节疼痛伴活动受限3天。患者缘于3天前无明显诱因出现左膝关节疼痛，伴活动受限，行走时疼痛加重，休息后可缓解，无红肿热痛，无发热，无咳嗽咳痰，无恶心呕吐，无腹痛腹泻，无头晕头痛。今为进一步诊治来我院门诊。",
+          "diagnosis": "左膝关节骨性关节炎",
+          "treatment": "左膝关节疼痛，口服非甾体消炎止痛药",
+          "doctor_name": ""
+        },
+        "errorMessage": null
       },
       {
         "documentId": "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1",
         "fileName": "Weixin Image_20260315010816_171_66.jpg",
         "fileType": "image/jpeg",
         "mimeType": "image/jpeg",
-        "ossKey": null,
+        "ossKey": "claims/CLM-MED-001/offline-import/0d892a99-1163-44e7-93de-cdd892e9f98d-Weixin_Image_20260315010816_171_66.jpg",
         "classification": {
           "materialId": "mat-20",
           "materialName": "医疗费发票",
-          "confidence": 1,
-          "source": "ai",
-          "matchStrategy": "ai"
+          "confidence": 0.95
         },
         "status": "completed",
-        "extractedText": "上海市医疗门诊收费票据 (电子)\n票据监制\n上海市财政局监制\n财政部监制\n\n票据代码: 31060125\n交款人统一社会信用代码: 362430********0052\n交款人: 杨霁\n\n票据号码: 0799287390\n校验码: 442f0a\n开票日期: 2025-03-01\n[QR Code]\n\n项目名称 数量/单位 金额(元) 备注 项目名称 数量/单位 金额(元) 备注\n诊察费 18.00\n诊查费(自费) 1.00 3.00 0.00 诊查费 1.00 15.00 0.00\n\n金额合计(大写) 壹拾捌元整 (小写)18.00\n\n其他信息\n业务流水号: NYGH2802911761\n医疗机构类型: 综合医院\n医保统筹基金支付: 0.00\n个人自付: 15.00\n分类自负: 0.00\n备注: 财政部全国财政电子票据查验平台: http://pjcy.mof.gov.cn/\n实收金额: 18.00\n\n门诊号: NYGH2802911761\n医保类型: 自费\n其他支付: 0.00\n个人自费: 3.00\n个人自负: 15.00\n\n医保编号:\n个人账户支付: 0.00\n附加基金支付: 0.00\n医保当年账户余额: 0.00\n挂号科室: 消化内科\n\n就诊日期: 20250301\n性别: 男\n个人现金支付: 18.00\n医保历年账户余额: 0.00\n卡号: DZ0000000097286\n\n收款单位(章): 上海市东方医院票据专用章\n复核人: 系统核验\n收款人: ZZ12",
-        "structuredData": {},
-        "errorMessage": null,
-        "documentSummary": {
-          "docId": "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1",
-          "summaryType": "expense_invoice",
-          "extractedAt": "2026-03-14T17:51:26.861Z",
-          "invoiceNumber": "0799287390",
-          "invoiceDate": "2026-05-20",
-          "totalAmount": 18,
-          "institution": "上海市东方医院",
-          "breakdown": [
-            {
-              "category": "诊疗费",
-              "itemName": "诊查费(自费)",
-              "amount": 3
-            },
-            {
-              "category": "诊疗费",
-              "itemName": "诊查费",
-              "amount": 15
-            }
-          ],
-          "sourceAnchors": {
-            "totalAmount": {
-              "pageIndex": 0,
-              "rawText": "(小写)18.00",
-              "highlightLevel": "text_search"
-            },
-            "invoiceNumber": {
-              "pageIndex": 0,
-              "rawText": "票据号码: 0799287390",
-              "highlightLevel": "text_search"
-            }
-          },
-          "confidence": 0.98
-        }
+        "structuredData": {
+          "hospital_name": "上海市东方医院",
+          "patient_name": "杨霁",
+          "invoice_number": "0799287390",
+          "invoice_code": "31060125",
+          "invoice_date": "2025-03-01",
+          "total_amount": 18,
+          "self_paid": 18,
+          "insurance_paid": 0,
+          "personal_account": 0
+        },
+        "errorMessage": null
       },
       {
         "documentId": "task-1e2217bc-f474-4cd6-abf1-fb693600e505-2",
         "fileName": "Weixin Image_20260315010817_172_66.jpg",
         "fileType": "image/jpeg",
         "mimeType": "image/jpeg",
-        "ossKey": null,
+        "ossKey": "claims/CLM-MED-001/offline-import/41aaf008-18f0-4352-a20f-1934deeac291-Weixin_Image_20260315010817_172_66.jpg",
         "classification": {
           "materialId": "mat-20",
           "materialName": "医疗费发票",
-          "confidence": 1,
-          "source": "ai",
-          "matchStrategy": "ai"
+          "confidence": 0.95
         },
         "status": "completed",
-        "extractedText": "上海市医疗门诊收费票据 (电子)\n(财政部监制 全国财政电子票据监管 上海市)\n\n票据代码: 31060125\n交款人统一社会信用代码: 362430********0052\n交款人: 杨霁\n\n票据号码: 0799289513\n校验码: 42e57a\n开票日期: 2025-03-01\n(QR code)\n\n项目名称 | 数量/单位 | 金额(元) | 备注\n---|---|---|---\n化验费 | | 130.00 |\n13碳尿素呼气试验 | 1.00次 | 130.000.00;0.00 |\n\n金额合计(大写) 壹佰叁拾元整\n(小写)130.00\n\n业务流水号: NYSF2802911918\n医疗机构类型: 综合医院\n医保统筹基金支付: 0.00\n个人自付: 130.00\n分类自负: 0.00\n备注: 财政部全国财政电子票据查验平台 http://pjcy.mof.gov.cn/\n\n门诊号: NYSF2802911918\n医保类型: 自费\n其他支付: 0.00\n个人自费: 0.00\n个人自负: 130.00\n\n就诊日期: 20250301\n性别: 男\n个人现金支付: 130.00\n医保历年账户余额: 0.00\n\n医保编号:\n个人账户支付: 0.00\n附加基金支付: 0.00\n医保当年账户余额: 0.00\n卡号: DZ0000000097286\n实收金额: 130.00\n\n收款单位(章): 上海市东方医院票据专用章 (上海市东方医院 票据专用章)\n复核人: 系统核验\n收款人: ZZ12",
+        "structuredData": {
+          "hospital_name": "上海市东方医院",
+          "patient_name": "杨霁",
+          "invoice_number": "0799289513",
+          "invoice_code": "31060125",
+          "invoice_date": "2025-03-01",
+          "total_amount": 130,
+          "self_paid": 130,
+          "insurance_paid": 0,
+          "personal_account": 0
+        },
+        "errorMessage": null
+      },
+      {
+        "documentId": "mat-mmrmdo7j-mat-11",
+        "ossKey": null,
+        "classification": {
+          "materialId": "mat-11",
+          "materialName": "门（急）诊病历",
+          "confidence": 0
+        },
+        "status": "completed",
         "structuredData": {},
-        "errorMessage": null,
-        "documentSummary": {
-          "docId": "task-1e2217bc-f474-4cd6-abf1-fb693600e505-2",
-          "summaryType": "expense_invoice",
-          "extractedAt": "2026-03-14T17:51:29.289Z",
-          "invoiceNumber": "0799289513",
-          "invoiceDate": "2026-05-20",
-          "totalAmount": 130,
-          "institution": "上海市东方医院",
-          "breakdown": [
-            {
-              "category": "检查费",
-              "itemName": "13碳尿素呼气试验",
-              "amount": 130
-            }
-          ],
-          "sourceAnchors": {
-            "totalAmount": {
-              "pageIndex": 0,
-              "rawText": "(小写)130.00",
-              "highlightLevel": "text_search"
-            },
-            "invoiceNumber": {
-              "pageIndex": 0,
-              "rawText": "票据号码: 0799289513",
-              "highlightLevel": "text_search"
-            }
-          },
-          "confidence": 0.98
-        }
+        "errorMessage": null
+      },
+      {
+        "documentId": "mat-mmrmdo7k-mat-21",
+        "ossKey": null,
+        "classification": {
+          "materialId": "mat-21",
+          "materialName": "费用明细清单",
+          "confidence": 0
+        },
+        "status": "completed",
+        "structuredData": {},
+        "errorMessage": null
+      },
+      {
+        "documentId": "mat-mmrmdo7k-mat-13",
+        "ossKey": null,
+        "classification": {
+          "materialId": "mat-13",
+          "materialName": "诊断证明书",
+          "confidence": 0
+        },
+        "status": "completed",
+        "structuredData": {},
+        "errorMessage": null
       }
     ],
     "aggregation": {
       "claimCaseId": "CLM-MED-001",
-      "aggregatedAt": "2026-03-14T17:51:35.019Z",
-      "injuryProfile": {
-        "injuryDescription": "急性阑尾炎；急性弥漫性腹膜炎",
-        "diagnoses": [
-          {
-            "name": "急性阑尾炎"
-          },
-          {
-            "name": "急性弥漫性腹膜炎"
-          }
-        ],
-        "diagnosisNames": [
-          "急性阑尾炎",
-          "急性弥漫性腹膜炎"
-        ],
-        "primaryDiagnosisDate": null,
-        "disabilityLevel": null,
-        "hospitalizationDays": 0,
-        "treatmentTimeline": [
-          {
-            "date": "2026-05-20",
-            "event": "门诊就诊",
-            "sourceDocId": "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
-          }
-        ]
-      },
+      "aggregatedAt": "2026-03-15T11:17:11.025Z",
+      "injuryProfile": null,
       "liabilityResult": null,
-      "expenseAggregation": {
-        "medicalTotal": 148,
-        "nursingDays": 0,
-        "lostWorkDays": 0,
-        "monthlyIncome": 0,
-        "transportationTotal": 0,
-        "assessmentFees": 0,
-        "sourceDocIds": [
-          "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1",
-          "task-1e2217bc-f474-4cd6-abf1-fb693600e505-2",
-          "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
-        ]
-      },
+      "expenseAggregation": null,
       "deathProfile": null,
       "caseReports": [],
       "conflictsDetected": [],
-      "validationFacts": {},
-      "validationResults": [],
+      "validationFacts": {
+        "claim.invoice_patient_name_consistent": false
+      },
+      "validationResults": [
+        {
+          "type": "identity",
+          "passed": false,
+          "severity": "warning",
+          "message": "发票患者姓名与病历患者姓名不一致，需人工复核。",
+          "details": {
+            "ruleId": "mv-identity-001",
+            "reasonCode": "INVOICE_PATIENT_NAME_MISMATCH",
+            "expected": "马华",
+            "actual": "杨霁",
+            "field": "claim.patient_name EQ claim.patient_name",
+            "relatedDocuments": [
+              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1",
+              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+            ],
+            "failureAction": "MANUAL_REVIEW"
+          }
+        }
+      ],
       "factModel": {
         "generatedAt": "2026-03-14T17:51:35.019Z",
         "injuryProfile": {
@@ -6660,7 +6574,102 @@
         "validationFacts": {},
         "validationResults": [],
         "canonicalFacts": {},
-        "canonicalFactSources": {}
+        "canonicalFactSources": {},
+        "handlingProfile": {
+          "profileCode": "generic_claim_review",
+          "profileName": "通用案件审核",
+          "description": "当前案件未命中特定处理画像，按通用案件审核模式处理。",
+          "factSchema": {
+            "groups": []
+          },
+          "processingStrategy": {},
+          "uiModules": {},
+          "reviewTasks": [],
+          "context": {
+            "claimCaseId": "CLM-MED-001",
+            "productCode": "ZA-GOPD-2022A-90",
+            "insuranceType": "众安互联网团体门诊急诊医疗保险（0免赔90%赔付版）",
+            "accidentReason": "疾病门诊",
+            "deathConfirmed": false,
+            "hasLiabilityEvidence": false,
+            "hasLiabilityRatio": false,
+            "hasNoLiabilityEvidence": true,
+            "hasIdentityChainEvidence": false,
+            "hasRecognizedPayment": false,
+            "hasMedicalExpense": false,
+            "hasRegionalStandards": true,
+            "hasClaimantRelationship": false,
+            "materialIds": [
+              "mat-11",
+              "mat-20",
+              "mat-21",
+              "mat-13"
+            ],
+            "recognizedPayment": 0,
+            "medicalExpense": 0,
+            "claimantsCount": 0,
+            "matchesLiabilityReason": false
+          },
+          "domainModel": {
+            "claimCaseId": "CLM-MED-001",
+            "productLine": "HEALTH",
+            "claimScenario": "medical_expense",
+            "reviewProfileCode": "medical_expense_reimbursement",
+            "coverageFamily": [
+              "expense",
+              "medical"
+            ],
+            "requiresLiabilityAssessment": false,
+            "requiresExpenseAssessment": true,
+            "requiresBenefitAssessment": false,
+            "requiresDeductionAssessment": false,
+            "requiredModules": [
+              "material_overview",
+              "fact_cards",
+              "decision_trace",
+              "validation",
+              "expense_report"
+            ],
+            "isMedicalScenario": true,
+            "isLiabilityScenario": false,
+            "isBenefitScenario": false,
+            "isAutoScenario": false
+          }
+        },
+        "regionalStandards": {
+          "region": "安徽省",
+          "year": 2024,
+          "urbanPerCapitaIncome": 47446,
+          "funeralMonthlySalary": 8499.92,
+          "sourceDocument": "2024年《安徽省道路交通事故赔偿标准》",
+          "source": "configured_standard"
+        },
+        "liabilityApportionment": null,
+        "liabilityEvidence": [],
+        "identityChainEvidence": [],
+        "incidentStatements": [],
+        "interviewRecords": [],
+        "policeCallRecords": [],
+        "paymentEvidence": [],
+        "paymentEvidenceNormalized": [],
+        "paymentSummary": {
+          "confirmedPaidAmount": 0,
+          "reportedAdvanceAmount": 0,
+          "deductionRecommendedAmount": 0,
+          "deductionTotal": 0,
+          "uniqueTransferCount": 0,
+          "note": "未识别可直接抵扣的已付款项"
+        },
+        "compulsoryInsuranceOffset": {
+          "applicable": false,
+          "deductionTotal": 0,
+          "reason": "当前案件按工程机械设备保险附加第三者责任险处理，不适用交强险扣减"
+        },
+        "manualReviewItems": [
+          "缺少公安/安监正式责任划分文书，责任比例仍需人工确认",
+          "死亡赔偿金已按统一城镇标准试算，如法院地或统计年度不同需调整地区标准参数"
+        ],
+        "legacyAliases": {}
       },
       "liabilitySuggestion": {
         "status": "MANUAL_REVIEW",
@@ -6668,60 +6677,250 @@
         "confidence": 0.3,
         "basis": []
       },
-      "aggregationSummary": "伤情：急性阑尾炎；急性弥漫性腹膜炎；门急诊医疗费：¥148"
+      "aggregationSummary": "材料校验规则异常 1 项",
+      "regionalStandards": {
+        "region": "安徽省",
+        "year": 2024,
+        "urbanPerCapitaIncome": 47446,
+        "funeralMonthlySalary": 8499.92,
+        "sourceDocument": "2024年《安徽省道路交通事故赔偿标准》",
+        "source": "configured_standard"
+      },
+      "liabilityApportionment": null,
+      "liabilityEvidence": [],
+      "paymentEvidence": [],
+      "paymentEvidenceNormalized": [],
+      "paymentSummary": {
+        "confirmedPaidAmount": 0,
+        "reportedAdvanceAmount": 0,
+        "deductionRecommendedAmount": 0,
+        "deductionTotal": 0,
+        "uniqueTransferCount": 0,
+        "note": "未识别可直接抵扣的已付款项"
+      },
+      "deductionSummary": {
+        "confirmedPaidAmount": 0,
+        "reportedAdvanceAmount": 0,
+        "deductionRecommendedAmount": 0,
+        "deductionTotal": 0,
+        "uniqueTransferCount": 0,
+        "note": "未识别可直接抵扣的已付款项"
+      },
+      "compulsoryInsuranceOffset": {
+        "applicable": false,
+        "deductionTotal": 0,
+        "reason": "当前案件按工程机械设备保险附加第三者责任险处理，不适用交强险扣减"
+      },
+      "identityChainEvidence": [],
+      "incidentStatements": [],
+      "interviewRecords": [],
+      "policeCallRecords": [],
+      "manualReviewItems": [
+        "缺少公安/安监正式责任划分文书，责任比例仍需人工确认",
+        "死亡赔偿金已按统一城镇标准试算，如法院地或统计年度不同需调整地区标准参数"
+      ],
+      "factConfirmations": {},
+      "handlingProfile": {
+        "profileCode": "generic_claim_review",
+        "profileName": "通用案件审核",
+        "description": "当前案件未命中特定处理画像，按通用案件审核模式处理。",
+        "factSchema": {
+          "groups": []
+        },
+        "processingStrategy": {},
+        "uiModules": {},
+        "reviewTasks": [],
+        "context": {
+          "claimCaseId": "CLM-MED-001",
+          "productCode": "ZA-GOPD-2022A-90",
+          "insuranceType": "众安互联网团体门诊急诊医疗保险（0免赔90%赔付版）",
+          "accidentReason": "疾病门诊",
+          "deathConfirmed": false,
+          "hasLiabilityEvidence": false,
+          "hasLiabilityRatio": false,
+          "hasNoLiabilityEvidence": true,
+          "hasIdentityChainEvidence": false,
+          "hasRecognizedPayment": false,
+          "hasMedicalExpense": false,
+          "hasRegionalStandards": true,
+          "hasClaimantRelationship": false,
+          "materialIds": [
+            "mat-11",
+            "mat-20",
+            "mat-21",
+            "mat-13"
+          ],
+          "recognizedPayment": 0,
+          "medicalExpense": 0,
+          "claimantsCount": 0,
+          "matchesLiabilityReason": false
+        },
+        "domainModel": {
+          "claimCaseId": "CLM-MED-001",
+          "productLine": "HEALTH",
+          "claimScenario": "medical_expense",
+          "reviewProfileCode": "medical_expense_reimbursement",
+          "coverageFamily": [
+            "expense",
+            "medical"
+          ],
+          "requiresLiabilityAssessment": false,
+          "requiresExpenseAssessment": true,
+          "requiresBenefitAssessment": false,
+          "requiresDeductionAssessment": false,
+          "requiredModules": [
+            "material_overview",
+            "fact_cards",
+            "decision_trace",
+            "validation",
+            "expense_report"
+          ],
+          "isMedicalScenario": true,
+          "isLiabilityScenario": false,
+          "isBenefitScenario": false,
+          "isAutoScenario": false
+        }
+      },
+      "decisionTrace": {
+        "traceId": "trace-CLM-MED-001",
+        "generatedAt": "2026-03-15T11:17:11.282Z",
+        "domainModel": {
+          "claimCaseId": "CLM-MED-001",
+          "productLine": "HEALTH",
+          "claimScenario": "medical_expense",
+          "reviewProfileCode": "medical_expense_reimbursement",
+          "coverageFamily": [
+            "expense",
+            "medical"
+          ],
+          "requiresLiabilityAssessment": false,
+          "requiresExpenseAssessment": true,
+          "requiresBenefitAssessment": false,
+          "requiresDeductionAssessment": false,
+          "requiredModules": [
+            "material_overview",
+            "fact_cards",
+            "decision_trace",
+            "validation",
+            "expense_report"
+          ],
+          "isMedicalScenario": true,
+          "isLiabilityScenario": false,
+          "isBenefitScenario": false,
+          "isAutoScenario": false
+        },
+        "claimScenario": "medical_expense",
+        "stages": [
+          {
+            "stage": "material_recognition",
+            "title": "材料识别",
+            "status": "completed",
+            "summary": "共识别 6/6 份材料，形成 0 份结构化摘要",
+            "sourceDocIds": [
+              "mat-1773508535449-wqg0z3050",
+              "mat-1773508535449-8jzm23u4k",
+              "mat-1773508535449-1f7wucee8",
+              "mat-mmrmdo7j-mat-11",
+              "mat-mmrmdo7k-mat-21",
+              "mat-mmrmdo7k-mat-13"
+            ],
+            "facts": [
+              {
+                "label": "材料总数",
+                "value": "6"
+              },
+              {
+                "label": "已识别材料",
+                "value": "6"
+              },
+              {
+                "label": "摘要数量",
+                "value": "0"
+              }
+            ]
+          },
+          {
+            "stage": "medical_fact_aggregation",
+            "title": "医疗事实归纳",
+            "status": "completed",
+            "summary": "材料校验规则异常 1 项",
+            "sourceDocIds": [],
+            "facts": [
+              {
+                "label": "诊断",
+                "value": "-"
+              },
+              {
+                "label": "医疗费用",
+                "value": "0"
+              },
+              {
+                "label": "住院天数",
+                "value": "0"
+              },
+              {
+                "label": "发票张数",
+                "value": "0"
+              }
+            ]
+          },
+          {
+            "stage": "expense_assessment",
+            "title": "费用核定",
+            "status": "completed",
+            "summary": "尚未识别可核定的医疗费用",
+            "sourceDocIds": [],
+            "facts": [
+              {
+                "label": "医疗费用合计",
+                "value": "0"
+              },
+              {
+                "label": "交通费",
+                "value": "0"
+              },
+              {
+                "label": "护理天数",
+                "value": "0"
+              },
+              {
+                "label": "误工天数",
+                "value": "0"
+              }
+            ]
+          }
+        ]
+      }
     },
     "completeness": {
-      "isComplete": true,
-      "completenessScore": 1,
+      "isComplete": false,
+      "completenessScore": 0,
       "requiredMaterials": [
-        {
-          "id": "mat-20",
-          "name": "医疗费发票",
-          "required": true
-        },
-        {
-          "id": "mat-21",
-          "name": "费用明细清单",
-          "required": true
-        },
-        {
-          "id": "mat-11",
-          "name": "门（急）诊病历",
-          "required": true
-        },
-        {
-          "id": "mat-13",
-          "name": "诊断证明书",
-          "required": true
-        }
+        "item-ZA-GOPD-outpatient",
+        "item-ZA-GOPD-outpatient"
       ],
       "providedMaterials": [
-        {
-          "id": "mat-20",
-          "name": "医疗费发票"
-        },
-        {
-          "id": "mat-21",
-          "name": "费用明细清单"
-        },
-        {
-          "id": "mat-11",
-          "name": "门（急）诊病历"
-        },
-        {
-          "id": "mat-13",
-          "name": "诊断证明书"
-        }
+        "image/jpeg",
+        "mat-11",
+        "mat-20",
+        "mat-21",
+        "mat-13"
       ],
-      "missingMaterials": [],
-      "warnings": []
+      "missingMaterials": [
+        "item-ZA-GOPD-outpatient",
+        "item-ZA-GOPD-outpatient"
+      ],
+      "optionalMaterials": [],
+      "warnings": [
+        "缺少以下材料: item-ZA-GOPD-outpatient, item-ZA-GOPD-outpatient"
+      ]
     },
     "reviewResult": {
-      "decision": "APPROVE",
+      "decision": "MANUAL_REVIEW",
       "intakeDecision": "PASS",
-      "liabilityDecision": "ACCEPT",
-      "assessmentDecision": "ASSESSED",
-      "settlementDecision": "PAY",
+      "liabilityDecision": "MANUAL_REVIEW",
+      "assessmentDecision": "PARTIAL_ASSESSED",
+      "settlementDecision": "MANUAL_REVIEW",
       "claimType": "HEALTH",
       "coverageResults": [
         {
@@ -6745,11 +6944,47 @@
           "warnings": []
         }
       ],
-      "reasonCodes": [],
-      "warnings": [],
-      "manualReviewReasons": [],
+      "reasonCodes": [
+        "INVOICE_PATIENT_NAME_MISMATCH",
+        "WARN_1"
+      ],
+      "warnings": [
+        "发票患者姓名与病历患者姓名不一致，需人工复核。"
+      ],
+      "manualReviewReasons": [
+        {
+          "code": "INVOICE_PATIENT_NAME_MISMATCH",
+          "stage": "INTAKE",
+          "source": "mv-identity-001",
+          "category": "identity",
+          "message": "发票患者姓名与病历患者姓名不一致，需人工复核。",
+          "metadata": {
+            "field": "claim.patient_name EQ claim.patient_name",
+            "failureAction": "MANUAL_REVIEW"
+          }
+        }
+      ],
       "missingMaterials": [],
-      "materialValidationResults": [],
+      "materialValidationResults": [
+        {
+          "type": "identity",
+          "passed": false,
+          "severity": "warning",
+          "message": "发票患者姓名与病历患者姓名不一致，需人工复核。",
+          "details": {
+            "ruleId": "mv-identity-001",
+            "reasonCode": "INVOICE_PATIENT_NAME_MISMATCH",
+            "expected": "马华",
+            "actual": "杨霁",
+            "field": "claim.patient_name EQ claim.patient_name",
+            "relatedDocuments": [
+              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1",
+              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+            ],
+            "failureAction": "MANUAL_REVIEW"
+          }
+        }
+      ],
       "matchedRuleDetails": [
         {
           "ruleId": "ZAOPD001",
@@ -6899,21 +7134,15 @@
           "totalApproved": 133.2,
           "itemBreakdown": [
             {
-              "item": "诊查费(自费)",
-              "claimed": 3,
-              "approved": 0,
-              "reason": "项目名称包含自费/自付提示，按目录外项目处理"
-            },
-            {
-              "item": "诊查费",
-              "claimed": 15,
-              "approved": 13.78,
+              "item": "医保内门急诊费用",
+              "claimed": 145,
+              "approved": 130.5,
               "reason": "按默认赔付比例 0.9"
             },
             {
-              "item": "13碳尿素呼气试验",
-              "claimed": 130,
-              "approved": 119.42,
+              "item": "医保外门急诊费用",
+              "claimed": 3,
+              "approved": 2.7,
               "reason": "按默认赔付比例 0.9"
             }
           ],
@@ -6980,19 +7209,54 @@
           ],
           "lossLedger": [
             {
-              "itemKey": "doc-1-item-0",
-              "itemName": "诊查费(自费)",
-              "claimedAmount": 3,
-              "payableAmount": 0,
-              "status": "ZERO_PAY",
+              "itemKey": "synthetic-social-medical",
+              "itemName": "医保内门急诊费用",
+              "claimedAmount": 145,
+              "payableAmount": 130.5,
+              "status": "PAYABLE",
               "coverageCode": "HLT_INPATIENT",
-              "category": "诊疗费",
+              "category": null,
               "medicalReview": {
-                "status": "SELF_PAY",
+                "status": "COVERED",
                 "catalogCategory": "treatment",
                 "catalogMatch": null,
-                "ratio": 0,
-                "basis": "项目名称包含自费/自付提示，按目录外项目处理",
+                "ratio": 1,
+                "basis": "基于报案汇总金额生成的门急诊费用，暂按可赔费用保留，待后续票据明细补充时再做目录细分",
+                "restriction": ""
+              },
+              "entries": [
+                {
+                  "step": "INIT",
+                  "beforeAmount": 145,
+                  "afterAmount": 145,
+                  "message": "载入原始申报金额"
+                },
+                {
+                  "step": "RATIO",
+                  "ruleId": "SYSTEM_DEFAULT_RATIO",
+                  "beforeAmount": 145,
+                  "afterAmount": 130.5,
+                  "reasonCode": "DEFAULT_REIMBURSEMENT_RATIO",
+                  "message": "按默认赔付比例 0.9"
+                }
+              ],
+              "manualReviewReasons": [],
+              "flags": []
+            },
+            {
+              "itemKey": "synthetic-non-social-medical",
+              "itemName": "医保外门急诊费用",
+              "claimedAmount": 3,
+              "payableAmount": 2.7,
+              "status": "PAYABLE",
+              "coverageCode": "HLT_INPATIENT",
+              "category": null,
+              "medicalReview": {
+                "status": "COVERED",
+                "catalogCategory": "treatment",
+                "catalogMatch": null,
+                "ratio": 1,
+                "basis": "基于报案汇总金额生成的门急诊费用，暂按可赔费用保留，待后续票据明细补充时再做目录细分",
                 "restriction": ""
               },
               "entries": [
@@ -7003,94 +7267,10 @@
                   "message": "载入原始申报金额"
                 },
                 {
-                  "step": "ELIGIBILITY",
-                  "ruleId": "MEDICAL_CATALOG",
+                  "step": "RATIO",
+                  "ruleId": "SYSTEM_DEFAULT_RATIO",
                   "beforeAmount": 3,
-                  "afterAmount": 0,
-                  "reasonCode": "MEDICAL_CATALOG_SELF_PAY",
-                  "message": "项目名称包含自费/自付提示，按目录外项目处理"
-                }
-              ],
-              "manualReviewReasons": [],
-              "flags": []
-            },
-            {
-              "itemKey": "doc-1-item-1",
-              "itemName": "诊查费",
-              "claimedAmount": 15,
-              "payableAmount": 13.78,
-              "status": "PAYABLE",
-              "coverageCode": "HLT_INPATIENT",
-              "category": "诊疗费",
-              "medicalReview": {
-                "status": "COVERED",
-                "catalogCategory": "treatment",
-                "catalogMatch": {
-                  "id": "catalog-1771125014007",
-                  "name": "诊查费",
-                  "type": "A",
-                  "reimbursementRatio": 100,
-                  "restrictions": "",
-                  "province": "national"
-                },
-                "ratio": 1,
-                "basis": "匹配医保目录“诊查费”",
-                "restriction": ""
-              },
-              "entries": [
-                {
-                  "step": "INIT",
-                  "beforeAmount": 15,
-                  "afterAmount": 15,
-                  "message": "载入原始申报金额"
-                },
-                {
-                  "step": "RATIO",
-                  "ruleId": "SYSTEM_DEFAULT_RATIO",
-                  "beforeAmount": 15,
-                  "afterAmount": 13.5,
-                  "reasonCode": "DEFAULT_REIMBURSEMENT_RATIO",
-                  "message": "按默认赔付比例 0.9"
-                }
-              ],
-              "manualReviewReasons": [],
-              "flags": []
-            },
-            {
-              "itemKey": "doc-2-item-0",
-              "itemName": "13碳尿素呼气试验",
-              "claimedAmount": 130,
-              "payableAmount": 119.42,
-              "status": "PAYABLE",
-              "coverageCode": "HLT_INPATIENT",
-              "category": "检查费",
-              "medicalReview": {
-                "status": "COVERED",
-                "catalogCategory": "treatment",
-                "catalogMatch": {
-                  "id": "catalog-1771129665840",
-                  "name": "13碳尿素呼气试验",
-                  "type": "A",
-                  "reimbursementRatio": 100,
-                  "restrictions": "",
-                  "province": "national"
-                },
-                "ratio": 1,
-                "basis": "匹配医保目录“13碳尿素呼气试验”",
-                "restriction": ""
-              },
-              "entries": [
-                {
-                  "step": "INIT",
-                  "beforeAmount": 130,
-                  "afterAmount": 130,
-                  "message": "载入原始申报金额"
-                },
-                {
-                  "step": "RATIO",
-                  "ruleId": "SYSTEM_DEFAULT_RATIO",
-                  "beforeAmount": 130,
-                  "afterAmount": 117,
+                  "afterAmount": 2.7,
                   "reasonCode": "DEFAULT_REIMBURSEMENT_RATIO",
                   "message": "按默认赔付比例 0.9"
                 }
@@ -7127,12 +7307,12 @@
             },
             "catalogSummary": {
               "totalClaimedAmount": 148,
-              "catalogCoveredAmount": 145,
-              "selfPayAmount": 3,
+              "catalogCoveredAmount": 148,
+              "selfPayAmount": 0,
               "restrictedAmount": 0,
               "uncertainAmount": 0,
               "matchedItems": 2,
-              "selfPayItems": 1,
+              "selfPayItems": 0,
               "uncertainItems": 0
             }
           },
@@ -7144,44 +7324,73 @@
             "rulesetId": "RS-HEALTH-ZA-GOPD-2022A90-001",
             "productSource": "CLAIM_CASE"
           },
-          "duration": 20
+          "duration": 27
         },
         "itemBreakdown": [
           {
-            "item": "诊查费(自费)",
-            "claimed": 3,
-            "approved": 0,
-            "reason": "项目名称包含自费/自付提示，按目录外项目处理"
-          },
-          {
-            "item": "诊查费",
-            "claimed": 15,
-            "approved": 13.78,
+            "item": "医保内门急诊费用",
+            "claimed": 145,
+            "approved": 130.5,
             "reason": "按默认赔付比例 0.9"
           },
           {
-            "item": "13碳尿素呼气试验",
-            "claimed": 130,
-            "approved": 119.42,
+            "item": "医保外门急诊费用",
+            "claimed": 3,
+            "approved": 2.7,
             "reason": "按默认赔付比例 0.9"
           }
         ],
         "settlementMode": "LOSS",
         "lossLedger": [
           {
-            "itemKey": "doc-1-item-0",
-            "itemName": "诊查费(自费)",
-            "claimedAmount": 3,
-            "payableAmount": 0,
-            "status": "ZERO_PAY",
+            "itemKey": "synthetic-social-medical",
+            "itemName": "医保内门急诊费用",
+            "claimedAmount": 145,
+            "payableAmount": 130.5,
+            "status": "PAYABLE",
             "coverageCode": "HLT_INPATIENT",
-            "category": "诊疗费",
+            "category": null,
             "medicalReview": {
-              "status": "SELF_PAY",
+              "status": "COVERED",
               "catalogCategory": "treatment",
               "catalogMatch": null,
-              "ratio": 0,
-              "basis": "项目名称包含自费/自付提示，按目录外项目处理",
+              "ratio": 1,
+              "basis": "基于报案汇总金额生成的门急诊费用，暂按可赔费用保留，待后续票据明细补充时再做目录细分",
+              "restriction": ""
+            },
+            "entries": [
+              {
+                "step": "INIT",
+                "beforeAmount": 145,
+                "afterAmount": 145,
+                "message": "载入原始申报金额"
+              },
+              {
+                "step": "RATIO",
+                "ruleId": "SYSTEM_DEFAULT_RATIO",
+                "beforeAmount": 145,
+                "afterAmount": 130.5,
+                "reasonCode": "DEFAULT_REIMBURSEMENT_RATIO",
+                "message": "按默认赔付比例 0.9"
+              }
+            ],
+            "manualReviewReasons": [],
+            "flags": []
+          },
+          {
+            "itemKey": "synthetic-non-social-medical",
+            "itemName": "医保外门急诊费用",
+            "claimedAmount": 3,
+            "payableAmount": 2.7,
+            "status": "PAYABLE",
+            "coverageCode": "HLT_INPATIENT",
+            "category": null,
+            "medicalReview": {
+              "status": "COVERED",
+              "catalogCategory": "treatment",
+              "catalogMatch": null,
+              "ratio": 1,
+              "basis": "基于报案汇总金额生成的门急诊费用，暂按可赔费用保留，待后续票据明细补充时再做目录细分",
               "restriction": ""
             },
             "entries": [
@@ -7192,94 +7401,10 @@
                 "message": "载入原始申报金额"
               },
               {
-                "step": "ELIGIBILITY",
-                "ruleId": "MEDICAL_CATALOG",
+                "step": "RATIO",
+                "ruleId": "SYSTEM_DEFAULT_RATIO",
                 "beforeAmount": 3,
-                "afterAmount": 0,
-                "reasonCode": "MEDICAL_CATALOG_SELF_PAY",
-                "message": "项目名称包含自费/自付提示，按目录外项目处理"
-              }
-            ],
-            "manualReviewReasons": [],
-            "flags": []
-          },
-          {
-            "itemKey": "doc-1-item-1",
-            "itemName": "诊查费",
-            "claimedAmount": 15,
-            "payableAmount": 13.78,
-            "status": "PAYABLE",
-            "coverageCode": "HLT_INPATIENT",
-            "category": "诊疗费",
-            "medicalReview": {
-              "status": "COVERED",
-              "catalogCategory": "treatment",
-              "catalogMatch": {
-                "id": "catalog-1771125014007",
-                "name": "诊查费",
-                "type": "A",
-                "reimbursementRatio": 100,
-                "restrictions": "",
-                "province": "national"
-              },
-              "ratio": 1,
-              "basis": "匹配医保目录“诊查费”",
-              "restriction": ""
-            },
-            "entries": [
-              {
-                "step": "INIT",
-                "beforeAmount": 15,
-                "afterAmount": 15,
-                "message": "载入原始申报金额"
-              },
-              {
-                "step": "RATIO",
-                "ruleId": "SYSTEM_DEFAULT_RATIO",
-                "beforeAmount": 15,
-                "afterAmount": 13.5,
-                "reasonCode": "DEFAULT_REIMBURSEMENT_RATIO",
-                "message": "按默认赔付比例 0.9"
-              }
-            ],
-            "manualReviewReasons": [],
-            "flags": []
-          },
-          {
-            "itemKey": "doc-2-item-0",
-            "itemName": "13碳尿素呼气试验",
-            "claimedAmount": 130,
-            "payableAmount": 119.42,
-            "status": "PAYABLE",
-            "coverageCode": "HLT_INPATIENT",
-            "category": "检查费",
-            "medicalReview": {
-              "status": "COVERED",
-              "catalogCategory": "treatment",
-              "catalogMatch": {
-                "id": "catalog-1771129665840",
-                "name": "13碳尿素呼气试验",
-                "type": "A",
-                "reimbursementRatio": 100,
-                "restrictions": "",
-                "province": "national"
-              },
-              "ratio": 1,
-              "basis": "匹配医保目录“13碳尿素呼气试验”",
-              "restriction": ""
-            },
-            "entries": [
-              {
-                "step": "INIT",
-                "beforeAmount": 130,
-                "afterAmount": 130,
-                "message": "载入原始申报金额"
-              },
-              {
-                "step": "RATIO",
-                "ruleId": "SYSTEM_DEFAULT_RATIO",
-                "beforeAmount": 130,
-                "afterAmount": 117,
+                "afterAmount": 2.7,
                 "reasonCode": "DEFAULT_REIMBURSEMENT_RATIO",
                 "message": "按默认赔付比例 0.9"
               }
@@ -7357,12 +7482,12 @@
           },
           "catalogSummary": {
             "totalClaimedAmount": 148,
-            "catalogCoveredAmount": 145,
-            "selfPayAmount": 3,
+            "catalogCoveredAmount": 148,
+            "selfPayAmount": 0,
             "restrictedAmount": 0,
             "uncertainAmount": 0,
             "matchedItems": 2,
-            "selfPayItems": 1,
+            "selfPayItems": 0,
             "uncertainItems": 0
           }
         },
@@ -7509,7 +7634,9 @@
               }
             ]
           },
-          "validation": {}
+          "validation": {
+            "claim.invoice_patient_name_consistent": false
+          }
         }
       },
       "auditTrail": [
@@ -7959,49 +8086,40 @@
           "matched": false
         }
       ],
-      "duration": 72
+      "duration": 103
     },
     "damageReport": {
-      "reportId": "RPT-1773571009936-4f39fa",
+      "reportId": "RPT-1773573442304-002925",
       "claimCaseId": "CLM-MED-001",
-      "generatedAt": "2026-03-15T10:36:49.936Z",
+      "generatedAt": "2026-03-15T11:17:22.305Z",
       "generatedBy": "ai",
       "items": [
         {
-          "id": "doc-1-item-0",
-          "category": "诊疗费",
-          "itemName": "诊查费(自费)",
+          "id": "synthetic-social-medical",
+          "category": "医疗费",
+          "itemName": "医保内门急诊费用",
+          "originalAmount": 145,
+          "approvedAmount": 130.5,
+          "formula": "核定金额 ¥130.50",
+          "basis": "基于报案汇总金额生成的门急诊费用，暂按可赔费用保留，待后续票据明细补充时再做目录细分；按默认赔付比例 0.9"
+        },
+        {
+          "id": "synthetic-non-social-medical",
+          "category": "医疗费",
+          "itemName": "医保外门急诊费用",
           "originalAmount": 3,
-          "approvedAmount": 0,
-          "formula": "目录外/不赔项目，核定为 0",
-          "basis": "项目名称包含自费/自付提示，按目录外项目处理；项目名称包含自费/自付提示，按目录外项目处理"
-        },
-        {
-          "id": "doc-1-item-1",
-          "category": "诊疗费",
-          "itemName": "诊查费",
-          "originalAmount": 15,
-          "approvedAmount": 13.5,
-          "formula": "核定金额 ¥13.50",
-          "basis": "匹配医保目录“诊查费”；按默认赔付比例 0.9"
-        },
-        {
-          "id": "doc-2-item-0",
-          "category": "检查费",
-          "itemName": "13碳尿素呼气试验",
-          "originalAmount": 130,
-          "approvedAmount": 117,
-          "formula": "核定金额 ¥117.00",
-          "basis": "匹配医保目录“13碳尿素呼气试验”；按默认赔付比例 0.9"
+          "approvedAmount": 2.7,
+          "formula": "核定金额 ¥2.70",
+          "basis": "基于报案汇总金额生成的门急诊费用，暂按可赔费用保留，待后续票据明细补充时再做目录细分；按默认赔付比例 0.9"
         }
       ],
-      "subTotal": 130.5,
+      "subTotal": 133.2,
       "liabilityAdjustment": 1,
-      "adjustedAmount": 130.5,
+      "adjustedAmount": 133.2,
       "deductionTotal": 0,
       "finalAmount": 133.2,
       "calculationFormula": "损失合计（责任比例待人工确认，未折减）",
-      "regionalStandards": "上海市 2024年，城镇居民人均可支配收入 ¥79,610/年",
+      "regionalStandards": "安徽省 2024年，城镇居民人均可支配收入 ¥47,446/年",
       "status": "draft",
       "domainModel": {
         "claimCaseId": "CLM-MED-001",
@@ -8036,41 +8154,34 @@
         "报告结论金额"
       ],
       "detailSectionTitle": "费用明细",
-      "injuryProfile": {
-        "injuryDescription": "急性阑尾炎；急性弥漫性腹膜炎",
-        "diagnoses": [
-          {
-            "name": "急性阑尾炎"
-          },
-          {
-            "name": "急性弥漫性腹膜炎"
-          }
-        ],
-        "diagnosisNames": [
-          "急性阑尾炎",
-          "急性弥漫性腹膜炎"
-        ],
-        "primaryDiagnosisDate": null,
-        "disabilityLevel": null,
-        "hospitalizationDays": 0,
-        "treatmentTimeline": [
-          {
-            "date": "2026-05-20",
-            "event": "门诊就诊",
-            "sourceDocId": "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
-          }
-        ]
-      },
+      "injuryProfile": null,
       "liabilityResult": null,
       "deathProfile": null,
-      "deductionSummary": null,
-      "manualReviewItems": [],
-      "standardsSnapshot": {},
+      "deductionSummary": {
+        "confirmedPaidAmount": 0,
+        "reportedAdvanceAmount": 0,
+        "deductionRecommendedAmount": 0,
+        "deductionTotal": 0,
+        "uniqueTransferCount": 0,
+        "note": "未识别可直接抵扣的已付款项"
+      },
+      "manualReviewItems": [
+        "缺少公安/安监正式责任划分文书，责任比例仍需人工确认",
+        "死亡赔偿金已按统一城镇标准试算，如法院地或统计年度不同需调整地区标准参数"
+      ],
+      "standardsSnapshot": {
+        "region": "安徽省",
+        "year": 2024,
+        "urbanPerCapitaIncome": 47446,
+        "funeralMonthlySalary": 8499.92,
+        "sourceDocument": "2024年《安徽省道路交通事故赔偿标准》",
+        "source": "configured_standard"
+      },
       "settlementSnapshot": {
         "deductible": 0,
         "reimbursementRatio": 0.9,
         "payableAmount": 133.2,
-        "settlementDecision": "PAY",
+        "settlementDecision": "MANUAL_REVIEW",
         "medicalReview": {
           "hospitalReview": {
             "requirement": {
@@ -8098,12 +8209,12 @@
           },
           "catalogSummary": {
             "totalClaimedAmount": 148,
-            "catalogCoveredAmount": 145,
-            "selfPayAmount": 3,
+            "catalogCoveredAmount": 148,
+            "selfPayAmount": 0,
             "restrictedAmount": 0,
             "uncertainAmount": 0,
             "matchedItems": 2,
-            "selfPayItems": 1,
+            "selfPayItems": 0,
             "uncertainItems": 0
           }
         },
@@ -8140,29 +8251,103 @@
       },
       "decisionTrace": {
         "traceId": "trace-CLM-MED-001",
-        "generatedAt": "2026-03-15T10:36:49.968Z",
+        "generatedAt": "2026-03-15T11:17:11.282Z",
         "stages": [
           {
-            "stage": "damage_calculation",
-            "title": "定损计算",
+            "stage": "material_recognition",
+            "title": "材料识别",
             "status": "completed",
-            "summary": "损失合计 130.50，责任系数 1.00，最终金额 133.20",
+            "summary": "共识别 6/6 份材料，形成 0 份结构化摘要",
+            "sourceDocIds": [
+              "mat-1773508535449-wqg0z3050",
+              "mat-1773508535449-8jzm23u4k",
+              "mat-1773508535449-1f7wucee8",
+              "mat-mmrmdo7j-mat-11",
+              "mat-mmrmdo7k-mat-21",
+              "mat-mmrmdo7k-mat-13"
+            ],
+            "facts": [
+              {
+                "label": "材料总数",
+                "value": "6"
+              },
+              {
+                "label": "已识别材料",
+                "value": "6"
+              },
+              {
+                "label": "摘要数量",
+                "value": "0"
+              }
+            ]
+          },
+          {
+            "stage": "medical_fact_aggregation",
+            "title": "医疗事实归纳",
+            "status": "completed",
+            "summary": "材料校验规则异常 1 项",
             "sourceDocIds": [],
             "facts": [
               {
-                "label": "损失合计",
-                "value": "¥130.50"
+                "label": "诊断",
+                "value": "-"
               },
               {
-                "label": "责任系数",
-                "value": "100%"
+                "label": "医疗费用",
+                "value": "0"
+              },
+              {
+                "label": "住院天数",
+                "value": "0"
+              },
+              {
+                "label": "发票张数",
+                "value": "0"
+              }
+            ]
+          },
+          {
+            "stage": "expense_assessment",
+            "title": "费用核定",
+            "status": "completed",
+            "summary": "尚未识别可核定的医疗费用",
+            "sourceDocIds": [],
+            "facts": [
+              {
+                "label": "医疗费用合计",
+                "value": "0"
+              },
+              {
+                "label": "交通费",
+                "value": "0"
+              },
+              {
+                "label": "护理天数",
+                "value": "0"
+              },
+              {
+                "label": "误工天数",
+                "value": "0"
+              }
+            ]
+          },
+          {
+            "stage": "damage_calculation",
+            "title": "审核结论",
+            "status": "completed",
+            "summary": "核定费用 133.20，抵扣 0.00，结论金额 133.20",
+            "sourceDocIds": [],
+            "facts": [
+              {
+                "label": "核定费用",
+                "value": "¥133.20"
               },
               {
                 "label": "抵扣金额",
                 "value": "¥0.00"
               },
               {
-                "label": "最终金额",
+                "label": "报告结论金额",
                 "value": "¥133.20"
               }
             ]
@@ -8171,6 +8356,30 @@
       },
       "conflicts": []
     },
-    "updatedAt": "2026-03-15T10:36:49.974Z"
+    "updatedAt": "2026-03-15T11:17:22.336Z",
+    "validationFacts": {
+      "claim.invoice_patient_name_consistent": false
+    },
+    "materialValidationResults": [
+      {
+        "type": "identity",
+        "passed": false,
+        "severity": "warning",
+        "message": "发票患者姓名与病历患者姓名不一致，需人工复核。",
+        "details": {
+          "ruleId": "mv-identity-001",
+          "reasonCode": "INVOICE_PATIENT_NAME_MISMATCH",
+          "expected": "马华",
+          "actual": "杨霁",
+          "field": "claim.patient_name EQ claim.patient_name",
+          "relatedDocuments": [
+            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1",
+            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+          ],
+          "failureAction": "MANUAL_REVIEW"
+        }
+      }
+    ],
+    "repairedAt": "2026-03-15T11:17:11.283Z"
   }
 ]

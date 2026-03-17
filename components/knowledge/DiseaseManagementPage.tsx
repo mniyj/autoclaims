@@ -25,6 +25,32 @@ const SEVERITY_OPTIONS = [
   { value: '危重', label: '危重', color: 'bg-red-100 text-red-800' },
 ];
 
+// ICD-10 Hierarchy (23 chapters) - simplified for frontend filtering
+const ICD_CHAPTERS = Array.from({ length: 23 }).map((_, i) => ({ id: i + 1, name: `第${i + 1}章` }));
+
+// Lightweight mapping from ICD-10 first letter to a chapter (best-effort for demo data)
+const LETTER_TO_CHAPTER: Record<string, number> = {
+  A: 1, B: 1,
+  C: 2, D: 2,
+  E: 3, F: 3,
+  G: 4, H: 4, I: 4,
+  J: 5,
+  K: 6, L: 6,
+  M: 7, N: 7, O: 7,
+  P: 8, Q: 8, R: 8,
+  S: 9, T: 9,
+  U: 10, V: 10, W: 10,
+  X: 11, Y: 11, Z: 11,
+};
+
+function getChapterLabelForCode(icdCode?: string): string {
+  if (!icdCode) return '未归类';
+  const first = icdCode.charAt(0).toUpperCase();
+  const ch = LETTER_TO_CHAPTER[first];
+  if (!ch) return '未归类';
+  return `第${ch}章`;
+}
+
 const DiseaseManagementPage: React.FC = () => {
   const [diseases, setDiseases] = useState<Disease[]>([]);
   const [loading, setLoading] = useState(false);
@@ -32,6 +58,13 @@ const DiseaseManagementPage: React.FC = () => {
   const [filterSeverity, setFilterSeverity] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
+  // Hierarchy filter and batch edit state
+  const [selectedChapter, setSelectedChapter] = useState<number | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [batchSeverity, setBatchSeverity] = useState<string>('');
+  const [batchInpatient, setBatchInpatient] = useState<boolean | null>(null);
+  const [batchStatus, setBatchStatus] = useState<'active' | 'inactive' | ''>('');
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingDisease, setEditingDisease] = useState<Partial<Disease> | null>(null);
@@ -44,16 +77,32 @@ const DiseaseManagementPage: React.FC = () => {
     loadDiseases();
   }, []);
 
+  // Reset to first page when chapter filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedChapter]);
+
   const loadDiseases = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/knowledge/entity/search?type=disease');
-      const data = await response.json();
-      if (data.success) {
-        setDiseases(data.data?.diseases || []);
-      }
+      const icd10Response = await fetch('/jsonlist/icd10/diseases.json');
+      const icd10Data = await icd10Response.json();
+      const convertedDiseases: Disease[] = icd10Data.map((d: any, index: number) => ({
+        disease_id: d.id || `icd-${index}`,
+        standard_name: d.name,
+        aliases: [],
+        icd_code: d.code,
+        severity_level: '一般',
+        status: 'active',
+        typical_los_min: undefined,
+        typical_los_max: undefined,
+        inpatient_necessity_flag: false,
+      }));
+      
+      setDiseases(convertedDiseases);
     } catch (error) {
       console.error('Failed to load diseases:', error);
+      setDiseases([]);
     } finally {
       setLoading(false);
     }
@@ -75,8 +124,13 @@ const DiseaseManagementPage: React.FC = () => {
       result = result.filter(disease => disease.severity_level === filterSeverity);
     }
 
+    // ICD-10 chapter filter
+    if (selectedChapter) {
+      result = result.filter(disease => getChapterLabelForCode(disease.icd_code) === `第${selectedChapter}章`);
+    }
+
     return result;
-  }, [diseases, searchQuery, filterSeverity]);
+  }, [diseases, searchQuery, filterSeverity, selectedChapter]);
 
   const totalPages = Math.ceil(filteredDiseases.length / itemsPerPage);
   const paginatedDiseases = filteredDiseases.slice(
@@ -161,11 +215,114 @@ const DiseaseManagementPage: React.FC = () => {
     );
   };
 
+  // Batch selection helpers
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const applyBatchUpdate = async () => {
+    if (!selectedIds.length) return;
+    const updates = selectedIds.map(async (id) => {
+      const payload: any = {};
+      if (batchSeverity) payload.severity_level = batchSeverity;
+      if (batchInpatient !== null) payload.inpatient_necessity_flag = batchInpatient;
+      if (batchStatus) payload.status = batchStatus;
+      if (Object.keys(payload).length === 0) return true;
+      try {
+        const res = await fetch(`/api/knowledge/diseases/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        return res.ok;
+      } catch {
+        return false;
+      }
+    });
+
+    const results = await Promise.all(updates);
+    // Clear batch state and refresh
+    setSelectedIds([]);
+    setBatchSeverity('');
+    setBatchInpatient(null);
+    setBatchStatus('');
+    loadDiseases();
+    return results.every(r => r);
+  };
+
   return (
-    <div className="p-6">
-      <div className="mb-6">
+    <div className="grid grid-cols-12 gap-4 p-6">
+      {/* Hierarchy Tree Sidebar */}
+      <aside className="h-full border border-gray-200 rounded-lg p-4 bg-white shadow-sm col-span-3">
+        <div className="font-semibold mb-2">ICD-10 章节筛选</div>
+        <div className="space-y-1 text-sm">
+          {ICD_CHAPTERS.map(ch => (
+            <div
+              key={ch.id}
+              onClick={() => setSelectedChapter(ch.id)}
+              className={`cursor-pointer px-2 py-1 rounded ${selectedChapter === ch.id ? 'bg-blue-100 text-blue-800' : 'hover:bg-gray-100'}`}
+            >
+              {ch.name}
+            </div>
+          ))}
+        </div>
+        <button className="mt-3 text-sm text-gray-700" onClick={() => setSelectedChapter(null)}>清除筛选</button>
+      </aside>
+
+      {/* Main Content */}
+      <div className="col-span-9">
+        <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">疾病管理</h1>
         <p className="text-gray-600 mt-1">管理疾病主数据，包括ICD编码、严重程度、住院必要性、典型住院天数等</p>
+      </div>
+
+      <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="text-sm text-gray-600">
+            总疾病数: <span className="font-semibold text-blue-600">{diseases.length}</span>
+            {selectedChapter && (
+              <span className="ml-2 text-blue-600">
+                | 当前筛选: 第{selectedChapter}章 ({filteredDiseases.length} 条)
+              </span>
+            )}
+          </div>
+          {selectedChapter && (
+            <button 
+              onClick={() => setSelectedChapter(null)}
+              className="text-sm text-blue-600 hover:text-blue-800"
+            >
+              清除筛选
+            </button>
+          )}
+        </div>
+        
+        <div className="border-t pt-3">
+          <div className="text-xs text-gray-500 mb-2">分章统计:</div>
+          <div className="grid grid-cols-8 gap-2">
+            {ICD_CHAPTERS.map(ch => {
+              const count = diseases.filter(d => getChapterLabelForCode(d.icd_code) === ch.name).length;
+              const isSelected = selectedChapter === ch.id;
+              return (
+                <button
+                  key={ch.id}
+                  onClick={() => setSelectedChapter(isSelected ? null : ch.id)}
+                  className={`px-2 py-1.5 rounded text-xs text-center transition-colors ${
+                    isSelected 
+                      ? 'bg-blue-600 text-white' 
+                      : count > 0 
+                        ? 'bg-blue-50 text-blue-700 hover:bg-blue-100' 
+                        : 'bg-gray-100 text-gray-500'
+                  }`}
+                >
+                  <div className="font-medium">{ch.name}</div>
+                  <div className="text-[10px] opacity-80">{count}条</div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-4">
@@ -210,13 +367,32 @@ const DiseaseManagementPage: React.FC = () => {
       </div>
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        {selectedIds.length > 0 && (
+          <div className="p-3 bg-yellow-50 border-t border-b border-gray-200 flex items-center gap-4 justify-between">
+            <span className="text-sm text-gray-700">已选中 {selectedIds.length} 条</span>
+            <div className="flex items-center gap-2">
+              <select value={batchSeverity} onChange={(e)=>setBatchSeverity(e.target.value)} className="border rounded px-2 py-1">
+                <option value="">批量设置严重程度</option>
+                {SEVERITY_OPTIONS.map(o => (<option key={o.value} value={o.value}>{o.label}</option>))}
+              </select>
+              <label className="flex items-center gap-2"><input type="checkbox" checked={batchInpatient ?? false} onChange={(e)=>setBatchInpatient(e.target.checked)} />通常需要住院</label>
+              <select value={batchStatus} onChange={(e)=>setBatchStatus(e.target.value as any)} className="border rounded px-2 py-1">
+                <option value="">批量设置状态</option>
+                <option value="active">启用</option>
+                <option value="inactive">禁用</option>
+              </select>
+              <button onClick={applyBatchUpdate} className="px-3 py-1 bg-green-600 text-white rounded-md">应用</button>
+            </div>
+          </div>
+        )}
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">疾病ID</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">标准名称</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">ICD编码</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase"><input type="checkbox" onChange={(e)=>{ if(e.target.checked){ setSelectedIds(paginatedDiseases.map(d => d.disease_id)); } else { setSelectedIds([]); } }} /></th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">诊断代码</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">诊断名称</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">章/节/类目</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">严重程度</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">典型住院天数</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">住院必要性</th>
@@ -232,9 +408,10 @@ const DiseaseManagementPage: React.FC = () => {
               ) : (
                 paginatedDiseases.map((disease) => (
                   <tr key={disease.disease_id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm text-gray-900 font-mono">{disease.disease_id}</td>
+                    <td className="px-4 py-3 text-sm text-gray-900"><input type="checkbox" checked={selectedIds.includes(disease.disease_id)} onChange={() => toggleSelect(disease.disease_id)} /></td>
+                    <td className="px-4 py-3 text-sm text-gray-900 font-mono">{disease.icd_code || '-'}</td>
                     <td className="px-4 py-3 text-sm text-gray-900">{disease.standard_name}</td>
-                    <td className="px-4 py-3 text-sm text-gray-500 font-mono">{disease.icd_code || '-'}</td>
+                    <td className="px-4 py-3 text-sm text-gray-500 font-mono">{getChapterLabelForCode(disease.icd_code)}</td>
                     <td className="px-4 py-3">{getSeverityBadge(disease.severity_level)}</td>
                     <td className="px-4 py-3 text-sm text-gray-500">
                       {disease.typical_los_min && disease.typical_los_max 
@@ -351,6 +528,7 @@ const DiseaseManagementPage: React.FC = () => {
         )}
       </Modal>
     </div>
+  </div>
   );
 };
 

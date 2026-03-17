@@ -214,6 +214,13 @@ async function readLocalFile(localPath) {
 
 export async function processFileWithRetry(taskId, file, fileIndex, retryCount = 0, taskOptions = {}) {
   const startTime = Date.now();
+  const logContext = {
+    taskId,
+    claimCaseId: taskOptions.claimCaseId || null,
+    traceId: taskOptions.traceId || (taskOptions.claimCaseId ? `trace-${taskOptions.claimCaseId}` : null),
+    fileIndex,
+    fileName: file.fileName,
+  };
   
   await updateFileStatus(taskId, fileIndex, {
     status: 'processing',
@@ -243,6 +250,7 @@ export async function processFileWithRetry(taskId, file, fileIndex, retryCount =
         extractText: true,
         skipAI: taskOptions.skipAI ?? true,
         skipVideo: taskOptions.skipVideo ?? false,
+        logContext,
       };
     } else if (file.localPath) {
       console.log(`[Worker] Reading local file: ${file.localPath}`);
@@ -253,6 +261,7 @@ export async function processFileWithRetry(taskId, file, fileIndex, retryCount =
         videoPath: file.localPath,
         skipAI: taskOptions.skipAI ?? true,
         skipVideo: taskOptions.skipVideo ?? false,
+        logContext,
       };
     } else if (file.base64Data) {
       fileBuffer = Buffer.from(file.base64Data, 'base64');
@@ -261,6 +270,7 @@ export async function processFileWithRetry(taskId, file, fileIndex, retryCount =
         extractText: true,
         skipAI: taskOptions.skipAI ?? true,
         skipVideo: taskOptions.skipVideo ?? false,
+        logContext,
       };
     } else {
       throw new Error('No file source provided (ossKey, localPath or base64Data)');
@@ -288,6 +298,7 @@ export async function processFileWithRetry(taskId, file, fileIndex, retryCount =
         parseResult: result,
         preferredMaterialId: file.classification?.materialId,
         preferredMaterialName: file.classification?.materialName,
+        context: logContext,
       });
       const classification = pipelineResult.classification;
       console.log(`[Worker] unified material pipeline completed for ${file.fileName}:`, classification.materialName);
@@ -418,8 +429,15 @@ export async function processBatchFiles(taskId, files, options = {}) {
   };
 }
 
-export async function processStagedFile(taskId, file, fileIndex) {
+export async function processStagedFile(taskId, file, fileIndex, taskOptions = {}) {
   const startTime = Date.now();
+  const logContext = {
+    taskId,
+    claimCaseId: taskOptions.claimCaseId || null,
+    traceId: taskOptions.traceId || (taskOptions.claimCaseId ? `trace-${taskOptions.claimCaseId}` : null),
+    fileIndex,
+    fileName: file.fileName,
+  };
   
   writeAuditLog({
     type: 'FILE_PROCESS_START',
@@ -470,7 +488,7 @@ export async function processStagedFile(taskId, file, fileIndex) {
         fileName: file.fileName,
         mimeType: file.mimeType,
         buffer: fileBuffer,
-        options: { extractText: true, videoPath: file.localPath },
+        options: { extractText: true, videoPath: file.localPath, logContext },
       });
       console.log(`[Worker] File processed, parseStatus: ${processResult.parseStatus}`);
     } catch (processError) {
@@ -493,6 +511,7 @@ export async function processStagedFile(taskId, file, fileIndex) {
         parseResult: processResult,
         preferredMaterialId: file.classification?.materialId,
         preferredMaterialName: file.classification?.materialName,
+        context: logContext,
       });
       console.log(
         `[Worker] Unified material pipeline completed: ${pipelineResult.classification.materialName} (${pipelineResult.classification.confidence})`
