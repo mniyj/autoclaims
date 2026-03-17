@@ -1,0 +1,132 @@
+[
+  {
+    "number": 1,
+    "codeRange": "A00-A99",
+    "name": "Chapter 1: A00-A99"
+  },
+  {
+    "number": 1,
+    "codeRange": "B00-B99",
+    "name": "Chapter 1: B00-B99"
+  },
+  {
+    "number": 2,
+    "codeRange": "C00-C99",
+    "name": "Chapter 2: C00-C99"
+  },
+  {
+    "number": 2,
+    "codeRange": "D00-D99",
+    "name": "Chapter 2: D00-D99"
+  },
+  {
+    "number": 3,
+    "codeRange": "E00-E99",
+    "name": "Chapter 3: E00-E99"
+  },
+  {
+    "number": 3,
+    "codeRange": "F00-F99",
+    "name": "Chapter 3: F00-F99"
+  },
+  {
+    "number": 3,
+    "codeRange": "G00-G99",
+    "name": "Chapter 3: G00-G99"
+  },
+  {
+    "number": 3,
+    "codeRange": "H00-H99",
+    "name": "Chapter 3: H00-H99"
+  },
+  {
+    "number": 4,
+    "codeRange": "I00-I99",
+    "name": "Chapter 4: I00-I99"
+  },
+  {
+    "number": 4,
+    "codeRange": "J00-J99",
+    "name": "Chapter 4: J00-J99"
+  },
+  {
+    "number": 4,
+    "codeRange": "K00-K99",
+    "name": "Chapter 4: K00-K99"
+  },
+  {
+    "number": 4,
+    "codeRange": "L00-L99",
+    "name": "Chapter 4: L00-L99"
+  },
+  {
+    "number": 4,
+    "codeRange": "M00-M99",
+    "name": "Chapter 4: M00-M99"
+  },
+  {
+    "number": 4,
+    "codeRange": "N00-N99",
+    "name": "Chapter 4: N00-N99"
+  },
+  {
+    "number": 5,
+    "codeRange": "O00-O99",
+    "name": "Chapter 5: O00-O99"
+  },
+  {
+    "number": 5,
+    "codeRange": "P00-P99",
+    "name": "Chapter 5: P00-P99"
+  },
+  {
+    "number": 5,
+    "codeRange": "Q00-Q99",
+    "name": "Chapter 5: Q00-Q99"
+  },
+  {
+    "number": 5,
+    "codeRange": "R00-R99",
+    "name": "Chapter 5: R00-R99"
+  },
+  {
+    "number": 5,
+    "codeRange": "S00-S99",
+    "name": "Chapter 5: S00-S99"
+  },
+  {
+    "number": 5,
+    "codeRange": "T00-T99",
+    "name": "Chapter 5: T00-T99"
+  },
+  {
+    "number": 6,
+    "codeRange": "U00-U99",
+    "name": "Chapter 6: U00-U99"
+  },
+  {
+    "number": 6,
+    "codeRange": "V00-V99",
+    "name": "Chapter 6: V00-V99"
+  },
+  {
+    "number": 6,
+    "codeRange": "W00-W99",
+    "name": "Chapter 6: W00-W99"
+  },
+  {
+    "number": 6,
+    "codeRange": "X00-X99",
+    "name": "Chapter 6: X00-X99"
+  },
+  {
+    "number": 6,
+    "codeRange": "Y00-Y99",
+    "name": "Chapter 6: Y00-Y99"
+  },
+  {
+    "number": 6,
+    "codeRange": "Z00-Z99",
+    "name": "Chapter 6: Z00-Z99"
+  }
+]

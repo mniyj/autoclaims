@@ -1,0 +1,7862 @@
+[
+  {
+    "code": "A00",
+    "name": "Category A00"
+  },
+  {
+    "code": "A01",
+    "name": "Category A01"
+  },
+  {
+    "code": "A02",
+    "name": "Category A02"
+  },
+  {
+    "code": "A03",
+    "name": "Category A03"
+  },
+  {
+    "code": "A04",
+    "name": "Category A04"
+  },
+  {
+    "code": "A05",
+    "name": "Category A05"
+  },
+  {
+    "code": "A06",
+    "name": "Category A06"
+  },
+  {
+    "code": "A07",
+    "name": "Category A07"
+  },
+  {
+    "code": "A08",
+    "name": "Category A08"
+  },
+  {
+    "code": "A09",
+    "name": "Category A09"
+  },
+  {
+    "code": "A15",
+    "name": "Category A15"
+  },
+  {
+    "code": "A16",
+    "name": "Category A16"
+  },
+  {
+    "code": "A17",
+    "name": "Category A17"
+  },
+  {
+    "code": "A18",
+    "name": "Category A18"
+  },
+  {
+    "code": "A19",
+    "name": "Category A19"
+  },
+  {
+    "code": "A20",
+    "name": "Category A20"
+  },
+  {
+    "code": "A21",
+    "name": "Category A21"
+  },
+  {
+    "code": "A22",
+    "name": "Category A22"
+  },
+  {
+    "code": "A23",
+    "name": "Category A23"
+  },
+  {
+    "code": "A24",
+    "name": "Category A24"
+  },
+  {
+    "code": "A25",
+    "name": "Category A25"
+  },
+  {
+    "code": "A26",
+    "name": "Category A26"
+  },
+  {
+    "code": "A27",
+    "name": "Category A27"
+  },
+  {
+    "code": "A28",
+    "name": "Category A28"
+  },
+  {
+    "code": "A30",
+    "name": "Category A30"
+  },
+  {
+    "code": "A31",
+    "name": "Category A31"
+  },
+  {
+    "code": "A32",
+    "name": "Category A32"
+  },
+  {
+    "code": "A36",
+    "name": "Category A36"
+  },
+  {
+    "code": "A37",
+    "name": "Category A37"
+  },
+  {
+    "code": "A39",
+    "name": "Category A39"
+  },
+  {
+    "code": "A40",
+    "name": "Category A40"
+  },
+  {
+    "code": "A41",
+    "name": "Category A41"
+  },
+  {
+    "code": "A42",
+    "name": "Category A42"
+  },
+  {
+    "code": "A43",
+    "name": "Category A43"
+  },
+  {
+    "code": "A44",
+    "name": "Category A44"
+  },
+  {
+    "code": "A48",
+    "name": "Category A48"
+  },
+  {
+    "code": "A49",
+    "name": "Category A49"
+  },
+  {
+    "code": "A33",
+    "name": "Category A33"
+  },
+  {
+    "code": "A34",
+    "name": "Category A34"
+  },
+  {
+    "code": "A35",
+    "name": "Category A35"
+  },
+  {
+    "code": "A38",
+    "name": "Category A38"
+  },
+  {
+    "code": "A46",
+    "name": "Category A46"
+  },
+  {
+    "code": "A50",
+    "name": "Category A50"
+  },
+  {
+    "code": "A51",
+    "name": "Category A51"
+  },
+  {
+    "code": "A52",
+    "name": "Category A52"
+  },
+  {
+    "code": "A53",
+    "name": "Category A53"
+  },
+  {
+    "code": "A54",
+    "name": "Category A54"
+  },
+  {
+    "code": "A56",
+    "name": "Category A56"
+  },
+  {
+    "code": "A59",
+    "name": "Category A59"
+  },
+  {
+    "code": "A60",
+    "name": "Category A60"
+  },
+  {
+    "code": "A63",
+    "name": "Category A63"
+  },
+  {
+    "code": "A55",
+    "name": "Category A55"
+  },
+  {
+    "code": "A57",
+    "name": "Category A57"
+  },
+  {
+    "code": "A58",
+    "name": "Category A58"
+  },
+  {
+    "code": "A64",
+    "name": "Category A64"
+  },
+  {
+    "code": "A66",
+    "name": "Category A66"
+  },
+  {
+    "code": "A67",
+    "name": "Category A67"
+  },
+  {
+    "code": "A68",
+    "name": "Category A68"
+  },
+  {
+    "code": "A69",
+    "name": "Category A69"
+  },
+  {
+    "code": "A65",
+    "name": "Category A65"
+  },
+  {
+    "code": "A71",
+    "name": "Category A71"
+  },
+  {
+    "code": "A74",
+    "name": "Category A74"
+  },
+  {
+    "code": "A70",
+    "name": "Category A70"
+  },
+  {
+    "code": "A75",
+    "name": "Category A75"
+  },
+  {
+    "code": "A77",
+    "name": "Category A77"
+  },
+  {
+    "code": "A79",
+    "name": "Category A79"
+  },
+  {
+    "code": "A78",
+    "name": "Category A78"
+  },
+  {
+    "code": "A80",
+    "name": "Category A80"
+  },
+  {
+    "code": "A81",
+    "name": "Category A81"
+  },
+  {
+    "code": "A82",
+    "name": "Category A82"
+  },
+  {
+    "code": "A83",
+    "name": "Category A83"
+  },
+  {
+    "code": "A84",
+    "name": "Category A84"
+  },
+  {
+    "code": "A85",
+    "name": "Category A85"
+  },
+  {
+    "code": "A87",
+    "name": "Category A87"
+  },
+  {
+    "code": "A88",
+    "name": "Category A88"
+  },
+  {
+    "code": "A86",
+    "name": "Category A86"
+  },
+  {
+    "code": "A89",
+    "name": "Category A89"
+  },
+  {
+    "code": "A92",
+    "name": "Category A92"
+  },
+  {
+    "code": "A93",
+    "name": "Category A93"
+  },
+  {
+    "code": "A95",
+    "name": "Category A95"
+  },
+  {
+    "code": "A96",
+    "name": "Category A96"
+  },
+  {
+    "code": "A97",
+    "name": "Category A97"
+  },
+  {
+    "code": "A98",
+    "name": "Category A98"
+  },
+  {
+    "code": "A94",
+    "name": "Category A94"
+  },
+  {
+    "code": "A99",
+    "name": "Category A99"
+  },
+  {
+    "code": "B00",
+    "name": "Category B00"
+  },
+  {
+    "code": "B01",
+    "name": "Category B01"
+  },
+  {
+    "code": "B02",
+    "name": "Category B02"
+  },
+  {
+    "code": "B05",
+    "name": "Category B05"
+  },
+  {
+    "code": "B06",
+    "name": "Category B06"
+  },
+  {
+    "code": "B08",
+    "name": "Category B08"
+  },
+  {
+    "code": "B03",
+    "name": "Category B03"
+  },
+  {
+    "code": "B04",
+    "name": "Category B04"
+  },
+  {
+    "code": "B07",
+    "name": "Category B07"
+  },
+  {
+    "code": "B09",
+    "name": "Category B09"
+  },
+  {
+    "code": "B15",
+    "name": "Category B15"
+  },
+  {
+    "code": "B16",
+    "name": "Category B16"
+  },
+  {
+    "code": "B17",
+    "name": "Category B17"
+  },
+  {
+    "code": "B18",
+    "name": "Category B18"
+  },
+  {
+    "code": "B19",
+    "name": "Category B19"
+  },
+  {
+    "code": "B20",
+    "name": "Category B20"
+  },
+  {
+    "code": "B21",
+    "name": "Category B21"
+  },
+  {
+    "code": "B22",
+    "name": "Category B22"
+  },
+  {
+    "code": "B23",
+    "name": "Category B23"
+  },
+  {
+    "code": "B24",
+    "name": "Category B24"
+  },
+  {
+    "code": "B25",
+    "name": "Category B25"
+  },
+  {
+    "code": "B26",
+    "name": "Category B26"
+  },
+  {
+    "code": "B27",
+    "name": "Category B27"
+  },
+  {
+    "code": "B30",
+    "name": "Category B30"
+  },
+  {
+    "code": "B33",
+    "name": "Category B33"
+  },
+  {
+    "code": "B34",
+    "name": "Category B34"
+  },
+  {
+    "code": "B35",
+    "name": "Category B35"
+  },
+  {
+    "code": "B36",
+    "name": "Category B36"
+  },
+  {
+    "code": "B37",
+    "name": "Category B37"
+  },
+  {
+    "code": "B38",
+    "name": "Category B38"
+  },
+  {
+    "code": "B39",
+    "name": "Category B39"
+  },
+  {
+    "code": "B40",
+    "name": "Category B40"
+  },
+  {
+    "code": "B41",
+    "name": "Category B41"
+  },
+  {
+    "code": "B42",
+    "name": "Category B42"
+  },
+  {
+    "code": "B43",
+    "name": "Category B43"
+  },
+  {
+    "code": "B44",
+    "name": "Category B44"
+  },
+  {
+    "code": "B45",
+    "name": "Category B45"
+  },
+  {
+    "code": "B46",
+    "name": "Category B46"
+  },
+  {
+    "code": "B47",
+    "name": "Category B47"
+  },
+  {
+    "code": "B48",
+    "name": "Category B48"
+  },
+  {
+    "code": "B49",
+    "name": "Category B49"
+  },
+  {
+    "code": "B50",
+    "name": "Category B50"
+  },
+  {
+    "code": "B51",
+    "name": "Category B51"
+  },
+  {
+    "code": "B52",
+    "name": "Category B52"
+  },
+  {
+    "code": "B53",
+    "name": "Category B53"
+  },
+  {
+    "code": "B55",
+    "name": "Category B55"
+  },
+  {
+    "code": "B56",
+    "name": "Category B56"
+  },
+  {
+    "code": "B57",
+    "name": "Category B57"
+  },
+  {
+    "code": "B58",
+    "name": "Category B58"
+  },
+  {
+    "code": "B60",
+    "name": "Category B60"
+  },
+  {
+    "code": "B54",
+    "name": "Category B54"
+  },
+  {
+    "code": "B64",
+    "name": "Category B64"
+  },
+  {
+    "code": "B65",
+    "name": "Category B65"
+  },
+  {
+    "code": "B66",
+    "name": "Category B66"
+  },
+  {
+    "code": "B67",
+    "name": "Category B67"
+  },
+  {
+    "code": "B68",
+    "name": "Category B68"
+  },
+  {
+    "code": "B69",
+    "name": "Category B69"
+  },
+  {
+    "code": "B70",
+    "name": "Category B70"
+  },
+  {
+    "code": "B71",
+    "name": "Category B71"
+  },
+  {
+    "code": "B74",
+    "name": "Category B74"
+  },
+  {
+    "code": "B76",
+    "name": "Category B76"
+  },
+  {
+    "code": "B77",
+    "name": "Category B77"
+  },
+  {
+    "code": "B78",
+    "name": "Category B78"
+  },
+  {
+    "code": "B81",
+    "name": "Category B81"
+  },
+  {
+    "code": "B82",
+    "name": "Category B82"
+  },
+  {
+    "code": "B83",
+    "name": "Category B83"
+  },
+  {
+    "code": "B72",
+    "name": "Category B72"
+  },
+  {
+    "code": "B73",
+    "name": "Category B73"
+  },
+  {
+    "code": "B75",
+    "name": "Category B75"
+  },
+  {
+    "code": "B79",
+    "name": "Category B79"
+  },
+  {
+    "code": "B80",
+    "name": "Category B80"
+  },
+  {
+    "code": "B85",
+    "name": "Category B85"
+  },
+  {
+    "code": "B87",
+    "name": "Category B87"
+  },
+  {
+    "code": "B88",
+    "name": "Category B88"
+  },
+  {
+    "code": "B86",
+    "name": "Category B86"
+  },
+  {
+    "code": "B89",
+    "name": "Category B89"
+  },
+  {
+    "code": "B90",
+    "name": "Category B90"
+  },
+  {
+    "code": "B94",
+    "name": "Category B94"
+  },
+  {
+    "code": "B91",
+    "name": "Category B91"
+  },
+  {
+    "code": "B92",
+    "name": "Category B92"
+  },
+  {
+    "code": "B95",
+    "name": "Category B95"
+  },
+  {
+    "code": "B96",
+    "name": "Category B96"
+  },
+  {
+    "code": "B97",
+    "name": "Category B97"
+  },
+  {
+    "code": "B98",
+    "name": "Category B98"
+  },
+  {
+    "code": "B99",
+    "name": "Category B99"
+  },
+  {
+    "code": "C00",
+    "name": "Category C00"
+  },
+  {
+    "code": "C02",
+    "name": "Category C02"
+  },
+  {
+    "code": "C03",
+    "name": "Category C03"
+  },
+  {
+    "code": "C04",
+    "name": "Category C04"
+  },
+  {
+    "code": "C05",
+    "name": "Category C05"
+  },
+  {
+    "code": "C06",
+    "name": "Category C06"
+  },
+  {
+    "code": "C08",
+    "name": "Category C08"
+  },
+  {
+    "code": "C09",
+    "name": "Category C09"
+  },
+  {
+    "code": "C10",
+    "name": "Category C10"
+  },
+  {
+    "code": "C11",
+    "name": "Category C11"
+  },
+  {
+    "code": "C13",
+    "name": "Category C13"
+  },
+  {
+    "code": "C14",
+    "name": "Category C14"
+  },
+  {
+    "code": "C01",
+    "name": "Category C01"
+  },
+  {
+    "code": "C07",
+    "name": "Category C07"
+  },
+  {
+    "code": "C12",
+    "name": "Category C12"
+  },
+  {
+    "code": "C15",
+    "name": "Category C15"
+  },
+  {
+    "code": "C16",
+    "name": "Category C16"
+  },
+  {
+    "code": "C17",
+    "name": "Category C17"
+  },
+  {
+    "code": "C18",
+    "name": "Category C18"
+  },
+  {
+    "code": "C21",
+    "name": "Category C21"
+  },
+  {
+    "code": "C22",
+    "name": "Category C22"
+  },
+  {
+    "code": "C24",
+    "name": "Category C24"
+  },
+  {
+    "code": "C25",
+    "name": "Category C25"
+  },
+  {
+    "code": "C26",
+    "name": "Category C26"
+  },
+  {
+    "code": "C19",
+    "name": "Category C19"
+  },
+  {
+    "code": "C20",
+    "name": "Category C20"
+  },
+  {
+    "code": "C23",
+    "name": "Category C23"
+  },
+  {
+    "code": "C30",
+    "name": "Category C30"
+  },
+  {
+    "code": "C31",
+    "name": "Category C31"
+  },
+  {
+    "code": "C32",
+    "name": "Category C32"
+  },
+  {
+    "code": "C34",
+    "name": "Category C34"
+  },
+  {
+    "code": "C38",
+    "name": "Category C38"
+  },
+  {
+    "code": "C39",
+    "name": "Category C39"
+  },
+  {
+    "code": "C33",
+    "name": "Category C33"
+  },
+  {
+    "code": "C37",
+    "name": "Category C37"
+  },
+  {
+    "code": "C40",
+    "name": "Category C40"
+  },
+  {
+    "code": "C41",
+    "name": "Category C41"
+  },
+  {
+    "code": "C43",
+    "name": "Category C43"
+  },
+  {
+    "code": "C44",
+    "name": "Category C44"
+  },
+  {
+    "code": "C45",
+    "name": "Category C45"
+  },
+  {
+    "code": "C46",
+    "name": "Category C46"
+  },
+  {
+    "code": "C47",
+    "name": "Category C47"
+  },
+  {
+    "code": "C48",
+    "name": "Category C48"
+  },
+  {
+    "code": "C49",
+    "name": "Category C49"
+  },
+  {
+    "code": "C50",
+    "name": "Category C50"
+  },
+  {
+    "code": "C51",
+    "name": "Category C51"
+  },
+  {
+    "code": "C53",
+    "name": "Category C53"
+  },
+  {
+    "code": "C54",
+    "name": "Category C54"
+  },
+  {
+    "code": "C57",
+    "name": "Category C57"
+  },
+  {
+    "code": "C52",
+    "name": "Category C52"
+  },
+  {
+    "code": "C55",
+    "name": "Category C55"
+  },
+  {
+    "code": "C56",
+    "name": "Category C56"
+  },
+  {
+    "code": "C58",
+    "name": "Category C58"
+  },
+  {
+    "code": "C60",
+    "name": "Category C60"
+  },
+  {
+    "code": "C62",
+    "name": "Category C62"
+  },
+  {
+    "code": "C63",
+    "name": "Category C63"
+  },
+  {
+    "code": "C61",
+    "name": "Category C61"
+  },
+  {
+    "code": "C67",
+    "name": "Category C67"
+  },
+  {
+    "code": "C68",
+    "name": "Category C68"
+  },
+  {
+    "code": "C64",
+    "name": "Category C64"
+  },
+  {
+    "code": "C65",
+    "name": "Category C65"
+  },
+  {
+    "code": "C66",
+    "name": "Category C66"
+  },
+  {
+    "code": "C69",
+    "name": "Category C69"
+  },
+  {
+    "code": "C70",
+    "name": "Category C70"
+  },
+  {
+    "code": "C71",
+    "name": "Category C71"
+  },
+  {
+    "code": "C72",
+    "name": "Category C72"
+  },
+  {
+    "code": "C74",
+    "name": "Category C74"
+  },
+  {
+    "code": "C75",
+    "name": "Category C75"
+  },
+  {
+    "code": "C73",
+    "name": "Category C73"
+  },
+  {
+    "code": "C76",
+    "name": "Category C76"
+  },
+  {
+    "code": "C77",
+    "name": "Category C77"
+  },
+  {
+    "code": "C78",
+    "name": "Category C78"
+  },
+  {
+    "code": "C79",
+    "name": "Category C79"
+  },
+  {
+    "code": "C80",
+    "name": "Category C80"
+  },
+  {
+    "code": "C81",
+    "name": "Category C81"
+  },
+  {
+    "code": "C82",
+    "name": "Category C82"
+  },
+  {
+    "code": "C83",
+    "name": "Category C83"
+  },
+  {
+    "code": "C84",
+    "name": "Category C84"
+  },
+  {
+    "code": "C85",
+    "name": "Category C85"
+  },
+  {
+    "code": "C86",
+    "name": "Category C86"
+  },
+  {
+    "code": "C88",
+    "name": "Category C88"
+  },
+  {
+    "code": "C90",
+    "name": "Category C90"
+  },
+  {
+    "code": "C91",
+    "name": "Category C91"
+  },
+  {
+    "code": "C92",
+    "name": "Category C92"
+  },
+  {
+    "code": "C93",
+    "name": "Category C93"
+  },
+  {
+    "code": "C94",
+    "name": "Category C94"
+  },
+  {
+    "code": "C95",
+    "name": "Category C95"
+  },
+  {
+    "code": "C96",
+    "name": "Category C96"
+  },
+  {
+    "code": "C97",
+    "name": "Category C97"
+  },
+  {
+    "code": "D00",
+    "name": "Category D00"
+  },
+  {
+    "code": "D01",
+    "name": "Category D01"
+  },
+  {
+    "code": "D02",
+    "name": "Category D02"
+  },
+  {
+    "code": "D03",
+    "name": "Category D03"
+  },
+  {
+    "code": "D04",
+    "name": "Category D04"
+  },
+  {
+    "code": "D05",
+    "name": "Category D05"
+  },
+  {
+    "code": "D06",
+    "name": "Category D06"
+  },
+  {
+    "code": "D07",
+    "name": "Category D07"
+  },
+  {
+    "code": "D09",
+    "name": "Category D09"
+  },
+  {
+    "code": "D10",
+    "name": "Category D10"
+  },
+  {
+    "code": "D11",
+    "name": "Category D11"
+  },
+  {
+    "code": "D12",
+    "name": "Category D12"
+  },
+  {
+    "code": "D13",
+    "name": "Category D13"
+  },
+  {
+    "code": "D14",
+    "name": "Category D14"
+  },
+  {
+    "code": "D15",
+    "name": "Category D15"
+  },
+  {
+    "code": "D16",
+    "name": "Category D16"
+  },
+  {
+    "code": "D17",
+    "name": "Category D17"
+  },
+  {
+    "code": "D18",
+    "name": "Category D18"
+  },
+  {
+    "code": "D19",
+    "name": "Category D19"
+  },
+  {
+    "code": "D20",
+    "name": "Category D20"
+  },
+  {
+    "code": "D21",
+    "name": "Category D21"
+  },
+  {
+    "code": "D22",
+    "name": "Category D22"
+  },
+  {
+    "code": "D23",
+    "name": "Category D23"
+  },
+  {
+    "code": "D25",
+    "name": "Category D25"
+  },
+  {
+    "code": "D26",
+    "name": "Category D26"
+  },
+  {
+    "code": "D28",
+    "name": "Category D28"
+  },
+  {
+    "code": "D29",
+    "name": "Category D29"
+  },
+  {
+    "code": "D30",
+    "name": "Category D30"
+  },
+  {
+    "code": "D31",
+    "name": "Category D31"
+  },
+  {
+    "code": "D32",
+    "name": "Category D32"
+  },
+  {
+    "code": "D33",
+    "name": "Category D33"
+  },
+  {
+    "code": "D35",
+    "name": "Category D35"
+  },
+  {
+    "code": "D36",
+    "name": "Category D36"
+  },
+  {
+    "code": "D24",
+    "name": "Category D24"
+  },
+  {
+    "code": "D27",
+    "name": "Category D27"
+  },
+  {
+    "code": "D34",
+    "name": "Category D34"
+  },
+  {
+    "code": "D37",
+    "name": "Category D37"
+  },
+  {
+    "code": "D38",
+    "name": "Category D38"
+  },
+  {
+    "code": "D39",
+    "name": "Category D39"
+  },
+  {
+    "code": "D40",
+    "name": "Category D40"
+  },
+  {
+    "code": "D41",
+    "name": "Category D41"
+  },
+  {
+    "code": "D42",
+    "name": "Category D42"
+  },
+  {
+    "code": "D43",
+    "name": "Category D43"
+  },
+  {
+    "code": "D44",
+    "name": "Category D44"
+  },
+  {
+    "code": "D46",
+    "name": "Category D46"
+  },
+  {
+    "code": "D47",
+    "name": "Category D47"
+  },
+  {
+    "code": "D48",
+    "name": "Category D48"
+  },
+  {
+    "code": "D45",
+    "name": "Category D45"
+  },
+  {
+    "code": "D50",
+    "name": "Category D50"
+  },
+  {
+    "code": "D51",
+    "name": "Category D51"
+  },
+  {
+    "code": "D52",
+    "name": "Category D52"
+  },
+  {
+    "code": "D53",
+    "name": "Category D53"
+  },
+  {
+    "code": "D55",
+    "name": "Category D55"
+  },
+  {
+    "code": "D56",
+    "name": "Category D56"
+  },
+  {
+    "code": "D57",
+    "name": "Category D57"
+  },
+  {
+    "code": "D58",
+    "name": "Category D58"
+  },
+  {
+    "code": "D59",
+    "name": "Category D59"
+  },
+  {
+    "code": "D60",
+    "name": "Category D60"
+  },
+  {
+    "code": "D61",
+    "name": "Category D61"
+  },
+  {
+    "code": "D64",
+    "name": "Category D64"
+  },
+  {
+    "code": "D62",
+    "name": "Category D62"
+  },
+  {
+    "code": "D68",
+    "name": "Category D68"
+  },
+  {
+    "code": "D69",
+    "name": "Category D69"
+  },
+  {
+    "code": "D65",
+    "name": "Category D65"
+  },
+  {
+    "code": "D66",
+    "name": "Category D66"
+  },
+  {
+    "code": "D67",
+    "name": "Category D67"
+  },
+  {
+    "code": "D72",
+    "name": "Category D72"
+  },
+  {
+    "code": "D73",
+    "name": "Category D73"
+  },
+  {
+    "code": "D74",
+    "name": "Category D74"
+  },
+  {
+    "code": "D75",
+    "name": "Category D75"
+  },
+  {
+    "code": "D76",
+    "name": "Category D76"
+  },
+  {
+    "code": "D70",
+    "name": "Category D70"
+  },
+  {
+    "code": "D71",
+    "name": "Category D71"
+  },
+  {
+    "code": "D80",
+    "name": "Category D80"
+  },
+  {
+    "code": "D81",
+    "name": "Category D81"
+  },
+  {
+    "code": "D82",
+    "name": "Category D82"
+  },
+  {
+    "code": "D83",
+    "name": "Category D83"
+  },
+  {
+    "code": "D84",
+    "name": "Category D84"
+  },
+  {
+    "code": "D86",
+    "name": "Category D86"
+  },
+  {
+    "code": "D89",
+    "name": "Category D89"
+  },
+  {
+    "code": "E00",
+    "name": "Category E00"
+  },
+  {
+    "code": "E01",
+    "name": "Category E01"
+  },
+  {
+    "code": "E03",
+    "name": "Category E03"
+  },
+  {
+    "code": "E04",
+    "name": "Category E04"
+  },
+  {
+    "code": "E05",
+    "name": "Category E05"
+  },
+  {
+    "code": "E06",
+    "name": "Category E06"
+  },
+  {
+    "code": "E07",
+    "name": "Category E07"
+  },
+  {
+    "code": "E02",
+    "name": "Category E02"
+  },
+  {
+    "code": "E10",
+    "name": "Category E10"
+  },
+  {
+    "code": "E11",
+    "name": "Category E11"
+  },
+  {
+    "code": "E12",
+    "name": "Category E12"
+  },
+  {
+    "code": "E13",
+    "name": "Category E13"
+  },
+  {
+    "code": "E14",
+    "name": "Category E14"
+  },
+  {
+    "code": "E16",
+    "name": "Category E16"
+  },
+  {
+    "code": "E15",
+    "name": "Category E15"
+  },
+  {
+    "code": "E20",
+    "name": "Category E20"
+  },
+  {
+    "code": "E21",
+    "name": "Category E21"
+  },
+  {
+    "code": "E22",
+    "name": "Category E22"
+  },
+  {
+    "code": "E23",
+    "name": "Category E23"
+  },
+  {
+    "code": "E24",
+    "name": "Category E24"
+  },
+  {
+    "code": "E25",
+    "name": "Category E25"
+  },
+  {
+    "code": "E26",
+    "name": "Category E26"
+  },
+  {
+    "code": "E27",
+    "name": "Category E27"
+  },
+  {
+    "code": "E28",
+    "name": "Category E28"
+  },
+  {
+    "code": "E29",
+    "name": "Category E29"
+  },
+  {
+    "code": "E30",
+    "name": "Category E30"
+  },
+  {
+    "code": "E31",
+    "name": "Category E31"
+  },
+  {
+    "code": "E32",
+    "name": "Category E32"
+  },
+  {
+    "code": "E34",
+    "name": "Category E34"
+  },
+  {
+    "code": "E44",
+    "name": "Category E44"
+  },
+  {
+    "code": "E40",
+    "name": "Category E40"
+  },
+  {
+    "code": "E41",
+    "name": "Category E41"
+  },
+  {
+    "code": "E42",
+    "name": "Category E42"
+  },
+  {
+    "code": "E43",
+    "name": "Category E43"
+  },
+  {
+    "code": "E45",
+    "name": "Category E45"
+  },
+  {
+    "code": "E46",
+    "name": "Category E46"
+  },
+  {
+    "code": "E50",
+    "name": "Category E50"
+  },
+  {
+    "code": "E51",
+    "name": "Category E51"
+  },
+  {
+    "code": "E53",
+    "name": "Category E53"
+  },
+  {
+    "code": "E55",
+    "name": "Category E55"
+  },
+  {
+    "code": "E56",
+    "name": "Category E56"
+  },
+  {
+    "code": "E61",
+    "name": "Category E61"
+  },
+  {
+    "code": "E63",
+    "name": "Category E63"
+  },
+  {
+    "code": "E64",
+    "name": "Category E64"
+  },
+  {
+    "code": "E52",
+    "name": "Category E52"
+  },
+  {
+    "code": "E54",
+    "name": "Category E54"
+  },
+  {
+    "code": "E58",
+    "name": "Category E58"
+  },
+  {
+    "code": "E59",
+    "name": "Category E59"
+  },
+  {
+    "code": "E60",
+    "name": "Category E60"
+  },
+  {
+    "code": "E66",
+    "name": "Category E66"
+  },
+  {
+    "code": "E67",
+    "name": "Category E67"
+  },
+  {
+    "code": "E65",
+    "name": "Category E65"
+  },
+  {
+    "code": "E68",
+    "name": "Category E68"
+  },
+  {
+    "code": "E70",
+    "name": "Category E70"
+  },
+  {
+    "code": "E71",
+    "name": "Category E71"
+  },
+  {
+    "code": "E72",
+    "name": "Category E72"
+  },
+  {
+    "code": "E73",
+    "name": "Category E73"
+  },
+  {
+    "code": "E74",
+    "name": "Category E74"
+  },
+  {
+    "code": "E75",
+    "name": "Category E75"
+  },
+  {
+    "code": "E76",
+    "name": "Category E76"
+  },
+  {
+    "code": "E77",
+    "name": "Category E77"
+  },
+  {
+    "code": "E78",
+    "name": "Category E78"
+  },
+  {
+    "code": "E79",
+    "name": "Category E79"
+  },
+  {
+    "code": "E80",
+    "name": "Category E80"
+  },
+  {
+    "code": "E83",
+    "name": "Category E83"
+  },
+  {
+    "code": "E84",
+    "name": "Category E84"
+  },
+  {
+    "code": "E85",
+    "name": "Category E85"
+  },
+  {
+    "code": "E87",
+    "name": "Category E87"
+  },
+  {
+    "code": "E88",
+    "name": "Category E88"
+  },
+  {
+    "code": "E89",
+    "name": "Category E89"
+  },
+  {
+    "code": "E86",
+    "name": "Category E86"
+  },
+  {
+    "code": "F01",
+    "name": "Category F01"
+  },
+  {
+    "code": "F05",
+    "name": "Category F05"
+  },
+  {
+    "code": "F06",
+    "name": "Category F06"
+  },
+  {
+    "code": "F07",
+    "name": "Category F07"
+  },
+  {
+    "code": "F03",
+    "name": "Category F03"
+  },
+  {
+    "code": "F04",
+    "name": "Category F04"
+  },
+  {
+    "code": "F09",
+    "name": "Category F09"
+  },
+  {
+    "code": "F10",
+    "name": "Category F10"
+  },
+  {
+    "code": "F11",
+    "name": "Category F11"
+  },
+  {
+    "code": "F12",
+    "name": "Category F12"
+  },
+  {
+    "code": "F13",
+    "name": "Category F13"
+  },
+  {
+    "code": "F14",
+    "name": "Category F14"
+  },
+  {
+    "code": "F15",
+    "name": "Category F15"
+  },
+  {
+    "code": "F16",
+    "name": "Category F16"
+  },
+  {
+    "code": "F17",
+    "name": "Category F17"
+  },
+  {
+    "code": "F18",
+    "name": "Category F18"
+  },
+  {
+    "code": "F19",
+    "name": "Category F19"
+  },
+  {
+    "code": "F20",
+    "name": "Category F20"
+  },
+  {
+    "code": "F22",
+    "name": "Category F22"
+  },
+  {
+    "code": "F23",
+    "name": "Category F23"
+  },
+  {
+    "code": "F25",
+    "name": "Category F25"
+  },
+  {
+    "code": "F21",
+    "name": "Category F21"
+  },
+  {
+    "code": "F24",
+    "name": "Category F24"
+  },
+  {
+    "code": "F28",
+    "name": "Category F28"
+  },
+  {
+    "code": "F29",
+    "name": "Category F29"
+  },
+  {
+    "code": "F30",
+    "name": "Category F30"
+  },
+  {
+    "code": "F31",
+    "name": "Category F31"
+  },
+  {
+    "code": "F32",
+    "name": "Category F32"
+  },
+  {
+    "code": "F33",
+    "name": "Category F33"
+  },
+  {
+    "code": "F34",
+    "name": "Category F34"
+  },
+  {
+    "code": "F38",
+    "name": "Category F38"
+  },
+  {
+    "code": "F39",
+    "name": "Category F39"
+  },
+  {
+    "code": "F40",
+    "name": "Category F40"
+  },
+  {
+    "code": "F41",
+    "name": "Category F41"
+  },
+  {
+    "code": "F42",
+    "name": "Category F42"
+  },
+  {
+    "code": "F43",
+    "name": "Category F43"
+  },
+  {
+    "code": "F44",
+    "name": "Category F44"
+  },
+  {
+    "code": "F45",
+    "name": "Category F45"
+  },
+  {
+    "code": "F48",
+    "name": "Category F48"
+  },
+  {
+    "code": "F50",
+    "name": "Category F50"
+  },
+  {
+    "code": "F51",
+    "name": "Category F51"
+  },
+  {
+    "code": "F52",
+    "name": "Category F52"
+  },
+  {
+    "code": "F53",
+    "name": "Category F53"
+  },
+  {
+    "code": "F54",
+    "name": "Category F54"
+  },
+  {
+    "code": "F55",
+    "name": "Category F55"
+  },
+  {
+    "code": "F59",
+    "name": "Category F59"
+  },
+  {
+    "code": "F60",
+    "name": "Category F60"
+  },
+  {
+    "code": "F62",
+    "name": "Category F62"
+  },
+  {
+    "code": "F63",
+    "name": "Category F63"
+  },
+  {
+    "code": "F64",
+    "name": "Category F64"
+  },
+  {
+    "code": "F65",
+    "name": "Category F65"
+  },
+  {
+    "code": "F66",
+    "name": "Category F66"
+  },
+  {
+    "code": "F68",
+    "name": "Category F68"
+  },
+  {
+    "code": "F61",
+    "name": "Category F61"
+  },
+  {
+    "code": "F69",
+    "name": "Category F69"
+  },
+  {
+    "code": "F70",
+    "name": "Category F70"
+  },
+  {
+    "code": "F71",
+    "name": "Category F71"
+  },
+  {
+    "code": "F72",
+    "name": "Category F72"
+  },
+  {
+    "code": "F73",
+    "name": "Category F73"
+  },
+  {
+    "code": "F78",
+    "name": "Category F78"
+  },
+  {
+    "code": "F79",
+    "name": "Category F79"
+  },
+  {
+    "code": "F80",
+    "name": "Category F80"
+  },
+  {
+    "code": "F81",
+    "name": "Category F81"
+  },
+  {
+    "code": "F84",
+    "name": "Category F84"
+  },
+  {
+    "code": "F82",
+    "name": "Category F82"
+  },
+  {
+    "code": "F83",
+    "name": "Category F83"
+  },
+  {
+    "code": "F88",
+    "name": "Category F88"
+  },
+  {
+    "code": "F89",
+    "name": "Category F89"
+  },
+  {
+    "code": "F90",
+    "name": "Category F90"
+  },
+  {
+    "code": "F91",
+    "name": "Category F91"
+  },
+  {
+    "code": "F92",
+    "name": "Category F92"
+  },
+  {
+    "code": "F93",
+    "name": "Category F93"
+  },
+  {
+    "code": "F94",
+    "name": "Category F94"
+  },
+  {
+    "code": "F95",
+    "name": "Category F95"
+  },
+  {
+    "code": "F98",
+    "name": "Category F98"
+  },
+  {
+    "code": "F99",
+    "name": "Category F99"
+  },
+  {
+    "code": "G00",
+    "name": "Category G00"
+  },
+  {
+    "code": "G03",
+    "name": "Category G03"
+  },
+  {
+    "code": "G04",
+    "name": "Category G04"
+  },
+  {
+    "code": "G06",
+    "name": "Category G06"
+  },
+  {
+    "code": "G08",
+    "name": "Category G08"
+  },
+  {
+    "code": "G09",
+    "name": "Category G09"
+  },
+  {
+    "code": "G11",
+    "name": "Category G11"
+  },
+  {
+    "code": "G12",
+    "name": "Category G12"
+  },
+  {
+    "code": "G10",
+    "name": "Category G10"
+  },
+  {
+    "code": "G14",
+    "name": "Category G14"
+  },
+  {
+    "code": "G21",
+    "name": "Category G21"
+  },
+  {
+    "code": "G23",
+    "name": "Category G23"
+  },
+  {
+    "code": "G24",
+    "name": "Category G24"
+  },
+  {
+    "code": "G25",
+    "name": "Category G25"
+  },
+  {
+    "code": "G20",
+    "name": "Category G20"
+  },
+  {
+    "code": "G30",
+    "name": "Category G30"
+  },
+  {
+    "code": "G31",
+    "name": "Category G31"
+  },
+  {
+    "code": "G36",
+    "name": "Category G36"
+  },
+  {
+    "code": "G37",
+    "name": "Category G37"
+  },
+  {
+    "code": "G35",
+    "name": "Category G35"
+  },
+  {
+    "code": "G40",
+    "name": "Category G40"
+  },
+  {
+    "code": "G41",
+    "name": "Category G41"
+  },
+  {
+    "code": "G43",
+    "name": "Category G43"
+  },
+  {
+    "code": "G44",
+    "name": "Category G44"
+  },
+  {
+    "code": "G45",
+    "name": "Category G45"
+  },
+  {
+    "code": "G47",
+    "name": "Category G47"
+  },
+  {
+    "code": "G50",
+    "name": "Category G50"
+  },
+  {
+    "code": "G51",
+    "name": "Category G51"
+  },
+  {
+    "code": "G52",
+    "name": "Category G52"
+  },
+  {
+    "code": "G54",
+    "name": "Category G54"
+  },
+  {
+    "code": "G56",
+    "name": "Category G56"
+  },
+  {
+    "code": "G57",
+    "name": "Category G57"
+  },
+  {
+    "code": "G58",
+    "name": "Category G58"
+  },
+  {
+    "code": "G60",
+    "name": "Category G60"
+  },
+  {
+    "code": "G61",
+    "name": "Category G61"
+  },
+  {
+    "code": "G62",
+    "name": "Category G62"
+  },
+  {
+    "code": "G64",
+    "name": "Category G64"
+  },
+  {
+    "code": "G70",
+    "name": "Category G70"
+  },
+  {
+    "code": "G71",
+    "name": "Category G71"
+  },
+  {
+    "code": "G72",
+    "name": "Category G72"
+  },
+  {
+    "code": "G80",
+    "name": "Category G80"
+  },
+  {
+    "code": "G81",
+    "name": "Category G81"
+  },
+  {
+    "code": "G82",
+    "name": "Category G82"
+  },
+  {
+    "code": "G83",
+    "name": "Category G83"
+  },
+  {
+    "code": "G90",
+    "name": "Category G90"
+  },
+  {
+    "code": "G91",
+    "name": "Category G91"
+  },
+  {
+    "code": "G93",
+    "name": "Category G93"
+  },
+  {
+    "code": "G95",
+    "name": "Category G95"
+  },
+  {
+    "code": "G96",
+    "name": "Category G96"
+  },
+  {
+    "code": "G97",
+    "name": "Category G97"
+  },
+  {
+    "code": "G92",
+    "name": "Category G92"
+  },
+  {
+    "code": "G98",
+    "name": "Category G98"
+  },
+  {
+    "code": "H00",
+    "name": "Category H00"
+  },
+  {
+    "code": "H01",
+    "name": "Category H01"
+  },
+  {
+    "code": "H02",
+    "name": "Category H02"
+  },
+  {
+    "code": "H04",
+    "name": "Category H04"
+  },
+  {
+    "code": "H05",
+    "name": "Category H05"
+  },
+  {
+    "code": "H10",
+    "name": "Category H10"
+  },
+  {
+    "code": "H11",
+    "name": "Category H11"
+  },
+  {
+    "code": "H15",
+    "name": "Category H15"
+  },
+  {
+    "code": "H16",
+    "name": "Category H16"
+  },
+  {
+    "code": "H17",
+    "name": "Category H17"
+  },
+  {
+    "code": "H18",
+    "name": "Category H18"
+  },
+  {
+    "code": "H20",
+    "name": "Category H20"
+  },
+  {
+    "code": "H21",
+    "name": "Category H21"
+  },
+  {
+    "code": "H25",
+    "name": "Category H25"
+  },
+  {
+    "code": "H26",
+    "name": "Category H26"
+  },
+  {
+    "code": "H27",
+    "name": "Category H27"
+  },
+  {
+    "code": "H30",
+    "name": "Category H30"
+  },
+  {
+    "code": "H31",
+    "name": "Category H31"
+  },
+  {
+    "code": "H33",
+    "name": "Category H33"
+  },
+  {
+    "code": "H34",
+    "name": "Category H34"
+  },
+  {
+    "code": "H35",
+    "name": "Category H35"
+  },
+  {
+    "code": "H40",
+    "name": "Category H40"
+  },
+  {
+    "code": "H43",
+    "name": "Category H43"
+  },
+  {
+    "code": "H44",
+    "name": "Category H44"
+  },
+  {
+    "code": "H47",
+    "name": "Category H47"
+  },
+  {
+    "code": "H46",
+    "name": "Category H46"
+  },
+  {
+    "code": "H49",
+    "name": "Category H49"
+  },
+  {
+    "code": "H50",
+    "name": "Category H50"
+  },
+  {
+    "code": "H51",
+    "name": "Category H51"
+  },
+  {
+    "code": "H52",
+    "name": "Category H52"
+  },
+  {
+    "code": "H53",
+    "name": "Category H53"
+  },
+  {
+    "code": "H54",
+    "name": "Category H54"
+  },
+  {
+    "code": "H57",
+    "name": "Category H57"
+  },
+  {
+    "code": "H59",
+    "name": "Category H59"
+  },
+  {
+    "code": "H55",
+    "name": "Category H55"
+  },
+  {
+    "code": "H60",
+    "name": "Category H60"
+  },
+  {
+    "code": "H61",
+    "name": "Category H61"
+  },
+  {
+    "code": "H65",
+    "name": "Category H65"
+  },
+  {
+    "code": "H66",
+    "name": "Category H66"
+  },
+  {
+    "code": "H68",
+    "name": "Category H68"
+  },
+  {
+    "code": "H69",
+    "name": "Category H69"
+  },
+  {
+    "code": "H70",
+    "name": "Category H70"
+  },
+  {
+    "code": "H72",
+    "name": "Category H72"
+  },
+  {
+    "code": "H73",
+    "name": "Category H73"
+  },
+  {
+    "code": "H74",
+    "name": "Category H74"
+  },
+  {
+    "code": "H71",
+    "name": "Category H71"
+  },
+  {
+    "code": "H80",
+    "name": "Category H80"
+  },
+  {
+    "code": "H81",
+    "name": "Category H81"
+  },
+  {
+    "code": "H83",
+    "name": "Category H83"
+  },
+  {
+    "code": "H90",
+    "name": "Category H90"
+  },
+  {
+    "code": "H91",
+    "name": "Category H91"
+  },
+  {
+    "code": "H92",
+    "name": "Category H92"
+  },
+  {
+    "code": "H93",
+    "name": "Category H93"
+  },
+  {
+    "code": "H95",
+    "name": "Category H95"
+  },
+  {
+    "code": "I01",
+    "name": "Category I01"
+  },
+  {
+    "code": "I02",
+    "name": "Category I02"
+  },
+  {
+    "code": "I00",
+    "name": "Category I00"
+  },
+  {
+    "code": "I05",
+    "name": "Category I05"
+  },
+  {
+    "code": "I06",
+    "name": "Category I06"
+  },
+  {
+    "code": "I07",
+    "name": "Category I07"
+  },
+  {
+    "code": "I08",
+    "name": "Category I08"
+  },
+  {
+    "code": "I09",
+    "name": "Category I09"
+  },
+  {
+    "code": "I11",
+    "name": "Category I11"
+  },
+  {
+    "code": "I12",
+    "name": "Category I12"
+  },
+  {
+    "code": "I13",
+    "name": "Category I13"
+  },
+  {
+    "code": "I15",
+    "name": "Category I15"
+  },
+  {
+    "code": "I10",
+    "name": "Category I10"
+  },
+  {
+    "code": "I20",
+    "name": "Category I20"
+  },
+  {
+    "code": "I21",
+    "name": "Category I21"
+  },
+  {
+    "code": "I22",
+    "name": "Category I22"
+  },
+  {
+    "code": "I23",
+    "name": "Category I23"
+  },
+  {
+    "code": "I24",
+    "name": "Category I24"
+  },
+  {
+    "code": "I25",
+    "name": "Category I25"
+  },
+  {
+    "code": "I26",
+    "name": "Category I26"
+  },
+  {
+    "code": "I27",
+    "name": "Category I27"
+  },
+  {
+    "code": "I28",
+    "name": "Category I28"
+  },
+  {
+    "code": "I30",
+    "name": "Category I30"
+  },
+  {
+    "code": "I31",
+    "name": "Category I31"
+  },
+  {
+    "code": "I33",
+    "name": "Category I33"
+  },
+  {
+    "code": "I34",
+    "name": "Category I34"
+  },
+  {
+    "code": "I35",
+    "name": "Category I35"
+  },
+  {
+    "code": "I36",
+    "name": "Category I36"
+  },
+  {
+    "code": "I37",
+    "name": "Category I37"
+  },
+  {
+    "code": "I40",
+    "name": "Category I40"
+  },
+  {
+    "code": "I42",
+    "name": "Category I42"
+  },
+  {
+    "code": "I44",
+    "name": "Category I44"
+  },
+  {
+    "code": "I45",
+    "name": "Category I45"
+  },
+  {
+    "code": "I46",
+    "name": "Category I46"
+  },
+  {
+    "code": "I47",
+    "name": "Category I47"
+  },
+  {
+    "code": "I48",
+    "name": "Category I48"
+  },
+  {
+    "code": "I49",
+    "name": "Category I49"
+  },
+  {
+    "code": "I50",
+    "name": "Category I50"
+  },
+  {
+    "code": "I51",
+    "name": "Category I51"
+  },
+  {
+    "code": "I38",
+    "name": "Category I38"
+  },
+  {
+    "code": "I60",
+    "name": "Category I60"
+  },
+  {
+    "code": "I61",
+    "name": "Category I61"
+  },
+  {
+    "code": "I62",
+    "name": "Category I62"
+  },
+  {
+    "code": "I63",
+    "name": "Category I63"
+  },
+  {
+    "code": "I65",
+    "name": "Category I65"
+  },
+  {
+    "code": "I66",
+    "name": "Category I66"
+  },
+  {
+    "code": "I67",
+    "name": "Category I67"
+  },
+  {
+    "code": "I69",
+    "name": "Category I69"
+  },
+  {
+    "code": "I64",
+    "name": "Category I64"
+  },
+  {
+    "code": "I70",
+    "name": "Category I70"
+  },
+  {
+    "code": "I71",
+    "name": "Category I71"
+  },
+  {
+    "code": "I72",
+    "name": "Category I72"
+  },
+  {
+    "code": "I73",
+    "name": "Category I73"
+  },
+  {
+    "code": "I74",
+    "name": "Category I74"
+  },
+  {
+    "code": "I77",
+    "name": "Category I77"
+  },
+  {
+    "code": "I78",
+    "name": "Category I78"
+  },
+  {
+    "code": "I80",
+    "name": "Category I80"
+  },
+  {
+    "code": "I82",
+    "name": "Category I82"
+  },
+  {
+    "code": "I83",
+    "name": "Category I83"
+  },
+  {
+    "code": "I85",
+    "name": "Category I85"
+  },
+  {
+    "code": "I86",
+    "name": "Category I86"
+  },
+  {
+    "code": "I87",
+    "name": "Category I87"
+  },
+  {
+    "code": "I88",
+    "name": "Category I88"
+  },
+  {
+    "code": "I89",
+    "name": "Category I89"
+  },
+  {
+    "code": "I81",
+    "name": "Category I81"
+  },
+  {
+    "code": "I95",
+    "name": "Category I95"
+  },
+  {
+    "code": "I97",
+    "name": "Category I97"
+  },
+  {
+    "code": "I99",
+    "name": "Category I99"
+  },
+  {
+    "code": "J01",
+    "name": "Category J01"
+  },
+  {
+    "code": "J02",
+    "name": "Category J02"
+  },
+  {
+    "code": "J03",
+    "name": "Category J03"
+  },
+  {
+    "code": "J04",
+    "name": "Category J04"
+  },
+  {
+    "code": "J05",
+    "name": "Category J05"
+  },
+  {
+    "code": "J06",
+    "name": "Category J06"
+  },
+  {
+    "code": "J00",
+    "name": "Category J00"
+  },
+  {
+    "code": "J10",
+    "name": "Category J10"
+  },
+  {
+    "code": "J11",
+    "name": "Category J11"
+  },
+  {
+    "code": "J12",
+    "name": "Category J12"
+  },
+  {
+    "code": "J15",
+    "name": "Category J15"
+  },
+  {
+    "code": "J16",
+    "name": "Category J16"
+  },
+  {
+    "code": "J18",
+    "name": "Category J18"
+  },
+  {
+    "code": "J09",
+    "name": "Category J09"
+  },
+  {
+    "code": "J13",
+    "name": "Category J13"
+  },
+  {
+    "code": "J14",
+    "name": "Category J14"
+  },
+  {
+    "code": "J20",
+    "name": "Category J20"
+  },
+  {
+    "code": "J21",
+    "name": "Category J21"
+  },
+  {
+    "code": "J22",
+    "name": "Category J22"
+  },
+  {
+    "code": "J30",
+    "name": "Category J30"
+  },
+  {
+    "code": "J31",
+    "name": "Category J31"
+  },
+  {
+    "code": "J32",
+    "name": "Category J32"
+  },
+  {
+    "code": "J33",
+    "name": "Category J33"
+  },
+  {
+    "code": "J34",
+    "name": "Category J34"
+  },
+  {
+    "code": "J35",
+    "name": "Category J35"
+  },
+  {
+    "code": "J37",
+    "name": "Category J37"
+  },
+  {
+    "code": "J38",
+    "name": "Category J38"
+  },
+  {
+    "code": "J39",
+    "name": "Category J39"
+  },
+  {
+    "code": "J36",
+    "name": "Category J36"
+  },
+  {
+    "code": "J41",
+    "name": "Category J41"
+  },
+  {
+    "code": "J43",
+    "name": "Category J43"
+  },
+  {
+    "code": "J44",
+    "name": "Category J44"
+  },
+  {
+    "code": "J45",
+    "name": "Category J45"
+  },
+  {
+    "code": "J40",
+    "name": "Category J40"
+  },
+  {
+    "code": "J42",
+    "name": "Category J42"
+  },
+  {
+    "code": "J46",
+    "name": "Category J46"
+  },
+  {
+    "code": "J47",
+    "name": "Category J47"
+  },
+  {
+    "code": "J62",
+    "name": "Category J62"
+  },
+  {
+    "code": "J63",
+    "name": "Category J63"
+  },
+  {
+    "code": "J66",
+    "name": "Category J66"
+  },
+  {
+    "code": "J67",
+    "name": "Category J67"
+  },
+  {
+    "code": "J68",
+    "name": "Category J68"
+  },
+  {
+    "code": "J69",
+    "name": "Category J69"
+  },
+  {
+    "code": "J70",
+    "name": "Category J70"
+  },
+  {
+    "code": "J60",
+    "name": "Category J60"
+  },
+  {
+    "code": "J61",
+    "name": "Category J61"
+  },
+  {
+    "code": "J64",
+    "name": "Category J64"
+  },
+  {
+    "code": "J65",
+    "name": "Category J65"
+  },
+  {
+    "code": "J84",
+    "name": "Category J84"
+  },
+  {
+    "code": "J80",
+    "name": "Category J80"
+  },
+  {
+    "code": "J81",
+    "name": "Category J81"
+  },
+  {
+    "code": "J82",
+    "name": "Category J82"
+  },
+  {
+    "code": "J85",
+    "name": "Category J85"
+  },
+  {
+    "code": "J86",
+    "name": "Category J86"
+  },
+  {
+    "code": "J92",
+    "name": "Category J92"
+  },
+  {
+    "code": "J93",
+    "name": "Category J93"
+  },
+  {
+    "code": "J94",
+    "name": "Category J94"
+  },
+  {
+    "code": "J90",
+    "name": "Category J90"
+  },
+  {
+    "code": "J95",
+    "name": "Category J95"
+  },
+  {
+    "code": "J96",
+    "name": "Category J96"
+  },
+  {
+    "code": "J98",
+    "name": "Category J98"
+  },
+  {
+    "code": "K00",
+    "name": "Category K00"
+  },
+  {
+    "code": "K01",
+    "name": "Category K01"
+  },
+  {
+    "code": "K02",
+    "name": "Category K02"
+  },
+  {
+    "code": "K03",
+    "name": "Category K03"
+  },
+  {
+    "code": "K04",
+    "name": "Category K04"
+  },
+  {
+    "code": "K05",
+    "name": "Category K05"
+  },
+  {
+    "code": "K06",
+    "name": "Category K06"
+  },
+  {
+    "code": "K07",
+    "name": "Category K07"
+  },
+  {
+    "code": "K08",
+    "name": "Category K08"
+  },
+  {
+    "code": "K09",
+    "name": "Category K09"
+  },
+  {
+    "code": "K10",
+    "name": "Category K10"
+  },
+  {
+    "code": "K11",
+    "name": "Category K11"
+  },
+  {
+    "code": "K12",
+    "name": "Category K12"
+  },
+  {
+    "code": "K13",
+    "name": "Category K13"
+  },
+  {
+    "code": "K14",
+    "name": "Category K14"
+  },
+  {
+    "code": "K21",
+    "name": "Category K21"
+  },
+  {
+    "code": "K22",
+    "name": "Category K22"
+  },
+  {
+    "code": "K25",
+    "name": "Category K25"
+  },
+  {
+    "code": "K26",
+    "name": "Category K26"
+  },
+  {
+    "code": "K27",
+    "name": "Category K27"
+  },
+  {
+    "code": "K28",
+    "name": "Category K28"
+  },
+  {
+    "code": "K29",
+    "name": "Category K29"
+  },
+  {
+    "code": "K31",
+    "name": "Category K31"
+  },
+  {
+    "code": "K20",
+    "name": "Category K20"
+  },
+  {
+    "code": "K30",
+    "name": "Category K30"
+  },
+  {
+    "code": "K35",
+    "name": "Category K35"
+  },
+  {
+    "code": "K38",
+    "name": "Category K38"
+  },
+  {
+    "code": "K36",
+    "name": "Category K36"
+  },
+  {
+    "code": "K37",
+    "name": "Category K37"
+  },
+  {
+    "code": "K40",
+    "name": "Category K40"
+  },
+  {
+    "code": "K41",
+    "name": "Category K41"
+  },
+  {
+    "code": "K42",
+    "name": "Category K42"
+  },
+  {
+    "code": "K43",
+    "name": "Category K43"
+  },
+  {
+    "code": "K44",
+    "name": "Category K44"
+  },
+  {
+    "code": "K45",
+    "name": "Category K45"
+  },
+  {
+    "code": "K46",
+    "name": "Category K46"
+  },
+  {
+    "code": "K50",
+    "name": "Category K50"
+  },
+  {
+    "code": "K51",
+    "name": "Category K51"
+  },
+  {
+    "code": "K52",
+    "name": "Category K52"
+  },
+  {
+    "code": "K55",
+    "name": "Category K55"
+  },
+  {
+    "code": "K56",
+    "name": "Category K56"
+  },
+  {
+    "code": "K57",
+    "name": "Category K57"
+  },
+  {
+    "code": "K58",
+    "name": "Category K58"
+  },
+  {
+    "code": "K59",
+    "name": "Category K59"
+  },
+  {
+    "code": "K60",
+    "name": "Category K60"
+  },
+  {
+    "code": "K61",
+    "name": "Category K61"
+  },
+  {
+    "code": "K62",
+    "name": "Category K62"
+  },
+  {
+    "code": "K63",
+    "name": "Category K63"
+  },
+  {
+    "code": "K64",
+    "name": "Category K64"
+  },
+  {
+    "code": "K65",
+    "name": "Category K65"
+  },
+  {
+    "code": "K66",
+    "name": "Category K66"
+  },
+  {
+    "code": "K70",
+    "name": "Category K70"
+  },
+  {
+    "code": "K71",
+    "name": "Category K71"
+  },
+  {
+    "code": "K72",
+    "name": "Category K72"
+  },
+  {
+    "code": "K73",
+    "name": "Category K73"
+  },
+  {
+    "code": "K74",
+    "name": "Category K74"
+  },
+  {
+    "code": "K75",
+    "name": "Category K75"
+  },
+  {
+    "code": "K76",
+    "name": "Category K76"
+  },
+  {
+    "code": "K80",
+    "name": "Category K80"
+  },
+  {
+    "code": "K81",
+    "name": "Category K81"
+  },
+  {
+    "code": "K82",
+    "name": "Category K82"
+  },
+  {
+    "code": "K83",
+    "name": "Category K83"
+  },
+  {
+    "code": "K85",
+    "name": "Category K85"
+  },
+  {
+    "code": "K86",
+    "name": "Category K86"
+  },
+  {
+    "code": "K90",
+    "name": "Category K90"
+  },
+  {
+    "code": "K91",
+    "name": "Category K91"
+  },
+  {
+    "code": "K92",
+    "name": "Category K92"
+  },
+  {
+    "code": "L01",
+    "name": "Category L01"
+  },
+  {
+    "code": "L02",
+    "name": "Category L02"
+  },
+  {
+    "code": "L03",
+    "name": "Category L03"
+  },
+  {
+    "code": "L04",
+    "name": "Category L04"
+  },
+  {
+    "code": "L05",
+    "name": "Category L05"
+  },
+  {
+    "code": "L08",
+    "name": "Category L08"
+  },
+  {
+    "code": "L00",
+    "name": "Category L00"
+  },
+  {
+    "code": "L10",
+    "name": "Category L10"
+  },
+  {
+    "code": "L11",
+    "name": "Category L11"
+  },
+  {
+    "code": "L12",
+    "name": "Category L12"
+  },
+  {
+    "code": "L13",
+    "name": "Category L13"
+  },
+  {
+    "code": "L20",
+    "name": "Category L20"
+  },
+  {
+    "code": "L21",
+    "name": "Category L21"
+  },
+  {
+    "code": "L23",
+    "name": "Category L23"
+  },
+  {
+    "code": "L24",
+    "name": "Category L24"
+  },
+  {
+    "code": "L25",
+    "name": "Category L25"
+  },
+  {
+    "code": "L27",
+    "name": "Category L27"
+  },
+  {
+    "code": "L28",
+    "name": "Category L28"
+  },
+  {
+    "code": "L29",
+    "name": "Category L29"
+  },
+  {
+    "code": "L30",
+    "name": "Category L30"
+  },
+  {
+    "code": "L22",
+    "name": "Category L22"
+  },
+  {
+    "code": "L26",
+    "name": "Category L26"
+  },
+  {
+    "code": "L40",
+    "name": "Category L40"
+  },
+  {
+    "code": "L41",
+    "name": "Category L41"
+  },
+  {
+    "code": "L43",
+    "name": "Category L43"
+  },
+  {
+    "code": "L44",
+    "name": "Category L44"
+  },
+  {
+    "code": "L42",
+    "name": "Category L42"
+  },
+  {
+    "code": "L50",
+    "name": "Category L50"
+  },
+  {
+    "code": "L51",
+    "name": "Category L51"
+  },
+  {
+    "code": "L53",
+    "name": "Category L53"
+  },
+  {
+    "code": "L52",
+    "name": "Category L52"
+  },
+  {
+    "code": "L55",
+    "name": "Category L55"
+  },
+  {
+    "code": "L56",
+    "name": "Category L56"
+  },
+  {
+    "code": "L57",
+    "name": "Category L57"
+  },
+  {
+    "code": "L58",
+    "name": "Category L58"
+  },
+  {
+    "code": "L59",
+    "name": "Category L59"
+  },
+  {
+    "code": "L60",
+    "name": "Category L60"
+  },
+  {
+    "code": "L63",
+    "name": "Category L63"
+  },
+  {
+    "code": "L64",
+    "name": "Category L64"
+  },
+  {
+    "code": "L65",
+    "name": "Category L65"
+  },
+  {
+    "code": "L66",
+    "name": "Category L66"
+  },
+  {
+    "code": "L67",
+    "name": "Category L67"
+  },
+  {
+    "code": "L68",
+    "name": "Category L68"
+  },
+  {
+    "code": "L70",
+    "name": "Category L70"
+  },
+  {
+    "code": "L71",
+    "name": "Category L71"
+  },
+  {
+    "code": "L72",
+    "name": "Category L72"
+  },
+  {
+    "code": "L73",
+    "name": "Category L73"
+  },
+  {
+    "code": "L74",
+    "name": "Category L74"
+  },
+  {
+    "code": "L75",
+    "name": "Category L75"
+  },
+  {
+    "code": "L81",
+    "name": "Category L81"
+  },
+  {
+    "code": "L85",
+    "name": "Category L85"
+  },
+  {
+    "code": "L87",
+    "name": "Category L87"
+  },
+  {
+    "code": "L89",
+    "name": "Category L89"
+  },
+  {
+    "code": "L90",
+    "name": "Category L90"
+  },
+  {
+    "code": "L91",
+    "name": "Category L91"
+  },
+  {
+    "code": "L92",
+    "name": "Category L92"
+  },
+  {
+    "code": "L93",
+    "name": "Category L93"
+  },
+  {
+    "code": "L94",
+    "name": "Category L94"
+  },
+  {
+    "code": "L95",
+    "name": "Category L95"
+  },
+  {
+    "code": "L98",
+    "name": "Category L98"
+  },
+  {
+    "code": "L80",
+    "name": "Category L80"
+  },
+  {
+    "code": "L82",
+    "name": "Category L82"
+  },
+  {
+    "code": "L83",
+    "name": "Category L83"
+  },
+  {
+    "code": "L84",
+    "name": "Category L84"
+  },
+  {
+    "code": "L88",
+    "name": "Category L88"
+  },
+  {
+    "code": "L97",
+    "name": "Category L97"
+  },
+  {
+    "code": "M00",
+    "name": "Category M00"
+  },
+  {
+    "code": "M02",
+    "name": "Category M02"
+  },
+  {
+    "code": "M05",
+    "name": "Category M05"
+  },
+  {
+    "code": "M06",
+    "name": "Category M06"
+  },
+  {
+    "code": "M08",
+    "name": "Category M08"
+  },
+  {
+    "code": "M10",
+    "name": "Category M10"
+  },
+  {
+    "code": "M11",
+    "name": "Category M11"
+  },
+  {
+    "code": "M12",
+    "name": "Category M12"
+  },
+  {
+    "code": "M13",
+    "name": "Category M13"
+  },
+  {
+    "code": "M15",
+    "name": "Category M15"
+  },
+  {
+    "code": "M16",
+    "name": "Category M16"
+  },
+  {
+    "code": "M17",
+    "name": "Category M17"
+  },
+  {
+    "code": "M18",
+    "name": "Category M18"
+  },
+  {
+    "code": "M19",
+    "name": "Category M19"
+  },
+  {
+    "code": "M20",
+    "name": "Category M20"
+  },
+  {
+    "code": "M21",
+    "name": "Category M21"
+  },
+  {
+    "code": "M22",
+    "name": "Category M22"
+  },
+  {
+    "code": "M23",
+    "name": "Category M23"
+  },
+  {
+    "code": "M24",
+    "name": "Category M24"
+  },
+  {
+    "code": "M25",
+    "name": "Category M25"
+  },
+  {
+    "code": "M30",
+    "name": "Category M30"
+  },
+  {
+    "code": "M31",
+    "name": "Category M31"
+  },
+  {
+    "code": "M32",
+    "name": "Category M32"
+  },
+  {
+    "code": "M33",
+    "name": "Category M33"
+  },
+  {
+    "code": "M34",
+    "name": "Category M34"
+  },
+  {
+    "code": "M35",
+    "name": "Category M35"
+  },
+  {
+    "code": "M40",
+    "name": "Category M40"
+  },
+  {
+    "code": "M41",
+    "name": "Category M41"
+  },
+  {
+    "code": "M42",
+    "name": "Category M42"
+  },
+  {
+    "code": "M43",
+    "name": "Category M43"
+  },
+  {
+    "code": "M46",
+    "name": "Category M46"
+  },
+  {
+    "code": "M47",
+    "name": "Category M47"
+  },
+  {
+    "code": "M48",
+    "name": "Category M48"
+  },
+  {
+    "code": "M45",
+    "name": "Category M45"
+  },
+  {
+    "code": "M50",
+    "name": "Category M50"
+  },
+  {
+    "code": "M51",
+    "name": "Category M51"
+  },
+  {
+    "code": "M53",
+    "name": "Category M53"
+  },
+  {
+    "code": "M54",
+    "name": "Category M54"
+  },
+  {
+    "code": "M60",
+    "name": "Category M60"
+  },
+  {
+    "code": "M61",
+    "name": "Category M61"
+  },
+  {
+    "code": "M62",
+    "name": "Category M62"
+  },
+  {
+    "code": "M65",
+    "name": "Category M65"
+  },
+  {
+    "code": "M66",
+    "name": "Category M66"
+  },
+  {
+    "code": "M67",
+    "name": "Category M67"
+  },
+  {
+    "code": "M70",
+    "name": "Category M70"
+  },
+  {
+    "code": "M71",
+    "name": "Category M71"
+  },
+  {
+    "code": "M72",
+    "name": "Category M72"
+  },
+  {
+    "code": "M75",
+    "name": "Category M75"
+  },
+  {
+    "code": "M76",
+    "name": "Category M76"
+  },
+  {
+    "code": "M77",
+    "name": "Category M77"
+  },
+  {
+    "code": "M79",
+    "name": "Category M79"
+  },
+  {
+    "code": "M80",
+    "name": "Category M80"
+  },
+  {
+    "code": "M81",
+    "name": "Category M81"
+  },
+  {
+    "code": "M83",
+    "name": "Category M83"
+  },
+  {
+    "code": "M84",
+    "name": "Category M84"
+  },
+  {
+    "code": "M85",
+    "name": "Category M85"
+  },
+  {
+    "code": "M86",
+    "name": "Category M86"
+  },
+  {
+    "code": "M87",
+    "name": "Category M87"
+  },
+  {
+    "code": "M88",
+    "name": "Category M88"
+  },
+  {
+    "code": "M89",
+    "name": "Category M89"
+  },
+  {
+    "code": "M91",
+    "name": "Category M91"
+  },
+  {
+    "code": "M92",
+    "name": "Category M92"
+  },
+  {
+    "code": "M93",
+    "name": "Category M93"
+  },
+  {
+    "code": "M94",
+    "name": "Category M94"
+  },
+  {
+    "code": "M95",
+    "name": "Category M95"
+  },
+  {
+    "code": "M96",
+    "name": "Category M96"
+  },
+  {
+    "code": "M99",
+    "name": "Category M99"
+  },
+  {
+    "code": "N00",
+    "name": "Category N00"
+  },
+  {
+    "code": "N01",
+    "name": "Category N01"
+  },
+  {
+    "code": "N02",
+    "name": "Category N02"
+  },
+  {
+    "code": "N03",
+    "name": "Category N03"
+  },
+  {
+    "code": "N04",
+    "name": "Category N04"
+  },
+  {
+    "code": "N05",
+    "name": "Category N05"
+  },
+  {
+    "code": "N06",
+    "name": "Category N06"
+  },
+  {
+    "code": "N07",
+    "name": "Category N07"
+  },
+  {
+    "code": "N11",
+    "name": "Category N11"
+  },
+  {
+    "code": "N13",
+    "name": "Category N13"
+  },
+  {
+    "code": "N14",
+    "name": "Category N14"
+  },
+  {
+    "code": "N15",
+    "name": "Category N15"
+  },
+  {
+    "code": "N10",
+    "name": "Category N10"
+  },
+  {
+    "code": "N12",
+    "name": "Category N12"
+  },
+  {
+    "code": "N17",
+    "name": "Category N17"
+  },
+  {
+    "code": "N18",
+    "name": "Category N18"
+  },
+  {
+    "code": "N19",
+    "name": "Category N19"
+  },
+  {
+    "code": "N20",
+    "name": "Category N20"
+  },
+  {
+    "code": "N21",
+    "name": "Category N21"
+  },
+  {
+    "code": "N23",
+    "name": "Category N23"
+  },
+  {
+    "code": "N25",
+    "name": "Category N25"
+  },
+  {
+    "code": "N27",
+    "name": "Category N27"
+  },
+  {
+    "code": "N28",
+    "name": "Category N28"
+  },
+  {
+    "code": "N26",
+    "name": "Category N26"
+  },
+  {
+    "code": "N30",
+    "name": "Category N30"
+  },
+  {
+    "code": "N31",
+    "name": "Category N31"
+  },
+  {
+    "code": "N32",
+    "name": "Category N32"
+  },
+  {
+    "code": "N34",
+    "name": "Category N34"
+  },
+  {
+    "code": "N35",
+    "name": "Category N35"
+  },
+  {
+    "code": "N36",
+    "name": "Category N36"
+  },
+  {
+    "code": "N39",
+    "name": "Category N39"
+  },
+  {
+    "code": "N41",
+    "name": "Category N41"
+  },
+  {
+    "code": "N42",
+    "name": "Category N42"
+  },
+  {
+    "code": "N43",
+    "name": "Category N43"
+  },
+  {
+    "code": "N45",
+    "name": "Category N45"
+  },
+  {
+    "code": "N48",
+    "name": "Category N48"
+  },
+  {
+    "code": "N49",
+    "name": "Category N49"
+  },
+  {
+    "code": "N50",
+    "name": "Category N50"
+  },
+  {
+    "code": "N40",
+    "name": "Category N40"
+  },
+  {
+    "code": "N44",
+    "name": "Category N44"
+  },
+  {
+    "code": "N46",
+    "name": "Category N46"
+  },
+  {
+    "code": "N47",
+    "name": "Category N47"
+  },
+  {
+    "code": "N60",
+    "name": "Category N60"
+  },
+  {
+    "code": "N64",
+    "name": "Category N64"
+  },
+  {
+    "code": "N61",
+    "name": "Category N61"
+  },
+  {
+    "code": "N62",
+    "name": "Category N62"
+  },
+  {
+    "code": "N63",
+    "name": "Category N63"
+  },
+  {
+    "code": "N70",
+    "name": "Category N70"
+  },
+  {
+    "code": "N71",
+    "name": "Category N71"
+  },
+  {
+    "code": "N73",
+    "name": "Category N73"
+  },
+  {
+    "code": "N75",
+    "name": "Category N75"
+  },
+  {
+    "code": "N76",
+    "name": "Category N76"
+  },
+  {
+    "code": "N72",
+    "name": "Category N72"
+  },
+  {
+    "code": "N80",
+    "name": "Category N80"
+  },
+  {
+    "code": "N81",
+    "name": "Category N81"
+  },
+  {
+    "code": "N82",
+    "name": "Category N82"
+  },
+  {
+    "code": "N83",
+    "name": "Category N83"
+  },
+  {
+    "code": "N84",
+    "name": "Category N84"
+  },
+  {
+    "code": "N85",
+    "name": "Category N85"
+  },
+  {
+    "code": "N87",
+    "name": "Category N87"
+  },
+  {
+    "code": "N88",
+    "name": "Category N88"
+  },
+  {
+    "code": "N89",
+    "name": "Category N89"
+  },
+  {
+    "code": "N90",
+    "name": "Category N90"
+  },
+  {
+    "code": "N91",
+    "name": "Category N91"
+  },
+  {
+    "code": "N92",
+    "name": "Category N92"
+  },
+  {
+    "code": "N93",
+    "name": "Category N93"
+  },
+  {
+    "code": "N94",
+    "name": "Category N94"
+  },
+  {
+    "code": "N95",
+    "name": "Category N95"
+  },
+  {
+    "code": "N97",
+    "name": "Category N97"
+  },
+  {
+    "code": "N98",
+    "name": "Category N98"
+  },
+  {
+    "code": "N86",
+    "name": "Category N86"
+  },
+  {
+    "code": "N96",
+    "name": "Category N96"
+  },
+  {
+    "code": "N99",
+    "name": "Category N99"
+  },
+  {
+    "code": "O00",
+    "name": "Category O00"
+  },
+  {
+    "code": "O01",
+    "name": "Category O01"
+  },
+  {
+    "code": "O02",
+    "name": "Category O02"
+  },
+  {
+    "code": "O03",
+    "name": "Category O03"
+  },
+  {
+    "code": "O04",
+    "name": "Category O04"
+  },
+  {
+    "code": "O05",
+    "name": "Category O05"
+  },
+  {
+    "code": "O06",
+    "name": "Category O06"
+  },
+  {
+    "code": "O07",
+    "name": "Category O07"
+  },
+  {
+    "code": "O08",
+    "name": "Category O08"
+  },
+  {
+    "code": "O10",
+    "name": "Category O10"
+  },
+  {
+    "code": "O12",
+    "name": "Category O12"
+  },
+  {
+    "code": "O14",
+    "name": "Category O14"
+  },
+  {
+    "code": "O15",
+    "name": "Category O15"
+  },
+  {
+    "code": "O11",
+    "name": "Category O11"
+  },
+  {
+    "code": "O13",
+    "name": "Category O13"
+  },
+  {
+    "code": "O16",
+    "name": "Category O16"
+  },
+  {
+    "code": "O20",
+    "name": "Category O20"
+  },
+  {
+    "code": "O21",
+    "name": "Category O21"
+  },
+  {
+    "code": "O22",
+    "name": "Category O22"
+  },
+  {
+    "code": "O23",
+    "name": "Category O23"
+  },
+  {
+    "code": "O24",
+    "name": "Category O24"
+  },
+  {
+    "code": "O26",
+    "name": "Category O26"
+  },
+  {
+    "code": "O28",
+    "name": "Category O28"
+  },
+  {
+    "code": "O29",
+    "name": "Category O29"
+  },
+  {
+    "code": "O25",
+    "name": "Category O25"
+  },
+  {
+    "code": "O30",
+    "name": "Category O30"
+  },
+  {
+    "code": "O31",
+    "name": "Category O31"
+  },
+  {
+    "code": "O32",
+    "name": "Category O32"
+  },
+  {
+    "code": "O33",
+    "name": "Category O33"
+  },
+  {
+    "code": "O34",
+    "name": "Category O34"
+  },
+  {
+    "code": "O35",
+    "name": "Category O35"
+  },
+  {
+    "code": "O36",
+    "name": "Category O36"
+  },
+  {
+    "code": "O41",
+    "name": "Category O41"
+  },
+  {
+    "code": "O42",
+    "name": "Category O42"
+  },
+  {
+    "code": "O43",
+    "name": "Category O43"
+  },
+  {
+    "code": "O44",
+    "name": "Category O44"
+  },
+  {
+    "code": "O45",
+    "name": "Category O45"
+  },
+  {
+    "code": "O46",
+    "name": "Category O46"
+  },
+  {
+    "code": "O47",
+    "name": "Category O47"
+  },
+  {
+    "code": "O40",
+    "name": "Category O40"
+  },
+  {
+    "code": "O48",
+    "name": "Category O48"
+  },
+  {
+    "code": "O60",
+    "name": "Category O60"
+  },
+  {
+    "code": "O61",
+    "name": "Category O61"
+  },
+  {
+    "code": "O62",
+    "name": "Category O62"
+  },
+  {
+    "code": "O63",
+    "name": "Category O63"
+  },
+  {
+    "code": "O64",
+    "name": "Category O64"
+  },
+  {
+    "code": "O65",
+    "name": "Category O65"
+  },
+  {
+    "code": "O66",
+    "name": "Category O66"
+  },
+  {
+    "code": "O67",
+    "name": "Category O67"
+  },
+  {
+    "code": "O68",
+    "name": "Category O68"
+  },
+  {
+    "code": "O69",
+    "name": "Category O69"
+  },
+  {
+    "code": "O70",
+    "name": "Category O70"
+  },
+  {
+    "code": "O71",
+    "name": "Category O71"
+  },
+  {
+    "code": "O72",
+    "name": "Category O72"
+  },
+  {
+    "code": "O73",
+    "name": "Category O73"
+  },
+  {
+    "code": "O74",
+    "name": "Category O74"
+  },
+  {
+    "code": "O75",
+    "name": "Category O75"
+  },
+  {
+    "code": "O80",
+    "name": "Category O80"
+  },
+  {
+    "code": "O81",
+    "name": "Category O81"
+  },
+  {
+    "code": "O82",
+    "name": "Category O82"
+  },
+  {
+    "code": "O83",
+    "name": "Category O83"
+  },
+  {
+    "code": "O84",
+    "name": "Category O84"
+  },
+  {
+    "code": "O86",
+    "name": "Category O86"
+  },
+  {
+    "code": "O87",
+    "name": "Category O87"
+  },
+  {
+    "code": "O88",
+    "name": "Category O88"
+  },
+  {
+    "code": "O89",
+    "name": "Category O89"
+  },
+  {
+    "code": "O90",
+    "name": "Category O90"
+  },
+  {
+    "code": "O91",
+    "name": "Category O91"
+  },
+  {
+    "code": "O92",
+    "name": "Category O92"
+  },
+  {
+    "code": "O85",
+    "name": "Category O85"
+  },
+  {
+    "code": "O96",
+    "name": "Category O96"
+  },
+  {
+    "code": "O97",
+    "name": "Category O97"
+  },
+  {
+    "code": "O98",
+    "name": "Category O98"
+  },
+  {
+    "code": "O99",
+    "name": "Category O99"
+  },
+  {
+    "code": "O94",
+    "name": "Category O94"
+  },
+  {
+    "code": "O95",
+    "name": "Category O95"
+  },
+  {
+    "code": "P00",
+    "name": "Category P00"
+  },
+  {
+    "code": "P01",
+    "name": "Category P01"
+  },
+  {
+    "code": "P02",
+    "name": "Category P02"
+  },
+  {
+    "code": "P03",
+    "name": "Category P03"
+  },
+  {
+    "code": "P04",
+    "name": "Category P04"
+  },
+  {
+    "code": "P05",
+    "name": "Category P05"
+  },
+  {
+    "code": "P07",
+    "name": "Category P07"
+  },
+  {
+    "code": "P08",
+    "name": "Category P08"
+  },
+  {
+    "code": "P10",
+    "name": "Category P10"
+  },
+  {
+    "code": "P11",
+    "name": "Category P11"
+  },
+  {
+    "code": "P12",
+    "name": "Category P12"
+  },
+  {
+    "code": "P13",
+    "name": "Category P13"
+  },
+  {
+    "code": "P14",
+    "name": "Category P14"
+  },
+  {
+    "code": "P15",
+    "name": "Category P15"
+  },
+  {
+    "code": "P20",
+    "name": "Category P20"
+  },
+  {
+    "code": "P21",
+    "name": "Category P21"
+  },
+  {
+    "code": "P22",
+    "name": "Category P22"
+  },
+  {
+    "code": "P23",
+    "name": "Category P23"
+  },
+  {
+    "code": "P24",
+    "name": "Category P24"
+  },
+  {
+    "code": "P25",
+    "name": "Category P25"
+  },
+  {
+    "code": "P26",
+    "name": "Category P26"
+  },
+  {
+    "code": "P27",
+    "name": "Category P27"
+  },
+  {
+    "code": "P28",
+    "name": "Category P28"
+  },
+  {
+    "code": "P29",
+    "name": "Category P29"
+  },
+  {
+    "code": "P35",
+    "name": "Category P35"
+  },
+  {
+    "code": "P36",
+    "name": "Category P36"
+  },
+  {
+    "code": "P37",
+    "name": "Category P37"
+  },
+  {
+    "code": "P39",
+    "name": "Category P39"
+  },
+  {
+    "code": "P38",
+    "name": "Category P38"
+  },
+  {
+    "code": "P50",
+    "name": "Category P50"
+  },
+  {
+    "code": "P51",
+    "name": "Category P51"
+  },
+  {
+    "code": "P52",
+    "name": "Category P52"
+  },
+  {
+    "code": "P54",
+    "name": "Category P54"
+  },
+  {
+    "code": "P55",
+    "name": "Category P55"
+  },
+  {
+    "code": "P56",
+    "name": "Category P56"
+  },
+  {
+    "code": "P57",
+    "name": "Category P57"
+  },
+  {
+    "code": "P58",
+    "name": "Category P58"
+  },
+  {
+    "code": "P59",
+    "name": "Category P59"
+  },
+  {
+    "code": "P61",
+    "name": "Category P61"
+  },
+  {
+    "code": "P53",
+    "name": "Category P53"
+  },
+  {
+    "code": "P60",
+    "name": "Category P60"
+  },
+  {
+    "code": "P70",
+    "name": "Category P70"
+  },
+  {
+    "code": "P71",
+    "name": "Category P71"
+  },
+  {
+    "code": "P72",
+    "name": "Category P72"
+  },
+  {
+    "code": "P74",
+    "name": "Category P74"
+  },
+  {
+    "code": "P76",
+    "name": "Category P76"
+  },
+  {
+    "code": "P78",
+    "name": "Category P78"
+  },
+  {
+    "code": "P77",
+    "name": "Category P77"
+  },
+  {
+    "code": "P80",
+    "name": "Category P80"
+  },
+  {
+    "code": "P81",
+    "name": "Category P81"
+  },
+  {
+    "code": "P83",
+    "name": "Category P83"
+  },
+  {
+    "code": "P91",
+    "name": "Category P91"
+  },
+  {
+    "code": "P92",
+    "name": "Category P92"
+  },
+  {
+    "code": "P94",
+    "name": "Category P94"
+  },
+  {
+    "code": "P96",
+    "name": "Category P96"
+  },
+  {
+    "code": "P90",
+    "name": "Category P90"
+  },
+  {
+    "code": "P93",
+    "name": "Category P93"
+  },
+  {
+    "code": "P95",
+    "name": "Category P95"
+  },
+  {
+    "code": "Q00",
+    "name": "Category Q00"
+  },
+  {
+    "code": "Q01",
+    "name": "Category Q01"
+  },
+  {
+    "code": "Q03",
+    "name": "Category Q03"
+  },
+  {
+    "code": "Q04",
+    "name": "Category Q04"
+  },
+  {
+    "code": "Q05",
+    "name": "Category Q05"
+  },
+  {
+    "code": "Q06",
+    "name": "Category Q06"
+  },
+  {
+    "code": "Q07",
+    "name": "Category Q07"
+  },
+  {
+    "code": "Q02",
+    "name": "Category Q02"
+  },
+  {
+    "code": "Q10",
+    "name": "Category Q10"
+  },
+  {
+    "code": "Q11",
+    "name": "Category Q11"
+  },
+  {
+    "code": "Q12",
+    "name": "Category Q12"
+  },
+  {
+    "code": "Q13",
+    "name": "Category Q13"
+  },
+  {
+    "code": "Q14",
+    "name": "Category Q14"
+  },
+  {
+    "code": "Q15",
+    "name": "Category Q15"
+  },
+  {
+    "code": "Q16",
+    "name": "Category Q16"
+  },
+  {
+    "code": "Q17",
+    "name": "Category Q17"
+  },
+  {
+    "code": "Q18",
+    "name": "Category Q18"
+  },
+  {
+    "code": "Q20",
+    "name": "Category Q20"
+  },
+  {
+    "code": "Q21",
+    "name": "Category Q21"
+  },
+  {
+    "code": "Q22",
+    "name": "Category Q22"
+  },
+  {
+    "code": "Q23",
+    "name": "Category Q23"
+  },
+  {
+    "code": "Q24",
+    "name": "Category Q24"
+  },
+  {
+    "code": "Q25",
+    "name": "Category Q25"
+  },
+  {
+    "code": "Q26",
+    "name": "Category Q26"
+  },
+  {
+    "code": "Q27",
+    "name": "Category Q27"
+  },
+  {
+    "code": "Q28",
+    "name": "Category Q28"
+  },
+  {
+    "code": "Q30",
+    "name": "Category Q30"
+  },
+  {
+    "code": "Q31",
+    "name": "Category Q31"
+  },
+  {
+    "code": "Q32",
+    "name": "Category Q32"
+  },
+  {
+    "code": "Q33",
+    "name": "Category Q33"
+  },
+  {
+    "code": "Q34",
+    "name": "Category Q34"
+  },
+  {
+    "code": "Q35",
+    "name": "Category Q35"
+  },
+  {
+    "code": "Q36",
+    "name": "Category Q36"
+  },
+  {
+    "code": "Q37",
+    "name": "Category Q37"
+  },
+  {
+    "code": "Q38",
+    "name": "Category Q38"
+  },
+  {
+    "code": "Q39",
+    "name": "Category Q39"
+  },
+  {
+    "code": "Q40",
+    "name": "Category Q40"
+  },
+  {
+    "code": "Q41",
+    "name": "Category Q41"
+  },
+  {
+    "code": "Q42",
+    "name": "Category Q42"
+  },
+  {
+    "code": "Q43",
+    "name": "Category Q43"
+  },
+  {
+    "code": "Q44",
+    "name": "Category Q44"
+  },
+  {
+    "code": "Q45",
+    "name": "Category Q45"
+  },
+  {
+    "code": "Q50",
+    "name": "Category Q50"
+  },
+  {
+    "code": "Q51",
+    "name": "Category Q51"
+  },
+  {
+    "code": "Q52",
+    "name": "Category Q52"
+  },
+  {
+    "code": "Q53",
+    "name": "Category Q53"
+  },
+  {
+    "code": "Q54",
+    "name": "Category Q54"
+  },
+  {
+    "code": "Q55",
+    "name": "Category Q55"
+  },
+  {
+    "code": "Q56",
+    "name": "Category Q56"
+  },
+  {
+    "code": "Q60",
+    "name": "Category Q60"
+  },
+  {
+    "code": "Q61",
+    "name": "Category Q61"
+  },
+  {
+    "code": "Q62",
+    "name": "Category Q62"
+  },
+  {
+    "code": "Q63",
+    "name": "Category Q63"
+  },
+  {
+    "code": "Q64",
+    "name": "Category Q64"
+  },
+  {
+    "code": "Q65",
+    "name": "Category Q65"
+  },
+  {
+    "code": "Q66",
+    "name": "Category Q66"
+  },
+  {
+    "code": "Q67",
+    "name": "Category Q67"
+  },
+  {
+    "code": "Q68",
+    "name": "Category Q68"
+  },
+  {
+    "code": "Q69",
+    "name": "Category Q69"
+  },
+  {
+    "code": "Q70",
+    "name": "Category Q70"
+  },
+  {
+    "code": "Q71",
+    "name": "Category Q71"
+  },
+  {
+    "code": "Q72",
+    "name": "Category Q72"
+  },
+  {
+    "code": "Q73",
+    "name": "Category Q73"
+  },
+  {
+    "code": "Q74",
+    "name": "Category Q74"
+  },
+  {
+    "code": "Q75",
+    "name": "Category Q75"
+  },
+  {
+    "code": "Q76",
+    "name": "Category Q76"
+  },
+  {
+    "code": "Q77",
+    "name": "Category Q77"
+  },
+  {
+    "code": "Q78",
+    "name": "Category Q78"
+  },
+  {
+    "code": "Q79",
+    "name": "Category Q79"
+  },
+  {
+    "code": "Q80",
+    "name": "Category Q80"
+  },
+  {
+    "code": "Q81",
+    "name": "Category Q81"
+  },
+  {
+    "code": "Q82",
+    "name": "Category Q82"
+  },
+  {
+    "code": "Q83",
+    "name": "Category Q83"
+  },
+  {
+    "code": "Q84",
+    "name": "Category Q84"
+  },
+  {
+    "code": "Q85",
+    "name": "Category Q85"
+  },
+  {
+    "code": "Q86",
+    "name": "Category Q86"
+  },
+  {
+    "code": "Q87",
+    "name": "Category Q87"
+  },
+  {
+    "code": "Q89",
+    "name": "Category Q89"
+  },
+  {
+    "code": "Q90",
+    "name": "Category Q90"
+  },
+  {
+    "code": "Q91",
+    "name": "Category Q91"
+  },
+  {
+    "code": "Q92",
+    "name": "Category Q92"
+  },
+  {
+    "code": "Q93",
+    "name": "Category Q93"
+  },
+  {
+    "code": "Q95",
+    "name": "Category Q95"
+  },
+  {
+    "code": "Q96",
+    "name": "Category Q96"
+  },
+  {
+    "code": "Q97",
+    "name": "Category Q97"
+  },
+  {
+    "code": "Q98",
+    "name": "Category Q98"
+  },
+  {
+    "code": "Q99",
+    "name": "Category Q99"
+  },
+  {
+    "code": "R00",
+    "name": "Category R00"
+  },
+  {
+    "code": "R01",
+    "name": "Category R01"
+  },
+  {
+    "code": "R03",
+    "name": "Category R03"
+  },
+  {
+    "code": "R04",
+    "name": "Category R04"
+  },
+  {
+    "code": "R06",
+    "name": "Category R06"
+  },
+  {
+    "code": "R07",
+    "name": "Category R07"
+  },
+  {
+    "code": "R09",
+    "name": "Category R09"
+  },
+  {
+    "code": "R02",
+    "name": "Category R02"
+  },
+  {
+    "code": "R05",
+    "name": "Category R05"
+  },
+  {
+    "code": "R10",
+    "name": "Category R10"
+  },
+  {
+    "code": "R16",
+    "name": "Category R16"
+  },
+  {
+    "code": "R19",
+    "name": "Category R19"
+  },
+  {
+    "code": "R11",
+    "name": "Category R11"
+  },
+  {
+    "code": "R12",
+    "name": "Category R12"
+  },
+  {
+    "code": "R13",
+    "name": "Category R13"
+  },
+  {
+    "code": "R14",
+    "name": "Category R14"
+  },
+  {
+    "code": "R15",
+    "name": "Category R15"
+  },
+  {
+    "code": "R18",
+    "name": "Category R18"
+  },
+  {
+    "code": "R20",
+    "name": "Category R20"
+  },
+  {
+    "code": "R22",
+    "name": "Category R22"
+  },
+  {
+    "code": "R23",
+    "name": "Category R23"
+  },
+  {
+    "code": "R21",
+    "name": "Category R21"
+  },
+  {
+    "code": "R25",
+    "name": "Category R25"
+  },
+  {
+    "code": "R26",
+    "name": "Category R26"
+  },
+  {
+    "code": "R27",
+    "name": "Category R27"
+  },
+  {
+    "code": "R29",
+    "name": "Category R29"
+  },
+  {
+    "code": "R30",
+    "name": "Category R30"
+  },
+  {
+    "code": "R39",
+    "name": "Category R39"
+  },
+  {
+    "code": "R31",
+    "name": "Category R31"
+  },
+  {
+    "code": "R32",
+    "name": "Category R32"
+  },
+  {
+    "code": "R33",
+    "name": "Category R33"
+  },
+  {
+    "code": "R34",
+    "name": "Category R34"
+  },
+  {
+    "code": "R35",
+    "name": "Category R35"
+  },
+  {
+    "code": "R36",
+    "name": "Category R36"
+  },
+  {
+    "code": "R40",
+    "name": "Category R40"
+  },
+  {
+    "code": "R41",
+    "name": "Category R41"
+  },
+  {
+    "code": "R43",
+    "name": "Category R43"
+  },
+  {
+    "code": "R44",
+    "name": "Category R44"
+  },
+  {
+    "code": "R45",
+    "name": "Category R45"
+  },
+  {
+    "code": "R46",
+    "name": "Category R46"
+  },
+  {
+    "code": "R42",
+    "name": "Category R42"
+  },
+  {
+    "code": "R47",
+    "name": "Category R47"
+  },
+  {
+    "code": "R48",
+    "name": "Category R48"
+  },
+  {
+    "code": "R49",
+    "name": "Category R49"
+  },
+  {
+    "code": "R50",
+    "name": "Category R50"
+  },
+  {
+    "code": "R52",
+    "name": "Category R52"
+  },
+  {
+    "code": "R56",
+    "name": "Category R56"
+  },
+  {
+    "code": "R57",
+    "name": "Category R57"
+  },
+  {
+    "code": "R59",
+    "name": "Category R59"
+  },
+  {
+    "code": "R60",
+    "name": "Category R60"
+  },
+  {
+    "code": "R61",
+    "name": "Category R61"
+  },
+  {
+    "code": "R62",
+    "name": "Category R62"
+  },
+  {
+    "code": "R63",
+    "name": "Category R63"
+  },
+  {
+    "code": "R65",
+    "name": "Category R65"
+  },
+  {
+    "code": "R68",
+    "name": "Category R68"
+  },
+  {
+    "code": "R51",
+    "name": "Category R51"
+  },
+  {
+    "code": "R53",
+    "name": "Category R53"
+  },
+  {
+    "code": "R54",
+    "name": "Category R54"
+  },
+  {
+    "code": "R55",
+    "name": "Category R55"
+  },
+  {
+    "code": "R58",
+    "name": "Category R58"
+  },
+  {
+    "code": "R64",
+    "name": "Category R64"
+  },
+  {
+    "code": "R69",
+    "name": "Category R69"
+  },
+  {
+    "code": "R70",
+    "name": "Category R70"
+  },
+  {
+    "code": "R73",
+    "name": "Category R73"
+  },
+  {
+    "code": "R74",
+    "name": "Category R74"
+  },
+  {
+    "code": "R76",
+    "name": "Category R76"
+  },
+  {
+    "code": "R77",
+    "name": "Category R77"
+  },
+  {
+    "code": "R78",
+    "name": "Category R78"
+  },
+  {
+    "code": "R79",
+    "name": "Category R79"
+  },
+  {
+    "code": "R71",
+    "name": "Category R71"
+  },
+  {
+    "code": "R72",
+    "name": "Category R72"
+  },
+  {
+    "code": "R75",
+    "name": "Category R75"
+  },
+  {
+    "code": "R82",
+    "name": "Category R82"
+  },
+  {
+    "code": "R80",
+    "name": "Category R80"
+  },
+  {
+    "code": "R81",
+    "name": "Category R81"
+  },
+  {
+    "code": "R83",
+    "name": "Category R83"
+  },
+  {
+    "code": "R84",
+    "name": "Category R84"
+  },
+  {
+    "code": "R85",
+    "name": "Category R85"
+  },
+  {
+    "code": "R86",
+    "name": "Category R86"
+  },
+  {
+    "code": "R87",
+    "name": "Category R87"
+  },
+  {
+    "code": "R89",
+    "name": "Category R89"
+  },
+  {
+    "code": "R17",
+    "name": "Category R17"
+  },
+  {
+    "code": "R90",
+    "name": "Category R90"
+  },
+  {
+    "code": "R93",
+    "name": "Category R93"
+  },
+  {
+    "code": "R94",
+    "name": "Category R94"
+  },
+  {
+    "code": "R91",
+    "name": "Category R91"
+  },
+  {
+    "code": "R92",
+    "name": "Category R92"
+  },
+  {
+    "code": "R95",
+    "name": "Category R95"
+  },
+  {
+    "code": "R96",
+    "name": "Category R96"
+  },
+  {
+    "code": "R98",
+    "name": "Category R98"
+  },
+  {
+    "code": "R99",
+    "name": "Category R99"
+  },
+  {
+    "code": "S00",
+    "name": "Category S00"
+  },
+  {
+    "code": "S01",
+    "name": "Category S01"
+  },
+  {
+    "code": "S02",
+    "name": "Category S02"
+  },
+  {
+    "code": "S03",
+    "name": "Category S03"
+  },
+  {
+    "code": "S04",
+    "name": "Category S04"
+  },
+  {
+    "code": "S05",
+    "name": "Category S05"
+  },
+  {
+    "code": "S06",
+    "name": "Category S06"
+  },
+  {
+    "code": "S07",
+    "name": "Category S07"
+  },
+  {
+    "code": "S08",
+    "name": "Category S08"
+  },
+  {
+    "code": "S09",
+    "name": "Category S09"
+  },
+  {
+    "code": "S10",
+    "name": "Category S10"
+  },
+  {
+    "code": "S11",
+    "name": "Category S11"
+  },
+  {
+    "code": "S12",
+    "name": "Category S12"
+  },
+  {
+    "code": "S13",
+    "name": "Category S13"
+  },
+  {
+    "code": "S14",
+    "name": "Category S14"
+  },
+  {
+    "code": "S15",
+    "name": "Category S15"
+  },
+  {
+    "code": "S17",
+    "name": "Category S17"
+  },
+  {
+    "code": "S19",
+    "name": "Category S19"
+  },
+  {
+    "code": "S16",
+    "name": "Category S16"
+  },
+  {
+    "code": "S18",
+    "name": "Category S18"
+  },
+  {
+    "code": "S20",
+    "name": "Category S20"
+  },
+  {
+    "code": "S21",
+    "name": "Category S21"
+  },
+  {
+    "code": "S22",
+    "name": "Category S22"
+  },
+  {
+    "code": "S23",
+    "name": "Category S23"
+  },
+  {
+    "code": "S24",
+    "name": "Category S24"
+  },
+  {
+    "code": "S25",
+    "name": "Category S25"
+  },
+  {
+    "code": "S26",
+    "name": "Category S26"
+  },
+  {
+    "code": "S27",
+    "name": "Category S27"
+  },
+  {
+    "code": "S28",
+    "name": "Category S28"
+  },
+  {
+    "code": "S29",
+    "name": "Category S29"
+  },
+  {
+    "code": "S30",
+    "name": "Category S30"
+  },
+  {
+    "code": "S31",
+    "name": "Category S31"
+  },
+  {
+    "code": "S32",
+    "name": "Category S32"
+  },
+  {
+    "code": "S33",
+    "name": "Category S33"
+  },
+  {
+    "code": "S34",
+    "name": "Category S34"
+  },
+  {
+    "code": "S35",
+    "name": "Category S35"
+  },
+  {
+    "code": "S36",
+    "name": "Category S36"
+  },
+  {
+    "code": "S37",
+    "name": "Category S37"
+  },
+  {
+    "code": "S38",
+    "name": "Category S38"
+  },
+  {
+    "code": "S39",
+    "name": "Category S39"
+  },
+  {
+    "code": "S40",
+    "name": "Category S40"
+  },
+  {
+    "code": "S41",
+    "name": "Category S41"
+  },
+  {
+    "code": "S42",
+    "name": "Category S42"
+  },
+  {
+    "code": "S43",
+    "name": "Category S43"
+  },
+  {
+    "code": "S44",
+    "name": "Category S44"
+  },
+  {
+    "code": "S45",
+    "name": "Category S45"
+  },
+  {
+    "code": "S46",
+    "name": "Category S46"
+  },
+  {
+    "code": "S48",
+    "name": "Category S48"
+  },
+  {
+    "code": "S49",
+    "name": "Category S49"
+  },
+  {
+    "code": "S47",
+    "name": "Category S47"
+  },
+  {
+    "code": "S50",
+    "name": "Category S50"
+  },
+  {
+    "code": "S51",
+    "name": "Category S51"
+  },
+  {
+    "code": "S52",
+    "name": "Category S52"
+  },
+  {
+    "code": "S53",
+    "name": "Category S53"
+  },
+  {
+    "code": "S54",
+    "name": "Category S54"
+  },
+  {
+    "code": "S55",
+    "name": "Category S55"
+  },
+  {
+    "code": "S56",
+    "name": "Category S56"
+  },
+  {
+    "code": "S57",
+    "name": "Category S57"
+  },
+  {
+    "code": "S58",
+    "name": "Category S58"
+  },
+  {
+    "code": "S59",
+    "name": "Category S59"
+  },
+  {
+    "code": "S60",
+    "name": "Category S60"
+  },
+  {
+    "code": "S61",
+    "name": "Category S61"
+  },
+  {
+    "code": "S62",
+    "name": "Category S62"
+  },
+  {
+    "code": "S63",
+    "name": "Category S63"
+  },
+  {
+    "code": "S64",
+    "name": "Category S64"
+  },
+  {
+    "code": "S65",
+    "name": "Category S65"
+  },
+  {
+    "code": "S66",
+    "name": "Category S66"
+  },
+  {
+    "code": "S67",
+    "name": "Category S67"
+  },
+  {
+    "code": "S68",
+    "name": "Category S68"
+  },
+  {
+    "code": "S69",
+    "name": "Category S69"
+  },
+  {
+    "code": "S70",
+    "name": "Category S70"
+  },
+  {
+    "code": "S71",
+    "name": "Category S71"
+  },
+  {
+    "code": "S72",
+    "name": "Category S72"
+  },
+  {
+    "code": "S73",
+    "name": "Category S73"
+  },
+  {
+    "code": "S74",
+    "name": "Category S74"
+  },
+  {
+    "code": "S75",
+    "name": "Category S75"
+  },
+  {
+    "code": "S76",
+    "name": "Category S76"
+  },
+  {
+    "code": "S77",
+    "name": "Category S77"
+  },
+  {
+    "code": "S78",
+    "name": "Category S78"
+  },
+  {
+    "code": "S79",
+    "name": "Category S79"
+  },
+  {
+    "code": "S80",
+    "name": "Category S80"
+  },
+  {
+    "code": "S81",
+    "name": "Category S81"
+  },
+  {
+    "code": "S82",
+    "name": "Category S82"
+  },
+  {
+    "code": "S83",
+    "name": "Category S83"
+  },
+  {
+    "code": "S84",
+    "name": "Category S84"
+  },
+  {
+    "code": "S85",
+    "name": "Category S85"
+  },
+  {
+    "code": "S86",
+    "name": "Category S86"
+  },
+  {
+    "code": "S87",
+    "name": "Category S87"
+  },
+  {
+    "code": "S88",
+    "name": "Category S88"
+  },
+  {
+    "code": "S89",
+    "name": "Category S89"
+  },
+  {
+    "code": "S90",
+    "name": "Category S90"
+  },
+  {
+    "code": "S91",
+    "name": "Category S91"
+  },
+  {
+    "code": "S92",
+    "name": "Category S92"
+  },
+  {
+    "code": "S93",
+    "name": "Category S93"
+  },
+  {
+    "code": "S94",
+    "name": "Category S94"
+  },
+  {
+    "code": "S95",
+    "name": "Category S95"
+  },
+  {
+    "code": "S96",
+    "name": "Category S96"
+  },
+  {
+    "code": "S97",
+    "name": "Category S97"
+  },
+  {
+    "code": "S98",
+    "name": "Category S98"
+  },
+  {
+    "code": "S99",
+    "name": "Category S99"
+  },
+  {
+    "code": "T00",
+    "name": "Category T00"
+  },
+  {
+    "code": "T01",
+    "name": "Category T01"
+  },
+  {
+    "code": "T02",
+    "name": "Category T02"
+  },
+  {
+    "code": "T03",
+    "name": "Category T03"
+  },
+  {
+    "code": "T04",
+    "name": "Category T04"
+  },
+  {
+    "code": "T05",
+    "name": "Category T05"
+  },
+  {
+    "code": "T06",
+    "name": "Category T06"
+  },
+  {
+    "code": "T07",
+    "name": "Category T07"
+  },
+  {
+    "code": "T09",
+    "name": "Category T09"
+  },
+  {
+    "code": "T11",
+    "name": "Category T11"
+  },
+  {
+    "code": "T13",
+    "name": "Category T13"
+  },
+  {
+    "code": "T14",
+    "name": "Category T14"
+  },
+  {
+    "code": "T08",
+    "name": "Category T08"
+  },
+  {
+    "code": "T10",
+    "name": "Category T10"
+  },
+  {
+    "code": "T12",
+    "name": "Category T12"
+  },
+  {
+    "code": "T15",
+    "name": "Category T15"
+  },
+  {
+    "code": "T17",
+    "name": "Category T17"
+  },
+  {
+    "code": "T18",
+    "name": "Category T18"
+  },
+  {
+    "code": "T19",
+    "name": "Category T19"
+  },
+  {
+    "code": "T16",
+    "name": "Category T16"
+  },
+  {
+    "code": "T20",
+    "name": "Category T20"
+  },
+  {
+    "code": "T21",
+    "name": "Category T21"
+  },
+  {
+    "code": "T22",
+    "name": "Category T22"
+  },
+  {
+    "code": "T23",
+    "name": "Category T23"
+  },
+  {
+    "code": "T24",
+    "name": "Category T24"
+  },
+  {
+    "code": "T25",
+    "name": "Category T25"
+  },
+  {
+    "code": "T26",
+    "name": "Category T26"
+  },
+  {
+    "code": "T27",
+    "name": "Category T27"
+  },
+  {
+    "code": "T28",
+    "name": "Category T28"
+  },
+  {
+    "code": "T29",
+    "name": "Category T29"
+  },
+  {
+    "code": "T30",
+    "name": "Category T30"
+  },
+  {
+    "code": "T31",
+    "name": "Category T31"
+  },
+  {
+    "code": "T32",
+    "name": "Category T32"
+  },
+  {
+    "code": "T33",
+    "name": "Category T33"
+  },
+  {
+    "code": "T34",
+    "name": "Category T34"
+  },
+  {
+    "code": "T35",
+    "name": "Category T35"
+  },
+  {
+    "code": "T36",
+    "name": "Category T36"
+  },
+  {
+    "code": "T37",
+    "name": "Category T37"
+  },
+  {
+    "code": "T38",
+    "name": "Category T38"
+  },
+  {
+    "code": "T39",
+    "name": "Category T39"
+  },
+  {
+    "code": "T40",
+    "name": "Category T40"
+  },
+  {
+    "code": "T41",
+    "name": "Category T41"
+  },
+  {
+    "code": "T42",
+    "name": "Category T42"
+  },
+  {
+    "code": "T43",
+    "name": "Category T43"
+  },
+  {
+    "code": "T44",
+    "name": "Category T44"
+  },
+  {
+    "code": "T45",
+    "name": "Category T45"
+  },
+  {
+    "code": "T46",
+    "name": "Category T46"
+  },
+  {
+    "code": "T47",
+    "name": "Category T47"
+  },
+  {
+    "code": "T48",
+    "name": "Category T48"
+  },
+  {
+    "code": "T49",
+    "name": "Category T49"
+  },
+  {
+    "code": "T50",
+    "name": "Category T50"
+  },
+  {
+    "code": "T51",
+    "name": "Category T51"
+  },
+  {
+    "code": "T52",
+    "name": "Category T52"
+  },
+  {
+    "code": "T53",
+    "name": "Category T53"
+  },
+  {
+    "code": "T54",
+    "name": "Category T54"
+  },
+  {
+    "code": "T56",
+    "name": "Category T56"
+  },
+  {
+    "code": "T57",
+    "name": "Category T57"
+  },
+  {
+    "code": "T59",
+    "name": "Category T59"
+  },
+  {
+    "code": "T60",
+    "name": "Category T60"
+  },
+  {
+    "code": "T61",
+    "name": "Category T61"
+  },
+  {
+    "code": "T62",
+    "name": "Category T62"
+  },
+  {
+    "code": "T63",
+    "name": "Category T63"
+  },
+  {
+    "code": "T65",
+    "name": "Category T65"
+  },
+  {
+    "code": "T55",
+    "name": "Category T55"
+  },
+  {
+    "code": "T58",
+    "name": "Category T58"
+  },
+  {
+    "code": "T64",
+    "name": "Category T64"
+  },
+  {
+    "code": "T67",
+    "name": "Category T67"
+  },
+  {
+    "code": "T69",
+    "name": "Category T69"
+  },
+  {
+    "code": "T70",
+    "name": "Category T70"
+  },
+  {
+    "code": "T73",
+    "name": "Category T73"
+  },
+  {
+    "code": "T74",
+    "name": "Category T74"
+  },
+  {
+    "code": "T75",
+    "name": "Category T75"
+  },
+  {
+    "code": "T78",
+    "name": "Category T78"
+  },
+  {
+    "code": "T66",
+    "name": "Category T66"
+  },
+  {
+    "code": "T68",
+    "name": "Category T68"
+  },
+  {
+    "code": "T71",
+    "name": "Category T71"
+  },
+  {
+    "code": "T76",
+    "name": "Category T76"
+  },
+  {
+    "code": "T79",
+    "name": "Category T79"
+  },
+  {
+    "code": "T80",
+    "name": "Category T80"
+  },
+  {
+    "code": "T81",
+    "name": "Category T81"
+  },
+  {
+    "code": "T82",
+    "name": "Category T82"
+  },
+  {
+    "code": "T83",
+    "name": "Category T83"
+  },
+  {
+    "code": "T84",
+    "name": "Category T84"
+  },
+  {
+    "code": "T85",
+    "name": "Category T85"
+  },
+  {
+    "code": "T86",
+    "name": "Category T86"
+  },
+  {
+    "code": "T87",
+    "name": "Category T87"
+  },
+  {
+    "code": "T88",
+    "name": "Category T88"
+  },
+  {
+    "code": "T90",
+    "name": "Category T90"
+  },
+  {
+    "code": "T91",
+    "name": "Category T91"
+  },
+  {
+    "code": "T92",
+    "name": "Category T92"
+  },
+  {
+    "code": "T93",
+    "name": "Category T93"
+  },
+  {
+    "code": "T94",
+    "name": "Category T94"
+  },
+  {
+    "code": "T95",
+    "name": "Category T95"
+  },
+  {
+    "code": "T98",
+    "name": "Category T98"
+  },
+  {
+    "code": "T96",
+    "name": "Category T96"
+  },
+  {
+    "code": "T97",
+    "name": "Category T97"
+  },
+  {
+    "code": "U04",
+    "name": "Category U04"
+  },
+  {
+    "code": "U07",
+    "name": "Category U07"
+  },
+  {
+    "code": "U82",
+    "name": "Category U82"
+  },
+  {
+    "code": "U83",
+    "name": "Category U83"
+  },
+  {
+    "code": "U84",
+    "name": "Category U84"
+  },
+  {
+    "code": "U85",
+    "name": "Category U85"
+  },
+  {
+    "code": "V09",
+    "name": "Category V09"
+  },
+  {
+    "code": "V01",
+    "name": "Category V01"
+  },
+  {
+    "code": "V02",
+    "name": "Category V02"
+  },
+  {
+    "code": "V03",
+    "name": "Category V03"
+  },
+  {
+    "code": "V04",
+    "name": "Category V04"
+  },
+  {
+    "code": "V05",
+    "name": "Category V05"
+  },
+  {
+    "code": "V06",
+    "name": "Category V06"
+  },
+  {
+    "code": "V19",
+    "name": "Category V19"
+  },
+  {
+    "code": "V10",
+    "name": "Category V10"
+  },
+  {
+    "code": "V11",
+    "name": "Category V11"
+  },
+  {
+    "code": "V12",
+    "name": "Category V12"
+  },
+  {
+    "code": "V13",
+    "name": "Category V13"
+  },
+  {
+    "code": "V14",
+    "name": "Category V14"
+  },
+  {
+    "code": "V15",
+    "name": "Category V15"
+  },
+  {
+    "code": "V16",
+    "name": "Category V16"
+  },
+  {
+    "code": "V17",
+    "name": "Category V17"
+  },
+  {
+    "code": "V18",
+    "name": "Category V18"
+  },
+  {
+    "code": "V29",
+    "name": "Category V29"
+  },
+  {
+    "code": "V20",
+    "name": "Category V20"
+  },
+  {
+    "code": "V21",
+    "name": "Category V21"
+  },
+  {
+    "code": "V22",
+    "name": "Category V22"
+  },
+  {
+    "code": "V23",
+    "name": "Category V23"
+  },
+  {
+    "code": "V24",
+    "name": "Category V24"
+  },
+  {
+    "code": "V25",
+    "name": "Category V25"
+  },
+  {
+    "code": "V26",
+    "name": "Category V26"
+  },
+  {
+    "code": "V27",
+    "name": "Category V27"
+  },
+  {
+    "code": "V28",
+    "name": "Category V28"
+  },
+  {
+    "code": "V39",
+    "name": "Category V39"
+  },
+  {
+    "code": "V30",
+    "name": "Category V30"
+  },
+  {
+    "code": "V31",
+    "name": "Category V31"
+  },
+  {
+    "code": "V32",
+    "name": "Category V32"
+  },
+  {
+    "code": "V33",
+    "name": "Category V33"
+  },
+  {
+    "code": "V34",
+    "name": "Category V34"
+  },
+  {
+    "code": "V35",
+    "name": "Category V35"
+  },
+  {
+    "code": "V36",
+    "name": "Category V36"
+  },
+  {
+    "code": "V37",
+    "name": "Category V37"
+  },
+  {
+    "code": "V38",
+    "name": "Category V38"
+  },
+  {
+    "code": "V49",
+    "name": "Category V49"
+  },
+  {
+    "code": "V40",
+    "name": "Category V40"
+  },
+  {
+    "code": "V41",
+    "name": "Category V41"
+  },
+  {
+    "code": "V42",
+    "name": "Category V42"
+  },
+  {
+    "code": "V43",
+    "name": "Category V43"
+  },
+  {
+    "code": "V44",
+    "name": "Category V44"
+  },
+  {
+    "code": "V45",
+    "name": "Category V45"
+  },
+  {
+    "code": "V46",
+    "name": "Category V46"
+  },
+  {
+    "code": "V47",
+    "name": "Category V47"
+  },
+  {
+    "code": "V48",
+    "name": "Category V48"
+  },
+  {
+    "code": "V59",
+    "name": "Category V59"
+  },
+  {
+    "code": "V50",
+    "name": "Category V50"
+  },
+  {
+    "code": "V51",
+    "name": "Category V51"
+  },
+  {
+    "code": "V52",
+    "name": "Category V52"
+  },
+  {
+    "code": "V53",
+    "name": "Category V53"
+  },
+  {
+    "code": "V54",
+    "name": "Category V54"
+  },
+  {
+    "code": "V55",
+    "name": "Category V55"
+  },
+  {
+    "code": "V56",
+    "name": "Category V56"
+  },
+  {
+    "code": "V57",
+    "name": "Category V57"
+  },
+  {
+    "code": "V58",
+    "name": "Category V58"
+  },
+  {
+    "code": "V69",
+    "name": "Category V69"
+  },
+  {
+    "code": "V60",
+    "name": "Category V60"
+  },
+  {
+    "code": "V61",
+    "name": "Category V61"
+  },
+  {
+    "code": "V62",
+    "name": "Category V62"
+  },
+  {
+    "code": "V63",
+    "name": "Category V63"
+  },
+  {
+    "code": "V64",
+    "name": "Category V64"
+  },
+  {
+    "code": "V65",
+    "name": "Category V65"
+  },
+  {
+    "code": "V66",
+    "name": "Category V66"
+  },
+  {
+    "code": "V67",
+    "name": "Category V67"
+  },
+  {
+    "code": "V68",
+    "name": "Category V68"
+  },
+  {
+    "code": "V79",
+    "name": "Category V79"
+  },
+  {
+    "code": "V70",
+    "name": "Category V70"
+  },
+  {
+    "code": "V71",
+    "name": "Category V71"
+  },
+  {
+    "code": "V72",
+    "name": "Category V72"
+  },
+  {
+    "code": "V73",
+    "name": "Category V73"
+  },
+  {
+    "code": "V74",
+    "name": "Category V74"
+  },
+  {
+    "code": "V75",
+    "name": "Category V75"
+  },
+  {
+    "code": "V76",
+    "name": "Category V76"
+  },
+  {
+    "code": "V77",
+    "name": "Category V77"
+  },
+  {
+    "code": "V78",
+    "name": "Category V78"
+  },
+  {
+    "code": "V80",
+    "name": "Category V80"
+  },
+  {
+    "code": "V81",
+    "name": "Category V81"
+  },
+  {
+    "code": "V82",
+    "name": "Category V82"
+  },
+  {
+    "code": "V83",
+    "name": "Category V83"
+  },
+  {
+    "code": "V84",
+    "name": "Category V84"
+  },
+  {
+    "code": "V85",
+    "name": "Category V85"
+  },
+  {
+    "code": "V86",
+    "name": "Category V86"
+  },
+  {
+    "code": "V87",
+    "name": "Category V87"
+  },
+  {
+    "code": "V88",
+    "name": "Category V88"
+  },
+  {
+    "code": "V89",
+    "name": "Category V89"
+  },
+  {
+    "code": "V90",
+    "name": "Category V90"
+  },
+  {
+    "code": "V91",
+    "name": "Category V91"
+  },
+  {
+    "code": "V92",
+    "name": "Category V92"
+  },
+  {
+    "code": "V93",
+    "name": "Category V93"
+  },
+  {
+    "code": "V94",
+    "name": "Category V94"
+  },
+  {
+    "code": "V95",
+    "name": "Category V95"
+  },
+  {
+    "code": "V96",
+    "name": "Category V96"
+  },
+  {
+    "code": "V97",
+    "name": "Category V97"
+  },
+  {
+    "code": "V98",
+    "name": "Category V98"
+  },
+  {
+    "code": "V99",
+    "name": "Category V99"
+  },
+  {
+    "code": "W00",
+    "name": "Category W00"
+  },
+  {
+    "code": "W01",
+    "name": "Category W01"
+  },
+  {
+    "code": "W02",
+    "name": "Category W02"
+  },
+  {
+    "code": "W03",
+    "name": "Category W03"
+  },
+  {
+    "code": "W04",
+    "name": "Category W04"
+  },
+  {
+    "code": "W05",
+    "name": "Category W05"
+  },
+  {
+    "code": "W06",
+    "name": "Category W06"
+  },
+  {
+    "code": "W07",
+    "name": "Category W07"
+  },
+  {
+    "code": "W08",
+    "name": "Category W08"
+  },
+  {
+    "code": "W09",
+    "name": "Category W09"
+  },
+  {
+    "code": "W10",
+    "name": "Category W10"
+  },
+  {
+    "code": "W11",
+    "name": "Category W11"
+  },
+  {
+    "code": "W12",
+    "name": "Category W12"
+  },
+  {
+    "code": "W13",
+    "name": "Category W13"
+  },
+  {
+    "code": "W14",
+    "name": "Category W14"
+  },
+  {
+    "code": "W15",
+    "name": "Category W15"
+  },
+  {
+    "code": "W16",
+    "name": "Category W16"
+  },
+  {
+    "code": "W17",
+    "name": "Category W17"
+  },
+  {
+    "code": "W18",
+    "name": "Category W18"
+  },
+  {
+    "code": "W19",
+    "name": "Category W19"
+  },
+  {
+    "code": "W26",
+    "name": "Category W26"
+  },
+  {
+    "code": "W20",
+    "name": "Category W20"
+  },
+  {
+    "code": "W21",
+    "name": "Category W21"
+  },
+  {
+    "code": "W22",
+    "name": "Category W22"
+  },
+  {
+    "code": "W23",
+    "name": "Category W23"
+  },
+  {
+    "code": "W24",
+    "name": "Category W24"
+  },
+  {
+    "code": "W25",
+    "name": "Category W25"
+  },
+  {
+    "code": "W27",
+    "name": "Category W27"
+  },
+  {
+    "code": "W28",
+    "name": "Category W28"
+  },
+  {
+    "code": "W29",
+    "name": "Category W29"
+  },
+  {
+    "code": "W30",
+    "name": "Category W30"
+  },
+  {
+    "code": "W31",
+    "name": "Category W31"
+  },
+  {
+    "code": "W32",
+    "name": "Category W32"
+  },
+  {
+    "code": "W33",
+    "name": "Category W33"
+  },
+  {
+    "code": "W34",
+    "name": "Category W34"
+  },
+  {
+    "code": "W35",
+    "name": "Category W35"
+  },
+  {
+    "code": "W36",
+    "name": "Category W36"
+  },
+  {
+    "code": "W37",
+    "name": "Category W37"
+  },
+  {
+    "code": "W38",
+    "name": "Category W38"
+  },
+  {
+    "code": "W39",
+    "name": "Category W39"
+  },
+  {
+    "code": "W40",
+    "name": "Category W40"
+  },
+  {
+    "code": "W41",
+    "name": "Category W41"
+  },
+  {
+    "code": "W42",
+    "name": "Category W42"
+  },
+  {
+    "code": "W43",
+    "name": "Category W43"
+  },
+  {
+    "code": "W44",
+    "name": "Category W44"
+  },
+  {
+    "code": "W45",
+    "name": "Category W45"
+  },
+  {
+    "code": "W46",
+    "name": "Category W46"
+  },
+  {
+    "code": "W49",
+    "name": "Category W49"
+  },
+  {
+    "code": "W50",
+    "name": "Category W50"
+  },
+  {
+    "code": "W51",
+    "name": "Category W51"
+  },
+  {
+    "code": "W52",
+    "name": "Category W52"
+  },
+  {
+    "code": "W53",
+    "name": "Category W53"
+  },
+  {
+    "code": "W54",
+    "name": "Category W54"
+  },
+  {
+    "code": "W55",
+    "name": "Category W55"
+  },
+  {
+    "code": "W56",
+    "name": "Category W56"
+  },
+  {
+    "code": "W57",
+    "name": "Category W57"
+  },
+  {
+    "code": "W58",
+    "name": "Category W58"
+  },
+  {
+    "code": "W59",
+    "name": "Category W59"
+  },
+  {
+    "code": "W60",
+    "name": "Category W60"
+  },
+  {
+    "code": "W64",
+    "name": "Category W64"
+  },
+  {
+    "code": "W65",
+    "name": "Category W65"
+  },
+  {
+    "code": "W66",
+    "name": "Category W66"
+  },
+  {
+    "code": "W67",
+    "name": "Category W67"
+  },
+  {
+    "code": "W68",
+    "name": "Category W68"
+  },
+  {
+    "code": "W69",
+    "name": "Category W69"
+  },
+  {
+    "code": "W70",
+    "name": "Category W70"
+  },
+  {
+    "code": "W73",
+    "name": "Category W73"
+  },
+  {
+    "code": "W74",
+    "name": "Category W74"
+  },
+  {
+    "code": "W75",
+    "name": "Category W75"
+  },
+  {
+    "code": "W76",
+    "name": "Category W76"
+  },
+  {
+    "code": "W77",
+    "name": "Category W77"
+  },
+  {
+    "code": "W78",
+    "name": "Category W78"
+  },
+  {
+    "code": "W79",
+    "name": "Category W79"
+  },
+  {
+    "code": "W80",
+    "name": "Category W80"
+  },
+  {
+    "code": "W81",
+    "name": "Category W81"
+  },
+  {
+    "code": "W83",
+    "name": "Category W83"
+  },
+  {
+    "code": "W84",
+    "name": "Category W84"
+  },
+  {
+    "code": "W85",
+    "name": "Category W85"
+  },
+  {
+    "code": "W86",
+    "name": "Category W86"
+  },
+  {
+    "code": "W87",
+    "name": "Category W87"
+  },
+  {
+    "code": "W88",
+    "name": "Category W88"
+  },
+  {
+    "code": "W89",
+    "name": "Category W89"
+  },
+  {
+    "code": "W90",
+    "name": "Category W90"
+  },
+  {
+    "code": "W91",
+    "name": "Category W91"
+  },
+  {
+    "code": "W92",
+    "name": "Category W92"
+  },
+  {
+    "code": "W93",
+    "name": "Category W93"
+  },
+  {
+    "code": "W94",
+    "name": "Category W94"
+  },
+  {
+    "code": "W99",
+    "name": "Category W99"
+  },
+  {
+    "code": "X00",
+    "name": "Category X00"
+  },
+  {
+    "code": "X01",
+    "name": "Category X01"
+  },
+  {
+    "code": "X02",
+    "name": "Category X02"
+  },
+  {
+    "code": "X03",
+    "name": "Category X03"
+  },
+  {
+    "code": "X04",
+    "name": "Category X04"
+  },
+  {
+    "code": "X05",
+    "name": "Category X05"
+  },
+  {
+    "code": "X06",
+    "name": "Category X06"
+  },
+  {
+    "code": "X08",
+    "name": "Category X08"
+  },
+  {
+    "code": "X09",
+    "name": "Category X09"
+  },
+  {
+    "code": "X10",
+    "name": "Category X10"
+  },
+  {
+    "code": "X11",
+    "name": "Category X11"
+  },
+  {
+    "code": "X12",
+    "name": "Category X12"
+  },
+  {
+    "code": "X13",
+    "name": "Category X13"
+  },
+  {
+    "code": "X14",
+    "name": "Category X14"
+  },
+  {
+    "code": "X15",
+    "name": "Category X15"
+  },
+  {
+    "code": "X16",
+    "name": "Category X16"
+  },
+  {
+    "code": "X17",
+    "name": "Category X17"
+  },
+  {
+    "code": "X18",
+    "name": "Category X18"
+  },
+  {
+    "code": "X19",
+    "name": "Category X19"
+  },
+  {
+    "code": "X20",
+    "name": "Category X20"
+  },
+  {
+    "code": "X21",
+    "name": "Category X21"
+  },
+  {
+    "code": "X22",
+    "name": "Category X22"
+  },
+  {
+    "code": "X23",
+    "name": "Category X23"
+  },
+  {
+    "code": "X24",
+    "name": "Category X24"
+  },
+  {
+    "code": "X25",
+    "name": "Category X25"
+  },
+  {
+    "code": "X26",
+    "name": "Category X26"
+  },
+  {
+    "code": "X27",
+    "name": "Category X27"
+  },
+  {
+    "code": "X28",
+    "name": "Category X28"
+  },
+  {
+    "code": "X29",
+    "name": "Category X29"
+  },
+  {
+    "code": "X34",
+    "name": "Category X34"
+  },
+  {
+    "code": "X30",
+    "name": "Category X30"
+  },
+  {
+    "code": "X31",
+    "name": "Category X31"
+  },
+  {
+    "code": "X32",
+    "name": "Category X32"
+  },
+  {
+    "code": "X33",
+    "name": "Category X33"
+  },
+  {
+    "code": "X35",
+    "name": "Category X35"
+  },
+  {
+    "code": "X36",
+    "name": "Category X36"
+  },
+  {
+    "code": "X37",
+    "name": "Category X37"
+  },
+  {
+    "code": "X38",
+    "name": "Category X38"
+  },
+  {
+    "code": "X39",
+    "name": "Category X39"
+  },
+  {
+    "code": "X47",
+    "name": "Category X47"
+  },
+  {
+    "code": "X40",
+    "name": "Category X40"
+  },
+  {
+    "code": "X41",
+    "name": "Category X41"
+  },
+  {
+    "code": "X42",
+    "name": "Category X42"
+  },
+  {
+    "code": "X43",
+    "name": "Category X43"
+  },
+  {
+    "code": "X44",
+    "name": "Category X44"
+  },
+  {
+    "code": "X45",
+    "name": "Category X45"
+  },
+  {
+    "code": "X46",
+    "name": "Category X46"
+  },
+  {
+    "code": "X48",
+    "name": "Category X48"
+  },
+  {
+    "code": "X49",
+    "name": "Category X49"
+  },
+  {
+    "code": "X50",
+    "name": "Category X50"
+  },
+  {
+    "code": "X51",
+    "name": "Category X51"
+  },
+  {
+    "code": "X52",
+    "name": "Category X52"
+  },
+  {
+    "code": "X53",
+    "name": "Category X53"
+  },
+  {
+    "code": "X54",
+    "name": "Category X54"
+  },
+  {
+    "code": "X57",
+    "name": "Category X57"
+  },
+  {
+    "code": "X59",
+    "name": "Category X59"
+  },
+  {
+    "code": "X58",
+    "name": "Category X58"
+  },
+  {
+    "code": "X67",
+    "name": "Category X67"
+  },
+  {
+    "code": "X60",
+    "name": "Category X60"
+  },
+  {
+    "code": "X61",
+    "name": "Category X61"
+  },
+  {
+    "code": "X62",
+    "name": "Category X62"
+  },
+  {
+    "code": "X63",
+    "name": "Category X63"
+  },
+  {
+    "code": "X64",
+    "name": "Category X64"
+  },
+  {
+    "code": "X65",
+    "name": "Category X65"
+  },
+  {
+    "code": "X66",
+    "name": "Category X66"
+  },
+  {
+    "code": "X68",
+    "name": "Category X68"
+  },
+  {
+    "code": "X69",
+    "name": "Category X69"
+  },
+  {
+    "code": "X70",
+    "name": "Category X70"
+  },
+  {
+    "code": "X71",
+    "name": "Category X71"
+  },
+  {
+    "code": "X72",
+    "name": "Category X72"
+  },
+  {
+    "code": "X73",
+    "name": "Category X73"
+  },
+  {
+    "code": "X74",
+    "name": "Category X74"
+  },
+  {
+    "code": "X75",
+    "name": "Category X75"
+  },
+  {
+    "code": "X76",
+    "name": "Category X76"
+  },
+  {
+    "code": "X77",
+    "name": "Category X77"
+  },
+  {
+    "code": "X78",
+    "name": "Category X78"
+  },
+  {
+    "code": "X79",
+    "name": "Category X79"
+  },
+  {
+    "code": "X80",
+    "name": "Category X80"
+  },
+  {
+    "code": "X81",
+    "name": "Category X81"
+  },
+  {
+    "code": "X82",
+    "name": "Category X82"
+  },
+  {
+    "code": "X83",
+    "name": "Category X83"
+  },
+  {
+    "code": "X84",
+    "name": "Category X84"
+  },
+  {
+    "code": "X88",
+    "name": "Category X88"
+  },
+  {
+    "code": "Y06",
+    "name": "Category Y06"
+  },
+  {
+    "code": "Y07",
+    "name": "Category Y07"
+  },
+  {
+    "code": "X85",
+    "name": "Category X85"
+  },
+  {
+    "code": "X86",
+    "name": "Category X86"
+  },
+  {
+    "code": "X87",
+    "name": "Category X87"
+  },
+  {
+    "code": "X89",
+    "name": "Category X89"
+  },
+  {
+    "code": "X90",
+    "name": "Category X90"
+  },
+  {
+    "code": "X91",
+    "name": "Category X91"
+  },
+  {
+    "code": "X92",
+    "name": "Category X92"
+  },
+  {
+    "code": "X93",
+    "name": "Category X93"
+  },
+  {
+    "code": "X94",
+    "name": "Category X94"
+  },
+  {
+    "code": "X95",
+    "name": "Category X95"
+  },
+  {
+    "code": "X96",
+    "name": "Category X96"
+  },
+  {
+    "code": "X97",
+    "name": "Category X97"
+  },
+  {
+    "code": "X98",
+    "name": "Category X98"
+  },
+  {
+    "code": "X99",
+    "name": "Category X99"
+  },
+  {
+    "code": "Y00",
+    "name": "Category Y00"
+  },
+  {
+    "code": "Y01",
+    "name": "Category Y01"
+  },
+  {
+    "code": "Y02",
+    "name": "Category Y02"
+  },
+  {
+    "code": "Y03",
+    "name": "Category Y03"
+  },
+  {
+    "code": "Y04",
+    "name": "Category Y04"
+  },
+  {
+    "code": "Y05",
+    "name": "Category Y05"
+  },
+  {
+    "code": "Y08",
+    "name": "Category Y08"
+  },
+  {
+    "code": "Y09",
+    "name": "Category Y09"
+  },
+  {
+    "code": "Y17",
+    "name": "Category Y17"
+  },
+  {
+    "code": "Y10",
+    "name": "Category Y10"
+  },
+  {
+    "code": "Y11",
+    "name": "Category Y11"
+  },
+  {
+    "code": "Y12",
+    "name": "Category Y12"
+  },
+  {
+    "code": "Y13",
+    "name": "Category Y13"
+  },
+  {
+    "code": "Y14",
+    "name": "Category Y14"
+  },
+  {
+    "code": "Y15",
+    "name": "Category Y15"
+  },
+  {
+    "code": "Y16",
+    "name": "Category Y16"
+  },
+  {
+    "code": "Y18",
+    "name": "Category Y18"
+  },
+  {
+    "code": "Y19",
+    "name": "Category Y19"
+  },
+  {
+    "code": "Y20",
+    "name": "Category Y20"
+  },
+  {
+    "code": "Y21",
+    "name": "Category Y21"
+  },
+  {
+    "code": "Y22",
+    "name": "Category Y22"
+  },
+  {
+    "code": "Y23",
+    "name": "Category Y23"
+  },
+  {
+    "code": "Y24",
+    "name": "Category Y24"
+  },
+  {
+    "code": "Y25",
+    "name": "Category Y25"
+  },
+  {
+    "code": "Y26",
+    "name": "Category Y26"
+  },
+  {
+    "code": "Y27",
+    "name": "Category Y27"
+  },
+  {
+    "code": "Y28",
+    "name": "Category Y28"
+  },
+  {
+    "code": "Y29",
+    "name": "Category Y29"
+  },
+  {
+    "code": "Y30",
+    "name": "Category Y30"
+  },
+  {
+    "code": "Y31",
+    "name": "Category Y31"
+  },
+  {
+    "code": "Y32",
+    "name": "Category Y32"
+  },
+  {
+    "code": "Y33",
+    "name": "Category Y33"
+  },
+  {
+    "code": "Y34",
+    "name": "Category Y34"
+  },
+  {
+    "code": "Y35",
+    "name": "Category Y35"
+  },
+  {
+    "code": "Y36",
+    "name": "Category Y36"
+  },
+  {
+    "code": "Y40",
+    "name": "Category Y40"
+  },
+  {
+    "code": "Y41",
+    "name": "Category Y41"
+  },
+  {
+    "code": "Y42",
+    "name": "Category Y42"
+  },
+  {
+    "code": "Y43",
+    "name": "Category Y43"
+  },
+  {
+    "code": "Y44",
+    "name": "Category Y44"
+  },
+  {
+    "code": "Y45",
+    "name": "Category Y45"
+  },
+  {
+    "code": "Y46",
+    "name": "Category Y46"
+  },
+  {
+    "code": "Y47",
+    "name": "Category Y47"
+  },
+  {
+    "code": "Y48",
+    "name": "Category Y48"
+  },
+  {
+    "code": "Y49",
+    "name": "Category Y49"
+  },
+  {
+    "code": "Y50",
+    "name": "Category Y50"
+  },
+  {
+    "code": "Y51",
+    "name": "Category Y51"
+  },
+  {
+    "code": "Y52",
+    "name": "Category Y52"
+  },
+  {
+    "code": "Y53",
+    "name": "Category Y53"
+  },
+  {
+    "code": "Y54",
+    "name": "Category Y54"
+  },
+  {
+    "code": "Y55",
+    "name": "Category Y55"
+  },
+  {
+    "code": "Y56",
+    "name": "Category Y56"
+  },
+  {
+    "code": "Y57",
+    "name": "Category Y57"
+  },
+  {
+    "code": "Y58",
+    "name": "Category Y58"
+  },
+  {
+    "code": "Y59",
+    "name": "Category Y59"
+  },
+  {
+    "code": "Y60",
+    "name": "Category Y60"
+  },
+  {
+    "code": "Y61",
+    "name": "Category Y61"
+  },
+  {
+    "code": "Y62",
+    "name": "Category Y62"
+  },
+  {
+    "code": "Y63",
+    "name": "Category Y63"
+  },
+  {
+    "code": "Y64",
+    "name": "Category Y64"
+  },
+  {
+    "code": "Y65",
+    "name": "Category Y65"
+  },
+  {
+    "code": "Y66",
+    "name": "Category Y66"
+  },
+  {
+    "code": "Y69",
+    "name": "Category Y69"
+  },
+  {
+    "code": "Y70",
+    "name": "Category Y70"
+  },
+  {
+    "code": "Y71",
+    "name": "Category Y71"
+  },
+  {
+    "code": "Y72",
+    "name": "Category Y72"
+  },
+  {
+    "code": "Y73",
+    "name": "Category Y73"
+  },
+  {
+    "code": "Y74",
+    "name": "Category Y74"
+  },
+  {
+    "code": "Y75",
+    "name": "Category Y75"
+  },
+  {
+    "code": "Y76",
+    "name": "Category Y76"
+  },
+  {
+    "code": "Y77",
+    "name": "Category Y77"
+  },
+  {
+    "code": "Y78",
+    "name": "Category Y78"
+  },
+  {
+    "code": "Y79",
+    "name": "Category Y79"
+  },
+  {
+    "code": "Y80",
+    "name": "Category Y80"
+  },
+  {
+    "code": "Y81",
+    "name": "Category Y81"
+  },
+  {
+    "code": "Y82",
+    "name": "Category Y82"
+  },
+  {
+    "code": "Y83",
+    "name": "Category Y83"
+  },
+  {
+    "code": "Y84",
+    "name": "Category Y84"
+  },
+  {
+    "code": "Y85",
+    "name": "Category Y85"
+  },
+  {
+    "code": "Y87",
+    "name": "Category Y87"
+  },
+  {
+    "code": "Y88",
+    "name": "Category Y88"
+  },
+  {
+    "code": "Y89",
+    "name": "Category Y89"
+  },
+  {
+    "code": "Y86",
+    "name": "Category Y86"
+  },
+  {
+    "code": "Y90",
+    "name": "Category Y90"
+  },
+  {
+    "code": "Y91",
+    "name": "Category Y91"
+  },
+  {
+    "code": "Y95",
+    "name": "Category Y95"
+  },
+  {
+    "code": "Y96",
+    "name": "Category Y96"
+  },
+  {
+    "code": "Y97",
+    "name": "Category Y97"
+  },
+  {
+    "code": "Y98",
+    "name": "Category Y98"
+  },
+  {
+    "code": "Z00",
+    "name": "Category Z00"
+  },
+  {
+    "code": "Z01",
+    "name": "Category Z01"
+  },
+  {
+    "code": "Z02",
+    "name": "Category Z02"
+  },
+  {
+    "code": "Z03",
+    "name": "Category Z03"
+  },
+  {
+    "code": "Z04",
+    "name": "Category Z04"
+  },
+  {
+    "code": "Z08",
+    "name": "Category Z08"
+  },
+  {
+    "code": "Z09",
+    "name": "Category Z09"
+  },
+  {
+    "code": "Z10",
+    "name": "Category Z10"
+  },
+  {
+    "code": "Z11",
+    "name": "Category Z11"
+  },
+  {
+    "code": "Z12",
+    "name": "Category Z12"
+  },
+  {
+    "code": "Z13",
+    "name": "Category Z13"
+  },
+  {
+    "code": "Z20",
+    "name": "Category Z20"
+  },
+  {
+    "code": "Z22",
+    "name": "Category Z22"
+  },
+  {
+    "code": "Z23",
+    "name": "Category Z23"
+  },
+  {
+    "code": "Z24",
+    "name": "Category Z24"
+  },
+  {
+    "code": "Z25",
+    "name": "Category Z25"
+  },
+  {
+    "code": "Z26",
+    "name": "Category Z26"
+  },
+  {
+    "code": "Z27",
+    "name": "Category Z27"
+  },
+  {
+    "code": "Z28",
+    "name": "Category Z28"
+  },
+  {
+    "code": "Z29",
+    "name": "Category Z29"
+  },
+  {
+    "code": "Z21",
+    "name": "Category Z21"
+  },
+  {
+    "code": "Z30",
+    "name": "Category Z30"
+  },
+  {
+    "code": "Z31",
+    "name": "Category Z31"
+  },
+  {
+    "code": "Z32",
+    "name": "Category Z32"
+  },
+  {
+    "code": "Z34",
+    "name": "Category Z34"
+  },
+  {
+    "code": "Z35",
+    "name": "Category Z35"
+  },
+  {
+    "code": "Z36",
+    "name": "Category Z36"
+  },
+  {
+    "code": "Z37",
+    "name": "Category Z37"
+  },
+  {
+    "code": "Z38",
+    "name": "Category Z38"
+  },
+  {
+    "code": "Z39",
+    "name": "Category Z39"
+  },
+  {
+    "code": "Z33",
+    "name": "Category Z33"
+  },
+  {
+    "code": "Z40",
+    "name": "Category Z40"
+  },
+  {
+    "code": "Z41",
+    "name": "Category Z41"
+  },
+  {
+    "code": "Z42",
+    "name": "Category Z42"
+  },
+  {
+    "code": "Z43",
+    "name": "Category Z43"
+  },
+  {
+    "code": "Z44",
+    "name": "Category Z44"
+  },
+  {
+    "code": "Z45",
+    "name": "Category Z45"
+  },
+  {
+    "code": "Z46",
+    "name": "Category Z46"
+  },
+  {
+    "code": "Z47",
+    "name": "Category Z47"
+  },
+  {
+    "code": "Z48",
+    "name": "Category Z48"
+  },
+  {
+    "code": "Z49",
+    "name": "Category Z49"
+  },
+  {
+    "code": "Z50",
+    "name": "Category Z50"
+  },
+  {
+    "code": "Z51",
+    "name": "Category Z51"
+  },
+  {
+    "code": "Z52",
+    "name": "Category Z52"
+  },
+  {
+    "code": "Z53",
+    "name": "Category Z53"
+  },
+  {
+    "code": "Z54",
+    "name": "Category Z54"
+  },
+  {
+    "code": "Z55",
+    "name": "Category Z55"
+  },
+  {
+    "code": "Z56",
+    "name": "Category Z56"
+  },
+  {
+    "code": "Z57",
+    "name": "Category Z57"
+  },
+  {
+    "code": "Z58",
+    "name": "Category Z58"
+  },
+  {
+    "code": "Z59",
+    "name": "Category Z59"
+  },
+  {
+    "code": "Z60",
+    "name": "Category Z60"
+  },
+  {
+    "code": "Z61",
+    "name": "Category Z61"
+  },
+  {
+    "code": "Z62",
+    "name": "Category Z62"
+  },
+  {
+    "code": "Z63",
+    "name": "Category Z63"
+  },
+  {
+    "code": "Z64",
+    "name": "Category Z64"
+  },
+  {
+    "code": "Z65",
+    "name": "Category Z65"
+  },
+  {
+    "code": "Z70",
+    "name": "Category Z70"
+  },
+  {
+    "code": "Z71",
+    "name": "Category Z71"
+  },
+  {
+    "code": "Z72",
+    "name": "Category Z72"
+  },
+  {
+    "code": "Z73",
+    "name": "Category Z73"
+  },
+  {
+    "code": "Z74",
+    "name": "Category Z74"
+  },
+  {
+    "code": "Z75",
+    "name": "Category Z75"
+  },
+  {
+    "code": "Z76",
+    "name": "Category Z76"
+  },
+  {
+    "code": "Z80",
+    "name": "Category Z80"
+  },
+  {
+    "code": "Z81",
+    "name": "Category Z81"
+  },
+  {
+    "code": "Z82",
+    "name": "Category Z82"
+  },
+  {
+    "code": "Z83",
+    "name": "Category Z83"
+  },
+  {
+    "code": "Z84",
+    "name": "Category Z84"
+  },
+  {
+    "code": "Z85",
+    "name": "Category Z85"
+  },
+  {
+    "code": "Z86",
+    "name": "Category Z86"
+  },
+  {
+    "code": "Z87",
+    "name": "Category Z87"
+  },
+  {
+    "code": "Z88",
+    "name": "Category Z88"
+  },
+  {
+    "code": "Z89",
+    "name": "Category Z89"
+  },
+  {
+    "code": "Z90",
+    "name": "Category Z90"
+  },
+  {
+    "code": "Z91",
+    "name": "Category Z91"
+  },
+  {
+    "code": "Z92",
+    "name": "Category Z92"
+  },
+  {
+    "code": "Z93",
+    "name": "Category Z93"
+  },
+  {
+    "code": "Z94",
+    "name": "Category Z94"
+  },
+  {
+    "code": "Z95",
+    "name": "Category Z95"
+  },
+  {
+    "code": "Z96",
+    "name": "Category Z96"
+  },
+  {
+    "code": "Z97",
+    "name": "Category Z97"
+  },
+  {
+    "code": "Z98",
+    "name": "Category Z98"
+  },
+  {
+    "code": "Z99",
+    "name": "Category Z99"
+  }
+]
