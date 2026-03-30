@@ -1,10 +1,17 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { type ClaimsMaterial, type InsuranceRuleset, type RulesetRule, RuleStatus, ExecutionDomain } from "../../types";
+import {
+  type ClaimsMaterial,
+  type InsuranceRuleset,
+  type RulesetRule,
+  RuleStatus,
+  ExecutionDomain,
+} from "../../types";
 import RuleDetailModal from "./RuleDetailModal";
 import RulesetSummaryPanel from "./RulesetSummaryPanel";
 import RuleGroupSection from "./RuleGroupSection";
 import VersionDiffViewer from "./VersionDiffViewer";
 import FieldDictionaryTab from "./FieldDictionaryTab";
+import BindingConfigTab from "./BindingConfigTab";
 import {
   deriveRulesetHealth,
   getRuleSemantic,
@@ -24,11 +31,18 @@ interface RulesetDetailViewProps {
   onCreateRule: (domain: ExecutionDomain) => void;
 }
 
-type DetailTab = "overview" | "fields" | "liability" | "settlement" | "publish";
+type DetailTab =
+  | "overview"
+  | "binding"
+  | "fields"
+  | "liability"
+  | "settlement"
+  | "publish";
 type ViewMode = "business" | "technical";
 
 const tabs: Array<{ id: DetailTab; label: string }> = [
   { id: "overview", label: "总览" },
+  { id: "binding", label: "产品绑定" },
   { id: "fields", label: "字段与映射" },
   { id: "liability", label: "责任规则" },
   { id: "settlement", label: "定损 / 给付规则" },
@@ -59,12 +73,16 @@ const RulesetDetailView: React.FC<RulesetDetailViewProps> = ({
     const hasLiabilityRules = ruleset.rules.some(
       (rule) =>
         rule.execution.domain === ExecutionDomain.ELIGIBILITY &&
-        (rule.applies_to?.coverage_codes || []).includes(initialFocusCoverageCode),
+        (rule.applies_to?.coverage_codes || []).includes(
+          initialFocusCoverageCode,
+        ),
     );
     const hasSettlementRules = ruleset.rules.some(
       (rule) =>
         rule.execution.domain !== ExecutionDomain.ELIGIBILITY &&
-        (rule.applies_to?.coverage_codes || []).includes(initialFocusCoverageCode),
+        (rule.applies_to?.coverage_codes || []).includes(
+          initialFocusCoverageCode,
+        ),
     );
 
     setActiveTab(
@@ -77,25 +95,51 @@ const RulesetDetailView: React.FC<RulesetDetailViewProps> = ({
   }, [initialFocusCoverageCode, ruleset.rules, ruleset.ruleset_id]);
 
   const groupedLiability = useMemo(() => {
-    const liabilityRules = ruleset.rules.filter((rule) => rule.execution.domain === "ELIGIBILITY");
+    const liabilityRules = ruleset.rules.filter(
+      (rule) => rule.execution.domain === "ELIGIBILITY",
+    );
     return {
-      gate: liabilityRules.filter((rule) => getRuleSemantic(rule).key === "gate"),
-      trigger: liabilityRules.filter((rule) => getRuleSemantic(rule).key === "trigger"),
-      exclusion: liabilityRules.filter((rule) => getRuleSemantic(rule).key === "exclusion"),
-      adjustment: liabilityRules.filter((rule) => getRuleSemantic(rule).key === "adjustment"),
+      gate: liabilityRules.filter(
+        (rule) => getRuleSemantic(rule).key === "gate",
+      ),
+      trigger: liabilityRules.filter(
+        (rule) => getRuleSemantic(rule).key === "trigger",
+      ),
+      exclusion: liabilityRules.filter(
+        (rule) => getRuleSemantic(rule).key === "exclusion",
+      ),
+      adjustment: liabilityRules.filter(
+        (rule) => getRuleSemantic(rule).key === "adjustment",
+      ),
     };
   }, [ruleset.rules]);
 
   const groupedSettlement = useMemo(() => {
-    const settlementRules = ruleset.rules.filter((rule) => rule.execution.domain !== "ELIGIBILITY");
+    const settlementRules = ruleset.rules.filter(
+      (rule) => rule.execution.domain !== "ELIGIBILITY",
+    );
     return {
-      benefit: settlementRules.filter((rule) => getRuleSemantic(rule).key === "benefit"),
-      item_eligibility: settlementRules.filter((rule) => getRuleSemantic(rule).key === "item_eligibility"),
-      item_ratio: settlementRules.filter((rule) => getRuleSemantic(rule).key === "item_ratio"),
-      item_pricing: settlementRules.filter((rule) => getRuleSemantic(rule).key === "item_pricing"),
-      item_cap: settlementRules.filter((rule) => getRuleSemantic(rule).key === "item_cap"),
-      item_flag: settlementRules.filter((rule) => getRuleSemantic(rule).key === "item_flag"),
-      post_process: settlementRules.filter((rule) => getRuleSemantic(rule).key === "post_process"),
+      benefit: settlementRules.filter(
+        (rule) => getRuleSemantic(rule).key === "benefit",
+      ),
+      item_eligibility: settlementRules.filter(
+        (rule) => getRuleSemantic(rule).key === "item_eligibility",
+      ),
+      item_ratio: settlementRules.filter(
+        (rule) => getRuleSemantic(rule).key === "item_ratio",
+      ),
+      item_pricing: settlementRules.filter(
+        (rule) => getRuleSemantic(rule).key === "item_pricing",
+      ),
+      item_cap: settlementRules.filter(
+        (rule) => getRuleSemantic(rule).key === "item_cap",
+      ),
+      item_flag: settlementRules.filter(
+        (rule) => getRuleSemantic(rule).key === "item_flag",
+      ),
+      post_process: settlementRules.filter(
+        (rule) => getRuleSemantic(rule).key === "post_process",
+      ),
     };
   }, [ruleset.rules]);
 
@@ -105,7 +149,9 @@ const RulesetDetailView: React.FC<RulesetDetailViewProps> = ({
         ? {
             ...rule,
             status:
-              rule.status === RuleStatus.EFFECTIVE ? RuleStatus.DISABLED : RuleStatus.EFFECTIVE,
+              rule.status === RuleStatus.EFFECTIVE
+                ? RuleStatus.DISABLED
+                : RuleStatus.EFFECTIVE,
           }
         : rule,
     );
@@ -123,9 +169,22 @@ const RulesetDetailView: React.FC<RulesetDetailViewProps> = ({
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <button onClick={onBack} className="rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700">
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          <button
+            onClick={onBack}
+            className="rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+          >
+            <svg
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
           </button>
           <div>
@@ -145,7 +204,9 @@ const RulesetDetailView: React.FC<RulesetDetailViewProps> = ({
                 key={mode.id}
                 onClick={() => setViewMode(mode.id as ViewMode)}
                 className={`rounded-lg px-3 py-2 text-sm font-medium ${
-                  viewMode === mode.id ? "bg-indigo-600 text-white" : "text-gray-600 hover:bg-gray-50"
+                  viewMode === mode.id
+                    ? "bg-indigo-600 text-white"
+                    : "text-gray-600 hover:bg-gray-50"
                 }`}
               >
                 {mode.label}
@@ -192,21 +253,41 @@ const RulesetDetailView: React.FC<RulesetDetailViewProps> = ({
         <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
           <div className="space-y-6">
             <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-              <h2 className="text-lg font-semibold text-gray-900">产品与责任总览</h2>
+              <h2 className="text-lg font-semibold text-gray-900">
+                产品与责任总览
+              </h2>
               {initialFocusCoverageCode && (
                 <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                  当前从案件缺口跳转，正在聚焦责任代码 <span className="font-semibold">{initialFocusCoverageCode}</span>。
+                  当前从案件缺口跳转，正在聚焦责任代码{" "}
+                  <span className="font-semibold">
+                    {initialFocusCoverageCode}
+                  </span>
+                  。
                 </div>
               )}
               <div className="mt-4 grid gap-3 md:grid-cols-2">
-                <InfoCard label="产品编码" value={ruleset.policy_info.product_code} />
-                <InfoCard label="保险公司" value={ruleset.policy_info.insurer} />
-                <InfoCard label="生效日期" value={ruleset.policy_info.effective_date} />
-                <InfoCard label="终止日期" value={ruleset.policy_info.expiry_date} />
+                <InfoCard
+                  label="产品编码"
+                  value={ruleset.policy_info.product_code}
+                />
+                <InfoCard
+                  label="保险公司"
+                  value={ruleset.policy_info.insurer}
+                />
+                <InfoCard
+                  label="生效日期"
+                  value={ruleset.policy_info.effective_date}
+                />
+                <InfoCard
+                  label="终止日期"
+                  value={ruleset.policy_info.expiry_date}
+                />
               </div>
 
               <div className="mt-5">
-                <h3 className="text-sm font-semibold text-gray-900">责任代码清单</h3>
+                <h3 className="text-sm font-semibold text-gray-900">
+                  责任代码清单
+                </h3>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {ruleset.policy_info.coverages.map((coverage) => (
                     <span
@@ -225,8 +306,13 @@ const RulesetDetailView: React.FC<RulesetDetailViewProps> = ({
             </section>
 
             <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-              <h2 className="text-lg font-semibold text-gray-900">关键字段依赖</h2>
-              <div className="mt-2 text-sm text-slate-500">已登记 {Object.keys(ruleset.field_dictionary).length} 个标准事实字段，配置 {mappingCount} 条来源映射。</div>
+              <h2 className="text-lg font-semibold text-gray-900">
+                关键字段依赖
+              </h2>
+              <div className="mt-2 text-sm text-slate-500">
+                已登记 {Object.keys(ruleset.field_dictionary).length}{" "}
+                个标准事实字段，配置 {mappingCount} 条来源映射。
+              </div>
               <div className="mt-4 grid gap-3 md:grid-cols-2">
                 {dependencyEntries.map(([field, definition]) => (
                   <button
@@ -234,13 +320,20 @@ const RulesetDetailView: React.FC<RulesetDetailViewProps> = ({
                     type="button"
                     onClick={() => setFocusedField(field)}
                     className={`rounded-xl border px-4 py-3 text-left ${
-                      focusedField === field ? "border-indigo-300 bg-indigo-50" : "border-gray-200 bg-slate-50"
+                      focusedField === field
+                        ? "border-indigo-300 bg-indigo-50"
+                        : "border-gray-200 bg-slate-50"
                     }`}
                   >
-                    <div className="text-xs font-medium text-slate-500">{field}</div>
-                    <div className="mt-1 text-sm font-semibold text-slate-900">{definition.label}</div>
+                    <div className="text-xs font-medium text-slate-500">
+                      {field}
+                    </div>
+                    <div className="mt-1 text-sm font-semibold text-slate-900">
+                      {definition.label}
+                    </div>
                     <div className="mt-1 text-xs text-slate-500">
-                      {definition.data_type} · {definition.scope} · {definition.source_type || definition.source}
+                      {definition.data_type} · {definition.scope} ·{" "}
+                      {definition.source_type || definition.source}
                     </div>
                   </button>
                 ))}
@@ -250,10 +343,13 @@ const RulesetDetailView: React.FC<RulesetDetailViewProps> = ({
 
           <div className="space-y-6">
             <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-              <h2 className="text-lg font-semibold text-gray-900">最近验证结果</h2>
+              <h2 className="text-lg font-semibold text-gray-900">
+                最近验证结果
+              </h2>
               <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-4">
                 <div className="text-sm font-medium text-slate-900">
-                  {ruleset.metadata.latest_validation?.summary || health.validationLabel}
+                  {ruleset.metadata.latest_validation?.summary ||
+                    health.validationLabel}
                 </div>
                 <div className="mt-2 text-sm text-slate-500">
                   {ruleset.metadata.latest_validation?.validated_at
@@ -270,15 +366,33 @@ const RulesetDetailView: React.FC<RulesetDetailViewProps> = ({
             </section>
 
             <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-              <h2 className="text-lg font-semibold text-gray-900">当前版本状态</h2>
+              <h2 className="text-lg font-semibold text-gray-900">
+                当前版本状态
+              </h2>
               <div className="mt-4 space-y-3">
                 <InfoLine label="版本状态" value={health.versionLabel} />
-                <InfoLine label="最近发布时间" value={ruleset.metadata.published_at ? new Date(ruleset.metadata.published_at).toLocaleString("zh-CN") : "未发布"} />
-                <InfoLine label="最近发布人" value={ruleset.metadata.published_by || "未记录"} />
+                <InfoLine
+                  label="最近发布时间"
+                  value={
+                    ruleset.metadata.published_at
+                      ? new Date(ruleset.metadata.published_at).toLocaleString(
+                          "zh-CN",
+                        )
+                      : "未发布"
+                  }
+                />
+                <InfoLine
+                  label="最近发布人"
+                  value={ruleset.metadata.published_by || "未记录"}
+                />
               </div>
             </section>
           </div>
         </div>
+      )}
+
+      {activeTab === "binding" && (
+        <BindingConfigTab ruleset={ruleset} onUpdateRuleset={onUpdateRuleset} />
       )}
 
       {activeTab === "fields" && (
@@ -435,7 +549,9 @@ const RulesetDetailView: React.FC<RulesetDetailViewProps> = ({
           <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <h2 className="text-lg font-semibold text-gray-900">发布门禁</h2>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  发布门禁
+                </h2>
                 <p className="mt-1 text-sm text-gray-500">
                   有高优先级字段错误时禁止发布，建议先进入验证工作台处理。
                 </p>
@@ -467,7 +583,8 @@ const RulesetDetailView: React.FC<RulesetDetailViewProps> = ({
                     <div className="font-medium">{issue.message}</div>
                     {(issue.ruleId || issue.field) && (
                       <div className="mt-1 text-xs opacity-80">
-                        {issue.ruleId ? `规则 ${issue.ruleId}` : ""} {issue.field ? `· 字段 ${issue.field}` : ""}
+                        {issue.ruleId ? `规则 ${issue.ruleId}` : ""}{" "}
+                        {issue.field ? `· 字段 ${issue.field}` : ""}
                       </div>
                     )}
                   </div>
@@ -505,14 +622,20 @@ const RulesetDetailView: React.FC<RulesetDetailViewProps> = ({
   );
 };
 
-const InfoCard: React.FC<{ label: string; value: string }> = ({ label, value }) => (
+const InfoCard: React.FC<{ label: string; value: string }> = ({
+  label,
+  value,
+}) => (
   <div className="rounded-xl bg-slate-50 px-4 py-3">
     <div className="text-xs text-slate-500">{label}</div>
     <div className="mt-1 text-sm font-semibold text-slate-900">{value}</div>
   </div>
 );
 
-const InfoLine: React.FC<{ label: string; value: string }> = ({ label, value }) => (
+const InfoLine: React.FC<{ label: string; value: string }> = ({
+  label,
+  value,
+}) => (
   <div className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 text-sm">
     <span className="text-slate-500">{label}</span>
     <span className="font-medium text-slate-900">{value}</span>
