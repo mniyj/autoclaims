@@ -20,9 +20,12 @@ interface RulesetListViewProps {
   onPublish: (ruleset: InsuranceRuleset) => void;
 }
 
-const ITEMS_PER_PAGE = 6;
+const ITEMS_PER_PAGE = 10;
 
-const healthToneClasses: Record<RulesetHealthSnapshot["validationTone"], string> = {
+const healthToneClasses: Record<
+  RulesetHealthSnapshot["validationTone"],
+  string
+> = {
   passed: "bg-emerald-50 text-emerald-700 border-emerald-200",
   warning: "bg-amber-50 text-amber-700 border-amber-200",
   error: "bg-rose-50 text-rose-700 border-rose-200",
@@ -55,8 +58,14 @@ const RulesetListView: React.FC<RulesetListViewProps> = ({
 
   const products = useMemo(
     () =>
-      [...new Set(rulesets.map((ruleset) => `${ruleset.policy_info.product_code}｜${ruleset.policy_info.product_name}`))]
-        .sort(),
+      [
+        ...new Set(
+          rulesets.map(
+            (ruleset) =>
+              `${ruleset.policy_info.product_code}｜${ruleset.policy_info.product_name}`,
+          ),
+        ),
+      ].sort(),
     [rulesets],
   );
 
@@ -71,10 +80,13 @@ const RulesetListView: React.FC<RulesetListViewProps> = ({
         ruleset.policy_info.product_code.toLowerCase().includes(query) ||
         ruleset.ruleset_id.toLowerCase().includes(query) ||
         ruleset.policy_info.insurer.toLowerCase().includes(query);
-      const matchesProductLine = !productLineFilter || ruleset.product_line === productLineFilter;
+      const matchesProductLine =
+        !productLineFilter || ruleset.product_line === productLineFilter;
       const matchesProduct = !productFilter || productToken === productFilter;
-      const matchesValidation = !validationFilter || health.validationTone === validationFilter;
-      const matchesVersion = !versionFilter || health.versionState === versionFilter;
+      const matchesValidation =
+        !validationFilter || health.validationTone === validationFilter;
+      const matchesVersion =
+        !versionFilter || health.versionState === versionFilter;
       return (
         matchesQuery &&
         matchesProductLine &&
@@ -121,8 +133,18 @@ const RulesetListView: React.FC<RulesetListViewProps> = ({
             onClick={onManualCreate}
             className="flex items-center space-x-1.5 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm text-blue-700 hover:bg-blue-100"
           >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+              />
             </svg>
             <span>手工创建</span>
           </button>
@@ -130,8 +152,18 @@ const RulesetListView: React.FC<RulesetListViewProps> = ({
             onClick={onImport}
             className="flex items-center space-x-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
           >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
             </svg>
             <span>导入规则集</span>
           </button>
@@ -226,7 +258,10 @@ const RulesetListView: React.FC<RulesetListViewProps> = ({
           {paginatedRulesets.map((ruleset) => {
             const health = deriveRulesetHealth(ruleset);
             return (
-              <div key={ruleset.ruleset_id} className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+              <div
+                key={ruleset.ruleset_id}
+                className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"
+              >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
@@ -241,30 +276,80 @@ const RulesetListView: React.FC<RulesetListViewProps> = ({
                       {ruleset.policy_info.product_code} · {ruleset.ruleset_id}
                     </div>
                   </div>
-                  <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${healthToneClasses[health.validationTone]}`}>
+                  <span
+                    className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${healthToneClasses[health.validationTone]}`}
+                  >
                     {health.validationLabel}
                   </span>
                 </div>
 
+                <div className="mt-3 flex flex-wrap gap-1">
+                  {(ruleset.binding?.product_codes || []).map((code) => (
+                    <span
+                      key={code}
+                      className="rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700"
+                    >
+                      {code}
+                    </span>
+                  ))}
+                  {!ruleset.binding?.product_codes?.length && (
+                    <span className="text-xs text-gray-400">未绑定</span>
+                  )}
+                </div>
+
                 <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                  <Metric label="责任项覆盖率" value={`${health.coverageCount}/${ruleset.policy_info.coverages?.length || 0 || health.coverageCount}`} />
+                  <Metric
+                    label="责任项覆盖率"
+                    value={`${health.coverageCount}/${ruleset.policy_info.coverages?.length || 0 || health.coverageCount}`}
+                  />
                   <Metric label="规则数" value={String(ruleset.rules.length)} />
-                  <Metric label="最新版本" value={`v${ruleset.metadata.version}`} />
-                  <Metric label="发布时间" value={ruleset.metadata.published_at ? new Date(ruleset.metadata.published_at).toLocaleDateString("zh-CN") : "未发布"} />
-                  <Metric label="最近验证" value={ruleset.metadata.latest_validation?.summary || health.versionLabel} wide />
+                  <Metric
+                    label="最新版本"
+                    value={`v${ruleset.metadata.version}`}
+                  />
+                  <Metric
+                    label="发布时间"
+                    value={
+                      ruleset.metadata.published_at
+                        ? new Date(
+                            ruleset.metadata.published_at,
+                          ).toLocaleDateString("zh-CN")
+                        : "未发布"
+                    }
+                  />
+                  <Metric
+                    label="最近验证"
+                    value={
+                      ruleset.metadata.latest_validation?.summary ||
+                      health.versionLabel
+                    }
+                    wide
+                  />
                 </div>
 
                 <div className="mt-4 flex flex-wrap gap-2">
-                  <button onClick={() => onSelectRuleset(ruleset)} className="rounded-lg bg-gray-900 px-3 py-2 text-xs font-medium text-white hover:bg-gray-800">
+                  <button
+                    onClick={() => onSelectRuleset(ruleset)}
+                    className="rounded-lg bg-gray-900 px-3 py-2 text-xs font-medium text-white hover:bg-gray-800"
+                  >
                     查看
                   </button>
-                  <button onClick={() => onDuplicate(ruleset)} className="rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50">
+                  <button
+                    onClick={() => onDuplicate(ruleset)}
+                    className="rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                  >
                     复制新版本
                   </button>
-                  <button onClick={() => onValidate(ruleset)} className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-medium text-indigo-700 hover:bg-indigo-100">
+                  <button
+                    onClick={() => onValidate(ruleset)}
+                    className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-medium text-indigo-700 hover:bg-indigo-100"
+                  >
                     进入验证
                   </button>
-                  <button onClick={() => onPublish(ruleset)} className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700 hover:bg-emerald-100">
+                  <button
+                    onClick={() => onPublish(ruleset)}
+                    className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700 hover:bg-emerald-100"
+                  >
                     发布
                   </button>
                 </div>
@@ -272,7 +357,10 @@ const RulesetListView: React.FC<RulesetListViewProps> = ({
                 <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-3 text-xs text-gray-500">
                   <div>{ruleset.policy_info.insurer}</div>
                   <div className="flex items-center gap-2">
-                    <button onClick={() => onExport(ruleset)} className="hover:text-blue-600">
+                    <button
+                      onClick={() => onExport(ruleset)}
+                      className="hover:text-blue-600"
+                    >
                       导出
                     </button>
                     <button
@@ -293,7 +381,13 @@ const RulesetListView: React.FC<RulesetListViewProps> = ({
         </div>
       )}
 
-      {totalPages > 1 && <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />}
+      {totalPages > 1 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
+      )}
     </div>
   );
 };
@@ -303,7 +397,9 @@ const Metric: React.FC<{ label: string; value: string; wide?: boolean }> = ({
   value,
   wide = false,
 }) => (
-  <div className={`rounded-xl bg-slate-50 px-3 py-2 ${wide ? "col-span-2" : ""}`}>
+  <div
+    className={`rounded-xl bg-slate-50 px-3 py-2 ${wide ? "col-span-2" : ""}`}
+  >
     <div className="text-xs text-slate-500">{label}</div>
     <div className="mt-1 font-medium text-slate-900">{value}</div>
   </div>

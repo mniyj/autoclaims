@@ -1,11 +1,17 @@
-import React, { useMemo, useState } from "react";
-import type { InsuranceRuleset } from "../../types";
+import React, { useEffect, useMemo, useState } from "react";
+import type {
+  AICapabilityDefinition,
+  AIPromptTemplate,
+  InsuranceRuleset,
+} from "../../types";
 import { api } from "../../services/api";
 import RulesetSummaryPanel from "./RulesetSummaryPanel";
 import FactInspector from "./FactInspector";
 import ValidationResultPanel from "./ValidationResultPanel";
 import VersionDiffViewer from "./VersionDiffViewer";
+import PreExistingAssessmentPanel from "./PreExistingAssessmentPanel";
 import {
+  buildPreExistingAssessmentPreview,
   buildValidationInput,
   buildValidationInputFromSnapshot,
   simulateRulesetValidation,
@@ -32,7 +38,16 @@ const RulesetValidationWorkspace: React.FC<RulesetValidationWorkspaceProps> = ({
   const [claimCaseId, setClaimCaseId] = useState("");
   const [snapshotMessage, setSnapshotMessage] = useState<string | null>(null);
   const [loadingSnapshot, setLoadingSnapshot] = useState(false);
-  const [backendResult, setBackendResult] = useState<ValidationSimulationResult | null>(null);
+  const [backendResult, setBackendResult] =
+    useState<ValidationSimulationResult | null>(null);
+  const [preExistingAICapability, setPreExistingAICapability] =
+    useState<AICapabilityDefinition | null>(null);
+  const [preExistingPromptTemplate, setPreExistingPromptTemplate] =
+    useState<AIPromptTemplate | null>(null);
+  const [
+    preExistingSecondaryPromptTemplate,
+    setPreExistingSecondaryPromptTemplate,
+  ] = useState<AIPromptTemplate | null>(null);
   const [inputState, setInputState] = useState<ValidationInputState>(() =>
     buildValidationInput(ruleset),
   );
@@ -42,6 +57,114 @@ const RulesetValidationWorkspace: React.FC<RulesetValidationWorkspaceProps> = ({
     [ruleset, inputState],
   );
   const validationResult = backendResult || localValidationResult;
+  const preExistingAssessment = useMemo(() => {
+    if (validationResult.preExistingAssessment) {
+      return validationResult.preExistingAssessment;
+    }
+    return buildPreExistingAssessmentPreview(inputState, {
+      includeAiStep: true,
+      source: validationResult.executionSource === "BACKEND" ? "AUTO" : "AUTO",
+    });
+  }, [inputState, validationResult]);
+  const preExistingAIConfigSummary = useMemo(() => {
+    if (!preExistingAICapability) return null;
+    return {
+      capability: {
+        id: preExistingAICapability.id,
+        name: preExistingAICapability.name,
+        currentProvider:
+          preExistingAICapability.currentProvider ||
+          preExistingAICapability.binding.provider,
+        currentModel:
+          preExistingAICapability.currentModel ||
+          preExistingAICapability.binding.model,
+        promptSourceType:
+          preExistingAICapability.promptSourceType ||
+          preExistingAICapability.promptSource?.type ||
+          "unknown",
+        promptTemplateId:
+          preExistingAICapability.promptTemplateId ||
+          preExistingAICapability.promptSource?.promptTemplateId ||
+          null,
+        secondaryPromptTemplateId:
+          preExistingAICapability.secondaryPromptTemplateId ||
+          preExistingAICapability.promptSource?.secondaryPromptTemplateId ||
+          null,
+      },
+      promptTemplate: preExistingPromptTemplate
+        ? {
+            id: preExistingPromptTemplate.id,
+            name: preExistingPromptTemplate.name,
+            description: preExistingPromptTemplate.description,
+          }
+        : null,
+      secondaryPromptTemplate: preExistingSecondaryPromptTemplate
+        ? {
+            id: preExistingSecondaryPromptTemplate.id,
+            name: preExistingSecondaryPromptTemplate.name,
+            description: preExistingSecondaryPromptTemplate.description,
+          }
+        : null,
+    };
+  }, [
+    preExistingAICapability,
+    preExistingPromptTemplate,
+    preExistingSecondaryPromptTemplate,
+  ]);
+
+  useEffect(() => {
+    if (ruleset.product_line !== "HEALTH") {
+      setPreExistingAICapability(null);
+      setPreExistingPromptTemplate(null);
+      setPreExistingSecondaryPromptTemplate(null);
+      return;
+    }
+
+    let cancelled = false;
+    const loadPreExistingAIConfig = async () => {
+      try {
+        const inventory = await api.ai.getInventory();
+        if (cancelled) return;
+        const capabilities = (inventory.capabilities ||
+          []) as AICapabilityDefinition[];
+        const settings = inventory.config as {
+          promptTemplates?: AIPromptTemplate[];
+        } | null;
+        const promptTemplates = settings?.promptTemplates || [];
+        const capability =
+          capabilities.find(
+            (item) => item.id === "admin.claim.pre_existing_assessment",
+          ) || null;
+        setPreExistingAICapability(capability);
+        setPreExistingPromptTemplate(
+          capability?.promptTemplateId
+            ? promptTemplates.find(
+                (item) => item.id === capability.promptTemplateId,
+              ) || null
+            : null,
+        );
+        setPreExistingSecondaryPromptTemplate(
+          capability?.secondaryPromptTemplateId
+            ? promptTemplates.find(
+                (item) => item.id === capability.secondaryPromptTemplateId,
+              ) || null
+            : null,
+        );
+      } catch (error) {
+        console.warn("Failed to load pre-existing AI config summary", error);
+        if (!cancelled) {
+          setPreExistingAICapability(null);
+          setPreExistingPromptTemplate(null);
+          setPreExistingSecondaryPromptTemplate(null);
+        }
+      }
+    };
+
+    void loadPreExistingAIConfig();
+    return () => {
+      cancelled = true;
+    };
+  }, [ruleset.product_line]);
 
   const resetToMode = (mode: SourceMode) => {
     setSourceMode(mode);
@@ -63,7 +186,9 @@ const RulesetValidationWorkspace: React.FC<RulesetValidationWorkspaceProps> = ({
     setLoadingSnapshot(true);
     setSnapshotMessage(null);
     try {
-      const snapshot = await api.claimDocuments.getByClaimCaseId(claimCaseId.trim());
+      const snapshot = await api.claimDocuments.getByClaimCaseId(
+        claimCaseId.trim(),
+      );
       const next = buildValidationInputFromSnapshot(ruleset, snapshot);
       setInputState(next);
       setSourceMode("snapshot");
@@ -80,13 +205,17 @@ const RulesetValidationWorkspace: React.FC<RulesetValidationWorkspaceProps> = ({
       );
     } catch (error) {
       setBackendResult(null);
-      setSnapshotMessage(error instanceof Error ? error.message : "加载真实快照失败");
+      setSnapshotMessage(
+        error instanceof Error ? error.message : "加载真实快照失败",
+      );
     } finally {
       setLoadingSnapshot(false);
     }
   };
 
-  const updateInputState = (updater: (prev: ValidationInputState) => ValidationInputState) => {
+  const updateInputState = (
+    updater: (prev: ValidationInputState) => ValidationInputState,
+  ) => {
     setBackendResult(null);
     setInputState(updater);
   };
@@ -95,14 +224,29 @@ const RulesetValidationWorkspace: React.FC<RulesetValidationWorkspaceProps> = ({
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <button onClick={onBack} className="rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700">
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          <button
+            onClick={onBack}
+            className="rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+          >
+            <svg
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
           </button>
           <div>
             <h1 className="text-xl font-bold text-gray-900">规则验证</h1>
-            <p className="text-sm text-gray-500">用样例事实或案件快照试跑规则，并追踪结论与赔付轨迹。</p>
+            <p className="text-sm text-gray-500">
+              用样例事实或案件快照试跑规则，并追踪结论与赔付轨迹。
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white p-1">
@@ -114,7 +258,9 @@ const RulesetValidationWorkspace: React.FC<RulesetValidationWorkspaceProps> = ({
               key={option.id}
               onClick={() => resetToMode(option.id as SourceMode)}
               className={`rounded-lg px-3 py-2 text-sm font-medium ${
-                sourceMode === option.id ? "bg-indigo-600 text-white" : "text-gray-600 hover:bg-gray-50"
+                sourceMode === option.id
+                  ? "bg-indigo-600 text-white"
+                  : "text-gray-600 hover:bg-gray-50"
               }`}
             >
               {option.label}
@@ -129,7 +275,9 @@ const RulesetValidationWorkspace: React.FC<RulesetValidationWorkspaceProps> = ({
         <div className="rounded-2xl border border-gray-200 bg-white p-4">
           <div className="flex flex-wrap items-end gap-3">
             <div className="min-w-[240px] flex-1">
-              <label className="text-xs font-medium text-slate-500">案件 ID</label>
+              <label className="text-xs font-medium text-slate-500">
+                案件 ID
+              </label>
               <input
                 value={claimCaseId}
                 onChange={(event) => setClaimCaseId(event.target.value)}
@@ -180,7 +328,9 @@ const RulesetValidationWorkspace: React.FC<RulesetValidationWorkspaceProps> = ({
           />
           <div className="rounded-2xl border border-gray-200 bg-white p-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-gray-900">费用 / 损失项</h3>
+              <h3 className="text-sm font-semibold text-gray-900">
+                费用 / 损失项
+              </h3>
               <button
                 type="button"
                 onClick={() =>
@@ -211,7 +361,9 @@ const RulesetValidationWorkspace: React.FC<RulesetValidationWorkspaceProps> = ({
                     updateInputState((prev) => ({
                       ...prev,
                       items: prev.items.map((current, itemIndex) =>
-                        itemIndex === index ? { ...current, [key]: value } : current,
+                        itemIndex === index
+                          ? { ...current, [key]: value }
+                          : current,
                       ),
                     }))
                   }
@@ -220,7 +372,9 @@ const RulesetValidationWorkspace: React.FC<RulesetValidationWorkspaceProps> = ({
             </div>
           </div>
           <div className="rounded-2xl border border-gray-200 bg-white p-4">
-            <h3 className="text-sm font-semibold text-gray-900">缺失事实提示</h3>
+            <h3 className="text-sm font-semibold text-gray-900">
+              缺失事实提示
+            </h3>
             <textarea
               value={inputState.missingFacts.join("\n")}
               onChange={(event) =>
@@ -242,14 +396,88 @@ const RulesetValidationWorkspace: React.FC<RulesetValidationWorkspaceProps> = ({
         <ValidationResultPanel
           result={validationResult}
           onFocusField={(field) => setFocusedField(field)}
-          onSelectRule={(ruleId) => setFocusedField(validationResult.matchedRules.find((item) => item.ruleId === ruleId)?.fields[0] || null)}
+          onSelectRule={(ruleId) =>
+            setFocusedField(
+              validationResult.matchedRules.find(
+                (item) => item.ruleId === ruleId,
+              )?.fields[0] || null,
+            )
+          }
         />
       </div>
 
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="rounded-xl border border-gray-200 bg-slate-50 px-4 py-3">
+          <div className="text-xs font-medium text-gray-500">
+            推断的覆盖范围
+          </div>
+          <div className="mt-1 text-sm font-semibold text-gray-900">
+            {validationResult?.coverageCode ||
+              validationResult?.amountResult?.coverageCode ||
+              "未推断"}
+          </div>
+        </div>
+      </div>
+
+      {(
+        (validationResult?.eligibilityResult?.preProcessorResults ||
+          validationResult?.preProcessorResults ||
+          []) as any[]
+      ).length > 0 && (
+        <div className="rounded-xl border border-gray-200 bg-white p-4">
+          <h4 className="text-sm font-semibold text-gray-900">
+            前处理器执行结果
+          </h4>
+          <div className="mt-2 space-y-2">
+            {(
+              (validationResult?.eligibilityResult?.preProcessorResults ||
+                validationResult?.preProcessorResults ||
+                []) as any[]
+            ).map((proc: any, idx: number) => (
+              <div
+                key={idx}
+                className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-sm"
+              >
+                <span className="font-medium text-gray-700">
+                  {proc.processor_id}
+                </span>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                    proc.result === "SKIPPED"
+                      ? "bg-gray-100 text-gray-600"
+                      : proc.result === "YES" || proc.result === "RESOLVED"
+                        ? "bg-emerald-50 text-emerald-700"
+                        : proc.result === "NO"
+                          ? "bg-blue-50 text-blue-700"
+                          : "bg-amber-50 text-amber-700"
+                  }`}
+                >
+                  {proc.result}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <PreExistingAssessmentPanel
+        assessment={
+          ruleset.product_line === "HEALTH" ? preExistingAssessment : null
+        }
+        result={validationResult}
+        rulesetId={ruleset.ruleset_id}
+        productCode={ruleset.policy_info.product_code}
+        aiConfigSummary={preExistingAIConfigSummary}
+      />
+
       <div className="rounded-2xl border border-gray-200 bg-white p-5">
         <div className="mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">本版本 vs 上一版本</h2>
-          <p className="mt-1 text-sm text-gray-500">对比规则变更范围，确认新增、修改和移除项。</p>
+          <h2 className="text-lg font-semibold text-gray-900">
+            本版本 vs 上一版本
+          </h2>
+          <p className="mt-1 text-sm text-gray-500">
+            对比规则变更范围，确认新增、修改和移除项。
+          </p>
         </div>
         <VersionDiffViewer current={ruleset} previous={previousRuleset} />
       </div>
