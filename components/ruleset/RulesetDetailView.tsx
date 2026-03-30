@@ -12,6 +12,7 @@ import RuleGroupSection from "./RuleGroupSection";
 import VersionDiffViewer from "./VersionDiffViewer";
 import FieldDictionaryTab from "./FieldDictionaryTab";
 import BindingConfigTab from "./BindingConfigTab";
+import CoverageInferenceTab from "./CoverageInferenceTab";
 import {
   deriveRulesetHealth,
   getRuleSemantic,
@@ -34,6 +35,7 @@ interface RulesetDetailViewProps {
 type DetailTab =
   | "overview"
   | "binding"
+  | "inference"
   | "fields"
   | "liability"
   | "settlement"
@@ -43,6 +45,7 @@ type ViewMode = "business" | "technical";
 const tabs: Array<{ id: DetailTab; label: string }> = [
   { id: "overview", label: "总览" },
   { id: "binding", label: "产品绑定" },
+  { id: "inference", label: "覆盖推断" },
   { id: "fields", label: "字段与映射" },
   { id: "liability", label: "责任规则" },
   { id: "settlement", label: "定损 / 给付规则" },
@@ -393,6 +396,13 @@ const RulesetDetailView: React.FC<RulesetDetailViewProps> = ({
 
       {activeTab === "binding" && (
         <BindingConfigTab ruleset={ruleset} onUpdateRuleset={onUpdateRuleset} />
+      )}
+
+      {activeTab === "inference" && (
+        <CoverageInferenceTab
+          ruleset={ruleset}
+          onUpdateRuleset={onUpdateRuleset}
+        />
       )}
 
       {activeTab === "fields" && (
