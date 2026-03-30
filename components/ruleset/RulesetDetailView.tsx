@@ -13,6 +13,7 @@ import VersionDiffViewer from "./VersionDiffViewer";
 import FieldDictionaryTab from "./FieldDictionaryTab";
 import BindingConfigTab from "./BindingConfigTab";
 import CoverageInferenceTab from "./CoverageInferenceTab";
+import PreProcessorConfigTab from "./PreProcessorConfigTab";
 import {
   deriveRulesetHealth,
   getRuleSemantic,
@@ -36,6 +37,7 @@ type DetailTab =
   | "overview"
   | "binding"
   | "inference"
+  | "preprocessors"
   | "fields"
   | "liability"
   | "settlement"
@@ -46,6 +48,7 @@ const tabs: Array<{ id: DetailTab; label: string }> = [
   { id: "overview", label: "总览" },
   { id: "binding", label: "产品绑定" },
   { id: "inference", label: "覆盖推断" },
+  { id: "preprocessors", label: "前处理器" },
   { id: "fields", label: "字段与映射" },
   { id: "liability", label: "责任规则" },
   { id: "settlement", label: "定损 / 给付规则" },
@@ -400,6 +403,13 @@ const RulesetDetailView: React.FC<RulesetDetailViewProps> = ({
 
       {activeTab === "inference" && (
         <CoverageInferenceTab
+          ruleset={ruleset}
+          onUpdateRuleset={onUpdateRuleset}
+        />
+      )}
+
+      {activeTab === "preprocessors" && (
+        <PreProcessorConfigTab
           ruleset={ruleset}
           onUpdateRuleset={onUpdateRuleset}
         />
