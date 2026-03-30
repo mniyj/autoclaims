@@ -14,6 +14,7 @@ export enum PrimaryCategory {
   WHOLE_LIFE = "终身寿险",
   ANNUITY = "年金保险",
   CAR_INSURANCE = "车险",
+  LIABILITY = "责任保险",
 }
 
 export enum ClauseType {
@@ -131,7 +132,7 @@ export interface BaseProduct {
   productDescriptionFile?: string;
   cashValueTableFile?: string;
   basicSumInsuredTableFile?: string;
-  
+
   // Responsibilities associated with this clause/product
   selectedResponsibilities?: ResponsibilityItem[];
 }
@@ -434,10 +435,37 @@ export interface TreeNode {
 
 // --- START: Types for End User Data (System Management) ---
 // --- START: Types for Claims Management ---
+export interface MaterialTypeCatalogItem {
+  type_code: string;
+  type_name: string;
+  category: string;
+  description: string;
+  default_processing_strategy: ProcessingStrategy;
+  default_confidence_threshold: number;
+  recommended_facts: string[];
+  status: "ACTIVE" | "DRAFT" | "DISABLED";
+  _source_material_id?: string;
+}
+
+export type SchemaFieldBindingStatus = "bound" | "display_only";
+
+export interface ClaimsMaterialSchemaField {
+  field_key: string;
+  field_label: string;
+  data_type: "STRING" | "NUMBER" | "BOOLEAN" | "DATE" | "ARRAY" | "OBJECT";
+  required?: boolean;
+  description?: string;
+  fact_id?: string;
+  binding_status?: SchemaFieldBindingStatus;
+  children?: ClaimsMaterialSchemaField[];
+  item_fields?: ClaimsMaterialSchemaField[];
+}
+
 export interface ClaimsMaterial {
   id: string;
   name: string;
   description: string;
+  type_code?: string;
   sampleUrl?: string;
   ossKey?: string; // OSS object key for generating fresh signed URLs
   jsonSchema: string; // JSON string representing the schema to extract
@@ -446,20 +474,24 @@ export interface ClaimsMaterial {
   category?: MaterialCategory;
   processingStrategy?: ProcessingStrategy;
   extractionConfig?: ExtractionConfig;
-  schemaFields?: Array<{
-    field_key: string;
-    field_label: string;
-    data_type: "STRING" | "NUMBER" | "BOOLEAN" | "DATE" | "ARRAY" | "OBJECT";
-    required?: boolean;
-    description?: string;
-    fact_id?: string;
-    children?: any[];
-    item_fields?: any[];
-  }>;
+  schemaFields?: ClaimsMaterialSchemaField[];
 }
 
-export type MaterialValidationOperator = "EQ" | "NE" | "GT" | "GTE" | "LT" | "LTE" | "CONTAINS" | "NOT_CONTAINS";
-export type MaterialValidationFailureAction = "WARNING" | "MANUAL_REVIEW" | "BLOCK";
+export type MaterialValidationOperator =
+  | "EQ"
+  | "NE"
+  | "GT"
+  | "GTE"
+  | "LT"
+  | "LTE"
+  | "CONTAINS"
+  | "NOT_CONTAINS"
+  | "PERCENT_DIFF_LTE"
+  | "DATE_BEFORE_NOW";
+export type MaterialValidationFailureAction =
+  | "WARNING"
+  | "MANUAL_REVIEW"
+  | "BLOCK";
 
 export interface MaterialFieldRef {
   material_id: string;
@@ -474,7 +506,12 @@ export interface MaterialValidationRule {
   name: string;
   description?: string;
   enabled: boolean;
-  category: "identity" | "amount_consistency" | "date_consistency" | "timeline" | "custom";
+  category:
+    | "identity"
+    | "amount_consistency"
+    | "date_consistency"
+    | "timeline"
+    | "custom";
   left: MaterialFieldRef;
   operator: MaterialValidationOperator;
   right: MaterialFieldRef;
@@ -483,12 +520,18 @@ export interface MaterialValidationRule {
   reason_code: string;
   message_template: string;
   output_fact_id?: string;
+  /** 操作符参数，如 PERCENT_DIFF_LTE 的阈值 */
+  params?: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 }
 
 // Processing and extraction related types for claims materials
-export type ProcessingStrategy = 'invoice' | 'structured_doc' | 'general_doc' | 'image_only';
+export type ProcessingStrategy =
+  | "invoice"
+  | "structured_doc"
+  | "general_doc"
+  | "image_only";
 
 export interface ExtractionConfig {
   jsonSchema: Record<string, any>;
@@ -639,16 +682,19 @@ export interface ClaimCase {
     uploaded?: boolean; // 是否已上传
   }>;
   intakeFormData?: Record<string, any>; // 报案表单原始数据
-  
+
   // 文件解析结果存储（键：分类名-文件名，值：解析结果）
-  fileParseResults?: Record<string, {
-    extractedData: Record<string, any>;
-    auditConclusion?: string;
-    confidence?: number;
-    materialName: string;
-    materialId?: string;
-    parsedAt: string;
-  }>;
+  fileParseResults?: Record<
+    string,
+    {
+      extractedData: Record<string, any>;
+      auditConclusion?: string;
+      confidence?: number;
+      materialName: string;
+      materialId?: string;
+      parsedAt: string;
+    }
+  >;
   acceptedAt?: string;
   acceptedBy?: "system" | "manual";
   parsedAt?: string;
@@ -694,9 +740,9 @@ export interface ProcessedFile {
     materialId: string;
     materialName: string;
     confidence: number;
-    source?: 'ai' | 'manual';
+    source?: "ai" | "manual";
     errorMessage?: string;
-    matchStrategy?: 'rule' | 'ai' | 'fallback';
+    matchStrategy?: "rule" | "ai" | "fallback";
   };
   status: "processing" | "completed" | "failed";
   errorMessage?: string;
@@ -738,7 +784,7 @@ export interface BatchOSSUploadResponse {
 export interface BatchClassifyRequest {
   batchId: string;
   materialIds?: string[];
-  strategy?: 'fast' | 'accurate';
+  strategy?: "fast" | "accurate";
 }
 
 export interface BatchClassifyResponse {
@@ -759,7 +805,7 @@ export interface MaterialImportTaskV2 {
   claimCaseId?: string;
   batchId: string;
   ossKeys: string[];
-  status: 'pending' | 'in_progress' | 'completed' | 'failed';
+  status: "pending" | "in_progress" | "completed" | "failed";
   createdAt: string;
   updatedAt?: string;
   summary?: string;
@@ -772,16 +818,25 @@ export interface MaterialImportTaskV2 {
 // --- START: Types for Unified Claim Materials ---
 /**
  * 材料来源类型
- * - direct_upload: 用户直接上传（案件信息页）
+ * - claim_report: 报案端上传（客户报案时提交）
+ * - direct_upload: 管理员手动上传（后台案件信息页）
  * - batch_import: 批量导入（材料审核页）
  * - api_sync: API 同步导入
  */
-export type ClaimMaterialSource = 'direct_upload' | 'batch_import' | 'api_sync';
+export type ClaimMaterialSource =
+  | "claim_report"
+  | "direct_upload"
+  | "batch_import"
+  | "api_sync";
 
 /**
  * 材料状态
  */
-export type ClaimMaterialStatus = 'pending' | 'processing' | 'completed' | 'failed';
+export type ClaimMaterialStatus =
+  | "pending"
+  | "processing"
+  | "completed"
+  | "failed";
 
 /**
  * 统一的理赔材料记录
@@ -948,6 +1003,8 @@ export enum RulesetProductLine {
   TERM_LIFE = "TERM_LIFE",
   WHOLE_LIFE = "WHOLE_LIFE",
   ANNUITY = "ANNUITY",
+  AUTO = "AUTO",
+  LIABILITY = "LIABILITY",
 }
 
 export enum ExecutionDomain {
@@ -1248,6 +1305,41 @@ export interface RulesetMetadata {
   }[];
 }
 
+export interface RulesetBinding {
+  product_codes: string[];
+  category_match: {
+    primary: string[];
+    secondary: string[];
+  };
+  keywords: string[];
+  match_priority: number;
+}
+
+export interface CoverageInferenceRule {
+  coverage_code: string;
+  label: string;
+  condition: RuleConditions;
+}
+
+export interface CoverageInference {
+  rules: CoverageInferenceRule[];
+  default_coverage_code: string | null;
+  default_label: string | null;
+}
+
+export type PreProcessorType =
+  | "PRE_EXISTING_CONDITION"
+  | "FIELD_CASCADE"
+  | "COVERAGE_ALIAS_RESOLVE";
+
+export interface PreProcessorConfig {
+  processor_id: string;
+  type: PreProcessorType;
+  label: string;
+  enabled: boolean;
+  config: Record<string, unknown>;
+}
+
 export interface InsuranceRuleset {
   ruleset_id: string;
   product_line: RulesetProductLine;
@@ -1258,6 +1350,9 @@ export interface InsuranceRuleset {
   field_dictionary: Record<string, FieldDefinition>;
   field_mappings?: FactMappingDefinition[];
   metadata: RulesetMetadata;
+  binding?: RulesetBinding;
+  coverage_inference?: CoverageInference;
+  pre_processors?: PreProcessorConfig[];
 }
 // --- END: Types for Ruleset Management ---
 
@@ -1310,6 +1405,7 @@ export interface AIInteractionLog {
   model: string;
   provider?: string;
   capabilityId?: string;
+  group?: string;
   promptTemplateId?: string;
   promptSourceType?: string;
   prompt: string;
@@ -1317,6 +1413,8 @@ export interface AIInteractionLog {
   duration: number;
   timestamp: string;
   usageMetadata?: any;
+  pricingRuleId?: string | null;
+  estimatedCost?: number | null;
   request?: {
     raw?: any;
     summary?: {
@@ -1336,13 +1434,14 @@ export interface AIInteractionLog {
     grounding?: any;
   } | null;
   context?: Record<string, any>;
-  tokenUsage?: {
-    inputTokens: number | null;
-    outputTokens: number | null;
-    totalTokens: number | null;
+  tokenUsage?: AIUsageRecord & {
     rawUsageMetadata?: any;
     unavailableReason?: string | null;
   };
+  fallbackInfo?: {
+    from: string;
+    reason: string;
+  } | null;
   timing?: {
     ocrDuration?: number; // OCR 识别耗时 (ms)
     parsingDuration?: number; // 大模型格式化耗时 (ms)
@@ -1358,11 +1457,26 @@ export interface AIProviderCatalogItem {
   type: string;
   runtime: string;
   defaultModel: string;
+  availableModels?: string[];
   supportsCustomModel: boolean;
   envKeys?: string[];
   description?: string;
   available?: boolean;
   missingEnvKeys?: string[];
+  status?: "active" | "degraded" | "offline";
+  healthCheckMode?: string;
+  billingMode?: "token" | "request" | "page" | "second";
+  rateLimitRpm?: number;
+  defaultTimeout?: number;
+  retryStrategy?: {
+    maxRetries: number;
+    backoffMs: number;
+  };
+  lastHealthCheck?: {
+    timestamp: string;
+    latencyMs: number;
+    success: boolean;
+  };
 }
 
 export interface AIPromptSourceInfo {
@@ -1383,6 +1497,16 @@ export interface AIPromptTemplate {
 export interface AICapabilityBinding {
   provider: string;
   model: string;
+  generationConfig?: {
+    temperature?: number;
+    maxOutputTokens?: number;
+    topP?: number;
+  };
+}
+
+export interface AICapabilityFallbackBinding {
+  provider: string;
+  model?: string;
 }
 
 export interface AICapabilityDefinition {
@@ -1400,6 +1524,8 @@ export interface AICapabilityDefinition {
   editable?: boolean;
   lockReason?: string;
   codeLocations?: string[];
+  owner?: string;
+  fallbackBindings?: AICapabilityFallbackBinding[];
   supportMatrix?: Array<{
     providerId: string;
     providerName: string;
@@ -1423,6 +1549,209 @@ export interface AISettingsSnapshot {
     updatedBy: string;
     version: number;
   };
+}
+
+export interface AIPricingRule {
+  id: string;
+  providerId: string;
+  modelId: string;
+  billingMode: "token" | "request" | "page" | "second";
+  currency: string;
+  inputPer1M?: number;
+  outputPer1M?: number;
+  perRequestFee?: number;
+  ocrPerPage?: number;
+  audioPerMinute?: number;
+  effectiveDate: string;
+}
+
+export interface AIModelCatalogItem {
+  modelId: string;
+  providerId: string;
+  displayName: string;
+  type: "text" | "vision" | "ocr" | "embedding" | "audio";
+  contextLength: number;
+  supportsImages: boolean;
+  supportsTools: boolean;
+  supportsJsonMode: boolean;
+  supportsStreaming: boolean;
+  deprecated: boolean;
+}
+
+export interface AIProviderHealth {
+  providerId: string;
+  configStatus: "configured" | "missing_env" | "invalid";
+  runtimeStatus: "healthy" | "degraded" | "offline" | "unknown";
+  probeStatus: "idle" | "healthy" | "degraded" | "offline";
+  lastCheckedAt?: string;
+  lastLatencyMs?: number;
+  successRate1h?: number;
+  successRate24h?: number;
+  avgLatencyMs?: number;
+  recentError?: string | null;
+}
+
+export interface AICapabilityBindingVersion {
+  id: string;
+  capabilityId: string;
+  version: number;
+  binding: { provider: string; model: string };
+  promptTemplateId?: string;
+  generationConfig?: Record<string, any>;
+  publishedAt: string;
+  publishedBy: string;
+  reason: string;
+  rollbackFrom?: number;
+  status: "active" | "superseded" | "rolled_back";
+}
+
+export interface AIPromptTemplateVersion {
+  id: string;
+  templateId: string;
+  version: number;
+  content: string;
+  variables: string[];
+  applicableCapabilities: string[];
+  publishedAt: string;
+  publishedBy: string;
+  reason?: string;
+  status: "active" | "superseded";
+}
+
+export interface AIUsageRecord {
+  usageType: "token" | "ocr_page" | "audio_second" | "request";
+  inputTokens?: number | null;
+  outputTokens?: number | null;
+  totalTokens?: number | null;
+  imageCount?: number | null;
+  ocrPages?: number | null;
+  audioSeconds?: number | null;
+  pricingRuleId?: string | null;
+  estimatedCost?: number | null;
+}
+
+export interface AIBudgetConfig {
+  id: string;
+  scopeType:
+    | "GLOBAL"
+    | "GROUP"
+    | "CAPABILITY"
+    | "MODULE"
+    | "COMPANY"
+    | "PROVIDER"
+    | "MODEL";
+  scopeId?: string;
+  periodType: "daily" | "monthly";
+  budgetAmount: number;
+  currency: string;
+  alertThresholds: number[];
+  actionType: "notify_only" | "soft_block" | "hard_block";
+  status: "active" | "paused";
+}
+
+export interface AIBusinessLineStats {
+  key: string;
+  label: string;
+  totalCalls: number;
+  successRate: number;
+  totalCost: number;
+  avgLatencyMs: number;
+}
+
+export interface AIModelRuntimeComparison {
+  capabilityId: string;
+  dateRange: { start: string; end: string };
+  models: Array<{
+    provider: string;
+    model: string;
+    totalCalls: number;
+    successRate: number;
+    avgLatencyMs: number;
+    p95LatencyMs: number;
+    avgTokensPerCall: number;
+    totalCost: number;
+    costPerCall: number;
+    fallbackCount: number;
+  }>;
+}
+
+export interface AIIncident {
+  id: string;
+  ruleId: string;
+  triggeredAt: string;
+  resolvedAt?: string;
+  severity: "warning" | "critical";
+  summary: string;
+  affectedTraceIds: string[];
+  status: "open" | "acknowledged" | "resolved";
+}
+
+export interface AIAlertRule {
+  id: string;
+  name: string;
+  type: "error_rate" | "latency_spike" | "cost_surge" | "provider_timeout";
+  scope: "global" | "capability" | "provider";
+  scopeId?: string;
+  threshold: number;
+  windowMinutes: number;
+  enabled: boolean;
+}
+
+export interface AIDashboardOverview {
+  period: { start: string; end: string };
+  totalCalls: number;
+  successRate: number;
+  totalCost: number;
+  activeModels: number;
+  topCapabilities: Array<{
+    id: string;
+    name: string;
+    calls: number;
+    cost: number;
+  }>;
+  topModels: Array<{
+    model: string;
+    calls: number;
+    cost: number;
+    avgLatencyMs: number;
+  }>;
+  topModules: Array<{ module: string; calls: number; cost: number }>;
+  topCompanies: Array<{
+    companyId: string;
+    companyName: string;
+    calls: number;
+    cost: number;
+  }>;
+  recentConfigChanges: Array<{
+    capabilityId: string;
+    changedAt: string;
+    changedBy: string;
+  }>;
+  openIncidents: AIIncident[];
+  trends: {
+    calls: Array<{ date: string; count: number }>;
+    costs: Array<{ date: string; amount: number }>;
+    errorRate: Array<{ date: string; rate: number }>;
+  };
+}
+
+export interface AICostRecord {
+  date: string;
+  provider?: string | null;
+  model?: string | null;
+  capabilityId?: string | null;
+  group?: string | null;
+  module?: string | null;
+  companyId?: string | null;
+  companyName?: string | null;
+  totalCalls: number;
+  successCalls: number;
+  failedCalls: number;
+  inputTokens: number;
+  outputTokens: number;
+  totalTokens: number;
+  totalCost: number;
+  avgLatencyMs: number;
 }
 
 export interface StepLog {
@@ -1550,7 +1879,8 @@ export interface ValidationWarning {
     | "total_mismatch"
     | "insurance_balance"
     | "abnormal_value"
-    | "summary_detail_mismatch";
+    | "summary_detail_mismatch"
+    | "unqualified_hospital";
   severity: "info" | "warning" | "error";
   message: string;
   details?: {
@@ -1965,9 +2295,23 @@ export interface UserOperationLog {
 }
 // --- END: Types for User Operation Logs ---
 
+// --- 结构化字段人工订正记录 ---
+export interface FieldCorrection {
+  correctionId: string; // "fc-{timestamp}"
+  documentId: string;
+  fieldKey: string;
+  fieldLabel: string;
+  originalValue: string; // 变更前
+  correctedValue: string; // 变更后
+  correctedAt: string; // ISO timestamp
+  correctedBy: string; // 操作人
+  claimCaseId: string;
+}
+
 export type ClaimStageStatus =
   | "pending"
   | "processing"
+  | "awaiting_human"
   | "completed"
   | "manual_completed"
   | "failed";
@@ -1981,6 +2325,9 @@ export interface ClaimStageProgress {
   completedBy?: "system" | "manual";
   summary?: string;
   blockingReason?: string;
+  activeInterventionId?: string;
+  interventionType?: InterventionPointType;
+  interventionSubState?: InterventionSubState;
 }
 
 export type ClaimTimelineEventType =
@@ -1995,7 +2342,16 @@ export type ClaimTimelineEventType =
   | "LIABILITY_MANUAL_COMPLETED"
   | "ASSESSMENT_AUTO_COMPLETED"
   | "ASSESSMENT_MANUAL_COMPLETED"
-  | "MANUAL_REVIEW_REQUESTED";
+  | "MANUAL_REVIEW_REQUESTED"
+  | "INTERVENTION_CREATED"
+  | "INTERVENTION_STATE_CHANGED"
+  | "INTERVENTION_RESOLVED"
+  | "ADJUSTER_OVERRIDE_APPLIED"
+  | "REUPLOAD_REQUESTED"
+  | "REUPLOAD_RECEIVED"
+  | "RE_EXTRACTION_TRIGGERED"
+  | "MANUAL_DECISION_MADE"
+  | "ROLLBACK_INITIATED";
 
 export interface ClaimTimelineEvent {
   id: string;
@@ -2010,6 +2366,162 @@ export interface ClaimTimelineEvent {
   success: boolean;
   summary: string;
   details?: Record<string, unknown>;
+}
+
+// ============ 人工介入（Human-in-the-Loop）状态机类型 ============
+
+/** 介入点类型 */
+export type InterventionPointType =
+  | "PARSE_LOW_CONFIDENCE" // 介入点1：材料识别置信度不足
+  | "VALIDATION_GATE" // 介入点2：材料校验规则不通过
+  | "RULE_MANUAL_ROUTE"; // 介入点3：规则引擎转人工
+
+/** 介入点1 子状态：材料识别置信度不足 */
+export type ParseConfidenceSubState =
+  | "IDLE"
+  | "REVIEW_CREATED"
+  | "REVIEW_IN_PROGRESS"
+  | "CORRECTION_SUBMITTED"
+  | "RE_EXTRACTION_PENDING"
+  | "RE_EXTRACTION_RUNNING"
+  | "RESOLVED_PROCEED"
+  | "RESOLVED_ACCEPT_AS_IS";
+
+/** 介入点2 子状态：材料校验规则不通过 */
+export type ValidationGateSubState =
+  | "IDLE"
+  | "VALIDATION_FAILED"
+  | "PENDING_ADJUSTER_REVIEW"
+  | "ADJUSTER_OVERRIDE"
+  | "PENDING_REUPLOAD"
+  | "REUPLOAD_RECEIVED"
+  | "RE_VALIDATION_RUNNING"
+  | "RESOLVED_PROCEED";
+
+/** 介入点3 子状态：规则引擎转人工 */
+export type RuleManualRouteSubState =
+  | "IDLE"
+  | "MANUAL_REVIEW_TRIGGERED"
+  | "PENDING_ADJUSTER"
+  | "ADJUSTER_REVIEWING"
+  | "DECISION_APPROVE"
+  | "DECISION_REJECT"
+  | "DECISION_ADJUST"
+  | "DECISION_REQUEST_INFO"
+  | "PENDING_ADDITIONAL_INFO"
+  | "INFO_RECEIVED"
+  | "RESOLVED_PROCEED"
+  | "RESOLVED_ROLLBACK";
+
+/** 所有子状态联合类型 */
+export type InterventionSubState =
+  | ParseConfidenceSubState
+  | ValidationGateSubState
+  | RuleManualRouteSubState;
+
+/** 状态转移事件 */
+export type InterventionEvent =
+  // 介入点1 事件
+  | "CONFIDENCE_BELOW_THRESHOLD"
+  | "ADJUSTER_CLAIM_TASK"
+  | "ADJUSTER_SUBMIT_CORRECTIONS"
+  | "ADJUSTER_ACCEPT_ORIGINAL"
+  | "REQUEST_RE_EXTRACTION"
+  | "CORRECTIONS_FINALIZED"
+  | "RE_EXTRACTION_STARTED"
+  | "RE_EXTRACTION_STILL_LOW_CONFIDENCE"
+  | "RE_EXTRACTION_SUCCEEDED"
+  // 介入点2 事件
+  | "VALIDATION_RULES_FAILED"
+  | "ADJUSTER_ASSIGNED"
+  | "ADJUSTER_OVERRIDE_DECISION"
+  | "OVERRIDE_CONFIRMED"
+  | "ADJUSTER_REQUEST_REUPLOAD"
+  | "CUSTOMER_REUPLOAD_COMPLETE"
+  | "RE_VALIDATION_STARTED"
+  | "RE_VALIDATION_PASSED"
+  | "RE_VALIDATION_FAILED"
+  // 介入点3 事件
+  | "RULE_ROUTE_MANUAL"
+  | "TASK_QUEUED"
+  | "ADJUSTER_APPROVE"
+  | "ADJUSTER_REJECT"
+  | "ADJUSTER_ADJUST"
+  | "ADJUSTER_REQUEST_INFO"
+  | "DECISION_CONFIRMED"
+  | "INFO_REQUEST_SENT"
+  | "CUSTOMER_PROVIDES_INFO"
+  | "RE_REVIEW_WITH_NEW_INFO"
+  | "ROLLBACK_TO_INTAKE";
+
+/** 介入实例解决方式 */
+export type InterventionResolution = "PROCEED" | "ROLLBACK" | "ACCEPT_AS_IS";
+
+/** 转人工原因结构 */
+export interface InterventionReason {
+  code: string; // 原因编码
+  summary: string; // 一句话摘要（工作台列表显示）
+  detail: string; // 详细说明（详情页横幅显示）
+  sourceField?: string; // 相关字段（介入点1）
+  sourceRuleId?: string; // 相关规则ID（介入点2/3）
+  sourceRuleName?: string; // 相关规则名称
+  confidence?: number; // 置信度值（介入点1）
+  threshold?: number; // 阈值（介入点1）
+  leftValue?: string; // 左字段值（介入点2）
+  rightValue?: string; // 右字段值（介入点2）
+  routeReason?: string; // 规则路由原因（介入点3）
+}
+
+/** 单次状态转移审计记录 */
+export interface InterventionTransition {
+  id: string;
+  interventionId: string;
+  fromState: InterventionSubState;
+  toState: InterventionSubState;
+  event: InterventionEvent;
+  timestamp: string;
+  actorType: "system" | "adjuster" | "supervisor" | "customer";
+  actorName?: string;
+  reason?: string;
+  data?: Record<string, unknown>;
+}
+
+/** 理赔员决策数据（介入点3） */
+export interface AdjusterDecision {
+  type: "APPROVE" | "REJECT" | "ADJUST" | "REQUEST_INFO";
+  adjustedAmount?: number;
+  adjustedRatio?: number;
+  reason: string;
+  decidedAt: string;
+  decidedBy: string;
+}
+
+/** 人工介入实例 */
+export interface InterventionInstance {
+  id: string;
+  claimCaseId: string;
+  stageKey: "intake" | "parse" | "liability" | "assessment";
+  interventionType: InterventionPointType;
+  currentState: InterventionSubState;
+  previousState?: InterventionSubState;
+  reason: InterventionReason;
+  priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+  createdAt: string;
+  updatedAt: string;
+  resolvedAt?: string;
+  resolution?: InterventionResolution;
+  rollbackTargetStage?: "intake" | "parse" | "liability";
+
+  // 关联ID
+  reviewTaskId?: string; // 关联 ReviewTask（介入点1）
+  validationRuleIds?: string[]; // 失败的校验规则ID（介入点2）
+  triggeringRuleId?: string; // 触发转人工的规则ID（介入点3）
+
+  // 理赔员决策（介入点3）
+  adjusterDecision?: AdjusterDecision;
+
+  // 状态转移历史（审计追踪）
+  transitions: InterventionTransition[];
 }
 
 export interface ClaimProcessTimeline {
@@ -2106,9 +2618,9 @@ export interface ParsedDocument {
     materialId: string;
     materialName: string;
     confidence: number;
-    source?: 'ai' | 'manual';
+    source?: "ai" | "manual";
     errorMessage?: string;
-    matchStrategy?: 'rule' | 'ai' | 'fallback';
+    matchStrategy?: "rule" | "ai" | "fallback";
   };
 
   // 处理信息
@@ -2504,45 +3016,45 @@ export interface DuplicateCheckResult {
 /** OCR 提取字段值结构 - 包含值、置信度和溯源信息 */
 export interface OCRFieldValue {
   value: string | number | boolean | null;
-  confidence: number;           // 置信度 0-1
-  anchor?: SourceAnchor;        // 溯源锚点（指向原始文件位置）
-  reviewFlag?: ReviewFlag;      // 人工复核标记
-  approved?: boolean;           // 是否已通过人工审核
+  confidence: number; // 置信度 0-1
+  anchor?: SourceAnchor; // 溯源锚点（指向原始文件位置）
+  reviewFlag?: ReviewFlag; // 人工复核标记
+  approved?: boolean; // 是否已通过人工审核
 }
 
 /** OCR 识别结果 */
 export interface OCRResult {
-  documentId: string;           // 文档ID
-  materialType: string;         // 材料类型ID（如 "mat-1"）
-  extractedData: Record<string, OCRFieldValue>;  // 提取的字段数据
-  overallConfidence: number;    // 整体置信度
-  extractedAt: string;          // 提取时间
-  model: string;                // 使用的AI模型
-  rawOcrText?: string;          // 原始OCR文本（可选）
+  documentId: string; // 文档ID
+  materialType: string; // 材料类型ID（如 "mat-1"）
+  extractedData: Record<string, OCRFieldValue>; // 提取的字段数据
+  overallConfidence: number; // 整体置信度
+  extractedAt: string; // 提取时间
+  model: string; // 使用的AI模型
+  rawOcrText?: string; // 原始OCR文本（可选）
 }
 
 /** 修正记录 - 保存每次人工修正的历史 */
 export interface CorrectionRecord {
   id: string;
   documentId: string;
-  fieldKey: string;             // 字段名
-  originalValue: string;        // 原始值
-  correctedValue: string;       // 修正后的值
-  originalConfidence: number;   // 原始置信度
-  correctedBy: string;          // 修正人ID
-  correctedAt: string;          // 修正时间
-  reason?: string;              // 修正原因（可选）
+  fieldKey: string; // 字段名
+  originalValue: string; // 原始值
+  correctedValue: string; // 修正后的值
+  originalConfidence: number; // 原始置信度
+  correctedBy: string; // 修正人ID
+  correctedAt: string; // 修正时间
+  reason?: string; // 修正原因（可选）
 }
 
 /** Schema 解析后的字段定义 */
 export interface ParsedSchemaField {
-  key: string;                  // 字段键名
-  label: string;                // 字段显示名称
-  type: 'string' | 'number' | 'boolean' | 'date';  // 字段类型
-  required: boolean;            // 是否必填
-  format?: string;              // 格式（如 date, email）
-  description?: string;         // 字段描述
-  group?: string;               // 所属分组
+  key: string; // 字段键名
+  label: string; // 字段显示名称
+  type: "string" | "number" | "boolean" | "date"; // 字段类型
+  required: boolean; // 是否必填
+  format?: string; // 格式（如 date, email）
+  description?: string; // 字段描述
+  group?: string; // 所属分组
 }
 
 /** 校验规则函数类型 */
