@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   type InsuranceRuleset,
   type PreProcessorConfig,
@@ -14,6 +14,15 @@ const TYPE_LABELS: Record<PreProcessorType, string> = {
   PRE_EXISTING_CONDITION: "既往症评估",
   FIELD_CASCADE: "字段级联",
   COVERAGE_ALIAS_RESOLVE: "别名解析",
+};
+
+const TYPE_DESCRIPTIONS: Record<PreProcessorType, string> = {
+  PRE_EXISTING_CONDITION:
+    "在执行规则前，自动调用 AI 判断案件是否涉及既往症（投保前已有的疾病）。判断结果会写入案件数据，供后续规则决定是否拒赔或转人工。",
+  FIELD_CASCADE:
+    "从多个候选字段中按优先级取值。典型场景：不同来源的理赔数据把同一个信息存在不同字段名中，需要统一提取。",
+  COVERAGE_ALIAS_RESOLVE:
+    "将不同来源使用的险种名称（中文名、英文缩写等）统一转换为系统标准代码。",
 };
 
 const TYPE_BADGE_CLASSES: Record<PreProcessorType, string> = {
@@ -88,14 +97,6 @@ const PreProcessorConfigTab: React.FC<PreProcessorConfigTabProps> = ({
     );
   };
 
-  const handleUpdateLabel = (processorId: string, label: string) => {
-    updateProcessors(
-      processors.map((p) =>
-        p.processor_id === processorId ? { ...p, label } : p,
-      ),
-    );
-  };
-
   const handleAdd = () => {
     if (!addingType) return;
     const newProcessor: PreProcessorConfig = {
@@ -123,21 +124,22 @@ const PreProcessorConfigTab: React.FC<PreProcessorConfigTabProps> = ({
         return (
           <div
             key={proc.processor_id}
-            className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"
+            className="rounded-2xl border border-gray-200 bg-white shadow-sm"
           >
-            <div className="flex flex-wrap items-center justify-between gap-3">
+            {/* Header */}
+            <div className="flex flex-wrap items-center justify-between gap-3 p-5">
               <div className="flex items-center gap-3">
-                <span className="text-sm font-bold text-gray-900">
-                  {proc.label}
-                </span>
                 <span
                   className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${TYPE_BADGE_CLASSES[proc.type]}`}
                 >
                   {TYPE_LABELS[proc.type]}
                 </span>
+                <span className="text-sm font-semibold text-gray-900">
+                  {proc.label}
+                </span>
               </div>
               <div className="flex items-center gap-3">
-                <label className="relative inline-flex cursor-pointer items-center">
+                <label className="relative inline-flex cursor-pointer items-center gap-2">
                   <input
                     type="checkbox"
                     checked={proc.enabled}
@@ -145,6 +147,9 @@ const PreProcessorConfigTab: React.FC<PreProcessorConfigTabProps> = ({
                     className="peer sr-only"
                   />
                   <div className="h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-indigo-600 peer-checked:after:translate-x-full peer-checked:after:border-white" />
+                  <span className="text-xs text-gray-500">
+                    {proc.enabled ? "已启用" : "已禁用"}
+                  </span>
                 </label>
                 <button
                   onClick={() =>
@@ -152,7 +157,7 @@ const PreProcessorConfigTab: React.FC<PreProcessorConfigTabProps> = ({
                   }
                   className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
                 >
-                  {isEditing ? "收起" : "编辑"}
+                  {isEditing ? "收起" : "查看详情"}
                 </button>
                 <button
                   onClick={() => handleDelete(proc.processor_id)}
@@ -163,34 +168,31 @@ const PreProcessorConfigTab: React.FC<PreProcessorConfigTabProps> = ({
               </div>
             </div>
 
+            {/* Collapsed summary */}
             {!isEditing && (
-              <div className="mt-3 text-xs text-gray-500">
+              <div className="border-t border-gray-100 bg-gray-50/50 px-5 py-3 text-xs text-gray-500">
                 <ConfigSummary type={proc.type} config={proc.config} />
               </div>
             )}
 
+            {/* Expanded detail */}
             {isEditing && (
-              <div className="mt-4 space-y-4 border-t border-gray-100 pt-4">
-                <div>
-                  <label className="text-xs font-medium text-gray-700">
-                    处理器名称
-                  </label>
-                  <input
-                    type="text"
-                    value={proc.label}
-                    onChange={(e) =>
-                      handleUpdateLabel(proc.processor_id, e.target.value)
+              <div className="border-t border-gray-100 px-5 pb-5 pt-4">
+                {/* Description */}
+                <div className="rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                  {TYPE_DESCRIPTIONS[proc.type]}
+                </div>
+
+                {/* Type-specific editor */}
+                <div className="mt-4">
+                  <TypeSpecificEditor
+                    type={proc.type}
+                    config={proc.config}
+                    onChange={(config) =>
+                      handleUpdateConfig(proc.processor_id, config)
                     }
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                   />
                 </div>
-                <TypeSpecificEditor
-                  type={proc.type}
-                  config={proc.config}
-                  onChange={(config) =>
-                    handleUpdateConfig(proc.processor_id, config)
-                  }
-                />
               </div>
             )}
           </div>
@@ -210,7 +212,7 @@ const PreProcessorConfigTab: React.FC<PreProcessorConfigTabProps> = ({
           <option value="">选择前处理器类型...</option>
           {ALL_TYPES.map((t) => (
             <option key={t} value={t}>
-              {TYPE_LABELS[t]}
+              {TYPE_LABELS[t]} — {TYPE_DESCRIPTIONS[t].slice(0, 30)}...
             </option>
           ))}
         </select>
@@ -233,24 +235,27 @@ const ConfigSummary: React.FC<{
   config: Record<string, unknown>;
 }> = ({ type, config }) => {
   switch (type) {
-    case "PRE_EXISTING_CONDITION": {
-      const outputField = (config.output_field as string) || "-";
-      return <span>输出字段: {outputField}</span>;
-    }
-    case "FIELD_CASCADE": {
-      const cascade = (config.field_cascade as string[]) ?? [];
-      const normalize = (config.normalize as string) || "NONE";
+    case "PRE_EXISTING_CONDITION":
       return (
         <span>
-          级联字段: {cascade.length > 0 ? cascade.join(" > ") : "未配置"} |
-          归一化: {normalize}
+          自动评估既往症 → 是既往症则标记为 true，否则标记为
+          false，不确定时转人工
+        </span>
+      );
+    case "FIELD_CASCADE": {
+      const cascade = (config.field_cascade as string[]) ?? [];
+      const outputField = (config.output_field as string) || "?";
+      const defaultVal = config.default_value;
+      return (
+        <span>
+          依次尝试 {cascade.length} 个字段 → 写入「{outputField}」
+          {defaultVal != null && `（默认值 ${defaultVal}）`}
         </span>
       );
     }
     case "COVERAGE_ALIAS_RESOLVE": {
       const aliasMap = (config.alias_map as Record<string, string[]>) ?? {};
-      const count = Object.keys(aliasMap).length;
-      return <span>别名映射: {count} 条</span>;
+      return <span>已配置 {Object.keys(aliasMap).length} 组别名映射</span>;
     }
     default:
       return <span>-</span>;
@@ -266,15 +271,11 @@ const TypeSpecificEditor: React.FC<{
 }> = ({ type, config, onChange }) => {
   switch (type) {
     case "PRE_EXISTING_CONDITION":
-      return (
-        <PreExistingConditionEditor config={config} onChange={onChange} />
-      );
+      return <PreExistingConditionEditor config={config} onChange={onChange} />;
     case "FIELD_CASCADE":
       return <FieldCascadeEditor config={config} onChange={onChange} />;
     case "COVERAGE_ALIAS_RESOLVE":
-      return (
-        <CoverageAliasResolveEditor config={config} onChange={onChange} />
-      );
+      return <CoverageAliasResolveEditor config={config} onChange={onChange} />;
     default:
       return null;
   }
@@ -285,73 +286,133 @@ const TypeSpecificEditor: React.FC<{
 const PreExistingConditionEditor: React.FC<{
   config: Record<string, unknown>;
   onChange: (config: Record<string, unknown>) => void;
-}> = ({ config, onChange }) => {
-  const skipWhen = (config.skip_when as { field?: string; operator?: string }) ?? {};
+}> = ({ config }) => {
+  // 既往症评估的所有 config 都是系统固定值，用户只需要启用/禁用
+  // 这里只做只读展示，解释系统行为
 
   return (
-    <div className="space-y-3">
-      <FieldRow label="output_field">
-        <input
-          type="text"
-          value={(config.output_field as string) ?? ""}
-          onChange={(e) =>
-            onChange({ ...config, output_field: e.target.value })
-          }
-          className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-        />
-      </FieldRow>
-      <FieldRow label="on_yes">
-        <input
-          type="text"
-          value={String(config.on_yes ?? "true")}
-          onChange={(e) => onChange({ ...config, on_yes: e.target.value })}
-          className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-        />
-      </FieldRow>
-      <FieldRow label="on_no">
-        <input
-          type="text"
-          value={String(config.on_no ?? "false")}
-          onChange={(e) => onChange({ ...config, on_no: e.target.value })}
-          className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-        />
-      </FieldRow>
-      <FieldRow label="on_uncertain">
-        <input
-          type="text"
-          value={String(config.on_uncertain ?? "null")}
-          onChange={(e) => onChange({ ...config, on_uncertain: e.target.value })}
-          className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-        />
-      </FieldRow>
-      <FieldRow label="skip_when">
-        <div className="flex items-center gap-2">
-          <input
-            type="text"
-            value={skipWhen.field ?? ""}
-            onChange={(e) =>
-              onChange({
-                ...config,
-                skip_when: { ...skipWhen, field: e.target.value },
-              })
-            }
-            placeholder="字段路径"
-            className="block w-1/2 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-          />
-          <input
-            type="text"
-            value={skipWhen.operator ?? ""}
-            onChange={(e) =>
-              onChange({
-                ...config,
-                skip_when: { ...skipWhen, operator: e.target.value },
-              })
-            }
-            placeholder="操作符"
-            className="block w-1/2 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-          />
+    <div className="space-y-4">
+      <div className="text-sm font-medium text-gray-900">处理流程</div>
+
+      <div className="relative space-y-0">
+        {/* Step 1 */}
+        <div className="flex gap-4">
+          <div className="flex flex-col items-center">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-700">
+              1
+            </div>
+            <div className="h-full w-px bg-gray-200" />
+          </div>
+          <div className="pb-6">
+            <div className="text-sm font-medium text-gray-900">
+              检查是否已有结论
+            </div>
+            <div className="mt-1 text-xs text-gray-500">
+              如果案件数据中已经明确标注了既往症结论（true 或
+              false），则跳过自动评估，直接使用已有结论。
+            </div>
+          </div>
         </div>
-      </FieldRow>
+
+        {/* Step 2 */}
+        <div className="flex gap-4">
+          <div className="flex flex-col items-center">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-700">
+              2
+            </div>
+            <div className="h-full w-px bg-gray-200" />
+          </div>
+          <div className="pb-6">
+            <div className="text-sm font-medium text-gray-900">AI 自动评估</div>
+            <div className="mt-1 text-xs text-gray-500">
+              根据病历中的既往病史、首次确诊日期、保单生效日期等信息，调用 AI
+              模型综合判断。
+            </div>
+          </div>
+        </div>
+
+        {/* Step 3 */}
+        <div className="flex gap-4">
+          <div className="flex flex-col items-center">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-700">
+              3
+            </div>
+          </div>
+          <div className="pb-2">
+            <div className="text-sm font-medium text-gray-900">
+              写入评估结果
+            </div>
+            <div className="mt-1 text-xs text-gray-500">
+              评估结果写入案件数据，供后续规则使用：
+            </div>
+            <div className="mt-2 space-y-1.5">
+              <ResultRow
+                label="确认是既往症"
+                value="true"
+                effect="触发既往症拒赔规则"
+                tone="rose"
+              />
+              <ResultRow
+                label="确认非既往症"
+                value="false"
+                effect="正常进入赔付流程"
+                tone="emerald"
+              />
+              <ResultRow
+                label="无法确定"
+                value="null"
+                effect="触发转人工复核规则"
+                tone="amber"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Technical info (collapsed) */}
+      <details className="rounded-lg border border-gray-200">
+        <summary className="cursor-pointer px-4 py-2.5 text-xs font-medium text-gray-500 hover:text-gray-700">
+          查看技术参数（通常不需要修改）
+        </summary>
+        <div className="space-y-2 border-t border-gray-100 px-4 py-3 text-xs text-gray-500">
+          <div className="flex justify-between">
+            <span>结果写入字段</span>
+            <code className="rounded bg-gray-100 px-1.5 py-0.5 font-mono">
+              {(config.output_field as string) || "pre_existing_condition"}
+            </code>
+          </div>
+          <div className="flex justify-between">
+            <span>跳过条件</span>
+            <code className="rounded bg-gray-100 px-1.5 py-0.5 font-mono">
+              {(config.skip_when as { field?: string })?.field || "-"}{" "}
+              已有值时跳过
+            </code>
+          </div>
+        </div>
+      </details>
+    </div>
+  );
+};
+
+const ResultRow: React.FC<{
+  label: string;
+  value: string;
+  effect: string;
+  tone: "rose" | "emerald" | "amber";
+}> = ({ label, value, effect, tone }) => {
+  const toneClasses = {
+    rose: "bg-rose-50 text-rose-700 border-rose-200",
+    emerald: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    amber: "bg-amber-50 text-amber-700 border-amber-200",
+  };
+  return (
+    <div
+      className={`flex items-center justify-between rounded-lg border px-3 py-2 text-xs ${toneClasses[tone]}`}
+    >
+      <span className="font-medium">
+        {label} → 写入 {value}
+      </span>
+      <span>{effect}</span>
     </div>
   );
 };
@@ -391,31 +452,30 @@ const FieldCascadeEditor: React.FC<{
   };
 
   return (
-    <div className="space-y-3">
-      <FieldRow label="output_field">
-        <input
-          type="text"
-          value={(config.output_field as string) ?? ""}
-          onChange={(e) =>
-            onChange({ ...config, output_field: e.target.value })
-          }
-          className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-        />
-      </FieldRow>
+    <div className="space-y-5">
+      {/* Explanation */}
+      <div className="text-sm text-gray-600">
+        系统会按下面的顺序逐个检查字段，找到<strong>第一个有值</strong>
+        的字段后停止，将该值写入结果。 如果所有字段都为空，则使用默认值。
+      </div>
 
+      {/* Field priority list */}
       <div>
-        <label className="text-xs font-medium text-gray-700">
-          field_cascade
-        </label>
-        <div className="mt-1 space-y-2">
+        <div className="mb-2 text-sm font-medium text-gray-900">
+          字段优先级（从上到下依次尝试）
+        </div>
+        <div className="space-y-2">
           {cascade.map((field, index) => (
             <div key={index} className="flex items-center gap-2">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-100 text-xs font-semibold text-green-700">
+                {index + 1}
+              </span>
               <input
                 type="text"
                 value={field}
                 onChange={(e) => handleFieldChange(index, e.target.value)}
-                placeholder={`字段 ${index + 1}`}
-                className="block flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                placeholder={`字段路径，如 claim.fault_ratio`}
+                className="block flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
               <button
                 onClick={() => handleSwap(index, index - 1)}
@@ -443,30 +503,22 @@ const FieldCascadeEditor: React.FC<{
             onClick={handleAddField}
             className="rounded-lg border border-dashed border-gray-300 px-3 py-1.5 text-xs text-gray-500 hover:border-gray-400 hover:text-gray-700"
           >
-            + 添加字段
+            + 添加候选字段
           </button>
         </div>
       </div>
 
-      <FieldRow label="normalize">
-        <select
-          value={normalize}
-          onChange={(e) => onChange({ ...config, normalize: e.target.value })}
-          className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-        >
-          <option value="NONE">NONE</option>
-          <option value="RATIO_0_1">RATIO_0_1</option>
-          <option value="PERCENTAGE">PERCENTAGE</option>
-        </select>
-      </FieldRow>
-
-      <FieldRow label="default_value">
+      {/* Default value */}
+      <div>
+        <div className="mb-1 text-sm font-medium text-gray-900">默认值</div>
+        <div className="mb-2 text-xs text-gray-500">
+          所有候选字段都没有值时，使用此默认值。
+        </div>
         <input
           type="number"
+          step="any"
           value={
-            config.default_value != null
-              ? String(config.default_value)
-              : ""
+            config.default_value != null ? String(config.default_value) : ""
           }
           onChange={(e) =>
             onChange({
@@ -475,9 +527,42 @@ const FieldCascadeEditor: React.FC<{
                 e.target.value === "" ? null : Number(e.target.value),
             })
           }
-          className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          placeholder="留空表示不设默认值"
+          className="block w-40 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
         />
-      </FieldRow>
+      </div>
+
+      {/* Normalize */}
+      <div>
+        <div className="mb-1 text-sm font-medium text-gray-900">数值转换</div>
+        <div className="mb-2 text-xs text-gray-500">
+          取到值后是否需要自动转换格式。
+        </div>
+        <select
+          value={normalize}
+          onChange={(e) => onChange({ ...config, normalize: e.target.value })}
+          className="block w-60 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+        >
+          <option value="NONE">不转换（保持原值）</option>
+          <option value="RATIO_0_1">百分比 → 小数（如 70 → 0.7）</option>
+          <option value="PERCENTAGE">小数 → 百分比（如 0.7 → 70）</option>
+        </select>
+      </div>
+
+      {/* Technical info */}
+      <details className="rounded-lg border border-gray-200">
+        <summary className="cursor-pointer px-4 py-2.5 text-xs font-medium text-gray-500 hover:text-gray-700">
+          查看技术参数
+        </summary>
+        <div className="space-y-2 border-t border-gray-100 px-4 py-3 text-xs text-gray-500">
+          <div className="flex justify-between">
+            <span>结果写入字段</span>
+            <code className="rounded bg-gray-100 px-1.5 py-0.5 font-mono">
+              {(config.output_field as string) || "(未设置)"}
+            </code>
+          </div>
+        </div>
+      </details>
     </div>
   );
 };
@@ -488,8 +573,7 @@ const CoverageAliasResolveEditor: React.FC<{
   config: Record<string, unknown>;
   onChange: (config: Record<string, unknown>) => void;
 }> = ({ config, onChange }) => {
-  const aliasMap =
-    (config.alias_map as Record<string, string[]>) ?? {};
+  const aliasMap = (config.alias_map as Record<string, string[]>) ?? {};
   const entries = Object.entries(aliasMap);
 
   const handleAddEntry = () => {
@@ -525,106 +609,74 @@ const CoverageAliasResolveEditor: React.FC<{
   };
 
   return (
-    <div className="space-y-3">
-      <FieldRow label="input_field">
-        <input
-          type="text"
-          value={(config.input_field as string) ?? ""}
-          onChange={(e) =>
-            onChange({ ...config, input_field: e.target.value })
-          }
-          className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-        />
-      </FieldRow>
-      <FieldRow label="output_field">
-        <input
-          type="text"
-          value={(config.output_field as string) ?? ""}
-          onChange={(e) =>
-            onChange({ ...config, output_field: e.target.value })
-          }
-          className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-        />
-      </FieldRow>
-
-      <div>
-        <label className="text-xs font-medium text-gray-700">
-          alias_map
-        </label>
-        <div className="mt-2 overflow-hidden rounded-lg border border-gray-200">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-gray-50 text-left text-xs font-medium text-gray-500">
-                <th className="px-3 py-2">standard_code</th>
-                <th className="px-3 py-2">aliases (逗号分隔)</th>
-                <th className="px-3 py-2 text-right">操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              {entries.map(([code, aliases], idx) => (
-                <tr key={idx} className="border-t border-gray-100">
-                  <td className="px-3 py-2">
-                    <input
-                      type="text"
-                      value={code}
-                      onChange={(e) => handleChangeCode(code, e.target.value)}
-                      className="block w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-indigo-500 focus:outline-none"
-                    />
-                  </td>
-                  <td className="px-3 py-2">
-                    <input
-                      type="text"
-                      value={aliases.join(", ")}
-                      onChange={(e) =>
-                        handleChangeAliases(code, e.target.value)
-                      }
-                      className="block w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-indigo-500 focus:outline-none"
-                    />
-                  </td>
-                  <td className="px-3 py-2 text-right">
-                    <button
-                      onClick={() => handleRemoveEntry(code)}
-                      className="text-xs text-rose-600 hover:text-rose-800"
-                    >
-                      删除
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {entries.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={3}
-                    className="px-3 py-3 text-center text-xs text-gray-400"
-                  >
-                    暂无别名映射
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-        <button
-          onClick={handleAddEntry}
-          className="mt-2 rounded-lg border border-dashed border-gray-300 px-3 py-1.5 text-xs text-gray-500 hover:border-gray-400 hover:text-gray-700"
-        >
-          + 添加映射
-        </button>
+    <div className="space-y-4">
+      {/* Explanation */}
+      <div className="text-sm text-gray-600">
+        不同渠道或系统对同一个险种可能使用不同的名称。下表将各种别名统一映射到系统标准代码。
       </div>
+
+      {/* Alias table */}
+      <div className="overflow-hidden rounded-lg border border-gray-200">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-gray-50 text-left text-xs font-medium text-gray-500">
+              <th className="px-3 py-2.5">标准代码</th>
+              <th className="px-3 py-2.5">别名（逗号分隔）</th>
+              <th className="px-3 py-2.5 text-right">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            {entries.map(([code, aliases], idx) => (
+              <tr key={idx} className="border-t border-gray-100">
+                <td className="px-3 py-2">
+                  <input
+                    type="text"
+                    value={code}
+                    onChange={(e) => handleChangeCode(code, e.target.value)}
+                    placeholder="如 AUTO_THIRD_PARTY"
+                    className="block w-full rounded border border-gray-300 px-2 py-1.5 font-mono text-sm focus:border-indigo-500 focus:outline-none"
+                  />
+                </td>
+                <td className="px-3 py-2">
+                  <input
+                    type="text"
+                    value={aliases.join(", ")}
+                    onChange={(e) => handleChangeAliases(code, e.target.value)}
+                    placeholder="如 第三者责任险, TPL, THIRD_PARTY"
+                    className="block w-full rounded border border-gray-300 px-2 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
+                  />
+                </td>
+                <td className="px-3 py-2 text-right">
+                  <button
+                    onClick={() => handleRemoveEntry(code)}
+                    className="text-xs text-rose-600 hover:text-rose-800"
+                  >
+                    删除
+                  </button>
+                </td>
+              </tr>
+            ))}
+            {entries.length === 0 && (
+              <tr>
+                <td
+                  colSpan={3}
+                  className="px-3 py-4 text-center text-xs text-gray-400"
+                >
+                  暂无别名映射，点击下方按钮添加
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      <button
+        onClick={handleAddEntry}
+        className="rounded-lg border border-dashed border-gray-300 px-3 py-1.5 text-xs text-gray-500 hover:border-gray-400 hover:text-gray-700"
+      >
+        + 添加映射
+      </button>
     </div>
   );
 };
-
-/* ---------- Shared Layout ---------- */
-
-const FieldRow: React.FC<{
-  label: string;
-  children: React.ReactNode;
-}> = ({ label, children }) => (
-  <div>
-    <label className="text-xs font-medium text-gray-700">{label}</label>
-    <div className="mt-1">{children}</div>
-  </div>
-);
 
 export default PreProcessorConfigTab;
