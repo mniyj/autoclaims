@@ -450,9 +450,9 @@
     "conflicts": []
   },
   {
-    "reportId": "RPT-1773573442304-002925",
+    "reportId": "RPT-1775319172275-969cbb",
     "claimCaseId": "CLM-MED-001",
-    "generatedAt": "2026-03-15T11:17:22.305Z",
+    "generatedAt": "2026-04-04T16:12:52.275Z",
     "generatedBy": "ai",
     "items": [
       {
@@ -505,6 +505,7 @@
       "isMedicalScenario": true,
       "isLiabilityScenario": false,
       "isBenefitScenario": false,
+      "isAccidentMedicalScenario": false,
       "isAutoScenario": false
     },
     "reportKind": "medical_expense_report",
@@ -542,7 +543,7 @@
       "deductible": 0,
       "reimbursementRatio": 0.9,
       "payableAmount": 133.2,
-      "settlementDecision": "MANUAL_REVIEW",
+      "settlementDecision": "PAY",
       "medicalReview": {
         "hospitalReview": {
           "requirement": {
@@ -612,29 +613,26 @@
     },
     "decisionTrace": {
       "traceId": "trace-CLM-MED-001",
-      "generatedAt": "2026-03-15T11:17:11.282Z",
+      "generatedAt": "2026-04-04T15:41:33.695Z",
       "stages": [
         {
           "stage": "material_recognition",
           "title": "材料识别",
           "status": "completed",
-          "summary": "共识别 6/6 份材料，形成 0 份结构化摘要",
+          "summary": "共识别 3/3 份材料，形成 0 份结构化摘要",
           "sourceDocIds": [
             "mat-1773508535449-wqg0z3050",
             "mat-1773508535449-8jzm23u4k",
-            "mat-1773508535449-1f7wucee8",
-            "mat-mmrmdo7j-mat-11",
-            "mat-mmrmdo7k-mat-21",
-            "mat-mmrmdo7k-mat-13"
+            "mat-1773508535449-1f7wucee8"
           ],
           "facts": [
             {
               "label": "材料总数",
-              "value": "6"
+              "value": "3"
             },
             {
               "label": "已识别材料",
-              "value": "6"
+              "value": "3"
             },
             {
               "label": "摘要数量",
@@ -646,7 +644,7 @@
           "stage": "medical_fact_aggregation",
           "title": "医疗事实归纳",
           "status": "completed",
-          "summary": "材料校验规则异常 1 项",
+          "summary": "聚合完成，请手动核实详情",
           "sourceDocIds": [],
           "facts": [
             {
@@ -689,6 +687,27 @@
             {
               "label": "误工天数",
               "value": "0"
+            }
+          ]
+        },
+        {
+          "stage": "manual_review",
+          "title": "人工确认与调整",
+          "status": "completed",
+          "summary": "已记录 1 项人工确认/调整动作",
+          "sourceDocIds": [],
+          "facts": [
+            {
+              "label": "修改结构化字段 - 入院日期 (系统用户)",
+              "value": "已处理 @ 2026/3/26 01:18:48"
+            }
+          ],
+          "manualActions": [
+            {
+              "label": "修改结构化字段 - 入院日期",
+              "timestamp": "2026-03-25T17:18:48.685Z",
+              "detail": "",
+              "actor": "系统用户"
             }
           ]
         },

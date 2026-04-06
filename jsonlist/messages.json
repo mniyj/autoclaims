@@ -143,6 +143,207 @@
       "isRead": false,
       "createdAt": "2026-03-14T17:51:19.388Z",
       "readAt": null
+    },
+    {
+      "id": "msg-16909b47-6885-4e11-a146-118ef41db32e",
+      "userId": "local-import",
+      "type": "task_complete",
+      "title": "材料导入完成",
+      "content": "您的离线材料导入任务已完成，成功处理 3/3 个文件",
+      "data": {
+        "taskId": "task-1e2217bc-f474-4cd6-abf1-fb693600e505",
+        "claimCaseId": "CLM-MED-001",
+        "totalFiles": 3,
+        "completedFiles": 3,
+        "failedFiles": 0,
+        "status": "completed"
+      },
+      "isRead": false,
+      "createdAt": "2026-03-25T16:53:49.531Z",
+      "readAt": null
+    },
+    {
+      "id": "msg-9adec978-ab22-48ff-a732-10f089096cfc",
+      "userId": "anonymous",
+      "type": "task_recovered",
+      "title": "导入任务已恢复",
+      "content": "已刷新导入任务结果，当前成功 3 个，失败 0 个。",
+      "data": {
+        "taskId": "task-1e2217bc-f474-4cd6-abf1-fb693600e505",
+        "claimCaseId": "CLM-MED-001",
+        "totalFiles": 3,
+        "completedFiles": 3,
+        "failedFiles": 0,
+        "status": "completed",
+        "recoveredFiles": []
+      },
+      "isRead": true,
+      "createdAt": "2026-03-25T16:54:11.193Z",
+      "readAt": "2026-03-25T16:57:19.084Z"
+    },
+    {
+      "id": "msg-b7d3be9a-5c01-446f-b360-88867253c67d",
+      "userId": "local-import",
+      "type": "task_complete",
+      "title": "材料导入完成",
+      "content": "您的离线材料导入任务已完成，成功处理 3/3 个文件",
+      "data": {
+        "taskId": "task-1e2217bc-f474-4cd6-abf1-fb693600e505",
+        "claimCaseId": "CLM-MED-001",
+        "totalFiles": 3,
+        "completedFiles": 3,
+        "failedFiles": 0,
+        "status": "completed"
+      },
+      "isRead": false,
+      "createdAt": "2026-03-25T16:54:49.797Z",
+      "readAt": null
+    },
+    {
+      "id": "msg-cf2fc0ec-cec4-49e9-bfe0-6d7c5be306df",
+      "userId": "anonymous",
+      "type": "task_recovered",
+      "title": "导入任务已恢复",
+      "content": "已刷新导入任务结果，当前成功 3 个，失败 0 个。",
+      "data": {
+        "taskId": "task-1e2217bc-f474-4cd6-abf1-fb693600e505",
+        "claimCaseId": "CLM-MED-001",
+        "totalFiles": 3,
+        "completedFiles": 3,
+        "failedFiles": 0,
+        "status": "completed",
+        "recoveredFiles": []
+      },
+      "isRead": true,
+      "createdAt": "2026-03-25T16:55:10.488Z",
+      "readAt": "2026-03-25T16:57:18.536Z"
+    },
+    {
+      "id": "msg-9b4286a8-f6b4-4c10-9bfd-2c1b9cd4619d",
+      "userId": "local-import",
+      "type": "task_complete",
+      "title": "材料导入完成",
+      "content": "您的离线材料导入任务已完成，成功处理 3/3 个文件",
+      "data": {
+        "taskId": "task-1e2217bc-f474-4cd6-abf1-fb693600e505",
+        "claimCaseId": "CLM-MED-001",
+        "totalFiles": 3,
+        "completedFiles": 3,
+        "failedFiles": 0,
+        "status": "completed"
+      },
+      "isRead": false,
+      "createdAt": "2026-03-31T17:26:22.703Z",
+      "readAt": null
+    },
+    {
+      "id": "msg-2924e834-09be-49d4-bac2-164490c9097e",
+      "userId": "anonymous",
+      "type": "task_recovered",
+      "title": "导入任务已恢复",
+      "content": "已刷新导入任务结果，当前成功 3 个，失败 0 个。",
+      "data": {
+        "taskId": "task-1e2217bc-f474-4cd6-abf1-fb693600e505",
+        "claimCaseId": "CLM-MED-001",
+        "totalFiles": 3,
+        "completedFiles": 3,
+        "failedFiles": 0,
+        "status": "completed",
+        "recoveredFiles": []
+      },
+      "isRead": false,
+      "createdAt": "2026-03-31T17:26:22.796Z",
+      "readAt": null
+    },
+    {
+      "id": "msg-8404243c-6792-40f9-913a-70a6a844027f",
+      "userId": null,
+      "type": "task_complete",
+      "title": "材料导入完成",
+      "content": "您的离线材料导入任务已完成，成功处理 3/3 个文件",
+      "data": {
+        "taskId": "task-646b441a-4d0a-4d63-b333-626290ab260c",
+        "claimCaseId": "CLM-MED-001",
+        "totalFiles": 3,
+        "completedFiles": 3,
+        "failedFiles": 0,
+        "status": "completed"
+      },
+      "isRead": false,
+      "createdAt": "2026-04-04T13:35:04.589Z",
+      "readAt": null
+    },
+    {
+      "id": "msg-fbacec99-82fb-4392-8c9d-0aad91f97ced",
+      "userId": null,
+      "type": "task_complete",
+      "title": "材料导入完成",
+      "content": "您的离线材料导入任务已完成，成功处理 3/3 个文件",
+      "data": {
+        "taskId": "task-646b441a-4d0a-4d63-b333-626290ab260c",
+        "claimCaseId": "CLM-MED-001",
+        "totalFiles": 3,
+        "completedFiles": 3,
+        "failedFiles": 0,
+        "status": "completed"
+      },
+      "isRead": false,
+      "createdAt": "2026-04-04T14:05:27.502Z",
+      "readAt": null
+    },
+    {
+      "id": "msg-5000bba4-a353-46ea-afb6-796e29eaedcb",
+      "userId": null,
+      "type": "task_complete",
+      "title": "材料导入完成",
+      "content": "您的离线材料导入任务已完成，成功处理 3/3 个文件",
+      "data": {
+        "taskId": "task-646b441a-4d0a-4d63-b333-626290ab260c",
+        "claimCaseId": "CLM-MED-001",
+        "totalFiles": 3,
+        "completedFiles": 3,
+        "failedFiles": 0,
+        "status": "completed"
+      },
+      "isRead": false,
+      "createdAt": "2026-04-04T14:08:29.301Z",
+      "readAt": null
+    },
+    {
+      "id": "msg-2885f879-c431-49d3-acfe-fc25c796cf83",
+      "userId": null,
+      "type": "task_complete",
+      "title": "材料导入完成",
+      "content": "您的离线材料导入任务已完成，成功处理 3/3 个文件",
+      "data": {
+        "taskId": "task-646b441a-4d0a-4d63-b333-626290ab260c",
+        "claimCaseId": "CLM-MED-001",
+        "totalFiles": 3,
+        "completedFiles": 3,
+        "failedFiles": 0,
+        "status": "completed"
+      },
+      "isRead": false,
+      "createdAt": "2026-04-04T14:11:41.376Z",
+      "readAt": null
+    },
+    {
+      "id": "msg-d52be7e9-07ad-4495-b46e-278c008fd48a",
+      "userId": null,
+      "type": "task_complete",
+      "title": "材料导入完成",
+      "content": "您的离线材料导入任务已完成，成功处理 3/3 个文件",
+      "data": {
+        "taskId": "task-646b441a-4d0a-4d63-b333-626290ab260c",
+        "claimCaseId": "CLM-MED-001",
+        "totalFiles": 3,
+        "completedFiles": 3,
+        "failedFiles": 0,
+        "status": "completed"
+      },
+      "isRead": false,
+      "createdAt": "2026-04-04T14:15:47.393Z",
+      "readAt": null
     }
   ]
 }

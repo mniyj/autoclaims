@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "sh -c 'cleanup(){ kill 0; }; trap cleanup EXIT INT TERM; if ! curl -fsS http://127.0.0.1:${VOICE_DEV_PORT:-8092}/api/voice/health >/dev/null 2>&1; then (cd .. && npm run build:server && npm run dev:voice) & fi; vite'",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start": "node server.js"
   },
   "dependencies": {
     "@google/genai": "^1.37.0",

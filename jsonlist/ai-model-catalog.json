@@ -1,0 +1,74 @@
+[
+  {
+    "modelId": "gemini-2.5-flash",
+    "providerId": "gemini-text",
+    "displayName": "Gemini 2.5 Flash",
+    "type": "text",
+    "contextLength": 1048576,
+    "supportsImages": false,
+    "supportsTools": true,
+    "supportsJsonMode": true,
+    "supportsStreaming": true,
+    "deprecated": false
+  },
+  {
+    "modelId": "gpt-4o",
+    "providerId": "openai-text",
+    "displayName": "GPT-4o",
+    "type": "text",
+    "contextLength": 128000,
+    "supportsImages": true,
+    "supportsTools": true,
+    "supportsJsonMode": true,
+    "supportsStreaming": true,
+    "deprecated": false
+  },
+  {
+    "modelId": "claude-3-sonnet-20250219",
+    "providerId": "claude-text",
+    "displayName": "Claude 3 Sonnet",
+    "type": "text",
+    "contextLength": 200000,
+    "supportsImages": true,
+    "supportsTools": true,
+    "supportsJsonMode": true,
+    "supportsStreaming": true,
+    "deprecated": false
+  },
+  {
+    "modelId": "qwen-plus",
+    "providerId": "qwen-text",
+    "displayName": "Qwen Plus",
+    "type": "text",
+    "contextLength": 128000,
+    "supportsImages": false,
+    "supportsTools": true,
+    "supportsJsonMode": true,
+    "supportsStreaming": true,
+    "deprecated": false
+  },
+  {
+    "modelId": "deepseek-chat",
+    "providerId": "deepseek-text",
+    "displayName": "DeepSeek Chat",
+    "type": "text",
+    "contextLength": 128000,
+    "supportsImages": false,
+    "supportsTools": true,
+    "supportsJsonMode": true,
+    "supportsStreaming": true,
+    "deprecated": false
+  },
+  {
+    "modelId": "glm-4-flash",
+    "providerId": "glm-text",
+    "displayName": "GLM 4 Flash",
+    "type": "text",
+    "contextLength": 128000,
+    "supportsImages": false,
+    "supportsTools": true,
+    "supportsJsonMode": true,
+    "supportsStreaming": true,
+    "deprecated": false
+  }
+]

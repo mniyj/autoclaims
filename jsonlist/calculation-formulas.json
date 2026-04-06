@@ -356,5 +356,170 @@
       "type": "number",
       "label": "人员伤亡理赔金额"
     }
+  },
+
+  "LIABILITY_DEATH": {
+    "description": "责任险死亡赔偿理算（HYBRID模式）",
+    "insuranceType": "LIABILITY",
+    "formula": "max((death_compensation + funeral_expense + dependent_expense + medical_expense) * liability_ratio - paid_offset, 0)",
+    "variables": {
+      "death_compensation": {
+        "source": "claim.death_compensation",
+        "type": "number",
+        "label": "死亡赔偿金"
+      },
+      "funeral_expense": {
+        "source": "claim.funeral_expense",
+        "type": "number",
+        "label": "丧葬费"
+      },
+      "dependent_expense": {
+        "source": "claim.dependent_expense",
+        "type": "number",
+        "label": "被扶养人生活费"
+      },
+      "medical_expense": {
+        "source": "claim.medical_expense",
+        "type": "number",
+        "label": "抢救/治疗医疗费用"
+      },
+      "liability_ratio": {
+        "source": "claim.liability_ratio",
+        "type": "number",
+        "label": "责任比例"
+      },
+      "paid_offset": {
+        "source": "claim.paid_offset",
+        "type": "number",
+        "label": "已付金额抵扣"
+      }
+    },
+    "steps": [
+      {
+        "name": "汇总损失项目",
+        "expr": "death_compensation + funeral_expense + dependent_expense + medical_expense",
+        "output": "total_loss"
+      },
+      {
+        "name": "应用责任比例",
+        "expr": "total_loss * liability_ratio",
+        "output": "liable_amount"
+      },
+      {
+        "name": "扣除已付抵扣",
+        "expr": "liable_amount - paid_offset",
+        "output": "net_amount"
+      },
+      {
+        "name": "确保非负",
+        "expr": "max(net_amount, 0)",
+        "output": "final_amount"
+      }
+    ],
+    "output": {
+      "field": "final_amount",
+      "type": "number",
+      "label": "责任赔偿金额"
+    }
+  },
+
+  "LIABILITY_INJURY": {
+    "description": "责任险人身伤害（非死亡）理算",
+    "insuranceType": "LIABILITY",
+    "formula": "max(medical_expense * liability_ratio - paid_offset, 0)",
+    "variables": {
+      "medical_expense": {
+        "source": "claim.medical_expense",
+        "type": "number",
+        "label": "医疗费用"
+      },
+      "liability_ratio": {
+        "source": "claim.liability_ratio",
+        "type": "number",
+        "label": "责任比例"
+      },
+      "paid_offset": {
+        "source": "claim.paid_offset",
+        "type": "number",
+        "label": "已付金额抵扣"
+      }
+    },
+    "steps": [
+      {
+        "name": "应用责任比例",
+        "expr": "medical_expense * liability_ratio",
+        "output": "liable_amount"
+      },
+      {
+        "name": "扣除已付抵扣",
+        "expr": "liable_amount - paid_offset",
+        "output": "net_amount"
+      },
+      {
+        "name": "确保非负",
+        "expr": "max(net_amount, 0)",
+        "output": "final_amount"
+      }
+    ],
+    "output": {
+      "field": "final_amount",
+      "type": "number",
+      "label": "人身伤害赔偿金额"
+    }
+  },
+
+  "LIABILITY_PROPERTY": {
+    "description": "责任险财产损失理算",
+    "insuranceType": "LIABILITY",
+    "formula": "min(property_loss * liability_ratio, per_incident_limit) - paid_offset",
+    "variables": {
+      "property_loss": {
+        "source": "claim.property_loss",
+        "type": "number",
+        "label": "财产损失金额"
+      },
+      "liability_ratio": {
+        "source": "claim.liability_ratio",
+        "type": "number",
+        "label": "责任比例"
+      },
+      "per_incident_limit": {
+        "source": "coverage.per_incident_limit",
+        "type": "number",
+        "label": "每次事故限额"
+      },
+      "paid_offset": {
+        "source": "claim.paid_offset",
+        "type": "number",
+        "label": "已付金额抵扣"
+      }
+    },
+    "steps": [
+      {
+        "name": "应用责任比例",
+        "expr": "property_loss * liability_ratio",
+        "output": "liable_amount"
+      },
+      {
+        "name": "应用每次事故限额",
+        "expr": "min(liable_amount, per_incident_limit)",
+        "output": "capped_amount"
+      },
+      {
+        "name": "扣除已付抵扣",
+        "expr": "capped_amount - paid_offset",
+        "output": "net_amount"
+      },
+      {
+        "name": "确保非负",
+        "expr": "max(net_amount, 0)",
+        "output": "final_amount"
+      }
+    ],
+    "output": {
+      "field": "final_amount",
+      "type": "number",
+      "label": "责任财产赔偿金额"
+    }
   }
 }

@@ -12,11 +12,14 @@ const assessmentServices = {
   // 意外险 - 伤害定损
   ACCIDENT: () => import("./injuryAssessment.js").then((m) => m),
 
-  // 健康险 - 疾病定损（预留，需要创建 diseaseAssessment.js）
-  // 'HEALTH': () => import('./diseaseAssessment.js').then(m => m),
+  // 健康险 - 疾病定损
+  HEALTH: () => import("./diseaseAssessment.js").then((m) => m),
 
-  // 车险 - 车辆定损（预留，需要创建 vehicleAssessment.js）
-  // 'AUTO': () => import('./vehicleAssessment.js').then(m => m),
+  // 车险 - 车辆定损
+  AUTO: () => import("./vehicleAssessment.js").then((m) => m),
+
+  // 责任险 - 责任定损
+  LIABILITY: () => import("./liabilityAssessment.js").then((m) => m),
 };
 
 /**
@@ -108,8 +111,9 @@ export async function assessDamage(params) {
 export function getSupportedInsuranceTypes() {
   return [
     { code: "ACCIDENT", description: "意外险", available: true },
-    { code: "HEALTH", description: "健康险", available: false },
-    { code: "AUTO", description: "车险", available: false },
+    { code: "HEALTH", description: "健康险", available: true },
+    { code: "AUTO", description: "车险", available: true },
+    { code: "LIABILITY", description: "责任险", available: true },
   ];
 }
 

@@ -29,16 +29,31 @@ export function summarizeMissingMaterialsForVoice(result: {
 
 export function summarizeCoverageForVoice(result: {
   claimType?: string;
+  subFocus?: string;
   responsibilities?: Array<{ name?: string }>;
   exclusions?: string[];
 }): string {
   const claimType = result.claimType || "这个险种";
+  const focusText =
+    result.subFocus === "inpatient"
+      ? "住院相关责任"
+      : result.subFocus === "outpatient"
+        ? "门急诊相关责任"
+        : result.subFocus === "compulsory"
+          ? "交强险部分"
+          : result.subFocus === "third_party"
+            ? "第三者责任部分"
+            : result.subFocus === "vehicle_damage"
+              ? "车损部分"
+              : result.subFocus === "driver_passenger"
+                ? "驾乘人员部分"
+                : claimType;
   const responsibilities = pickTop(
     (result.responsibilities || []).map((item) => item.name || ""),
   );
   const exclusions = pickTop(result.exclusions || [], 2);
   const parts = [
-    `${claimType}主要能保${responsibilities.length > 0 ? responsibilities.join("、") : "常见责任，具体还要以条款为准"}。`,
+    `${focusText}主要能保${responsibilities.length > 0 ? responsibilities.join("、") : "常见责任，具体还要以条款为准"}。`,
   ];
   if (exclusions.length > 0) {
     parts.push(`需要特别注意的是：${exclusions.join("；")}。`);
@@ -50,16 +65,32 @@ export function summarizeSettlementForVoice(result: {
   estimatedAmount?: number;
   basis?: string;
   claimType?: string;
+  subFocus?: string;
 }): string {
   const amount = Number(result.estimatedAmount || 0);
   if (!amount) {
     return `现在还没法给您准确赔付预估，需要结合案件金额和材料再判断。`;
   }
-  return `${result.claimType || "这个险种"}目前预估能赔大约${amount.toLocaleString()}元。${result.basis || "这只是当前估算，最终以审核结果为准"}。`;
+  const focusText =
+    result.subFocus === "compulsory"
+      ? "交强险部分"
+      : result.subFocus === "third_party"
+        ? "第三者责任部分"
+        : result.subFocus === "vehicle_damage"
+          ? "车损部分"
+          : result.subFocus === "driver_passenger"
+            ? "驾乘人员部分"
+            : result.subFocus === "inpatient"
+              ? "住院部分"
+              : result.subFocus === "outpatient"
+                ? "门急诊部分"
+                : result.claimType || "这个险种";
+  return `${focusText}目前预估能赔大约${amount.toLocaleString()}元。${result.basis || "这只是当前估算，最终以审核结果为准"}。`;
 }
 
 export function summarizeMaterialsForVoice(result: {
   claimType?: string;
+  subFocus?: string;
   materials?: Array<{ name?: string; required?: boolean }>;
 }): string {
   const required = pickTop(
@@ -73,8 +104,14 @@ export function summarizeMaterialsForVoice(result: {
       .map((item) => item.name || ""),
     2,
   );
+  const focusText =
+    result.subFocus === "inpatient"
+      ? "住院理赔"
+      : result.subFocus === "outpatient"
+        ? "门急诊理赔"
+        : result.claimType || "该险种";
   const parts = [
-    `${result.claimType || "该险种"}一般先准备${required.length > 0 ? required.join("、") : "基础理赔材料"}。`,
+    `${focusText}一般先准备${required.length > 0 ? required.join("、") : "基础理赔材料"}。`,
   ];
   if (optional.length > 0) {
     parts.push(`如果有的话，再补上${optional.join("、")}会更完整。`);

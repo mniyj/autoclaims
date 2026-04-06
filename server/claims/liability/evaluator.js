@@ -20,7 +20,23 @@ function extractConditionFields(conditions, collected = new Set()) {
   return collected;
 }
 
-function findMissingFields(fields, context) {
+function getPreProcessorManagedFields(context) {
+  const managedFields = new Set();
+  const processors = Array.isArray(context?.ruleset?.pre_processors)
+    ? context.ruleset.pre_processors
+    : [];
+
+  for (const processor of processors) {
+    const outputField = processor?.config?.output_field;
+    if (!outputField) continue;
+    managedFields.add(`claim.${outputField}`);
+    managedFields.add(`ocrData.${outputField}`);
+  }
+
+  return managedFields;
+}
+
+function findMissingFields(fields, context, nullableManagedFields = new Set()) {
   return [...fields].filter(field => {
     const parts = field.split('.');
     let current = context;
@@ -30,7 +46,13 @@ function findMissingFields(fields, context) {
       }
       current = current[part];
     }
-    return current === undefined || current === null || current === '';
+    if (current === undefined || current === '') {
+      return true;
+    }
+    if (current === null) {
+      return !nullableManagedFields.has(field);
+    }
+    return false;
   });
 }
 
@@ -92,8 +114,11 @@ function runBucket(rules, context, state, executionResults, matchedRules, warnin
   const matched = [];
   const unresolved = [];
   let rejectionReason = null;
+  const nullableManagedFields = getPreProcessorManagedFields(context);
 
   for (const rule of rules) {
+    const prevNeedsManualReview = state.needsManualReview;
+    const prevManualReviewReason = state.manualReviewReason;
     const result = executeSingleRule(rule, context, state);
     executionResults.push(result);
 
@@ -106,7 +131,12 @@ function runBucket(rules, context, state, executionResults, matchedRules, warnin
         break;
       }
 
-      if (state.needsManualReview) {
+      const hasNewManualReviewReason =
+        state.needsManualReview &&
+        (!prevNeedsManualReview ||
+          state.manualReviewReason !== prevManualReviewReason);
+
+      if (hasNewManualReviewReason) {
         appendManualReviewReason(manualReviewReasons, warnings, {
           code: 'LIABILITY_RULE_REVIEW',
           rule,
@@ -126,7 +156,7 @@ function runBucket(rules, context, state, executionResults, matchedRules, warnin
     }
 
     const fields = extractConditionFields(rule.conditions);
-    const missingFields = findMissingFields(fields, context);
+    const missingFields = findMissingFields(fields, context, nullableManagedFields);
     const unsupportedReference = hasUnsupportedValueReference(rule.conditions);
     if (missingFields.length > 0 || unsupportedReference) {
       const message = unsupportedReference

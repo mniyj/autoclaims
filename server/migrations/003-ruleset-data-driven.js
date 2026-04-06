@@ -166,6 +166,19 @@ function getPreProcessorsForProductLine(productLine) {
           on_yes: true,
           on_no: false,
           on_uncertain: null,
+          uncertain_resolution: {
+            default: 'MANUAL_REVIEW',
+            rules: [
+              {
+                when: {
+                  product_line: 'HEALTH',
+                  claim_scenario: 'medical_expense',
+                  max_claim_amount: 5000,
+                },
+                action: 'ASSUME_FALSE',
+              },
+            ],
+          },
         },
       },
     ],

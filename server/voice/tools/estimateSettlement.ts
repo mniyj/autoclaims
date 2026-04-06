@@ -6,16 +6,39 @@ const EstimateSettlementSchema = z.object({
   claimId: z.string().optional(),
   productCode: z.string().optional(),
   claimType: z.string().optional(),
+  subFocus: z.string().optional(),
 });
 
-function estimateAmount(claimType: string, amount: number): number {
+function estimateAmount(claimType: string, amount: number, subFocus?: string): number {
+  if (claimType === '车险') {
+    switch (subFocus) {
+      case 'compulsory':
+        return Math.round(amount * 0.75);
+      case 'third_party':
+        return Math.round(amount * 0.85);
+      case 'vehicle_damage':
+        return Math.round(amount * 0.9);
+      case 'driver_passenger':
+        return Math.round(amount * 0.8);
+      default:
+        return Math.round(amount * 0.9);
+    }
+  }
+
+  if (claimType === '医疗险') {
+    switch (subFocus) {
+      case 'outpatient':
+        return Math.round(amount * 0.6);
+      case 'inpatient':
+        return Math.round(amount * 0.85);
+      default:
+        return Math.round(amount * 0.8);
+    }
+  }
+
   switch (claimType) {
-    case '医疗险':
-      return Math.round(amount * 0.8);
     case '重疾险':
       return amount > 0 ? amount : 50000;
-    case '车险':
-      return Math.round(amount * 0.9);
     case '意外险':
     default:
       return Math.round(amount * 0.7);
@@ -47,15 +70,18 @@ export const estimateSettlementTool = {
           : undefined,
       });
       const baseAmount = Number(claim?.claimAmount || claim?.approvedAmount || 0);
-      const estimatedAmount = estimateAmount(claimType, baseAmount || 1000);
+      const estimatedAmount = estimateAmount(claimType, baseAmount || 1000, params.subFocus);
 
       return {
         success: true,
         data: {
           claimId: claim?.id,
           claimType,
+          subFocus: params.subFocus,
           estimatedAmount,
-          basis: baseAmount > 0 ? `基于申报金额 ${baseAmount} 元估算` : '基于险种默认规则估算',
+          basis: baseAmount > 0
+            ? `基于申报金额 ${baseAmount} 元${params.subFocus ? `，按${params.subFocus}口径` : ''}估算`
+            : `基于险种默认规则${params.subFocus ? `和${params.subFocus}口径` : ''}估算`,
         },
         message: `已生成${claimType}赔付预估`,
       };

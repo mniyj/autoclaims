@@ -20,6 +20,7 @@ import {
   readAuditLogs,
 } from "./middleware/index.js";
 import { reviewTaskService } from "./services/reviewTaskService.js";
+import { interventionStateMachine } from "./services/interventionStateMachine.js";
 
 // 导入多文件处理服务
 import {
@@ -59,7 +60,7 @@ import {
   getContainerType,
 } from "./services/preprocessor.js";
 import { checkDuplicatesBatch } from "./services/duplicateDetector.js";
-import { extractDocumentSummaries } from "./services/summaryExtractors/index.js";
+import { buildSummariesFromDocuments } from "./services/summaryBuilder.js";
 import { aggregateCase } from "./services/caseAggregator.js";
 
 // 导入任务队列和消息中心
@@ -107,10 +108,62 @@ import {
 import {
   getAIInventory,
   getAISettingsSnapshot,
+  getProviderCatalog,
   renderPromptTemplate,
   resolveAICapability,
   updateAISettings,
 } from "./services/aiConfigService.js";
+import {
+  getPricingRules,
+  savePricingRules,
+} from "./services/aiPricingService.js";
+import {
+  getModelCatalog,
+  saveModelCatalog,
+} from "./services/aiModelCatalogService.js";
+import {
+  getAIBusinessStats,
+  getAICostAnalytics,
+  getAIDashboardOverview,
+  getAIModelRuntimeComparison,
+} from "./services/aiAnalytics.js";
+import { clearAIStatsCache } from "./services/aiStatsCache.js";
+import {
+  getAIStatsDailyStatus,
+  rebuildAIStatsDaily,
+  summarizeAIStatsDaily,
+} from "./services/aiStatsDailyService.js";
+import {
+  getProviderHealthSummary,
+  runProviderHealthCheck,
+} from "./services/aiHealthMonitor.js";
+import { getBudgets, updateBudgets } from "./services/aiBudgetService.js";
+import {
+  getAIAlerts,
+  repairBrokenIncidentTraceReferences,
+  saveAlertRules,
+  updateIncidentStatus,
+} from "./services/aiAlertService.js";
+import {
+  getBindingHistory,
+  appendBindingHistory,
+} from "./services/aiBindingVersionService.js";
+import {
+  getPromptHistory,
+  appendPromptHistory,
+} from "./services/aiPromptVersionService.js";
+import {
+  listAILogViews,
+  saveAILogView,
+  deleteAILogView,
+} from "./services/aiLogViewService.js";
+import {
+  listAIConsistencyReports,
+  notifyAIDataConsistencyFailure,
+  runAIDataConsistencyCheck,
+} from "./services/aiConsistencyService.js";
+import { getAIConsistencyMonitorStatus } from "./services/aiConsistencyMonitor.js";
+import { getAIStorageStatus } from "./services/aiStorageService.js";
 import { loadEnvConfig as loadEnvFromFile } from "./utils/loadEnvConfig.js";
 
 // ============ 操作日志辅助函数 ============
@@ -120,15 +173,15 @@ import { loadEnvConfig as loadEnvFromFile } from "./utils/loadEnvConfig.js";
  */
 function mapAuditTypeToOperationType(auditType) {
   const typeMap = {
-    'RULE_EXECUTION': 'AI_REVIEW',
-    'AI_REVIEW': 'AI_REVIEW',
-    'CLAIM_ACTION': 'CLAIM_ACTION',
-    'API_CALL': 'SYSTEM_CALL',
-    'TASK_CREATE': 'TASK_CREATE',
-    'TASK_RETRY': 'TASK_RETRY',
-    'IMPORT_TASK_CREATE': 'IMPORT_MATERIALS',
+    RULE_EXECUTION: "AI_REVIEW",
+    AI_REVIEW: "AI_REVIEW",
+    CLAIM_ACTION: "CLAIM_ACTION",
+    API_CALL: "SYSTEM_CALL",
+    TASK_CREATE: "TASK_CREATE",
+    TASK_RETRY: "TASK_RETRY",
+    IMPORT_TASK_CREATE: "IMPORT_MATERIALS",
   };
-  return typeMap[auditType] || 'SYSTEM_CALL';
+  return typeMap[auditType] || "SYSTEM_CALL";
 }
 
 /**
@@ -136,19 +189,25 @@ function mapAuditTypeToOperationType(auditType) {
  */
 function formatAuditLogLabel(log) {
   const labels = {
-    'RULE_EXECUTION': `规则执行: ${log.rulesetId || '未知规则'}`,
-    'AI_REVIEW': `AI智能审核${log.decision ? ` - ${log.decision}` : ''}`,
-    'CLAIM_ACTION': `案件操作: ${log.action || '未知操作'}`,
-    'API_CALL': `系统调用: ${log.endpoint || log.type}`,
-    'TASK_CREATE': `创建处理任务 (${log.fileCount || 0}个文件)`,
-    'TASK_RETRY': `重试处理任务`,
-    'IMPORT_TASK_CREATE': `导入离线材料 (${log.fileCount || 0}个文件)`,
+    RULE_EXECUTION: `规则执行: ${log.rulesetId || "未知规则"}`,
+    AI_REVIEW: `AI智能审核${log.decision ? ` - ${log.decision}` : ""}`,
+    CLAIM_ACTION: `案件操作: ${log.action || "未知操作"}`,
+    API_CALL: `系统调用: ${log.endpoint || log.type}`,
+    TASK_CREATE: `创建处理任务 (${log.fileCount || 0}个文件)`,
+    TASK_RETRY: `重试处理任务`,
+    IMPORT_TASK_CREATE: `导入离线材料 (${log.fileCount || 0}个文件)`,
   };
   return labels[log.type] || log.type;
 }
 
-function rebuildDecisionTraceForClaim({ claimCaseId, aggregation, latestRecord }) {
-  const claimCase = (readData("claim-cases") || []).find((item) => item.id === claimCaseId) || null;
+function rebuildDecisionTraceForClaim({
+  claimCaseId,
+  aggregation,
+  latestRecord,
+}) {
+  const claimCase =
+    (readData("claim-cases") || []).find((item) => item.id === claimCaseId) ||
+    null;
   const materials = (readData("claim-materials") || [])
     .filter((item) => item.claimCaseId === claimCaseId)
     .map((item) => ({
@@ -159,7 +218,7 @@ function rebuildDecisionTraceForClaim({ claimCaseId, aggregation, latestRecord }
     .map((doc) => doc.documentSummary)
     .filter(Boolean);
   const operationLogs = (readData("user-operation-logs") || []).filter(
-    (item) => item.claimId === claimCaseId
+    (item) => item.claimId === claimCaseId,
   );
   const enrichedAggregation = {
     ...aggregation,
@@ -169,7 +228,8 @@ function rebuildDecisionTraceForClaim({ claimCaseId, aggregation, latestRecord }
     aggregation: enrichedAggregation,
     materials,
   });
-  enrichedAggregation.domainModel = enrichedAggregation.handlingProfile?.domainModel || null;
+  enrichedAggregation.domainModel =
+    enrichedAggregation.handlingProfile?.domainModel || null;
 
   return buildDecisionTrace({
     claimCaseId,
@@ -200,12 +260,22 @@ function normalizeFieldKey(value) {
 }
 
 function getAllowedMaterialIdsForFact(fact, materials) {
-  if (Array.isArray(fact?.allowed_material_ids) && fact.allowed_material_ids.length > 0) {
+  if (
+    Array.isArray(fact?.allowed_material_ids) &&
+    fact.allowed_material_ids.length > 0
+  ) {
     return fact.allowed_material_ids;
   }
-  if (Array.isArray(fact?.allowed_material_categories) && fact.allowed_material_categories.length > 0) {
+  if (
+    Array.isArray(fact?.allowed_material_categories) &&
+    fact.allowed_material_categories.length > 0
+  ) {
     return (materials || [])
-      .filter((material) => material?.category && fact.allowed_material_categories.includes(material.category))
+      .filter(
+        (material) =>
+          material?.category &&
+          fact.allowed_material_categories.includes(material.category),
+      )
       .map((material) => material.id);
   }
   return [];
@@ -225,14 +295,16 @@ function collectSchemaFieldPaths(fields = [], prefix = "") {
       paths.push(...collectSchemaFieldPaths(field.children || [], path));
     }
     if (field?.data_type === "ARRAY") {
-      paths.push(...collectSchemaFieldPaths(field.item_fields || [], `${path}[]`));
+      paths.push(
+        ...collectSchemaFieldPaths(field.item_fields || [], `${path}[]`),
+      );
     }
   }
   return paths;
 }
 
 function normalizeSchemaFields(material = {}) {
-  return ((material?.schemaFields || [])).map((field) => ({ ...field }));
+  return (material?.schemaFields || []).map((field) => ({ ...field }));
 }
 
 function collectFactBindingsFromSchemaFields(fields = [], prefix = "") {
@@ -248,10 +320,17 @@ function collectFactBindingsFromSchemaFields(fields = [], prefix = "") {
       });
     }
     if (field?.data_type === "OBJECT") {
-      bindings.push(...collectFactBindingsFromSchemaFields(field.children || [], path));
+      bindings.push(
+        ...collectFactBindingsFromSchemaFields(field.children || [], path),
+      );
     }
     if (field?.data_type === "ARRAY") {
-      bindings.push(...collectFactBindingsFromSchemaFields(field.item_fields || [], `${path}[]`));
+      bindings.push(
+        ...collectFactBindingsFromSchemaFields(
+          field.item_fields || [],
+          `${path}[]`,
+        ),
+      );
     }
   }
   return bindings;
@@ -276,7 +355,9 @@ function buildJsonSchemaFromFields(fields = []) {
     };
 
     if (field?.data_type === "OBJECT") {
-      properties[key] = JSON.parse(buildJsonSchemaFromFields(field.children || []));
+      properties[key] = JSON.parse(
+        buildJsonSchemaFromFields(field.children || []),
+      );
       continue;
     }
 
@@ -312,14 +393,21 @@ function buildJsonSchemaFromFields(fields = []) {
 function normalizeClaimsMaterialPayload(payload) {
   const normalizeOne = (item = {}) => {
     const schemaFields = normalizeSchemaFields(item);
+    const builtJsonSchema = buildJsonSchemaFromFields(schemaFields);
     return {
       ...item,
       schemaFields,
-      jsonSchema: buildJsonSchemaFromFields(schemaFields),
+      jsonSchema: builtJsonSchema,
+      extractionConfig: {
+        ...(item.extractionConfig || {}),
+        jsonSchema: builtJsonSchema,
+      },
     };
   };
 
-  return Array.isArray(payload) ? payload.map(normalizeOne) : normalizeOne(payload);
+  return Array.isArray(payload)
+    ? payload.map(normalizeOne)
+    : normalizeOne(payload);
 }
 
 function validateClaimsMaterialItem(item, facts, allMaterials) {
@@ -334,16 +422,60 @@ function validateClaimsMaterialItem(item, facts, allMaterials) {
     .map((binding) => normalizeFieldKey(binding.field_key))
     .filter(Boolean);
 
-  const materialFieldKeys = schemaFieldKeys;
-  const duplicateMaterialFieldKeys = materialFieldKeys.filter((key, index) => materialFieldKeys.indexOf(key) !== index);
-  if (duplicateMaterialFieldKeys.length > 0) {
-    errors.push(`材料 ${item?.name || item?.id || "unknown"} 的 schema 字段存在重复路径：${[...new Set(duplicateMaterialFieldKeys)].join("、")}`);
+  // 验证 type_code 存在于材料类型目录
+  if (item?.type_code) {
+    const typeCatalog = readData("material-type-catalog") || [];
+    const catalogEntry = typeCatalog.find(
+      (t) => t.type_code === item.type_code,
+    );
+    if (!catalogEntry) {
+      errors.push(
+        `材料 ${item?.name || item?.id || "unknown"} 引用了不存在的材料类型代码：${item.type_code}`,
+      );
+    }
   }
 
-  const duplicateBindingFieldKeys = bindingFieldKeys.filter((key, index) => bindingFieldKeys.indexOf(key) !== index);
-  if (duplicateBindingFieldKeys.length > 0) {
-    errors.push(`材料 ${item?.name || item?.id || "unknown"} 的事实绑定存在重复 schema 字段：${[...new Set(duplicateBindingFieldKeys)].join("、")}`);
+  const materialFieldKeys = schemaFieldKeys;
+  const duplicateMaterialFieldKeys = materialFieldKeys.filter(
+    (key, index) => materialFieldKeys.indexOf(key) !== index,
+  );
+  if (duplicateMaterialFieldKeys.length > 0) {
+    errors.push(
+      `材料 ${item?.name || item?.id || "unknown"} 的 schema 字段存在重复路径：${[...new Set(duplicateMaterialFieldKeys)].join("、")}`,
+    );
   }
+
+  const duplicateBindingFieldKeys = bindingFieldKeys.filter(
+    (key, index) => bindingFieldKeys.indexOf(key) !== index,
+  );
+  if (duplicateBindingFieldKeys.length > 0) {
+    errors.push(
+      `材料 ${item?.name || item?.id || "unknown"} 的事实绑定存在重复 schema 字段：${[...new Set(duplicateBindingFieldKeys)].join("、")}`,
+    );
+  }
+
+  // 验证 binding_status 与 fact_id 一致性
+  const validateBindingConsistency = (fields, parentPath = "") => {
+    for (const field of fields || []) {
+      const fieldPath = parentPath
+        ? `${parentPath}.${field.field_key}`
+        : field.field_key;
+      if (field.binding_status === "bound" && !field.fact_id) {
+        errors.push(
+          `材料 ${item?.name || item?.id} 的业务字段 ${fieldPath} 标记为 bound 但未绑定事实`,
+        );
+      }
+      if (field.binding_status === "display_only" && field.fact_id) {
+        errors.push(
+          `材料 ${item?.name || item?.id} 的展示字段 ${fieldPath} 不应绑定事实`,
+        );
+      }
+      if (field.children) validateBindingConsistency(field.children, fieldPath);
+      if (field.item_fields)
+        validateBindingConsistency(field.item_fields, `${fieldPath}[]`);
+    }
+  };
+  validateBindingConsistency(schemaFields);
 
   const allBindings = collectFactBindingsFromSchemaFields(schemaFields);
 
@@ -351,13 +483,21 @@ function validateClaimsMaterialItem(item, facts, allMaterials) {
     const factId = binding?.fact_id;
     const fact = factMap.get(factId);
     if (!fact) {
-      errors.push(`材料 ${item?.name || item?.id || "unknown"} 绑定了不存在的标准事实字段：${factId}`);
+      errors.push(
+        `材料 ${item?.name || item?.id || "unknown"} 绑定了不存在的标准事实字段：${factId}`,
+      );
       continue;
     }
 
     const allowedMaterialIds = getAllowedMaterialIdsForFact(fact, allMaterials);
-    if (fact?.source_type === "material" && allowedMaterialIds.length > 0 && !allowedMaterialIds.includes(item?.id)) {
-      errors.push(`标准事实 ${factId} 不允许绑定到材料模板 ${item?.name || item?.id}`);
+    if (
+      fact?.source_type === "material" &&
+      allowedMaterialIds.length > 0 &&
+      !allowedMaterialIds.includes(item?.id)
+    ) {
+      errors.push(
+        `标准事实 ${factId} 不允许绑定到材料模板 ${item?.name || item?.id}`,
+      );
     }
   }
 
@@ -371,8 +511,12 @@ function validateIfClaimsMaterialsResource(resource, payload) {
 
   const facts = readData("fact-catalog") || [];
   const normalizedPayload = normalizeClaimsMaterialPayload(payload);
-  const allMaterials = Array.isArray(normalizedPayload) ? normalizedPayload : [normalizedPayload];
-  return allMaterials.flatMap((item) => validateClaimsMaterialItem(item, facts, allMaterials));
+  const allMaterials = Array.isArray(normalizedPayload)
+    ? normalizedPayload
+    : [normalizedPayload];
+  return allMaterials.flatMap((item) =>
+    validateClaimsMaterialItem(item, facts, allMaterials),
+  );
 }
 
 function validateIfRulesetResource(resource, payload) {
@@ -386,42 +530,42 @@ function validateIfRulesetResource(resource, payload) {
  * 检测设备类型
  */
 function detectDeviceType(userAgent) {
-  if (!userAgent) return 'unknown';
+  if (!userAgent) return "unknown";
   const ua = userAgent.toLowerCase();
   if (/mobile|android|iphone|ipad|ipod/.test(ua)) {
-    if (/ipad/.test(ua)) return 'tablet';
-    return 'mobile';
+    if (/ipad/.test(ua)) return "tablet";
+    return "mobile";
   }
-  if (/tablet|ipad/.test(ua)) return 'tablet';
-  return 'desktop';
+  if (/tablet|ipad/.test(ua)) return "tablet";
+  return "desktop";
 }
 
 /**
  * 根据文件名推断 MIME 类型
  */
 function inferFileType(fileName) {
-  if (!fileName) return 'application/octet-stream';
-  const ext = fileName.split('.').pop()?.toLowerCase();
+  if (!fileName) return "application/octet-stream";
+  const ext = fileName.split(".").pop()?.toLowerCase();
   const typeMap = {
-    'jpg': 'image/jpeg',
-    'jpeg': 'image/jpeg',
-    'png': 'image/png',
-    'gif': 'image/gif',
-    'webp': 'image/webp',
-    'pdf': 'application/pdf',
-    'doc': 'application/msword',
-    'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'xls': 'application/vnd.ms-excel',
-    'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    'mp4': 'video/mp4',
-    'mov': 'video/quicktime',
-    'avi': 'video/x-msvideo',
-    'mkv': 'video/x-matroska',
-    'webm': 'video/webm',
-    'txt': 'text/plain',
-    'csv': 'text/csv',
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    png: "image/png",
+    gif: "image/gif",
+    webp: "image/webp",
+    pdf: "application/pdf",
+    doc: "application/msword",
+    docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    xls: "application/vnd.ms-excel",
+    xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    mp4: "video/mp4",
+    mov: "video/quicktime",
+    avi: "video/x-msvideo",
+    mkv: "video/x-matroska",
+    webm: "video/webm",
+    txt: "text/plain",
+    csv: "text/csv",
   };
-  return typeMap[ext] || 'application/octet-stream';
+  return typeMap[ext] || "application/octet-stream";
 }
 
 function resolveLocalImportPath(inputPath) {
@@ -447,10 +591,24 @@ function resolveLocalImportPath(inputPath) {
 
 function collectLocalCaseFiles(directoryPath) {
   const supportedExtensions = new Set([
-    ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp",
-    ".pdf", ".doc", ".docx", ".xls", ".xlsx",
-    ".mp4", ".mov", ".avi", ".mkv", ".webm",
-    ".txt", ".csv",
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".gif",
+    ".bmp",
+    ".webp",
+    ".pdf",
+    ".doc",
+    ".docx",
+    ".xls",
+    ".xlsx",
+    ".mp4",
+    ".mov",
+    ".avi",
+    ".mkv",
+    ".webm",
+    ".txt",
+    ".csv",
   ]);
   const files = [];
 
@@ -503,11 +661,12 @@ function buildLocalCaseOssKey(claimCaseId, relativeFileName) {
   const normalizedPath = String(relativeFileName || "")
     .replace(/\\/g, "/")
     .split("/")
-    .map((segment) =>
-      segment
-        .replace(/[^\u4e00-\u9fa5a-zA-Z0-9._-]/g, "_")
-        .replace(/_+/g, "_")
-        .slice(0, 120) || "file"
+    .map(
+      (segment) =>
+        segment
+          .replace(/[^\u4e00-\u9fa5a-zA-Z0-9._-]/g, "_")
+          .replace(/_+/g, "_")
+          .slice(0, 120) || "file",
     )
     .join("/");
 
@@ -527,7 +686,7 @@ async function mapWithConcurrency(items, concurrency, mapper) {
 
   const workers = Array.from(
     { length: Math.max(1, Math.min(concurrency, items.length || 1)) },
-    () => worker()
+    () => worker(),
   );
   await Promise.all(workers);
   return results;
@@ -566,7 +725,7 @@ function upsertPendingOfflineImportMaterials({
       (item) =>
         item.claimCaseId === claimCaseId &&
         item.fileName === file.fileName &&
-        item.source === "offline_import"
+        item.source === "offline_import",
     );
 
     const nextMaterial = {
@@ -660,7 +819,9 @@ function upsertPendingImportRecord({
     },
   };
 
-  const existingIndex = allClaimDocs.findIndex((item) => item.taskId === taskId);
+  const existingIndex = allClaimDocs.findIndex(
+    (item) => item.taskId === taskId,
+  );
   if (existingIndex !== -1) {
     allClaimDocs[existingIndex] = {
       ...allClaimDocs[existingIndex],
@@ -686,7 +847,9 @@ function getAutoCompletedBy(status, fallback = "system") {
 function shouldWriteAutoStage(stageDecision) {
   return (
     typeof stageDecision === "string" &&
-    !["PENDING_MATERIAL", "MANUAL_REVIEW", "UNABLE_TO_ASSESS"].includes(stageDecision)
+    !["PENDING_MATERIAL", "MANUAL_REVIEW", "UNABLE_TO_ASSESS"].includes(
+      stageDecision,
+    )
   );
 }
 
@@ -714,6 +877,7 @@ function buildLatestReviewSnapshot(reviewResult, timestamp) {
     missingMaterials: Array.isArray(reviewResult.missingMaterials)
       ? reviewResult.missingMaterials
       : [],
+    preExistingAssessment: reviewResult.preExistingAssessment || null,
     coverageResults,
   };
 }
@@ -811,10 +975,7 @@ function syncClaimStageFields(claimCaseId, reviewResult, options = {}) {
     patch.acceptedBy = claimCase.acceptedBy || "system";
   }
 
-  if (
-    options.parseCompleted &&
-    (!claimCase.parsedAt || !claimCase.parsedBy)
-  ) {
+  if (options.parseCompleted && (!claimCase.parsedAt || !claimCase.parsedBy)) {
     patch.parsedAt = claimCase.parsedAt || nowIso;
     patch.parsedBy = claimCase.parsedBy || "system";
   }
@@ -839,7 +1000,8 @@ function syncClaimStageFields(claimCaseId, reviewResult, options = {}) {
     (!claimCase.assessmentCompletedAt ||
       !claimCase.assessmentCompletedBy ||
       !claimCase.assessmentDecision ||
-      (claimCase.approvedAmount == null && getNormalizedReviewAmount(reviewResult) != null))
+      (claimCase.approvedAmount == null &&
+        getNormalizedReviewAmount(reviewResult) != null))
   ) {
     patch.assessmentCompletedAt = claimCase.assessmentCompletedAt || nowIso;
     patch.assessmentCompletedBy =
@@ -848,7 +1010,10 @@ function syncClaimStageFields(claimCaseId, reviewResult, options = {}) {
     if (!claimCase.assessmentDecision) {
       patch.assessmentDecision = reviewResult.assessmentDecision;
     }
-    if (claimCase.approvedAmount == null && getNormalizedReviewAmount(reviewResult) != null) {
+    if (
+      claimCase.approvedAmount == null &&
+      getNormalizedReviewAmount(reviewResult) != null
+    ) {
       patch.approvedAmount = getNormalizedReviewAmount(reviewResult);
     }
   }
@@ -862,6 +1027,27 @@ function syncClaimStageFields(claimCaseId, reviewResult, options = {}) {
     ...patch,
   };
   writeData("claim-cases", claimCases);
+
+  // 审核通过的阶段，自动解决对应的旧人工介入记录
+  try {
+    const activeInterventions = interventionStateMachine
+      .listByClaimCase(claimCaseId)
+      .filter((iv) => !iv.resolvedAt);
+    for (const iv of activeInterventions) {
+      const shouldResolve =
+        (iv.stageKey === "liability" &&
+          shouldWriteAutoStage(reviewResult.liabilityDecision)) ||
+        (iv.stageKey === "assessment" &&
+          shouldWriteAutoStage(reviewResult.assessmentDecision));
+      if (shouldResolve) {
+        interventionStateMachine.resolveIntervention(iv.id, "PROCEED", {
+          adjusterDecision: { note: "审核重跑后自动解决" },
+        });
+      }
+    }
+  } catch (_) {
+    // 介入清理失败不影响主流程
+  }
 }
 
 /**
@@ -880,7 +1066,9 @@ function syncFileCategoriesToMaterials(claimCaseId, fileCategories) {
       return (
         materialCatalog.find((item) => item.name === categoryName) ||
         materialCatalog.find(
-          (item) => categoryName.includes(item.name) || item.name.includes(categoryName),
+          (item) =>
+            categoryName.includes(item.name) ||
+            item.name.includes(categoryName),
         ) ||
         null
       );
@@ -890,9 +1078,10 @@ function syncFileCategoriesToMaterials(claimCaseId, fileCategories) {
       for (const file of category.files || []) {
         const matchedMaterialConfig = resolveMaterialConfig(category.name);
         const existingIndex = allMaterials.findIndex(
-          (m) => m.claimCaseId === claimCaseId &&
-                 m.fileName === file.name &&
-                 m.source === "direct_upload"
+          (m) =>
+            m.claimCaseId === claimCaseId &&
+            m.fileName === file.name &&
+            (m.source === "claim_report" || m.source === "direct_upload"),
         );
         if (!file.name) {
           continue;
@@ -911,12 +1100,16 @@ function syncFileCategoriesToMaterials(claimCaseId, fileCategories) {
           category: category.name,
           materialId:
             matchedMaterialConfig?.id ||
-            (existingIndex >= 0 ? allMaterials[existingIndex].materialId : undefined),
+            (existingIndex >= 0
+              ? allMaterials[existingIndex].materialId
+              : undefined),
           materialName:
             matchedMaterialConfig?.name ||
             category.name ||
-            (existingIndex >= 0 ? allMaterials[existingIndex].materialName : undefined),
-          source: "direct_upload",
+            (existingIndex >= 0
+              ? allMaterials[existingIndex].materialName
+              : undefined),
+          source: "claim_report",
           status:
             existingIndex >= 0
               ? allMaterials[existingIndex].status || "pending"
@@ -943,7 +1136,9 @@ function syncFileCategoriesToMaterials(claimCaseId, fileCategories) {
     }
 
     writeData("claim-materials", allMaterials);
-    console.log(`[Sync] Synced fileCategories to claim-materials for claim ${claimCaseId}`);
+    console.log(
+      `[Sync] Synced fileCategories to claim-materials for claim ${claimCaseId}`,
+    );
   } catch (error) {
     console.error("[Sync] Failed to sync fileCategories:", error);
   }
@@ -1198,8 +1393,7 @@ async function classifyMaterial(result, fileName) {
       temperature: 0.1,
     });
 
-    const raw =
-      response.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+    const raw = response.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
     let parsed = {};
     try {
       parsed = JSON.parse(raw.replace(/```json|```/g, "").trim());
@@ -1210,8 +1404,7 @@ async function classifyMaterial(result, fileName) {
     const classification = {
       materialId: parsed.materialId || "unknown",
       materialName: parsed.materialName || "未识别",
-      confidence:
-        typeof parsed.confidence === "number" ? parsed.confidence : 0,
+      confidence: typeof parsed.confidence === "number" ? parsed.confidence : 0,
     };
     console.log(
       `[classify] ${fileName} → ${classification.materialName} (${(classification.confidence * 100).toFixed(0)}%)`,
@@ -1262,6 +1455,7 @@ const allowedResources = [
   "batch-classify",
   "import-offline-materials-v2",
   "intake-field-presets",
+  "material-type-catalog",
 ];
 
 export const handleApiRequest = async (req, res) => {
@@ -1288,7 +1482,7 @@ export const handleApiRequest = async (req, res) => {
 
     try {
       const body = await parseBody(req);
-      const files = (body && Array.isArray(body.files)) ? body.files : [];
+      const files = body && Array.isArray(body.files) ? body.files : [];
       const expiresSec = Number(body?.expires ?? 3600) || 3600;
 
       // OSS 配置
@@ -1302,11 +1496,15 @@ export const handleApiRequest = async (req, res) => {
       }
 
       // 形成 host
-      const regionForHost = region.startsWith("oss-") ? region.replace("oss-", "") : region;
+      const regionForHost = region.startsWith("oss-")
+        ? region.replace("oss-", "")
+        : region;
       const host = `https://${bucket}.oss-${regionForHost}.aliyuncs.com`;
 
       const policyBase64For = (keyPrefix) => {
-        const expiration = new Date(Date.now() + expiresSec * 1000).toISOString();
+        const expiration = new Date(
+          Date.now() + expiresSec * 1000,
+        ).toISOString();
         const policy = {
           expiration,
           conditions: [
@@ -1324,7 +1522,7 @@ export const handleApiRequest = async (req, res) => {
         const name = (f && f.name) || "untitled";
         // 统一生成 key，前缀设为 uploads/
         const key = `uploads/${Date.now()}_${Math.random().toString(36).slice(2)}_${name}`;
-        const policy = policyBase64For("" + ("uploads/"));
+        const policy = policyBase64For("" + "uploads/");
         // 签名使用 policyBase64 的值
         const signature = crypto
           .createHmac("sha1", accessKeySecret)
@@ -1347,7 +1545,7 @@ export const handleApiRequest = async (req, res) => {
         JSON.stringify({
           bucket,
           endpoint: host,
-          files: results.filter(r => r && r.name),
+          files: results.filter((r) => r && r.name),
         }),
       );
     } catch (error) {
@@ -1368,7 +1566,7 @@ export const handleApiRequest = async (req, res) => {
 
     try {
       const { fileName, fileType, base64Data } = await parseBody(req);
-      
+
       if (!base64Data || !fileName) {
         res.statusCode = 400;
         res.end(JSON.stringify({ error: "Missing file data or filename" }));
@@ -1376,10 +1574,10 @@ export const handleApiRequest = async (req, res) => {
       }
 
       const buffer = Buffer.from(base64Data, "base64");
-      
+
       // 生成唯一的OSS key
       const key = `uploads/${Date.now()}_${Math.random().toString(36).slice(2)}_${fileName}`;
-      
+
       // OSS配置
       const region = process.env.ALIYUN_OSS_REGION || "oss-cn-beijing";
       const bucket = process.env.ALIYUN_OSS_BUCKET;
@@ -1412,7 +1610,7 @@ export const handleApiRequest = async (req, res) => {
           ossKey: key,
           url: signedUrl,
           publicUrl: result.url,
-        })
+        }),
       );
     } catch (error) {
       console.error("[API] Upload to OSS failed:", error);
@@ -1434,7 +1632,12 @@ export const handleApiRequest = async (req, res) => {
       const body = await parseBody(req);
       const { claimCaseId, productCode, files } = body;
 
-      if (!claimCaseId || !files || !Array.isArray(files) || files.length === 0) {
+      if (
+        !claimCaseId ||
+        !files ||
+        !Array.isArray(files) ||
+        files.length === 0
+      ) {
         res.statusCode = 400;
         res.end(JSON.stringify({ error: "Missing claimCaseId or files" }));
         return;
@@ -1465,11 +1668,29 @@ export const handleApiRequest = async (req, res) => {
         source: "offline-import-quick",
         useV2: true,
       });
+      const importedAt = new Date().toISOString();
+      const importId = `import-${Date.now()}`;
 
       task.status = "archived";
       await updateTask(task.id, {
         status: "archived",
         files: taskFiles,
+      });
+
+      upsertPendingOfflineImportMaterials({
+        claimCaseId,
+        taskId: task.id,
+        importId,
+        importedAt,
+        files,
+      });
+      upsertPendingImportRecord({
+        claimCaseId,
+        productCode,
+        taskId: task.id,
+        importId,
+        importedAt,
+        files,
       });
 
       // 记录审计日志
@@ -1488,7 +1709,7 @@ export const handleApiRequest = async (req, res) => {
           taskId: task.id,
           message: "导入成功，后台识别中",
           totalFiles: files.length,
-        })
+        }),
       );
     } catch (error) {
       console.error("[API] Quick import failed:", error);
@@ -1511,7 +1732,9 @@ export const handleApiRequest = async (req, res) => {
 
       if (!claimCaseId || !directoryPath) {
         res.statusCode = 400;
-        res.end(JSON.stringify({ error: "Missing claimCaseId or directoryPath" }));
+        res.end(
+          JSON.stringify({ error: "Missing claimCaseId or directoryPath" }),
+        );
         return;
       }
 
@@ -1519,7 +1742,11 @@ export const handleApiRequest = async (req, res) => {
       const localFiles = collectLocalCaseFiles(resolvedPath);
       if (localFiles.length === 0) {
         res.statusCode = 400;
-        res.end(JSON.stringify({ error: "No supported files found in directoryPath" }));
+        res.end(
+          JSON.stringify({
+            error: "No supported files found in directoryPath",
+          }),
+        );
         return;
       }
 
@@ -1527,11 +1754,17 @@ export const handleApiRequest = async (req, res) => {
       const uploadedFiles = await uploadLocalCaseFilesToOSS(localFiles, {
         claimCaseId,
       });
-      const task = await createTask(claimCaseId, productCode, uploadedFiles, userId, {
-        source: "offline-import-local-case-folder-oss",
-        useLocalFiles: false,
-        rootDirectory: resolvedPath,
-      });
+      const task = await createTask(
+        claimCaseId,
+        productCode,
+        uploadedFiles,
+        userId,
+        {
+          source: "offline-import-local-case-folder-oss",
+          useLocalFiles: false,
+          rootDirectory: resolvedPath,
+        },
+      );
       const importedAt = new Date().toISOString();
       const importId = `import-${Date.now()}`;
 
@@ -1617,7 +1850,9 @@ export const handleApiRequest = async (req, res) => {
         return;
       }
 
-      const recoverableFiles = task.files.filter((file) => file.status !== "completed");
+      const recoverableFiles = task.files.filter(
+        (file) => file.status !== "completed",
+      );
       const recoveredFiles = [];
 
       for (const file of recoverableFiles) {
@@ -1640,7 +1875,9 @@ export const handleApiRequest = async (req, res) => {
       const refreshedTask = getTask(taskId);
       if (!refreshedTask) {
         res.statusCode = 500;
-        res.end(JSON.stringify({ error: "Task refresh failed after recovery" }));
+        res.end(
+          JSON.stringify({ error: "Task refresh failed after recovery" }),
+        );
         return;
       }
 
@@ -1660,16 +1897,21 @@ export const handleApiRequest = async (req, res) => {
       });
 
       res.setHeader("Content-Type", "application/json");
-      res.end(JSON.stringify({
-        success: true,
-        taskId,
-        claimCaseId: finalTask.claimCaseId,
-        recoveredFiles,
-        status: finalTask.status,
-        completed: finalTask.files.filter((file) => file.status === "completed").length,
-        failed: finalTask.files.filter((file) => file.status === "failed").length,
-        postProcessedAt: finalTask.postProcessedAt || null,
-      }));
+      res.end(
+        JSON.stringify({
+          success: true,
+          taskId,
+          claimCaseId: finalTask.claimCaseId,
+          recoveredFiles,
+          status: finalTask.status,
+          completed: finalTask.files.filter(
+            (file) => file.status === "completed",
+          ).length,
+          failed: finalTask.files.filter((file) => file.status === "failed")
+            .length,
+          postProcessedAt: finalTask.postProcessedAt || null,
+        }),
+      );
     } catch (error) {
       console.error("[API] Recover offline task failed:", error);
       res.statusCode = 500;
@@ -1738,29 +1980,32 @@ export const handleApiRequest = async (req, res) => {
 
               // 处理文件
               const processResult = await processFile({
-                fileName: key.split('/').pop() || 'file',
+                fileName: key.split("/").pop() || "file",
                 mimeType,
                 buffer,
                 options: { skipOCR: false },
               });
 
               // 分类
-              const classification = await classifyMaterialFromAPI(processResult, key);
+              const classification = await classifyMaterialFromAPI(
+                processResult,
+                key,
+              );
 
               return {
                 ossKey: key,
-                status: 'success',
+                status: "success",
                 classification,
               };
             } catch (error) {
               console.error(`[Batch Classify] Error processing ${key}:`, error);
               return {
                 ossKey: key,
-                status: 'failed',
+                status: "failed",
                 error: error.message,
                 classification: {
-                  materialId: 'unknown',
-                  materialName: '未识别',
+                  materialId: "unknown",
+                  materialName: "未识别",
                   confidence: 0,
                 },
               };
@@ -1781,11 +2026,12 @@ export const handleApiRequest = async (req, res) => {
           success: true,
           data: {
             total: ossKeys.length,
-            completed: classifyResults.filter(r => r.status === 'success').length,
-            failed: classifyResults.filter(r => r.status === 'failed').length,
+            completed: classifyResults.filter((r) => r.status === "success")
+              .length,
+            failed: classifyResults.filter((r) => r.status === "failed").length,
             results: classifyResults,
           },
-        })
+        }),
       );
     } catch (error) {
       console.error("[API] Batch classify failed:", error);
@@ -1805,11 +2051,14 @@ export const handleApiRequest = async (req, res) => {
 
     try {
       const body = await parseBody(req);
-      const { claimCaseId, productCode, ossKeys, mimeTypes, classifications } = body;
+      const { claimCaseId, productCode, ossKeys, mimeTypes, classifications } =
+        body;
 
       if (!claimCaseId || !productCode) {
         res.statusCode = 400;
-        res.end(JSON.stringify({ error: "Missing claimCaseId or productCode" }));
+        res.end(
+          JSON.stringify({ error: "Missing claimCaseId or productCode" }),
+        );
         return;
       }
 
@@ -1822,22 +2071,22 @@ export const handleApiRequest = async (req, res) => {
       // 创建任务数据
       const files = ossKeys.map((key, index) => ({
         index,
-        fileName: key.split('/').pop() || `file-${index}`,
+        fileName: key.split("/").pop() || `file-${index}`,
         mimeType: (mimeTypes && mimeTypes[index]) || "image/jpeg",
         ossKey: key,
         classification: (classifications && classifications[index]) || null,
-        status: 'pending',
+        status: "pending",
       }));
 
       // 创建异步任务
       const task = await createTask(claimCaseId, productCode, files, null, {
         useV2: true,
-        source: 'offline-import-v2',
+        source: "offline-import-v2",
       });
 
       // 记录审计日志
       writeAuditLog({
-        type: 'IMPORT_TASK_CREATE',
+        type: "IMPORT_TASK_CREATE",
         claimCaseId,
         taskId: task.id,
         fileCount: files.length,
@@ -1851,7 +2100,7 @@ export const handleApiRequest = async (req, res) => {
           taskId: task.id,
           message: "Import task created successfully",
           totalFiles: files.length,
-        })
+        }),
       );
     } catch (error) {
       console.error("[API] Import offline materials v2 failed:", error);
@@ -2085,10 +2334,13 @@ export const handleApiRequest = async (req, res) => {
         "application/octet-stream";
 
       res.statusCode = 200;
-      res.setHeader("Content-Type", Array.isArray(mimeType) ? mimeType[0] : mimeType);
+      res.setHeader(
+        "Content-Type",
+        Array.isArray(mimeType) ? mimeType[0] : mimeType,
+      );
       res.setHeader(
         "Content-Disposition",
-        `inline; filename*=UTF-8''${encodeURIComponent(fileName)}`
+        `inline; filename*=UTF-8''${encodeURIComponent(fileName)}`,
       );
       res.setHeader("Cache-Control", "private, max-age=300");
 
@@ -2125,8 +2377,9 @@ export const handleApiRequest = async (req, res) => {
     }
 
     try {
-      const { fileUrl, fileName, materialName, jsonSchema, aiAuditPrompt } = await parseBody(req);
-      
+      const { fileUrl, fileName, materialName, jsonSchema, aiAuditPrompt } =
+        await parseBody(req);
+
       if (!fileUrl) {
         res.statusCode = 400;
         res.end(JSON.stringify({ error: "Missing fileUrl" }));
@@ -2134,7 +2387,7 @@ export const handleApiRequest = async (req, res) => {
       }
 
       const model = process.env.GEMINI_VISION_MODEL || "gemini-2.5-flash";
-      
+
       const startTime = Date.now();
       let result = {
         success: true,
@@ -2147,15 +2400,15 @@ export const handleApiRequest = async (req, res) => {
       // 下载文件内容
       let fileBuffer;
       let mimeType = "image/jpeg";
-      
+
       try {
         // 使用 AbortController 实现超时
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 30000);
-        
+
         const response = await fetch(fileUrl, { signal: controller.signal });
         clearTimeout(timeoutId);
-        
+
         if (!response.ok) {
           throw new Error(`Failed to download file: ${response.status}`);
         }
@@ -2164,27 +2417,34 @@ export const handleApiRequest = async (req, res) => {
       } catch (e) {
         console.error("[ParseDocument] Failed to download:", e);
         res.statusCode = 400;
-        res.end(JSON.stringify({ error: "Failed to download file", message: e.message }));
+        res.end(
+          JSON.stringify({
+            error: "Failed to download file",
+            message: e.message,
+          }),
+        );
         return;
       }
 
       // 根据文件类型选择处理方式
       const isImage = mimeType.startsWith("image/");
-      const isPdf = mimeType === "application/pdf" || fileName?.toLowerCase().endsWith(".pdf");
-      
+      const isPdf =
+        mimeType === "application/pdf" ||
+        fileName?.toLowerCase().endsWith(".pdf");
+
       if (isImage || isPdf) {
         // 使用 Gemini Vision 进行提取
         const base64Data = fileBuffer.toString("base64");
-        
+
         // 构造提示词：融合材料的 aiAuditPrompt 和 jsonSchema
-        const prompt = `你是一个专业的保险理赔材料审核系统。请对上传的「${materialName || '理赔材料'}」进行 OCR 识别和审核。
+        const prompt = `你是一个专业的保险理赔材料审核系统。请对上传的「${materialName || "理赔材料"}」进行 OCR 识别和审核。
 
 ## 提取要求
 请严格根据图片中可见的文字内容提取信息，按以下 JSON Schema 结构提取：
-${jsonSchema || '{}'}
+${jsonSchema || "{}"}
 
 ## 审核要求
-${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
+${aiAuditPrompt || "请提取图片中的关键信息并进行校验"}
 
 ## 重要规则
 1. 只提取图片中**明确可见**的文字和数字，严禁补充、推测或编造任何信息
@@ -2200,7 +2460,7 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
   "auditConclusion": "审核结论文本，包含提取摘要和校验结果",
   "confidence": 0.95
 }`;
-        
+
         const { response: geminiResponse } = await generateGeminiContent({
           apiKey: getGeminiApiKey(),
           request: {
@@ -2226,14 +2486,14 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
             },
           },
         });
-        
+
         const responseText = geminiResponse.text || "";
-        
+
         // 提取 JSON
         let extractedData = {};
         let auditConclusion = "";
         let confidence = 0;
-        
+
         try {
           // 尝试解析整个响应为 JSON
           const jsonMatch = responseText.match(/\{[\s\S]*\}/);
@@ -2248,7 +2508,7 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
           // 如果解析失败，返回原始文本
           auditConclusion = responseText.slice(0, 500);
         }
-        
+
         result = {
           success: true,
           text: responseText,
@@ -2275,7 +2535,9 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
     } catch (error) {
       console.error("[API] Parse document failed:", error);
       res.statusCode = 500;
-      res.end(JSON.stringify({ error: "Parse failed", message: error.message }));
+      res.end(
+        JSON.stringify({ error: "Parse failed", message: error.message }),
+      );
     }
     return;
   }
@@ -2297,7 +2559,9 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
       }
 
       const rawCapability = resolveAICapability("admin.invoice_ocr.raw_engine");
-      const structuringCapability = resolveAICapability("admin.invoice_ocr.structuring");
+      const structuringCapability = resolveAICapability(
+        "admin.invoice_ocr.structuring",
+      );
       const configuredMode = (() => {
         if (mode) return mode;
         switch (rawCapability.binding.provider) {
@@ -2315,8 +2579,13 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
           : structuringCapability.binding.provider;
       const structuringModel =
         structuringProvider === "glm-text"
-          ? (process.env.GLM_TEXT_MODEL || process.env.ZHIPU_MODEL || structuringCapability.binding.model || "glm-4.7-flash")
-          : (geminiModel || structuringCapability.binding.model || "gemini-2.5-flash");
+          ? process.env.GLM_TEXT_MODEL ||
+            process.env.ZHIPU_MODEL ||
+            structuringCapability.binding.model ||
+            "glm-4.7-flash"
+          : geminiModel ||
+            structuringCapability.binding.model ||
+            "gemini-2.5-flash";
 
       const buildStructuringPrompt = (ocrText) =>
         renderPromptTemplate("invoice_structuring", {
@@ -2367,7 +2636,8 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
         const parseResponse =
           structuringProvider === "glm-text"
             ? await callGlmChat({
-                apiKey: process.env.GLM_OCR_API_KEY || process.env.ZHIPU_API_KEY,
+                apiKey:
+                  process.env.GLM_OCR_API_KEY || process.env.ZHIPU_API_KEY,
                 model: structuringModel,
                 messages: [{ role: "user", content: parsePrompt }],
                 temperature: 0,
@@ -2380,8 +2650,10 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
         const parsingDuration = Date.now() - parsingStartTime;
         const parseText =
           structuringProvider === "glm-text"
-            ? extractJsonFromText(parseResponse?.choices?.[0]?.message?.content || "")
-            : (parseResponse.text || "{}");
+            ? extractJsonFromText(
+                parseResponse?.choices?.[0]?.message?.content || "",
+              )
+            : parseResponse.text || "{}";
         const parseUsage =
           structuringProvider === "glm-text"
             ? parseResponse?.usage
@@ -2405,7 +2677,10 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
         return;
       }
 
-      if (configuredMode === "glm-ocr" || configuredMode === "glm-ocr-structured") {
+      if (
+        configuredMode === "glm-ocr" ||
+        configuredMode === "glm-ocr-structured"
+      ) {
         const glmApiKey =
           process.env.GLM_OCR_API_KEY || process.env.ZHIPU_API_KEY;
         if (!glmApiKey) {
@@ -2470,8 +2745,10 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
         const parsingDuration = Date.now() - parsingStartTime;
         const parseText =
           structuringProvider === "glm-text"
-            ? extractJsonFromText(parseResponse?.choices?.[0]?.message?.content || "")
-            : (parseResponse.text || "{}");
+            ? extractJsonFromText(
+                parseResponse?.choices?.[0]?.message?.content || "",
+              )
+            : parseResponse.text || "{}";
         const parseUsage =
           structuringProvider === "glm-text"
             ? parseResponse?.usage
@@ -2531,7 +2808,8 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
     }
 
     try {
-      const { claimCaseId, productCode, ocrData, validationFacts, ruleset } = await parseBody(req);
+      const { claimCaseId, productCode, ocrData, validationFacts, ruleset } =
+        await parseBody(req);
       if (!claimCaseId && !productCode) {
         res.statusCode = 400;
         res.end(
@@ -2602,8 +2880,14 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
     }
 
     try {
-      const { claimCaseId, productCode, ocrData, invoiceItems, validationFacts, ruleset } =
-        await parseBody(req);
+      const {
+        claimCaseId,
+        productCode,
+        ocrData,
+        invoiceItems,
+        validationFacts,
+        ruleset,
+      } = await parseBody(req);
       if (!claimCaseId && !productCode) {
         res.statusCode = 400;
         res.end(
@@ -2631,28 +2915,35 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
             (task) => task.claimCaseId === claimCaseId,
           );
           const userLogs = (readData("user-operation-logs") || [])
-            .filter((log) => log.claimId === claimCaseId || log.claimCaseId === claimCaseId)
+            .filter(
+              (log) =>
+                log.claimId === claimCaseId || log.claimCaseId === claimCaseId,
+            )
             .map((log) => ({ ...log, logSource: "user" }));
-          const auditLogs = readAuditLogs("all", { claimCaseId }).map((log) => ({
-            logId: `audit-${log.timestamp}-${Math.random().toString(36).slice(2, 8)}`,
-            timestamp: log.timestamp,
-            userName: log.operator || "系统",
-            operationType: mapAuditTypeToOperationType(log.type),
-            operationLabel: formatAuditLogLabel(log),
-            claimId: log.claimCaseId,
-            claimReportNumber: null,
-            currentStatus: log.newStatus || null,
-            inputData: log.input || null,
-            outputData: log.output || null,
-            success: log.success !== false,
-            duration: log.duration || null,
-            logSource: "system",
-          }));
+          const auditLogs = readAuditLogs("all", { claimCaseId }).map(
+            (log) => ({
+              logId: `audit-${log.timestamp}-${Math.random().toString(36).slice(2, 8)}`,
+              timestamp: log.timestamp,
+              userName: log.operator || "系统",
+              operationType: mapAuditTypeToOperationType(log.type),
+              operationLabel: formatAuditLogLabel(log),
+              claimId: log.claimCaseId,
+              claimReportNumber: null,
+              currentStatus: log.newStatus || null,
+              inputData: log.input || null,
+              outputData: log.output || null,
+              success: log.success !== false,
+              duration: log.duration || null,
+              logSource: "system",
+            }),
+          );
           const timeline = buildClaimProcessTimeline({
             claimCase,
             claimMaterials,
             logs: [...userLogs, ...auditLogs].sort(
-              (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+              (a, b) =>
+                new Date(a.timestamp).getTime() -
+                new Date(b.timestamp).getTime(),
             ),
             reviewTasks,
           });
@@ -2660,8 +2951,12 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
             parseCompleted: ["completed", "manual_completed"].includes(
               timeline?.stages?.find((stage) => stage.key === "parse")?.status,
             ),
-            liabilityStatus: timeline?.stages?.find((stage) => stage.key === "liability")?.status,
-            assessmentStatus: timeline?.stages?.find((stage) => stage.key === "assessment")?.status,
+            liabilityStatus: timeline?.stages?.find(
+              (stage) => stage.key === "liability",
+            )?.status,
+            assessmentStatus: timeline?.stages?.find(
+              (stage) => stage.key === "assessment",
+            )?.status,
           });
           try {
             await syncClaimReviewArtifacts({
@@ -2669,17 +2964,48 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
               claimCase,
               stageOptions: {
                 parseCompleted: ["completed", "manual_completed"].includes(
-                  timeline?.stages?.find((stage) => stage.key === "parse")?.status,
+                  timeline?.stages?.find((stage) => stage.key === "parse")
+                    ?.status,
                 ),
-                liabilityStatus: timeline?.stages?.find((stage) => stage.key === "liability")?.status,
-                assessmentStatus: timeline?.stages?.find((stage) => stage.key === "assessment")?.status,
+                liabilityStatus: timeline?.stages?.find(
+                  (stage) => stage.key === "liability",
+                )?.status,
+                assessmentStatus: timeline?.stages?.find(
+                  (stage) => stage.key === "assessment",
+                )?.status,
               },
             });
           } catch (reviewSyncError) {
-            console.error("[claim/full-review] Failed to sync review artifacts:", reviewSyncError);
+            console.error(
+              "[claim/full-review] Failed to sync review artifacts:",
+              reviewSyncError,
+            );
           }
         }
       }
+
+      // 将 domainModel 附加到审核结果中，供前端 mergeSmartReviewResults 使用
+      if (claimCaseId) {
+        try {
+          const allClaimDocs = readData("claim-documents") || [];
+          const latestDoc = allClaimDocs
+            .filter((doc) => doc.claimCaseId === claimCaseId && doc.aggregation)
+            .sort(
+              (a, b) =>
+                new Date(b.importedAt || b.updatedAt || 0).getTime() -
+                new Date(a.importedAt || a.updatedAt || 0).getTime(),
+            )[0];
+          const dm =
+            latestDoc?.aggregation?.domainModel ||
+            latestDoc?.aggregation?.handlingProfile?.domainModel;
+          if (dm) {
+            result.domainModel = dm;
+          }
+        } catch (_dmError) {
+          // domainModel 附加失败不影响主流程
+        }
+      }
+
       res.setHeader("Content-Type", "application/json");
       res.end(JSON.stringify(result));
     } catch (error) {
@@ -2700,10 +3026,12 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
 
     try {
       res.setHeader("Content-Type", "application/json");
-      res.end(JSON.stringify({
-        capabilities: getAIInventory(),
-        config: getAISettingsSnapshot(),
-      }));
+      res.end(
+        JSON.stringify({
+          capabilities: getAIInventory(),
+          config: getAISettingsSnapshot(),
+        }),
+      );
     } catch (error) {
       res.statusCode = 500;
       res.end(JSON.stringify({ error: formatErrorMessage(error) }));
@@ -2726,7 +3054,10 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
     if (req.method === "PUT") {
       try {
         const payload = await parseBody(req);
-        const updated = updateAISettings(payload, payload?.metadata?.updatedBy || "admin");
+        const updated = updateAISettings(
+          payload,
+          payload?.metadata?.updatedBy || "admin",
+        );
         res.setHeader("Content-Type", "application/json");
         res.end(JSON.stringify(updated));
       } catch (error) {
@@ -2825,28 +3156,35 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
             (task) => task.claimCaseId === claimCaseId,
           );
           const userLogs = (readData("user-operation-logs") || [])
-            .filter((log) => log.claimId === claimCaseId || log.claimCaseId === claimCaseId)
+            .filter(
+              (log) =>
+                log.claimId === claimCaseId || log.claimCaseId === claimCaseId,
+            )
             .map((log) => ({ ...log, logSource: "user" }));
-          const auditLogs = readAuditLogs("all", { claimCaseId }).map((log) => ({
-            logId: `audit-${log.timestamp}-${Math.random().toString(36).slice(2, 8)}`,
-            timestamp: log.timestamp,
-            userName: log.operator || "系统",
-            operationType: mapAuditTypeToOperationType(log.type),
-            operationLabel: formatAuditLogLabel(log),
-            claimId: log.claimCaseId,
-            claimReportNumber: null,
-            currentStatus: log.newStatus || null,
-            inputData: log.input || null,
-            outputData: log.output || null,
-            success: log.success !== false,
-            duration: log.duration || null,
-            logSource: "system",
-          }));
+          const auditLogs = readAuditLogs("all", { claimCaseId }).map(
+            (log) => ({
+              logId: `audit-${log.timestamp}-${Math.random().toString(36).slice(2, 8)}`,
+              timestamp: log.timestamp,
+              userName: log.operator || "系统",
+              operationType: mapAuditTypeToOperationType(log.type),
+              operationLabel: formatAuditLogLabel(log),
+              claimId: log.claimCaseId,
+              claimReportNumber: null,
+              currentStatus: log.newStatus || null,
+              inputData: log.input || null,
+              outputData: log.output || null,
+              success: log.success !== false,
+              duration: log.duration || null,
+              logSource: "system",
+            }),
+          );
           const timeline = buildClaimProcessTimeline({
             claimCase,
             claimMaterials,
             logs: [...userLogs, ...auditLogs].sort(
-              (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+              (a, b) =>
+                new Date(a.timestamp).getTime() -
+                new Date(b.timestamp).getTime(),
             ),
             reviewTasks,
           });
@@ -2854,8 +3192,12 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
             parseCompleted: ["completed", "manual_completed"].includes(
               timeline?.stages?.find((stage) => stage.key === "parse")?.status,
             ),
-            liabilityStatus: timeline?.stages?.find((stage) => stage.key === "liability")?.status,
-            assessmentStatus: timeline?.stages?.find((stage) => stage.key === "assessment")?.status,
+            liabilityStatus: timeline?.stages?.find(
+              (stage) => stage.key === "liability",
+            )?.status,
+            assessmentStatus: timeline?.stages?.find(
+              (stage) => stage.key === "assessment",
+            )?.status,
           });
         }
       }
@@ -3052,6 +3394,488 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
     return;
   }
 
+  if (resource === "ai" && id === "stats/rebuild") {
+    if (req.method !== "POST") {
+      res.statusCode = 405;
+      res.end(JSON.stringify({ error: "Method Not Allowed" }));
+      return;
+    }
+    try {
+      const startedAt = Date.now();
+      const stats = rebuildAIStatsDaily();
+      clearAIStatsCache();
+      res.setHeader("Content-Type", "application/json");
+      res.end(
+        JSON.stringify({
+          success: true,
+          durationMs: Date.now() - startedAt,
+          summary: summarizeAIStatsDaily(stats),
+        }),
+      );
+    } catch (error) {
+      res.statusCode = 500;
+      res.end(JSON.stringify({ error: formatErrorMessage(error) }));
+    }
+    return;
+  }
+
+  if (resource === "ai" && id === "stats/overview") {
+    if (req.method !== "GET") {
+      res.statusCode = 405;
+      res.end(JSON.stringify({ error: "Method Not Allowed" }));
+      return;
+    }
+    try {
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify(getAIStatsDailyStatus()));
+    } catch (error) {
+      res.statusCode = 500;
+      res.end(JSON.stringify({ error: formatErrorMessage(error) }));
+    }
+    return;
+  }
+
+  if (resource === "ai" && id === "storage-status") {
+    if (req.method !== "GET") {
+      res.statusCode = 405;
+      res.end(JSON.stringify({ error: "Method Not Allowed" }));
+      return;
+    }
+    try {
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify(getAIStorageStatus()));
+    } catch (error) {
+      res.statusCode = 500;
+      res.end(JSON.stringify({ error: formatErrorMessage(error) }));
+    }
+    return;
+  }
+
+  if (resource === "ai" && id === "stats/consistency-check") {
+    if (req.method !== "POST" && req.method !== "GET") {
+      res.statusCode = 405;
+      res.end(JSON.stringify({ error: "Method Not Allowed" }));
+      return;
+    }
+    try {
+      if (req.method === "GET") {
+        const limit = Number(url.searchParams.get("limit") || 10);
+        res.setHeader("Content-Type", "application/json");
+        res.end(
+          JSON.stringify({
+            reports: listAIConsistencyReports(limit),
+            monitor: getAIConsistencyMonitorStatus(),
+          }),
+        );
+        return;
+      }
+      const report = runAIDataConsistencyCheck();
+      if (!report.success) {
+        const userId = req.headers["x-user-id"] || "anonymous";
+        notifyAIDataConsistencyFailure(report, userId);
+      }
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify(report));
+    } catch (error) {
+      res.statusCode = 500;
+      res.end(JSON.stringify({ error: formatErrorMessage(error) }));
+    }
+    return;
+  }
+
+  if (resource === "ai" && id === "dashboard") {
+    if (req.method !== "GET") {
+      res.statusCode = 405;
+      res.end(JSON.stringify({ error: "Method Not Allowed" }));
+      return;
+    }
+    try {
+      res.setHeader("Content-Type", "application/json");
+      res.end(
+        JSON.stringify(
+          getAIDashboardOverview({
+            startTime: url.searchParams.get("startTime") || undefined,
+            endTime: url.searchParams.get("endTime") || undefined,
+          }),
+        ),
+      );
+    } catch (error) {
+      res.statusCode = 500;
+      res.end(JSON.stringify({ error: formatErrorMessage(error) }));
+    }
+    return;
+  }
+
+  if (resource === "ai" && id === "providers") {
+    res.setHeader("Content-Type", "application/json");
+    res.end(JSON.stringify(getProviderCatalog()));
+    return;
+  }
+
+  if (resource === "ai" && id === "models") {
+    if (req.method === "GET") {
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify(getModelCatalog()));
+      return;
+    }
+    if (req.method === "PUT") {
+      const body = await parseBody(req);
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify(saveModelCatalog(body)));
+      return;
+    }
+    res.statusCode = 405;
+    res.end(JSON.stringify({ error: "Method Not Allowed" }));
+    return;
+  }
+
+  if (resource === "ai" && id === "capabilities") {
+    res.setHeader("Content-Type", "application/json");
+    res.end(JSON.stringify(getAIInventory()));
+    return;
+  }
+
+  if (resource === "ai" && id === "capability-bindings/history") {
+    res.setHeader("Content-Type", "application/json");
+    res.end(
+      JSON.stringify(
+        getBindingHistory(url.searchParams.get("capabilityId") || null),
+      ),
+    );
+    return;
+  }
+
+  if (resource === "ai" && id === "capability-bindings/publish") {
+    if (req.method !== "POST") {
+      res.statusCode = 405;
+      res.end(JSON.stringify({ error: "Method Not Allowed" }));
+      return;
+    }
+    try {
+      const body = await parseBody(req);
+      const entry = appendBindingHistory({
+        id: `binding-${Date.now()}`,
+        capabilityId: body.capabilityId,
+        version: body.version || Date.now(),
+        binding: body.binding,
+        promptTemplateId: body.promptTemplateId || null,
+        generationConfig: body.generationConfig || null,
+        publishedAt: new Date().toISOString(),
+        publishedBy: body.publishedBy || "system",
+        reason: body.reason || "manual publish",
+        rollbackFrom: body.rollbackFrom || null,
+        status: "active",
+      });
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify(entry));
+    } catch (error) {
+      res.statusCode = 500;
+      res.end(JSON.stringify({ error: formatErrorMessage(error) }));
+    }
+    return;
+  }
+
+  if (resource === "ai" && id === "capability-bindings/rollback") {
+    if (req.method !== "POST") {
+      res.statusCode = 405;
+      res.end(JSON.stringify({ error: "Method Not Allowed" }));
+      return;
+    }
+    try {
+      const body = await parseBody(req);
+      const history = getBindingHistory(body.capabilityId);
+      const target = history.find(
+        (item) => String(item.version) === String(body.version),
+      );
+      if (!target) throw new Error("Binding version not found");
+      const entry = appendBindingHistory({
+        ...target,
+        id: `binding-${Date.now()}`,
+        version: Date.now(),
+        publishedAt: new Date().toISOString(),
+        publishedBy: body.publishedBy || "system",
+        reason: body.reason || "rollback",
+        rollbackFrom: target.version,
+        status: "rolled_back",
+      });
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify(entry));
+    } catch (error) {
+      res.statusCode = 500;
+      res.end(JSON.stringify({ error: formatErrorMessage(error) }));
+    }
+    return;
+  }
+
+  if (resource === "ai" && id === "prompts/history") {
+    res.setHeader("Content-Type", "application/json");
+    res.end(
+      JSON.stringify(
+        getPromptHistory(url.searchParams.get("templateId") || null),
+      ),
+    );
+    return;
+  }
+
+  if (resource === "ai" && id === "prompts/publish") {
+    if (req.method !== "POST") {
+      res.statusCode = 405;
+      res.end(JSON.stringify({ error: "Method Not Allowed" }));
+      return;
+    }
+    try {
+      const body = await parseBody(req);
+      const entry = appendPromptHistory({
+        id: `prompt-${Date.now()}`,
+        templateId: body.templateId,
+        version: body.version || Date.now(),
+        content: body.content,
+        variables: body.variables || [],
+        applicableCapabilities: body.applicableCapabilities || [],
+        publishedAt: new Date().toISOString(),
+        publishedBy: body.publishedBy || "system",
+        reason: body.reason || "manual update",
+        status: "active",
+      });
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify(entry));
+    } catch (error) {
+      res.statusCode = 500;
+      res.end(JSON.stringify({ error: formatErrorMessage(error) }));
+    }
+    return;
+  }
+
+  if (resource === "ai" && id === "provider-health") {
+    if (req.method === "GET") {
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify(getProviderHealthSummary()));
+      return;
+    }
+  }
+
+  if (resource === "ai" && id === "provider-health/check") {
+    if (req.method !== "POST") {
+      res.statusCode = 405;
+      res.end(JSON.stringify({ error: "Method Not Allowed" }));
+      return;
+    }
+    const body = await parseBody(req).catch(() => ({}));
+    res.setHeader("Content-Type", "application/json");
+    res.end(
+      JSON.stringify(await runProviderHealthCheck(body.providerId || null)),
+    );
+    return;
+  }
+
+  if (resource === "ai" && id === "budgets") {
+    if (req.method === "GET") {
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify(getBudgets()));
+      return;
+    }
+    if (req.method === "PUT") {
+      const body = await parseBody(req);
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify(updateBudgets(body)));
+      return;
+    }
+  }
+
+  if (resource === "ai" && id === "model-pricing") {
+    if (req.method === "GET") {
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify(getPricingRules()));
+      return;
+    }
+    if (req.method === "PUT") {
+      const body = await parseBody(req);
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify(savePricingRules(body)));
+      return;
+    }
+  }
+
+  if (resource === "ai" && id === "model-comparison") {
+    res.setHeader("Content-Type", "application/json");
+    res.end(
+      JSON.stringify(
+        getAIModelRuntimeComparison({
+          capabilityId: url.searchParams.get("capabilityId") || undefined,
+          startTime: url.searchParams.get("startTime") || undefined,
+          endTime: url.searchParams.get("endTime") || undefined,
+        }),
+      ),
+    );
+    return;
+  }
+
+  if (resource === "ai" && id === "cost-analytics") {
+    res.setHeader("Content-Type", "application/json");
+    res.end(
+      JSON.stringify(
+        getAICostAnalytics({
+          groupBy: url.searchParams.get("groupBy") || "day",
+          startTime: url.searchParams.get("startTime") || undefined,
+          endTime: url.searchParams.get("endTime") || undefined,
+        }),
+      ),
+    );
+    return;
+  }
+
+  if (resource === "ai" && id === "business-stats") {
+    res.setHeader("Content-Type", "application/json");
+    res.end(
+      JSON.stringify(
+        getAIBusinessStats({
+          startTime: url.searchParams.get("startTime") || undefined,
+          endTime: url.searchParams.get("endTime") || undefined,
+        }),
+      ),
+    );
+    return;
+  }
+
+  if (resource === "ai" && id === "alerts") {
+    if (req.method === "GET") {
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify(getAIAlerts()));
+      return;
+    }
+  }
+
+  if (resource === "ai" && id === "alerts/rules") {
+    if (req.method !== "POST") {
+      res.statusCode = 405;
+      res.end(JSON.stringify({ error: "Method Not Allowed" }));
+      return;
+    }
+    const body = await parseBody(req);
+    res.setHeader("Content-Type", "application/json");
+    res.end(JSON.stringify(saveAlertRules(body)));
+    return;
+  }
+
+  if (resource === "ai" && id === "alerts/incidents") {
+    if (req.method !== "POST") {
+      res.statusCode = 405;
+      res.end(JSON.stringify({ error: "Method Not Allowed" }));
+      return;
+    }
+    const body = await parseBody(req);
+    res.setHeader("Content-Type", "application/json");
+    res.end(JSON.stringify(updateIncidentStatus(body.incidentId, body.status)));
+    return;
+  }
+
+  if (resource === "ai" && id === "alerts/repair-broken-traces") {
+    if (req.method !== "POST") {
+      res.statusCode = 405;
+      res.end(JSON.stringify({ error: "Method Not Allowed" }));
+      return;
+    }
+    res.setHeader("Content-Type", "application/json");
+    res.end(JSON.stringify(repairBrokenIncidentTraceReferences()));
+    return;
+  }
+
+  if (resource === "ai" && id === "log-views") {
+    const userId = req.headers["x-user-id"] || "anonymous";
+    if (req.method === "GET") {
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify(listAILogViews(userId)));
+      return;
+    }
+    if (req.method === "POST") {
+      const body = await parseBody(req);
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify(saveAILogView(userId, body)));
+      return;
+    }
+    if (req.method === "DELETE") {
+      const viewId = url.searchParams.get("id") || "";
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify(deleteAILogView(userId, viewId)));
+      return;
+    }
+    res.statusCode = 405;
+    res.end(JSON.stringify({ error: "Method Not Allowed" }));
+    return;
+  }
+
+  if (resource === "ai" && id === "traces") {
+    const result = queryAIInteractionLogs({
+      traceId: url.searchParams.get("traceId") || undefined,
+      provider: url.searchParams.get("provider") || undefined,
+      model: url.searchParams.get("model") || undefined,
+      capabilityId: url.searchParams.get("capabilityId") || undefined,
+      group: url.searchParams.get("group") || undefined,
+      module: url.searchParams.get("module") || undefined,
+      companyId: url.searchParams.get("companyId") || undefined,
+      startTime: url.searchParams.get("startTime") || undefined,
+      endTime: url.searchParams.get("endTime") || undefined,
+      view: "summary",
+      limit: 100000,
+      offset: 0,
+    });
+    const grouped = Object.values(
+      result.logs.reduce((acc, log) => {
+        const key = log.traceId || log.requestId;
+        if (!acc[key]) {
+          acc[key] = {
+            traceId: key,
+            startedAt: log.timestamp,
+            module: log.module,
+            capabilityId: log.capabilityId,
+            companyId: log.context?.companyId || null,
+            companyName: log.context?.companyName || null,
+            totalCost: 0,
+            totalCalls: 0,
+            success: true,
+            logs: [],
+          };
+        }
+        acc[key].logs.push(log);
+        acc[key].totalCalls += 1;
+        acc[key].totalCost += log.tokenUsage?.estimatedCost || 0;
+        acc[key].success = acc[key].success && log.success !== false;
+        return acc;
+      }, {}),
+    );
+    res.setHeader("Content-Type", "application/json");
+    res.end(JSON.stringify(grouped));
+    return;
+  }
+
+  if (resource === "ai" && id && id.startsWith("traces/")) {
+    const traceId = decodeURIComponent(id.replace(/^traces\//, ""));
+    const result = queryAIInteractionLogs({
+      traceId,
+      view: "detail",
+      includeRaw: true,
+      limit: 100000,
+      offset: 0,
+    });
+    res.setHeader("Content-Type", "application/json");
+    res.end(JSON.stringify({ traceId, logs: result.logs }));
+    return;
+  }
+
+  if (resource === "ai" && id && id.startsWith("invocations/")) {
+    const logId = decodeURIComponent(id.replace(/^invocations\//, ""));
+    const result = queryAIInteractionLogs({
+      logId,
+      view: "detail",
+      includeRaw: true,
+      limit: 1,
+      offset: 0,
+    });
+    res.setHeader("Content-Type", "application/json");
+    res.end(JSON.stringify(result.logs[0] || null));
+    return;
+  }
+
   if (resource === "ai" && id === "proxy") {
     if (req.method !== "POST") {
       res.statusCode = 405;
@@ -3073,7 +3897,11 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
       } = body || {};
       if (!capabilityId && (!model || !rawContents)) {
         res.statusCode = 400;
-        res.end(JSON.stringify({ error: "Missing required fields: capabilityId or model+contents" }));
+        res.end(
+          JSON.stringify({
+            error: "Missing required fields: capabilityId or model+contents",
+          }),
+        );
         return;
       }
 
@@ -3085,11 +3913,25 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
       if (capabilityId) {
         resolvedCapability = resolveAICapability(capabilityId);
         if (!contents) {
-          const capabilityPromptId = promptTemplateId || resolvedCapability.capability.promptTemplateId;
+          const capabilityPromptId =
+            promptTemplateId || resolvedCapability.capability.promptTemplateId;
           if (!capabilityPromptId) {
-            throw new Error(`Capability '${capabilityId}' requires contents or promptTemplateId`);
+            throw new Error(
+              `Capability '${capabilityId}' requires contents or promptTemplateId`,
+            );
           }
-          contents = [{ parts: [{ text: renderPromptTemplate(capabilityPromptId, templateVariables || {}) }] }];
+          contents = [
+            {
+              parts: [
+                {
+                  text: renderPromptTemplate(
+                    capabilityPromptId,
+                    templateVariables || {},
+                  ),
+                },
+              ],
+            },
+          ];
           resolvedPromptTemplateId = capabilityPromptId;
         }
 
@@ -3117,7 +3959,8 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
         containsSensitiveData: meta?.containsSensitiveData !== false,
         capabilityId: capabilityId || null,
         promptTemplateId: resolvedPromptTemplateId,
-        promptSourceType: resolvedCapability?.capability?.promptSourceType || null,
+        promptSourceType:
+          resolvedCapability?.capability?.promptSourceType || null,
       };
 
       const request = {
@@ -3139,10 +3982,12 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
           });
 
       res.setHeader("Content-Type", "application/json");
-      res.end(JSON.stringify({
-        response,
-        aiLog: toLegacyAIInteractionLog(logEntry),
-      }));
+      res.end(
+        JSON.stringify({
+          response,
+          aiLog: toLegacyAIInteractionLog(logEntry),
+        }),
+      );
     } catch (error) {
       console.error("[AI Proxy Error]", error);
       res.statusCode = 500;
@@ -3167,12 +4012,24 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
         fileName: params.get("fileName") || undefined,
         claimCaseId: params.get("claimCaseId") || undefined,
         taskId: params.get("taskId") || undefined,
-        fileIndex: params.get("fileIndex") !== null ? Number(params.get("fileIndex")) : undefined,
+        fileIndex:
+          params.get("fileIndex") !== null
+            ? Number(params.get("fileIndex"))
+            : undefined,
         sessionId: params.get("sessionId") || undefined,
         traceId: params.get("traceId") || undefined,
         sourceApp: params.get("sourceApp") || undefined,
         module: params.get("module") || undefined,
-        success: params.get("success") !== null ? params.get("success") === "true" : undefined,
+        provider: params.get("provider") || undefined,
+        model: params.get("model") || undefined,
+        capabilityId: params.get("capabilityId") || undefined,
+        group: params.get("group") || undefined,
+        companyId: params.get("companyId") || undefined,
+        companyName: params.get("companyName") || undefined,
+        success:
+          params.get("success") !== null
+            ? params.get("success") === "true"
+            : undefined,
         startTime: params.get("startTime") || undefined,
         endTime: params.get("endTime") || undefined,
         view: params.get("view") || undefined,
@@ -3385,7 +4242,10 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
     const claimCaseId = url.searchParams.get("claimCaseId");
     const allDocs = readData("claim-documents");
     const taskMap = new Map(
-      ((readData("processing-tasks") || {}).tasks || []).map((task) => [task.id, task]),
+      ((readData("processing-tasks") || {}).tasks || []).map((task) => [
+        task.id,
+        task,
+      ]),
     );
 
     if (claimCaseId) {
@@ -3399,23 +4259,31 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
             new Date(b.record.importedAt || 0).getTime(),
         );
       const documents = records.flatMap((r) =>
-        ((r.record.documents || []).map((d) => ({
+        (r.record.documents || []).map((d) => ({
           ...d,
           importedAt: r.record.importedAt,
           importId: r.record.id,
-        }))),
+        })),
       );
       const latestCompleteness =
-        records.length > 0 ? records[records.length - 1].record.completeness : null;
+        records.length > 0
+          ? records[records.length - 1].record.completeness
+          : null;
       const latestValidationFacts =
-        records.length > 0 ? records[records.length - 1].record.validationFacts || {} : {};
+        records.length > 0
+          ? records[records.length - 1].record.validationFacts || {}
+          : {};
       const latestMaterialValidationResults =
         records.length > 0
           ? records[records.length - 1].record.materialValidationResults || []
           : [];
-      const latestRecordInfo = records.length > 0 ? records[records.length - 1] : null;
+      const latestRecordInfo =
+        records.length > 0 ? records[records.length - 1] : null;
       let latestRecord = latestRecordInfo?.record || null;
-      const claimCase = (readData("claim-cases") || []).find((item) => item.id === claimCaseId) || null;
+      const claimCase =
+        (readData("claim-cases") || []).find(
+          (item) => item.id === claimCaseId,
+        ) || null;
       if (
         latestRecordInfo &&
         latestRecord?.aggregation &&
@@ -3434,12 +4302,19 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
             latestRecord = syncedArtifacts.record;
           }
         } catch (error) {
-          console.error("[claim-documents] Failed to sync review artifacts:", error);
+          console.error(
+            "[claim-documents] Failed to sync review artifacts:",
+            error,
+          );
         }
       }
       const latestAggregation = latestRecord?.aggregation || null;
-      const latestTask = latestRecord?.taskId ? getTask(latestRecord.taskId) : null;
-      const latestRecoveryIssue = latestTask ? classifyTaskRecoveryIssue(latestTask) : null;
+      const latestTask = latestRecord?.taskId
+        ? getTask(latestRecord.taskId)
+        : null;
+      const latestRecoveryIssue = latestTask
+        ? classifyTaskRecoveryIssue(latestTask)
+        : null;
       const claimMaterials = (readData("claim-materials") || []).filter(
         (item) => item.claimCaseId === claimCaseId,
       );
@@ -3447,18 +4322,20 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
         ? { ...latestAggregation }
         : null;
       if (enrichedAggregation) {
-        enrichedAggregation.handlingProfile =
-          summarizeHandlingProfile({
-            claimCase,
-            aggregation: enrichedAggregation,
-            materials: claimMaterials,
-          });
-        enrichedAggregation.domainModel = enrichedAggregation.handlingProfile?.domainModel || null;
+        enrichedAggregation.handlingProfile = summarizeHandlingProfile({
+          claimCase,
+          aggregation: enrichedAggregation,
+          materials: claimMaterials,
+        });
+        enrichedAggregation.domainModel =
+          enrichedAggregation.handlingProfile?.domainModel || null;
         enrichedAggregation.decisionTrace = buildDecisionTrace({
           claimCaseId,
           claimCase,
           materials: claimMaterials,
-          summaries: documents.map((doc) => doc.documentSummary).filter(Boolean),
+          summaries: documents
+            .map((doc) => doc.documentSummary)
+            .filter(Boolean),
           aggregation: enrichedAggregation,
           operationLogs: (readData("user-operation-logs") || []).filter(
             (item) => item.claimId === claimCaseId,
@@ -3501,24 +4378,163 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
       );
     } else {
       res.setHeader("Content-Type", "application/json");
-      res.end(JSON.stringify(
-        allDocs.map((record) => {
-          const task = record?.taskId ? taskMap.get(record.taskId) : null;
-          const recoveryIssue = task ? classifyTaskRecoveryIssue(task) : null;
-          return {
-            ...record,
-            taskStatus: task?.status || null,
-            postProcessedAt: task?.postProcessedAt || null,
-            failureCategory: recoveryIssue?.category || null,
-            failureHint: recoveryIssue?.hint || null,
+      res.end(
+        JSON.stringify(
+          allDocs.map((record) => {
+            const task = record?.taskId ? taskMap.get(record.taskId) : null;
+            const recoveryIssue = task ? classifyTaskRecoveryIssue(task) : null;
+            return {
+              ...record,
+              taskStatus: task?.status || null,
+              postProcessedAt: task?.postProcessedAt || null,
+              failureCategory: recoveryIssue?.category || null,
+              failureHint: recoveryIssue?.hint || null,
+            };
+          }),
+        ),
+      );
+    }
+    return;
+  }
+
+  if (resource === "claim-documents" && req.method === "POST" && id === "field-corrections") {
+    try {
+      const body = await parseBody(req);
+      const correction = body?.correction || body;
+      const claimCaseId = correction?.claimCaseId;
+      const documentId = correction?.documentId;
+      const fieldKey = correction?.fieldKey;
+
+      if (!claimCaseId || !documentId || !fieldKey) {
+        res.statusCode = 400;
+        res.end(JSON.stringify({ error: "Missing claimCaseId, documentId or fieldKey" }));
+        return;
+      }
+
+      const allClaimDocs = readData("claim-documents") || [];
+      let updatedCorrection = null;
+      let updated = false;
+
+      const nextDocs = allClaimDocs.map((record) => {
+        if (record.claimCaseId !== claimCaseId || !Array.isArray(record.documents)) {
+          return record;
+        }
+
+        let recordChanged = false;
+        const nextRecordDocs = record.documents.map((doc) => {
+          if (doc.documentId !== documentId) {
+            return doc;
+          }
+
+          const existingCorrections = Array.isArray(doc.fieldCorrections)
+            ? doc.fieldCorrections
+            : [];
+          const nextCorrection = {
+            correctionId: correction.correctionId || `fc-${Date.now()}`,
+            documentId,
+            fieldKey,
+            fieldLabel: correction.fieldLabel || fieldKey,
+            originalValue: correction.originalValue || "",
+            correctedValue: correction.correctedValue || "",
+            correctedAt: correction.correctedAt || new Date().toISOString(),
+            correctedBy: correction.correctedBy || "系统用户",
+            claimCaseId,
           };
-        }),
-      ));
+          const filteredCorrections = existingCorrections.filter(
+            (item) => item?.fieldKey !== fieldKey,
+          );
+
+          updatedCorrection = nextCorrection;
+          recordChanged = true;
+          updated = true;
+
+          return {
+            ...doc,
+            fieldCorrections: [...filteredCorrections, nextCorrection],
+          };
+        });
+
+        return recordChanged ? { ...record, documents: nextRecordDocs } : record;
+      });
+
+      if (!updated) {
+        res.statusCode = 404;
+        res.end(JSON.stringify({ error: "Document not found for correction" }));
+        return;
+      }
+
+      writeData("claim-documents", nextDocs);
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({ success: true, data: updatedCorrection }));
+    } catch (error) {
+      res.statusCode = 500;
+      res.end(JSON.stringify({ error: formatErrorMessage(error) }));
     }
     return;
   }
 
   // ==================== 统一材料管理 API ====================
+
+  if (resource === "claim-materials" && req.method === "POST" && id === "field-corrections") {
+    try {
+      const body = await parseBody(req);
+      const correction = body?.correction || body;
+      const claimCaseId = correction?.claimCaseId;
+      const documentId = correction?.documentId;
+      const fieldKey = correction?.fieldKey;
+
+      if (!claimCaseId || !documentId || !fieldKey) {
+        res.statusCode = 400;
+        res.end(JSON.stringify({ error: "Missing claimCaseId, documentId or fieldKey" }));
+        return;
+      }
+
+      const allMaterials = readData("claim-materials") || [];
+      const materialIndex = allMaterials.findIndex(
+        (material) =>
+          material.claimCaseId === claimCaseId &&
+          material.id === documentId,
+      );
+
+      if (materialIndex === -1) {
+        res.statusCode = 404;
+        res.end(JSON.stringify({ error: "Material not found for correction" }));
+        return;
+      }
+
+      const targetMaterial = allMaterials[materialIndex];
+      const existingCorrections = Array.isArray(targetMaterial.fieldCorrections)
+        ? targetMaterial.fieldCorrections
+        : [];
+      const nextCorrection = {
+        correctionId: correction.correctionId || `fc-${Date.now()}`,
+        documentId,
+        fieldKey,
+        fieldLabel: correction.fieldLabel || fieldKey,
+        originalValue: correction.originalValue || "",
+        correctedValue: correction.correctedValue || "",
+        correctedAt: correction.correctedAt || new Date().toISOString(),
+        correctedBy: correction.correctedBy || "系统用户",
+        claimCaseId,
+      };
+      const filteredCorrections = existingCorrections.filter(
+        (item) => item?.fieldKey !== fieldKey,
+      );
+
+      allMaterials[materialIndex] = {
+        ...targetMaterial,
+        fieldCorrections: [...filteredCorrections, nextCorrection],
+      };
+
+      writeData("claim-materials", allMaterials);
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({ success: true, data: nextCorrection }));
+    } catch (error) {
+      res.statusCode = 500;
+      res.end(JSON.stringify({ error: formatErrorMessage(error) }));
+    }
+    return;
+  }
 
   // GET /api/claim-materials - 查询案件材料
   if (resource === "claim-materials" && !id && req.method === "GET") {
@@ -3555,9 +4571,81 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
       return {
         ...m,
         ossKey: taskFile.ossKey,
-        url: m.url && m.url !== "#" ? m.url : (taskFile.result?.ossUrl || m.url || "#"),
+        url:
+          m.url && m.url !== "#"
+            ? m.url
+            : taskFile.result?.ossUrl || m.url || "#",
       };
     });
+
+    if (claimCaseId) {
+      const existingTaskFileKeys = new Set(
+        materials.map(
+          (m) => `${m.sourceDetail?.taskId || m.taskId || ""}::${m.fileName}`,
+        ),
+      );
+
+      const taskBackfilledMaterials = tasks
+        .filter(
+          (task) =>
+            task.claimCaseId === claimCaseId &&
+            ["pending", "processing", "archived"].includes(task.status),
+        )
+        .flatMap((task) =>
+          (task.files || [])
+            .filter((file) => {
+              const dedupeKey = `${task.id}::${file.fileName}`;
+              return !existingTaskFileKeys.has(dedupeKey);
+            })
+            .map((file, index) => ({
+              id: `${task.id}-${file.index ?? index}`,
+              claimCaseId,
+              fileName: file.fileName,
+              fileType: file.mimeType || inferFileType(file.fileName),
+              url: "#",
+              ossKey: file.ossKey,
+              category:
+                file.result?.classification?.materialName ||
+                file.classification?.materialName ||
+                "处理中",
+              materialId:
+                file.result?.classification?.materialId ||
+                file.classification?.materialId ||
+                "unknown",
+              materialName:
+                file.result?.classification?.materialName ||
+                file.classification?.materialName ||
+                "处理中",
+              classificationError:
+                file.classificationError || file.errorMessage || null,
+              extractedData: file.result?.structuredData || {},
+              auditConclusion: file.result?.auditConclusion || "",
+              confidence:
+                file.result?.confidence ??
+                file.result?.classification?.confidence ??
+                file.classification?.confidence ??
+                0,
+              documentSummary: null,
+              source: "batch_import",
+              sourceDetail: {
+                taskId: task.id,
+              },
+              status:
+                file.status === "failed"
+                  ? "failed"
+                  : file.status === "completed"
+                    ? "completed"
+                    : "processing",
+              uploadedAt: file.startedAt || task.createdAt,
+              processedAt: file.completedAt || undefined,
+              metadata: {
+                taskStatus: task.status,
+              },
+            })),
+        );
+
+      materials = materials.concat(taskBackfilledMaterials);
+    }
 
     // 统计信息
     const bySource = materials.reduce((acc, m) => {
@@ -3599,7 +4687,11 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
 
       if (!claimCaseId || !fileName) {
         res.statusCode = 400;
-        res.end(JSON.stringify({ error: "Missing required fields: claimCaseId, fileName" }));
+        res.end(
+          JSON.stringify({
+            error: "Missing required fields: claimCaseId, fileName",
+          }),
+        );
         return;
       }
 
@@ -3607,12 +4699,21 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
 
       // 检查是否已存在（去重）
       const exists = allMaterials.some(
-        (m) => m.claimCaseId === claimCaseId && m.fileName === fileName && m.source === source
+        (m) =>
+          m.claimCaseId === claimCaseId &&
+          m.fileName === fileName &&
+          m.source === source,
       );
 
       if (exists) {
         res.statusCode = 409;
-        res.end(JSON.stringify({ error: "Material already exists", fileName, source }));
+        res.end(
+          JSON.stringify({
+            error: "Material already exists",
+            fileName,
+            source,
+          }),
+        );
         return;
       }
 
@@ -3650,7 +4751,12 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
   }
 
   // PUT /api/claim-materials/:id/parse - 触发解析
-  if (resource === "claim-materials" && id && req.method === "PUT" && url.pathname.endsWith("/parse")) {
+  if (
+    resource === "claim-materials" &&
+    id &&
+    req.method === "PUT" &&
+    url.pathname.endsWith("/parse")
+  ) {
     try {
       const materialId = id;
       const payload = await parseBody(req).catch(() => ({}));
@@ -3669,41 +4775,59 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
         ...material,
         materialId: payload.materialId || material.materialId,
         materialName: payload.materialName || material.materialName,
-        category: payload.category || material.category || payload.materialName || material.materialName,
+        category:
+          payload.category ||
+          material.category ||
+          payload.materialName ||
+          material.materialName,
         status: "processing",
       };
       allMaterials[materialIndex] = nextMaterial;
       writeData("claim-materials", allMaterials);
 
-      const { buffer, mimeType } = await loadBufferForClaimMaterial(nextMaterial);
+      const { buffer, mimeType } =
+        await loadBufferForClaimMaterial(nextMaterial);
       const pipelineResult = await processClaimMaterial({
         fileName: nextMaterial.fileName,
-        mimeType: nextMaterial.fileType || mimeType || inferFileType(nextMaterial.fileName),
+        mimeType:
+          nextMaterial.fileType ||
+          mimeType ||
+          inferFileType(nextMaterial.fileName),
         buffer,
         materialRecord: nextMaterial,
         preferredMaterialId: payload.materialId || nextMaterial.materialId,
-        preferredMaterialName: payload.materialName || nextMaterial.materialName || nextMaterial.category,
+        preferredMaterialName:
+          payload.materialName ||
+          nextMaterial.materialName ||
+          nextMaterial.category,
       });
       if (!pipelineResult.success) {
         throw new Error(
           pipelineResult.classification?.errorMessage ||
             pipelineResult.parseResult?.errorMessage ||
-            "材料解析失败"
+            "材料解析失败",
         );
       }
 
       const updatedMaterial = {
         ...nextMaterial,
-        materialId: pipelineResult.classification?.materialId || nextMaterial.materialId,
-        materialName: pipelineResult.classification?.materialName || nextMaterial.materialName,
+        materialId:
+          pipelineResult.classification?.materialId || nextMaterial.materialId,
+        materialName:
+          pipelineResult.classification?.materialName ||
+          nextMaterial.materialName,
         category:
           pipelineResult.classification?.materialName ||
           nextMaterial.category ||
           nextMaterial.materialName,
-        classificationError: pipelineResult.classification?.errorMessage || null,
+        classificationError:
+          pipelineResult.classification?.errorMessage || null,
         extractedData: pipelineResult.extractedData || {},
         auditConclusion: pipelineResult.auditConclusion || "",
-        confidence: pipelineResult.confidence ?? pipelineResult.classification?.confidence ?? 0,
+        confidence:
+          pipelineResult.confidence ??
+          pipelineResult.classification?.confidence ??
+          0,
         ocrText: pipelineResult.extractedText || nextMaterial.ocrText || "",
         status: pipelineResult.success ? "completed" : "failed",
         processedAt: new Date().toISOString(),
@@ -3889,7 +5013,11 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
     return;
   }
 
-  if (resource === "messages" && id === "unread-count" && req.method === "GET") {
+  if (
+    resource === "messages" &&
+    id === "unread-count" &&
+    req.method === "GET"
+  ) {
     try {
       const userId = req.headers["x-user-id"] || "anonymous";
       const count = await getUnreadCount(userId);
@@ -3985,8 +5113,13 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
       }
 
       const userId = req.headers["x-user-id"] || "anonymous";
-      const task = await createTask(claimCaseId, productCode, uploadedFiles, userId);
-      
+      const task = await createTask(
+        claimCaseId,
+        productCode,
+        uploadedFiles,
+        userId,
+      );
+
       writeAuditLog({
         type: "IMPORT_TASK_CREATE",
         taskId: task.id,
@@ -3997,13 +5130,14 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
       });
 
       res.setHeader("Content-Type", "application/json");
-      res.end(JSON.stringify({
-        success: true,
-        taskId: task.id,
-        message: "任务已创建，正在后台处理",
-        totalFiles: uploadedFiles.length,
-      }));
-
+      res.end(
+        JSON.stringify({
+          success: true,
+          taskId: task.id,
+          message: "任务已创建，正在后台处理",
+          totalFiles: uploadedFiles.length,
+        }),
+      );
     } catch (error) {
       console.error("[import-offline-materials] Error:", error);
       res.statusCode = 500;
@@ -4092,9 +5226,7 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
       }
 
       const completedDocs = documents.filter((d) => d.status === "completed");
-      const summaries = await extractDocumentSummaries(completedDocs, {
-        skipImages: true,
-      });
+      const summaries = buildSummariesFromDocuments(completedDocs);
       completedDocs.forEach((doc, index) => {
         if (summaries[index]) {
           doc.documentSummary = summaries[index];
@@ -4150,20 +5282,25 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
       const processingTime = Date.now() - startTime;
 
       // 3. 检查置信度并创建人工复核工单
-      const claimCase = readData("claim-cases").find(c => c.id === claimCaseId);
+      const claimCase = readData("claim-cases").find(
+        (c) => c.id === claimCaseId,
+      );
       const reportNumber = claimCase?.reportNumber || claimCaseId;
       const createdReviewTasks = [];
-      
+
       // 获取材料配置以检查置信度阈值
       const materialsConfig = readData("claims-materials");
-      
+
       for (const doc of documents) {
-        if (doc.status !== "completed" || !doc.classification?.materialId) continue;
-        
-        const materialConfig = materialsConfig.find(m => m.id === doc.classification.materialId);
+        if (doc.status !== "completed" || !doc.classification?.materialId)
+          continue;
+
+        const materialConfig = materialsConfig.find(
+          (m) => m.id === doc.classification.materialId,
+        );
         const threshold = materialConfig?.confidenceThreshold ?? 0.9;
         const aiConfidence = (doc.classification?.confidence || 0) / 100; // 转换为0-1范围
-        
+
         // 如果置信度低于阈值，创建工单
         if (aiConfidence < threshold) {
           try {
@@ -4171,7 +5308,10 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
               claimCaseId,
               reportNumber,
               materialId: doc.classification.materialId,
-              materialName: doc.classification.materialName || materialConfig?.name || "未知材料",
+              materialName:
+                doc.classification.materialName ||
+                materialConfig?.name ||
+                "未知材料",
               documentId: doc.documentId,
               ossUrl: doc.ossUrl,
               ossKey: doc.ossKey,
@@ -4180,7 +5320,7 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
               aiExtractedData: doc.structuredData,
               createdBy: "system",
             });
-            
+
             if (task) {
               createdReviewTasks.push({
                 taskId: task.id,
@@ -4191,7 +5331,10 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
               });
             }
           } catch (taskError) {
-            console.error("[import-offline-materials] Failed to create review task:", taskError);
+            console.error(
+              "[import-offline-materials] Failed to create review task:",
+              taskError,
+            );
           }
         }
       }
@@ -4209,15 +5352,19 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
         })),
         aggregation: aggregationResult,
         validationFacts: analysisResult?.validationFacts || {},
-        materialValidationResults: analysisResult?.materialValidationResults || [],
+        materialValidationResults:
+          analysisResult?.materialValidationResults || [],
         completeness,
-        reviewTasks: createdReviewTasks.map(t => t.taskId),
+        reviewTasks: createdReviewTasks.map((t) => t.taskId),
       };
       allClaimDocs.push(importRecord);
       writeData("claim-documents", allClaimDocs);
       if (aggregationResult) {
         try {
-          const claimCase = (readData("claim-cases") || []).find((item) => item.id === claimCaseId) || {};
+          const claimCase =
+            (readData("claim-cases") || []).find(
+              (item) => item.id === claimCaseId,
+            ) || {};
           await syncClaimReviewArtifacts({
             claimCaseId,
             recordIndex: allClaimDocs.length - 1,
@@ -4227,7 +5374,10 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
             },
           });
         } catch (reviewSyncError) {
-          console.error("[import-offline-materials] Failed to sync review artifacts:", reviewSyncError);
+          console.error(
+            "[import-offline-materials] Failed to sync review artifacts:",
+            reviewSyncError,
+          );
         }
       }
 
@@ -4235,7 +5385,9 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
       try {
         const allMaterials = readData("claim-materials");
         const batchMaterials = documents.map((doc) => ({
-          id: doc.documentId || `mat-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          id:
+            doc.documentId ||
+            `mat-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           claimCaseId,
           fileName: doc.fileName,
           fileType: doc.fileType || inferFileType(doc.fileName),
@@ -4254,15 +5406,25 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
             importedAt: importRecord.importedAt,
             taskId: importRecord.taskId,
           },
-          status: doc.status === "completed" ? "completed" : doc.status === "failed" ? "failed" : "pending",
+          status:
+            doc.status === "completed"
+              ? "completed"
+              : doc.status === "failed"
+                ? "failed"
+                : "pending",
           uploadedAt: importRecord.importedAt,
-          processedAt: doc.status === "completed" ? importRecord.importedAt : undefined,
-          metadata: doc.duplicateWarning ? { duplicateWarning: doc.duplicateWarning } : undefined,
+          processedAt:
+            doc.status === "completed" ? importRecord.importedAt : undefined,
+          metadata: doc.duplicateWarning
+            ? { duplicateWarning: doc.duplicateWarning }
+            : undefined,
         }));
 
         allMaterials.push(...batchMaterials);
         writeData("claim-materials", allMaterials);
-        console.log(`[Import] Synced ${batchMaterials.length} materials to claim-materials`);
+        console.log(
+          `[Import] Synced ${batchMaterials.length} materials to claim-materials`,
+        );
       } catch (syncError) {
         console.error("[Import] Failed to sync to claim-materials:", syncError);
       }
@@ -4273,7 +5435,7 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
       ).length;
       const failCount = documents.filter((d) => d.status === "failed").length;
       let summary = `成功处理 ${successCount} 个文件${failCount > 0 ? `，${failCount} 个失败` : ""}，耗时 ${processingTime}ms`;
-      
+
       if (createdReviewTasks.length > 0) {
         summary += `。已创建 ${createdReviewTasks.length} 个人工复核工单`;
       }
@@ -4533,7 +5695,8 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
     }
 
     try {
-      const { calculateMaterials } = await import("./services/materialCalculator.js");
+      const { calculateMaterials } =
+        await import("./services/materialCalculator.js");
       const params = await parseBody(req);
       const result = await calculateMaterials(params);
 
@@ -4542,12 +5705,14 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
     } catch (error) {
       console.error("[calculate-materials error]", error);
       res.statusCode = 500;
-      res.end(JSON.stringify({
-        success: false,
-        error: formatErrorMessage(error),
-        materials: [],
-        summary: { totalCount: 0, requiredCount: 0, optionalCount: 0 }
-      }));
+      res.end(
+        JSON.stringify({
+          success: false,
+          error: formatErrorMessage(error),
+          materials: [],
+          summary: { totalCount: 0, requiredCount: 0, optionalCount: 0 },
+        }),
+      );
     }
     return;
   }
@@ -4702,9 +5867,9 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
         }
       }
 
-      // 5. 类型化摘要提取（仅 completed 文件）
+      // 5. 从材料管线提取数据构造类型化摘要（不再独立调用 AI）
       const completedDocs = documents.filter((d) => d.status === "completed");
-      const summaries = await extractDocumentSummaries(completedDocs);
+      const summaries = buildSummariesFromDocuments(completedDocs);
       // 将摘要附加到对应文档
       completedDocs.forEach((doc, i) => {
         if (summaries[i]) {
@@ -4764,13 +5929,17 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
         completeness,
         aggregation: { ...aggregationResult, summaries: undefined },
         validationFacts: analysisResult?.validationFacts || {},
-        materialValidationResults: analysisResult?.materialValidationResults || [],
+        materialValidationResults:
+          analysisResult?.materialValidationResults || [],
       };
       allClaimDocs.push(importRecord);
       writeData("claim-documents", allClaimDocs);
       if (aggregationResult) {
         try {
-          const claimCase = (readData("claim-cases") || []).find((item) => item.id === claimCaseId) || {};
+          const claimCase =
+            (readData("claim-cases") || []).find(
+              (item) => item.id === claimCaseId,
+            ) || {};
           await syncClaimReviewArtifacts({
             claimCaseId,
             recordIndex: allClaimDocs.length - 1,
@@ -4780,7 +5949,10 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
             },
           });
         } catch (reviewSyncError) {
-          console.error("[import-injury-case] Failed to sync review artifacts:", reviewSyncError);
+          console.error(
+            "[import-injury-case] Failed to sync review artifacts:",
+            reviewSyncError,
+          );
         }
       }
 
@@ -4812,7 +5984,8 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
           completeness,
           aggregation: aggregationResult,
           validationFacts: analysisResult?.validationFacts || {},
-          materialValidationResults: analysisResult?.materialValidationResults || [],
+          materialValidationResults:
+            analysisResult?.materialValidationResults || [],
           duplicateSkipped: exactDuplicateFiles.map((f) => f.fileName),
           duplicateWarnings: duplicateResults.filter(
             (r) => r.isDuplicate && r.duplicateType === "similar",
@@ -4869,13 +6042,15 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
           parseCompleted: true,
         },
       });
-      const report = syncedArtifacts?.report || generateDamageReport({
-        claimCaseId,
-        aggregationResult: latestImportInfo.record.aggregation,
-        claimCase,
-        standards: standards || {},
-        claimantAge: claimantAge || 35,
-      });
+      const report =
+        syncedArtifacts?.report ||
+        generateDamageReport({
+          claimCaseId,
+          aggregationResult: latestImportInfo.record.aggregation,
+          claimCase,
+          standards: standards || {},
+          claimantAge: claimantAge || 35,
+        });
 
       // 写审计日志
       writeAuditLog({
@@ -4890,10 +6065,12 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
       });
 
       res.setHeader("Content-Type", "application/json");
-      res.end(JSON.stringify({
-        ...report,
-        reviewResult: syncedArtifacts?.reviewResult || null,
-      }));
+      res.end(
+        JSON.stringify({
+          ...report,
+          reviewResult: syncedArtifacts?.reviewResult || null,
+        }),
+      );
     } catch (error) {
       console.error("[generate-damage-report error]", error);
       res.statusCode = 500;
@@ -4910,7 +6087,8 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
     }
 
     try {
-      const { claimCaseId, applyDeduction, deductionAmount } = await parseBody(req);
+      const { claimCaseId, applyDeduction, deductionAmount } =
+        await parseBody(req);
       if (!claimCaseId) {
         res.statusCode = 400;
         res.end(JSON.stringify({ error: "Missing claimCaseId" }));
@@ -4920,8 +6098,15 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
       const allClaimDocs = readData("claim-documents");
       const latestIndex = allClaimDocs
         .map((record, index) => ({ record, index }))
-        .filter(({ record }) => record.claimCaseId === claimCaseId && record.aggregation)
-        .sort((a, b) => new Date(b.record.importedAt || 0) - new Date(a.record.importedAt || 0))[0];
+        .filter(
+          ({ record }) =>
+            record.claimCaseId === claimCaseId && record.aggregation,
+        )
+        .sort(
+          (a, b) =>
+            new Date(b.record.importedAt || 0) -
+            new Date(a.record.importedAt || 0),
+        )[0];
 
       if (!latestIndex?.record?.aggregation) {
         res.statusCode = 404;
@@ -4933,24 +6118,36 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
       const deductionSummary = {
         ...(aggregation.deductionSummary || aggregation.paymentSummary || {}),
       };
-      const deductionRecommendedAmount = Number(deductionSummary.deductionRecommendedAmount || 0);
+      const deductionRecommendedAmount = Number(
+        deductionSummary.deductionRecommendedAmount || 0,
+      );
       const parsedDeductionAmount =
-        deductionAmount === undefined || deductionAmount === null || deductionAmount === ""
+        deductionAmount === undefined ||
+        deductionAmount === null ||
+        deductionAmount === ""
           ? null
           : Number(deductionAmount);
-      if (parsedDeductionAmount !== null && (!Number.isFinite(parsedDeductionAmount) || parsedDeductionAmount < 0)) {
+      if (
+        parsedDeductionAmount !== null &&
+        (!Number.isFinite(parsedDeductionAmount) || parsedDeductionAmount < 0)
+      ) {
         res.statusCode = 400;
         res.end(JSON.stringify({ error: "抵扣金额必须是大于等于 0 的数字" }));
         return;
       }
       const resolvedDeductionAmount =
         parsedDeductionAmount !== null
-          ? Math.min(parsedDeductionAmount, deductionRecommendedAmount || parsedDeductionAmount)
+          ? Math.min(
+              parsedDeductionAmount,
+              deductionRecommendedAmount || parsedDeductionAmount,
+            )
           : applyDeduction
             ? deductionRecommendedAmount
             : 0;
       deductionSummary.deductionTotal = resolvedDeductionAmount;
-      deductionSummary.confirmed = Boolean(applyDeduction || resolvedDeductionAmount > 0);
+      deductionSummary.confirmed = Boolean(
+        applyDeduction || resolvedDeductionAmount > 0,
+      );
       deductionSummary.confirmedAt = new Date().toISOString();
       aggregation.deductionSummary = deductionSummary;
       aggregation.decisionTrace = rebuildDecisionTraceForClaim({
@@ -4960,7 +6157,8 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
       });
 
       const allClaimCases = readData("claim-cases");
-      const claimCase = allClaimCases.find((item) => item.id === claimCaseId) || {};
+      const claimCase =
+        allClaimCases.find((item) => item.id === claimCaseId) || {};
       const syncedArtifacts = await syncClaimReviewArtifacts({
         claimCaseId,
         recordIndex: latestIndex.index,
@@ -5007,8 +6205,13 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
       }
 
       const normalizedFactKey =
-        factKey === "employment_relation" ? "third_party_identity_chain" : factKey;
-      const allowedFactKeys = new Set(["liability_apportionment", "third_party_identity_chain"]);
+        factKey === "employment_relation"
+          ? "third_party_identity_chain"
+          : factKey;
+      const allowedFactKeys = new Set([
+        "liability_apportionment",
+        "third_party_identity_chain",
+      ]);
       if (!allowedFactKeys.has(normalizedFactKey)) {
         res.statusCode = 400;
         res.end(JSON.stringify({ error: "Unsupported factKey" }));
@@ -5018,8 +6221,15 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
       const allClaimDocs = readData("claim-documents");
       const latestIndex = allClaimDocs
         .map((record, index) => ({ record, index }))
-        .filter(({ record }) => record.claimCaseId === claimCaseId && record.aggregation)
-        .sort((a, b) => new Date(b.record.importedAt || 0) - new Date(a.record.importedAt || 0))[0];
+        .filter(
+          ({ record }) =>
+            record.claimCaseId === claimCaseId && record.aggregation,
+        )
+        .sort(
+          (a, b) =>
+            new Date(b.record.importedAt || 0) -
+            new Date(a.record.importedAt || 0),
+        )[0];
 
       if (!latestIndex?.record?.aggregation) {
         res.statusCode = 404;
@@ -5037,7 +6247,10 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
       };
       aggregation.factConfirmations = factConfirmations;
 
-      if (normalizedFactKey === "liability_apportionment" && aggregation.liabilityApportionment) {
+      if (
+        normalizedFactKey === "liability_apportionment" &&
+        aggregation.liabilityApportionment
+      ) {
         aggregation.liabilityApportionment = {
           ...aggregation.liabilityApportionment,
           confirmed: Boolean(confirmed),
@@ -5051,7 +6264,7 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
           thirdPartyIdentityChainConfirmed: Boolean(confirmed),
           thirdPartyIdentityChainConfirmedAt: new Date().toISOString(),
           legacyAliases: {
-            ...(((aggregation.factModel || {}).legacyAliases) || {}),
+            ...((aggregation.factModel || {}).legacyAliases || {}),
             employmentRelationConfirmed: Boolean(confirmed),
             employmentRelationConfirmedAt: new Date().toISOString(),
           },
@@ -5064,7 +6277,8 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
       });
 
       const allClaimCases = readData("claim-cases");
-      const claimCase = allClaimCases.find((item) => item.id === claimCaseId) || {};
+      const claimCase =
+        allClaimCases.find((item) => item.id === claimCaseId) || {};
       const syncedArtifacts = await syncClaimReviewArtifacts({
         claimCaseId,
         recordIndex: latestIndex.index,
@@ -5107,7 +6321,11 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
       const ratio = Number(thirdPartyLiabilityPct);
       if (!claimCaseId || !Number.isFinite(ratio)) {
         res.statusCode = 400;
-        res.end(JSON.stringify({ error: "Missing claimCaseId or invalid thirdPartyLiabilityPct" }));
+        res.end(
+          JSON.stringify({
+            error: "Missing claimCaseId or invalid thirdPartyLiabilityPct",
+          }),
+        );
         return;
       }
       if (ratio < 0 || ratio > 100) {
@@ -5119,8 +6337,15 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
       const allClaimDocs = readData("claim-documents");
       const latestIndex = allClaimDocs
         .map((record, index) => ({ record, index }))
-        .filter(({ record }) => record.claimCaseId === claimCaseId && record.aggregation)
-        .sort((a, b) => new Date(b.record.importedAt || 0) - new Date(a.record.importedAt || 0))[0];
+        .filter(
+          ({ record }) =>
+            record.claimCaseId === claimCaseId && record.aggregation,
+        )
+        .sort(
+          (a, b) =>
+            new Date(b.record.importedAt || 0) -
+            new Date(a.record.importedAt || 0),
+        )[0];
 
       if (!latestIndex?.record?.aggregation) {
         res.statusCode = 404;
@@ -5154,7 +6379,8 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
       });
 
       const allClaimCases = readData("claim-cases");
-      const claimCase = allClaimCases.find((item) => item.id === claimCaseId) || {};
+      const claimCase =
+        allClaimCases.find((item) => item.id === claimCaseId) || {};
       const syncedArtifacts = await syncClaimReviewArtifacts({
         claimCaseId,
         recordIndex: latestIndex.index,
@@ -5234,9 +6460,10 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
     if (claimCaseId) filters.claimCaseId = claimCaseId;
 
     const logs = readAuditLogs(date, filters);
-    const limited = date === "all" 
-      ? logs.slice(0, limit) // 全部日志已按时间排序
-      : logs.slice(-limit).reverse(); // 单天日志最新的在前
+    const limited =
+      date === "all"
+        ? logs.slice(0, limit) // 全部日志已按时间排序
+        : logs.slice(-limit).reverse(); // 单天日志最新的在前
 
     res.setHeader("Content-Type", "application/json");
     res.end(
@@ -5267,12 +6494,14 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
       try {
         // 1. 从 user-operation-logs.json 查询（用户操作日志）
         const userLogs = readData("user-operation-logs") || [];
-        const filteredUserLogs = userLogs.filter(
-          (log) => log.claimId === claimId || log.claimCaseId === claimId
-        ).map((log) => ({
-          ...log,
-          logSource: "user", // 标记来源
-        }));
+        const filteredUserLogs = userLogs
+          .filter(
+            (log) => log.claimId === claimId || log.claimCaseId === claimId,
+          )
+          .map((log) => ({
+            ...log,
+            logSource: "user", // 标记来源
+          }));
 
         // 2. 从审计日志查询（系统操作日志）
         const auditLogs = readAuditLogs("all", { claimCaseId: claimId });
@@ -5292,7 +6521,11 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
           logSource: "system",
         }));
 
-        const aiLogs = queryAIInteractionLogs({ claimCaseId: claimId, limit: 200, includeRaw: false }).logs;
+        const aiLogs = queryAIInteractionLogs({
+          claimCaseId: claimId,
+          limit: 200,
+          includeRaw: false,
+        }).logs;
         const formattedAILogs = aiLogs.map((log) => ({
           logId: log.id,
           timestamp: log.timestamp,
@@ -5303,7 +6536,9 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
           claimReportNumber: null,
           currentStatus: null,
           inputData: log.sanitized?.request || log.request?.summary || null,
-          outputData: log.sanitized?.response || { text: log.response?.text || null },
+          outputData: log.sanitized?.response || {
+            text: log.response?.text || null,
+          },
           success: log.success !== false,
           duration: log.performance?.durationMs || null,
           aiInteractionId: log.id,
@@ -5312,8 +6547,13 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
         }));
 
         // 3. 合并并按时间排序（最新的在前）
-        const allLogs = [...filteredUserLogs, ...formattedAuditLogs, ...formattedAILogs].sort(
-          (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        const allLogs = [
+          ...filteredUserLogs,
+          ...formattedAuditLogs,
+          ...formattedAILogs,
+        ].sort(
+          (a, b) =>
+            new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
         );
 
         res.setHeader("Content-Type", "application/json");
@@ -5325,7 +6565,7 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
             systemLogsCount: formattedAuditLogs.length,
             aiLogsCount: formattedAILogs.length,
             logs: allLogs,
-          })
+          }),
         );
       } catch (error) {
         console.error("[operation-logs] Error:", error);
@@ -5339,17 +6579,33 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
     if (req.method === "POST") {
       try {
         const body = await parseBody(req);
-        const { claimId, operationType, operationLabel, inputData, outputData, success = true, duration, userName } = body;
+        const {
+          claimId,
+          operationType,
+          operationLabel,
+          inputData,
+          outputData,
+          success = true,
+          duration,
+          userName,
+        } = body;
 
         if (!claimId || !operationType) {
           res.statusCode = 400;
-          res.end(JSON.stringify({ error: "Missing required fields: claimId, operationType" }));
+          res.end(
+            JSON.stringify({
+              error: "Missing required fields: claimId, operationType",
+            }),
+          );
           return;
         }
 
         // 创建日志条目
         const logEntry = {
-          logId: `log-${new Date().toISOString().replace(/[-:T.Z]/g, '').slice(0, 14)}-${Math.random().toString(36).slice(2, 8)}`,
+          logId: `log-${new Date()
+            .toISOString()
+            .replace(/[-:T.Z]/g, "")
+            .slice(0, 14)}-${Math.random().toString(36).slice(2, 8)}`,
           timestamp: new Date().toISOString(),
           userName: userName || req.headers["x-user-id"] || "system",
           operationType,
@@ -5415,12 +6671,14 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
         (material) => material.claimCaseId === claimId,
       );
       const claimDocuments = readData("claim-documents") || [];
-      const latestImportRecord = [...claimDocuments]
-        .filter((record) => record.claimCaseId === claimId)
-        .sort(
-          (a, b) =>
-            new Date(b.importedAt || 0).getTime() - new Date(a.importedAt || 0).getTime(),
-        )[0] || null;
+      const latestImportRecord =
+        [...claimDocuments]
+          .filter((record) => record.claimCaseId === claimId)
+          .sort(
+            (a, b) =>
+              new Date(b.importedAt || 0).getTime() -
+              new Date(a.importedAt || 0).getTime(),
+          )[0] || null;
       const latestImportTask = latestImportRecord?.taskId
         ? getTask(latestImportRecord.taskId)
         : null;
@@ -5430,24 +6688,27 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
       const userLogs = (readData("user-operation-logs") || [])
         .filter((log) => log.claimId === claimId || log.claimCaseId === claimId)
         .map((log) => ({ ...log, logSource: "user" }));
-      const auditLogs = readAuditLogs("all", { claimCaseId: claimId }).map((log) => ({
-        logId: `audit-${log.timestamp}-${Math.random().toString(36).slice(2, 8)}`,
-        timestamp: log.timestamp,
-        userName: log.operator || "系统",
-        operationType: mapAuditTypeToOperationType(log.type),
-        operationLabel: formatAuditLogLabel(log),
-        claimId: log.claimCaseId,
-        claimReportNumber: null,
-        currentStatus: log.newStatus || null,
-        inputData: log.input || null,
-        outputData: log.output || null,
-        success: log.success !== false,
-        duration: log.duration || null,
-        logSource: "system",
-      }));
+      const auditLogs = readAuditLogs("all", { claimCaseId: claimId }).map(
+        (log) => ({
+          logId: `audit-${log.timestamp}-${Math.random().toString(36).slice(2, 8)}`,
+          timestamp: log.timestamp,
+          userName: log.operator || "系统",
+          operationType: mapAuditTypeToOperationType(log.type),
+          operationLabel: formatAuditLogLabel(log),
+          claimId: log.claimCaseId,
+          claimReportNumber: null,
+          currentStatus: log.newStatus || null,
+          inputData: log.input || null,
+          outputData: log.output || null,
+          success: log.success !== false,
+          duration: log.duration || null,
+          logSource: "system",
+        }),
+      );
 
       const logs = [...userLogs, ...auditLogs].sort(
-        (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+        (a, b) =>
+          new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
       );
       const processTimeline = buildClaimProcessTimeline({
         claimCase,
@@ -5467,7 +6728,9 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
     } catch (error) {
       console.error("[claim-process-timeline] Error:", error);
       res.statusCode = 500;
-      res.end(JSON.stringify({ error: "Failed to build claim process timeline" }));
+      res.end(
+        JSON.stringify({ error: "Failed to build claim process timeline" }),
+      );
     }
     return;
   }
@@ -5637,6 +6900,78 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
     return;
   }
 
+  // ============ 人工介入（Human-in-the-Loop）API ============
+  if (resource === "claim-interventions") {
+    res.setHeader("Content-Type", "application/json");
+    try {
+      if (req.method === "GET") {
+        if (id && id.startsWith("iv-")) {
+          // GET /api/claim-interventions/:id - 单个介入实例详情
+          const intervention = interventionStateMachine.getIntervention(id);
+          if (!intervention) {
+            res.statusCode = 404;
+            res.end(JSON.stringify({ error: "Intervention not found" }));
+          } else {
+            res.end(JSON.stringify(intervention));
+          }
+        } else {
+          // GET /api/claim-interventions?claimCaseId=&interventionType=&priority=&resolved=
+          const url = new URL(req.url, `http://${req.headers.host}`);
+          const filters = {};
+          if (url.searchParams.get("claimCaseId"))
+            filters.claimCaseId = url.searchParams.get("claimCaseId");
+          if (url.searchParams.get("interventionType"))
+            filters.interventionType = url.searchParams.get("interventionType");
+          if (url.searchParams.get("priority"))
+            filters.priority = url.searchParams.get("priority");
+          if (url.searchParams.get("stageKey"))
+            filters.stageKey = url.searchParams.get("stageKey");
+          const resolvedParam = url.searchParams.get("resolved");
+          if (resolvedParam === "true") filters.resolved = true;
+          else if (resolvedParam === "all") filters.resolved = "all";
+
+          const list = interventionStateMachine.listInterventions(filters);
+          res.end(JSON.stringify(list));
+        }
+      } else if (req.method === "POST") {
+        const body = await parseBody(req);
+
+        if (id && id.endsWith("/transition")) {
+          // POST /api/claim-interventions/:id/transition
+          const interventionId = id.replace("/transition", "");
+          const updated = interventionStateMachine.transitionState(
+            interventionId,
+            body.event,
+            body.payload || {},
+          );
+          res.end(JSON.stringify({ success: true, data: updated }));
+        } else if (id && id.endsWith("/resolve")) {
+          // POST /api/claim-interventions/:id/resolve
+          const interventionId = id.replace("/resolve", "");
+          const updated = interventionStateMachine.resolveIntervention(
+            interventionId,
+            body.resolution,
+            body.payload || {},
+          );
+          res.end(JSON.stringify({ success: true, data: updated }));
+        } else {
+          // POST /api/claim-interventions - 创建介入实例
+          const intervention =
+            interventionStateMachine.createIntervention(body);
+          res.statusCode = 201;
+          res.end(JSON.stringify({ success: true, data: intervention }));
+        }
+      } else {
+        res.statusCode = 405;
+        res.end(JSON.stringify({ error: "Method Not Allowed" }));
+      }
+    } catch (error) {
+      res.statusCode = error.message.includes("not found") ? 404 : 400;
+      res.end(JSON.stringify({ error: error.message }));
+    }
+    return;
+  }
+
   if (resource === "review-tasks") {
     res.setHeader("Content-Type", "application/json");
     try {
@@ -5652,17 +6987,21 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
         } else {
           const url = new URL(req.url, `http://${req.headers.host}`);
           const filters = {};
-          if (url.searchParams.get("status")) filters.status = url.searchParams.get("status");
-          if (url.searchParams.get("claimCaseId")) filters.claimCaseId = url.searchParams.get("claimCaseId");
-          if (url.searchParams.get("priority")) filters.priority = url.searchParams.get("priority");
-          if (url.searchParams.get("reviewerId")) filters.reviewerId = url.searchParams.get("reviewerId");
-          
+          if (url.searchParams.get("status"))
+            filters.status = url.searchParams.get("status");
+          if (url.searchParams.get("claimCaseId"))
+            filters.claimCaseId = url.searchParams.get("claimCaseId");
+          if (url.searchParams.get("priority"))
+            filters.priority = url.searchParams.get("priority");
+          if (url.searchParams.get("reviewerId"))
+            filters.reviewerId = url.searchParams.get("reviewerId");
+
           const tasks = await reviewTaskService.list(filters);
           res.end(JSON.stringify(tasks));
         }
       } else if (req.method === "POST") {
         const body = await parseBody(req);
-        
+
         if (body.action === "check-and-create") {
           const task = await reviewTaskService.checkAndCreateTask(body);
           res.statusCode = 201;
@@ -5685,7 +7024,10 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
           if (body.status === "已完成") {
             const logs = readData("user-operation-logs") || [];
             logs.push({
-              logId: `log-${new Date().toISOString().replace(/[-:T.Z]/g, "").slice(0, 14)}-${Math.random().toString(36).slice(2, 8)}`,
+              logId: `log-${new Date()
+                .toISOString()
+                .replace(/[-:T.Z]/g, "")
+                .slice(0, 14)}-${Math.random().toString(36).slice(2, 8)}`,
               timestamp: task.completedAt || new Date().toISOString(),
               userName: body.reviewerName || task.reviewerName || "人工处理",
               operationType: "CLAIM_ACTION",
@@ -5701,10 +7043,13 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
               },
               outputData: {
                 actionType: "MANUAL_MATERIAL_REVIEW_COMPLETED",
-                manualReviewNotes: body.manualReviewNotes || task.manualReviewNotes || "",
-                manualInputData: body.manualInputData || task.manualInputData || {},
+                manualReviewNotes:
+                  body.manualReviewNotes || task.manualReviewNotes || "",
+                manualInputData:
+                  body.manualInputData || task.manualInputData || {},
                 reviewerId: body.reviewerId || task.reviewerId || null,
-                reviewerName: body.reviewerName || task.reviewerName || "人工处理",
+                reviewerName:
+                  body.reviewerName || task.reviewerName || "人工处理",
               },
               success: true,
               duration: null,
@@ -5757,7 +7102,7 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
       } else if (req.method === "PUT") {
         const payload = await parseBody(req);
         const data = readData(resource);
-        
+
         if (id) {
           // 更新单个预设
           if (!data[id]) {
@@ -5771,19 +7116,24 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
         } else {
           // 批量更新所有预设（对象格式）
           writeData(resource, payload);
-          res.end(JSON.stringify({ success: true, count: Object.keys(payload).length }));
+          res.end(
+            JSON.stringify({
+              success: true,
+              count: Object.keys(payload).length,
+            }),
+          );
         }
       } else if (req.method === "POST") {
         // 创建新预设
         const newItem = await parseBody(req);
         const data = readData(resource);
-        
+
         if (!newItem.id) {
           res.statusCode = 400;
           res.end(JSON.stringify({ error: "Preset id is required" }));
           return;
         }
-        
+
         data[newItem.id] = newItem;
         writeData(resource, data);
         res.statusCode = 201;
@@ -5845,7 +7195,7 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
 
       const classification = await classifyMaterial(
         processResult,
-        "uploaded-file"
+        "uploaded-file",
       );
 
       res.setHeader("Content-Type", "application/json");
@@ -5853,7 +7203,7 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
         JSON.stringify({
           success: true,
           data: classification,
-        })
+        }),
       );
     } catch (error) {
       console.error("[materials/classify error]", error);
@@ -5861,7 +7211,7 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
       res.end(
         JSON.stringify({
           error: formatErrorMessage(error),
-        })
+        }),
       );
     }
     return;
@@ -5928,7 +7278,10 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
       newItem = normalizeIfRulesetResource(resource, newItem);
       newItem = normalizeIfClaimsMaterialsResource(resource, newItem);
       const validationErrors = validateIfRulesetResource(resource, newItem);
-      const materialValidationErrors = validateIfClaimsMaterialsResource(resource, newItem);
+      const materialValidationErrors = validateIfClaimsMaterialsResource(
+        resource,
+        newItem,
+      );
       if (validationErrors.length > 0 || materialValidationErrors.length > 0) {
         res.statusCode = 400;
         const details = [...validationErrors, ...materialValidationErrors];
@@ -5953,7 +7306,11 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
         writeData(resource, data);
 
         // 新建赔案时同步 fileCategories 到 claim-materials
-        if (resource === "claim-cases" && newItem?.id && newItem?.fileCategories) {
+        if (
+          resource === "claim-cases" &&
+          newItem?.id &&
+          newItem?.fileCategories
+        ) {
           syncFileCategoriesToMaterials(newItem.id, newItem.fileCategories);
         }
 
@@ -5965,7 +7322,10 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
       payload = normalizeIfRulesetResource(resource, payload);
       payload = normalizeIfClaimsMaterialsResource(resource, payload);
       const validationErrors = validateIfRulesetResource(resource, payload);
-      const materialValidationErrors = validateIfClaimsMaterialsResource(resource, payload);
+      const materialValidationErrors = validateIfClaimsMaterialsResource(
+        resource,
+        payload,
+      );
       if (validationErrors.length > 0 || materialValidationErrors.length > 0) {
         res.statusCode = 400;
         const details = [...validationErrors, ...materialValidationErrors];
@@ -5984,7 +7344,10 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
             normalizeIfRulesetResource(resource, { ...data[idx], ...payload }),
           );
           const mergedErrors = validateIfRulesetResource(resource, merged);
-          const mergedMaterialErrors = validateIfClaimsMaterialsResource(resource, merged);
+          const mergedMaterialErrors = validateIfClaimsMaterialsResource(
+            resource,
+            merged,
+          );
           if (mergedErrors.length > 0 || mergedMaterialErrors.length > 0) {
             res.statusCode = 400;
             const details = [...mergedErrors, ...mergedMaterialErrors];
@@ -6002,10 +7365,18 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
           res.end(JSON.stringify({ success: true, data: data[idx] }));
         }
       } else {
-        const batchMaterialErrors = validateIfClaimsMaterialsResource(resource, payload);
+        const batchMaterialErrors = validateIfClaimsMaterialsResource(
+          resource,
+          payload,
+        );
         if (batchMaterialErrors.length > 0) {
           res.statusCode = 400;
-          res.end(JSON.stringify({ error: batchMaterialErrors[0], details: batchMaterialErrors }));
+          res.end(
+            JSON.stringify({
+              error: batchMaterialErrors[0],
+              details: batchMaterialErrors,
+            }),
+          );
           return;
         }
         writeData(resource, payload);
@@ -6045,29 +7416,29 @@ ${aiAuditPrompt || '请提取图片中的关键信息并进行校验'}
 // ============ 批量分类辅助函数 ============
 
 async function classifyMaterialFromAPI(result, fileName) {
-  if (result.parseStatus !== 'completed') {
+  if (result.parseStatus !== "completed") {
     return {
-      materialId: 'unknown',
-      materialName: '未识别',
+      materialId: "unknown",
+      materialName: "未识别",
       confidence: 0,
     };
   }
 
   try {
-    const materials = readData('claims-materials');
+    const materials = readData("claims-materials");
     if (materials.length === 0) {
       return {
-        materialId: 'unknown',
-        materialName: '未识别',
+        materialId: "unknown",
+        materialName: "未识别",
         confidence: 0,
       };
     }
 
     const catalog = materials
-      .map((m) => `${m.id}|${m.name}|${m.description?.slice(0, 60) || ''}`)
-      .join('\n');
+      .map((m) => `${m.id}|${m.name}|${m.description?.slice(0, 60) || ""}`)
+      .join("\n");
 
-    const ocrText = result.extractedText || '';
+    const ocrText = result.extractedText || "";
     const prompt = `你是保险理赔材料分类专家。请根据以下 OCR 文字内容，从材料目录中选出最匹配的材料类型。
 
 【OCR 文字】
@@ -6083,14 +7454,14 @@ ${catalog}
     const { response } = await generateGeminiContent({
       apiKey: process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY,
       request: {
-        model: 'gemini-2.5-flash',
+        model: "gemini-2.5-flash",
         contents: { parts: [{ text: prompt }] },
         config: { temperature: 0.1 },
       },
       meta: {
-        sourceApp: 'admin-system',
-        module: 'apiHandler.classifyMaterial',
-        operation: 'classify_material',
+        sourceApp: "admin-system",
+        module: "apiHandler.classifyMaterial",
+        operation: "classify_material",
         context: {
           fileName,
           materialCount: materials.length,
@@ -6098,24 +7469,24 @@ ${catalog}
       },
     });
 
-    const raw = response.text || '{}';
+    const raw = response.text || "{}";
     let parsed = {};
     try {
-      parsed = JSON.parse(raw.replace(/```json|```/g, '').trim());
+      parsed = JSON.parse(raw.replace(/```json|```/g, "").trim());
     } catch {}
 
     const classification = {
-      materialId: parsed.materialId || 'unknown',
-      materialName: parsed.materialName || '未识别',
-      confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0,
+      materialId: parsed.materialId || "unknown",
+      materialName: parsed.materialName || "未识别",
+      confidence: typeof parsed.confidence === "number" ? parsed.confidence : 0,
     };
 
     return classification;
   } catch (error) {
-    console.error('[API] classifyMaterialFromAPI error:', error);
+    console.error("[API] classifyMaterialFromAPI error:", error);
     return {
-      materialId: 'unknown',
-      materialName: '未识别',
+      materialId: "unknown",
+      materialName: "未识别",
       confidence: 0,
     };
   }

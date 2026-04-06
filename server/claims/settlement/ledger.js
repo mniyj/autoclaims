@@ -1,7 +1,17 @@
-import { ACCIDENT_COVERAGE_CODES } from '../accident/engine.js';
-import { MEDICAL_COVERAGE_CODES } from '../medical/engine.js';
-import { AUTO_COVERAGE_CODES, isAutoCoverageCode, getAutoLossAmount, getAutoActualValue, getCompulsoryBreakdown, getAutoCoverageConfig } from '../auto/engine.js';
-import { evaluateHospitalRequirement, evaluateMedicalCatalogItems } from '../medical/review.js';
+import { ACCIDENT_COVERAGE_CODES } from "../accident/engine.js";
+import { MEDICAL_COVERAGE_CODES } from "../medical/engine.js";
+import {
+  AUTO_COVERAGE_CODES,
+  isAutoCoverageCode,
+  getAutoLossAmount,
+  getAutoActualValue,
+  getCompulsoryBreakdown,
+  getAutoCoverageConfig,
+} from "../auto/engine.js";
+import {
+  evaluateHospitalRequirement,
+  evaluateMedicalCatalogItems,
+} from "../medical/review.js";
 
 function roundAmount(value) {
   return Math.round((Number(value) || 0) * 100) / 100;
@@ -9,13 +19,13 @@ function roundAmount(value) {
 
 function toDateOnly(value) {
   if (!value) return undefined;
-  if (typeof value === 'string') {
+  if (typeof value === "string") {
     const matched = value.match(/^(\d{4}-\d{2}-\d{2})/);
     if (matched) return matched[1];
   }
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return undefined;
-  return parsed.toISOString().split('T')[0];
+  return parsed.toISOString().split("T")[0];
 }
 
 function diffYears(startDate, endDate) {
@@ -24,7 +34,8 @@ function diffYears(startDate, endDate) {
   if (!start || !end) return null;
   const startTime = new Date(start).getTime();
   const endTime = new Date(end).getTime();
-  if (Number.isNaN(startTime) || Number.isNaN(endTime) || endTime < startTime) return null;
+  if (Number.isNaN(startTime) || Number.isNaN(endTime) || endTime < startTime)
+    return null;
   return (endTime - startTime) / (1000 * 60 * 60 * 24 * 365);
 }
 
@@ -34,7 +45,8 @@ function calculateAgeFromBirthDate(birthDate, referenceDate) {
   if (!birth || !reference) return null;
   const birthObj = new Date(birth);
   const refObj = new Date(reference);
-  if (Number.isNaN(birthObj.getTime()) || Number.isNaN(refObj.getTime())) return null;
+  if (Number.isNaN(birthObj.getTime()) || Number.isNaN(refObj.getTime()))
+    return null;
   let age = refObj.getFullYear() - birthObj.getFullYear();
   const monthDiff = refObj.getMonth() - birthObj.getMonth();
   const dayDiff = refObj.getDate() - birthObj.getDate();
@@ -45,8 +57,8 @@ function calculateAgeFromBirthDate(birthDate, referenceDate) {
 }
 
 function getConfiguredAmount(value) {
-  if (typeof value === 'number') return value;
-  if (value && typeof value === 'object' && typeof value.amount === 'number') {
+  if (typeof value === "number") return value;
+  if (value && typeof value === "object" && typeof value.amount === "number") {
     return value.amount;
   }
   return 0;
@@ -65,11 +77,20 @@ function getItemKey(item, index) {
 }
 
 function getCoverageStatus(needsManualReview, approvedAmount) {
-  if (needsManualReview) return 'MANUAL_REVIEW';
-  return approvedAmount > 0 ? 'PAYABLE' : 'ZERO_PAY';
+  if (needsManualReview) return "MANUAL_REVIEW";
+  return approvedAmount > 0 ? "PAYABLE" : "ZERO_PAY";
 }
 
-function buildCoverageResult({ coverageCode, claimedAmount, approvedAmount, deductible, reimbursementRatio, sumInsured, status, warnings = [] }) {
+function buildCoverageResult({
+  coverageCode,
+  claimedAmount,
+  approvedAmount,
+  deductible,
+  reimbursementRatio,
+  sumInsured,
+  status,
+  warnings = [],
+}) {
   return {
     coverageCode,
     claimedAmount: roundAmount(claimedAmount),
@@ -78,7 +99,7 @@ function buildCoverageResult({ coverageCode, claimedAmount, approvedAmount, dedu
     reimbursementRatio: reimbursementRatio ?? 1,
     sumInsured: Number.isFinite(sumInsured) ? roundAmount(sumInsured) : null,
     status,
-    warnings
+    warnings,
   };
 }
 
@@ -103,22 +124,36 @@ function getMatchedCoverageCodesFromEligibility(context, eligibilityResult) {
 }
 
 function isPublicTransportAddonEligible(context) {
-  const transportTypes = ['BUS', 'LONG_DISTANCE_BUS', 'TRAIN', 'SUBWAY', 'FERRY', 'AIRCRAFT', 'TAXI'];
+  const transportTypes = [
+    "BUS",
+    "LONG_DISTANCE_BUS",
+    "TRAIN",
+    "SUBWAY",
+    "FERRY",
+    "AIRCRAFT",
+    "TAXI",
+  ];
   return (
-    context?.claim?.scenario === 'PUBLIC_TRANSPORT_PASSENGER' &&
+    context?.claim?.scenario === "PUBLIC_TRANSPORT_PASSENGER" &&
     transportTypes.includes(context?.claim?.transport_type)
   );
 }
 
 function isPrivateCarAddonEligible(context) {
   return (
-    context?.claim?.scenario === 'PRIVATE_CAR_PASSENGER' &&
+    context?.claim?.scenario === "PRIVATE_CAR_PASSENGER" &&
     context?.claim?.vehicle_is_non_commercial === true &&
     context?.claim?.vehicle_is_truck === false
   );
 }
 
-function buildAddonBenefitCoverage({ coverageCode, coverageName, sumInsured, status, message }) {
+function buildAddonBenefitCoverage({
+  coverageCode,
+  coverageName,
+  sumInsured,
+  status,
+  message,
+}) {
   const amount = getConfiguredAmount(sumInsured);
   return {
     coverageCode,
@@ -127,66 +162,79 @@ function buildAddonBenefitCoverage({ coverageCode, coverageName, sumInsured, sta
     status,
     entries: [
       {
-        step: 'INIT',
+        step: "INIT",
         beforeAmount: amount,
         afterAmount: amount,
-        message: '初始化附加给付责任'
+        message: "初始化附加给付责任",
       },
       {
-        step: 'TRIGGER',
+        step: "TRIGGER",
         beforeAmount: amount,
         afterAmount: amount,
-        reasonCode: 'ADDON_TRIGGERED',
-        message
+        reasonCode: "ADDON_TRIGGERED",
+        message,
       },
       {
-        step: 'CAP',
+        step: "CAP",
         beforeAmount: amount,
         afterAmount: amount,
-        reasonCode: 'SUM_INSURED_CAP',
-        message: '按责任保额上限收敛'
-      }
+        reasonCode: "SUM_INSURED_CAP",
+        message: "按责任保额上限收敛",
+      },
     ],
     manualReviewReasons: [],
-    coverageName: coverageName || coverageCode
+    coverageName: coverageName || coverageCode,
   };
 }
 
-function collectAccidentDeathAddonCoverages(context, eligibilityResult, status) {
+function collectAccidentDeathAddonCoverages(
+  context,
+  eligibilityResult,
+  status,
+) {
   const addOnCoverages = [];
-  const publicTransportCoverage = getPolicyCoverageConfig(context, 'ACC_PUBLIC_TRANS');
-  const privateCarCoverage = getPolicyCoverageConfig(context, 'ACC_PRIVATE_CAR');
-  const matchedCoverageCodes = getMatchedCoverageCodesFromEligibility(context, eligibilityResult);
+  const publicTransportCoverage = getPolicyCoverageConfig(
+    context,
+    "ACC_PUBLIC_TRANS",
+  );
+  const privateCarCoverage = getPolicyCoverageConfig(
+    context,
+    "ACC_PRIVATE_CAR",
+  );
+  const matchedCoverageCodes = getMatchedCoverageCodesFromEligibility(
+    context,
+    eligibilityResult,
+  );
 
   if (
     publicTransportCoverage &&
-    matchedCoverageCodes.has('ACC_PUBLIC_TRANS') &&
+    matchedCoverageCodes.has("ACC_PUBLIC_TRANS") &&
     isPublicTransportAddonEligible(context)
   ) {
     addOnCoverages.push(
       buildAddonBenefitCoverage({
-        coverageCode: 'ACC_PUBLIC_TRANS',
+        coverageCode: "ACC_PUBLIC_TRANS",
         coverageName: publicTransportCoverage.coverage_name,
         sumInsured: publicTransportCoverage.sum_insured,
         status,
-        message: '营运交通工具乘客附加身故责任成立'
-      })
+        message: "营运交通工具乘客附加身故责任成立",
+      }),
     );
   }
 
   if (
     privateCarCoverage &&
-    matchedCoverageCodes.has('ACC_PRIVATE_CAR') &&
+    matchedCoverageCodes.has("ACC_PRIVATE_CAR") &&
     isPrivateCarAddonEligible(context)
   ) {
     addOnCoverages.push(
       buildAddonBenefitCoverage({
-        coverageCode: 'ACC_PRIVATE_CAR',
+        coverageCode: "ACC_PRIVATE_CAR",
         coverageName: privateCarCoverage.coverage_name,
         sumInsured: privateCarCoverage.sum_insured,
         status,
-        message: '自驾车乘客附加身故责任成立'
-      })
+        message: "自驾车乘客附加身故责任成立",
+      }),
     );
   }
 
@@ -197,7 +245,7 @@ function getCompulsoryLimits(coverageConfig) {
   const defaults = {
     deathDisability: 180000,
     injury: 18000,
-    propertyDamage: 2000
+    propertyDamage: 2000,
   };
 
   if (!coverageConfig?.limit_breakdown) {
@@ -205,20 +253,33 @@ function getCompulsoryLimits(coverageConfig) {
   }
 
   return {
-    deathDisability: getConfiguredAmount(coverageConfig.limit_breakdown.death_disability) || defaults.deathDisability,
-    injury: getConfiguredAmount(coverageConfig.limit_breakdown.injury) || defaults.injury,
-    propertyDamage: getConfiguredAmount(coverageConfig.limit_breakdown.property_damage) || defaults.propertyDamage
+    deathDisability:
+      getConfiguredAmount(coverageConfig.limit_breakdown.death_disability) ||
+      defaults.deathDisability,
+    injury:
+      getConfiguredAmount(coverageConfig.limit_breakdown.injury) ||
+      defaults.injury,
+    propertyDamage:
+      getConfiguredAmount(coverageConfig.limit_breakdown.property_damage) ||
+      defaults.propertyDamage,
   };
 }
 
-function calculateCompulsoryApprovedAmount(context, coverageConfig, totalClaimedAmount) {
+function calculateCompulsoryApprovedAmount(
+  context,
+  coverageConfig,
+  totalClaimedAmount,
+) {
   const breakdown = getCompulsoryBreakdown(context);
   const limits = getCompulsoryLimits(coverageConfig);
 
   if (breakdown.total <= 0) {
     return {
       claimedAmount: totalClaimedAmount,
-      approvedAmount: Math.min(totalClaimedAmount, getConfiguredAmount(coverageConfig?.sum_insured) || totalClaimedAmount)
+      approvedAmount: Math.min(
+        totalClaimedAmount,
+        getConfiguredAmount(coverageConfig?.sum_insured) || totalClaimedAmount,
+      ),
     };
   }
 
@@ -227,7 +288,7 @@ function calculateCompulsoryApprovedAmount(context, coverageConfig, totalClaimed
     approvedAmount:
       Math.min(breakdown.propertyDamage, limits.propertyDamage) +
       Math.min(breakdown.injury, limits.injury) +
-      Math.min(breakdown.deathDisability, limits.deathDisability)
+      Math.min(breakdown.deathDisability, limits.deathDisability),
   };
 }
 
@@ -242,7 +303,7 @@ function extractClaimRatio(eligibilityResult) {
   const details = eligibilityResult?.executionDetails || [];
   for (let index = details.length - 1; index >= 0; index -= 1) {
     const ratio = details[index]?.action_result?.data?.payout_ratio;
-    if (typeof ratio === 'number') {
+    if (typeof ratio === "number") {
       return ratio;
     }
   }
@@ -253,11 +314,16 @@ function buildManualReviewReason(code, message, metadata = undefined) {
   return {
     code,
     message,
-    ...(metadata ? { metadata } : {})
+    ...(metadata ? { metadata } : {}),
   };
 }
 
-export function determineSettlementMode({ claimType, coverageCode, expenseItems = [], context }) {
+export function determineSettlementMode({
+  claimType,
+  coverageCode,
+  expenseItems = [],
+  context,
+}) {
   const hasExpenseItems = expenseItems.length > 0;
   const isMedicalCoverage =
     coverageCode === ACCIDENT_COVERAGE_CODES.MEDICAL ||
@@ -266,24 +332,27 @@ export function determineSettlementMode({ claimType, coverageCode, expenseItems 
     coverageCode === ACCIDENT_COVERAGE_CODES.DISABILITY ||
     coverageCode === ACCIDENT_COVERAGE_CODES.DEATH ||
     coverageCode === ACCIDENT_COVERAGE_CODES.ALLOWANCE ||
-    claimType === 'CRITICAL_ILLNESS';
+    claimType === "CRITICAL_ILLNESS";
 
-  if (claimType === 'AUTO' || isAutoCoverageCode(coverageCode)) {
-    return 'LOSS';
+  if (claimType === "AUTO" || isAutoCoverageCode(coverageCode)) {
+    return "LOSS";
+  }
+  if (claimType === "LIABILITY") {
+    return "LOSS";
   }
   if (isBenefitCoverage && hasExpenseItems) {
-    return 'HYBRID';
+    return "HYBRID";
   }
   if (isBenefitCoverage) {
-    return 'BENEFIT';
+    return "BENEFIT";
   }
   if (isMedicalCoverage || hasExpenseItems) {
-    return 'LOSS';
+    return "LOSS";
   }
   if ((context?.claim?.hospital_days || 0) > 0) {
-    return 'BENEFIT';
+    return "BENEFIT";
   }
-  return 'LOSS';
+  return "LOSS";
 }
 
 function createLossLedgerItem(item, index, coverageCode) {
@@ -293,21 +362,21 @@ function createLossLedgerItem(item, index, coverageCode) {
     itemName: getItemName(item, index),
     claimedAmount,
     payableAmount: claimedAmount,
-    status: claimedAmount > 0 ? 'PAYABLE' : 'ZERO_PAY',
+    status: claimedAmount > 0 ? "PAYABLE" : "ZERO_PAY",
     coverageCode,
     category: item?.category || null,
     medicalReview: item?.medicalReview || null,
     entries: [
       {
-        step: 'INIT',
+        step: "INIT",
         beforeAmount: claimedAmount,
         afterAmount: claimedAmount,
-        message: '载入原始申报金额'
-      }
+        message: "载入原始申报金额",
+      },
     ],
     manualReviewReasons: [],
     flags: [],
-    locked: false
+    locked: false,
   };
 }
 
@@ -315,112 +384,136 @@ function pushLossEntry(ledgerItem, entry) {
   ledgerItem.entries.push({
     ...entry,
     beforeAmount: roundAmount(entry.beforeAmount),
-    afterAmount: roundAmount(entry.afterAmount)
+    afterAmount: roundAmount(entry.afterAmount),
   });
   ledgerItem.payableAmount = roundAmount(entry.afterAmount);
 }
 
 function applyAssessmentResultToLedger(ledgerItem, ruleResult, rule) {
-  const actionType = ruleResult?.actionResult?.action_type || rule?.action?.action_type;
+  const actionType =
+    ruleResult?.actionResult?.action_type || rule?.action?.action_type;
   const actionData = ruleResult?.actionResult?.data || {};
   const beforeAmount = ledgerItem.payableAmount;
 
-  if (ledgerItem.locked && actionType !== 'FLAG_ITEM') {
+  if (ledgerItem.locked && actionType !== "FLAG_ITEM") {
     return;
   }
 
-  if (actionType === 'APPROVE_ITEM') {
+  if (actionType === "APPROVE_ITEM") {
     pushLossEntry(ledgerItem, {
-      step: 'ELIGIBILITY',
+      step: "ELIGIBILITY",
       ruleId: rule.rule_id,
       beforeAmount,
       afterAmount: beforeAmount,
-      message: ruleResult.conditionMet ? '费用项通过' : '费用项未命中'
+      message: ruleResult.conditionMet ? "费用项通过" : "费用项未命中",
     });
     return;
   }
 
-  if (actionType === 'REJECT_ITEM' || actionData.item_amount === 0 || ruleResult?.conditionMet === false) {
+  if (
+    actionType === "REJECT_ITEM" ||
+    actionData.item_amount === 0 ||
+    ruleResult?.conditionMet === false
+  ) {
     pushLossEntry(ledgerItem, {
-      step: 'ELIGIBILITY',
+      step: "ELIGIBILITY",
       ruleId: rule.rule_id,
       beforeAmount,
       afterAmount: 0,
-      reasonCode: 'ITEM_REJECTED',
-      message: ruleResult?.actionResult?.message || '费用项拒赔'
+      reasonCode: "ITEM_REJECTED",
+      message: ruleResult?.actionResult?.message || "费用项拒赔",
     });
     ledgerItem.locked = true;
-    ledgerItem.status = 'ZERO_PAY';
+    ledgerItem.status = "ZERO_PAY";
     return;
   }
 
-  if (actionType === 'SET_ITEM_RATIO' && typeof actionData.item_ratio === 'number') {
+  if (
+    actionType === "SET_ITEM_RATIO" &&
+    typeof actionData.item_ratio === "number"
+  ) {
     pushLossEntry(ledgerItem, {
-      step: 'RATIO',
+      step: "RATIO",
       ruleId: rule.rule_id,
       beforeAmount,
       afterAmount: beforeAmount * actionData.item_ratio,
-      reasonCode: 'ITEM_RATIO_APPLIED',
-      message: ruleResult.actionResult?.message
+      reasonCode: "ITEM_RATIO_APPLIED",
+      message: ruleResult.actionResult?.message,
     });
     return;
   }
 
-  if (actionType === 'ADJUST_ITEM_AMOUNT') {
-    const reductionRatio = typeof actionData.reduction_ratio === 'number' ? actionData.reduction_ratio : 0;
+  if (actionType === "ADJUST_ITEM_AMOUNT") {
+    const reductionRatio =
+      typeof actionData.reduction_ratio === "number"
+        ? actionData.reduction_ratio
+        : 0;
     pushLossEntry(ledgerItem, {
-      step: 'PRICING',
+      step: "PRICING",
       ruleId: rule.rule_id,
       beforeAmount,
       afterAmount: beforeAmount * (1 - reductionRatio),
-      reasonCode: 'ITEM_PRICING_ADJUSTED',
-      message: ruleResult.actionResult?.message
+      reasonCode: "ITEM_PRICING_ADJUSTED",
+      message: ruleResult.actionResult?.message,
     });
     return;
   }
 
-  if (actionType === 'APPLY_DEDUCTIBLE') {
-    const deductible = typeof actionData.deductible === 'number' ? actionData.deductible : 0;
+  if (actionType === "APPLY_DEDUCTIBLE") {
+    const deductible =
+      typeof actionData.deductible === "number" ? actionData.deductible : 0;
     pushLossEntry(ledgerItem, {
-      step: 'DEDUCTIBLE',
+      step: "DEDUCTIBLE",
       ruleId: rule.rule_id,
       beforeAmount,
       afterAmount: Math.max(0, beforeAmount - deductible),
-      reasonCode: 'DEDUCTIBLE_APPLIED',
-      message: ruleResult.actionResult?.message
+      reasonCode: "DEDUCTIBLE_APPLIED",
+      message: ruleResult.actionResult?.message,
     });
     return;
   }
 
-  if (actionType === 'APPLY_CAP') {
-    const cappedAmount = typeof actionData.capped_amount === 'number' ? actionData.capped_amount : beforeAmount;
+  if (actionType === "APPLY_CAP") {
+    const cappedAmount =
+      typeof actionData.capped_amount === "number"
+        ? actionData.capped_amount
+        : beforeAmount;
     pushLossEntry(ledgerItem, {
-      step: 'CAP',
+      step: "CAP",
       ruleId: rule.rule_id,
       beforeAmount,
       afterAmount: Math.min(beforeAmount, cappedAmount),
-      reasonCode: 'CAP_APPLIED',
-      message: ruleResult.actionResult?.message
+      reasonCode: "CAP_APPLIED",
+      message: ruleResult.actionResult?.message,
     });
     return;
   }
 
-  if (actionType === 'FLAG_ITEM') {
+  if (actionType === "FLAG_ITEM") {
     pushLossEntry(ledgerItem, {
-      step: 'FLAG',
+      step: "FLAG",
       ruleId: rule.rule_id,
       beforeAmount,
       afterAmount: beforeAmount,
-      reasonCode: 'ITEM_FLAGGED',
-      message: ruleResult.actionResult?.message || '费用项需人工复核'
+      reasonCode: "ITEM_FLAGGED",
+      message: ruleResult.actionResult?.message || "费用项需人工复核",
     });
     ledgerItem.flags.push(rule.rule_id);
-    ledgerItem.manualReviewReasons.push(buildManualReviewReason('FLAGGED_ITEM', ruleResult.actionResult?.message || '费用项需人工复核'));
-    ledgerItem.status = 'MANUAL_REVIEW';
+    ledgerItem.manualReviewReasons.push(
+      buildManualReviewReason(
+        "FLAGGED_ITEM",
+        ruleResult.actionResult?.message || "费用项需人工复核",
+      ),
+    );
+    ledgerItem.status = "MANUAL_REVIEW";
   }
 }
 
-function allocateCoverageDeductible(items, deductible, ruleId = 'SYSTEM_DEFAULT_DEDUCTIBLE') {
+function allocateCoverageDeductible(
+  items,
+  deductible,
+  ruleId = "SYSTEM_DEFAULT_DEDUCTIBLE",
+) {
   let remaining = roundAmount(deductible);
   if (remaining <= 0) return 0;
 
@@ -428,15 +521,15 @@ function allocateCoverageDeductible(items, deductible, ruleId = 'SYSTEM_DEFAULT_
     if (remaining <= 0 || item.payableAmount <= 0) continue;
     const deduction = Math.min(item.payableAmount, remaining);
     pushLossEntry(item, {
-      step: 'DEDUCTIBLE',
+      step: "DEDUCTIBLE",
       ruleId,
       beforeAmount: item.payableAmount,
       afterAmount: item.payableAmount - deduction,
-      reasonCode: 'COVERAGE_DEDUCTIBLE_APPLIED',
-      message: `责任免赔额扣减 ${deduction}`
+      reasonCode: "COVERAGE_DEDUCTIBLE_APPLIED",
+      message: `责任免赔额扣减 ${deduction}`,
     });
     if (item.payableAmount <= 0) {
-      item.status = 'ZERO_PAY';
+      item.status = "ZERO_PAY";
       item.locked = true;
     }
     remaining = roundAmount(remaining - deduction);
@@ -445,8 +538,10 @@ function allocateCoverageDeductible(items, deductible, ruleId = 'SYSTEM_DEFAULT_
   return roundAmount(deductible - remaining);
 }
 
-function allocateCoverageCap(items, targetTotal, ruleId = 'SYSTEM_CAP') {
-  const currentTotal = roundAmount(items.reduce((sum, item) => sum + item.payableAmount, 0));
+function allocateCoverageCap(items, targetTotal, ruleId = "SYSTEM_CAP") {
+  const currentTotal = roundAmount(
+    items.reduce((sum, item) => sum + item.payableAmount, 0),
+  );
   if (targetTotal >= currentTotal) return false;
   if (currentTotal <= 0) return false;
 
@@ -459,15 +554,15 @@ function allocateCoverageCap(items, targetTotal, ruleId = 'SYSTEM_CAP') {
     const nextAmount = Math.max(0, proportional);
     allocated = roundAmount(allocated + nextAmount);
     pushLossEntry(item, {
-      step: 'CAP',
+      step: "CAP",
       ruleId,
       beforeAmount: item.payableAmount,
       afterAmount: nextAmount,
-      reasonCode: 'COVERAGE_CAP_APPLIED',
-      message: '责任限额收敛'
+      reasonCode: "COVERAGE_CAP_APPLIED",
+      message: "责任限额收敛",
     });
     if (item.payableAmount <= 0) {
-      item.status = 'ZERO_PAY';
+      item.status = "ZERO_PAY";
       item.locked = true;
     }
   });
@@ -480,13 +575,15 @@ function buildLegacyItemBreakdown(lossLedger) {
     item: item.itemName,
     claimed: item.claimedAmount,
     approved: item.payableAmount,
-    reason: item.entries[item.entries.length - 1]?.message || (item.status === 'PAYABLE' ? '通过' : '需人工复核')
+    reason:
+      item.entries[item.entries.length - 1]?.message ||
+      (item.status === "PAYABLE" ? "通过" : "需人工复核"),
   }));
 }
 
 function toNumericGrade(value) {
-  if (value === null || value === undefined || value === '') return null;
-  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (value === null || value === undefined || value === "") return null;
+  if (typeof value === "number" && Number.isFinite(value)) return value;
   const matched = String(value).match(/(\d+)/);
   if (!matched) return null;
   const parsed = Number(matched[1]);
@@ -500,7 +597,7 @@ function findDisabilityGradeRatio(context, grade) {
     const table = rule?.action?.params?.disability_grade_table;
     if (!Array.isArray(table)) continue;
     const matched = table.find((item) => Number(item?.grade) === Number(grade));
-    if (matched && typeof matched.payout_ratio === 'number') {
+    if (matched && typeof matched.payout_ratio === "number") {
       return matched.payout_ratio;
     }
   }
@@ -512,15 +609,23 @@ function findProductCoverageDetail(context, coverageCode, claimType) {
   if (!Array.isArray(details)) return null;
 
   const aliases = {
-    [ACCIDENT_COVERAGE_CODES.DEATH]: ['DEATH', 'DEATH_OR_TOTAL_DISABILITY', 'ACCIDENT_DEATH'],
-    [ACCIDENT_COVERAGE_CODES.DISABILITY]: ['DISABILITY', 'DEATH_OR_TOTAL_DISABILITY', 'ACCIDENT_DISABILITY'],
-    [ACCIDENT_COVERAGE_CODES.ALLOWANCE]: ['ALLOWANCE', 'HOSPITAL_ALLOWANCE'],
+    [ACCIDENT_COVERAGE_CODES.DEATH]: [
+      "DEATH",
+      "DEATH_OR_TOTAL_DISABILITY",
+      "ACCIDENT_DEATH",
+    ],
+    [ACCIDENT_COVERAGE_CODES.DISABILITY]: [
+      "DISABILITY",
+      "DEATH_OR_TOTAL_DISABILITY",
+      "ACCIDENT_DISABILITY",
+    ],
+    [ACCIDENT_COVERAGE_CODES.ALLOWANCE]: ["ALLOWANCE", "HOSPITAL_ALLOWANCE"],
   };
 
-  if (claimType === 'CRITICAL_ILLNESS') {
+  if (claimType === "CRITICAL_ILLNESS") {
     return (
-      details.find((item) => item?.item_code === 'CRITICAL_ILLNESS') ||
-      details.find((item) => item?.item_code === 'CRITICAL_ILLNESS_EXTRA') ||
+      details.find((item) => item?.item_code === "CRITICAL_ILLNESS") ||
+      details.find((item) => item?.item_code === "CRITICAL_ILLNESS_EXTRA") ||
       null
     );
   }
@@ -530,9 +635,9 @@ function findProductCoverageDetail(context, coverageCode, claimType) {
 }
 
 function normalizeDiseaseText(value) {
-  return String(value || '')
-    .replace(/[（(].*?[)）]/g, '')
-    .replace(/\s+/g, '')
+  return String(value || "")
+    .replace(/[（(].*?[)）]/g, "")
+    .replace(/\s+/g, "")
     .trim();
 }
 
@@ -546,7 +651,7 @@ function getClaimDiagnosisNames(context) {
       value.forEach(append);
       return;
     }
-    if (typeof value === 'object') {
+    if (typeof value === "object") {
       append(value.name);
       return;
     }
@@ -566,13 +671,21 @@ function getClaimDiagnosisNames(context) {
 
 function getCoverageDiseaseList(coverageDetail) {
   const details = coverageDetail?.details || {};
-  const directDiseases = Array.isArray(details.disease_list) ? details.disease_list : [];
+  const directDiseases = Array.isArray(details.disease_list)
+    ? details.disease_list
+    : [];
   const groupedDiseases = Array.isArray(details.group_details?.groups)
     ? details.group_details.groups.flatMap((group) =>
-        Array.isArray(group?.disease_list) ? group.disease_list : []
+        Array.isArray(group?.disease_list) ? group.disease_list : [],
       )
     : [];
-  return [...new Set([...directDiseases, ...groupedDiseases].map(normalizeDiseaseText).filter(Boolean))];
+  return [
+    ...new Set(
+      [...directDiseases, ...groupedDiseases]
+        .map(normalizeDiseaseText)
+        .filter(Boolean),
+    ),
+  ];
 }
 
 function inferSpecialDiseaseConfirmed(context, coverageDetail) {
@@ -584,49 +697,63 @@ function inferSpecialDiseaseConfirmed(context, coverageDetail) {
   }
 
   const matchedDiagnosis = diagnosisNames.find((diagnosis) =>
-    coverageDiseases.some((configuredDisease) =>
-      diagnosis === configuredDisease ||
-      diagnosis.includes(configuredDisease) ||
-      configuredDisease.includes(diagnosis)
-    )
+    coverageDiseases.some(
+      (configuredDisease) =>
+        diagnosis === configuredDisease ||
+        diagnosis.includes(configuredDisease) ||
+        configuredDisease.includes(diagnosis),
+    ),
   );
 
   return matchedDiagnosis ? true : null;
 }
 
 function resolveBenefitModifiers({ context, coverageCode, claimType }) {
-  const coverageDetail = findProductCoverageDetail(context, coverageCode, claimType);
+  const coverageDetail = findProductCoverageDetail(
+    context,
+    coverageCode,
+    claimType,
+  );
   const details = coverageDetail?.details || {};
   const descriptionText = [
     coverageDetail?.description,
     details.payout_logic,
     context?.policy?.productSummery,
-    context?.policy?.productIntroduction
+    context?.policy?.productIntroduction,
   ]
     .filter(Boolean)
-    .join(' ');
+    .join(" ");
   const modifiers = {
-    payoutRatio: typeof details.payout_ratio === 'number' ? details.payout_ratio : 1,
+    payoutRatio:
+      typeof details.payout_ratio === "number" ? details.payout_ratio : 1,
     extraPayoutRatio: 0,
-    extraPayoutReason: '',
+    extraPayoutReason: "",
     requiresSpecialDiseaseConfirmation: /特疾|特定疾病/.test(descriptionText),
     missingConditions: [],
   };
 
-  if (Array.isArray(details.payout_ratios) && details.payout_ratios.length > 0) {
-    const priorBenefitCount = Number(
-      context?.claim?.prior_benefit_count ||
-      context?.claim?.priorBenefitCount ||
-      0
-    ) || 0;
-    const ratioFromArray = details.payout_ratios[Math.min(priorBenefitCount, details.payout_ratios.length - 1)];
-    if (typeof ratioFromArray === 'number') {
+  if (
+    Array.isArray(details.payout_ratios) &&
+    details.payout_ratios.length > 0
+  ) {
+    const priorBenefitCount =
+      Number(
+        context?.claim?.prior_benefit_count ||
+          context?.claim?.priorBenefitCount ||
+          0,
+      ) || 0;
+    const ratioFromArray =
+      details.payout_ratios[
+        Math.min(priorBenefitCount, details.payout_ratios.length - 1)
+      ];
+    if (typeof ratioFromArray === "number") {
       modifiers.payoutRatio = ratioFromArray;
     }
   }
 
-  if (typeof details.extra_payout_ratio === 'number') {
-    const effectiveDate = context?.policy?.effective_date || context?.policy?.effectiveDate;
+  if (typeof details.extra_payout_ratio === "number") {
+    const effectiveDate =
+      context?.policy?.effective_date || context?.policy?.effectiveDate;
     const triggerDate =
       context?.claim?.diagnosis_date ||
       context?.claim?.diagnosisDate ||
@@ -638,28 +765,46 @@ function resolveBenefitModifiers({ context, coverageCode, claimType }) {
       Number(context?.claim?.insured_age) ||
       calculateAgeFromBirthDate(
         context?.claim?.insured_birth_date || context?.claim?.insuredBirthDate,
-        triggerDate
+        triggerDate,
       );
     const yearsFromEffective = diffYears(effectiveDate, triggerDate);
     const limitYears = Number(details.age_limit_before);
-    const mentionsPolicyYears = /前\d+年|首\d+年|前十年|首十年/.test(descriptionText);
+    const mentionsPolicyYears = /前\d+年|首\d+年|前十年|首十年/.test(
+      descriptionText,
+    );
     let withinExtraWindow = true;
     if (Number.isFinite(limitYears)) {
       if (mentionsPolicyYears) {
-        withinExtraWindow = yearsFromEffective !== null && yearsFromEffective <= limitYears;
+        withinExtraWindow =
+          yearsFromEffective !== null && yearsFromEffective <= limitYears;
         if (!withinExtraWindow && yearsFromEffective === null) {
-          modifiers.missingConditions.push('缺少保单生效日或触发日期，无法判断额外赔付年限条件');
+          modifiers.missingConditions.push(
+            "缺少保单生效日或触发日期，无法判断额外赔付年限条件",
+          );
         }
       } else {
-        withinExtraWindow = insuredAge !== null && insuredAge !== undefined && insuredAge <= limitYears;
-        if (!withinExtraWindow && (insuredAge === null || insuredAge === undefined || Number.isNaN(insuredAge))) {
-          modifiers.missingConditions.push('缺少被保险人年龄，无法判断额外赔付年龄条件');
+        withinExtraWindow =
+          insuredAge !== null &&
+          insuredAge !== undefined &&
+          insuredAge <= limitYears;
+        if (
+          !withinExtraWindow &&
+          (insuredAge === null ||
+            insuredAge === undefined ||
+            Number.isNaN(insuredAge))
+        ) {
+          modifiers.missingConditions.push(
+            "缺少被保险人年龄，无法判断额外赔付年龄条件",
+          );
         }
       }
     }
 
     if (modifiers.requiresSpecialDiseaseConfirmation) {
-      const inferredSpecialDiseaseConfirmed = inferSpecialDiseaseConfirmed(context, coverageDetail);
+      const inferredSpecialDiseaseConfirmed = inferSpecialDiseaseConfirmed(
+        context,
+        coverageDetail,
+      );
       if (
         context?.claim?.special_disease_confirmed === true ||
         context?.claim?.specialDiseaseConfirmed === true ||
@@ -668,7 +813,9 @@ function resolveBenefitModifiers({ context, coverageCode, claimType }) {
         // allowed
       } else {
         withinExtraWindow = false;
-        modifiers.missingConditions.push('缺少特定疾病确认结果，无法自动适用特疾额外赔');
+        modifiers.missingConditions.push(
+          "缺少特定疾病确认结果，无法自动适用特疾额外赔",
+        );
       }
     }
 
@@ -677,18 +824,23 @@ function resolveBenefitModifiers({ context, coverageCode, claimType }) {
       modifiers.extraPayoutReason =
         coverageDetail?.description ||
         details.payout_logic ||
-        '满足额外赔付条件';
+        "满足额外赔付条件";
     }
   }
 
   return modifiers;
 }
 
-function collectBenefitManualReviewReasons({ context, coverageCode, claimType, baseAmount }) {
+function collectBenefitManualReviewReasons({
+  context,
+  coverageCode,
+  claimType,
+  baseAmount,
+}) {
   const reasons = [];
   const claim = context?.claim || {};
 
-  if (claimType === 'CRITICAL_ILLNESS') {
+  if (claimType === "CRITICAL_ILLNESS") {
     const diagnosisNames = getClaimDiagnosisNames(context);
     const hasDiagnosis = Boolean(
       claim.diagnosis ||
@@ -696,30 +848,63 @@ function collectBenefitManualReviewReasons({ context, coverageCode, claimType, b
       claim.diagnosisResult ||
       claim.admission_diagnosis ||
       claim.discharge_diagnosis ||
-      diagnosisNames.length > 0
+      diagnosisNames.length > 0,
     );
-    const hasDiagnosisDate = Boolean(claim.diagnosis_date || claim.diagnosisDate || claim.result_date || claim.resultDate);
+    const hasDiagnosisDate = Boolean(
+      claim.diagnosis_date ||
+      claim.diagnosisDate ||
+      claim.result_date ||
+      claim.resultDate,
+    );
     if (!hasDiagnosis) {
-      reasons.push(buildManualReviewReason('CRITICAL_ILLNESS_DIAGNOSIS_MISSING', '缺少重疾诊断结果，需人工复核'));
+      reasons.push(
+        buildManualReviewReason(
+          "CRITICAL_ILLNESS_DIAGNOSIS_MISSING",
+          "缺少重疾诊断结果，需人工复核",
+        ),
+      );
     }
     if (!hasDiagnosisDate) {
-      reasons.push(buildManualReviewReason('CRITICAL_ILLNESS_DIAGNOSIS_DATE_MISSING', '缺少确诊日期，需人工复核'));
+      reasons.push(
+        buildManualReviewReason(
+          "CRITICAL_ILLNESS_DIAGNOSIS_DATE_MISSING",
+          "缺少确诊日期，需人工复核",
+        ),
+      );
     }
-    if ((claim.special_disease_confirmed ?? claim.specialDiseaseConfirmed) === false) {
-      reasons.push(buildManualReviewReason('SPECIAL_DISEASE_NOT_CONFIRMED', '特定疾病条件未确认，不适用特疾额外赔'));
+    if (
+      (claim.special_disease_confirmed ?? claim.specialDiseaseConfirmed) ===
+      false
+    ) {
+      reasons.push(
+        buildManualReviewReason(
+          "SPECIAL_DISEASE_NOT_CONFIRMED",
+          "特定疾病条件未确认，不适用特疾额外赔",
+        ),
+      );
     }
   }
 
   if (coverageCode === ACCIDENT_COVERAGE_CODES.DISABILITY) {
     const grade = toNumericGrade(claim.disability_grade);
     if (grade === null) {
-      reasons.push(buildManualReviewReason('DISABILITY_GRADE_MISSING', '缺少伤残等级，需人工复核'));
+      reasons.push(
+        buildManualReviewReason(
+          "DISABILITY_GRADE_MISSING",
+          "缺少伤残等级，需人工复核",
+        ),
+      );
     }
   }
 
   if (coverageCode === ACCIDENT_COVERAGE_CODES.ALLOWANCE) {
     if (!(Number(claim.hospital_days || 0) > 0)) {
-      reasons.push(buildManualReviewReason('HOSPITAL_DAYS_MISSING', '缺少住院天数，需人工复核'));
+      reasons.push(
+        buildManualReviewReason(
+          "HOSPITAL_DAYS_MISSING",
+          "缺少住院天数，需人工复核",
+        ),
+      );
     }
   }
 
@@ -728,28 +913,39 @@ function collectBenefitManualReviewReasons({ context, coverageCode, claimType, b
     claim.employer_name ||
     claim.work_injury_conclusion ||
     claim.labor_relation_confirmed ||
-    claim.laborRelationConfirmed
+    claim.laborRelationConfirmed,
   );
   if (employerFieldPresent) {
     const laborRelationConfirmed =
-      claim.labor_relation_confirmed ??
-      claim.laborRelationConfirmed ??
-      null;
+      claim.labor_relation_confirmed ?? claim.laborRelationConfirmed ?? null;
     const workInjuryConclusion =
-      claim.work_injury_conclusion ||
-      claim.workInjuryConclusion ||
-      '';
+      claim.work_injury_conclusion || claim.workInjuryConclusion || "";
 
     if (laborRelationConfirmed === false) {
-      reasons.push(buildManualReviewReason('LABOR_RELATION_UNCONFIRMED', '劳动关系未确认，需人工复核'));
+      reasons.push(
+        buildManualReviewReason(
+          "LABOR_RELATION_UNCONFIRMED",
+          "劳动关系未确认，需人工复核",
+        ),
+      );
     }
     if (!workInjuryConclusion) {
-      reasons.push(buildManualReviewReason('WORK_INJURY_CONCLUSION_MISSING', '缺少工伤认定结论，需人工复核'));
+      reasons.push(
+        buildManualReviewReason(
+          "WORK_INJURY_CONCLUSION_MISSING",
+          "缺少工伤认定结论，需人工复核",
+        ),
+      );
     }
   }
 
   if (baseAmount <= 0) {
-    reasons.push(buildManualReviewReason('BENEFIT_BASE_AMOUNT_MISSING', '给付基础金额缺失，需人工复核'));
+    reasons.push(
+      buildManualReviewReason(
+        "BENEFIT_BASE_AMOUNT_MISSING",
+        "给付基础金额缺失，需人工复核",
+      ),
+    );
   }
 
   return reasons;
@@ -757,51 +953,91 @@ function collectBenefitManualReviewReasons({ context, coverageCode, claimType, b
 
 function getMedicalDefaultRatio(coverageConfig) {
   if (!coverageConfig) return 1;
-  if (typeof coverageConfig.co_pay_ratio === 'number') {
+  if (typeof coverageConfig.co_pay_ratio === "number") {
     return 1 - coverageConfig.co_pay_ratio;
   }
   const rules = coverageConfig.reimbursement_rules;
   if (rules) {
-    if (typeof rules.base_ratio === 'number') {
+    if (typeof rules.base_ratio === "number") {
       return rules.base_ratio;
     }
-    if (typeof rules.social_insurance_covered_ratio === 'number') {
+    if (typeof rules.social_insurance_covered_ratio === "number") {
       return rules.social_insurance_covered_ratio;
     }
-    if (typeof rules.without_social_insurance_ratio === 'number') {
+    if (typeof rules.without_social_insurance_ratio === "number") {
       return rules.without_social_insurance_ratio;
     }
   }
   return 1;
 }
 
-function calculateAutoLossLedger({ productCode, context, factResult, coverageCode, coverageConfig, warnings, needsManualReview }) {
+function calculateAutoLossLedger({
+  productCode,
+  context,
+  factResult,
+  coverageCode,
+  coverageConfig,
+  warnings,
+  needsManualReview,
+}) {
   const faultRatio = factResult.faultRatio ?? 1;
 
   if (coverageCode === AUTO_COVERAGE_CODES.VEHICLE_DAMAGE) {
-    const claimedAmount = getAutoLossAmount(context, factResult, coverageCode, coverageConfig);
+    const claimedAmount = getAutoLossAmount(
+      context,
+      factResult,
+      coverageCode,
+      coverageConfig,
+    );
     const actualValue = getAutoActualValue(context, coverageConfig);
-    const baseAmount = actualValue > 0 ? Math.min(claimedAmount, actualValue) : claimedAmount;
+    const baseAmount =
+      actualValue > 0 ? Math.min(claimedAmount, actualValue) : claimedAmount;
     const finalAmount = roundAmount(baseAmount * faultRatio);
-    const sumInsured = getConfiguredAmount(coverageConfig?.sum_insured) || Infinity;
+    const sumInsured =
+      getConfiguredAmount(coverageConfig?.sum_insured) || Infinity;
     const approvedAmount = Math.min(finalAmount, sumInsured);
 
-    const ledger = [{
-      itemKey: `${coverageCode}_AUTO_LOSS`,
-      itemName: '车辆损失',
-      claimedAmount,
-      payableAmount: approvedAmount,
-      status: getCoverageStatus(needsManualReview, approvedAmount),
-      coverageCode,
-      entries: [
-        { step: 'INIT', beforeAmount: claimedAmount, afterAmount: claimedAmount, message: '载入车辆损失金额' },
-        { step: 'PRICING', beforeAmount: claimedAmount, afterAmount: baseAmount, reasonCode: 'ACTUAL_VALUE_LIMIT', message: '按车辆实际价值收敛' },
-        { step: 'RATIO', beforeAmount: baseAmount, afterAmount: finalAmount, reasonCode: 'FAULT_RATIO_APPLIED', message: `按责任比例 ${faultRatio}` },
-        { step: 'CAP', beforeAmount: finalAmount, afterAmount: approvedAmount, reasonCode: 'SUM_INSURED_CAP', message: '按保额上限收敛' }
-      ],
-      manualReviewReasons: [],
-      flags: []
-    }];
+    const ledger = [
+      {
+        itemKey: `${coverageCode}_AUTO_LOSS`,
+        itemName: "车辆损失",
+        claimedAmount,
+        payableAmount: approvedAmount,
+        status: getCoverageStatus(needsManualReview, approvedAmount),
+        coverageCode,
+        entries: [
+          {
+            step: "INIT",
+            beforeAmount: claimedAmount,
+            afterAmount: claimedAmount,
+            message: "载入车辆损失金额",
+          },
+          {
+            step: "PRICING",
+            beforeAmount: claimedAmount,
+            afterAmount: baseAmount,
+            reasonCode: "ACTUAL_VALUE_LIMIT",
+            message: "按车辆实际价值收敛",
+          },
+          {
+            step: "RATIO",
+            beforeAmount: baseAmount,
+            afterAmount: finalAmount,
+            reasonCode: "FAULT_RATIO_APPLIED",
+            message: `按责任比例 ${faultRatio}`,
+          },
+          {
+            step: "CAP",
+            beforeAmount: finalAmount,
+            afterAmount: approvedAmount,
+            reasonCode: "SUM_INSURED_CAP",
+            message: "按保额上限收敛",
+          },
+        ],
+        manualReviewReasons: [],
+        flags: [],
+      },
+    ];
 
     return {
       lossLedger: ledger,
@@ -814,36 +1050,62 @@ function calculateAutoLossLedger({ productCode, context, factResult, coverageCod
           reimbursementRatio: faultRatio,
           sumInsured,
           status: getCoverageStatus(needsManualReview, approvedAmount),
-          warnings
-        })
+          warnings,
+        }),
       ],
       lossPayableAmount: approvedAmount,
       deductible: 0,
       reimbursementRatio: faultRatio,
-      totalClaimable: claimedAmount
+      totalClaimable: claimedAmount,
     };
   }
 
   if (coverageCode === AUTO_COVERAGE_CODES.COMPULSORY) {
-    const claimedAmount = getAutoLossAmount(context, factResult, coverageCode, coverageConfig);
-    const compulsoryAmount = calculateCompulsoryApprovedAmount(context, coverageConfig, claimedAmount);
-    const sumInsured = getConfiguredAmount(coverageConfig?.sum_insured) || Infinity;
-    const approvedAmount = Math.min(compulsoryAmount.approvedAmount, sumInsured);
+    const claimedAmount = getAutoLossAmount(
+      context,
+      factResult,
+      coverageCode,
+      coverageConfig,
+    );
+    const compulsoryAmount = calculateCompulsoryApprovedAmount(
+      context,
+      coverageConfig,
+      claimedAmount,
+    );
+    const sumInsured =
+      getConfiguredAmount(coverageConfig?.sum_insured) || Infinity;
+    const approvedAmount = Math.min(
+      compulsoryAmount.approvedAmount,
+      sumInsured,
+    );
     return {
-      lossLedger: [{
-        itemKey: `${coverageCode}_AUTO_COMPULSORY`,
-        itemName: '交强险责任',
-        claimedAmount: compulsoryAmount.claimedAmount,
-        payableAmount: approvedAmount,
-        status: getCoverageStatus(needsManualReview, approvedAmount),
-        coverageCode,
-        entries: [
-          { step: 'INIT', beforeAmount: compulsoryAmount.claimedAmount, afterAmount: compulsoryAmount.claimedAmount, message: '载入交强险损失金额' },
-          { step: 'CAP', beforeAmount: compulsoryAmount.claimedAmount, afterAmount: approvedAmount, reasonCode: 'COMPULSORY_LIMIT_APPLIED', message: '按交强险限额收敛' }
-        ],
-        manualReviewReasons: [],
-        flags: []
-      }],
+      lossLedger: [
+        {
+          itemKey: `${coverageCode}_AUTO_COMPULSORY`,
+          itemName: "交强险责任",
+          claimedAmount: compulsoryAmount.claimedAmount,
+          payableAmount: approvedAmount,
+          status: getCoverageStatus(needsManualReview, approvedAmount),
+          coverageCode,
+          entries: [
+            {
+              step: "INIT",
+              beforeAmount: compulsoryAmount.claimedAmount,
+              afterAmount: compulsoryAmount.claimedAmount,
+              message: "载入交强险损失金额",
+            },
+            {
+              step: "CAP",
+              beforeAmount: compulsoryAmount.claimedAmount,
+              afterAmount: approvedAmount,
+              reasonCode: "COMPULSORY_LIMIT_APPLIED",
+              message: "按交强险限额收敛",
+            },
+          ],
+          manualReviewReasons: [],
+          flags: [],
+        },
+      ],
       coverageResults: [
         buildCoverageResult({
           coverageCode,
@@ -853,120 +1115,186 @@ function calculateAutoLossLedger({ productCode, context, factResult, coverageCod
           reimbursementRatio: 1,
           sumInsured,
           status: getCoverageStatus(needsManualReview, approvedAmount),
-          warnings
-        })
+          warnings,
+        }),
       ],
       lossPayableAmount: approvedAmount,
       deductible: 0,
       reimbursementRatio: 1,
-      totalClaimable: compulsoryAmount.claimedAmount
+      totalClaimable: compulsoryAmount.claimedAmount,
     };
   }
 
   if (coverageCode === AUTO_COVERAGE_CODES.THIRD_PARTY) {
-    const claimedAmount = getAutoLossAmount(context, factResult, coverageCode, coverageConfig);
+    const claimedAmount = getAutoLossAmount(
+      context,
+      factResult,
+      coverageCode,
+      coverageConfig,
+    );
     const shouldOffsetCompulsory = shouldApplyCompulsoryOffset(context);
     const compulsoryConfig = shouldOffsetCompulsory
       ? getAutoCoverageConfig(productCode, AUTO_COVERAGE_CODES.COMPULSORY)
       : null;
     const compulsoryAmount = shouldOffsetCompulsory
-      ? calculateCompulsoryApprovedAmount(context, compulsoryConfig, claimedAmount)
+      ? calculateCompulsoryApprovedAmount(
+          context,
+          compulsoryConfig,
+          claimedAmount,
+        )
       : { claimedAmount: 0, approvedAmount: 0 };
     const compulsorySumInsured = shouldOffsetCompulsory
-      ? (getConfiguredAmount(compulsoryConfig?.sum_insured) || Infinity)
+      ? getConfiguredAmount(compulsoryConfig?.sum_insured) || Infinity
       : 0;
     const compulsoryApproved = shouldOffsetCompulsory
       ? Math.min(compulsoryAmount.approvedAmount, compulsorySumInsured)
       : 0;
     const remainingLoss = Math.max(0, claimedAmount - compulsoryApproved);
     const commercialBaseAmount = roundAmount(remainingLoss * faultRatio);
-    const commercialSumInsured = getConfiguredAmount(coverageConfig?.sum_insured) || Infinity;
-    const commercialApproved = Math.min(commercialBaseAmount, commercialSumInsured);
+    const commercialSumInsured =
+      getConfiguredAmount(coverageConfig?.sum_insured) || Infinity;
+    const commercialApproved = Math.min(
+      commercialBaseAmount,
+      commercialSumInsured,
+    );
     const coverageResults = [];
     const lossLedger = [];
 
     if (compulsoryApproved > 0) {
       lossLedger.push({
         itemKey: `${AUTO_COVERAGE_CODES.COMPULSORY}_AUTO_TPL`,
-        itemName: '交强险先行赔付',
+        itemName: "交强险先行赔付",
         claimedAmount: compulsoryAmount.claimedAmount,
         payableAmount: compulsoryApproved,
         status: getCoverageStatus(needsManualReview, compulsoryApproved),
         coverageCode: AUTO_COVERAGE_CODES.COMPULSORY,
         entries: [
-          { step: 'INIT', beforeAmount: compulsoryAmount.claimedAmount, afterAmount: compulsoryAmount.claimedAmount, message: '载入交强险损失金额' },
-          { step: 'CAP', beforeAmount: compulsoryAmount.claimedAmount, afterAmount: compulsoryApproved, reasonCode: 'COMPULSORY_LIMIT_APPLIED', message: '按交强险限额收敛' }
+          {
+            step: "INIT",
+            beforeAmount: compulsoryAmount.claimedAmount,
+            afterAmount: compulsoryAmount.claimedAmount,
+            message: "载入交强险损失金额",
+          },
+          {
+            step: "CAP",
+            beforeAmount: compulsoryAmount.claimedAmount,
+            afterAmount: compulsoryApproved,
+            reasonCode: "COMPULSORY_LIMIT_APPLIED",
+            message: "按交强险限额收敛",
+          },
         ],
         manualReviewReasons: [],
-        flags: []
+        flags: [],
       });
-      coverageResults.push(buildCoverageResult({
-        coverageCode: AUTO_COVERAGE_CODES.COMPULSORY,
-        claimedAmount: compulsoryAmount.claimedAmount,
-        approvedAmount: compulsoryApproved,
-        deductible: 0,
-        reimbursementRatio: 1,
-        sumInsured: compulsorySumInsured,
-        status: getCoverageStatus(needsManualReview, compulsoryApproved),
-        warnings
-      }));
+      coverageResults.push(
+        buildCoverageResult({
+          coverageCode: AUTO_COVERAGE_CODES.COMPULSORY,
+          claimedAmount: compulsoryAmount.claimedAmount,
+          approvedAmount: compulsoryApproved,
+          deductible: 0,
+          reimbursementRatio: 1,
+          sumInsured: compulsorySumInsured,
+          status: getCoverageStatus(needsManualReview, compulsoryApproved),
+          warnings,
+        }),
+      );
     }
 
     lossLedger.push({
       itemKey: `${coverageCode}_AUTO_TPL`,
-      itemName: '商业三者责任',
+      itemName: "商业三者责任",
       claimedAmount: remainingLoss || claimedAmount,
       payableAmount: commercialApproved,
       status: getCoverageStatus(needsManualReview, commercialApproved),
       coverageCode,
       entries: [
-        { step: 'INIT', beforeAmount: remainingLoss || claimedAmount, afterAmount: remainingLoss || claimedAmount, message: '载入商业三者损失金额' },
-        { step: 'RATIO', beforeAmount: remainingLoss || claimedAmount, afterAmount: commercialBaseAmount, reasonCode: 'FAULT_RATIO_APPLIED', message: `按责任比例 ${faultRatio}` },
-        { step: 'CAP', beforeAmount: commercialBaseAmount, afterAmount: commercialApproved, reasonCode: 'SUM_INSURED_CAP', message: '按商业三者保额上限收敛' }
+        {
+          step: "INIT",
+          beforeAmount: remainingLoss || claimedAmount,
+          afterAmount: remainingLoss || claimedAmount,
+          message: "载入商业三者损失金额",
+        },
+        {
+          step: "RATIO",
+          beforeAmount: remainingLoss || claimedAmount,
+          afterAmount: commercialBaseAmount,
+          reasonCode: "FAULT_RATIO_APPLIED",
+          message: `按责任比例 ${faultRatio}`,
+        },
+        {
+          step: "CAP",
+          beforeAmount: commercialBaseAmount,
+          afterAmount: commercialApproved,
+          reasonCode: "SUM_INSURED_CAP",
+          message: "按商业三者保额上限收敛",
+        },
       ],
       manualReviewReasons: [],
-      flags: []
+      flags: [],
     });
-    coverageResults.push(buildCoverageResult({
-      coverageCode,
-      claimedAmount: remainingLoss || claimedAmount,
-      approvedAmount: commercialApproved,
-      deductible: 0,
-      reimbursementRatio: faultRatio,
-      sumInsured: commercialSumInsured,
-      status: getCoverageStatus(needsManualReview, commercialApproved),
-      warnings
-    }));
+    coverageResults.push(
+      buildCoverageResult({
+        coverageCode,
+        claimedAmount: remainingLoss || claimedAmount,
+        approvedAmount: commercialApproved,
+        deductible: 0,
+        reimbursementRatio: faultRatio,
+        sumInsured: commercialSumInsured,
+        status: getCoverageStatus(needsManualReview, commercialApproved),
+        warnings,
+      }),
+    );
 
     return {
       lossLedger,
       coverageResults,
-      lossPayableAmount: roundAmount(lossLedger.reduce((sum, item) => sum + item.payableAmount, 0)),
+      lossPayableAmount: roundAmount(
+        lossLedger.reduce((sum, item) => sum + item.payableAmount, 0),
+      ),
       deductible: 0,
       reimbursementRatio: faultRatio,
-      totalClaimable: claimedAmount
+      totalClaimable: claimedAmount,
     };
   }
 
   if (coverageCode === AUTO_COVERAGE_CODES.DRIVER_PASSENGER) {
-    const claimedAmount = getAutoLossAmount(context, factResult, coverageCode, coverageConfig);
-    const sumInsured = getConfiguredAmount(coverageConfig?.sum_insured) || Infinity;
+    const claimedAmount = getAutoLossAmount(
+      context,
+      factResult,
+      coverageCode,
+      coverageConfig,
+    );
+    const sumInsured =
+      getConfiguredAmount(coverageConfig?.sum_insured) || Infinity;
     const approvedAmount = Math.min(claimedAmount, sumInsured);
     return {
-      lossLedger: [{
-        itemKey: `${coverageCode}_AUTO_SEAT`,
-        itemName: '车上人员责任',
-        claimedAmount,
-        payableAmount: approvedAmount,
-        status: getCoverageStatus(needsManualReview, approvedAmount),
-        coverageCode,
-        entries: [
-          { step: 'INIT', beforeAmount: claimedAmount, afterAmount: claimedAmount, message: '载入车上人员损失金额' },
-          { step: 'CAP', beforeAmount: claimedAmount, afterAmount: approvedAmount, reasonCode: 'SUM_INSURED_CAP', message: '按保额上限收敛' }
-        ],
-        manualReviewReasons: [],
-        flags: []
-      }],
+      lossLedger: [
+        {
+          itemKey: `${coverageCode}_AUTO_SEAT`,
+          itemName: "车上人员责任",
+          claimedAmount,
+          payableAmount: approvedAmount,
+          status: getCoverageStatus(needsManualReview, approvedAmount),
+          coverageCode,
+          entries: [
+            {
+              step: "INIT",
+              beforeAmount: claimedAmount,
+              afterAmount: claimedAmount,
+              message: "载入车上人员损失金额",
+            },
+            {
+              step: "CAP",
+              beforeAmount: claimedAmount,
+              afterAmount: approvedAmount,
+              reasonCode: "SUM_INSURED_CAP",
+              message: "按保额上限收敛",
+            },
+          ],
+          manualReviewReasons: [],
+          flags: [],
+        },
+      ],
       coverageResults: [
         buildCoverageResult({
           coverageCode,
@@ -976,17 +1304,288 @@ function calculateAutoLossLedger({ productCode, context, factResult, coverageCod
           reimbursementRatio: 1,
           sumInsured,
           status: getCoverageStatus(needsManualReview, approvedAmount),
-          warnings
-        })
+          warnings,
+        }),
       ],
       lossPayableAmount: approvedAmount,
       deductible: 0,
       reimbursementRatio: 1,
-      totalClaimable: claimedAmount
+      totalClaimable: claimedAmount,
     };
   }
 
   return null;
+}
+
+// ============ LIABILITY 责任险理算分类帐 ============
+
+const DEFAULT_LIABILITY_STANDARDS = {
+  region: "上海市",
+  year: 2024,
+  urbanPerCapitaIncome: 79610, // 城镇居民人均可支配收入 (元/年)
+  urbanPerCapitaExpense: 51295, // 城镇居民人均消费支出 (元/年)
+  funeralMonthlySalary: 9000, // 上年度职工月平均工资 (元/月)
+  nursingDailyRate: 200, // 护理费日标准 (元/天)
+  hospitalMealSubsidy: 20, // 住院伙食补助 (元/天)
+  transportationDailyRate: 30, // 交通费日标准 (元/天)
+  defaultMentalDamage: 50000, // 精神损害抚慰金默认值 (元)
+};
+
+function calculateLiabilityLossLedger({
+  context,
+  coverageCode: inputCoverageCode,
+  coverageConfig,
+  warnings,
+  needsManualReview,
+}) {
+  const claim = context.claim || {};
+  const isDeathCase =
+    claim.death_confirmed ||
+    claim.deathConfirmed ||
+    claim.result_type === "DEATH";
+  const isPropertyCase = claim.property_damage || claim.propertyDamage;
+  const effectiveCoverageCode =
+    inputCoverageCode ||
+    (isDeathCase
+      ? "LIABILITY_DEATH"
+      : isPropertyCase
+        ? "LIABILITY_PROPERTY"
+        : "LIABILITY_INJURY");
+  const standards = { ...DEFAULT_LIABILITY_STANDARDS };
+  const liabilityRatio = Number(
+    claim.liability_ratio ?? claim.liabilityRatio ?? 1,
+  );
+  const claimantAge = Number(claim.claimant_age ?? claim.claimantAge ?? 35);
+  const sumInsured =
+    getConfiguredAmount(coverageConfig?.sum_insured) || Infinity;
+  const manualReviewReasons = [];
+
+  // 构建赔偿项目分类帐
+  const ledger = [];
+
+  // 1. 死亡赔偿金 = 人均可支配收入 × 计算年限(20年，60岁以上每增1岁减1年，75岁以上按5年)
+  if (
+    claim.death_confirmed ||
+    claim.deathConfirmed ||
+    claim.result_type === "DEATH"
+  ) {
+    const computeYears =
+      claimantAge >= 75 ? 5 : Math.max(1, 20 - Math.max(0, claimantAge - 60));
+    const deathCompensation = roundAmount(
+      standards.urbanPerCapitaIncome * computeYears,
+    );
+    const afterRatio = roundAmount(deathCompensation * liabilityRatio);
+    ledger.push({
+      itemKey: "LIABILITY_DEATH_COMPENSATION",
+      itemName: "死亡赔偿金",
+      claimedAmount: deathCompensation,
+      payableAmount: afterRatio,
+      status: getCoverageStatus(needsManualReview, afterRatio),
+      coverageCode: "LIABILITY_DEATH",
+      entries: [
+        {
+          step: "INIT",
+          beforeAmount: deathCompensation,
+          afterAmount: deathCompensation,
+          message: `城镇人均可支配收入 ${standards.urbanPerCapitaIncome}元/年 × ${computeYears}年`,
+        },
+        {
+          step: "RATIO",
+          beforeAmount: deathCompensation,
+          afterAmount: afterRatio,
+          reasonCode: "LIABILITY_RATIO",
+          message: `责任比例 ${(liabilityRatio * 100).toFixed(0)}%`,
+        },
+      ],
+      manualReviewReasons: [],
+      flags: [],
+    });
+
+    // 2. 丧葬费 = 职工月平均工资 × 6个月
+    const funeralClaimed =
+      Number(claim.funeral_expense ?? claim.funeralExpense) ||
+      roundAmount(standards.funeralMonthlySalary * 6);
+    const funeralAfterRatio = roundAmount(funeralClaimed * liabilityRatio);
+    ledger.push({
+      itemKey: "LIABILITY_FUNERAL",
+      itemName: "丧葬费",
+      claimedAmount: funeralClaimed,
+      payableAmount: funeralAfterRatio,
+      status: getCoverageStatus(needsManualReview, funeralAfterRatio),
+      coverageCode: "LIABILITY_DEATH",
+      entries: [
+        {
+          step: "INIT",
+          beforeAmount: funeralClaimed,
+          afterAmount: funeralClaimed,
+          message: `丧葬费 ${funeralClaimed}元`,
+        },
+        {
+          step: "RATIO",
+          beforeAmount: funeralClaimed,
+          afterAmount: funeralAfterRatio,
+          reasonCode: "LIABILITY_RATIO",
+          message: `责任比例 ${(liabilityRatio * 100).toFixed(0)}%`,
+        },
+      ],
+      manualReviewReasons: [],
+      flags: [],
+    });
+
+    // 3. 被扶养人生活费
+    const dependentExpense = Number(
+      claim.dependent_expense ?? claim.dependentExpense ?? 0,
+    );
+    if (dependentExpense > 0) {
+      const depAfterRatio = roundAmount(dependentExpense * liabilityRatio);
+      ledger.push({
+        itemKey: "LIABILITY_DEPENDENT",
+        itemName: "被扶养人生活费",
+        claimedAmount: dependentExpense,
+        payableAmount: depAfterRatio,
+        status: getCoverageStatus(needsManualReview, depAfterRatio),
+        coverageCode: "LIABILITY_DEATH",
+        entries: [
+          {
+            step: "INIT",
+            beforeAmount: dependentExpense,
+            afterAmount: dependentExpense,
+            message: `被扶养人生活费 ${dependentExpense}元`,
+          },
+          {
+            step: "RATIO",
+            beforeAmount: dependentExpense,
+            afterAmount: depAfterRatio,
+            reasonCode: "LIABILITY_RATIO",
+            message: `责任比例 ${(liabilityRatio * 100).toFixed(0)}%`,
+          },
+        ],
+        manualReviewReasons: [],
+        flags: [],
+      });
+    }
+
+    // 4. 精神损害抚慰金
+    const mentalDamage = Number(
+      claim.mental_damage ??
+        claim.mentalDamage ??
+        standards.defaultMentalDamage,
+    );
+    const mentalAfterRatio = roundAmount(mentalDamage * liabilityRatio);
+    ledger.push({
+      itemKey: "LIABILITY_MENTAL_DAMAGE",
+      itemName: "精神损害抚慰金",
+      claimedAmount: mentalDamage,
+      payableAmount: mentalAfterRatio,
+      status: getCoverageStatus(needsManualReview, mentalAfterRatio),
+      coverageCode: "LIABILITY_DEATH",
+      entries: [
+        {
+          step: "INIT",
+          beforeAmount: mentalDamage,
+          afterAmount: mentalDamage,
+          message: `精神损害抚慰金 ${mentalDamage}元`,
+        },
+        {
+          step: "RATIO",
+          beforeAmount: mentalDamage,
+          afterAmount: mentalAfterRatio,
+          reasonCode: "LIABILITY_RATIO",
+          message: `责任比例 ${(liabilityRatio * 100).toFixed(0)}%`,
+        },
+      ],
+      manualReviewReasons: [],
+      flags: [],
+    });
+  } else {
+    // 非死亡场景：从案件 calculationItems / expense_items 逐项理算
+    const expenseItems = claim.expense_items || [];
+    if (expenseItems.length === 0) {
+      manualReviewReasons.push(
+        buildManualReviewReason(
+          "LIABILITY_NO_ITEMS",
+          "无赔偿项目明细，需人工复核",
+        ),
+      );
+    }
+    expenseItems.forEach((item, index) => {
+      const amount = Number(item.amount ?? item.totalPrice ?? 0);
+      const afterRatio = roundAmount(amount * liabilityRatio);
+      ledger.push({
+        itemKey: `LIABILITY_ITEM_${index}`,
+        itemName:
+          item.itemName || item.name || item.item || `赔偿项${index + 1}`,
+        claimedAmount: amount,
+        payableAmount: afterRatio,
+        status: getCoverageStatus(needsManualReview, afterRatio),
+        coverageCode: effectiveCoverageCode,
+        entries: [
+          {
+            step: "INIT",
+            beforeAmount: amount,
+            afterAmount: amount,
+            message: `载入赔偿项金额`,
+          },
+          {
+            step: "RATIO",
+            beforeAmount: amount,
+            afterAmount: afterRatio,
+            reasonCode: "LIABILITY_RATIO",
+            message: `责任比例 ${(liabilityRatio * 100).toFixed(0)}%`,
+          },
+        ],
+        manualReviewReasons: [],
+        flags: [],
+      });
+    });
+  }
+
+  // 5. 已付金额抵扣
+  const paidOffset = Number(claim.paid_offset ?? claim.paidOffset ?? 0);
+  let totalBeforeOffset = roundAmount(
+    ledger.reduce((sum, item) => sum + item.payableAmount, 0),
+  );
+  let totalAfterOffset = roundAmount(
+    Math.max(0, totalBeforeOffset - paidOffset),
+  );
+
+  // 6. 保额上限
+  const totalPayable = Math.min(totalAfterOffset, sumInsured);
+  const capApplied = totalAfterOffset > sumInsured;
+
+  // 按比例调整各项（如超保额）
+  if (capApplied && totalBeforeOffset > 0) {
+    const scaleFactor = totalPayable / totalBeforeOffset;
+    ledger.forEach((item) => {
+      item.payableAmount = roundAmount(item.payableAmount * scaleFactor);
+    });
+  }
+
+  const totalClaimed = roundAmount(
+    ledger.reduce((sum, item) => sum + item.claimedAmount, 0),
+  );
+
+  return {
+    lossLedger: ledger,
+    coverageResults: [
+      buildCoverageResult({
+        coverageCode: effectiveCoverageCode,
+        claimedAmount: totalClaimed,
+        approvedAmount: totalPayable,
+        deductible: paidOffset,
+        reimbursementRatio: liabilityRatio,
+        sumInsured,
+        status: getCoverageStatus(needsManualReview, totalPayable),
+        warnings,
+      }),
+    ],
+    lossPayableAmount: totalPayable,
+    deductible: paidOffset,
+    reimbursementRatio: liabilityRatio,
+    totalClaimable: totalClaimed,
+    capApplied,
+    manualReviewReasons,
+  };
 }
 
 export function runLossLedger({
@@ -997,9 +1596,9 @@ export function runLossLedger({
   coverageConfig,
   claimType,
   warnings = [],
-  needsManualReview = false
+  needsManualReview = false,
 }) {
-  if (claimType === 'AUTO' || isAutoCoverageCode(coverageCode)) {
+  if (claimType === "AUTO" || isAutoCoverageCode(coverageCode)) {
     const autoLedger = calculateAutoLossLedger({
       productCode,
       context,
@@ -1007,14 +1606,28 @@ export function runLossLedger({
       coverageCode,
       coverageConfig,
       warnings,
-      needsManualReview
+      needsManualReview,
     });
     if (autoLedger) {
       return {
         ...autoLedger,
-        legacyItemBreakdown: buildLegacyItemBreakdown(autoLedger.lossLedger)
+        legacyItemBreakdown: buildLegacyItemBreakdown(autoLedger.lossLedger),
       };
     }
+  }
+
+  if (claimType === "LIABILITY") {
+    const liabilityLedger = calculateLiabilityLossLedger({
+      context,
+      coverageCode,
+      coverageConfig,
+      warnings,
+      needsManualReview,
+    });
+    return {
+      ...liabilityLedger,
+      legacyItemBreakdown: buildLegacyItemBreakdown(liabilityLedger.lossLedger),
+    };
   }
 
   const isMedicalCoverage =
@@ -1024,11 +1637,23 @@ export function runLossLedger({
     ? evaluateHospitalRequirement({ context, coverageConfig, claimType })
     : null;
   const catalogReview = isMedicalCoverage
-    ? evaluateMedicalCatalogItems({ context, expenseItems: factResult.expenseItems || [] })
-    : { reviewedItems: factResult.expenseItems || [], manualReviewReasons: [], summary: null };
-  const sourceItems = catalogReview.reviewedItems || factResult.expenseItems || [];
-  const items = sourceItems.map((item, index) => createLossLedgerItem(item, index, coverageCode));
-  const ruleIndex = new Map((context.ruleset?.rules || []).map((rule) => [rule.rule_id, rule]));
+    ? evaluateMedicalCatalogItems({
+        context,
+        expenseItems: factResult.expenseItems || [],
+      })
+    : {
+        reviewedItems: factResult.expenseItems || [],
+        manualReviewReasons: [],
+        summary: null,
+      };
+  const sourceItems =
+    catalogReview.reviewedItems || factResult.expenseItems || [];
+  const items = sourceItems.map((item, index) =>
+    createLossLedgerItem(item, index, coverageCode),
+  );
+  const ruleIndex = new Map(
+    (context.ruleset?.rules || []).map((rule) => [rule.rule_id, rule]),
+  );
   const assessmentResults = factResult.executionDetails || [];
   const settlementManualReviewReasons = [
     ...(hospitalReview?.manualReviewReasons || []),
@@ -1045,15 +1670,17 @@ export function runLossLedger({
         return;
       }
       pushLossEntry(item, {
-        step: 'ELIGIBILITY',
-        ruleId: 'MEDICAL_HOSPITAL_REQUIREMENT',
+        step: "ELIGIBILITY",
+        ruleId: "MEDICAL_HOSPITAL_REQUIREMENT",
         beforeAmount: item.payableAmount,
         afterAmount: 0,
-        reasonCode: 'HOSPITAL_REQUIREMENT_NOT_MET',
-        message: hospitalReview.manualReviewReasons[0]?.message || '医院不满足医疗责任就诊要求',
+        reasonCode: "HOSPITAL_REQUIREMENT_NOT_MET",
+        message:
+          hospitalReview.manualReviewReasons[0]?.message ||
+          "医院不满足医疗责任就诊要求",
       });
       item.locked = true;
-      item.status = 'ZERO_PAY';
+      item.status = "ZERO_PAY";
     });
   }
 
@@ -1064,41 +1691,52 @@ export function runLossLedger({
         return;
       }
 
-      if (review.status === 'SELF_PAY') {
+      if (review.status === "SELF_PAY") {
         pushLossEntry(item, {
-          step: 'ELIGIBILITY',
-          ruleId: 'MEDICAL_CATALOG',
+          step: "ELIGIBILITY",
+          ruleId: "MEDICAL_CATALOG",
           beforeAmount: item.payableAmount,
           afterAmount: 0,
-          reasonCode: 'MEDICAL_CATALOG_SELF_PAY',
-          message: review.basis || '费用项判定为目录外自费项目',
+          reasonCode: "MEDICAL_CATALOG_SELF_PAY",
+          message: review.basis || "费用项判定为目录外自费项目",
         });
         item.locked = true;
-        item.status = 'ZERO_PAY';
+        item.status = "ZERO_PAY";
         return;
       }
 
-      if (review.status === 'RESTRICTED' && typeof review.ratio === 'number' && review.ratio >= 0 && review.ratio < 1) {
+      if (
+        review.status === "RESTRICTED" &&
+        typeof review.ratio === "number" &&
+        review.ratio >= 0 &&
+        review.ratio < 1
+      ) {
         pushLossEntry(item, {
-          step: 'RATIO',
-          ruleId: 'MEDICAL_CATALOG',
+          step: "RATIO",
+          ruleId: "MEDICAL_CATALOG",
           beforeAmount: item.payableAmount,
           afterAmount: item.payableAmount * review.ratio,
-          reasonCode: 'MEDICAL_CATALOG_RATIO',
+          reasonCode: "MEDICAL_CATALOG_RATIO",
           message: review.basis || `按医保目录比例 ${review.ratio}`,
         });
       }
 
-      if (review.status === 'UNCERTAIN') {
+      if (review.status === "UNCERTAIN") {
         item.manualReviewReasons.push(
-          buildManualReviewReason('MEDICAL_CATALOG_UNCERTAIN', review.basis || '费用项目录属性待人工确认'),
+          buildManualReviewReason(
+            "MEDICAL_CATALOG_UNCERTAIN",
+            review.basis || "费用项目录属性待人工确认",
+          ),
         );
       }
     });
   }
 
   for (const result of assessmentResults) {
-    if (!Array.isArray(result.item_results) || result.item_results.length === 0) {
+    if (
+      !Array.isArray(result.item_results) ||
+      result.item_results.length === 0
+    ) {
       continue;
     }
 
@@ -1112,41 +1750,50 @@ export function runLossLedger({
     }
   }
 
-  const medicalDefaultRatio = (
-    isMedicalCoverage
-  ) ? getMedicalDefaultRatio(coverageConfig) : 1;
+  const medicalDefaultRatio = isMedicalCoverage
+    ? getMedicalDefaultRatio(coverageConfig)
+    : 1;
 
   if (medicalDefaultRatio !== 1) {
     items.forEach((item) => {
       if (item.locked || item.payableAmount <= 0) return;
       pushLossEntry(item, {
-        step: 'RATIO',
-        ruleId: 'SYSTEM_DEFAULT_RATIO',
+        step: "RATIO",
+        ruleId: "SYSTEM_DEFAULT_RATIO",
         beforeAmount: item.payableAmount,
         afterAmount: item.payableAmount * medicalDefaultRatio,
-        reasonCode: 'DEFAULT_REIMBURSEMENT_RATIO',
-        message: `按默认赔付比例 ${medicalDefaultRatio}`
+        reasonCode: "DEFAULT_REIMBURSEMENT_RATIO",
+        message: `按默认赔付比例 ${medicalDefaultRatio}`,
       });
     });
   }
 
   const deductibleAmount = getConfiguredAmount(coverageConfig?.deductible);
   const appliedDeductible = allocateCoverageDeductible(items, deductibleAmount);
-  const preCapTotal = roundAmount(items.reduce((sum, item) => sum + item.payableAmount, 0));
-  const sumInsured = getConfiguredAmount(coverageConfig?.sum_insured) || Infinity;
-  const capApplied = Number.isFinite(sumInsured) ? allocateCoverageCap(items, sumInsured) : false;
-  const lossPayableAmount = roundAmount(items.reduce((sum, item) => sum + item.payableAmount, 0));
+  const preCapTotal = roundAmount(
+    items.reduce((sum, item) => sum + item.payableAmount, 0),
+  );
+  const sumInsured =
+    getConfiguredAmount(coverageConfig?.sum_insured) || Infinity;
+  const capApplied = Number.isFinite(sumInsured)
+    ? allocateCoverageCap(items, sumInsured)
+    : false;
+  const lossPayableAmount = roundAmount(
+    items.reduce((sum, item) => sum + item.payableAmount, 0),
+  );
 
   items.forEach((item) => {
     if (item.manualReviewReasons.length > 0) {
-      item.status = 'MANUAL_REVIEW';
+      item.status = "MANUAL_REVIEW";
     } else if (item.payableAmount <= 0) {
-      item.status = 'ZERO_PAY';
+      item.status = "ZERO_PAY";
     }
     delete item.locked;
   });
 
-  const claimedAmount = roundAmount(items.reduce((sum, item) => sum + item.claimedAmount, 0));
+  const claimedAmount = roundAmount(
+    items.reduce((sum, item) => sum + item.claimedAmount, 0),
+  );
   const coverageResult = buildCoverageResult({
     coverageCode,
     claimedAmount,
@@ -1156,11 +1803,11 @@ export function runLossLedger({
     sumInsured,
     status: getCoverageStatus(
       needsManualReview ||
-      settlementManualReviewReasons.length > 0 ||
-      items.some(item => item.status === 'MANUAL_REVIEW'),
+        settlementManualReviewReasons.length > 0 ||
+        items.some((item) => item.status === "MANUAL_REVIEW"),
       lossPayableAmount,
     ),
-    warnings
+    warnings,
   });
 
   return {
@@ -1170,12 +1817,17 @@ export function runLossLedger({
     deductible: appliedDeductible,
     reimbursementRatio: medicalDefaultRatio,
     totalClaimable: claimedAmount,
-    capApplied: capApplied || (Number.isFinite(sumInsured) && preCapTotal > sumInsured),
+    capApplied:
+      capApplied || (Number.isFinite(sumInsured) && preCapTotal > sumInsured),
     legacyItemBreakdown: buildLegacyItemBreakdown(items),
     manualReviewReasons: settlementManualReviewReasons.concat(
       items.flatMap((item) =>
         (item.manualReviewReasons || []).map((reason) =>
-          buildManualReviewReason(reason.code || 'ITEM_MANUAL_REVIEW', reason.message || '费用项需人工复核', reason.metadata),
+          buildManualReviewReason(
+            reason.code || "ITEM_MANUAL_REVIEW",
+            reason.message || "费用项需人工复核",
+            reason.metadata,
+          ),
         ),
       ),
     ),
@@ -1188,19 +1840,29 @@ export function runLossLedger({
   };
 }
 
-function buildBenefitBaseAmount({ coverageCode, coverageConfig, context, claimType }) {
+function buildBenefitBaseAmount({
+  coverageCode,
+  coverageConfig,
+  context,
+  claimType,
+}) {
   if (coverageCode === ACCIDENT_COVERAGE_CODES.DISABILITY) {
     const base = getConfiguredAmount(coverageConfig?.sum_insured);
     const disabilityGrade = toNumericGrade(context?.claim?.disability_grade);
     const gradeRatio = findDisabilityGradeRatio(context, disabilityGrade);
     return roundAmount(base * (gradeRatio ?? 1));
   }
-  if (coverageCode === ACCIDENT_COVERAGE_CODES.DEATH || claimType === 'CRITICAL_ILLNESS') {
+  if (
+    coverageCode === ACCIDENT_COVERAGE_CODES.DEATH ||
+    claimType === "CRITICAL_ILLNESS"
+  ) {
     return getConfiguredAmount(coverageConfig?.sum_insured);
   }
   if (coverageCode === ACCIDENT_COVERAGE_CODES.ALLOWANCE) {
     const dailyAllowance = Number(coverageConfig?.daily_allowance || 0);
-    return roundAmount((Number(context.claim?.hospital_days || 0) || 0) * dailyAllowance);
+    return roundAmount(
+      (Number(context.claim?.hospital_days || 0) || 0) * dailyAllowance,
+    );
   }
   return getConfiguredAmount(coverageConfig?.sum_insured);
 }
@@ -1212,38 +1874,51 @@ export function runBenefitLedger({
   claimType,
   eligibilityResult,
   warnings = [],
-  needsManualReview = false
+  needsManualReview = false,
 }) {
   const manualReviewReasons = [];
-  const baseAmount = buildBenefitBaseAmount({ coverageCode, coverageConfig, context, claimType });
-  const modifiers = resolveBenefitModifiers({ context, coverageCode, claimType });
-  const ratio = extractClaimRatio(eligibilityResult) ?? modifiers.payoutRatio ?? 1;
+  const baseAmount = buildBenefitBaseAmount({
+    coverageCode,
+    coverageConfig,
+    context,
+    claimType,
+  });
+  const modifiers = resolveBenefitModifiers({
+    context,
+    coverageCode,
+    claimType,
+  });
+  const ratio =
+    extractClaimRatio(eligibilityResult) ?? modifiers.payoutRatio ?? 1;
   const priorBenefit = roundAmount(
     context.claim?.prior_benefit ||
-    context.claim?.prior_disability_paid ||
-    context.claim?.priorDisabilityPaid ||
-    0
+      context.claim?.prior_disability_paid ||
+      context.claim?.priorDisabilityPaid ||
+      0,
   );
-  const sumInsured = getConfiguredAmount(coverageConfig?.sum_insured) || Infinity;
+  const sumInsured =
+    getConfiguredAmount(coverageConfig?.sum_insured) || Infinity;
   const entries = [
     {
-      step: 'INIT',
+      step: "INIT",
       beforeAmount: baseAmount,
       afterAmount: baseAmount,
-      message: '初始化给付责任'
-    }
+      message: "初始化给付责任",
+    },
   ];
 
   if (!eligibilityResult?.eligible) {
     return {
-      benefitLedger: [{
-        coverageCode,
-        claimedAmount: baseAmount,
-        payableAmount: 0,
-        status: 'ZERO_PAY',
-        entries,
-        manualReviewReasons
-      }],
+      benefitLedger: [
+        {
+          coverageCode,
+          claimedAmount: baseAmount,
+          payableAmount: 0,
+          status: "ZERO_PAY",
+          entries,
+          manualReviewReasons,
+        },
+      ],
       coverageResults: [
         buildCoverageResult({
           coverageCode,
@@ -1253,51 +1928,55 @@ export function runBenefitLedger({
           reimbursementRatio: 0,
           sumInsured,
           status: getCoverageStatus(needsManualReview, 0),
-          warnings
-        })
+          warnings,
+        }),
       ],
       benefitPayableAmount: 0,
       totalClaimable: baseAmount,
-      reimbursementRatio: 0
+      reimbursementRatio: 0,
     };
   }
 
   let currentAmount = baseAmount;
   entries.push({
-    step: 'TRIGGER',
+    step: "TRIGGER",
     beforeAmount: currentAmount,
     afterAmount: currentAmount,
-    message: '责任触发成立'
+    message: "责任触发成立",
   });
 
-  manualReviewReasons.push(...collectBenefitManualReviewReasons({
-    context,
-    coverageCode,
-    claimType,
-    baseAmount
-  }));
   manualReviewReasons.push(
-    ...modifiers.missingConditions.map((message) => buildManualReviewReason('BENEFIT_EXTRA_CONDITION_UNCONFIRMED', message))
+    ...collectBenefitManualReviewReasons({
+      context,
+      coverageCode,
+      claimType,
+      baseAmount,
+    }),
+  );
+  manualReviewReasons.push(
+    ...modifiers.missingConditions.map((message) =>
+      buildManualReviewReason("BENEFIT_EXTRA_CONDITION_UNCONFIRMED", message),
+    ),
   );
 
   if (baseAmount > 0) {
     entries.push({
-      step: 'BASE_AMOUNT',
+      step: "BASE_AMOUNT",
       beforeAmount: currentAmount,
       afterAmount: currentAmount,
-      reasonCode: 'BENEFIT_BASE_AMOUNT',
-      message: '确定给付基础金额'
+      reasonCode: "BENEFIT_BASE_AMOUNT",
+      message: "确定给付基础金额",
     });
   }
 
   if (ratio !== 1) {
     const afterRatio = roundAmount(currentAmount * ratio);
     entries.push({
-      step: 'RATIO',
+      step: "RATIO",
       beforeAmount: currentAmount,
       afterAmount: afterRatio,
-      reasonCode: 'BENEFIT_RATIO_APPLIED',
-      message: `按给付比例 ${ratio}`
+      reasonCode: "BENEFIT_RATIO_APPLIED",
+      message: `按给付比例 ${ratio}`,
     });
     currentAmount = afterRatio;
   }
@@ -1306,11 +1985,13 @@ export function runBenefitLedger({
     const extraAmount = roundAmount(baseAmount * modifiers.extraPayoutRatio);
     const afterExtra = roundAmount(currentAmount + extraAmount);
     entries.push({
-      step: 'RATIO',
+      step: "RATIO",
       beforeAmount: currentAmount,
       afterAmount: afterExtra,
-      reasonCode: 'EXTRA_BENEFIT_APPLIED',
-      message: modifiers.extraPayoutReason || `额外赔付 ${modifiers.extraPayoutRatio * 100}%`
+      reasonCode: "EXTRA_BENEFIT_APPLIED",
+      message:
+        modifiers.extraPayoutReason ||
+        `额外赔付 ${modifiers.extraPayoutRatio * 100}%`,
     });
     currentAmount = afterExtra;
   }
@@ -1318,43 +1999,51 @@ export function runBenefitLedger({
   if (priorBenefit > 0) {
     const afterPrior = Math.max(0, roundAmount(currentAmount - priorBenefit));
     entries.push({
-      step: 'DEDUCT_PRIOR_BENEFIT',
+      step: "DEDUCT_PRIOR_BENEFIT",
       beforeAmount: currentAmount,
       afterAmount: afterPrior,
-      reasonCode: 'PRIOR_BENEFIT_DEDUCTED',
-      message: `扣减既往赔付 ${priorBenefit}`
+      reasonCode: "PRIOR_BENEFIT_DEDUCTED",
+      message: `扣减既往赔付 ${priorBenefit}`,
     });
     currentAmount = afterPrior;
   }
 
-  const cappedAmount = Number.isFinite(sumInsured) ? Math.min(currentAmount, sumInsured) : currentAmount;
+  const cappedAmount = Number.isFinite(sumInsured)
+    ? Math.min(currentAmount, sumInsured)
+    : currentAmount;
   entries.push({
-    step: 'CAP',
+    step: "CAP",
     beforeAmount: currentAmount,
     afterAmount: cappedAmount,
-    reasonCode: 'SUM_INSURED_CAP',
-    message: '按责任保额上限收敛'
+    reasonCode: "SUM_INSURED_CAP",
+    message: "按责任保额上限收敛",
   });
   currentAmount = roundAmount(cappedAmount);
 
   const combinedManualReviewReasons = [
     ...manualReviewReasons,
-    ...((eligibilityResult?.manualReviewReasons || []).map((reason) => buildManualReviewReason(reason.code || 'LIABILITY_MANUAL_REVIEW', reason.message || '需人工复核')))
+    ...(eligibilityResult?.manualReviewReasons || []).map((reason) =>
+      buildManualReviewReason(
+        reason.code || "LIABILITY_MANUAL_REVIEW",
+        reason.message || "需人工复核",
+      ),
+    ),
   ];
 
   if (combinedManualReviewReasons.length > 0 || needsManualReview) {
     entries.push({
-      step: 'FLAG',
+      step: "FLAG",
       beforeAmount: currentAmount,
       afterAmount: currentAmount,
-      reasonCode: 'BENEFIT_MANUAL_REVIEW',
-      message: '给付责任需人工复核'
+      reasonCode: "BENEFIT_MANUAL_REVIEW",
+      message: "给付责任需人工复核",
     });
   }
 
-  const status = combinedManualReviewReasons.length > 0 || needsManualReview
-    ? 'MANUAL_REVIEW'
-    : getCoverageStatus(false, currentAmount);
+  const status =
+    combinedManualReviewReasons.length > 0 || needsManualReview
+      ? "MANUAL_REVIEW"
+      : getCoverageStatus(false, currentAmount);
 
   const benefitCoverage = {
     coverageCode,
@@ -1362,17 +2051,21 @@ export function runBenefitLedger({
     payableAmount: currentAmount,
     status,
     entries,
-    manualReviewReasons: combinedManualReviewReasons
+    manualReviewReasons: combinedManualReviewReasons,
   };
 
-  const addonBenefitCoverages = coverageCode === ACCIDENT_COVERAGE_CODES.DEATH
-    ? collectAccidentDeathAddonCoverages(context, eligibilityResult, status)
-    : [];
+  const addonBenefitCoverages =
+    coverageCode === ACCIDENT_COVERAGE_CODES.DEATH
+      ? collectAccidentDeathAddonCoverages(context, eligibilityResult, status)
+      : [];
   const allBenefitCoverages = [benefitCoverage, ...addonBenefitCoverages];
   const coverageResults = allBenefitCoverages.map((item) => {
-    const sumInsuredValue = coverageCode === item.coverageCode
-      ? sumInsured
-      : getConfiguredAmount(getPolicyCoverageConfig(context, item.coverageCode)?.sum_insured) || Infinity;
+    const sumInsuredValue =
+      coverageCode === item.coverageCode
+        ? sumInsured
+        : getConfiguredAmount(
+            getPolicyCoverageConfig(context, item.coverageCode)?.sum_insured,
+          ) || Infinity;
     return buildCoverageResult({
       coverageCode: item.coverageCode,
       claimedAmount: item.claimedAmount,
@@ -1381,17 +2074,27 @@ export function runBenefitLedger({
       reimbursementRatio: ratio,
       sumInsured: sumInsuredValue,
       status: item.status,
-      warnings
+      warnings,
     });
   });
-  const totalBenefitPayableAmount = roundAmount(allBenefitCoverages.reduce((sum, item) => sum + (item.payableAmount || 0), 0));
-  const totalClaimable = roundAmount(allBenefitCoverages.reduce((sum, item) => sum + (item.claimedAmount || 0), 0));
+  const totalBenefitPayableAmount = roundAmount(
+    allBenefitCoverages.reduce(
+      (sum, item) => sum + (item.payableAmount || 0),
+      0,
+    ),
+  );
+  const totalClaimable = roundAmount(
+    allBenefitCoverages.reduce(
+      (sum, item) => sum + (item.claimedAmount || 0),
+      0,
+    ),
+  );
 
   return {
     benefitLedger: allBenefitCoverages,
     coverageResults,
     benefitPayableAmount: totalBenefitPayableAmount,
     totalClaimable,
-    reimbursementRatio: ratio
+    reimbursementRatio: ratio,
   };
 }

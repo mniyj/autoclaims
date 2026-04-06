@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import type {
   AnyDocumentSummary,
   ClaimCase,
+  FieldCorrection,
+  InterventionInstance,
   ProcessedFile,
   ReviewTask,
 } from "../../types";
@@ -15,10 +17,11 @@ type ReviewDocumentItem = ProcessedFile & {
   importedAt?: string;
   documentSummary?: AnyDocumentSummary;
   duplicateWarning?: { message: string; similarity: number } | null;
+  source?: string;
 };
 
 type DecisionMode = "liability" | "assessment";
-type MaterialDisplayMode = "upload" | "type" | "event";
+type MaterialDisplayMode = "upload" | "type" | "event" | "source";
 type MaterialAiResultSource = "structured" | "log";
 
 type MaterialAiField = {
@@ -45,12 +48,41 @@ interface MaterialManagementPanelProps {
   selectedDocumentId: string | null;
   onSelectDocument: (documentId: string) => void;
   onJumpTo: (
-    doc: Pick<ReviewDocumentItem, "ossUrl" | "ossKey" | "fileType" | "fileName">,
+    doc: Pick<
+      ReviewDocumentItem,
+      "ossUrl" | "ossKey" | "fileType" | "fileName"
+    >,
     anchor: SourceAnchor,
   ) => void;
-  onApproveField: (docId: string, fieldName: string) => void;
-  isFieldApproved: (docId: string, fieldName: string) => boolean;
+  onCorrectField: (
+    docId: string,
+    fieldKey: string,
+    fieldLabel: string,
+    originalValue: string,
+    correctedValue: string,
+  ) => void | Promise<void>;
+  isFieldCorrected: (docId: string, fieldKey: string) => boolean;
+  getFieldDisplayValue: (
+    docId: string,
+    fieldKey: string,
+    originalValue: string,
+  ) => string;
+  isCaseClosed: boolean;
+  fieldCorrections: Map<string, FieldCorrection>;
   previewContent: React.ReactNode;
+  completeness?: {
+    isComplete: boolean;
+    score: number;
+    missingMaterials: string[];
+  } | null;
+  importTaskMeta?: {
+    id: string;
+    taskId: string | null;
+    taskStatus: string | null;
+    postProcessedAt: string | null;
+  } | null;
+  onRecoverImportTask?: () => void;
+  recoveringImportTask?: boolean;
 }
 
 interface ManualProcessingPanelProps {
@@ -140,6 +172,40 @@ function documentStatusTone(status: string) {
   }
 }
 
+function materialSourceLabel(source?: string): string {
+  switch (source) {
+    case "claim_report":
+      return "报案上传";
+    case "batch_import":
+    case "offline_import":
+      return "批量导入";
+    case "direct_upload":
+    case "manual_backfill":
+      return "管理员上传";
+    case "api_sync":
+      return "API同步";
+    default:
+      return source ? `其他(${source})` : "未知来源";
+  }
+}
+
+function materialSourceTone(source?: string): string {
+  switch (source) {
+    case "claim_report":
+      return "bg-green-50 text-green-700";
+    case "batch_import":
+    case "offline_import":
+      return "bg-indigo-50 text-indigo-700";
+    case "direct_upload":
+    case "manual_backfill":
+      return "bg-blue-50 text-blue-700";
+    case "api_sync":
+      return "bg-purple-50 text-purple-700";
+    default:
+      return "bg-slate-100 text-slate-600";
+  }
+}
+
 function taskTypeLabel(task: ReviewTask) {
   if (task.aiErrorMessage) return "AI识别失败";
   return task.taskType || "人工处理";
@@ -159,19 +225,35 @@ function extractSummaryFields(summary: AnyDocumentSummary | undefined) {
     case "case_report":
       return [
         summary.accidentDate
-          ? { key: "accidentDate", label: "事故日期", value: summary.accidentDate }
+          ? {
+              key: "accidentDate",
+              label: "事故日期",
+              value: summary.accidentDate,
+            }
           : null,
         summary.accidentLocation
-          ? { key: "accidentLocation", label: "事故地点", value: summary.accidentLocation }
+          ? {
+              key: "accidentLocation",
+              label: "事故地点",
+              value: summary.accidentLocation,
+            }
           : null,
         summary.victimName
           ? { key: "victimName", label: "死者/伤者", value: summary.victimName }
           : null,
         summary.incidentSummary
-          ? { key: "incidentSummary", label: "事故经过", value: summary.incidentSummary }
+          ? {
+              key: "incidentSummary",
+              label: "事故经过",
+              value: summary.incidentSummary,
+            }
           : null,
         summary.liabilityOpinion
-          ? { key: "liabilityOpinion", label: "责任意见", value: summary.liabilityOpinion }
+          ? {
+              key: "liabilityOpinion",
+              label: "责任意见",
+              value: summary.liabilityOpinion,
+            }
           : null,
         summary.compensationPaid != null
           ? {
@@ -184,10 +266,18 @@ function extractSummaryFields(summary: AnyDocumentSummary | undefined) {
     case "accident_liability":
       return [
         summary.accidentDate
-          ? { key: "accidentDate", label: "事故日期", value: summary.accidentDate }
+          ? {
+              key: "accidentDate",
+              label: "事故日期",
+              value: summary.accidentDate,
+            }
           : null,
         summary.accidentLocation
-          ? { key: "accidentLocation", label: "事故地点", value: summary.accidentLocation }
+          ? {
+              key: "accidentLocation",
+              label: "事故地点",
+              value: summary.accidentLocation,
+            }
           : null,
         ...(summary.parties || []).map((party, index) => ({
           key: `liabilityPct_${index}`,
@@ -195,16 +285,28 @@ function extractSummaryFields(summary: AnyDocumentSummary | undefined) {
           value: `${party.name || "当事人"} · ${party.liabilityPct}%`,
         })),
         summary.liabilityBasis
-          ? { key: "liabilityBasis", label: "定责依据", value: summary.liabilityBasis }
+          ? {
+              key: "liabilityBasis",
+              label: "定责依据",
+              value: summary.liabilityBasis,
+            }
           : null,
       ].filter(Boolean) as Array<{ key: string; label: string; value: string }>;
     case "inpatient_record":
       return [
         summary.admissionDate
-          ? { key: "admissionDate", label: "入院日期", value: summary.admissionDate }
+          ? {
+              key: "admissionDate",
+              label: "入院日期",
+              value: summary.admissionDate,
+            }
           : null,
         summary.dischargeDate
-          ? { key: "dischargeDate", label: "出院日期", value: summary.dischargeDate }
+          ? {
+              key: "dischargeDate",
+              label: "出院日期",
+              value: summary.dischargeDate,
+            }
           : null,
         summary.hospitalizationDays != null
           ? {
@@ -227,10 +329,18 @@ function extractSummaryFields(summary: AnyDocumentSummary | undefined) {
     case "expense_invoice":
       return [
         summary.invoiceNumber
-          ? { key: "invoiceNumber", label: "发票号码", value: summary.invoiceNumber }
+          ? {
+              key: "invoiceNumber",
+              label: "发票号码",
+              value: summary.invoiceNumber,
+            }
           : null,
         summary.invoiceDate
-          ? { key: "invoiceDate", label: "开票日期", value: summary.invoiceDate }
+          ? {
+              key: "invoiceDate",
+              label: "开票日期",
+              value: summary.invoiceDate,
+            }
           : null,
         summary.totalAmount != null
           ? {
@@ -240,7 +350,11 @@ function extractSummaryFields(summary: AnyDocumentSummary | undefined) {
             }
           : null,
         summary.institution
-          ? { key: "institution", label: "开票机构", value: summary.institution }
+          ? {
+              key: "institution",
+              label: "开票机构",
+              value: summary.institution,
+            }
           : null,
         ...(summary.breakdown || []).slice(0, 6).map((item, index) => ({
           key: `breakdown_${index}`,
@@ -251,13 +365,25 @@ function extractSummaryFields(summary: AnyDocumentSummary | undefined) {
     case "disability_assessment":
       return [
         summary.disabilityLevel
-          ? { key: "disabilityLevel", label: "伤残等级", value: summary.disabilityLevel }
+          ? {
+              key: "disabilityLevel",
+              label: "伤残等级",
+              value: summary.disabilityLevel,
+            }
           : null,
         summary.disabilityBasis
-          ? { key: "disabilityBasis", label: "鉴定依据", value: summary.disabilityBasis }
+          ? {
+              key: "disabilityBasis",
+              label: "鉴定依据",
+              value: summary.disabilityBasis,
+            }
           : null,
         summary.assessmentDate
-          ? { key: "assessmentDate", label: "鉴定日期", value: summary.assessmentDate }
+          ? {
+              key: "assessmentDate",
+              label: "鉴定日期",
+              value: summary.assessmentDate,
+            }
           : null,
         summary.assessmentInstitution
           ? {
@@ -277,7 +403,11 @@ function extractSummaryFields(summary: AnyDocumentSummary | undefined) {
             }
           : null,
         summary.lostWorkDays != null
-          ? { key: "lostWorkDays", label: "误工天数", value: `${summary.lostWorkDays} 天` }
+          ? {
+              key: "lostWorkDays",
+              label: "误工天数",
+              value: `${summary.lostWorkDays} 天`,
+            }
           : null,
         summary.employer
           ? { key: "employer", label: "工作单位", value: summary.employer }
@@ -294,19 +424,31 @@ function extractSummaryFields(summary: AnyDocumentSummary | undefined) {
           ? { key: "issueDate", label: "出具日期", value: summary.issueDate }
           : null,
         summary.issuingDoctor
-          ? { key: "issuingDoctor", label: "医师", value: summary.issuingDoctor }
+          ? {
+              key: "issuingDoctor",
+              label: "医师",
+              value: summary.issuingDoctor,
+            }
           : null,
         summary.institution
           ? { key: "institution", label: "机构", value: summary.institution }
           : null,
         summary.restDays != null
-          ? { key: "restDays", label: "建议休养", value: `${summary.restDays} 天` }
+          ? {
+              key: "restDays",
+              label: "建议休养",
+              value: `${summary.restDays} 天`,
+            }
           : null,
       ].filter(Boolean) as Array<{ key: string; label: string; value: string }>;
     case "death_record":
       return [
         summary.deceasedName
-          ? { key: "deceasedName", label: "死者姓名", value: summary.deceasedName }
+          ? {
+              key: "deceasedName",
+              label: "死者姓名",
+              value: summary.deceasedName,
+            }
           : null,
         summary.deathDate
           ? { key: "deathDate", label: "死亡日期", value: summary.deathDate }
@@ -315,7 +457,11 @@ function extractSummaryFields(summary: AnyDocumentSummary | undefined) {
           ? { key: "deathCause", label: "死亡原因", value: summary.deathCause }
           : null,
         summary.issuingAuthority
-          ? { key: "issuingAuthority", label: "出具机构", value: summary.issuingAuthority }
+          ? {
+              key: "issuingAuthority",
+              label: "出具机构",
+              value: summary.issuingAuthority,
+            }
           : null,
       ].filter(Boolean) as Array<{ key: string; label: string; value: string }>;
     case "claimant_relationship":
@@ -324,28 +470,52 @@ function extractSummaryFields(summary: AnyDocumentSummary | undefined) {
           ? { key: "deceasedName", label: "死者", value: summary.deceasedName }
           : null,
         summary.claimantName
-          ? { key: "claimantName", label: "关系人", value: summary.claimantName }
+          ? {
+              key: "claimantName",
+              label: "关系人",
+              value: summary.claimantName,
+            }
           : null,
         summary.relationship
           ? { key: "relationship", label: "关系", value: summary.relationship }
           : null,
         summary.issuingAuthority
-          ? { key: "issuingAuthority", label: "出具机构", value: summary.issuingAuthority }
+          ? {
+              key: "issuingAuthority",
+              label: "出具机构",
+              value: summary.issuingAuthority,
+            }
           : null,
       ].filter(Boolean) as Array<{ key: string; label: string; value: string }>;
     case "household_proof":
       return [
         summary.residentName
-          ? { key: "residentName", label: "户籍姓名", value: summary.residentName }
+          ? {
+              key: "residentName",
+              label: "户籍姓名",
+              value: summary.residentName,
+            }
           : null,
         summary.householdType
-          ? { key: "householdType", label: "户别", value: summary.householdType }
+          ? {
+              key: "householdType",
+              label: "户别",
+              value: summary.householdType,
+            }
           : null,
         summary.householdAddress
-          ? { key: "householdAddress", label: "户籍地址", value: summary.householdAddress }
+          ? {
+              key: "householdAddress",
+              label: "户籍地址",
+              value: summary.householdAddress,
+            }
           : null,
         summary.issuingAuthority
-          ? { key: "issuingAuthority", label: "登记机关", value: summary.issuingAuthority }
+          ? {
+              key: "issuingAuthority",
+              label: "登记机关",
+              value: summary.issuingAuthority,
+            }
           : null,
       ].filter(Boolean) as Array<{ key: string; label: string; value: string }>;
     case "police_call_record":
@@ -354,44 +524,84 @@ function extractSummaryFields(summary: AnyDocumentSummary | undefined) {
           ? { key: "callTime", label: "报警时间", value: summary.callTime }
           : null,
         summary.handlingUnit
-          ? { key: "handlingUnit", label: "处理单位", value: summary.handlingUnit }
+          ? {
+              key: "handlingUnit",
+              label: "处理单位",
+              value: summary.handlingUnit,
+            }
           : null,
         summary.incidentSummary
-          ? { key: "incidentSummary", label: "接警摘要", value: summary.incidentSummary }
+          ? {
+              key: "incidentSummary",
+              label: "接警摘要",
+              value: summary.incidentSummary,
+            }
           : null,
       ].filter(Boolean) as Array<{ key: string; label: string; value: string }>;
     case "incident_interview":
       return [
         summary.recordPerson
-          ? { key: "recordPerson", label: "笔录对象", value: summary.recordPerson }
+          ? {
+              key: "recordPerson",
+              label: "笔录对象",
+              value: summary.recordPerson,
+            }
           : null,
         summary.recordingUnit
-          ? { key: "recordingUnit", label: "制作单位", value: summary.recordingUnit }
+          ? {
+              key: "recordingUnit",
+              label: "制作单位",
+              value: summary.recordingUnit,
+            }
           : null,
         summary.incidentStatement
-          ? { key: "incidentStatement", label: "事故陈述", value: summary.incidentStatement }
+          ? {
+              key: "incidentStatement",
+              label: "事故陈述",
+              value: summary.incidentStatement,
+            }
           : null,
       ].filter(Boolean) as Array<{ key: string; label: string; value: string }>;
     case "employment_chat":
     case "identity_chain_evidence":
       return [
         summary.communicationDate
-          ? { key: "communicationDate", label: "沟通日期", value: summary.communicationDate }
+          ? {
+              key: "communicationDate",
+              label: "沟通日期",
+              value: summary.communicationDate,
+            }
           : null,
         Array.isArray(summary.participants) && summary.participants.length > 0
-          ? { key: "participants", label: "参与人", value: summary.participants.join("、") }
+          ? {
+              key: "participants",
+              label: "参与人",
+              value: summary.participants.join("、"),
+            }
           : null,
         summary.taskSummary
-          ? { key: "taskSummary", label: "责任链摘要", value: summary.taskSummary }
+          ? {
+              key: "taskSummary",
+              label: "责任链摘要",
+              value: summary.taskSummary,
+            }
           : null,
         summary.relationHint
-          ? { key: "relationHint", label: "第三者身份/责任链线索", value: summary.relationHint }
+          ? {
+              key: "relationHint",
+              label: "第三者身份/责任链线索",
+              value: summary.relationHint,
+            }
           : null,
       ].filter(Boolean) as Array<{ key: string; label: string; value: string }>;
     case "payment_voucher":
       return [
         summary.paidAmount != null
-          ? { key: "paidAmount", label: "付款金额", value: `¥${formatCurrency(summary.paidAmount)}` }
+          ? {
+              key: "paidAmount",
+              label: "付款金额",
+              value: `¥${formatCurrency(summary.paidAmount)}`,
+            }
           : null,
         summary.payeeName
           ? { key: "payeeName", label: "收款人", value: summary.payeeName }
@@ -400,7 +610,11 @@ function extractSummaryFields(summary: AnyDocumentSummary | undefined) {
           ? { key: "paidAt", label: "付款日期", value: summary.paidAt }
           : null,
         summary.voucherNumber
-          ? { key: "voucherNumber", label: "凭证号", value: summary.voucherNumber }
+          ? {
+              key: "voucherNumber",
+              label: "凭证号",
+              value: summary.voucherNumber,
+            }
           : null,
         summary.paymentNote
           ? { key: "paymentNote", label: "附言", value: summary.paymentNote }
@@ -412,13 +626,25 @@ function extractSummaryFields(summary: AnyDocumentSummary | undefined) {
           ? { key: "issueDate", label: "出具日期", value: summary.issueDate }
           : null,
         summary.issuingAuthority
-          ? { key: "issuingAuthority", label: "出具机构", value: summary.issuingAuthority }
+          ? {
+              key: "issuingAuthority",
+              label: "出具机构",
+              value: summary.issuingAuthority,
+            }
           : null,
         summary.incidentSummary
-          ? { key: "incidentSummary", label: "事故摘要", value: summary.incidentSummary }
+          ? {
+              key: "incidentSummary",
+              label: "事故摘要",
+              value: summary.incidentSummary,
+            }
           : null,
         summary.liabilityHint
-          ? { key: "liabilityHint", label: "责任线索", value: summary.liabilityHint }
+          ? {
+              key: "liabilityHint",
+              label: "责任线索",
+              value: summary.liabilityHint,
+            }
           : null,
       ].filter(Boolean) as Array<{ key: string; label: string; value: string }>;
     default:
@@ -451,7 +677,9 @@ function formatAiFieldLabel(key: string) {
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-function buildStructuredAiResult(doc: ReviewDocumentItem): MaterialAiResultView | null {
+function buildStructuredAiResult(
+  doc: ReviewDocumentItem,
+): MaterialAiResultView | null {
   const summaryFields = extractSummaryFields(doc.documentSummary);
   const structuredData =
     doc.structuredData && typeof doc.structuredData === "object"
@@ -463,9 +691,13 @@ function buildStructuredAiResult(doc: ReviewDocumentItem): MaterialAiResultView 
         value: stringifyFieldValue(value),
       }))
     : [];
-  const keyFields = summaryFields.length > 0
-    ? summaryFields.map((field) => ({ label: field.label, value: field.value }))
-    : structuredFields;
+  const keyFields =
+    summaryFields.length > 0
+      ? summaryFields.map((field) => ({
+          label: field.label,
+          value: field.value,
+        }))
+      : structuredFields;
 
   if (keyFields.length === 0 && !doc.documentSummary && !structuredData) {
     return null;
@@ -473,7 +705,11 @@ function buildStructuredAiResult(doc: ReviewDocumentItem): MaterialAiResultView 
 
   const summaryText =
     doc.auditConclusion ||
-    (doc.documentSummary ? summaryFields.map((field) => `${field.label}: ${field.value}`).join("；") : undefined);
+    (doc.documentSummary
+      ? summaryFields
+          .map((field) => `${field.label}: ${field.value}`)
+          .join("；")
+      : undefined);
   const rawOutput =
     doc.documentSummary != null
       ? JSON.stringify(doc.documentSummary, null, 2)
@@ -487,19 +723,31 @@ function buildStructuredAiResult(doc: ReviewDocumentItem): MaterialAiResultView 
     confidence: doc.classification?.confidence,
     summaryText,
     keyFields,
-    anomalies: doc.classification?.errorMessage ? [doc.classification.errorMessage] : [],
+    anomalies: doc.classification?.errorMessage
+      ? [doc.classification.errorMessage]
+      : [],
     rawOutput,
   };
 }
 
-function buildLogAiResult(logs: Array<Record<string, any>>, doc: ReviewDocumentItem): MaterialAiResultView | null {
+function buildLogAiResult(
+  logs: Array<Record<string, any>>,
+  doc: ReviewDocumentItem,
+): MaterialAiResultView | null {
   if (!logs.length) return null;
 
-  const classifyLog = logs.find((log) => log.module === "taskQueue.worker.classifyMaterial");
-  const analysisLog = logs.find((log) => log.module === "fileProcessor.analyzeDocumentContent");
+  const classifyLog = logs.find(
+    (log) => log.module === "taskQueue.worker.classifyMaterial",
+  );
+  const analysisLog = logs.find(
+    (log) => log.module === "fileProcessor.analyzeDocumentContent",
+  );
   const fallbackLog = analysisLog || classifyLog || logs[0];
-  const classifyPayload = classifyLog?.response?.text ? parseJsonSafely(classifyLog.response.text) : null;
-  const analysisText = analysisLog?.response?.text || fallbackLog?.response?.text || "";
+  const classifyPayload = classifyLog?.response?.text
+    ? parseJsonSafely(classifyLog.response.text)
+    : null;
+  const analysisText =
+    analysisLog?.response?.text || fallbackLog?.response?.text || "";
   const analysisPayload = analysisText ? parseJsonSafely(analysisText) : null;
 
   const typeCandidates = [
@@ -514,12 +762,19 @@ function buildLogAiResult(logs: Array<Record<string, any>>, doc: ReviewDocumentI
     analysisPayload?.summary,
     analysisPayload?.result,
     analysisPayload?.document_summary,
-    analysisPayload?.key_information && stringifyFieldValue(analysisPayload.key_information),
+    analysisPayload?.key_information &&
+      stringifyFieldValue(analysisPayload.key_information),
   ].filter(Boolean);
   const anomalyCandidates = [
-    ...(Array.isArray(analysisPayload?.["异常指标详情"]) ? analysisPayload["异常指标详情"] : []),
-    ...(Array.isArray(analysisPayload?.anomalies) ? analysisPayload.anomalies : []),
-    ...(Array.isArray(analysisPayload?.warnings) ? analysisPayload.warnings : []),
+    ...(Array.isArray(analysisPayload?.["异常指标详情"])
+      ? analysisPayload["异常指标详情"]
+      : []),
+    ...(Array.isArray(analysisPayload?.anomalies)
+      ? analysisPayload.anomalies
+      : []),
+    ...(Array.isArray(analysisPayload?.warnings)
+      ? analysisPayload.warnings
+      : []),
   ].map((item) => stringifyFieldValue(item));
 
   const keyFields: MaterialAiField[] = [];
@@ -550,14 +805,17 @@ function buildLogAiResult(logs: Array<Record<string, any>>, doc: ReviewDocumentI
       typeof classifyPayload?.confidence === "number"
         ? classifyPayload.confidence
         : doc.classification?.confidence,
-    summaryText: summaryCandidates[0] ? String(summaryCandidates[0]) : undefined,
+    summaryText: summaryCandidates[0]
+      ? String(summaryCandidates[0])
+      : undefined,
     keyFields,
     anomalies: anomalyCandidates,
     rawOutput: analysisText || classifyLog?.response?.text || undefined,
     generatedAt: fallbackLog?.timestamp,
     logCount: logs.length,
     unknownReason:
-      classifyPayload?.materialName === "未识别" || classifyPayload?.materialId === "unknown"
+      classifyPayload?.materialName === "未识别" ||
+      classifyPayload?.materialId === "unknown"
         ? String(classifyPayload?.reason || "")
         : undefined,
   };
@@ -583,7 +841,10 @@ function buildRawText(
   return "暂无识别结果";
 }
 
-function getRecognitionStatusLabel(doc: ReviewDocumentItem, hasAiResult: boolean) {
+function getRecognitionStatusLabel(
+  doc: ReviewDocumentItem,
+  hasAiResult: boolean,
+) {
   if (doc.status === "failed") return "识别失败";
   if (doc.status === "processing") return "处理中";
   if (doc.status !== "completed") return "待处理";
@@ -594,7 +855,10 @@ function getRecognitionStatusLabel(doc: ReviewDocumentItem, hasAiResult: boolean
   return "待补识别";
 }
 
-function findStageView(stageViews: ClaimTimelineStageView[], key: ClaimTimelineStageView["key"]) {
+function findStageView(
+  stageViews: ClaimTimelineStageView[],
+  key: ClaimTimelineStageView["key"],
+) {
   return stageViews.find((stage) => stage.key === key) || null;
 }
 
@@ -604,7 +868,10 @@ function toTimestamp(value?: string) {
   return Number.isNaN(timestamp) ? 0 : timestamp;
 }
 
-function getRecordValue(record: Record<string, unknown> | undefined, keys: string[]) {
+function getRecordValue(
+  record: Record<string, unknown> | undefined,
+  keys: string[],
+) {
   if (!record) return undefined;
   for (const key of keys) {
     const value = record[key];
@@ -635,7 +902,9 @@ function getEventTimeInfo(doc: ReviewDocumentItem) {
       "encounterDate",
       "encounter_date",
     ]) ||
-    (summary && "serviceDate" in summary && typeof summary.serviceDate === "string"
+    (summary &&
+    "serviceDate" in summary &&
+    typeof summary.serviceDate === "string"
       ? summary.serviceDate
       : undefined);
 
@@ -704,7 +973,8 @@ function getEventTimeInfo(doc: ReviewDocumentItem) {
   }
 
   if (
-    (summary?.summaryType === "employment_chat" || summary?.summaryType === "identity_chain_evidence") &&
+    (summary?.summaryType === "employment_chat" ||
+      summary?.summaryType === "identity_chain_evidence") &&
     summary.communicationDate
   ) {
     return {
@@ -752,21 +1022,38 @@ export function MaterialManagementPanel({
   selectedDocumentId,
   onSelectDocument,
   onJumpTo,
-  onApproveField,
-  isFieldApproved,
+  onCorrectField,
+  isFieldCorrected,
+  getFieldDisplayValue,
+  isCaseClosed,
+  fieldCorrections,
   previewContent,
+  completeness,
+  importTaskMeta,
+  onRecoverImportTask,
+  recoveringImportTask,
 }: MaterialManagementPanelProps) {
   const [displayMode, setDisplayMode] = useState<MaterialDisplayMode>("upload");
-  const [aiResultCache, setAiResultCache] = useState<Record<string, MaterialAiResultView | null>>({});
+  const [contentTab, setContentTab] = useState<
+    "fields" | "ai" | "validation" | "raw"
+  >("fields");
+  const [editingField, setEditingField] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState<string>("");
+  const [aiResultCache, setAiResultCache] = useState<
+    Record<string, MaterialAiResultView | null>
+  >({});
   const [aiResultLoading, setAiResultLoading] = useState(false);
 
-  const normalizedDocuments = documents.map((doc) => ({
-    doc,
-    uploadSortTime: toTimestamp(doc.importedAt),
-    uploadGroupLabel: getDateGroupLabel(doc.importedAt),
-    eventTime: getEventTimeInfo(doc),
-    typeGroupLabel: doc.classification?.materialName || "未分类",
-  }));
+  const normalizedDocuments = documents
+    .filter((doc) => !!doc.fileName)
+    .map((doc) => ({
+      doc,
+      uploadSortTime: toTimestamp(doc.importedAt),
+      uploadGroupLabel: getDateGroupLabel(doc.importedAt),
+      eventTime: getEventTimeInfo(doc),
+      typeGroupLabel: doc.classification?.materialName || "未分类",
+      sourceGroupLabel: materialSourceLabel(doc.source),
+    }));
 
   const groupedDocuments = (() => {
     const groups: Record<
@@ -800,6 +1087,13 @@ export function MaterialManagementPanel({
         secondaryLabel = item.eventTime.sourceLabel;
       }
 
+      if (displayMode === "source") {
+        groupKey = item.sourceGroupLabel;
+        groupLabel = item.sourceGroupLabel;
+        sortTime = item.uploadSortTime;
+        secondaryLabel = "按材料来源分类";
+      }
+
       if (!groups[groupKey]) {
         groups[groupKey] = {
           label: groupLabel,
@@ -820,7 +1114,7 @@ export function MaterialManagementPanel({
       .map((group) => ({
         ...group,
         items: group.items.sort((left, right) => {
-          if (displayMode === "type") {
+          if (displayMode === "type" || displayMode === "source") {
             return right.uploadSortTime - left.uploadSortTime;
           }
           if (displayMode === "event") {
@@ -830,7 +1124,7 @@ export function MaterialManagementPanel({
         }),
       }))
       .sort((left, right) => {
-        if (displayMode === "type") {
+        if (displayMode === "type" || displayMode === "source") {
           return left.label.localeCompare(right.label, "zh-CN");
         }
         return right.sortTime - left.sortTime;
@@ -838,23 +1132,25 @@ export function MaterialManagementPanel({
   })();
 
   const selectedDocument =
-    documents.find((doc) => doc.documentId === selectedDocumentId) || documents[0] || null;
+    documents.find((doc) => doc.documentId === selectedDocumentId) ||
+    documents[0] ||
+    null;
   const selectedSummary = selectedDocument?.documentSummary;
-  const selectedEventTime = selectedDocument ? getEventTimeInfo(selectedDocument) : null;
+  const selectedEventTime = selectedDocument
+    ? getEventTimeInfo(selectedDocument)
+    : null;
   const summaryFields = extractSummaryFields(selectedSummary);
-  const approvedCount = selectedSummary
-    ? Object.keys(selectedSummary.sourceAnchors || {}).filter((fieldName) =>
-        isFieldApproved(selectedSummary.docId, fieldName),
+  const correctedCount = selectedDocument
+    ? summaryFields.filter((f) =>
+        isFieldCorrected(selectedDocument.documentId, f.key),
       ).length
     : 0;
-  const totalAnchorCount = selectedSummary
-    ? Object.keys(selectedSummary.sourceAnchors || {}).length
-    : summaryFields.length;
   const rawText = selectedDocument
     ? buildRawText(selectedDocument, selectedSummary, summaryFields)
     : "暂无识别结果";
-  const selectedAiResult =
-    selectedDocument ? aiResultCache[selectedDocument.documentId] ?? null : null;
+  const selectedAiResult = selectedDocument
+    ? (aiResultCache[selectedDocument.documentId] ?? null)
+    : null;
   const recognitionStatusLabel = selectedDocument
     ? getRecognitionStatusLabel(selectedDocument, Boolean(selectedAiResult))
     : "待处理";
@@ -876,7 +1172,12 @@ export function MaterialManagementPanel({
       return;
     }
 
-    if (Object.prototype.hasOwnProperty.call(aiResultCache, selectedDocument.documentId)) {
+    if (
+      Object.prototype.hasOwnProperty.call(
+        aiResultCache,
+        selectedDocument.documentId,
+      )
+    ) {
       return;
     }
 
@@ -893,7 +1194,10 @@ export function MaterialManagementPanel({
       .then((result) => {
         if (cancelled) return;
         const logs = Array.isArray(result.logs) ? result.logs : [];
-        const nextResult = buildLogAiResult(logs as Array<Record<string, any>>, selectedDocument);
+        const nextResult = buildLogAiResult(
+          logs as Array<Record<string, any>>,
+          selectedDocument,
+        );
         setAiResultCache((current) => ({
           ...current,
           [selectedDocument.documentId]: nextResult,
@@ -919,18 +1223,37 @@ export function MaterialManagementPanel({
 
   return (
     <div className="flex gap-4 h-[calc(100vh-220px)] min-h-[680px]">
-      <aside className="w-[300px] shrink-0 bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden flex flex-col">
+      <aside className="w-[260px] shrink-0 bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden flex flex-col">
         <div className="px-4 py-4 border-b border-slate-200 bg-white">
-          <p className="text-xs uppercase tracking-[0.28em] text-slate-400">Materials</p>
+          <p className="text-xs uppercase tracking-[0.28em] text-slate-400">
+            Materials
+          </p>
           <h3 className="mt-2 text-lg font-bold text-slate-900">材料管理</h3>
           <p className="mt-1 text-xs text-slate-500">
             {claim.reportNumber} · {documents.length} 份材料
           </p>
           <div className="mt-4 grid grid-cols-1 gap-2">
             {[
-              { key: "upload" as const, label: "按上传时间", desc: "默认展示方式" },
-              { key: "type" as const, label: "按材料类型", desc: "按分类聚合材料" },
-              { key: "event" as const, label: "按事件时间", desc: "按就医/事件时间聚合" },
+              {
+                key: "upload" as const,
+                label: "按上传时间",
+                desc: "默认展示方式",
+              },
+              {
+                key: "type" as const,
+                label: "按材料类型",
+                desc: "按分类聚合材料",
+              },
+              {
+                key: "event" as const,
+                label: "按事件时间",
+                desc: "按就医/事件时间聚合",
+              },
+              {
+                key: "source" as const,
+                label: "按来源",
+                desc: "区分材料提交渠道",
+              },
             ].map((mode) => (
               <button
                 key={mode.key}
@@ -948,9 +1271,52 @@ export function MaterialManagementPanel({
             ))}
           </div>
         </div>
+        {/* 完整性警告 */}
+        {completeness && completeness.missingMaterials.length > 0 && (
+          <div className="mx-3 my-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+            <p className="text-xs font-semibold text-amber-800">
+              缺失材料 ({completeness.missingMaterials.length})
+            </p>
+            <ul className="mt-1 space-y-0.5">
+              {completeness.missingMaterials.map((name) => (
+                <li key={name} className="text-[11px] text-amber-700">
+                  · {name}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {/* 批量导入任务恢复 */}
+        {importTaskMeta?.taskId && (
+          <div className="mx-3 my-2 flex items-center gap-2 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2">
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700">
+              导入任务 {importTaskMeta.taskStatus || "未知"}
+            </span>
+            <button
+              type="button"
+              onClick={onRecoverImportTask}
+              disabled={recoveringImportTask}
+              className={`text-[11px] px-2 py-1 rounded border transition-colors ${
+                recoveringImportTask
+                  ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                  : "bg-white text-indigo-700 border-indigo-200 hover:bg-indigo-50"
+              }`}
+            >
+              {recoveringImportTask ? "恢复中..." : "恢复任务"}
+            </button>
+            {importTaskMeta.postProcessedAt && (
+              <span className="text-[10px] text-slate-500 ml-auto">
+                {importTaskMeta.postProcessedAt}
+              </span>
+            )}
+          </div>
+        )}
         <div className="overflow-y-auto flex-1">
           {groupedDocuments.map((group) => (
-            <div key={group.label} className="border-b border-slate-200/70 last:border-b-0">
+            <div
+              key={group.label}
+              className="border-b border-slate-200/70 last:border-b-0"
+            >
               <div className="flex items-center justify-between px-4 pt-4 pb-1">
                 <p className="text-[11px] font-semibold tracking-[0.2em] text-slate-400">
                   {group.label}
@@ -964,7 +1330,8 @@ export function MaterialManagementPanel({
               </div>
               <div className="pb-3">
                 {group.items.map(({ doc, eventTime }, index) => {
-                  const isActive = doc.documentId === selectedDocument?.documentId;
+                  const isActive =
+                    doc.documentId === selectedDocument?.documentId;
                   return (
                     <button
                       key={doc.documentId}
@@ -980,7 +1347,9 @@ export function MaterialManagementPanel({
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
                             {group.items.length > 1 && (
-                              <span className="text-xs font-semibold text-blue-600">#{index + 1}</span>
+                              <span className="text-xs font-semibold text-blue-600">
+                                #{index + 1}
+                              </span>
                             )}
                             <p className="text-sm font-semibold text-slate-900 truncate">
                               {doc.fileName}
@@ -1009,18 +1378,31 @@ export function MaterialManagementPanel({
                         </span>
                       </div>
                       <div className="mt-3 flex items-center gap-2 flex-wrap">
-                        {displayMode !== "event" && eventTime.value !== "未识别事件时间" && (
-                          <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[11px] font-semibold">
-                            {eventTime.sourceLabel} {formatDateTime(eventTime.value)}
-                          </span>
-                        )}
+                        {displayMode !== "event" &&
+                          eventTime.value !== "未识别事件时间" && (
+                            <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[11px] font-semibold">
+                              {eventTime.sourceLabel}{" "}
+                              {formatDateTime(eventTime.value)}
+                            </span>
+                          )}
                         <span
                           className={`px-2 py-0.5 rounded-full text-[11px] font-semibold border ${confidenceTone(
                             doc.classification?.confidence,
                           )}`}
                         >
-                          置信度 {Math.round((doc.classification?.confidence || 0) * 100)}%
+                          置信度{" "}
+                          {Math.round(
+                            (doc.classification?.confidence || 0) * 100,
+                          )}
+                          %
                         </span>
+                        {displayMode !== "source" && doc.source && (
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${materialSourceTone(doc.source)}`}
+                          >
+                            {materialSourceLabel(doc.source)}
+                          </span>
+                        )}
                         {doc.duplicateWarning && (
                           <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[11px] font-semibold">
                             重复提醒
@@ -1036,14 +1418,16 @@ export function MaterialManagementPanel({
         </div>
       </aside>
 
-      <section className="flex-1 min-w-0 bg-white border border-slate-200 rounded-2xl overflow-hidden">
+      <section className="flex-1 min-w-0 bg-white border border-slate-200 rounded-2xl overflow-hidden flex flex-col">
         {selectedDocument ? (
-          <div className="h-full overflow-y-auto">
+          <div className="h-full flex flex-col overflow-hidden">
             <div className="px-6 py-5 border-b border-slate-200 bg-[linear-gradient(135deg,#f8fafc,white_55%,#eff6ff)]">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-xl font-bold text-slate-900">{selectedDocument.fileName}</h3>
+                    <h3 className="text-xl font-bold text-slate-900">
+                      {selectedDocument.fileName}
+                    </h3>
                     <span className="px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">
                       {selectedDocument.classification.materialName}
                     </span>
@@ -1052,15 +1436,21 @@ export function MaterialManagementPanel({
                         selectedDocument.classification.confidence,
                       )}`}
                     >
-                      AI {Math.round(selectedDocument.classification.confidence * 100)}%
+                      AI{" "}
+                      {Math.round(
+                        selectedDocument.classification.confidence * 100,
+                      )}
+                      %
                     </span>
                   </div>
                   <p className="mt-2 text-sm text-slate-500">
-                    {claim.insured || claim.reporter || "被保人"} · 导入时间 {formatDateTime(selectedDocument.importedAt)}
+                    {claim.insured || claim.reporter || "被保人"} · 导入时间{" "}
+                    {formatDateTime(selectedDocument.importedAt)}
                   </p>
                   {selectedEventTime && (
                     <p className="mt-1 text-sm text-slate-500">
-                      {selectedEventTime.sourceLabel} {formatDateTime(selectedEventTime.value)}
+                      {selectedEventTime.sourceLabel}{" "}
+                      {formatDateTime(selectedEventTime.value)}
                     </p>
                   )}
                 </div>
@@ -1072,9 +1462,9 @@ export function MaterialManagementPanel({
                     </p>
                   </div>
                   <div className="rounded-2xl bg-slate-50 px-4 py-3 border border-slate-200">
-                    <p className="text-xs text-slate-500">字段确认</p>
+                    <p className="text-xs text-slate-500">人工订正</p>
                     <p className="mt-1 text-sm font-bold text-slate-900">
-                      {approvedCount}/{totalAnchorCount || 0}
+                      {correctedCount > 0 ? `${correctedCount} 项` : "无"}
                     </p>
                   </div>
                   <div className="rounded-2xl bg-slate-50 px-4 py-3 border border-slate-200">
@@ -1087,258 +1477,433 @@ export function MaterialManagementPanel({
               </div>
             </div>
 
-            <div className="px-6 py-5 space-y-5">
-              <div className="rounded-2xl border border-slate-200 overflow-hidden">
-                <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-                  <span className="text-sm font-semibold text-slate-900">OCR 识别原文</span>
-                  <span className="text-xs text-slate-400">按当前结构化结果生成</span>
-                </div>
-                <pre className="px-4 py-4 text-xs leading-6 text-slate-700 whitespace-pre-wrap bg-white overflow-x-auto">
-                  {rawText}
-                </pre>
-              </div>
+            {/* Inner tab bar */}
+            <div className="px-5 py-3 border-b border-slate-200 flex items-center gap-1 bg-slate-50/50">
+              {[
+                { key: "fields" as const, label: "结构化字段" },
+                { key: "ai" as const, label: "AI 识别" },
+                { key: "validation" as const, label: "校验" },
+                { key: "raw" as const, label: "原文" },
+              ].map((tab) => (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => setContentTab(tab.key)}
+                  className={`px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    contentTab === tab.key
+                      ? "bg-white text-slate-900 shadow-sm border border-slate-200"
+                      : "text-slate-500 hover:text-slate-700 hover:bg-white/60"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
 
-              <div className="rounded-2xl border border-slate-200 overflow-hidden">
-                <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-                  <span className="text-sm font-semibold text-slate-900">结构化提取结果</span>
-                  <span className="text-xs text-slate-400">点击定位可联动右侧预览</span>
-                </div>
-                {summaryFields.length > 0 ? (
-                  <div className="divide-y divide-slate-100">
-                    {summaryFields.map((field) => {
-                      const anchor = selectedSummary?.sourceAnchors?.[field.key];
-                      const approved = isFieldApproved(selectedDocument.documentId, field.key);
+            <div className="flex-1 overflow-y-auto">
+              {/* Tab: 结构化字段 */}
+              {contentTab === "fields" && (
+                <div className="divide-y divide-slate-100">
+                  {summaryFields.length > 0 ? (
+                    summaryFields.map((field) => {
+                      // 数组字段的 key（如 diagnosis_0）在 sourceAnchors 里存的是父数组 key（如 diagnoses）
+                      const parentKeyMap: Record<string, string> = {
+                        diagnosis: "diagnoses",
+                        surgery: "surgeries",
+                        liabilityPct: "parties",
+                        breakdown: "breakdownItems",
+                      };
+                      const parentKey = Object.entries(parentKeyMap).find(
+                        ([prefix]) => field.key.startsWith(`${prefix}_`),
+                      )?.[1];
+                      const anchor =
+                        selectedSummary?.sourceAnchors?.[field.key] ??
+                        (parentKey
+                          ? selectedSummary?.sourceAnchors?.[parentKey]
+                          : undefined);
+                      const corrected = isFieldCorrected(
+                        selectedDocument.documentId,
+                        field.key,
+                      );
+                      const displayValue = getFieldDisplayValue(
+                        selectedDocument.documentId,
+                        field.key,
+                        field.value,
+                      );
+                      const correction = fieldCorrections.get(
+                        `${selectedDocument.documentId}.${field.key}`,
+                      );
+                      const isEditing =
+                        editingField ===
+                        `${selectedDocument.documentId}.${field.key}`;
+
                       return (
                         <div
                           key={field.key}
-                          className="px-4 py-4 grid grid-cols-[140px,1fr,170px] gap-4 items-center"
+                          className="px-5 py-4 hover:bg-slate-50/50 transition-colors"
                         >
-                          <div className="text-sm font-medium text-slate-500">{field.label}</div>
-                          <div className="text-sm text-slate-900 break-words">{field.value}</div>
-                          <div className="flex items-center justify-end gap-2">
-                            {anchor && (
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  onJumpTo(
-                                    {
-                                      ossUrl: selectedDocument.ossUrl,
-                                      ossKey: selectedDocument.ossKey,
-                                      fileType: selectedDocument.fileType,
-                                      fileName: selectedDocument.fileName,
-                                    },
-                                    anchor,
-                                  )
-                                }
-                                className="px-3 py-1.5 rounded-lg border border-blue-200 text-blue-700 text-xs font-semibold hover:bg-blue-50"
-                              >
-                                定位原文
-                              </button>
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-medium text-slate-400">
+                                  {field.label}
+                                </span>
+                                {corrected && (
+                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                                    已修改
+                                  </span>
+                                )}
+                              </div>
+                              {isEditing ? (
+                                <div className="mt-2 flex items-center gap-2">
+                                  <input
+                                    type="text"
+                                    value={editDraft}
+                                    onChange={(e) =>
+                                      setEditDraft(e.target.value)
+                                    }
+                                    className="flex-1 px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    autoFocus
+                                    onKeyDown={(e) => {
+                                      if (
+                                        e.key === "Enter" &&
+                                        editDraft.trim() &&
+                                        editDraft !== field.value
+                                      ) {
+                                        onCorrectField(
+                                          selectedDocument.documentId,
+                                          field.key,
+                                          field.label,
+                                          field.value,
+                                          editDraft.trim(),
+                                        );
+                                        setEditingField(null);
+                                      } else if (e.key === "Escape") {
+                                        setEditingField(null);
+                                      }
+                                    }}
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (
+                                        editDraft.trim() &&
+                                        editDraft !== field.value
+                                      ) {
+                                        onCorrectField(
+                                          selectedDocument.documentId,
+                                          field.key,
+                                          field.label,
+                                          field.value,
+                                          editDraft.trim(),
+                                        );
+                                      }
+                                      setEditingField(null);
+                                    }}
+                                    className="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700"
+                                  >
+                                    保存
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setEditingField(null)}
+                                    className="px-3 py-1.5 rounded-lg border border-slate-300 text-slate-600 text-xs font-semibold hover:bg-slate-50"
+                                  >
+                                    取消
+                                  </button>
+                                </div>
+                              ) : (
+                                <div className="mt-1.5 text-sm font-medium text-slate-900 break-words">
+                                  {displayValue}
+                                </div>
+                              )}
+                              {/* 已订正时显示原始值 */}
+                              {corrected && !isEditing && correction && (
+                                <div className="mt-1 flex items-center gap-2 text-xs text-slate-400">
+                                  <span className="line-through">
+                                    {correction.originalValue}
+                                  </span>
+                                  <span>·</span>
+                                  <span>
+                                    {new Date(
+                                      correction.correctedAt,
+                                    ).toLocaleString("zh-CN")}
+                                  </span>
+                                  <span>·</span>
+                                  <span>{correction.correctedBy}</span>
+                                </div>
+                              )}
+                            </div>
+                            {!isEditing && (
+                              <div className="flex items-center gap-2 shrink-0 pt-3">
+                                {anchor && (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      onJumpTo(
+                                        {
+                                          ossUrl: selectedDocument.ossUrl,
+                                          ossKey: selectedDocument.ossKey,
+                                          fileType: selectedDocument.fileType,
+                                          fileName: selectedDocument.fileName,
+                                        },
+                                        anchor,
+                                      )
+                                    }
+                                    className="px-3 py-1.5 rounded-lg border border-blue-200 text-blue-700 text-xs font-semibold hover:bg-blue-50"
+                                  >
+                                    定位
+                                  </button>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const editKey = `${selectedDocument.documentId}.${field.key}`;
+                                    setEditingField(editKey);
+                                    setEditDraft(displayValue);
+                                  }}
+                                  disabled={isCaseClosed}
+                                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${
+                                    isCaseClosed
+                                      ? "bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed"
+                                      : "border border-slate-300 text-slate-700 hover:bg-slate-50"
+                                  }`}
+                                  title={
+                                    isCaseClosed
+                                      ? "案件已结案，不可修改"
+                                      : "修改此字段"
+                                  }
+                                >
+                                  修改
+                                </button>
+                              </div>
                             )}
-                            <button
-                              type="button"
-                              onClick={() => onApproveField(selectedDocument.documentId, field.key)}
-                              disabled={approved}
-                              className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${
-                                approved
-                                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200 cursor-default"
-                                  : "bg-slate-900 text-white hover:bg-slate-800"
-                              }`}
-                            >
-                              {approved ? "已确认" : "确认字段"}
-                            </button>
                           </div>
                         </div>
                       );
-                    })}
-                  </div>
-                ) : (
-                  <div className="px-4 py-8 text-sm text-slate-400">暂无结构化字段</div>
-                )}
-              </div>
-
-              <div className="rounded-2xl border border-slate-200 overflow-hidden">
-                <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-                  <span className="text-sm font-semibold text-slate-900">AI 识别结果</span>
-                  {selectedAiResult?.generatedAt ? (
-                    <span className="text-xs text-slate-400">
-                      {formatDateTime(selectedAiResult.generatedAt)}
-                    </span>
+                    })
                   ) : (
-                    <span className="text-xs text-slate-400">按材料详情实时补充</span>
+                    <div className="px-5 py-12 text-sm text-slate-400 text-center">
+                      暂无结构化字段
+                    </div>
                   )}
                 </div>
-                {aiResultLoading && !selectedAiResult ? (
-                  <div className="px-4 py-8 text-sm text-slate-400">AI 日志查询中...</div>
-                ) : selectedAiResult ? (
-                  <div className="px-4 py-4 space-y-4">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span
-                        className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
-                          selectedAiResult.source === "structured"
-                            ? "bg-emerald-50 text-emerald-700"
-                            : "bg-amber-50 text-amber-700"
-                        }`}
-                      >
-                        {selectedAiResult.source === "structured"
-                          ? "已结构化入库"
-                          : "日志识别结果（未回填）"}
-                      </span>
-                      <span className="px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">
-                        {selectedAiResult.materialType}
-                      </span>
-                      {selectedAiResult.confidence !== undefined && (
+              )}
+
+              {/* Tab: AI 识别 */}
+              {contentTab === "ai" && (
+                <div className="px-5 py-5">
+                  {aiResultLoading && !selectedAiResult ? (
+                    <div className="py-12 text-sm text-slate-400 text-center">
+                      AI 日志查询中...
+                    </div>
+                  ) : selectedAiResult ? (
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span
-                          className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${confidenceTone(
-                            selectedAiResult.confidence,
-                          )}`}
+                          className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
+                            selectedAiResult.source === "structured"
+                              ? "bg-emerald-50 text-emerald-700"
+                              : "bg-amber-50 text-amber-700"
+                          }`}
                         >
-                          AI {Math.round(selectedAiResult.confidence * 100)}%
+                          {selectedAiResult.source === "structured"
+                            ? "已结构化入库"
+                            : "日志识别结果（未回填）"}
                         </span>
-                      )}
-                      {selectedAiResult.logCount ? (
-                        <span className="text-xs text-slate-400">
-                          共 {selectedAiResult.logCount} 次识别
+                        <span className="px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">
+                          {selectedAiResult.materialType}
                         </span>
+                        {selectedAiResult.confidence !== undefined && (
+                          <span
+                            className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${confidenceTone(
+                              selectedAiResult.confidence,
+                            )}`}
+                          >
+                            AI {Math.round(selectedAiResult.confidence * 100)}%
+                          </span>
+                        )}
+                        {selectedAiResult.logCount ? (
+                          <span className="text-xs text-slate-400">
+                            共 {selectedAiResult.logCount} 次识别
+                          </span>
+                        ) : null}
+                      </div>
+
+                      {selectedAiResult.summaryText ? (
+                        <div className="rounded-xl bg-slate-50 border border-slate-200 px-4 py-3">
+                          <p className="text-xs font-semibold text-slate-500">
+                            识别摘要
+                          </p>
+                          <p className="mt-2 text-sm leading-6 text-slate-800">
+                            {selectedAiResult.summaryText}
+                          </p>
+                        </div>
+                      ) : null}
+
+                      {selectedAiResult.keyFields.length > 0 ? (
+                        <div className="rounded-xl border border-slate-200 overflow-hidden">
+                          <div className="px-4 py-2.5 bg-slate-50 text-xs font-semibold text-slate-500">
+                            关键字段
+                          </div>
+                          <div className="divide-y divide-slate-100">
+                            {selectedAiResult.keyFields.map((field) => (
+                              <div
+                                key={`${field.label}:${field.value}`}
+                                className="px-4 py-3"
+                              >
+                                <div className="text-xs font-medium text-slate-400">
+                                  {field.label}
+                                </div>
+                                <div className="mt-1 text-sm text-slate-900 whitespace-pre-wrap break-words">
+                                  {field.value}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
+
+                      <div className="rounded-xl border border-slate-200 overflow-hidden">
+                        <div className="px-4 py-2.5 bg-slate-50 text-xs font-semibold text-slate-500">
+                          异常与风险提示
+                        </div>
+                        {selectedAiResult.anomalies.length > 0 ||
+                        selectedAiResult.unknownReason ? (
+                          <div className="px-4 py-3 space-y-2">
+                            {selectedAiResult.anomalies.map((item, index) => (
+                              <div
+                                key={`${item}-${index}`}
+                                className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-800"
+                              >
+                                {item}
+                              </div>
+                            ))}
+                            {selectedAiResult.unknownReason ? (
+                              <div className="rounded-lg bg-rose-50 border border-rose-200 px-3 py-2 text-sm text-rose-800">
+                                当前无匹配材料模板：
+                                {selectedAiResult.unknownReason}
+                              </div>
+                            ) : null}
+                          </div>
+                        ) : (
+                          <div className="px-4 py-3 text-sm text-slate-400">
+                            未发现异常
+                          </div>
+                        )}
+                      </div>
+
+                      {selectedAiResult.rawOutput ? (
+                        <details className="rounded-xl border border-slate-200 overflow-hidden">
+                          <summary className="px-4 py-2.5 bg-slate-50 text-xs font-semibold text-slate-500 cursor-pointer">
+                            原始 AI 输出
+                          </summary>
+                          <pre className="px-4 py-3 text-xs leading-6 text-slate-700 whitespace-pre-wrap overflow-x-auto">
+                            {selectedAiResult.rawOutput}
+                          </pre>
+                        </details>
                       ) : null}
                     </div>
-
-                    {selectedAiResult.summaryText ? (
-                      <div className="rounded-xl bg-slate-50 border border-slate-200 px-3 py-3">
-                        <p className="text-xs font-semibold text-slate-500">识别摘要</p>
-                        <p className="mt-2 text-sm leading-6 text-slate-800">
-                          {selectedAiResult.summaryText}
-                        </p>
-                      </div>
-                    ) : null}
-
-                    {selectedAiResult.keyFields.length > 0 ? (
-                      <div className="rounded-xl border border-slate-200 overflow-hidden">
-                        <div className="px-3 py-2 bg-slate-50 text-xs font-semibold text-slate-500">
-                          关键字段
-                        </div>
-                        <div className="divide-y divide-slate-100">
-                          {selectedAiResult.keyFields.map((field) => (
-                            <div
-                              key={`${field.label}:${field.value}`}
-                              className="grid grid-cols-[140px,1fr] gap-4 px-3 py-3"
-                            >
-                              <div className="text-sm font-medium text-slate-500">{field.label}</div>
-                              <div className="text-sm text-slate-900 whitespace-pre-wrap break-words">
-                                {field.value}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ) : null}
-
-                    <div className="rounded-xl border border-slate-200 overflow-hidden">
-                      <div className="px-3 py-2 bg-slate-50 text-xs font-semibold text-slate-500">
-                        异常与风险提示
-                      </div>
-                      {selectedAiResult.anomalies.length > 0 || selectedAiResult.unknownReason ? (
-                        <div className="px-3 py-3 space-y-2">
-                          {selectedAiResult.anomalies.map((item, index) => (
-                            <div
-                              key={`${item}-${index}`}
-                              className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-800"
-                            >
-                              {item}
-                            </div>
-                          ))}
-                          {selectedAiResult.unknownReason ? (
-                            <div className="rounded-lg bg-rose-50 border border-rose-200 px-3 py-2 text-sm text-rose-800">
-                              当前无匹配材料模板：{selectedAiResult.unknownReason}
-                            </div>
-                          ) : null}
-                        </div>
-                      ) : (
-                        <div className="px-3 py-3 text-sm text-slate-400">未发现异常</div>
-                      )}
+                  ) : (
+                    <div className="py-12 text-sm text-slate-400 text-center">
+                      暂无 AI 识别结果
                     </div>
+                  )}
+                </div>
+              )}
 
-                    {selectedAiResult.rawOutput ? (
-                      <details className="rounded-xl border border-slate-200 overflow-hidden">
-                        <summary className="px-3 py-2 bg-slate-50 text-xs font-semibold text-slate-500 cursor-pointer">
-                          原始 AI 输出
-                        </summary>
-                        <pre className="px-3 py-3 text-xs leading-6 text-slate-700 whitespace-pre-wrap overflow-x-auto">
-                          {selectedAiResult.rawOutput}
-                        </pre>
-                      </details>
-                    ) : null}
+              {/* Tab: 校验 */}
+              {contentTab === "validation" && (
+                <div className="px-5 py-5 space-y-4">
+                  <div className="rounded-xl border border-slate-200 overflow-hidden">
+                    <div className="px-4 py-2.5 bg-slate-50 text-xs font-semibold text-slate-500">
+                      交叉校验
+                    </div>
+                    <div className="divide-y divide-slate-100">
+                      {[
+                        {
+                          label: "分类结果",
+                          value: selectedDocument.classification.materialName,
+                        },
+                        {
+                          label: "分类置信度",
+                          value: `${Math.round(selectedDocument.classification.confidence * 100)}%`,
+                        },
+                        {
+                          label: "重复文件提醒",
+                          value: selectedDocument.duplicateWarning
+                            ? `${selectedDocument.duplicateWarning.message} (${Math.round(selectedDocument.duplicateWarning.similarity * 100)}%)`
+                            : "未发现",
+                        },
+                        {
+                          label: "识别异常",
+                          value:
+                            selectedDocument.classification.errorMessage ||
+                            "无",
+                        },
+                      ].map((item) => (
+                        <div
+                          key={item.label}
+                          className="px-4 py-3 flex items-start justify-between gap-4"
+                        >
+                          <span className="text-sm text-slate-500">
+                            {item.label}
+                          </span>
+                          <span className="text-sm text-slate-900 text-right">
+                            {item.value}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                ) : (
-                  <div className="px-4 py-8 text-sm text-slate-400">暂无 AI 识别结果</div>
-                )}
-              </div>
+                  {selectedDocument.duplicateWarning && (
+                    <div className="rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+                      检测到疑似重复材料，建议重点核对文件内容与上传时间。
+                    </div>
+                  )}
+                  {selectedDocument.status === "failed" && (
+                    <div className="rounded-lg bg-rose-50 border border-rose-200 px-4 py-3 text-sm text-rose-800">
+                      当前材料解析失败，需结合右侧原文进行人工核实。
+                    </div>
+                  )}
+                </div>
+              )}
 
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-                <div className="rounded-2xl border border-slate-200 p-4">
-                  <p className="text-sm font-semibold text-slate-900">交叉校验</p>
-                  <div className="mt-4 space-y-3 text-sm">
-                    <div className="flex items-start justify-between gap-4">
-                      <span className="text-slate-500">分类结果</span>
-                      <span className="text-right text-slate-900">
-                        {selectedDocument.classification.materialName}
+              {/* Tab: 原文 */}
+              {contentTab === "raw" && (
+                <div className="px-5 py-5">
+                  <div className="rounded-xl border border-slate-200 overflow-hidden">
+                    <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                      <span className="text-xs font-semibold text-slate-500">
+                        OCR 识别原文
+                      </span>
+                      <span className="text-xs text-slate-400">
+                        按当前结构化结果生成
                       </span>
                     </div>
-                    <div className="flex items-start justify-between gap-4">
-                      <span className="text-slate-500">分类置信度</span>
-                      <span className="text-right text-slate-900">
-                        {Math.round(selectedDocument.classification.confidence * 100)}%
-                      </span>
-                    </div>
-                    <div className="flex items-start justify-between gap-4">
-                      <span className="text-slate-500">重复文件提醒</span>
-                      <span className="text-right text-slate-900">
-                        {selectedDocument.duplicateWarning
-                          ? `${selectedDocument.duplicateWarning.message} (${Math.round(
-                              selectedDocument.duplicateWarning.similarity * 100,
-                            )}%)`
-                          : "未发现"}
-                      </span>
-                    </div>
-                    <div className="flex items-start justify-between gap-4">
-                      <span className="text-slate-500">识别异常</span>
-                      <span className="text-right text-slate-900">
-                        {selectedDocument.classification.errorMessage || "无"}
-                      </span>
-                    </div>
+                    <pre className="px-4 py-4 text-xs leading-6 text-slate-700 whitespace-pre-wrap bg-white overflow-x-auto max-h-[60vh]">
+                      {rawText}
+                    </pre>
                   </div>
                 </div>
-
-                <div className="rounded-2xl border border-slate-200 p-4">
-                  <p className="text-sm font-semibold text-slate-900">处理提示</p>
-                  <div className="mt-4 space-y-3">
-                    <div className="rounded-xl bg-blue-50 border border-blue-200 px-3 py-2 text-sm text-blue-800">
-                      当前界面沿用现有材料解析与预览能力，仅替换为附件中的材料管理布局。
-                    </div>
-                    {selectedDocument.duplicateWarning && (
-                      <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-800">
-                        检测到疑似重复材料，建议重点核对文件内容与上传时间。
-                      </div>
-                    )}
-                    {selectedDocument.status === "failed" && (
-                      <div className="rounded-xl bg-rose-50 border border-rose-200 px-3 py-2 text-sm text-rose-800">
-                        当前材料解析失败，需结合右侧原文进行人工核实。
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         ) : (
-          <div className="h-full flex items-center justify-center text-slate-400">暂无材料</div>
+          <div className="h-full flex items-center justify-center text-slate-400">
+            暂无材料
+          </div>
         )}
       </section>
 
       <section className="w-[420px] shrink-0 bg-white border border-slate-200 rounded-2xl overflow-hidden">
         <div className="px-4 py-4 border-b border-slate-200">
-          <p className="text-xs uppercase tracking-[0.28em] text-slate-400">Preview</p>
-          <h3 className="mt-2 text-lg font-bold text-slate-900">原始材料预览</h3>
+          <p className="text-xs uppercase tracking-[0.28em] text-slate-400">
+            Preview
+          </p>
+          <h3 className="mt-2 text-lg font-bold text-slate-900">
+            原始材料预览
+          </h3>
         </div>
         <div className="h-[calc(100%-88px)]">{previewContent}</div>
       </section>
@@ -1365,17 +1930,30 @@ export function ManualProcessingPanel({
     <div className="grid grid-cols-1 lg:grid-cols-[320px,1fr] gap-6">
       <aside className="bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden">
         <div className="px-5 py-4 border-b border-slate-200 bg-white">
-          <p className="text-xs uppercase tracking-[0.28em] text-slate-400">Worklist</p>
+          <p className="text-xs uppercase tracking-[0.28em] text-slate-400">
+            Worklist
+          </p>
           <h2 className="mt-2 text-lg font-bold text-slate-900">人工处理</h2>
-          <p className="mt-1 text-xs text-slate-500">共 {tasks.length} 个工单</p>
+          <p className="mt-1 text-xs text-slate-500">
+            共 {tasks.length} 个工单
+          </p>
         </div>
         <div className="max-h-[calc(100vh-220px)] overflow-y-auto">
           {[
             { title: "待处理", items: pendingTasks, accent: "text-rose-600" },
-            { title: "已完成", items: completedTasks, accent: "text-slate-500" },
+            {
+              title: "已完成",
+              items: completedTasks,
+              accent: "text-slate-500",
+            },
           ].map((group) => (
-            <div key={group.title} className="border-b border-slate-200 last:border-b-0">
-              <div className={`px-5 pt-4 pb-2 text-[11px] font-semibold tracking-[0.2em] ${group.accent}`}>
+            <div
+              key={group.title}
+              className="border-b border-slate-200 last:border-b-0"
+            >
+              <div
+                className={`px-5 pt-4 pb-2 text-[11px] font-semibold tracking-[0.2em] ${group.accent}`}
+              >
                 {group.title} ({group.items.length})
               </div>
               {group.items.length > 0 ? (
@@ -1387,14 +1965,20 @@ export function ManualProcessingPanel({
                       type="button"
                       onClick={() => onSelectTask(task)}
                       className={`w-full text-left px-5 py-4 border-l-4 transition-colors ${
-                        active ? "bg-white border-l-blue-600" : "border-l-transparent hover:bg-white/70"
+                        active
+                          ? "bg-white border-l-blue-600"
+                          : "border-l-transparent hover:bg-white/70"
                       }`}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="font-mono text-xs text-slate-400">{task.reportNumber}</span>
-                            <span className="text-xs font-semibold text-slate-700">{task.priority}优先级</span>
+                            <span className="font-mono text-xs text-slate-400">
+                              {task.reportNumber}
+                            </span>
+                            <span className="text-xs font-semibold text-slate-700">
+                              {task.priority}优先级
+                            </span>
                           </div>
                           <p className="mt-2 text-sm font-semibold text-slate-900 truncate">
                             {task.materialName}
@@ -1429,7 +2013,9 @@ export function ManualProcessingPanel({
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-xl font-bold text-slate-900">{selectedTask.materialName}</h3>
+                    <h3 className="text-xl font-bold text-slate-900">
+                      {selectedTask.materialName}
+                    </h3>
                     <span
                       className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${taskTypeTone(
                         selectedTask,
@@ -1439,7 +2025,8 @@ export function ManualProcessingPanel({
                     </span>
                   </div>
                   <p className="mt-2 text-sm text-slate-500">
-                    工单 {selectedTask.id} · 创建于 {formatDateTime(selectedTask.createdAt)}
+                    工单 {selectedTask.id} · 创建于{" "}
+                    {formatDateTime(selectedTask.createdAt)}
                   </p>
                 </div>
                 <div className="grid grid-cols-3 gap-3 min-w-[360px]">
@@ -1457,7 +2044,9 @@ export function ManualProcessingPanel({
                   </div>
                   <div className="rounded-2xl bg-slate-50 px-4 py-3 border border-slate-200">
                     <p className="text-xs text-slate-500">处理状态</p>
-                    <p className="mt-1 text-base font-bold text-slate-900">{selectedTask.status}</p>
+                    <p className="mt-1 text-base font-bold text-slate-900">
+                      {selectedTask.status}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -1466,19 +2055,27 @@ export function ManualProcessingPanel({
             <div className="px-6 py-5 space-y-5">
               <div className="grid grid-cols-1 xl:grid-cols-[260px,1fr] gap-5">
                 <div className="rounded-2xl border border-slate-200 p-4">
-                  <p className="text-sm font-semibold text-slate-900">关联材料</p>
+                  <p className="text-sm font-semibold text-slate-900">
+                    关联材料
+                  </p>
                   <div className="mt-4 space-y-3 text-sm">
                     <div className="flex items-start justify-between gap-4">
                       <span className="text-slate-500">案件号</span>
-                      <span className="text-right text-slate-900">{selectedTask.reportNumber}</span>
+                      <span className="text-right text-slate-900">
+                        {selectedTask.reportNumber}
+                      </span>
                     </div>
                     <div className="flex items-start justify-between gap-4">
                       <span className="text-slate-500">材料 ID</span>
-                      <span className="text-right text-slate-900">{selectedTask.materialId}</span>
+                      <span className="text-right text-slate-900">
+                        {selectedTask.materialId}
+                      </span>
                     </div>
                     <div className="flex items-start justify-between gap-4">
                       <span className="text-slate-500">创建人</span>
-                      <span className="text-right text-slate-900">{selectedTask.createdBy}</span>
+                      <span className="text-right text-slate-900">
+                        {selectedTask.createdBy}
+                      </span>
                     </div>
                     <div className="flex items-start justify-between gap-4">
                       <span className="text-slate-500">当前处理人</span>
@@ -1490,7 +2087,9 @@ export function ManualProcessingPanel({
                 </div>
 
                 <div className="rounded-2xl border border-slate-200 p-4">
-                  <p className="text-sm font-semibold text-slate-900">处理说明</p>
+                  <p className="text-sm font-semibold text-slate-900">
+                    处理说明
+                  </p>
                   <div className="mt-4 space-y-3">
                     <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-800">
                       当前界面沿用现有工单保存逻辑，仅迁移为附件中的人工处理布局。
@@ -1502,7 +2101,8 @@ export function ManualProcessingPanel({
                     )}
                     {!selectedTask.aiErrorMessage && (
                       <div className="rounded-xl bg-slate-50 border border-slate-200 px-3 py-2 text-sm text-slate-700">
-                        当前工单主要因 AI 识别置信度低于阈值，需要人工补录或确认识别结果。
+                        当前工单主要因 AI
+                        识别置信度低于阈值，需要人工补录或确认识别结果。
                       </div>
                     )}
                   </div>
@@ -1512,7 +2112,9 @@ export function ManualProcessingPanel({
               {selectedTask.aiExtractedData && (
                 <div className="rounded-2xl border border-slate-200 overflow-hidden">
                   <div className="px-4 py-3 bg-slate-50 border-b border-slate-200">
-                    <span className="text-sm font-semibold text-slate-900">AI 识别结果</span>
+                    <span className="text-sm font-semibold text-slate-900">
+                      AI 识别结果
+                    </span>
                   </div>
                   <pre className="px-4 py-4 text-xs leading-6 text-slate-700 whitespace-pre-wrap overflow-x-auto">
                     {JSON.stringify(selectedTask.aiExtractedData, null, 2)}
@@ -1522,7 +2124,9 @@ export function ManualProcessingPanel({
 
               <div className="rounded-2xl border border-slate-200 overflow-hidden">
                 <div className="px-4 py-3 bg-slate-50 border-b border-slate-200">
-                  <span className="text-sm font-semibold text-slate-900">人工处理</span>
+                  <span className="text-sm font-semibold text-slate-900">
+                    人工处理
+                  </span>
                 </div>
                 <div className="p-4 space-y-4">
                   <div>
@@ -1531,7 +2135,9 @@ export function ManualProcessingPanel({
                     </label>
                     <textarea
                       value={manualInputText}
-                      onChange={(event) => onManualInputTextChange(event.target.value)}
+                      onChange={(event) =>
+                        onManualInputTextChange(event.target.value)
+                      }
                       className="w-full h-56 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-mono text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -1541,7 +2147,9 @@ export function ManualProcessingPanel({
                     </label>
                     <textarea
                       value={manualReviewNotes}
-                      onChange={(event) => onManualReviewNotesChange(event.target.value)}
+                      onChange={(event) =>
+                        onManualReviewNotesChange(event.target.value)
+                      }
                       className="w-full h-28 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="记录人工核查结论、修正原因和特殊说明..."
                     />
@@ -1573,7 +2181,9 @@ export function ManualProcessingPanel({
             <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 text-2xl">
               ▣
             </div>
-            <h3 className="mt-4 text-lg font-semibold text-slate-900">选择一个工单开始处理</h3>
+            <h3 className="mt-4 text-lg font-semibold text-slate-900">
+              选择一个工单开始处理
+            </h3>
             <p className="mt-2 text-sm text-slate-500">
               左侧列表已切换为附件中的人工处理结构，保存仍使用现有工单接口。
             </p>
@@ -1605,11 +2215,21 @@ export function StageDecisionPanel({
     ? (damageReport.items as Array<Record<string, unknown>>)
     : [];
   const totalClaimed =
-    coverageResults.reduce((sum, item) => sum + Number(item.claimedAmount || 0), 0) ||
-    Number((damageReport?.subTotal as number) || claim.claimAmount || 0);
+    coverageResults.reduce(
+      (sum, item) => sum + Number(item.claimedAmount || 0),
+      0,
+    ) || Number((damageReport?.subTotal as number) || claim.claimAmount || 0);
   const totalApproved =
-    coverageResults.reduce((sum, item) => sum + Number(item.approvedAmount || 0), 0) ||
-    Number((damageReport?.finalAmount as number) || reviewResult?.amount || claim.approvedAmount || 0);
+    coverageResults.reduce(
+      (sum, item) => sum + Number(item.approvedAmount || 0),
+      0,
+    ) ||
+    Number(
+      (damageReport?.finalAmount as number) ||
+        reviewResult?.amount ||
+        claim.approvedAmount ||
+        0,
+    );
   const totalReduced = Math.max(totalClaimed - totalApproved, 0);
 
   if (mode === "liability") {
@@ -1639,16 +2259,25 @@ export function StageDecisionPanel({
     return (
       <div className="grid grid-cols-1 xl:grid-cols-[280px,1fr] gap-5">
         <aside className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-          <p className="text-xs uppercase tracking-[0.28em] text-slate-400">Eligibility</p>
+          <p className="text-xs uppercase tracking-[0.28em] text-slate-400">
+            Eligibility
+          </p>
           <h3 className="mt-2 text-lg font-bold text-slate-900">定责</h3>
           <div className="mt-5 space-y-3">
             {liabilityCards.map((item) => (
-              <div key={item.label} className="rounded-2xl bg-white border border-slate-200 px-4 py-3">
+              <div
+                key={item.label}
+                className="rounded-2xl bg-white border border-slate-200 px-4 py-3"
+              >
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-sm text-slate-500">{item.label}</span>
-                  <span className="text-sm font-semibold text-slate-900">{item.value}</span>
+                  <span className="text-sm font-semibold text-slate-900">
+                    {item.value}
+                  </span>
                 </div>
-                <p className="mt-2 text-xs text-slate-400 leading-5">{item.note}</p>
+                <p className="mt-2 text-xs text-slate-400 leading-5">
+                  {item.note}
+                </p>
               </div>
             ))}
           </div>
@@ -1657,21 +2286,28 @@ export function StageDecisionPanel({
         <section className="space-y-5">
           <div className="rounded-2xl border border-slate-200 overflow-hidden">
             <div className="px-5 py-4 bg-slate-50 border-b border-slate-200">
-              <span className="text-sm font-semibold text-slate-900">定责摘要</span>
+              <span className="text-sm font-semibold text-slate-900">
+                定责摘要
+              </span>
             </div>
             <div className="p-5 space-y-4">
               <div className="rounded-2xl bg-blue-50 border border-blue-200 px-4 py-3">
                 <div className="text-sm font-semibold text-blue-900">
-                  {reviewResult?.eligibility?.eligible ? "ELIGIBILITY 通过" : "等待人工确认"}
+                  {reviewResult?.eligibility?.eligible
+                    ? "ELIGIBILITY 通过"
+                    : "等待人工确认"}
                 </div>
                 <div className="mt-1 text-sm text-blue-800">
-                  {reviewResult?.reasoning || "当前暂无自动定责摘要，可补充人工处理说明。"}
+                  {reviewResult?.reasoning ||
+                    "当前暂无自动定责摘要，可补充人工处理说明。"}
                 </div>
               </div>
               {reviewResult?.eligibility?.matchedRules &&
                 reviewResult.eligibility.matchedRules.length > 0 && (
                   <div>
-                    <p className="text-sm font-semibold text-slate-900 mb-3">规则命中</p>
+                    <p className="text-sm font-semibold text-slate-900 mb-3">
+                      规则命中
+                    </p>
                     <div className="flex flex-wrap gap-2">
                       {reviewResult.eligibility.matchedRules.map((rule) => (
                         <span
@@ -1686,14 +2322,24 @@ export function StageDecisionPanel({
                 )}
               {groupedManualReviewReasons.length > 0 && (
                 <div>
-                  <p className="text-sm font-semibold text-slate-900 mb-3">人工复核原因</p>
+                  <p className="text-sm font-semibold text-slate-900 mb-3">
+                    人工复核原因
+                  </p>
                   <div className="space-y-3">
                     {groupedManualReviewReasons.map((group) => (
-                      <div key={group.stage} className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-                        <p className="text-sm font-semibold text-amber-800">{group.label}</p>
+                      <div
+                        key={group.stage}
+                        className="rounded-2xl border border-amber-200 bg-amber-50 p-4"
+                      >
+                        <p className="text-sm font-semibold text-amber-800">
+                          {group.label}
+                        </p>
                         <div className="mt-2 space-y-2">
                           {group.reasons.map((reason) => (
-                            <div key={`${group.stage}-${reason.code}`} className="rounded-xl bg-white/80 px-3 py-2 text-sm text-amber-900">
+                            <div
+                              key={`${group.stage}-${reason.code}`}
+                              className="rounded-xl bg-white/80 px-3 py-2 text-sm text-amber-900"
+                            >
                               {reason.message}
                             </div>
                           ))}
@@ -1708,7 +2354,9 @@ export function StageDecisionPanel({
 
           <div className="rounded-2xl border border-slate-200 overflow-hidden">
             <div className="px-5 py-4 bg-slate-50 border-b border-slate-200">
-              <span className="text-sm font-semibold text-slate-900">人工处理备注</span>
+              <span className="text-sm font-semibold text-slate-900">
+                人工处理备注
+              </span>
             </div>
             <div className="p-5">
               <textarea
@@ -1739,15 +2387,21 @@ export function StageDecisionPanel({
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
           <p className="text-xs text-slate-500">申请金额</p>
-          <p className="mt-2 text-2xl font-bold text-slate-900">¥{formatCurrency(totalClaimed)}</p>
+          <p className="mt-2 text-2xl font-bold text-slate-900">
+            ¥{formatCurrency(totalClaimed)}
+          </p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
           <p className="text-xs text-slate-500">认定金额</p>
-          <p className="mt-2 text-2xl font-bold text-emerald-700">¥{formatCurrency(totalApproved)}</p>
+          <p className="mt-2 text-2xl font-bold text-emerald-700">
+            ¥{formatCurrency(totalApproved)}
+          </p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
           <p className="text-xs text-slate-500">扣减金额</p>
-          <p className="mt-2 text-2xl font-bold text-rose-700">¥{formatCurrency(totalReduced)}</p>
+          <p className="mt-2 text-2xl font-bold text-rose-700">
+            ¥{formatCurrency(totalReduced)}
+          </p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
           <p className="text-xs text-slate-500">阶段状态</p>
@@ -1755,7 +2409,8 @@ export function StageDecisionPanel({
             {assessmentStage?.summary || "待处理"}
           </p>
           <p className="mt-1 text-xs text-slate-400">
-            {assessmentStage?.methodLabel || "待处理"} · {assessmentStage?.displayTime || "待处理"}
+            {assessmentStage?.methodLabel || "待处理"} ·{" "}
+            {assessmentStage?.displayTime || "待处理"}
           </p>
         </div>
       </div>
@@ -1763,7 +2418,9 @@ export function StageDecisionPanel({
       <div className="rounded-2xl border border-slate-200 overflow-hidden">
         <div className="px-5 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
           <span className="text-sm font-semibold text-slate-900">定损明细</span>
-          <span className="text-xs text-slate-400">参考附件右侧定责定损布局</span>
+          <span className="text-xs text-slate-400">
+            参考附件右侧定责定损布局
+          </span>
         </div>
         {coverageResults.length > 0 ? (
           <div className="divide-y divide-slate-100">
@@ -1771,8 +2428,12 @@ export function StageDecisionPanel({
               <div key={`${item.coverageCode}-${index}`} className="px-5 py-4">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-sm font-semibold text-slate-900">{item.coverageCode}</p>
-                    <p className="mt-1 text-xs text-slate-500">状态：{item.status || "待确认"}</p>
+                    <p className="text-sm font-semibold text-slate-900">
+                      {item.coverageCode}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      状态：{item.status || "待确认"}
+                    </p>
                   </div>
                   <div className="text-right">
                     <p className="text-xs text-slate-500">认定金额</p>
@@ -1782,9 +2443,19 @@ export function StageDecisionPanel({
                   </div>
                 </div>
                 <div className="mt-3 grid grid-cols-2 lg:grid-cols-4 gap-3 text-xs text-slate-500">
-                  <div>申请金额：¥{formatCurrency(item.claimedAmount || 0)}</div>
-                  <div>赔付比例：{((item.reimbursementRatio || 0) * 100).toFixed(0)}%</div>
-                  <div>保额上限：{item.sumInsured != null ? `¥${formatCurrency(item.sumInsured)}` : "不限"}</div>
+                  <div>
+                    申请金额：¥{formatCurrency(item.claimedAmount || 0)}
+                  </div>
+                  <div>
+                    赔付比例：
+                    {((item.reimbursementRatio || 0) * 100).toFixed(0)}%
+                  </div>
+                  <div>
+                    保额上限：
+                    {item.sumInsured != null
+                      ? `¥${formatCurrency(item.sumInsured)}`
+                      : "不限"}
+                  </div>
                   <div>责任编码：{item.coverageCode}</div>
                 </div>
               </div>
@@ -1793,10 +2464,17 @@ export function StageDecisionPanel({
         ) : damageReportItems.length > 0 ? (
           <div className="divide-y divide-slate-100">
             {damageReportItems.map((item, index) => (
-              <div key={`${item.id || index}`} className="px-5 py-4 flex items-center justify-between gap-4">
+              <div
+                key={`${item.id || index}`}
+                className="px-5 py-4 flex items-center justify-between gap-4"
+              >
                 <div>
-                  <p className="text-sm font-semibold text-slate-900">{String(item.itemName || `项目 ${index + 1}`)}</p>
-                  <p className="mt-1 text-xs text-slate-500">{String(item.basis || "按已有报告结果展示")}</p>
+                  <p className="text-sm font-semibold text-slate-900">
+                    {String(item.itemName || `项目 ${index + 1}`)}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {String(item.basis || "按已有报告结果展示")}
+                  </p>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-slate-500">核定金额</p>
@@ -1816,7 +2494,9 @@ export function StageDecisionPanel({
 
       <div className="rounded-2xl border border-slate-200 overflow-hidden">
         <div className="px-5 py-4 bg-slate-50 border-b border-slate-200">
-          <span className="text-sm font-semibold text-slate-900">人工处理备注</span>
+          <span className="text-sm font-semibold text-slate-900">
+            人工处理备注
+          </span>
         </div>
         <div className="p-5">
           <textarea
@@ -1837,6 +2517,154 @@ export function StageDecisionPanel({
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ============ 校验失败操作面板（介入点2） ============
+
+interface ValidationFailurePanelProps {
+  intervention: InterventionInstance;
+  onOverride: (reason: string) => void;
+  onRequestReupload: (materialIds: string[]) => void;
+}
+
+export function ValidationFailurePanel({
+  intervention,
+  onOverride,
+  onRequestReupload,
+}: ValidationFailurePanelProps) {
+  const [overrideReason, setOverrideReason] = useState("");
+  const [selectedMaterialIds, setSelectedMaterialIds] = useState<string[]>([]);
+  const [mode, setMode] = useState<"initial" | "override" | "reupload">(
+    "initial",
+  );
+
+  const reason = intervention.reason;
+
+  return (
+    <div className="bg-white border border-purple-200 rounded-lg p-5 space-y-4">
+      <div className="flex items-center gap-2">
+        <div className="w-2 h-2 rounded-full bg-purple-500" />
+        <h3 className="text-sm font-bold text-purple-900">校验规则不通过</h3>
+      </div>
+
+      {/* 规则信息 */}
+      <div className="bg-purple-50 rounded-lg p-4 space-y-2">
+        <div className="text-sm text-purple-800 font-medium">
+          规则: {reason?.sourceRuleName || reason?.sourceRuleId || "未知"}
+        </div>
+        <div className="text-sm text-purple-700">
+          {reason?.detail || reason?.summary}
+        </div>
+        {/* 字段对比 */}
+        {(reason?.leftValue || reason?.rightValue) && (
+          <div className="flex items-center gap-4 mt-2 text-xs">
+            <div className="flex-1 bg-white rounded px-3 py-2 border border-purple-100">
+              <span className="text-gray-500">左字段值: </span>
+              <span className="font-medium text-gray-900">
+                {reason.leftValue || "N/A"}
+              </span>
+            </div>
+            <span className="text-purple-400 font-bold">≠</span>
+            <div className="flex-1 bg-white rounded px-3 py-2 border border-purple-100">
+              <span className="text-gray-500">右字段值: </span>
+              <span className="font-medium text-gray-900">
+                {reason.rightValue || "N/A"}
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 操作选择 */}
+      {mode === "initial" && (
+        <div className="flex gap-3">
+          <button
+            onClick={() => setMode("override")}
+            className="flex-1 px-4 py-2 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-sm font-medium hover:bg-amber-100"
+          >
+            放行（人工判断通过）
+          </button>
+          <button
+            onClick={() => setMode("reupload")}
+            className="flex-1 px-4 py-2 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-sm font-medium hover:bg-blue-100"
+          >
+            下发重新上传
+          </button>
+        </div>
+      )}
+
+      {/* 放行表单 */}
+      {mode === "override" && (
+        <div className="space-y-3">
+          <label className="block text-xs font-medium text-gray-700">
+            放行理由（必填）
+          </label>
+          <textarea
+            value={overrideReason}
+            onChange={(e) => setOverrideReason(e.target.value)}
+            placeholder="请说明放行理由，例如：经核实，两处姓名因简繁体差异造成不一致，实为同一人..."
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none h-20 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={() => setMode("initial")}
+              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200"
+            >
+              取消
+            </button>
+            <button
+              onClick={() => onOverride(overrideReason)}
+              disabled={!overrideReason.trim()}
+              className="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 disabled:opacity-50"
+            >
+              确认放行
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 重传表单 */}
+      {mode === "reupload" && (
+        <div className="space-y-3">
+          <label className="block text-xs font-medium text-gray-700">
+            选择需要重新上传的材料
+          </label>
+          {(intervention.validationRuleIds || []).map((ruleId) => (
+            <label key={ruleId} className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={selectedMaterialIds.includes(ruleId)}
+                onChange={(e) =>
+                  setSelectedMaterialIds((prev) =>
+                    e.target.checked
+                      ? [...prev, ruleId]
+                      : prev.filter((id) => id !== ruleId),
+                  )
+                }
+                className="rounded border-gray-300"
+              />
+              {ruleId}
+            </label>
+          ))}
+          <div className="flex gap-2">
+            <button
+              onClick={() => setMode("initial")}
+              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200"
+            >
+              取消
+            </button>
+            <button
+              onClick={() => onRequestReupload(selectedMaterialIds)}
+              disabled={selectedMaterialIds.length === 0}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+            >
+              下发重传通知
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

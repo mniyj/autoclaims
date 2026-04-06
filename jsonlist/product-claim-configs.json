@@ -11,6 +11,28 @@
     ]
   },
   {
+    "productCode": "ZA-002",
+    "responsibilityConfigs": [
+      {
+        "responsibilityId": "resp-2",
+        "claimItemIds": [
+          "item-1"
+        ]
+      }
+    ]
+  },
+  {
+    "productCode": "ZA-003",
+    "responsibilityConfigs": [
+      {
+        "responsibilityId": "resp-3",
+        "claimItemIds": [
+          "item-1"
+        ]
+      }
+    ]
+  },
+  {
     "productCode": "PROD001",
     "responsibilityConfigs": [
       {
@@ -83,6 +105,69 @@
           "mat-64",
           "mat-65",
           "mat-66"
+        ]
+      },
+      {
+        "responsibilityId": "resp-20",
+        "claimItemIds": [
+          "mat-43",
+          "mat-44",
+          "mat-45",
+          "mat-46",
+          "mat-49",
+          "mat-50",
+          "mat-52",
+          "mat-57",
+          "mat-58",
+          "mat-64",
+          "mat-65",
+          "mat-66"
+        ]
+      },
+      {
+        "responsibilityId": "resp-21",
+        "claimItemIds": [
+          "mat-43",
+          "mat-44",
+          "mat-45",
+          "mat-46",
+          "mat-52",
+          "mat-57",
+          "mat-64",
+          "mat-65"
+        ]
+      },
+      {
+        "responsibilityId": "resp-22",
+        "claimItemIds": [
+          "mat-43",
+          "mat-44",
+          "mat-45",
+          "mat-46",
+          "mat-49",
+          "mat-50",
+          "mat-52",
+          "mat-57",
+          "mat-58",
+          "mat-64",
+          "mat-65",
+          "mat-66"
+        ]
+      },
+      {
+        "responsibilityId": "resp-23",
+        "claimItemIds": [
+          "mat-43",
+          "mat-44",
+          "mat-45",
+          "mat-46",
+          "mat-49",
+          "mat-50",
+          "mat-52",
+          "mat-57",
+          "mat-58",
+          "mat-64",
+          "mat-65"
         ]
       }
     ]

@@ -2808,5 +2808,314 @@
     "rateTableFile": "众安互联网团体门诊急诊医疗保险费率表.pdf",
     "productDescriptionFile": "",
     "cashValueTableFile": ""
+  },
+  {
+    "productCode": "SUN-EML-BASE-2022",
+    "regulatoryName": "阳光财产保险工程机械设备险条款",
+    "companyName": "阳光财险",
+    "version": "1.0",
+    "salesRegions": "全国（不含港澳台）",
+    "effectiveDate": "2022-01-01",
+    "discontinuationDate": null,
+    "status": "生效",
+    "primaryCategory": "财产保险",
+    "secondaryCategory": "工程机械保险",
+    "primaryCategoryCode": "F",
+    "secondaryCategoryCode": "F05",
+    "racewayId": "F0501",
+    "racewayName": "工程机械设备险",
+    "clauseType": "主险",
+    "operator": "核保部",
+    "coverageDetails": [],
+    "coveragePlans": [
+      {
+        "planType": "标准版",
+        "annualLimit": 0,
+        "guaranteedRenewalYears": 0,
+        "coverageDetails": [
+          {
+            "mandatory": true,
+            "item_code": "ENGINEERING_SELF_DAMAGE",
+            "item_name": "设备自身损失",
+            "description": "因碰撞、倾覆、火灾、爆炸、自然灾害等保险事故造成的被保险工程机械设备自身损失，按照保险价值/保险金额比例赔偿。",
+            "deductible": "绝对免赔额：每次事故损失金额的10%，最低人民币5000元",
+            "coverageAmountRange": { "min": 100000, "max": 50000000, "unit": "元" },
+            "premiumRate": "0.5%-1.2%（视设备类型、机龄、使用区域而定）"
+          }
+        ]
+      }
+    ],
+    "selectedResponsibilities": ["ENGINEERING_SELF_DAMAGE"],
+    "specialAgreements": [
+      "1. 本保险合同承保工程机械设备，包括挖掘机、起重机、推土机、装载机、压路机、混凝土搅拌车等施工设备。",
+      "2. 设备使用年限超过10年的，每增加1年，费率上浮5%，最高上浮50%。",
+      "3. 本保险不承保被保险设备因设计缺陷、制造缺陷导致的损失。",
+      "4. 被保险设备须在中华人民共和国境内（不含港澳台）登记注册并合法使用。"
+    ],
+    "supportsOnlineClaim": true,
+    "isOnline": true,
+    "clauseTextFile": "阳光财险工程机械设备险主险条款.pdf",
+    "rateTableFile": "阳光财险工程机械设备险费率表.pdf",
+    "productDescriptionFile": "阳光财险工程机械设备险产品说明书.pdf",
+    "cashValueTableFile": ""
+  },
+  {
+    "productCode": "SUN-EML-TPL-2022",
+    "regulatoryName": "阳光财产保险工程机械设备险附加第三者责任险条款",
+    "companyName": "阳光财险",
+    "version": "1.0",
+    "salesRegions": "全国（不含港澳台）",
+    "effectiveDate": "2022-01-01",
+    "discontinuationDate": null,
+    "status": "生效",
+    "primaryCategory": "财产保险",
+    "secondaryCategory": "工程机械保险",
+    "primaryCategoryCode": "F",
+    "secondaryCategoryCode": "F05",
+    "racewayId": "F0501",
+    "racewayName": "工程机械设备险",
+    "clauseType": "附加险",
+    "operator": "核保部",
+    "coverageDetails": [],
+    "coveragePlans": [
+      {
+        "planType": "标准版",
+        "annualLimit": 0,
+        "guaranteedRenewalYears": 0,
+        "coverageDetails": [
+          {
+            "mandatory": false,
+            "item_code": "ENGINEERING_TPL_DEATH",
+            "item_name": "第三者人身死亡赔偿",
+            "description": "被保险设备在施工场地作业期间造成第三者死亡，依法应由被保险人承担的赔偿责任，含死亡赔偿金、丧葬费等。精神损害抚慰金在双方协商的情况下，由被保险人自行承担，保险公司不予赔偿。",
+            "coverageAmountRange": { "min": 500000, "max": 10000000, "unit": "元" }
+          },
+          {
+            "mandatory": false,
+            "item_code": "ENGINEERING_TPL_INJURY",
+            "item_name": "第三者人身伤害赔偿",
+            "description": "被保险设备在施工场地作业期间造成第三者人身伤害（未致死亡），依法应由被保险人承担的医疗费、误工费、护理费、残疾赔偿金等。",
+            "coverageAmountRange": { "min": 500000, "max": 10000000, "unit": "元" }
+          },
+          {
+            "mandatory": false,
+            "item_code": "ENGINEERING_TPL_PROPERTY",
+            "item_name": "第三者财产损失赔偿",
+            "description": "被保险设备在施工场地作业期间造成第三者财产损毁，依法应由被保险人承担的赔偿责任。",
+            "coverageAmountRange": { "min": 200000, "max": 5000000, "unit": "元" }
+          }
+        ]
+      }
+    ],
+    "selectedResponsibilities": ["ENGINEERING_TPL_DEATH", "ENGINEERING_TPL_INJURY", "ENGINEERING_TPL_PROPERTY"],
+    "specialAgreements": [
+      "1. 本附加险须附加于阳光财险工程机械设备险主险（SUN-EML-BASE-2022）项下，不得单独投保。",
+      "2. 交强险应优先赔付，本附加险赔付交强险赔付后超出部分。",
+      "3. 第三者精神损害抚慰金属于除外责任，保险公司不承担赔偿责任。（特别约定第9条）",
+      "4. 每次事故绝对免赔额：人民币5000元或损失金额的10%，以较高者为准。",
+      "5. 第三者责任限额为投保时约定的限额，人身伤亡与财产损失共享同一限额。",
+      "6. 被保险人及其雇员不属于第三者范围。"
+    ],
+    "supportsOnlineClaim": true,
+    "isOnline": true,
+    "clauseTextFile": "阳光财险工程机械设备险附加第三者责任险条款.pdf",
+    "rateTableFile": "阳光财险工程机械设备险附加第三者责任险费率表.pdf",
+    "productDescriptionFile": "",
+    "cashValueTableFile": ""
+  },
+  {
+    "productCode": "SUN-EML-EMPLOYER-2022",
+    "regulatoryName": "阳光财产保险工程机械设备险附加雇主责任险条款",
+    "companyName": "阳光财险",
+    "version": "1.0",
+    "salesRegions": "全国（不含港澳台）",
+    "effectiveDate": "2022-01-01",
+    "discontinuationDate": null,
+    "status": "生效",
+    "primaryCategory": "财产保险",
+    "secondaryCategory": "工程机械保险",
+    "primaryCategoryCode": "F",
+    "secondaryCategoryCode": "F05",
+    "racewayId": "F0501",
+    "racewayName": "工程机械设备险",
+    "clauseType": "附加险",
+    "operator": "核保部",
+    "coverageDetails": [],
+    "coveragePlans": [
+      {
+        "planType": "标准版",
+        "annualLimit": 0,
+        "guaranteedRenewalYears": 0,
+        "coverageDetails": [
+          {
+            "mandatory": false,
+            "item_code": "ENGINEERING_EMPLOYER_DEATH",
+            "item_name": "雇员意外死亡赔偿",
+            "description": "被保险人雇用的操作员等雇员在从事工程机械操作期间因意外事故死亡，依法应由雇主承担的赔偿责任。",
+            "coverageAmountRange": { "min": 300000, "max": 3000000, "unit": "元" }
+          },
+          {
+            "mandatory": false,
+            "item_code": "ENGINEERING_EMPLOYER_INJURY",
+            "item_name": "雇员意外伤残赔偿",
+            "description": "被保险人雇用的操作员等雇员在从事工程机械操作期间因意外事故致残，依法应由雇主承担的医疗费及伤残赔偿责任。",
+            "coverageAmountRange": { "min": 300000, "max": 3000000, "unit": "元" }
+          }
+        ]
+      }
+    ],
+    "selectedResponsibilities": ["ENGINEERING_EMPLOYER_DEATH", "ENGINEERING_EMPLOYER_INJURY"],
+    "specialAgreements": [
+      "1. 本附加险须附加于阳光财险工程机械设备险主险（SUN-EML-BASE-2022）项下，不得单独投保。",
+      "2. 雇主责任险仅承保被保险人与雇员之间依法成立的雇主法律赔偿责任。",
+      "3. 雇员的工伤保险赔付部分由工伤保险基金承担，本险种赔付超出工伤保险的差额部分（若适用）。",
+      "4. 每次事故绝对免赔额：人民币2000元或损失金额的5%，以较高者为准。"
+    ],
+    "supportsOnlineClaim": true,
+    "isOnline": true,
+    "clauseTextFile": "阳光财险工程机械设备险附加雇主责任险条款.pdf",
+    "rateTableFile": "",
+    "productDescriptionFile": "",
+    "cashValueTableFile": ""
+  },
+  {
+    "productCode": "SUN-EML-COLLISION-2023",
+    "regulatoryName": "阳光财产保险工程机械设备险附加碰撞倾覆险条款",
+    "companyName": "阳光财险",
+    "version": "1.0",
+    "salesRegions": "全国（不含港澳台）",
+    "effectiveDate": "2023-01-01",
+    "discontinuationDate": null,
+    "status": "生效",
+    "primaryCategory": "财产保险",
+    "secondaryCategory": "工程机械保险",
+    "primaryCategoryCode": "F",
+    "secondaryCategoryCode": "F05",
+    "racewayId": "F0501",
+    "racewayName": "工程机械设备险",
+    "clauseType": "附加险",
+    "operator": "核保部",
+    "coverageDetails": [],
+    "coveragePlans": [
+      {
+        "planType": "标准版",
+        "annualLimit": 0,
+        "guaranteedRenewalYears": 0,
+        "coverageDetails": [
+          {
+            "mandatory": false,
+            "item_code": "ENGINEERING_SELF_DAMAGE",
+            "item_name": "设备碰撞倾覆损失",
+            "description": "被保险工程机械设备因发生碰撞或倾覆导致的设备自身损失，扩展承保主险免赔额范围。",
+            "coverageAmountRange": { "min": 100000, "max": 20000000, "unit": "元" }
+          }
+        ]
+      }
+    ],
+    "selectedResponsibilities": ["ENGINEERING_SELF_DAMAGE"],
+    "specialAgreements": [
+      "1. 本附加险扩展承保主险中因碰撞、倾覆引起的设备自身损失，降低免赔额至5%。",
+      "2. 须附加于阳光财险工程机械设备险主险（SUN-EML-BASE-2022）项下。"
+    ],
+    "supportsOnlineClaim": true,
+    "isOnline": true,
+    "clauseTextFile": "阳光财险工程机械设备险附加碰撞倾覆险条款.pdf",
+    "rateTableFile": "",
+    "productDescriptionFile": "",
+    "cashValueTableFile": ""
+  },
+  {
+    "productCode": "SUN-EML-BOOM-2023",
+    "regulatoryName": "阳光财产保险工程机械设备险附加吊臂断裂险条款",
+    "companyName": "阳光财险",
+    "version": "1.0",
+    "salesRegions": "全国（不含港澳台）",
+    "effectiveDate": "2023-01-01",
+    "discontinuationDate": null,
+    "status": "生效",
+    "primaryCategory": "财产保险",
+    "secondaryCategory": "工程机械保险",
+    "primaryCategoryCode": "F",
+    "secondaryCategoryCode": "F05",
+    "racewayId": "F0501",
+    "racewayName": "工程机械设备险",
+    "clauseType": "附加险",
+    "operator": "核保部",
+    "coverageDetails": [],
+    "coveragePlans": [
+      {
+        "planType": "标准版",
+        "annualLimit": 0,
+        "guaranteedRenewalYears": 0,
+        "coverageDetails": [
+          {
+            "mandatory": false,
+            "item_code": "ENGINEERING_SELF_DAMAGE",
+            "item_name": "吊臂/吊臂附件断裂损失",
+            "description": "被保险起重类机械（汽车吊、履带吊等）的吊臂或吊臂附件在正常作业过程中发生意外断裂，造成设备自身及第三者财产损失。",
+            "coverageAmountRange": { "min": 100000, "max": 5000000, "unit": "元" }
+          }
+        ]
+      }
+    ],
+    "selectedResponsibilities": ["ENGINEERING_SELF_DAMAGE", "ENGINEERING_TPL_PROPERTY"],
+    "specialAgreements": [
+      "1. 本附加险专门适用于起重类工程机械（含汽车吊、履带吊、随车吊等）。",
+      "2. 须附加于阳光财险工程机械设备险主险（SUN-EML-BASE-2022）及附加第三者责任险（SUN-EML-TPL-2022）项下。",
+      "3. 因超载使用、违规操作导致的吊臂断裂不在承保范围内。"
+    ],
+    "supportsOnlineClaim": true,
+    "isOnline": true,
+    "clauseTextFile": "阳光财险工程机械设备险附加吊臂断裂险条款.pdf",
+    "rateTableFile": "",
+    "productDescriptionFile": "",
+    "cashValueTableFile": ""
+  },
+  {
+    "productCode": "SUN-EML-CARGO-2023",
+    "regulatoryName": "阳光财产保险工程机械设备险附加被吊物品损失险条款",
+    "companyName": "阳光财险",
+    "version": "1.0",
+    "salesRegions": "全国（不含港澳台）",
+    "effectiveDate": "2023-01-01",
+    "discontinuationDate": null,
+    "status": "生效",
+    "primaryCategory": "财产保险",
+    "secondaryCategory": "工程机械保险",
+    "primaryCategoryCode": "F",
+    "secondaryCategoryCode": "F05",
+    "racewayId": "F0501",
+    "racewayName": "工程机械设备险",
+    "clauseType": "附加险",
+    "operator": "核保部",
+    "coverageDetails": [],
+    "coveragePlans": [
+      {
+        "planType": "标准版",
+        "annualLimit": 0,
+        "guaranteedRenewalYears": 0,
+        "coverageDetails": [
+          {
+            "mandatory": false,
+            "item_code": "ENGINEERING_TPL_PROPERTY",
+            "item_name": "被吊物品损失赔偿",
+            "description": "因被保险起重机械在吊运作业过程中发生意外事故，导致被吊物品损坏或灭失，依法应由被保险人承担的赔偿责任。",
+            "coverageAmountRange": { "min": 100000, "max": 3000000, "unit": "元" }
+          }
+        ]
+      }
+    ],
+    "selectedResponsibilities": ["ENGINEERING_TPL_PROPERTY"],
+    "specialAgreements": [
+      "1. 本附加险承保被吊物品损失，须附加于附加第三者责任险（SUN-EML-TPL-2022）项下。",
+      "2. 承保货物须在吊运前做书面记录（品名、数量、价值），超出申报价值部分不予赔付。",
+      "3. 液体、气体类物品、精密仪器须经保险公司特别批注同意方可纳入承保范围。"
+    ],
+    "supportsOnlineClaim": true,
+    "isOnline": true,
+    "clauseTextFile": "阳光财险工程机械设备险附加被吊物品损失险条款.pdf",
+    "rateTableFile": "",
+    "productDescriptionFile": "",
+    "cashValueTableFile": ""
   }
 ]

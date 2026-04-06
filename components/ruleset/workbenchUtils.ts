@@ -135,6 +135,8 @@ interface ClaimDocumentsSnapshot {
       primaryDiagnosisDate?: string | null;
       hospitalizationDays?: number | null;
       disabilityLevel?: string | number | null;
+      pastHistory?: string | null;
+      firstDiagnosisDate?: string | null;
     } | null;
     deathProfile?: {
       deathConfirmed?: boolean;
@@ -142,6 +144,9 @@ interface ClaimDocumentsSnapshot {
     } | null;
     liabilityResult?: {
       thirdPartyLiabilityPct?: number | null;
+    } | null;
+    factModel?: {
+      canonicalFacts?: Record<string, unknown>;
     } | null;
   } | null;
   validationFacts?: Record<string, boolean | null>;
@@ -156,6 +161,7 @@ interface ClaimDocumentsSnapshot {
 
 interface FullReviewApiResult {
   decision: "APPROVE" | "REJECT" | "MANUAL_REVIEW";
+  preExistingAssessment?: PreExistingAssessmentTrace | null;
   matchedRuleDetails?: Array<{
     ruleId: string;
     ruleName: string;
@@ -224,6 +230,74 @@ interface FullReviewApiResult {
     matched: boolean;
   }>;
   warnings?: string[];
+}
+
+export interface PreExistingAssessmentTrace {
+  result: "YES" | "NO" | "UNCERTAIN" | "SKIPPED";
+  confidence: number | null;
+  reasoning: string;
+  evidence: string[];
+  historyText: string | null;
+  evaluatedAt?: string;
+  source?: "AUTO" | "INPUT" | "ENGINE" | "ERROR";
+  input?: {
+    diagnosis?: string | null;
+    diagnosisNames?: string[] | string | null;
+    pastMedicalHistory?: string | null;
+    firstDiagnosisDate?: string | null;
+    policyEffectiveDate?: string | null;
+    waitingPeriodDays?: number;
+  } | null;
+  uncertainResolution?: {
+    action?: "MANUAL_REVIEW" | "ASSUME_FALSE" | null;
+    matchedRule?: {
+      when?: {
+        product_line?: string;
+        claim_scenario?: string;
+        max_claim_amount?: number | null;
+      };
+      action?: "MANUAL_REVIEW" | "ASSUME_FALSE" | null;
+    } | null;
+    productLine?: string | null;
+    claimScenario?: string | null;
+    claimAmount?: number | null;
+  } | null;
+  steps?: {
+    history?: {
+      certainty?: string | null;
+      text?: string | null;
+      vote?: "YES" | "NO" | null;
+      weight?: number;
+    } | null;
+    timeLogic?: {
+      verdict?: string | null;
+      reason?: string | null;
+      firstDiagnosisDate?: string | null;
+      vote?: "YES" | "NO" | null;
+      weight?: number;
+    } | null;
+    ai?: {
+      invoked?: boolean;
+      skippedReason?: string | null;
+      result?: "YES" | "NO" | "UNCERTAIN" | null;
+      confidence?: number | null;
+      reasoning?: string;
+      voteWeight?: number;
+    } | null;
+    synthesis?: {
+      preAiResult?: {
+        result?: "YES" | "NO" | "UNCERTAIN";
+        confidence?: number;
+      } | null;
+      finalResult?: {
+        result?: "YES" | "NO" | "UNCERTAIN";
+        confidence?: number;
+      } | null;
+      yesScore?: number;
+      noScore?: number;
+      threshold?: number;
+    } | null;
+  } | null;
 }
 
 export interface ValidationSimulationStep {
@@ -312,6 +386,7 @@ export interface ValidationSimulationResult {
     message: string;
   }>;
   steps: ValidationSimulationStep[];
+  preExistingAssessment?: PreExistingAssessmentTrace | null;
 }
 
 export interface ManualRulesetDraftInput {
@@ -1200,6 +1275,250 @@ function buildCoverageResults(ruleset: InsuranceRuleset, ledger: ValidationSimul
   ];
 }
 
+function normalizeDateOnly(value: unknown): string | null {
+  if (!value) return null;
+  if (typeof value === "string") {
+    const matched = value.match(/^(\d{4}-\d{2}-\d{2})/);
+    if (matched) return matched[1];
+  }
+  const parsed = new Date(String(value));
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed.toISOString().split("T")[0];
+}
+
+function addDays(dateStr: string, days: number) {
+  const parsed = new Date(dateStr);
+  if (Number.isNaN(parsed.getTime())) return null;
+  parsed.setDate(parsed.getDate() + days);
+  return parsed.toISOString().split("T")[0];
+}
+
+function parsePastHistoryCertainty(historyText: unknown) {
+  const text = typeof historyText === "string" ? historyText.trim() : "";
+  if (!text) {
+    return { certainty: "UNKNOWN" as const, text: null };
+  }
+  if (["无", "否认既往病史", "无特殊"].includes(text)) {
+    return { certainty: "CLEAR" as const, text };
+  }
+  if (["不详", "不明"].includes(text)) {
+    return { certainty: "UNKNOWN" as const, text };
+  }
+  return { certainty: "HAS_CONTENT" as const, text };
+}
+
+function synthesizePreExistingSignals(
+  signals: Array<{ vote: "YES" | "NO"; weight: number }>,
+  threshold: number,
+) {
+  const yesScore = Number(
+    signals
+      .filter((item) => item.vote === "YES")
+      .reduce((sum, item) => sum + item.weight, 0)
+      .toFixed(2),
+  );
+  const noScore = Number(
+    signals
+      .filter((item) => item.vote === "NO")
+      .reduce((sum, item) => sum + item.weight, 0)
+      .toFixed(2),
+  );
+  const total = yesScore + noScore;
+  if (total === 0) {
+    return {
+      result: "UNCERTAIN" as const,
+      confidence: 0,
+      yesScore,
+      noScore,
+    };
+  }
+  const confidence = Number((Math.max(yesScore, noScore) / total).toFixed(2));
+  if (confidence < threshold) {
+    return {
+      result: "UNCERTAIN" as const,
+      confidence,
+      yesScore,
+      noScore,
+    };
+  }
+  return {
+    result: yesScore > noScore ? ("YES" as const) : ("NO" as const),
+    confidence,
+    yesScore,
+    noScore,
+  };
+}
+
+export function buildPreExistingAssessmentPreview(
+  input: ValidationInputState,
+  options: {
+    includeAiStep?: boolean;
+    source?: PreExistingAssessmentTrace["source"];
+    aiTrace?: NonNullable<NonNullable<PreExistingAssessmentTrace["steps"]>["ai"]>;
+  } = {},
+): PreExistingAssessmentTrace {
+  const threshold = 0.65;
+  const historyParsed = parsePastHistoryCertainty(
+    input.claim.pastMedicalHistory ?? input.claim.past_medical_history,
+  );
+  const firstDiagnosisDate = normalizeDateOnly(
+    input.claim.firstDiagnosisDate ??
+      input.claim.first_diagnosis_date ??
+      input.claim.diagnosisDate ??
+      input.claim.diagnosis_date ??
+      input.claim.admissionDate ??
+      input.claim.admission_date,
+  );
+  const policyEffectiveDate = normalizeDateOnly(
+    input.policy.effectiveDate ?? input.policy.effective_date,
+  );
+  const waitingPeriodDays = Number(
+    input.policy.waitingPeriodDays ?? input.policy.waiting_period_days ?? 0,
+  );
+
+  const evidence: string[] = [];
+  const signals: Array<{ vote: "YES" | "NO"; weight: number }> = [];
+
+  const historyStep: NonNullable<NonNullable<PreExistingAssessmentTrace["steps"]>["history"]> = {
+    certainty: historyParsed.certainty,
+    text: historyParsed.text,
+    vote: null,
+    weight: 0,
+  };
+  if (historyParsed.certainty === "CLEAR") {
+    signals.push({ vote: "NO", weight: 0.6 });
+    evidence.push(`既往史记录为“${historyParsed.text}”`);
+    historyStep.vote = "NO";
+    historyStep.weight = 0.6;
+  } else if (historyParsed.certainty === "HAS_CONTENT") {
+    signals.push({ vote: "YES", weight: 0.5 });
+    evidence.push(`既往史记录：${historyParsed.text}`);
+    historyStep.vote = "YES";
+    historyStep.weight = 0.5;
+  }
+
+  let timeVerdict = "UNKNOWN";
+  let timeReason = "保单生效日或首诊日期缺失";
+  let timeVote: "YES" | "NO" | null = null;
+  let timeWeight = 0;
+  if (policyEffectiveDate && firstDiagnosisDate) {
+    if (firstDiagnosisDate < policyEffectiveDate) {
+      timeVerdict = "SUSPICIOUS";
+      timeReason = `首诊日期(${firstDiagnosisDate})早于保单生效日(${policyEffectiveDate})`;
+      timeVote = "YES";
+      timeWeight = 0.7;
+    } else if (waitingPeriodDays > 0) {
+      const waitingEnd = addDays(policyEffectiveDate, waitingPeriodDays);
+      if (waitingEnd && firstDiagnosisDate < waitingEnd) {
+        timeVerdict = "SUSPICIOUS";
+        timeReason = `首诊日期(${firstDiagnosisDate})在等待期内（等待期至${waitingEnd}）`;
+        timeVote = "YES";
+        timeWeight = 0.7;
+      } else {
+        timeVerdict = "CLEAR";
+        timeReason = "时间逻辑无异常";
+        timeVote = "NO";
+        timeWeight = 0.4;
+      }
+    } else {
+      timeVerdict = "CLEAR";
+      timeReason = "时间逻辑无异常";
+      timeVote = "NO";
+      timeWeight = 0.4;
+    }
+  }
+  if (timeVote) {
+    signals.push({ vote: timeVote, weight: timeWeight });
+    evidence.push(timeReason);
+  }
+  const timeStep: NonNullable<NonNullable<PreExistingAssessmentTrace["steps"]>["timeLogic"]> = {
+    verdict: timeVerdict,
+    reason: timeReason,
+    firstDiagnosisDate,
+    vote: timeVote,
+    weight: timeWeight,
+  };
+
+  const preAiResult = synthesizePreExistingSignals(signals, threshold);
+  const aiTrace =
+    options.aiTrace ||
+    ({
+      invoked: false,
+      skippedReason: options.includeAiStep
+        ? historyParsed.certainty === "UNKNOWN"
+          ? "既往史缺失或不详，不触发 AI"
+          : preAiResult.result !== "UNCERTAIN"
+            ? "文本与时间逻辑已足够确定"
+            : "样例模式不调用 AI，仅展示是否会进入 AI"
+        : "未提供 AI 调试结果",
+      result: null,
+      confidence: null,
+      reasoning: "",
+      voteWeight: 0,
+    } as NonNullable<NonNullable<PreExistingAssessmentTrace["steps"]>["ai"]>);
+
+  const aiSignal =
+    aiTrace.invoked &&
+    (aiTrace.result === "YES" || aiTrace.result === "NO") &&
+    typeof aiTrace.confidence === "number"
+      ? {
+          vote: aiTrace.result,
+          weight: Number((aiTrace.confidence * 0.8).toFixed(2)),
+        }
+      : null;
+  const finalResult = aiSignal
+    ? synthesizePreExistingSignals(signals.concat(aiSignal), threshold)
+    : preAiResult;
+
+  return {
+    result: finalResult.result,
+    confidence: finalResult.confidence,
+    reasoning:
+      finalResult.result === "UNCERTAIN"
+        ? "信息不足，当前预览建议人工复核"
+        : evidence.join("；"),
+    evidence,
+    historyText: historyParsed.text,
+    evaluatedAt: new Date().toISOString(),
+    source: options.source || "AUTO",
+    input: {
+      diagnosis:
+        String(
+          input.claim.diagnosis ??
+            input.claim.diagnosisNames ??
+            input.claim.diagnosis_names ??
+            "",
+        ) || null,
+      diagnosisNames:
+        input.claim.diagnosisNames ??
+        input.claim.diagnosis_names ??
+        null,
+      pastMedicalHistory: historyParsed.text,
+      firstDiagnosisDate,
+      policyEffectiveDate,
+      waitingPeriodDays,
+    },
+    steps: {
+      history: historyStep,
+      timeLogic: timeStep,
+      ai: aiTrace,
+      synthesis: {
+        preAiResult: {
+          result: preAiResult.result,
+          confidence: preAiResult.confidence,
+        },
+        finalResult: {
+          result: finalResult.result,
+          confidence: finalResult.confidence,
+        },
+        yesScore: finalResult.yesScore,
+        noScore: finalResult.noScore,
+        threshold,
+      },
+    },
+  };
+}
+
 export function buildValidationInput(ruleset: InsuranceRuleset): ValidationInputState {
   const coverage = ruleset.policy_info.coverages?.[0];
   const items =
@@ -1235,6 +1554,7 @@ export function buildValidationInput(ruleset: InsuranceRuleset): ValidationInput
       effectiveDate: ruleset.policy_info.effective_date,
       expiryDate: ruleset.policy_info.expiry_date,
       isWithinCoveragePeriod: true,
+      waitingPeriodDays: ruleset.product_line === "HEALTH" ? 30 : 0,
       coverageCode: coverage?.coverage_code || "",
       sumInsured: coverage?.sum_insured || 0,
       deductible: coverage?.deductible || 0,
@@ -1250,6 +1570,11 @@ export function buildValidationInput(ruleset: InsuranceRuleset): ValidationInput
       daysFromAccidentToResult: 4,
       hospitalDays: 3,
       liabilityRatio: 0.7,
+      pastMedicalHistory:
+        ruleset.product_line === "HEALTH" ? "不详" : "",
+      firstDiagnosisDate: "2026-03-01",
+      diagnosis: "急性上呼吸道感染",
+      diagnosisNames: "急性上呼吸道感染",
     },
     items,
     missingFacts: [],
@@ -1289,6 +1614,10 @@ export function buildValidationInputFromSnapshot(
     policy: {
       ...base.policy,
       isWithinCoveragePeriod: true,
+      waitingPeriodDays:
+        Number(
+          snapshot?.aggregation?.factModel?.canonicalFacts?.["policy.waiting_period_days"],
+        ) || Number(base.policy.waitingPeriodDays || 0),
     },
     claim: {
       ...base.claim,
@@ -1306,6 +1635,19 @@ export function buildValidationInputFromSnapshot(
       diagnosis: injuryProfile.injuryDescription || "",
       diagnosisNames: diagnosisNames.join("；"),
       diagnosisDate: injuryProfile.primaryDiagnosisDate || "",
+      pastMedicalHistory:
+        String(
+          snapshot?.aggregation?.factModel?.canonicalFacts?.["claim.past_medical_history"] ||
+            injuryProfile.pastHistory ||
+            "",
+        ) || "",
+      firstDiagnosisDate:
+        String(
+          snapshot?.aggregation?.factModel?.canonicalFacts?.["claim.first_diagnosis_date"] ||
+            injuryProfile.firstDiagnosisDate ||
+            injuryProfile.primaryDiagnosisDate ||
+            "",
+        ) || "",
       hospitalDays: Number(injuryProfile.hospitalizationDays || base.claim.hospitalDays || 0),
       disabilityGrade: injuryProfile.disabilityLevel || "",
       liabilityRatio:
@@ -1427,6 +1769,7 @@ export function transformFullReviewToValidationResult(
       code: reason.code,
       message: reason.message,
     })),
+    preExistingAssessment: result.preExistingAssessment || null,
     steps: (result.auditTrail || []).map((item, index) => ({
       id: `audit-${index}`,
       label: item.stage,
@@ -1462,6 +1805,13 @@ export function simulateRulesetValidation(
   input: ValidationInputState,
 ): ValidationSimulationResult {
   const issues = validateRuleset(ruleset);
+  const preExistingAssessment =
+    ruleset.product_line === RulesetProductLine.HEALTH
+      ? buildPreExistingAssessmentPreview(input, {
+          includeAiStep: true,
+          source: "AUTO",
+        })
+      : null;
   const matchedRules: ValidationSimulationResult["matchedRules"] = [];
   const manualReviewReasons: ValidationSimulationResult["manualReviewReasons"] = [];
   const steps: ValidationSimulationStep[] = [];
@@ -1682,6 +2032,7 @@ export function simulateRulesetValidation(
     },
     coverageResults: buildCoverageResults(ruleset, ledger),
     manualReviewReasons,
+    preExistingAssessment,
     steps,
   };
 }

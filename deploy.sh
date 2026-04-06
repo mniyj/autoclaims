@@ -7,7 +7,7 @@
 SERVER_IP=${1:-"121.43.159.216"}
 SERVER_USER=${2:-"root"}
 SSH_KEY_PATH=${3:-"/Users/pegasus/Downloads/aliyun.pem"}
-TARGET_PORT=${4:-"3005"}
+TARGET_PORT=${4:-"3009"}
 
 REMOTE_DIR="/var/www/insurance-config"
 REMOTE_PORT=$TARGET_PORT

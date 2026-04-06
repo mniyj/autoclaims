@@ -15,6 +15,7 @@ const MESSAGE_TYPES = {
   TASK_RECOVERY_NEEDED: 'task_recovery_needed',
   TASK_RECOVERY_ESCALATED: 'task_recovery_escalated',
   TASK_RECOVERED: 'task_recovered',
+  AI_ALERT: 'ai_alert',
   SYSTEM_NOTICE: 'system_notice',
 };
 
@@ -234,6 +235,36 @@ export function createTaskRecoveryNeededMessage(userId, task) {
   });
 }
 
+export function findLatestUnreadByIncident(userId, incidentId) {
+  return (
+    readMessages().find(
+      (message) =>
+        message.userId === userId &&
+        message.type === MESSAGE_TYPES.AI_ALERT &&
+        message.data?.incidentId === incidentId &&
+        message.isRead === false,
+    ) || null
+  );
+}
+
+export function createAIIncidentMessage(userId, incident) {
+  const existing = findLatestUnreadByIncident(userId, incident.id);
+  if (existing) return existing;
+
+  return createMessage(
+    userId,
+    MESSAGE_TYPES.AI_ALERT,
+    `AI 告警：${incident.summary}`,
+    `${incident.summary}。严重级别：${incident.severity}。触发时间：${incident.triggeredAt}`,
+    {
+      incidentId: incident.id,
+      traceIds: incident.affectedTraceIds || [],
+      severity: incident.severity,
+      status: incident.status,
+    },
+  );
+}
+
 export function getMessages(userId, options = {}) {
   let messages = readMessages().filter(m => m.userId === userId);
   
@@ -339,6 +370,7 @@ export default {
   classifyTaskRecoveryIssue,
   createTaskRecoveryNeededMessage,
   createTaskRecoveredMessage,
+  createAIIncidentMessage,
   getTaskRecoveryEscalation,
   getMessages,
   getUnreadCount,

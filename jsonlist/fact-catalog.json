@@ -7,8 +7,88 @@
     "scope": "policy",
     "source": "fact_catalog",
     "source_type": "derived",
-    "applicable_domains": ["ELIGIBILITY"],
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
     "derivation": "claim.accident_date 或 claim.result_date 与 policy.effective_date / policy.expiry_date 比较",
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "policy.premium_overdue",
+    "label": "保费逾期",
+    "description": "当前保单是否存在保费逾期未缴。",
+    "data_type": "BOOLEAN",
+    "scope": "policy",
+    "source": "fact_catalog",
+    "source_type": "derived",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "derivation": "policy.days_overdue > 0",
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "policy.days_overdue",
+    "label": "保费逾期天数",
+    "description": "当前应缴保费的逾期天数，0表示未逾期。",
+    "data_type": "NUMBER",
+    "scope": "policy",
+    "source": "fact_catalog",
+    "source_type": "system",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "system_source": "保单缴费记录",
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "policy.is_renewal",
+    "label": "续保保单",
+    "description": "该保单是否为续保（非首年投保）。",
+    "data_type": "BOOLEAN",
+    "scope": "policy",
+    "source": "fact_catalog",
+    "source_type": "system",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "system_source": "保单基础信息表",
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "policy.payment_mode",
+    "label": "缴费方式",
+    "description": "保单的缴费频率，如年缴、月缴、趸缴等。",
+    "data_type": "ENUM",
+    "scope": "policy",
+    "source": "fact_catalog",
+    "source_type": "system",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "system_source": "保单基础信息表",
+    "enum_values": [
+      {
+        "code": "ANNUAL",
+        "label": "年缴"
+      },
+      {
+        "code": "MONTHLY",
+        "label": "月缴"
+      },
+      {
+        "code": "QUARTERLY",
+        "label": "季缴"
+      },
+      {
+        "code": "LUMP_SUM",
+        "label": "趸缴"
+      }
+    ],
     "required_evidence": false,
     "status": "ACTIVE"
   },
@@ -20,9 +100,14 @@
     "scope": "claim",
     "source": "fact_catalog",
     "source_type": "material",
-    "applicable_domains": ["ELIGIBILITY"],
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
     "required_evidence": true,
-    "allowed_material_categories": ["accident", "medical"],
+    "allowed_material_categories": [
+      "accident",
+      "medical"
+    ],
     "status": "ACTIVE"
   },
   {
@@ -33,12 +118,26 @@
     "scope": "claim",
     "source": "fact_catalog",
     "source_type": "manual",
-    "applicable_domains": ["ELIGIBILITY"],
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
     "enum_values": [
-      { "code": "MEDICAL_TREATMENT", "label": "医疗治疗" },
-      { "code": "DEATH", "label": "身故" },
-      { "code": "DISABILITY", "label": "伤残" },
-      { "code": "PROPERTY_DAMAGE", "label": "财产损失" }
+      {
+        "code": "MEDICAL_TREATMENT",
+        "label": "医疗治疗"
+      },
+      {
+        "code": "DEATH",
+        "label": "身故"
+      },
+      {
+        "code": "DISABILITY",
+        "label": "伤残"
+      },
+      {
+        "code": "PROPERTY_DAMAGE",
+        "label": "财产损失"
+      }
     ],
     "status": "ACTIVE"
   },
@@ -50,10 +149,79 @@
     "scope": "claim",
     "source": "fact_catalog",
     "source_type": "manual",
-    "applicable_domains": ["ELIGIBILITY"],
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
     "enum_values": [
-      { "code": "ACCIDENT", "label": "意外" },
-      { "code": "DISEASE", "label": "疾病" }
+      {
+        "code": "ACCIDENT",
+        "label": "意外"
+      },
+      {
+        "code": "DISEASE",
+        "label": "疾病"
+      }
+    ],
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.cause_sub_type",
+    "label": "事故原因细分",
+    "description": "在 cause_type 基础上进一步细分，例如交通事故、跌落、溺水等。",
+    "data_type": "STRING",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.scenario",
+    "label": "理赔场景",
+    "description": "案件所属理赔场景，用于路由规则集。",
+    "data_type": "ENUM",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "enum_values": [
+      {
+        "code": "ACCIDENT_MEDICAL",
+        "label": "意外医疗"
+      },
+      {
+        "code": "ACCIDENT_DEATH",
+        "label": "意外身故"
+      },
+      {
+        "code": "ACCIDENT_DISABILITY",
+        "label": "意外伤残"
+      },
+      {
+        "code": "DISEASE_MEDICAL",
+        "label": "疾病医疗"
+      },
+      {
+        "code": "CRITICAL_ILLNESS",
+        "label": "重大疾病"
+      },
+      {
+        "code": "VEHICLE_DAMAGE",
+        "label": "车辆损失"
+      },
+      {
+        "code": "THIRD_PARTY_LIABILITY",
+        "label": "第三者责任"
+      },
+      {
+        "code": "INCOME_LOSS",
+        "label": "收入损失"
+      }
     ],
     "status": "ACTIVE"
   },
@@ -65,8 +233,1537 @@
     "scope": "claim",
     "source": "fact_catalog",
     "source_type": "system",
-    "applicable_domains": ["ASSESSMENT"],
+    "applicable_domains": [
+      "ASSESSMENT"
+    ],
     "system_source": "案件费用明细",
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.claimed_total_amount",
+    "label": "申请赔付总金额",
+    "description": "被保险人申请的赔付总金额。",
+    "data_type": "NUMBER",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "material",
+    "applicable_domains": [
+      "ELIGIBILITY",
+      "ASSESSMENT"
+    ],
+    "required_evidence": true,
+    "allowed_material_categories": [
+      "medical",
+      "settlement"
+    ],
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.claimant_age",
+    "label": "索赔人年龄",
+    "description": "事故发生时被保险人的年龄。",
+    "data_type": "NUMBER",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "derived",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "derivation": "事故日期 - insured.birth_date，取整年数",
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.newest_policy_inception_days",
+    "label": "最新保单起保天数",
+    "description": "最新一份同类保单从起保日到事故日的天数，用于等待期判断。",
+    "data_type": "NUMBER",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "derived",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "derivation": "claim.accident_date - policy.inception_date（最新一份）",
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.days_from_accident_to_result",
+    "label": "事故到结果天数",
+    "description": "从事故日期到伤残认定/身故日期的天数。",
+    "data_type": "NUMBER",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "derived",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "derivation": "result_date - accident_date",
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.hours_accident_to_ambulance",
+    "label": "事故到急救时间（小时）",
+    "description": "从事故发生到接受急救的时间间隔（小时）。",
+    "data_type": "NUMBER",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "material",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": true,
+    "allowed_material_categories": [
+      "accident",
+      "medical"
+    ],
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.disability_grade",
+    "label": "伤残等级",
+    "description": "经医学鉴定的伤残等级，1-10级或百分比。",
+    "data_type": "STRING",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "material",
+    "applicable_domains": [
+      "ELIGIBILITY",
+      "ASSESSMENT"
+    ],
+    "required_evidence": true,
+    "allowed_material_categories": [
+      "medical",
+      "survey_report"
+    ],
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.policy_active",
+    "label": "保单处于有效状态",
+    "description": "案件受理时保单是否处于有效（非失效、未到期）状态。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "derived",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "derivation": "policy.status == ACTIVE AND NOT policy.premium_overdue",
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.pre_existing_condition",
+    "label": "既往症",
+    "description": "事故或疾病是否属于投保前已存在的既往病症。null 表示无法自动判断，需转人工。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "derived",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.past_medical_history",
+    "label": "既往史原文",
+    "description": "从住院病历中提取的既往史段落原文，供既往症评估使用。",
+    "data_type": "TEXT",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "ocr",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.pre_existing_condition_confidence",
+    "label": "既往症判断置信度",
+    "description": "既往症自动判断的置信度（0~1）。低于阈值时结果为 UNCERTAIN 并转人工。",
+    "data_type": "NUMBER",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "derived",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.exam_within_waiting_period",
+    "label": "检查在等待期内",
+    "description": "相关检查或确诊是否发生在保单等待期内。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "derived",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "derivation": "首次检查日期 < policy.inception_date + waiting_period_days",
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.waiting_period_allergy_or_infection",
+    "label": "等待期内过敏或感染",
+    "description": "是否在等待期内首次出现过敏或感染症状。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "derived",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "derivation": "首次过敏/感染记录日期在等待期内",
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.intentional_act",
+    "label": "故意行为",
+    "description": "事故是否由被保险人的故意行为导致。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.self_inflicted",
+    "label": "自伤",
+    "description": "伤害是否为被保险人自我伤害。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.policyholder_intentional_harm",
+    "label": "投保人故意伤害",
+    "description": "伤害是否由投保人故意为之。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.criminal_act",
+    "label": "犯罪行为",
+    "description": "被保险人或投保人是否因犯罪行为导致事故。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.illegal_activity",
+    "label": "违法活动",
+    "description": "事故发生时是否正在从事违法活动（不含犯罪）。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.detained_or_imprisoned",
+    "label": "被拘留或监禁",
+    "description": "事故发生时被保险人是否处于被拘留或监禁状态。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.insured_legal_status",
+    "label": "被保险人法律身份状态",
+    "description": "被保险人的法律状态，如正常、被拘留、被起诉等。",
+    "data_type": "ENUM",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "system",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "system_source": "被保险人信息表",
+    "enum_values": [
+      {
+        "code": "NORMAL",
+        "label": "正常"
+      },
+      {
+        "code": "DETAINED",
+        "label": "被拘留"
+      },
+      {
+        "code": "IMPRISONED",
+        "label": "服刑中"
+      },
+      {
+        "code": "PROSECUTED",
+        "label": "被起诉"
+      }
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.war_related",
+    "label": "战争相关",
+    "description": "事故是否与战争、军事行动或武装冲突有关。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.insured_intoxicated",
+    "label": "被保险人醉酒",
+    "description": "事故发生时被保险人是否处于醉酒状态。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.insured_drug_use",
+    "label": "被保险人吸毒",
+    "description": "事故发生时被保险人是否处于吸毒状态。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.intoxicated_or_drug",
+    "label": "醉酒或吸毒状态",
+    "description": "被保险人是否处于醉酒或吸毒状态（综合判断）。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "derived",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "derivation": "claim.insured_intoxicated OR claim.insured_drug_use",
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.illegal_drug_use",
+    "label": "使用非法毒品",
+    "description": "被保险人是否使用了非法药物（毒品）。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.is_drunk_driving",
+    "label": "醉酒驾车",
+    "description": "事故是否因醉酒后驾驶机动车引起。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "derived",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "derivation": "claim.driver_bac_level >= 80（mg/100ml）",
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.driver_bac_level",
+    "label": "驾驶员血液酒精含量",
+    "description": "驾驶员血液中酒精含量，单位 mg/100ml。",
+    "data_type": "NUMBER",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "material",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": true,
+    "allowed_material_categories": [
+      "accident",
+      "police_record"
+    ],
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.driver_license_valid",
+    "label": "驾驶证有效",
+    "description": "事故发生时驾驶员的驾驶证是否在有效期内且对应车型。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "material",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": true,
+    "allowed_material_categories": [
+      "identity",
+      "qualification"
+    ],
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.illegal_driving",
+    "label": "无证或违规驾驶",
+    "description": "驾驶员是否存在无驾驶证或违规驾驶的情形。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "derived",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "derivation": "NOT claim.driver_license_valid OR claim.is_drunk_driving",
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.vehicle_registration_valid",
+    "label": "车辆年检有效",
+    "description": "涉事车辆是否通过了最近一次年检且处于有效期内。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "material",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": true,
+    "allowed_material_categories": [
+      "identity",
+      "qualification"
+    ],
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.vehicle_is_non_commercial",
+    "label": "车辆为非营运",
+    "description": "涉事车辆是否为非营运性质（如私家车）。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "material",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": true,
+    "status": "ACTIVE",
+    "allowed_material_ids": [
+      "mat-4",
+      "mat-55",
+      "mat-56"
+    ],
+    "source_refs": []
+  },
+  {
+    "fact_id": "claim.vehicle_is_truck",
+    "label": "车辆为货车",
+    "description": "涉事车辆是否为货车（影响部分责任险的保障范围）。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "material",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": true,
+    "allowed_material_categories": [
+      "identity",
+      "qualification"
+    ],
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.non_designated_operator",
+    "label": "非指定操作人",
+    "description": "操作人是否不在保单指定的操作人范围内。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.operator_authorized",
+    "label": "操作人已授权",
+    "description": "设备或车辆操作人是否持有有效的授权。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.operator_certificate_valid",
+    "label": "操作证有效",
+    "description": "操作人的操作资质证书是否在有效期内。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "material",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": true,
+    "allowed_material_categories": [
+      "qualification"
+    ],
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.operator_intoxicated",
+    "label": "操作员醉酒",
+    "description": "事故发生时操作人员是否处于醉酒状态。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.operator_drug_use",
+    "label": "操作员吸毒",
+    "description": "事故发生时操作人员是否处于吸毒状态。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.equipment_inspection_valid",
+    "label": "设备检验合格",
+    "description": "涉事设备是否通过了合规检验且处于有效期内。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "material",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": true,
+    "allowed_material_categories": [
+      "qualification"
+    ],
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.transport_type",
+    "label": "交通工具类型",
+    "description": "事故涉及的交通工具类型。",
+    "data_type": "ENUM",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "enum_values": [
+      {
+        "code": "PRIVATE_CAR",
+        "label": "私家车"
+      },
+      {
+        "code": "COMMERCIAL_VEHICLE",
+        "label": "营运车辆"
+      },
+      {
+        "code": "MOTORCYCLE",
+        "label": "摩托车"
+      },
+      {
+        "code": "BICYCLE",
+        "label": "自行车"
+      },
+      {
+        "code": "PEDESTRIAN",
+        "label": "步行"
+      },
+      {
+        "code": "AIRCRAFT",
+        "label": "航空器"
+      },
+      {
+        "code": "VESSEL",
+        "label": "船舶"
+      },
+      {
+        "code": "OTHER",
+        "label": "其他"
+      }
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.ambulance_type",
+    "label": "救护类型",
+    "description": "急救/救护服务类型，如正规急救车、自行就医等。",
+    "data_type": "ENUM",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "enum_values": [
+      {
+        "code": "OFFICIAL_AMBULANCE",
+        "label": "正规急救车"
+      },
+      {
+        "code": "PRIVATE_TRANSPORT",
+        "label": "私家车送医"
+      },
+      {
+        "code": "SELF_ADMITTED",
+        "label": "自行就医"
+      },
+      {
+        "code": "AIR_RESCUE",
+        "label": "航空救援"
+      }
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.auto_coverage_type",
+    "label": "机动车险保障类型",
+    "description": "本次案件对应的机动车险保障类型。",
+    "data_type": "ENUM",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "enum_values": [
+      {
+        "code": "CTPL",
+        "label": "交强险"
+      },
+      {
+        "code": "COMMERCIAL_AUTO",
+        "label": "商业车险"
+      },
+      {
+        "code": "THIRD_PARTY",
+        "label": "第三者责任险"
+      },
+      {
+        "code": "VEHICLE_DAMAGE",
+        "label": "车损险"
+      }
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.ctpl_death_limit_paid",
+    "label": "交强险死亡限额已赔付",
+    "description": "交强险中死亡伤残限额是否已经全额赔付。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "system",
+    "applicable_domains": [
+      "ELIGIBILITY",
+      "ASSESSMENT"
+    ],
+    "system_source": "交强险赔付记录",
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.activity_during_accident",
+    "label": "事故发生时的活动",
+    "description": "事故发生时被保险人正在从事的活动，如登山、游泳、工作等。",
+    "data_type": "STRING",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.accident_sub_type",
+    "label": "事故细分类型",
+    "description": "事故的详细分类，如跌落、溺水、交通事故、意外中毒等。",
+    "data_type": "STRING",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.accident_in_excluded_region",
+    "label": "事故发生在除外地区",
+    "description": "事故是否发生在保单约定除外的地区（如战区、限制区域）。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.severe_weather_during_accident",
+    "label": "事故发生时遇恶劣天气",
+    "description": "事故发生时是否存在台风、暴雪、洪涝等恶劣天气。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.is_high_altitude_work",
+    "label": "高空作业",
+    "description": "事故是否发生在高空作业场景（2米以上离地高度）。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.fall_height_meters",
+    "label": "跌落高度（米）",
+    "description": "高空坠落事故的跌落高度，单位为米。",
+    "data_type": "NUMBER",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.during_maintenance",
+    "label": "维修期间",
+    "description": "事故是否发生在设备或车辆处于维修期间。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.during_transit",
+    "label": "运输途中",
+    "description": "货物或人员是否处于运输途中时发生事故。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.victim_is_employee",
+    "label": "受害人是员工",
+    "description": "第三方受害人是否为投保人/被保险人的雇员。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.work_stopped_for_weather",
+    "label": "因天气停工",
+    "description": "工程项目是否因恶劣天气停工期间发生损失。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.evidence_destroyed",
+    "label": "证据被销毁",
+    "description": "理赔相关证据是否被人为销毁或无法获取。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.hospital_qualified",
+    "label": "就诊医院资质符合",
+    "description": "就诊医院是否符合保单约定的医院等级要求（如二级及以上公立医院）。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "derived",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "derivation": "根据就诊医院名称匹配保单约定的医院资质要求",
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.medically_necessary",
+    "label": "医疗必要性",
+    "description": "所接受的治疗是否属于医疗必要（非预防性、非美容性）。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.non_medical_institution_treatment",
+    "label": "非医疗机构治疗",
+    "description": "治疗是否在非合规医疗机构进行（如无照诊所、家庭治疗）。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.unapproved_treatment",
+    "label": "未批准的治疗方案",
+    "description": "所接受的治疗方案是否未经药监或医疗主管机构批准。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.experimental_treatment",
+    "label": "实验性治疗",
+    "description": "所接受的治疗是否属于临床试验或实验性质。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.gene_or_cell_therapy",
+    "label": "基因或细胞治疗",
+    "description": "是否进行了基因治疗或细胞治疗（通常属于除外责任）。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.preventive_or_wellness",
+    "label": "预防性或健康护理",
+    "description": "就医是否属于预防性检查或健康保健类（非治疗性）。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.cosmetic_treatment",
+    "label": "美容整形治疗",
+    "description": "是否属于美容、整形或外貌改善类治疗。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.dental_care_only",
+    "label": "仅为牙科护理",
+    "description": "就医是否仅属于常规牙科护理（非意外牙齿损伤）。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.dental_exception_covered",
+    "label": "牙科例外条款覆盖",
+    "description": "该牙科费用是否符合保单约定的牙科例外保障条款。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.vision_correction",
+    "label": "视力矫正",
+    "description": "费用是否用于近视矫正、配镜等视力矫正目的。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.obesity_treatment",
+    "label": "肥胖症治疗",
+    "description": "是否为减重或肥胖症相关治疗（通常属于除外责任）。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.pregnancy_related",
+    "label": "妊娠相关",
+    "description": "费用或事故是否与妊娠、分娩或流产相关。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.non_covered_genital_treatment",
+    "label": "不保障的生殖系统治疗",
+    "description": "是否为除外责任中明确列明的生殖系统相关治疗。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.genetic_or_psychiatric",
+    "label": "遗传性或精神类疾病",
+    "description": "诊断是否为遗传性疾病或精神类疾病（通常属于除外或特殊条款）。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.hiv_related",
+    "label": "艾滋病相关",
+    "description": "疾病或治疗是否与艾滋病毒感染或艾滋病相关。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.occupational_disease",
+    "label": "职业病",
+    "description": "疾病是否属于国家认定的职业病。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.medical_malpractice",
+    "label": "医疗事故",
+    "description": "事故或损伤是否由医疗事故引起。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.mental_damage",
+    "label": "精神损害",
+    "description": "索赔是否包含精神损害赔偿部分。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.cancer_drug_not_effective",
+    "label": "癌症药物无效",
+    "description": "被保险人使用的癌症治疗药物是否经临床评估无效。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.cancer_drug_resistant",
+    "label": "癌症药物耐药",
+    "description": "被保险人是否对所用癌症治疗药物产生耐药性。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.off_label_cancer_drug",
+    "label": "超说明书癌症用药",
+    "description": "所用癌症药物是否属于超说明书（适应症外）使用。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.rehabilitation_device",
+    "label": "康复器械",
+    "description": "费用是否涉及康复辅助器械（如轮椅、假肢、助听器等）。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.non_listed_artificial_organ",
+    "label": "非目录内人工器官",
+    "description": "所使用的人工器官是否不在社保或保单约定的目录内。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.prescription_over_30_days",
+    "label": "处方超过30天用量",
+    "description": "单张处方药量是否超过30天剂量（合理性审核标准）。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "material",
+    "applicable_domains": [
+      "ELIGIBILITY",
+      "ASSESSMENT"
+    ],
+    "required_evidence": true,
+    "allowed_material_categories": [
+      "medical"
+    ],
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.self_purchased_drug_without_prescription",
+    "label": "无处方自购药",
+    "description": "是否存在无医生处方自行购买的药品费用。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.non_prescribing_institution_purchase",
+    "label": "非处方机构购药",
+    "description": "药品是否从非医疗处方机构（如网购、非定点药店）购买。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.insured_occupation_changed",
+    "label": "职业已变更",
+    "description": "被保险人在保单有效期内是否发生了职业变更。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "system",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "system_source": "被保险人信息变更记录",
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.insured_occupation_change_notified",
+    "label": "职业变更已通知保险公司",
+    "description": "职业变更后是否已按要求通知保险公司。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "system",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "system_source": "客服记录/批单记录",
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.insured_occupation_class_at_accident",
+    "label": "事故时职业类别",
+    "description": "事故发生时被保险人的职业类别代码（按保险行业职业分类）。",
+    "data_type": "STRING",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "system",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "system_source": "被保险人职业信息",
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.insured_occupation_risk_increased",
+    "label": "职业风险等级升高",
+    "description": "职业变更后风险等级是否高于原投保职业等级。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "derived",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "derivation": "事故时职业风险等级 > 投保时职业风险等级",
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.insured_new_occupation_in_decline_list",
+    "label": "新职业在拒保名单",
+    "description": "职业变更后新职业是否在保险公司拒保或限额名单内。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "derived",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "derivation": "新职业代码匹配拒保职业名单",
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.insured_social_security",
+    "label": "被保险人有社会医疗保险",
+    "description": "被保险人是否参加了社会医疗保险（医保）。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "system",
+    "applicable_domains": [
+      "ASSESSMENT"
+    ],
+    "system_source": "社保参保信息",
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.insured_accident_policy_count",
+    "label": "意外险保单数量",
+    "description": "被保险人名下有效的意外险保单数量，用于反欺诈审核。",
+    "data_type": "NUMBER",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "system",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "system_source": "全行业保单查询接口",
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.insured_total_accident_death_sum",
+    "label": "意外险死亡保额合计",
+    "description": "被保险人名下所有意外险保单的身故保额总和。",
+    "data_type": "NUMBER",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "system",
+    "applicable_domains": [
+      "ASSESSMENT"
+    ],
+    "system_source": "全行业保单查询接口",
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.insured_liability_ratio",
+    "label": "被保险人责任比例",
+    "description": "事故中被保险人承担的责任比例（0-100%），用于按责赔付。",
+    "data_type": "NUMBER",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "material",
+    "applicable_domains": [
+      "ASSESSMENT"
+    ],
+    "required_evidence": true,
+    "allowed_material_categories": [
+      "accident",
+      "police_record",
+      "survey_report"
+    ],
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.social_medical_amount",
+    "label": "社保报销金额",
+    "description": "本次就医中社会医疗保险已报销的金额。",
+    "data_type": "NUMBER",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "material",
+    "applicable_domains": [
+      "ASSESSMENT"
+    ],
+    "required_evidence": true,
+    "allowed_material_categories": [
+      "medical",
+      "settlement"
+    ],
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.non_social_medical_amount",
+    "label": "非社保医疗费用金额",
+    "description": "自费（非医保目录内）医疗费用金额。",
+    "data_type": "NUMBER",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "derived",
+    "applicable_domains": [
+      "ASSESSMENT"
+    ],
+    "derivation": "总医疗费用 - 社保报销金额 - 社保自付部分",
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.other_reimbursement_received",
+    "label": "其他已获赔付金额",
+    "description": "从其他渠道（如其他保险、单位）已获得的赔付总额。",
+    "data_type": "NUMBER",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ASSESSMENT"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.settled_with_social_security",
+    "label": "已通过社保结算",
+    "description": "本次就医是否已通过社保定点机构结算。",
+    "data_type": "BOOLEAN",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "material",
+    "applicable_domains": [
+      "ASSESSMENT"
+    ],
+    "required_evidence": true,
+    "allowed_material_categories": [
+      "medical",
+      "settlement"
+    ],
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.legal_fees",
+    "label": "法律费用",
+    "description": "因事故产生的合理法律诉讼费用。",
+    "data_type": "NUMBER",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "material",
+    "applicable_domains": [
+      "ASSESSMENT"
+    ],
+    "required_evidence": true,
+    "allowed_material_categories": [
+      "settlement"
+    ],
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.rescue_fees",
+    "label": "救援费用",
+    "description": "因事故产生的紧急救援费用（如直升机救援、海上救援）。",
+    "data_type": "NUMBER",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "material",
+    "applicable_domains": [
+      "ASSESSMENT"
+    ],
+    "required_evidence": true,
+    "allowed_material_categories": [
+      "accident",
+      "settlement"
+    ],
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.medical_appraisal_fee",
+    "label": "医疗鉴定费",
+    "description": "因伤残或疾病鉴定产生的医学鉴定费用。",
+    "data_type": "NUMBER",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "material",
+    "applicable_domains": [
+      "ASSESSMENT"
+    ],
+    "required_evidence": true,
+    "allowed_material_categories": [
+      "medical",
+      "settlement"
+    ],
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.damage_items",
+    "label": "财产损失项目清单",
+    "description": "财产险中各损失项目的详细清单。",
+    "data_type": "ARRAY",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "material",
+    "applicable_domains": [
+      "ASSESSMENT"
+    ],
+    "required_evidence": true,
+    "allowed_material_categories": [
+      "survey_report"
+    ],
     "status": "ACTIVE"
   },
   {
@@ -77,9 +1774,501 @@
     "scope": "expense_item",
     "source": "fact_catalog",
     "source_type": "material",
-    "applicable_domains": ["ASSESSMENT", "POST_PROCESS"],
+    "applicable_domains": [
+      "ASSESSMENT",
+      "POST_PROCESS"
+    ],
     "required_evidence": true,
-    "allowed_material_categories": ["medical"],
+    "allowed_material_categories": [
+      "medical"
+    ],
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "expense_item.approved_amount",
+    "label": "核准费用金额",
+    "description": "经审核后认定可赔付的费用金额。",
+    "data_type": "NUMBER",
+    "scope": "expense_item",
+    "source": "fact_catalog",
+    "source_type": "derived",
+    "applicable_domains": [
+      "ASSESSMENT",
+      "POST_PROCESS"
+    ],
+    "derivation": "在原始金额基础上扣除不合理费用、按比例调整后的核准金额",
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "expense_item.category",
+    "label": "费用大类",
+    "description": "费用项所属的大类，如药品费、检查费、手术费等。",
+    "data_type": "ENUM",
+    "scope": "expense_item",
+    "source": "fact_catalog",
+    "source_type": "material",
+    "applicable_domains": [
+      "ASSESSMENT"
+    ],
+    "enum_values": [
+      {
+        "code": "MEDICINE",
+        "label": "药品费"
+      },
+      {
+        "code": "EXAM",
+        "label": "检查费"
+      },
+      {
+        "code": "SURGERY",
+        "label": "手术费"
+      },
+      {
+        "code": "BED",
+        "label": "床位费"
+      },
+      {
+        "code": "NURSING",
+        "label": "护理费"
+      },
+      {
+        "code": "TREATMENT",
+        "label": "治疗费"
+      },
+      {
+        "code": "MATERIAL",
+        "label": "耗材费"
+      },
+      {
+        "code": "OTHER",
+        "label": "其他"
+      }
+    ],
+    "required_evidence": true,
+    "allowed_material_categories": [
+      "medical"
+    ],
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "expense_item.expense_category",
+    "label": "费用分类（社保口径）",
+    "description": "按社保目录分类：甲类（全额报销）/ 乙类（部分报销）/ 丙类（自费）。",
+    "data_type": "ENUM",
+    "scope": "expense_item",
+    "source": "fact_catalog",
+    "source_type": "material",
+    "applicable_domains": [
+      "ASSESSMENT"
+    ],
+    "enum_values": [
+      {
+        "code": "CLASS_A",
+        "label": "甲类"
+      },
+      {
+        "code": "CLASS_B",
+        "label": "乙类"
+      },
+      {
+        "code": "CLASS_C",
+        "label": "丙类（自费）"
+      }
+    ],
+    "required_evidence": true,
+    "allowed_material_categories": [
+      "medical"
+    ],
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "expense_item.department_type",
+    "label": "就诊科室类型",
+    "description": "产生该费用项的科室类型，如普通门诊、急诊、住院等。",
+    "data_type": "ENUM",
+    "scope": "expense_item",
+    "source": "fact_catalog",
+    "source_type": "material",
+    "applicable_domains": [
+      "ASSESSMENT"
+    ],
+    "enum_values": [
+      {
+        "code": "OUTPATIENT",
+        "label": "门诊"
+      },
+      {
+        "code": "EMERGENCY",
+        "label": "急诊"
+      },
+      {
+        "code": "INPATIENT",
+        "label": "住院"
+      },
+      {
+        "code": "ICU",
+        "label": "重症监护"
+      },
+      {
+        "code": "SURGERY",
+        "label": "手术室"
+      }
+    ],
+    "required_evidence": true,
+    "allowed_material_categories": [
+      "medical"
+    ],
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "expense_item.hospitalization_days",
+    "label": "住院天数",
+    "description": "该费用项对应的实际住院天数。",
+    "data_type": "NUMBER",
+    "scope": "expense_item",
+    "source": "fact_catalog",
+    "source_type": "material",
+    "applicable_domains": [
+      "ASSESSMENT"
+    ],
+    "required_evidence": true,
+    "allowed_material_categories": [
+      "medical"
+    ],
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "expense_item.diagnosis_related",
+    "label": "与诊断相关",
+    "description": "该费用项是否与主诊断直接相关（合理性审核）。",
+    "data_type": "BOOLEAN",
+    "scope": "expense_item",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ASSESSMENT"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "expense_item.is_social_insurance_covered",
+    "label": "社保覆盖范围内",
+    "description": "该费用项是否在社会医疗保险目录范围内。",
+    "data_type": "BOOLEAN",
+    "scope": "expense_item",
+    "source": "fact_catalog",
+    "source_type": "derived",
+    "applicable_domains": [
+      "ASSESSMENT"
+    ],
+    "derivation": "expense_item.expense_category IN (CLASS_A, CLASS_B)",
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "expense_item.hospital_qualified",
+    "label": "费用项对应医院资质符合",
+    "description": "产生该费用的医院是否满足保单约定的医院资质要求。",
+    "data_type": "BOOLEAN",
+    "scope": "expense_item",
+    "source": "fact_catalog",
+    "source_type": "derived",
+    "applicable_domains": [
+      "ASSESSMENT"
+    ],
+    "derivation": "根据医院名称匹配医院资质数据库",
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "expense_item.duplicate_count",
+    "label": "重复计费次数",
+    "description": "同一类型费用项在同一时段的重复出现次数，用于反欺诈。",
+    "data_type": "NUMBER",
+    "scope": "expense_item",
+    "source": "fact_catalog",
+    "source_type": "derived",
+    "applicable_domains": [
+      "ASSESSMENT"
+    ],
+    "derivation": "统计相同费用类别在相同时间段的出现次数",
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "expense_item.is_duplicate_exam",
+    "label": "重复检查",
+    "description": "该检查项目是否与其他同类检查存在重复（短期内多次同类检查）。",
+    "data_type": "BOOLEAN",
+    "scope": "expense_item",
+    "source": "fact_catalog",
+    "source_type": "derived",
+    "applicable_domains": [
+      "ASSESSMENT"
+    ],
+    "derivation": "相同检查项目在30天内重复出现",
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "expense_item.daily_medication_exceeds_avg",
+    "label": "日均用药超标",
+    "description": "该药品的日均用量是否显著超过同类疾病的平均水平。",
+    "data_type": "BOOLEAN",
+    "scope": "expense_item",
+    "source": "fact_catalog",
+    "source_type": "derived",
+    "applicable_domains": [
+      "ASSESSMENT"
+    ],
+    "derivation": "日均用量 > 同类疾病平均日均用量 * 1.5",
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "expense_item.unit_price_deviation_percent",
+    "label": "单价偏差百分比",
+    "description": "费用项单价与市场均价的偏差百分比，用于价格合理性审核。",
+    "data_type": "NUMBER",
+    "scope": "expense_item",
+    "source": "fact_catalog",
+    "source_type": "derived",
+    "applicable_domains": [
+      "ASSESSMENT"
+    ],
+    "derivation": "(实际单价 - 市场均价) / 市场均价 * 100",
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "expense_item.hospitalization_days_exceeds_drg",
+    "label": "住院天数超DRG标准",
+    "description": "实际住院天数是否超过该诊断相关分组（DRG）的标准住院天数。",
+    "data_type": "BOOLEAN",
+    "scope": "expense_item",
+    "source": "fact_catalog",
+    "source_type": "derived",
+    "applicable_domains": [
+      "ASSESSMENT"
+    ],
+    "derivation": "实际住院天数 > DRG标准住院天数",
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "expense_item.is_pathological_fracture",
+    "label": "病理性骨折",
+    "description": "骨折是否为病理性骨折（非外伤引起）。",
+    "data_type": "BOOLEAN",
+    "scope": "expense_item",
+    "source": "fact_catalog",
+    "source_type": "manual",
+    "applicable_domains": [
+      "ASSESSMENT"
+    ],
+    "required_evidence": false,
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "insured.name",
+    "label": "被保险人姓名",
+    "description": "被保险人的真实姓名，从身份证或保单信息获取。",
+    "data_type": "STRING",
+    "scope": "insured",
+    "source": "fact_catalog",
+    "source_type": "material",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": true,
+    "allowed_material_categories": [
+      "identity"
+    ],
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "insured.id_number",
+    "label": "被保险人身份证号",
+    "description": "被保险人的居民身份证号码。",
+    "data_type": "STRING",
+    "scope": "insured",
+    "source": "fact_catalog",
+    "source_type": "material",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": true,
+    "allowed_material_categories": [
+      "identity"
+    ],
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "insured.birth_date",
+    "label": "被保险人出生日期",
+    "description": "被保险人的出生日期，用于年龄计算。",
+    "data_type": "DATE",
+    "scope": "insured",
+    "source": "fact_catalog",
+    "source_type": "material",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": true,
+    "allowed_material_categories": [
+      "identity"
+    ],
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "insured.gender",
+    "label": "被保险人性别",
+    "description": "被保险人的性别。",
+    "data_type": "ENUM",
+    "scope": "insured",
+    "source": "fact_catalog",
+    "source_type": "material",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "enum_values": [
+      {
+        "code": "MALE",
+        "label": "男"
+      },
+      {
+        "code": "FEMALE",
+        "label": "女"
+      }
+    ],
+    "required_evidence": true,
+    "allowed_material_categories": [
+      "identity"
+    ],
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "insured.driver_license_number",
+    "label": "被保险人驾驶证号",
+    "description": "被保险人的机动车驾驶证档案编号。",
+    "data_type": "STRING",
+    "scope": "insured",
+    "source": "fact_catalog",
+    "source_type": "material",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": true,
+    "allowed_material_categories": [
+      "identity",
+      "qualification"
+    ],
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "insured.driver_license_valid_until",
+    "label": "驾驶证有效期至",
+    "description": "被保险人驾驶证的有效期截止日期。",
+    "data_type": "DATE",
+    "scope": "insured",
+    "source": "fact_catalog",
+    "source_type": "material",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": true,
+    "allowed_material_categories": [
+      "identity",
+      "qualification"
+    ],
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.hospital_name",
+    "label": "就诊医院名称",
+    "description": "被保险人接受治疗的医院名称。",
+    "data_type": "STRING",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "material",
+    "applicable_domains": [
+      "ELIGIBILITY",
+      "ASSESSMENT"
+    ],
+    "required_evidence": true,
+    "allowed_material_categories": [
+      "medical"
+    ],
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.admission_date",
+    "label": "住院入院日期",
+    "description": "被保险人办理住院入院手续的日期。",
+    "data_type": "DATE",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "material",
+    "applicable_domains": [
+      "ASSESSMENT"
+    ],
+    "required_evidence": true,
+    "allowed_material_categories": [
+      "medical"
+    ],
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.discharge_date",
+    "label": "住院出院日期",
+    "description": "被保险人办理住院出院手续的日期。",
+    "data_type": "DATE",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "material",
+    "applicable_domains": [
+      "ASSESSMENT"
+    ],
+    "required_evidence": true,
+    "allowed_material_categories": [
+      "medical"
+    ],
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.diagnosis",
+    "label": "诊断结论",
+    "description": "主治医生出具的主要诊断结论（文字描述）。",
+    "data_type": "STRING",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "material",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": true,
+    "allowed_material_categories": [
+      "medical"
+    ],
+    "status": "ACTIVE"
+  },
+  {
+    "fact_id": "claim.icd10_code",
+    "label": "ICD-10诊断编码",
+    "description": "标准化的ICD-10国际疾病分类编码。",
+    "data_type": "STRING",
+    "scope": "claim",
+    "source": "fact_catalog",
+    "source_type": "material",
+    "applicable_domains": [
+      "ELIGIBILITY"
+    ],
+    "required_evidence": true,
+    "allowed_material_categories": [
+      "medical"
+    ],
     "status": "ACTIVE"
   }
 ]

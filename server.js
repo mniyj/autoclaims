@@ -5,6 +5,7 @@ import http from "http";
 import { readFileSync } from "fs";
 import { handleApiRequest } from "./server/apiHandler.js";
 import { startScheduler, stopScheduler } from "./server/taskQueue/scheduler.js";
+import { startAIConsistencyMonitor, stopAIConsistencyMonitor } from "./server/services/aiConsistencyMonitor.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -131,16 +132,19 @@ server.listen(PORT, "0.0.0.0", () => {
   console.log(`Voice WebSocket: ws://localhost:${PORT}/voice/ws/:sessionId`);
 
   startScheduler();
+  startAIConsistencyMonitor();
 });
 
 process.on("SIGTERM", () => {
   console.log("SIGTERM received, shutting down gracefully");
   stopScheduler();
+  stopAIConsistencyMonitor();
   process.exit(0);
 });
 
 process.on("SIGINT", () => {
   console.log("SIGINT received, shutting down gracefully");
   stopScheduler();
+  stopAIConsistencyMonitor();
   process.exit(0);
 });

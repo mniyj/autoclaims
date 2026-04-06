@@ -10,6 +10,7 @@ import {
   type CategoryMaterialConfig,
   type AccidentCauseMaterialConfig,
   type Clause,
+  type MaterialTypeCatalogItem,
 } from "../types";
 import Modal from "./ui/Modal";
 import Input from "./ui/Input";
@@ -30,16 +31,27 @@ function normalizeFieldKey(value?: string) {
   return (value || "").trim();
 }
 
-function canBindFactToMaterial(fact: FactCatalogField, material?: Partial<ClaimsMaterial> | null) {
+function canBindFactToMaterial(
+  fact: FactCatalogField,
+  material?: Partial<ClaimsMaterial> | null,
+) {
   if (!material) return true;
   if (fact.source_type !== "material") return true;
 
   if (fact.allowed_material_ids && fact.allowed_material_ids.length > 0) {
-    return Boolean(material.id && fact.allowed_material_ids.includes(material.id));
+    return Boolean(
+      material.id && fact.allowed_material_ids.includes(material.id),
+    );
   }
 
-  if (fact.allowed_material_categories && fact.allowed_material_categories.length > 0) {
-    return Boolean(material.category && fact.allowed_material_categories.includes(material.category));
+  if (
+    fact.allowed_material_categories &&
+    fact.allowed_material_categories.length > 0
+  ) {
+    return Boolean(
+      material.category &&
+      fact.allowed_material_categories.includes(material.category),
+    );
   }
 
   return true;
@@ -77,16 +89,29 @@ function updateMaterialFieldTree(
     if (fieldIndex !== index) return field;
     if (rest.length === 0) return updater(field);
     if (field.data_type === "OBJECT") {
-      return { ...field, children: updateMaterialFieldTree(field.children || [], rest, updater) };
+      return {
+        ...field,
+        children: updateMaterialFieldTree(field.children || [], rest, updater),
+      };
     }
     if (field.data_type === "ARRAY") {
-      return { ...field, item_fields: updateMaterialFieldTree(field.item_fields || [], rest, updater) };
+      return {
+        ...field,
+        item_fields: updateMaterialFieldTree(
+          field.item_fields || [],
+          rest,
+          updater,
+        ),
+      };
     }
     return field;
   });
 }
 
-function removeMaterialFieldTree(fields: MaterialSchemaField[], path: number[]): MaterialSchemaField[] {
+function removeMaterialFieldTree(
+  fields: MaterialSchemaField[],
+  path: number[],
+): MaterialSchemaField[] {
   if (path.length === 0) return fields;
   const [index, ...rest] = path;
   if (rest.length === 0) {
@@ -95,46 +120,77 @@ function removeMaterialFieldTree(fields: MaterialSchemaField[], path: number[]):
   return fields.map((field, fieldIndex) => {
     if (fieldIndex !== index) return field;
     if (field.data_type === "OBJECT") {
-      return { ...field, children: removeMaterialFieldTree(field.children || [], rest) };
+      return {
+        ...field,
+        children: removeMaterialFieldTree(field.children || [], rest),
+      };
     }
     if (field.data_type === "ARRAY") {
-      return { ...field, item_fields: removeMaterialFieldTree(field.item_fields || [], rest) };
+      return {
+        ...field,
+        item_fields: removeMaterialFieldTree(field.item_fields || [], rest),
+      };
     }
     return field;
   });
 }
 
-function addChildMaterialField(fields: MaterialSchemaField[], path: number[]): MaterialSchemaField[] {
+function addChildMaterialField(
+  fields: MaterialSchemaField[],
+  path: number[],
+): MaterialSchemaField[] {
   return updateMaterialFieldTree(fields, path, (field) => {
     const nextField = createEmptyMaterialSchemaField(
-      (field.data_type === "OBJECT" ? field.children?.length : field.item_fields?.length || 0) + 1,
+      (field.data_type === "OBJECT"
+        ? field.children?.length
+        : field.item_fields?.length || 0) + 1,
     );
     if (field.data_type === "OBJECT") {
       return { ...field, children: [...(field.children || []), nextField] };
     }
     if (field.data_type === "ARRAY") {
-      return { ...field, item_fields: [...(field.item_fields || []), nextField] };
+      return {
+        ...field,
+        item_fields: [...(field.item_fields || []), nextField],
+      };
     }
     return field;
   });
 }
 
-function validateMaterialFieldTree(fields: MaterialSchemaField[], scope = "root"): string[] {
+function validateMaterialFieldTree(
+  fields: MaterialSchemaField[],
+  scope = "root",
+): string[] {
   const errors: string[] = [];
-  const keys = fields.map((field) => normalizeFieldKey(field.field_key)).filter(Boolean);
+  const keys = fields
+    .map((field) => normalizeFieldKey(field.field_key))
+    .filter(Boolean);
   const duplicates = keys.filter((key, index) => keys.indexOf(key) !== index);
   if (duplicates.length > 0) {
-    errors.push(`${scope} 下存在重复 schema 字段：${[...new Set(duplicates)].join("、")}`);
+    errors.push(
+      `${scope} 下存在重复 schema 字段：${[...new Set(duplicates)].join("、")}`,
+    );
   }
   fields.forEach((field) => {
     if (!normalizeFieldKey(field.field_key)) {
       errors.push(`${scope} 下存在空的 schema 字段名。`);
     }
     if (field.data_type === "OBJECT") {
-      errors.push(...validateMaterialFieldTree(field.children || [], `${field.field_key || scope} 对象`));
+      errors.push(
+        ...validateMaterialFieldTree(
+          field.children || [],
+          `${field.field_key || scope} 对象`,
+        ),
+      );
     }
     if (field.data_type === "ARRAY") {
-      errors.push(...validateMaterialFieldTree(field.item_fields || [], `${field.field_key || scope} 数组项`));
+      errors.push(
+        ...validateMaterialFieldTree(
+          field.item_fields || [],
+          `${field.field_key || scope} 数组项`,
+        ),
+      );
     }
   });
   return errors;
@@ -149,12 +205,18 @@ function collectMaterialSchemaPaths(
     const key = normalizeFieldKey(field.field_key);
     if (!key) return;
     const path = prefix ? `${prefix}.${key}` : key;
-    paths.push({ path, label: field.field_label || key, type: field.data_type });
+    paths.push({
+      path,
+      label: field.field_label || key,
+      type: field.data_type,
+    });
     if (field.data_type === "OBJECT") {
       paths.push(...collectMaterialSchemaPaths(field.children || [], path));
     }
     if (field.data_type === "ARRAY") {
-      paths.push(...collectMaterialSchemaPaths(field.item_fields || [], `${path}[]`));
+      paths.push(
+        ...collectMaterialSchemaPaths(field.item_fields || [], `${path}[]`),
+      );
     }
   });
   return paths;
@@ -177,7 +239,10 @@ function toJsonSchemaType(dataType?: MaterialSchemaField["data_type"]) {
   }
 }
 
-function fromJsonSchemaType(type?: string, format?: string): MaterialSchemaField["data_type"] {
+function fromJsonSchemaType(
+  type?: string,
+  format?: string,
+): MaterialSchemaField["data_type"] {
   if (type === "number" || type === "integer") return "NUMBER";
   if (type === "boolean") return "BOOLEAN";
   if (type === "array") return "ARRAY";
@@ -187,7 +252,17 @@ function fromJsonSchemaType(type?: string, format?: string): MaterialSchemaField
 }
 
 function parseSchemaFieldsFromNode(node: {
-  properties?: Record<string, { type?: string; description?: string; format?: string; properties?: Record<string, any>; items?: any; required?: string[] }>;
+  properties?: Record<
+    string,
+    {
+      type?: string;
+      description?: string;
+      format?: string;
+      properties?: Record<string, any>;
+      items?: any;
+      required?: string[];
+    }
+  >;
   required?: string[];
 }): MaterialSchemaField[] {
   const requiredFields = new Set(node.required || []);
@@ -207,24 +282,37 @@ function parseSchemaFieldsFromNode(node: {
             })
           : undefined,
       item_fields:
-        dataType === "ARRAY" && config?.items && typeof config.items === "object"
+        dataType === "ARRAY" &&
+        config?.items &&
+        typeof config.items === "object"
           ? parseSchemaFieldsFromNode({
               properties: config.items.properties || {},
-              required: Array.isArray(config.items.required) ? config.items.required : [],
+              required: Array.isArray(config.items.required)
+                ? config.items.required
+                : [],
             })
           : undefined,
     };
   });
 }
 
-function buildMaterialSchemaField(field: MaterialSchemaField): Record<string, any> {
+function buildMaterialSchemaField(
+  field: MaterialSchemaField,
+): Record<string, any> {
   if (field.data_type === "OBJECT") {
     const children = field.children || [];
     return {
       type: "object",
       description: field.description || field.field_label || field.field_key,
-      properties: Object.fromEntries(children.map((child) => [child.field_key, buildMaterialSchemaField(child)])),
-      required: children.filter((child) => child.required).map((child) => child.field_key),
+      properties: Object.fromEntries(
+        children.map((child) => [
+          child.field_key,
+          buildMaterialSchemaField(child),
+        ]),
+      ),
+      required: children
+        .filter((child) => child.required)
+        .map((child) => child.field_key),
     };
   }
   if (field.data_type === "ARRAY") {
@@ -234,8 +322,15 @@ function buildMaterialSchemaField(field: MaterialSchemaField): Record<string, an
       description: field.description || field.field_label || field.field_key,
       items: {
         type: "object",
-        properties: Object.fromEntries(itemFields.map((child) => [child.field_key, buildMaterialSchemaField(child)])),
-        required: itemFields.filter((child) => child.required).map((child) => child.field_key),
+        properties: Object.fromEntries(
+          itemFields.map((child) => [
+            child.field_key,
+            buildMaterialSchemaField(child),
+          ]),
+        ),
+        required: itemFields
+          .filter((child) => child.required)
+          .map((child) => child.field_key),
       },
     };
   }
@@ -293,17 +388,29 @@ function collectFactBindingsFromFields(
       });
     }
     if (field.data_type === "OBJECT") {
-      bindings.push(...collectFactBindingsFromFields(field.children as MaterialSchemaField[] || [], path));
+      bindings.push(
+        ...collectFactBindingsFromFields(
+          (field.children as MaterialSchemaField[]) || [],
+          path,
+        ),
+      );
     }
     if (field.data_type === "ARRAY") {
-      bindings.push(...collectFactBindingsFromFields(field.item_fields as MaterialSchemaField[] || [], `${path}[]`));
+      bindings.push(
+        ...collectFactBindingsFromFields(
+          (field.item_fields as MaterialSchemaField[]) || [],
+          `${path}[]`,
+        ),
+      );
     }
   });
 
   return bindings;
 }
 
-function hydrateSchemaFields(material: Partial<ClaimsMaterial>): MaterialSchemaField[] {
+function hydrateSchemaFields(
+  material: Partial<ClaimsMaterial>,
+): MaterialSchemaField[] {
   const schemaFields = (material.schemaFields as MaterialSchemaField[]) || [];
   return schemaFields.map((field) => ({ ...field }));
 }
@@ -318,15 +425,24 @@ const MaterialSchemaFieldListEditor: React.FC<{
 }> = ({ fields, onChange, factCatalog, material, path = [], title }) => {
   return (
     <div className="space-y-3">
-      {title && <div className="text-xs font-medium text-slate-500">{title}</div>}
+      {title && (
+        <div className="text-xs font-medium text-slate-500">{title}</div>
+      )}
       {fields.map((field, index) => {
         const fieldPath = [...path, index];
-        const bindableFacts = factCatalog.filter((fact) => canBindFactToMaterial(fact, material));
+        const bindableFacts = factCatalog.filter((fact) =>
+          canBindFactToMaterial(fact, material),
+        );
         return (
-          <div key={`${fieldPath.join("-")}-${field.field_key}`} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+          <div
+            key={`${fieldPath.join("-")}-${field.field_key}`}
+            className="rounded-lg border border-slate-200 bg-slate-50 p-3"
+          >
             <div className="grid gap-3 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_180px_auto]">
               <div>
-                <div className="text-xs font-medium text-slate-500">schema 字段名</div>
+                <div className="text-xs font-medium text-slate-500">
+                  schema 字段名
+                </div>
                 <input
                   type="text"
                   value={field.field_key}
@@ -334,7 +450,9 @@ const MaterialSchemaFieldListEditor: React.FC<{
                     onChange(
                       updateMaterialFieldTree(fields, [index], (current) => ({
                         ...current,
-                        field_key: event.target.value.trim().replace(/\s+/g, "_"),
+                        field_key: event.target.value
+                          .trim()
+                          .replace(/\s+/g, "_"),
                       })),
                     )
                   }
@@ -342,7 +460,9 @@ const MaterialSchemaFieldListEditor: React.FC<{
                 />
               </div>
               <div>
-                <div className="text-xs font-medium text-slate-500">字段名称</div>
+                <div className="text-xs font-medium text-slate-500">
+                  字段名称
+                </div>
                 <input
                   type="text"
                   value={field.field_label}
@@ -358,18 +478,27 @@ const MaterialSchemaFieldListEditor: React.FC<{
                 />
               </div>
               <div>
-                <div className="text-xs font-medium text-slate-500">数据类型</div>
+                <div className="text-xs font-medium text-slate-500">
+                  数据类型
+                </div>
                 <select
                   value={field.data_type}
                   onChange={(event) =>
                     onChange(
                       updateMaterialFieldTree(fields, [index], (current) => {
-                        const nextType = event.target.value as MaterialSchemaField["data_type"];
+                        const nextType = event.target
+                          .value as MaterialSchemaField["data_type"];
                         return {
                           ...current,
                           data_type: nextType,
-                          children: nextType === "OBJECT" ? current.children || [] : undefined,
-                          item_fields: nextType === "ARRAY" ? current.item_fields || [] : undefined,
+                          children:
+                            nextType === "OBJECT"
+                              ? current.children || []
+                              : undefined,
+                          item_fields:
+                            nextType === "ARRAY"
+                              ? current.item_fields || []
+                              : undefined,
                         };
                       }),
                     )
@@ -402,7 +531,9 @@ const MaterialSchemaFieldListEditor: React.FC<{
                 </label>
                 <button
                   type="button"
-                  onClick={() => onChange(removeMaterialFieldTree(fields, [index]))}
+                  onClick={() =>
+                    onChange(removeMaterialFieldTree(fields, [index]))
+                  }
                   className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700 hover:bg-rose-100"
                 >
                   删除
@@ -411,7 +542,9 @@ const MaterialSchemaFieldListEditor: React.FC<{
             </div>
             <div className="mt-3 grid gap-3 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.9fr)]">
               <div>
-                <div className="text-xs font-medium text-slate-500">字段说明</div>
+                <div className="text-xs font-medium text-slate-500">
+                  字段说明
+                </div>
                 <input
                   type="text"
                   value={field.description || ""}
@@ -428,7 +561,9 @@ const MaterialSchemaFieldListEditor: React.FC<{
                 />
               </div>
               <div>
-                <div className="text-xs font-medium text-slate-500">绑定标准事实（可选）</div>
+                <div className="text-xs font-medium text-slate-500">
+                  绑定标准事实（可选）
+                </div>
                 <select
                   value={field.fact_id || ""}
                   onChange={(event) =>
@@ -458,7 +593,9 @@ const MaterialSchemaFieldListEditor: React.FC<{
                   </div>
                   <button
                     type="button"
-                    onClick={() => onChange(addChildMaterialField(fields, [index]))}
+                    onClick={() =>
+                      onChange(addChildMaterialField(fields, [index]))
+                    }
                     className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100"
                   >
                     新增子字段
@@ -466,12 +603,18 @@ const MaterialSchemaFieldListEditor: React.FC<{
                 </div>
                 <div className="mt-3">
                   <MaterialSchemaFieldListEditor
-                    fields={field.data_type === "OBJECT" ? field.children || [] : field.item_fields || []}
+                    fields={
+                      field.data_type === "OBJECT"
+                        ? field.children || []
+                        : field.item_fields || []
+                    }
                     onChange={(nextFields) =>
                       onChange(
                         updateMaterialFieldTree(fields, [index], (current) => ({
                           ...current,
-                          ...(field.data_type === "OBJECT" ? { children: nextFields } : { item_fields: nextFields }),
+                          ...(field.data_type === "OBJECT"
+                            ? { children: nextFields }
+                            : { item_fields: nextFields }),
                         })),
                       )
                     }
@@ -491,7 +634,11 @@ const MaterialSchemaFieldListEditor: React.FC<{
 
 const ClaimItemConfigPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<
-    "materials" | "items" | "category_materials" | "accident_causes"
+    | "materials"
+    | "items"
+    | "category_materials"
+    | "accident_causes"
+    | "metadata"
   >("materials");
   const [claimItems, setClaimItems] = useState<ClaimItem[]>([]);
   const [materials, setMaterials] = useState<ClaimsMaterial[]>([]);
@@ -511,6 +658,17 @@ const ClaimItemConfigPage: React.FC = () => {
     AccidentCauseMaterialConfig[]
   >([]);
   const [loading, setLoading] = useState(true);
+  const [materialTypeCatalog, setMaterialTypeCatalog] = useState<
+    MaterialTypeCatalogItem[]
+  >([]);
+
+  // Metadata tab state
+  const [metaSearchQuery, setMetaSearchQuery] = useState("");
+  const [metaCurrentPage, setMetaCurrentPage] = useState(1);
+  const META_ITEMS_PER_PAGE = 10;
+  const [isMetaModalOpen, setIsMetaModalOpen] = useState(false);
+  const [editingMeta, setEditingMeta] =
+    useState<Partial<MaterialTypeCatalogItem> | null>(null);
 
   // Sample preview state
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
@@ -528,6 +686,7 @@ const ClaimItemConfigPage: React.FC = () => {
           respData,
           catMatData,
           accidentCauseData,
+          typeCatalogData,
         ] = await Promise.all([
           api.claimItems.list(),
           api.claimsMaterials.list(),
@@ -538,6 +697,7 @@ const ClaimItemConfigPage: React.FC = () => {
           api.responsibilities.list(),
           api.categoryMaterialConfigs.list(),
           api.accidentCauseConfigs.list(),
+          api.materialTypeCatalog.list(),
         ]);
         setClaimItems(itemsData as ClaimItem[]);
         if (!materialsData || materialsData.length === 0) {
@@ -555,6 +715,9 @@ const ClaimItemConfigPage: React.FC = () => {
         setAccidentCauseConfigs(
           (accidentCauseData as AccidentCauseMaterialConfig[]) || [],
         );
+        setMaterialTypeCatalog(
+          (typeCatalogData as MaterialTypeCatalogItem[]) || [],
+        );
       } catch (error) {
         console.error("Failed to fetch claim item config data:", error);
       } finally {
@@ -569,6 +732,7 @@ const ClaimItemConfigPage: React.FC = () => {
   const [editingItem, setEditingItem] = useState<Partial<ClaimItem> | null>(
     null,
   );
+  const [itemMaterialSearchQuery, setItemMaterialSearchQuery] = useState("");
 
   // Modal states for Product Config
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
@@ -608,6 +772,7 @@ const ClaimItemConfigPage: React.FC = () => {
       materialIds: [],
       responsibilityIds: [],
     });
+    setItemMaterialSearchQuery("");
     setIsItemModalOpen(true);
   };
 
@@ -616,6 +781,7 @@ const ClaimItemConfigPage: React.FC = () => {
       ...item,
       responsibilityIds: item.responsibilityIds || [],
     });
+    setItemMaterialSearchQuery("");
     setIsItemModalOpen(true);
   };
 
@@ -678,6 +844,16 @@ const ClaimItemConfigPage: React.FC = () => {
       return { ...prev!, responsibilityIds: nextIds };
     });
   };
+
+  const filteredMaterialsForItemModal = useMemo(() => {
+    const query = itemMaterialSearchQuery.trim().toLowerCase();
+    if (!query) return materials;
+    return materials.filter((material) =>
+      [material.name, material.description]
+        .filter(Boolean)
+        .some((value) => value!.toLowerCase().includes(query)),
+    );
+  }, [materials, itemMaterialSearchQuery]);
 
   // ── Product Config handlers ──
   const handleAddConfig = () => {
@@ -977,21 +1153,31 @@ const ClaimItemConfigPage: React.FC = () => {
     if (!editingMaterial) return [];
 
     const errors: string[] = [];
-    const schemaFields = (editingMaterial.schemaFields as MaterialSchemaField[]) || [];
+    const schemaFields =
+      (editingMaterial.schemaFields as MaterialSchemaField[]) || [];
 
     errors.push(...validateMaterialFieldTree(schemaFields, "材料字段"));
 
-    const factIds = collectFactBindingsFromFields(schemaFields).map((binding) => binding.fact_id).filter(Boolean);
-    const duplicatedFactIds = factIds.filter((factId, index) => factIds.indexOf(factId) !== index);
+    const factIds = collectFactBindingsFromFields(schemaFields)
+      .map((binding) => binding.fact_id)
+      .filter(Boolean);
+    const duplicatedFactIds = factIds.filter(
+      (factId, index) => factIds.indexOf(factId) !== index,
+    );
     if (duplicatedFactIds.length > 0) {
-      errors.push(`同一个标准事实不能在当前材料里重复绑定：${[...new Set(duplicatedFactIds)].join("、")}`);
+      errors.push(
+        `同一个标准事实不能在当前材料里重复绑定：${[...new Set(duplicatedFactIds)].join("、")}`,
+      );
     }
 
     return errors;
   }, [editingMaterial]);
 
   const materialSchemaPaths = useMemo(
-    () => collectMaterialSchemaPaths((editingMaterial?.schemaFields as MaterialSchemaField[]) || []),
+    () =>
+      collectMaterialSchemaPaths(
+        (editingMaterial?.schemaFields as MaterialSchemaField[]) || [],
+      ),
     [editingMaterial?.schemaFields],
   );
 
@@ -1059,7 +1245,7 @@ const ClaimItemConfigPage: React.FC = () => {
 
   const handleSaveMaterial = async () => {
     if (!editingMaterial?.name) {
-      alert("请输入材料名称");
+      alert("请从元数据下拉列表中选择材料");
       return;
     }
     if (editorValidationErrors.length > 0) {
@@ -1068,8 +1254,11 @@ const ClaimItemConfigPage: React.FC = () => {
     }
     const materialToSave: ClaimsMaterial = {
       ...editingMaterial,
-      schemaFields: (editingMaterial.schemaFields as MaterialSchemaField[]) || [],
-      jsonSchema: buildSchemaFromFields((editingMaterial.schemaFields as MaterialSchemaField[]) || []),
+      schemaFields:
+        (editingMaterial.schemaFields as MaterialSchemaField[]) || [],
+      jsonSchema: buildSchemaFromFields(
+        (editingMaterial.schemaFields as MaterialSchemaField[]) || [],
+      ),
     } as ClaimsMaterial;
     let newMaterials = [...materials];
     if (materials.find((m) => m.id === materialToSave.id)) {
@@ -1094,7 +1283,16 @@ const ClaimItemConfigPage: React.FC = () => {
     if (!editingMaterial?.jsonSchema) return;
     try {
       const parsed = JSON.parse(editingMaterial.jsonSchema) as {
-        properties?: Record<string, { type?: string; description?: string; format?: string; properties?: Record<string, any>; items?: any }>;
+        properties?: Record<
+          string,
+          {
+            type?: string;
+            description?: string;
+            format?: string;
+            properties?: Record<string, any>;
+            items?: any;
+          }
+        >;
         required?: string[];
       };
       const importedFields = parseSchemaFieldsFromNode(parsed);
@@ -1235,6 +1433,106 @@ const ClaimItemConfigPage: React.FC = () => {
     }
   };
 
+  // ── Metadata tab computed values & handlers ──
+  const filteredMetaCatalog = useMemo(() => {
+    if (!metaSearchQuery) return materialTypeCatalog;
+    const lowerQuery = metaSearchQuery.toLowerCase();
+    return materialTypeCatalog.filter(
+      (t) =>
+        t.type_name.toLowerCase().includes(lowerQuery) ||
+        t.type_code.toLowerCase().includes(lowerQuery),
+    );
+  }, [materialTypeCatalog, metaSearchQuery]);
+
+  const paginatedMetaCatalog = useMemo(() => {
+    const startIndex = (metaCurrentPage - 1) * META_ITEMS_PER_PAGE;
+    return filteredMetaCatalog.slice(
+      startIndex,
+      startIndex + META_ITEMS_PER_PAGE,
+    );
+  }, [filteredMetaCatalog, metaCurrentPage]);
+
+  const metaTotalPages = Math.ceil(
+    filteredMetaCatalog.length / META_ITEMS_PER_PAGE,
+  );
+
+  const handleMetaAdd = () => {
+    setEditingMeta({
+      type_code: "",
+      type_name: "",
+      category: "other",
+      description: "",
+      default_processing_strategy:
+        "general_doc" as MaterialTypeCatalogItem["default_processing_strategy"],
+      default_confidence_threshold: 0.9,
+      recommended_facts: [],
+      status: "ACTIVE",
+    });
+    setIsMetaModalOpen(true);
+  };
+
+  const handleMetaEdit = (item: MaterialTypeCatalogItem) => {
+    setEditingMeta({ ...item });
+    setIsMetaModalOpen(true);
+  };
+
+  const handleMetaDelete = async (typeCode: string) => {
+    const referenced = materials.some((m) => m.type_code === typeCode);
+    if (referenced) {
+      alert("该元数据已被理赔材料引用，无法删除。请先解除关联后再删除。");
+      return;
+    }
+    if (!confirm("确认删除该材料元数据？")) return;
+    const updated = materialTypeCatalog.filter((t) => t.type_code !== typeCode);
+    await api.materialTypeCatalog.saveAll(updated);
+    setMaterialTypeCatalog(updated);
+  };
+
+  const handleMetaSave = async () => {
+    if (!editingMeta?.type_code?.trim() || !editingMeta?.type_name?.trim()) {
+      alert("材料代码和材料名称不能为空。");
+      return;
+    }
+    const isNew = !materialTypeCatalog.some(
+      (t) => t.type_code === editingMeta.type_code,
+    );
+    if (isNew) {
+      const duplicate = materialTypeCatalog.find(
+        (t) => t.type_code === editingMeta.type_code!.trim(),
+      );
+      if (duplicate) {
+        alert(`材料代码 "${editingMeta.type_code}" 已存在，请使用不同的代码。`);
+        return;
+      }
+    }
+    const item: MaterialTypeCatalogItem = {
+      type_code: editingMeta.type_code!.trim(),
+      type_name: editingMeta.type_name!.trim(),
+      category: editingMeta.category || "other",
+      description: editingMeta.description || "",
+      default_processing_strategy:
+        (editingMeta.default_processing_strategy as MaterialTypeCatalogItem["default_processing_strategy"]) ||
+        "general_doc",
+      default_confidence_threshold:
+        editingMeta.default_confidence_threshold ?? 0.9,
+      recommended_facts: editingMeta.recommended_facts || [],
+      status:
+        (editingMeta.status as MaterialTypeCatalogItem["status"]) || "ACTIVE",
+    };
+    let updated: MaterialTypeCatalogItem[];
+    if (isNew) {
+      updated = [...materialTypeCatalog, item];
+    } else {
+      updated = materialTypeCatalog.map((t) =>
+        t.type_code === item.type_code ? item : t,
+      );
+    }
+    await api.materialTypeCatalog.saveAll(updated);
+    setMaterialTypeCatalog(updated);
+    setIsMetaModalOpen(false);
+    setEditingMeta(null);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center py-20">
@@ -1271,6 +1569,12 @@ const ClaimItemConfigPage: React.FC = () => {
           onClick={() => setActiveTab("accident_causes")}
         >
           事故原因及索赔材料关联
+        </button>
+        <button
+          className={`px-6 py-3 text-sm font-medium transition-colors ${activeTab === "metadata" ? "text-brand-blue-600 border-b-2 border-brand-blue-600" : "text-gray-500 hover:text-gray-700"}`}
+          onClick={() => setActiveTab("metadata")}
+        >
+          材料元数据
         </button>
       </div>
 
@@ -1888,6 +2192,221 @@ const ClaimItemConfigPage: React.FC = () => {
             )}
           </div>
         </div>
+      ) : /* ── Tab: 材料元数据 ── */
+      activeTab === "metadata" ? (
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <button
+              onClick={handleMetaAdd}
+              className="px-4 py-2 bg-brand-blue-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-brand-blue-700 transition-colors"
+            >
+              新增元数据
+            </button>
+          </div>
+          <div className="bg-white p-6 rounded-md shadow-sm border border-gray-200">
+            <div className="max-w-md">
+              <label
+                htmlFor="meta-search"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                搜索元数据
+              </label>
+              <div className="flex space-x-2">
+                <input
+                  id="meta-search"
+                  type="text"
+                  value={metaSearchQuery}
+                  onChange={(e) => setMetaSearchQuery(e.target.value)}
+                  placeholder="搜索材料名称或代码"
+                  className="flex-1 h-9 px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 text-sm"
+                />
+                <button
+                  onClick={() => setMetaSearchQuery("")}
+                  className="h-9 px-4 bg-gray-100 text-gray-600 text-sm font-medium rounded-md hover:bg-gray-200 transition"
+                >
+                  重置
+                </button>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      材料名称
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      材料代码
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      状态
+                    </th>
+                    <th className="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      操作
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {paginatedMetaCatalog.length > 0 ? (
+                    paginatedMetaCatalog.map((item) => (
+                      <tr
+                        key={item.type_code}
+                        className="hover:bg-gray-50 transition-colors"
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {item.type_name}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-xs font-mono text-gray-500">
+                          {item.type_code}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <span
+                            className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
+                              item.status === "ACTIVE"
+                                ? "bg-green-50 text-green-700"
+                                : item.status === "DRAFT"
+                                  ? "bg-yellow-50 text-yellow-700"
+                                  : "bg-gray-100 text-gray-500"
+                            }`}
+                          >
+                            {item.status === "ACTIVE"
+                              ? "启用"
+                              : item.status === "DRAFT"
+                                ? "草稿"
+                                : "停用"}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-3">
+                          <button
+                            onClick={() => handleMetaEdit(item)}
+                            className="text-brand-blue-600 hover:text-brand-blue-900 bg-brand-blue-50 hover:bg-brand-blue-100 px-3 py-1 rounded-md transition-colors"
+                          >
+                            修改
+                          </button>
+                          <button
+                            onClick={() => handleMetaDelete(item.type_code)}
+                            className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1 rounded-md transition-colors"
+                          >
+                            删除
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan={4}
+                        className="px-6 py-8 text-center text-sm text-gray-500"
+                      >
+                        暂无符合条件的元数据
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <div className="p-4 border-t border-gray-200">
+              <Pagination
+                currentPage={metaCurrentPage}
+                totalPages={metaTotalPages}
+                onPageChange={setMetaCurrentPage}
+                totalItems={filteredMetaCatalog.length}
+                itemsPerPage={META_ITEMS_PER_PAGE}
+              />
+            </div>
+          </div>
+
+          {/* Meta Edit Modal */}
+          <Modal
+            isOpen={isMetaModalOpen}
+            onClose={() => setIsMetaModalOpen(false)}
+            title={
+              editingMeta?.type_code &&
+              materialTypeCatalog.some(
+                (t) => t.type_code === editingMeta.type_code,
+              )
+                ? "修改材料元数据"
+                : "新增材料元数据"
+            }
+            footer={
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => setIsMetaModalOpen(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={handleMetaSave}
+                  disabled={
+                    !editingMeta?.type_code?.trim() ||
+                    !editingMeta?.type_name?.trim()
+                  }
+                  className="px-4 py-2 bg-brand-blue-600 text-white text-sm font-medium rounded-md hover:bg-brand-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  保存
+                </button>
+              </div>
+            }
+          >
+            <div className="space-y-4">
+              <Input
+                label="材料代码"
+                required
+                value={editingMeta?.type_code || ""}
+                onChange={(e) =>
+                  setEditingMeta((prev) => ({
+                    ...prev!,
+                    type_code: e.target.value,
+                  }))
+                }
+                placeholder="例如: MT-MED-BLOOD_TEST"
+                disabled={
+                  !!editingMeta?.type_code &&
+                  materialTypeCatalog.some(
+                    (t) => t.type_code === editingMeta.type_code,
+                  )
+                }
+              />
+              <Input
+                label="材料名称"
+                required
+                value={editingMeta?.type_name || ""}
+                onChange={(e) =>
+                  setEditingMeta((prev) => ({
+                    ...prev!,
+                    type_name: e.target.value,
+                  }))
+                }
+                placeholder="例如: 血液检验报告"
+              />
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700">
+                  状态
+                </label>
+                <select
+                  value={editingMeta?.status || "ACTIVE"}
+                  onChange={(e) =>
+                    setEditingMeta((prev) => ({
+                      ...prev!,
+                      status: e.target.value as "ACTIVE" | "DRAFT" | "DISABLED",
+                    }))
+                  }
+                  className="w-full h-9 px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 text-sm"
+                >
+                  <option value="ACTIVE">启用</option>
+                  <option value="DRAFT">草稿</option>
+                  <option value="DISABLED">停用</option>
+                </select>
+                <p className="text-xs text-gray-500">
+                  仅"启用"状态的元数据会出现在新增材料的下拉列表中
+                </p>
+              </div>
+            </div>
+          </Modal>
+        </div>
       ) : (
         /* ── 产品索赔材料配置（else 分支） ── */
         <div className="flex gap-5" style={{ minHeight: "600px" }}>
@@ -2296,6 +2815,7 @@ const ClaimItemConfigPage: React.FC = () => {
         isOpen={isItemModalOpen}
         onClose={() => setIsItemModalOpen(false)}
         title="索赔项目配置"
+        width="max-w-6xl"
         footer={
           <div className="flex justify-end space-x-3">
             <button
@@ -2313,107 +2833,237 @@ const ClaimItemConfigPage: React.FC = () => {
           </div>
         }
       >
-        <div className="space-y-4">
-          <Input
-            label="项目名称"
-            value={editingItem?.name || ""}
-            onChange={(e) =>
-              setEditingItem((prev) => ({ ...prev!, name: e.target.value }))
-            }
-            required
-          />
-          <Textarea
-            label="项目说明"
-            value={editingItem?.description || ""}
-            onChange={(e) =>
-              setEditingItem((prev) => ({
-                ...prev!,
-                description: e.target.value,
-              }))
-            }
-            rows={2}
-          />
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              关联责任
-            </label>
-            {(editingItem?.responsibilityIds || []).length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {(editingItem?.responsibilityIds || []).map((id) => (
-                  <span
-                    key={id}
-                    className="px-2 py-1 text-xs rounded-full bg-blue-50 text-blue-700 border border-blue-100"
-                  >
-                    {responsibilities.find((resp) => resp.id === id)?.name ||
-                      id}
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <div className="text-sm text-gray-500">请选择要关联的责任</div>
-            )}
-            <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2 border border-gray-200 rounded-md bg-white">
-              {responsibilities.map((resp) => (
-                <label
-                  key={resp.id}
-                  className="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded cursor-pointer"
-                >
-                  <input
-                    type="checkbox"
-                    checked={
-                      editingItem?.responsibilityIds?.includes(resp.id) || false
-                    }
-                    onChange={() => toggleResponsibilityForItem(resp.id)}
-                    className="rounded border-gray-300 text-brand-blue-600 focus:ring-brand-blue-500"
-                  />
-                  <span className="text-sm text-gray-700">{resp.name}</span>
-                </label>
-              ))}
-            </div>
+        <div className="space-y-6">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
+            <Input
+              label="项目名称"
+              value={editingItem?.name || ""}
+              onChange={(e) =>
+                setEditingItem((prev) => ({ ...prev!, name: e.target.value }))
+              }
+              required
+            />
+            <Textarea
+              label="项目说明"
+              value={editingItem?.description || ""}
+              onChange={(e) =>
+                setEditingItem((prev) => ({
+                  ...prev!,
+                  description: e.target.value,
+                }))
+              }
+              rows={2}
+            />
           </div>
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              关联理赔材料
-            </label>
-            <div className="space-y-1 max-h-56 overflow-y-auto p-2 border border-gray-200 rounded-md">
-              {materials.map((mat) => {
-                const isChecked =
-                  editingItem?.materialIds?.includes(mat.id) || false;
-                const isRequired =
-                  editingItem?.materialRequiredMap?.[mat.id] || false;
-                return (
-                  <div
-                    key={mat.id}
-                    className={`flex items-center justify-between gap-2 px-2 py-1.5 rounded transition-colors ${isChecked ? "bg-brand-blue-50" : "hover:bg-gray-50"}`}
-                  >
-                    <label className="flex items-center gap-2 cursor-pointer flex-1 min-w-0">
+
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+            <section className="rounded-xl border border-gray-200 bg-gray-50/60 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-base font-semibold text-gray-900">
+                    关联责任
+                  </h3>
+                  <p className="mt-1 text-xs leading-5 text-gray-500">
+                    先明确这个索赔项目适用于哪些责任，便于后续在产品责任配置中复用。
+                  </p>
+                </div>
+                <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-600 ring-1 ring-gray-200">
+                  已选 {(editingItem?.responsibilityIds || []).length} 个
+                </span>
+              </div>
+
+              <div className="mt-4">
+                {(editingItem?.responsibilityIds || []).length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {(editingItem?.responsibilityIds || []).map((id) => (
+                      <span
+                        key={id}
+                        className="px-2.5 py-1 text-xs rounded-full bg-blue-50 text-blue-700 border border-blue-100"
+                      >
+                        {responsibilities.find((resp) => resp.id === id)
+                          ?.name || id}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="rounded-lg border border-dashed border-gray-300 bg-white px-3 py-4 text-sm text-gray-500">
+                    还没有关联责任
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-4 grid grid-cols-1 gap-2 md:grid-cols-2">
+                {responsibilities.map((resp) => {
+                  const isChecked =
+                    editingItem?.responsibilityIds?.includes(resp.id) || false;
+                  return (
+                    <label
+                      key={resp.id}
+                      className={`flex items-center gap-3 rounded-lg border px-3 py-3 cursor-pointer transition-colors ${
+                        isChecked
+                          ? "border-brand-blue-200 bg-brand-blue-50"
+                          : "border-gray-200 bg-white hover:bg-gray-50"
+                      }`}
+                    >
                       <input
                         type="checkbox"
                         checked={isChecked}
-                        onChange={() => toggleMaterial(mat.id)}
-                        className="rounded border-gray-300 text-brand-blue-600 focus:ring-brand-blue-500 flex-shrink-0"
+                        onChange={() => toggleResponsibilityForItem(resp.id)}
+                        className="rounded border-gray-300 text-brand-blue-600 focus:ring-brand-blue-500"
                       />
-                      <span className="text-sm text-gray-700 truncate">
-                        {mat.name}
+                      <span className="min-w-0 text-sm font-medium text-gray-700">
+                        {resp.name}
                       </span>
                     </label>
-                    {isChecked && (
-                      <label className="flex items-center gap-1 cursor-pointer flex-shrink-0">
-                        <input
-                          type="checkbox"
-                          checked={isRequired}
-                          onChange={() => toggleMaterialRequired(mat.id)}
-                          className="rounded border-gray-300 text-red-500 focus:ring-red-400"
-                        />
-                        <span className="text-xs text-red-500 font-medium whitespace-nowrap">
-                          必传
-                        </span>
-                      </label>
-                    )}
+                  );
+                })}
+              </div>
+            </section>
+
+            <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                  <h3 className="text-base font-semibold text-gray-900">
+                    关联理赔材料
+                  </h3>
+                  <p className="mt-1 text-xs leading-5 text-gray-500">
+                    勾选后即可纳入该索赔项目；已勾选材料可继续标记为“必传”。
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2 text-xs">
+                  <span className="rounded-full bg-gray-100 px-3 py-1 font-medium text-gray-600">
+                    已选 {(editingItem?.materialIds || []).length} 个
+                  </span>
+                  <span className="rounded-full bg-red-50 px-3 py-1 font-medium text-red-600">
+                    必传{" "}
+                    {
+                      Object.entries(
+                        editingItem?.materialRequiredMap || {},
+                      ).filter(([, required]) => Boolean(required)).length
+                    }{" "}
+                    个
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-4 flex flex-col gap-3 lg:flex-row">
+                <div className="flex-1">
+                  <label
+                    htmlFor="claim-item-material-search"
+                    className="mb-1 block text-sm font-medium text-gray-700"
+                  >
+                    搜索材料
+                  </label>
+                  <input
+                    id="claim-item-material-search"
+                    type="text"
+                    value={itemMaterialSearchQuery}
+                    onChange={(e) => setItemMaterialSearchQuery(e.target.value)}
+                    placeholder="按材料名称或说明筛选"
+                    className="h-10 w-full rounded-md border border-gray-300 px-3 text-sm focus:ring-1 focus:ring-brand-blue-500"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setItemMaterialSearchQuery("")}
+                  className="h-10 rounded-md border border-gray-300 px-4 text-sm font-medium text-gray-600 hover:bg-gray-50"
+                >
+                  清空筛选
+                </button>
+              </div>
+
+              {(editingItem?.materialIds || []).length > 0 && (
+                <div className="mt-4 flex flex-wrap gap-2 rounded-lg bg-slate-50 p-3">
+                  {(editingItem?.materialIds || []).map((matId) => {
+                    const isRequired =
+                      editingItem?.materialRequiredMap?.[matId] || false;
+                    return (
+                      <span
+                        key={matId}
+                        className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs ${
+                          isRequired
+                            ? "border-red-200 bg-red-50 text-red-700"
+                            : "border-slate-200 bg-white text-slate-700"
+                        }`}
+                      >
+                        {getMaterialName(matId)}
+                        {isRequired && (
+                          <span className="font-semibold">必传</span>
+                        )}
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
+
+              <div className="mt-4 max-h-[28rem] space-y-2 overflow-y-auto pr-1">
+                {filteredMaterialsForItemModal.length > 0 ? (
+                  filteredMaterialsForItemModal.map((mat) => {
+                    const isChecked =
+                      editingItem?.materialIds?.includes(mat.id) || false;
+                    const isRequired =
+                      editingItem?.materialRequiredMap?.[mat.id] || false;
+                    return (
+                      <div
+                        key={mat.id}
+                        className={`rounded-xl border p-3 transition-colors ${
+                          isChecked
+                            ? "border-brand-blue-200 bg-brand-blue-50/70"
+                            : "border-gray-200 hover:bg-gray-50"
+                        }`}
+                      >
+                        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                          <label className="flex min-w-0 flex-1 cursor-pointer items-start gap-3">
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={() => toggleMaterial(mat.id)}
+                              className="mt-0.5 rounded border-gray-300 text-brand-blue-600 focus:ring-brand-blue-500"
+                            />
+                            <span className="min-w-0">
+                              <span className="block text-sm font-medium text-gray-800">
+                                {mat.name}
+                              </span>
+                              <span className="mt-1 block text-xs leading-5 text-gray-500">
+                                {mat.description || "未填写材料说明"}
+                              </span>
+                            </span>
+                          </label>
+                          <div className="flex items-center justify-between gap-3 lg:justify-end">
+                            {mat.confidenceThreshold != null && (
+                              <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-slate-600 ring-1 ring-slate-200">
+                                转人工{" "}
+                                {(mat.confidenceThreshold * 100).toFixed(0)}%
+                              </span>
+                            )}
+                            <label
+                              className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium ${
+                                isChecked
+                                  ? "cursor-pointer border-red-200 bg-white text-red-600"
+                                  : "cursor-not-allowed border-gray-200 bg-gray-50 text-gray-400"
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isRequired}
+                                disabled={!isChecked}
+                                onChange={() => toggleMaterialRequired(mat.id)}
+                                className="rounded border-gray-300 text-red-500 focus:ring-red-400"
+                              />
+                              必传
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-3 py-8 text-center text-sm text-gray-500">
+                    没有匹配的材料，试试换个关键词
                   </div>
-                );
-              })}
-            </div>
+                )}
+              </div>
+            </section>
           </div>
         </div>
       </Modal>
@@ -2597,15 +3247,55 @@ const ClaimItemConfigPage: React.FC = () => {
       >
         <div className="space-y-4">
           <div className="grid gap-4 lg:grid-cols-2">
-            <Input
-              label="材料名称"
-              value={editingMaterial?.name || ""}
-              onChange={(e) =>
-                setEditingMaterial((prev) => ({ ...prev!, name: e.target.value }))
-              }
-              placeholder="请输入材料名称"
-              required
-            />
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">
+                材料名称 <span className="text-red-500">*</span>
+              </label>
+              {editingMaterial?.id &&
+              materials.find((m) => m.id === editingMaterial.id) ? (
+                <input
+                  type="text"
+                  value={editingMaterial?.name || ""}
+                  disabled
+                  className="w-full h-9 px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-sm text-gray-500"
+                />
+              ) : (
+                <select
+                  value={editingMaterial?.type_code || ""}
+                  onChange={(e) => {
+                    const selected = materialTypeCatalog.find(
+                      (t) => t.type_code === e.target.value,
+                    );
+                    if (selected) {
+                      setEditingMaterial((prev) => ({
+                        ...prev!,
+                        name: selected.type_name,
+                        type_code: selected.type_code,
+                        category: selected.category,
+                        description: prev?.description || selected.description,
+                      }));
+                    } else {
+                      setEditingMaterial((prev) => ({
+                        ...prev!,
+                        name: "",
+                        type_code: "",
+                        category: undefined,
+                      }));
+                    }
+                  }}
+                  className="w-full h-9 px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 text-sm"
+                >
+                  <option value="">请选择材料</option>
+                  {materialTypeCatalog
+                    .filter((t) => t.status === "ACTIVE")
+                    .map((t) => (
+                      <option key={t.type_code} value={t.type_code}>
+                        {t.type_name}（{t.type_code}）
+                      </option>
+                    ))}
+                </select>
+              )}
+            </div>
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700">
                 转人工置信度阈值（%）
@@ -2635,7 +3325,8 @@ const ClaimItemConfigPage: React.FC = () => {
                 <span className="text-sm text-gray-500">%</span>
               </div>
               <p className="text-xs text-gray-500">
-                当 AI 识别结果的置信度低于此值时，该材料将自动转人工复核。留空表示不启用此规则。
+                当 AI
+                识别结果的置信度低于此值时，该材料将自动转人工复核。留空表示不启用此规则。
               </p>
             </div>
           </div>
@@ -2685,9 +3376,12 @@ const ClaimItemConfigPage: React.FC = () => {
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div>
-                <div className="text-sm font-semibold text-slate-900">Schema Builder</div>
+                <div className="text-sm font-semibold text-slate-900">
+                  Schema Builder
+                </div>
                 <p className="mt-1 text-xs leading-5 text-slate-500">
-                  一棵字段树同时描述材料 schema 和可选事实映射。字段先跟材料走；需要进入规则层时，直接在字段上绑定标准事实。
+                  一棵字段树同时描述材料 schema
+                  和可选事实映射。字段先跟材料走；需要进入规则层时，直接在字段上绑定标准事实。
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2 text-xs">
                   <span className="rounded-full bg-white px-3 py-1 text-slate-600 ring-1 ring-slate-200">
@@ -2697,7 +3391,14 @@ const ClaimItemConfigPage: React.FC = () => {
                     可选 schema 路径 {materialSchemaPaths.length} 个
                   </span>
                   <span className="rounded-full bg-white px-3 py-1 text-slate-600 ring-1 ring-slate-200">
-                    已绑定事实 {collectFactBindingsFromFields((editingMaterial?.schemaFields as MaterialSchemaField[]) || []).length} 个
+                    已绑定事实{" "}
+                    {
+                      collectFactBindingsFromFields(
+                        (editingMaterial?.schemaFields as MaterialSchemaField[]) ||
+                          [],
+                      ).length
+                    }{" "}
+                    个
                   </span>
                 </div>
               </div>
@@ -2710,7 +3411,9 @@ const ClaimItemConfigPage: React.FC = () => {
               </button>
             </div>
             <div className="mt-4 rounded-xl border border-gray-200 bg-white px-3 py-3 text-xs leading-5 text-slate-500">
-              现在只维护一棵 schema 字段树。材料提取、材料校验和标准事实透传都基于这些字段；若某个字段需要进入规则层，直接在字段上绑定 `fact_id` 即可。
+              现在只维护一棵 schema
+              字段树。材料提取、材料校验和标准事实透传都基于这些字段；若某个字段需要进入规则层，直接在字段上绑定
+              `fact_id` 即可。
             </div>
           </div>
 
@@ -2718,9 +3421,12 @@ const ClaimItemConfigPage: React.FC = () => {
             <div className="space-y-3 rounded-md border border-gray-200 bg-white p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">递归字段编辑器</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    递归字段编辑器
+                  </label>
                   <p className="mt-1 text-xs text-gray-500">
-                    每个字段先属于材料 schema；需要进入规则层时，再给字段补一个可选的标准事实绑定。对象字段可继续新增子字段，数组字段可继续维护数组项字段。
+                    每个字段先属于材料
+                    schema；需要进入规则层时，再给字段补一个可选的标准事实绑定。对象字段可继续新增子字段，数组字段可继续维护数组项字段。
                   </p>
                 </div>
                 <button
@@ -2729,8 +3435,12 @@ const ClaimItemConfigPage: React.FC = () => {
                     setEditingMaterial((prev) => ({
                       ...prev!,
                       schemaFields: [
-                        ...((prev?.schemaFields as MaterialSchemaField[]) || []),
-                        createEmptyMaterialSchemaField((((prev?.schemaFields as MaterialSchemaField[]) || []).length + 1)),
+                        ...((prev?.schemaFields as MaterialSchemaField[]) ||
+                          []),
+                        createEmptyMaterialSchemaField(
+                          ((prev?.schemaFields as MaterialSchemaField[]) || [])
+                            .length + 1,
+                        ),
                       ],
                     }))
                   }
@@ -2740,15 +3450,21 @@ const ClaimItemConfigPage: React.FC = () => {
                 </button>
               </div>
               <div className="rounded-md border border-dashed border-slate-200 bg-slate-50 px-3 py-3 text-xs leading-5 text-slate-500">
-                示例：先新增 `parties`，类型选 `ARRAY`；再在数组项里新增 `name / vehicle_info / responsibility`。如果 `responsibility` 需要进入规则层，直接在该字段上绑定标准事实即可。
+                示例：先新增 `parties`，类型选 `ARRAY`；再在数组项里新增 `name /
+                vehicle_info / responsibility`。如果 `responsibility`
+                需要进入规则层，直接在该字段上绑定标准事实即可。
               </div>
-              {((editingMaterial?.schemaFields as MaterialSchemaField[]) || []).length === 0 ? (
+              {((editingMaterial?.schemaFields as MaterialSchemaField[]) || [])
+                .length === 0 ? (
                 <div className="rounded-md bg-slate-50 px-3 py-4 text-sm text-slate-500">
                   当前还没有字段。先新增 schema 字段，再决定是否绑定到标准事实。
                 </div>
               ) : (
                 <MaterialSchemaFieldListEditor
-                  fields={(editingMaterial?.schemaFields as MaterialSchemaField[]) || []}
+                  fields={
+                    (editingMaterial?.schemaFields as MaterialSchemaField[]) ||
+                    []
+                  }
                   onChange={(fields) =>
                     setEditingMaterial((prev) => ({
                       ...prev!,
@@ -2762,37 +3478,61 @@ const ClaimItemConfigPage: React.FC = () => {
             </div>
             <div className="space-y-4">
               <div className="rounded-md border border-gray-200 bg-white p-4">
-                <div className="text-sm font-medium text-slate-700">当前 schema 路径</div>
-                <p className="mt-1 text-xs text-slate-500">材料校验规则和标准事实透传都直接复用这些字段路径，不再维护第二套字段表。</p>
+                <div className="text-sm font-medium text-slate-700">
+                  当前 schema 路径
+                </div>
+                <p className="mt-1 text-xs text-slate-500">
+                  材料校验规则和标准事实透传都直接复用这些字段路径，不再维护第二套字段表。
+                </p>
                 <div className="mt-3 max-h-72 space-y-2 overflow-y-auto">
-                  {materialSchemaPaths.length > 0 ? materialSchemaPaths.map((pathOption) => {
-                    const pathBinding = collectFactBindingsFromFields((editingMaterial?.schemaFields as MaterialSchemaField[]) || []).find((binding) => binding.field_key === pathOption.path);
-                    const fact = factCatalog.find((item) => item.fact_id === pathBinding?.fact_id);
-                    return (
-                      <div key={pathOption.path} className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
-                        <div className="text-sm font-medium text-slate-800">{pathOption.path}</div>
-                        <div className="mt-1 text-xs text-slate-500">
-                          {pathOption.label} · {pathOption.type}
-                        </div>
-                        {fact && (
-                          <div className="mt-2 inline-flex rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-brand-blue-700 ring-1 ring-brand-blue-100">
-                            映射到 {fact.label}
+                  {materialSchemaPaths.length > 0 ? (
+                    materialSchemaPaths.map((pathOption) => {
+                      const pathBinding = collectFactBindingsFromFields(
+                        (editingMaterial?.schemaFields as MaterialSchemaField[]) ||
+                          [],
+                      ).find(
+                        (binding) => binding.field_key === pathOption.path,
+                      );
+                      const fact = factCatalog.find(
+                        (item) => item.fact_id === pathBinding?.fact_id,
+                      );
+                      return (
+                        <div
+                          key={pathOption.path}
+                          className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2"
+                        >
+                          <div className="text-sm font-medium text-slate-800">
+                            {pathOption.path}
                           </div>
-                        )}
-                      </div>
-                    );
-                  }) : (
+                          <div className="mt-1 text-xs text-slate-500">
+                            {pathOption.label} · {pathOption.type}
+                          </div>
+                          {fact && (
+                            <div className="mt-2 inline-flex rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-brand-blue-700 ring-1 ring-brand-blue-100">
+                              映射到 {fact.label}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
+                  ) : (
                     <div className="rounded-md bg-slate-50 px-3 py-4 text-sm text-slate-500">
-                      还没有 schema 路径。先在左侧新增字段，路径会实时出现在这里。
+                      还没有 schema
+                      路径。先在左侧新增字段，路径会实时出现在这里。
                     </div>
                   )}
                 </div>
               </div>
               <div className="rounded-md border border-gray-200 bg-white p-4">
-                <div className="mb-2 text-sm font-medium text-slate-700">JSON Schema 预览</div>
+                <div className="mb-2 text-sm font-medium text-slate-700">
+                  JSON Schema 预览
+                </div>
                 <textarea
                   className="h-64 w-full rounded-md border border-gray-200 bg-slate-50 px-3 py-2 font-mono text-sm"
-                  value={buildSchemaFromFields((editingMaterial?.schemaFields as MaterialSchemaField[]) || [])}
+                  value={buildSchemaFromFields(
+                    (editingMaterial?.schemaFields as MaterialSchemaField[]) ||
+                      [],
+                  )}
                   readOnly
                 />
                 <p className="mt-2 text-xs text-slate-500">
@@ -2804,7 +3544,9 @@ const ClaimItemConfigPage: React.FC = () => {
 
           {editorValidationErrors.length > 0 && (
             <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-              <div className="text-sm font-semibold text-amber-800">保存前校验</div>
+              <div className="text-sm font-semibold text-amber-800">
+                保存前校验
+              </div>
               <ul className="mt-2 space-y-1 text-sm text-amber-700">
                 {editorValidationErrors.map((error) => (
                   <li key={error}>- {error}</li>

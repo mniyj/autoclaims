@@ -1,5 +1,6 @@
 import type { ClaimsMaterial, ClassificationResult, AiClassification, MaterialCategory } from '../types';
 import { CLASSIFICATION_CONFIDENCE_THRESHOLD } from '../types';
+import { normalizeImageForOcr } from '../imageNormalizationService';
 
 /**
  * 材料分类器
@@ -45,23 +46,7 @@ export class MaterialClassifier {
   private async aiClassifyDocument(
     fileSource: File | Blob | string
   ): Promise<AiClassification> {
-    let base64Data: string;
-    let mimeType = 'image/jpeg';
-
-    // 处理输入
-    if (typeof fileSource === 'string') {
-      if (fileSource.startsWith('http')) {
-        const response = await fetch(fileSource);
-        const blob = await response.blob();
-        base64Data = await this.blobToBase64(blob);
-        mimeType = blob.type || 'image/jpeg';
-      } else {
-        base64Data = fileSource.replace(/^data:image\/\w+;base64,/, '');
-      }
-    } else {
-      base64Data = await this.blobToBase64(fileSource);
-      mimeType = (fileSource as File).type || 'image/jpeg';
-    }
+    const { base64Data, mimeType } = await normalizeImageForOcr(fileSource);
 
     const prompt = `你是专业的保险理赔材料识别专家。请分析这张图片，判断它是什么类型的理赔材料。
 
@@ -202,18 +187,6 @@ export class MaterialClassifier {
       other: '其他',
     };
     return category ? categoryMap[category] || category : '其他';
-  }
-
-  private blobToBase64(blob: Blob): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64 = reader.result as string;
-        resolve(base64.split(',')[1] || base64);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
   }
 }
 

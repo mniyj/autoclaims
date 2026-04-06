@@ -55,6 +55,53 @@ const PROCESSOR_HANDLERS = {
   COVERAGE_ALIAS_RESOLVE: handleCoverageAliasResolve,
 };
 
+function toFiniteNumber(value) {
+  const normalized = Number(value);
+  return Number.isFinite(normalized) ? normalized : null;
+}
+
+function resolvePreExistingUncertainResolution(proc, ctx) {
+  const config = proc.config || {};
+  const resolution = config.uncertain_resolution || {};
+  const rules = Array.isArray(resolution.rules) ? resolution.rules : [];
+  const productLine = ctx.ruleset?.product_line || ctx.policy?.product_line || null;
+  const claimScenario =
+    ctx.aggregation?.domainModel?.claimScenario ||
+    ctx.aggregation?.handlingProfile?.domainModel?.claimScenario ||
+    ctx.claim?.claim_scenario ||
+    ctx.claim?.claimScenario ||
+    null;
+  const claimAmount =
+    toFiniteNumber(ctx.claim?.total_claimed_amount) ??
+    toFiniteNumber(ctx.claim?.claimed_amount) ??
+    toFiniteNumber(ctx.claim?.claimAmount);
+
+  const matchedRule = rules.find((rule) => {
+    const when = rule?.when || {};
+    if (when.product_line && when.product_line !== productLine) {
+      return false;
+    }
+    if (when.claim_scenario && when.claim_scenario !== claimScenario) {
+      return false;
+    }
+    const maxClaimAmount = toFiniteNumber(when.max_claim_amount);
+    if (maxClaimAmount != null) {
+      if (claimAmount == null || claimAmount > maxClaimAmount) {
+        return false;
+      }
+    }
+    return true;
+  });
+
+  return {
+    action: matchedRule?.action || resolution.default || "MANUAL_REVIEW",
+    matchedRule: matchedRule || null,
+    productLine,
+    claimScenario,
+    claimAmount,
+  };
+}
+
 async function handlePreExistingCondition(proc, { claimCaseId, productCode, ocrData, rulesetOverride }) {
   const existing = ocrData[proc.config.output_field];
   if (existing === true || existing === false) {
@@ -79,9 +126,15 @@ async function handlePreExistingCondition(proc, { claimCaseId, productCode, ocrD
     };
 
     const assessment = await assessPreExistingCondition(claimContext, policyInfo);
+    const uncertainResolution =
+      assessment.result === "UNCERTAIN"
+        ? resolvePreExistingUncertainResolution(proc, ctx)
+        : null;
     const outputValue = assessment.result === "YES" ? proc.config.on_yes
       : assessment.result === "NO" ? proc.config.on_no
-      : proc.config.on_uncertain;
+      : uncertainResolution?.action === "ASSUME_FALSE"
+        ? proc.config.on_no
+        : proc.config.on_uncertain;
 
     return {
       ocrData: {
@@ -100,6 +153,15 @@ async function handlePreExistingCondition(proc, { claimCaseId, productCode, ocrD
           policyEffectiveDate: policyInfo.effective_date || null,
           waitingPeriodDays: policyInfo.waiting_period_days || 0,
         },
+        uncertainResolution: uncertainResolution
+          ? {
+              action: uncertainResolution.action,
+              matchedRule: uncertainResolution.matchedRule,
+              productLine: uncertainResolution.productLine,
+              claimScenario: uncertainResolution.claimScenario,
+              claimAmount: uncertainResolution.claimAmount,
+            }
+          : null,
       },
     };
   } catch (error) {

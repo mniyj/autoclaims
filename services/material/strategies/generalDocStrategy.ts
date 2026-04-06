@@ -1,5 +1,6 @@
 import type { ProcessingStrategy, StrategyContext, StrategyResult } from './baseStrategy';
 import { uploadToOSS } from '../../services/ossService';
+import { normalizeImageForOcr } from '../../imageNormalizationService';
 
 /**
  * 通用文档处理策略
@@ -82,9 +83,7 @@ export class GeneralDocStrategy implements ProcessingStrategy {
   }> {
     const geminiModel = 'gemini-2.5-flash';
 
-    const response = await fetch(imageUrl);
-    const blob = await response.blob();
-    const base64 = await this.blobToBase64(blob);
+    const { base64Data, mimeType } = await normalizeImageForOcr(imageUrl);
 
     const prompt = `你是一个专业的文档分析助手。请分析这张图片中的「${materialName || '文档'}」。
 
@@ -115,8 +114,8 @@ export class GeneralDocStrategy implements ProcessingStrategy {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         mode: 'gemini',
-        base64Data: base64,
-        mimeType: blob.type || 'image/jpeg',
+        base64Data,
+        mimeType,
         prompt,
         geminiModel,
       }),
@@ -149,17 +148,5 @@ export class GeneralDocStrategy implements ProcessingStrategy {
         confidence: 0.3,
       };
     }
-  }
-
-  private blobToBase64(blob: Blob): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64 = reader.result as string;
-        resolve(base64.split(',')[1] || base64);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
   }
 }

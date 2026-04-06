@@ -1,0 +1,324 @@
+{
+  "project": "ICD-10疾病分类导入系统",
+  "version": "1.0",
+  "created": "2026-03-16",
+  "total_phases": 6,
+  "total_tasks": 19,
+  "estimated_days": 13,
+  "phases": [
+    {
+      "phase_id": 1,
+      "name": "基础设施",
+      "duration_days": 2,
+      "tasks": [
+        {
+          "task_id": "1.1",
+          "name": "创建 TypeScript 类型定义",
+          "priority": "P0",
+          "estimated_hours": 4,
+          "files_to_create": [
+            "types/icd10.ts"
+          ],
+          "acceptance_criteria": [
+            "ICD10Disease 接口定义完整",
+            "层级结构类型定义正确",
+            "保险元数据类型定义完成",
+            "与现有 Disease 类型兼容"
+          ]
+        },
+        {
+          "task_id": "1.2",
+          "name": "创建存储结构和初始化脚本",
+          "priority": "P0",
+          "estimated_hours": 6,
+          "files_to_create": [
+            "scripts/convert-icd10-excel.ts",
+            "jsonlist/icd10/diseases.json",
+            "jsonlist/icd10/chapters.json",
+            "jsonlist/icd10/sections.json",
+            "jsonlist/icd10/categories.json",
+            "jsonlist/icd10/subcategories.json"
+          ],
+          "acceptance_criteria": [
+            "成功转换 34,227 条 Excel 数据",
+            "所有 JSON 文件生成完成",
+            "数据完整性验证通过",
+            "备份原始数据文件"
+          ]
+        },
+        {
+          "task_id": "1.3",
+          "name": "创建索引文件",
+          "priority": "P1",
+          "estimated_hours": 4,
+          "files_to_create": [
+            "jsonlist/icd10/indexes.json"
+          ],
+          "acceptance_criteria": [
+            "byCode 索引完整",
+            "byChapter 索引完整",
+            "byCategory 索引完整",
+            "索引文件格式正确"
+          ]
+        }
+      ]
+    },
+    {
+      "phase_id": 2,
+      "name": "核心服务",
+      "duration_days": 3,
+      "tasks": [
+        {
+          "task_id": "2.1",
+          "name": "ICD10Service 实现",
+          "priority": "P0",
+          "estimated_hours": 8,
+          "files_to_create": [
+            "services/icd10Service.ts"
+          ],
+          "acceptance_criteria": [
+            "所有 CRUD 方法实现",
+            "搜索响应时间 < 200ms",
+            "支持分页和筛选",
+            "缓存机制正常工作"
+          ]
+        },
+        {
+          "task_id": "2.2",
+          "name": "ICD10MatchService (匹配服务)",
+          "priority": "P0",
+          "estimated_hours": 8,
+          "files_to_create": [
+            "services/icd10MatchService.ts"
+          ],
+          "acceptance_criteria": [
+            "5级匹配策略实现",
+            "批量匹配支持并发控制",
+            "匹配准确率 > 90%",
+            "返回建议和置信度"
+          ]
+        },
+        {
+          "task_id": "2.3",
+          "name": "缓存和性能优化",
+          "priority": "P1",
+          "estimated_hours": 8,
+          "files_to_create": [
+            "services/icd10CacheService.ts"
+          ],
+          "acceptance_criteria": [
+            "LRU 缓存正常工作",
+            "Fuse.js 索引构建成功",
+            "搜索性能 < 100ms",
+            "缓存命中率 > 80%"
+          ]
+        }
+      ]
+    },
+    {
+      "phase_id": 3,
+      "name": "数据导入",
+      "duration_days": 2,
+      "tasks": [
+        {
+          "task_id": "3.1",
+          "name": "Excel 导入服务",
+          "priority": "P0",
+          "estimated_hours": 8,
+          "files_to_create": [
+            "services/icd10ImportService.ts"
+          ],
+          "acceptance_criteria": [
+            "支持 xlsx/xls/csv 格式",
+            "数据验证准确",
+            "增量更新功能正常",
+            "生成导入报告"
+          ]
+        },
+        {
+          "task_id": "3.2",
+          "name": "导入管理界面",
+          "priority": "P1",
+          "estimated_hours": 8,
+          "files_to_create": [
+            "components/icd10/ICD10ImportWizard.tsx",
+            "components/icd10/UploadStep.tsx",
+            "components/icd10/PreviewStep.tsx",
+            "components/icd10/ValidationStep.tsx",
+            "components/icd10/ImportProgressStep.tsx",
+            "components/icd10/CompleteStep.tsx"
+          ],
+          "acceptance_criteria": [
+            "5步导入向导实现",
+            "数据预览功能正常",
+            "验证报告展示",
+            "进度实时更新"
+          ]
+        }
+      ]
+    },
+    {
+      "phase_id": 4,
+      "name": "前端界面",
+      "duration_days": 2,
+      "tasks": [
+        {
+          "task_id": "4.1",
+          "name": "ICD10Selector 组件",
+          "priority": "P0",
+          "estimated_hours": 8,
+          "files_to_create": [
+            "components/icd10/ICD10Selector.tsx"
+          ],
+          "acceptance_criteria": [
+            "支持编码和名称搜索",
+            "防抖优化 (300ms)",
+            "下拉建议展示",
+            "选中后回显"
+          ]
+        },
+        {
+          "task_id": "4.2",
+          "name": "疾病管理页面增强",
+          "priority": "P1",
+          "estimated_hours": 8,
+          "files_to_modify": [
+            "components/knowledge/DiseaseManagementPage.tsx"
+          ],
+          "acceptance_criteria": [
+            "层级树形筛选",
+            "保险元数据编辑",
+            "统计面板",
+            "批量操作功能"
+          ]
+        }
+      ]
+    },
+    {
+      "phase_id": 5,
+      "name": "系统集成",
+      "duration_days": 2,
+      "tasks": [
+        {
+          "task_id": "5.1",
+          "name": "理赔系统集成",
+          "priority": "P0",
+          "estimated_hours": 8,
+          "files_to_create": [
+            "server/claims/icd10Integration.ts"
+          ],
+          "acceptance_criteria": [
+            "理赔单据疾病验证",
+            "既往症自动检测",
+            "赔付比例自动计算",
+            "核赔建议生成"
+          ]
+        },
+        {
+          "task_id": "5.2",
+          "name": "核保系统集成",
+          "priority": "P0",
+          "estimated_hours": 8,
+          "files_to_create": [
+            "server/underwriting/icd10Integration.ts"
+          ],
+          "acceptance_criteria": [
+            "疾病风险评估",
+            "加费计算",
+            "除外责任生成",
+            "体检建议"
+          ]
+        }
+      ]
+    },
+    {
+      "phase_id": 6,
+      "name": "测试优化",
+      "duration_days": 2,
+      "tasks": [
+        {
+          "task_id": "6.1",
+          "name": "单元测试",
+          "priority": "P0",
+          "estimated_hours": 6,
+          "files_to_create": [
+            "services/__tests__/icd10Service.test.ts",
+            "services/__tests__/icd10MatchService.test.ts",
+            "services/__tests__/icd10CacheService.test.ts"
+          ],
+          "acceptance_criteria": [
+            "核心服务测试覆盖 > 80%",
+            "性能测试通过",
+            "边界条件测试"
+          ]
+        },
+        {
+          "task_id": "6.2",
+          "name": "集成测试与优化",
+          "priority": "P1",
+          "estimated_hours": 10,
+          "acceptance_criteria": [
+            "理赔验证场景测试通过",
+            "核保评估场景测试通过",
+            "批量导入测试通过",
+            "性能优化完成"
+          ]
+        }
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "task": "1.2",
+      "depends_on": ["1.1"]
+    },
+    {
+      "task": "1.3",
+      "depends_on": ["1.2"]
+    },
+    {
+      "task": "2.1",
+      "depends_on": ["1.3"]
+    },
+    {
+      "task": "2.2",
+      "depends_on": ["2.1"]
+    },
+    {
+      "task": "2.3",
+      "depends_on": ["2.1"]
+    },
+    {
+      "task": "3.1",
+      "depends_on": ["2.1"]
+    },
+    {
+      "task": "3.2",
+      "depends_on": ["3.1"]
+    },
+    {
+      "task": "4.1",
+      "depends_on": ["2.2"]
+    },
+    {
+      "task": "4.2",
+      "depends_on": ["4.1"]
+    },
+    {
+      "task": "5.1",
+      "depends_on": ["2.2", "4.1"]
+    },
+    {
+      "task": "5.2",
+      "depends_on": ["2.2", "4.1"]
+    },
+    {
+      "task": "6.1",
+      "depends_on": ["2.3"]
+    },
+    {
+      "task": "6.2",
+      "depends_on": ["5.1", "5.2", "6.1"]
+    }
+  ]
+}

@@ -1,0 +1,735 @@
+[
+  {
+    "date": "2026-03-14",
+    "totals": {
+      "totalCalls": 32,
+      "successCalls": 32,
+      "failedCalls": 0,
+      "inputTokens": 35742,
+      "outputTokens": 9847,
+      "totalTokens": 83983,
+      "totalCost": 0,
+      "totalLatencyMs": 408363
+    },
+    "byProvider": {
+      "gemini": {
+        "provider": "gemini",
+        "totalCalls": 32,
+        "successCalls": 32,
+        "failedCalls": 0,
+        "inputTokens": 35742,
+        "outputTokens": 9847,
+        "totalTokens": 83983,
+        "totalCost": 0,
+        "totalLatencyMs": 408363
+      }
+    },
+    "byModel": {
+      "gemini-2.5-flash": {
+        "model": "gemini-2.5-flash",
+        "provider": "gemini",
+        "totalCalls": 32,
+        "successCalls": 32,
+        "failedCalls": 0,
+        "inputTokens": 35742,
+        "outputTokens": 9847,
+        "totalTokens": 83983,
+        "totalCost": 0,
+        "totalLatencyMs": 408363
+      }
+    },
+    "byCapability": {
+      "admin.material.general_analysis": {
+        "capabilityId": "admin.material.general_analysis",
+        "totalCalls": 22,
+        "successCalls": 22,
+        "failedCalls": 0,
+        "inputTokens": 10425,
+        "outputTokens": 9140,
+        "totalTokens": 46600,
+        "totalCost": 0,
+        "totalLatencyMs": 347413
+      },
+      "admin.material.classification": {
+        "capabilityId": "admin.material.classification",
+        "totalCalls": 10,
+        "successCalls": 10,
+        "failedCalls": 0,
+        "inputTokens": 25317,
+        "outputTokens": 707,
+        "totalTokens": 37383,
+        "totalCost": 0,
+        "totalLatencyMs": 60950
+      }
+    },
+    "byGroup": {
+      "unknown": {
+        "group": "unknown",
+        "totalCalls": 32,
+        "successCalls": 32,
+        "failedCalls": 0,
+        "inputTokens": 35742,
+        "outputTokens": 9847,
+        "totalTokens": 83983,
+        "totalCost": 0,
+        "totalLatencyMs": 408363
+      }
+    },
+    "byModule": {
+      "summaryExtractors.extractSummaryWithGemini": {
+        "module": "summaryExtractors.extractSummaryWithGemini",
+        "totalCalls": 6,
+        "successCalls": 6,
+        "failedCalls": 0,
+        "inputTokens": 5122,
+        "outputTokens": 1904,
+        "totalTokens": 18694,
+        "totalCost": 0,
+        "totalLatencyMs": 67993
+      },
+      "taskQueue.worker.classifyMaterial": {
+        "module": "taskQueue.worker.classifyMaterial",
+        "totalCalls": 10,
+        "successCalls": 10,
+        "failedCalls": 0,
+        "inputTokens": 25317,
+        "outputTokens": 707,
+        "totalTokens": 37383,
+        "totalCost": 0,
+        "totalLatencyMs": 60950
+      },
+      "fileProcessor.processImageWithAI": {
+        "module": "fileProcessor.processImageWithAI",
+        "totalCalls": 8,
+        "successCalls": 8,
+        "failedCalls": 0,
+        "inputTokens": 2192,
+        "outputTokens": 3028,
+        "totalTokens": 13637,
+        "totalCost": 0,
+        "totalLatencyMs": 224452
+      },
+      "fileProcessor.analyzeDocumentContent": {
+        "module": "fileProcessor.analyzeDocumentContent",
+        "totalCalls": 8,
+        "successCalls": 8,
+        "failedCalls": 0,
+        "inputTokens": 3111,
+        "outputTokens": 4208,
+        "totalTokens": 14269,
+        "totalCost": 0,
+        "totalLatencyMs": 54968
+      }
+    },
+    "byCompany": {
+      "unassigned": {
+        "companyId": null,
+        "companyName": null,
+        "totalCalls": 32,
+        "successCalls": 32,
+        "failedCalls": 0,
+        "inputTokens": 35742,
+        "outputTokens": 9847,
+        "totalTokens": 83983,
+        "totalCost": 0,
+        "totalLatencyMs": 408363
+      }
+    },
+    "bySourceApp": {
+      "admin-system": {
+        "sourceApp": "admin-system",
+        "totalCalls": 32,
+        "successCalls": 32,
+        "failedCalls": 0,
+        "inputTokens": 35742,
+        "outputTokens": 9847,
+        "totalTokens": 83983,
+        "totalCost": 0,
+        "totalLatencyMs": 408363
+      }
+    }
+  },
+  {
+    "date": "2026-03-15",
+    "totals": {
+      "totalCalls": 9,
+      "successCalls": 9,
+      "failedCalls": 0,
+      "inputTokens": 4706,
+      "outputTokens": 4328,
+      "totalTokens": 27898,
+      "totalCost": 0,
+      "totalLatencyMs": 107680
+    },
+    "byProvider": {
+      "gemini": {
+        "provider": "gemini",
+        "totalCalls": 9,
+        "successCalls": 9,
+        "failedCalls": 0,
+        "inputTokens": 4706,
+        "outputTokens": 4328,
+        "totalTokens": 27898,
+        "totalCost": 0,
+        "totalLatencyMs": 107680
+      }
+    },
+    "byModel": {
+      "gemini-2.5-flash": {
+        "model": "gemini-2.5-flash",
+        "provider": "gemini",
+        "totalCalls": 9,
+        "successCalls": 9,
+        "failedCalls": 0,
+        "inputTokens": 4706,
+        "outputTokens": 4328,
+        "totalTokens": 27898,
+        "totalCost": 0,
+        "totalLatencyMs": 107680
+      }
+    },
+    "byCapability": {
+      "unknown": {
+        "capabilityId": "unknown",
+        "totalCalls": 3,
+        "successCalls": 3,
+        "failedCalls": 0,
+        "inputTokens": 2676,
+        "outputTokens": 1481,
+        "totalTokens": 12551,
+        "totalCost": 0,
+        "totalLatencyMs": 45206
+      },
+      "admin.material.general_analysis": {
+        "capabilityId": "admin.material.general_analysis",
+        "totalCalls": 6,
+        "successCalls": 6,
+        "failedCalls": 0,
+        "inputTokens": 2030,
+        "outputTokens": 2847,
+        "totalTokens": 15347,
+        "totalCost": 0,
+        "totalLatencyMs": 62474
+      }
+    },
+    "byGroup": {
+      "unknown": {
+        "group": "unknown",
+        "totalCalls": 9,
+        "successCalls": 9,
+        "failedCalls": 0,
+        "inputTokens": 4706,
+        "outputTokens": 4328,
+        "totalTokens": 27898,
+        "totalCost": 0,
+        "totalLatencyMs": 107680
+      }
+    },
+    "byModule": {
+      "claimMaterialPipeline.extractClaimMaterial": {
+        "module": "claimMaterialPipeline.extractClaimMaterial",
+        "totalCalls": 3,
+        "successCalls": 3,
+        "failedCalls": 0,
+        "inputTokens": 2676,
+        "outputTokens": 1481,
+        "totalTokens": 12551,
+        "totalCost": 0,
+        "totalLatencyMs": 45206
+      },
+      "fileProcessor.analyzeDocumentContent": {
+        "module": "fileProcessor.analyzeDocumentContent",
+        "totalCalls": 3,
+        "successCalls": 3,
+        "failedCalls": 0,
+        "inputTokens": 1208,
+        "outputTokens": 1681,
+        "totalTokens": 8937,
+        "totalCost": 0,
+        "totalLatencyMs": 32094
+      },
+      "fileProcessor.processImageWithAI": {
+        "module": "fileProcessor.processImageWithAI",
+        "totalCalls": 3,
+        "successCalls": 3,
+        "failedCalls": 0,
+        "inputTokens": 822,
+        "outputTokens": 1166,
+        "totalTokens": 6410,
+        "totalCost": 0,
+        "totalLatencyMs": 30380
+      }
+    },
+    "byCompany": {
+      "unassigned": {
+        "companyId": null,
+        "companyName": null,
+        "totalCalls": 9,
+        "successCalls": 9,
+        "failedCalls": 0,
+        "inputTokens": 4706,
+        "outputTokens": 4328,
+        "totalTokens": 27898,
+        "totalCost": 0,
+        "totalLatencyMs": 107680
+      }
+    },
+    "bySourceApp": {
+      "admin-system": {
+        "sourceApp": "admin-system",
+        "totalCalls": 9,
+        "successCalls": 9,
+        "failedCalls": 0,
+        "inputTokens": 4706,
+        "outputTokens": 4328,
+        "totalTokens": 27898,
+        "totalCost": 0,
+        "totalLatencyMs": 107680
+      }
+    }
+  },
+  {
+    "date": "2026-03-25",
+    "totals": {
+      "totalCalls": 14,
+      "successCalls": 13,
+      "failedCalls": 1,
+      "inputTokens": 9295,
+      "outputTokens": 2488,
+      "totalTokens": 28413,
+      "totalCost": 0,
+      "totalLatencyMs": 143208
+    },
+    "byProvider": {
+      "gemini": {
+        "provider": "gemini",
+        "totalCalls": 14,
+        "successCalls": 13,
+        "failedCalls": 1,
+        "inputTokens": 9295,
+        "outputTokens": 2488,
+        "totalTokens": 28413,
+        "totalCost": 0,
+        "totalLatencyMs": 143208
+      }
+    },
+    "byModel": {
+      "gemini-2.5-flash": {
+        "model": "gemini-2.5-flash",
+        "provider": "gemini",
+        "totalCalls": 14,
+        "successCalls": 13,
+        "failedCalls": 1,
+        "inputTokens": 9295,
+        "outputTokens": 2488,
+        "totalTokens": 28413,
+        "totalCost": 0,
+        "totalLatencyMs": 143208
+      }
+    },
+    "byCapability": {
+      "admin.claim.risk_assessment": {
+        "capabilityId": "admin.claim.risk_assessment",
+        "totalCalls": 2,
+        "successCalls": 2,
+        "failedCalls": 0,
+        "inputTokens": 493,
+        "outputTokens": 130,
+        "totalTokens": 3205,
+        "totalCost": 0,
+        "totalLatencyMs": 18042
+      },
+      "admin.material.general_analysis": {
+        "capabilityId": "admin.material.general_analysis",
+        "totalCalls": 6,
+        "successCalls": 6,
+        "failedCalls": 0,
+        "inputTokens": 5122,
+        "outputTokens": 2164,
+        "totalTokens": 20816,
+        "totalCost": 0,
+        "totalLatencyMs": 83637
+      },
+      "smartclaim.document_analysis": {
+        "capabilityId": "smartclaim.document_analysis",
+        "totalCalls": 1,
+        "successCalls": 0,
+        "failedCalls": 1,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0,
+        "totalCost": 0,
+        "totalLatencyMs": 1715
+      },
+      "smartclaim.intent": {
+        "capabilityId": "smartclaim.intent",
+        "totalCalls": 5,
+        "successCalls": 5,
+        "failedCalls": 0,
+        "inputTokens": 3680,
+        "outputTokens": 194,
+        "totalTokens": 4392,
+        "totalCost": 0,
+        "totalLatencyMs": 39814
+      }
+    },
+    "byGroup": {
+      "unknown": {
+        "group": "unknown",
+        "totalCalls": 14,
+        "successCalls": 13,
+        "failedCalls": 1,
+        "inputTokens": 9295,
+        "outputTokens": 2488,
+        "totalTokens": 28413,
+        "totalCost": 0,
+        "totalLatencyMs": 143208
+      }
+    },
+    "byModule": {
+      "ai.graph.assessRisk": {
+        "module": "ai.graph.assessRisk",
+        "totalCalls": 2,
+        "successCalls": 2,
+        "failedCalls": 0,
+        "inputTokens": 493,
+        "outputTokens": 130,
+        "totalTokens": 3205,
+        "totalCost": 0,
+        "totalLatencyMs": 18042
+      },
+      "summaryExtractors.extractSummaryWithGemini": {
+        "module": "summaryExtractors.extractSummaryWithGemini",
+        "totalCalls": 6,
+        "successCalls": 6,
+        "failedCalls": 0,
+        "inputTokens": 5122,
+        "outputTokens": 2164,
+        "totalTokens": 20816,
+        "totalCost": 0,
+        "totalLatencyMs": 83637
+      },
+      "smartclaim-ai-agent": {
+        "module": "smartclaim-ai-agent",
+        "totalCalls": 6,
+        "successCalls": 5,
+        "failedCalls": 1,
+        "inputTokens": 3680,
+        "outputTokens": 194,
+        "totalTokens": 4392,
+        "totalCost": 0,
+        "totalLatencyMs": 41529
+      }
+    },
+    "byCompany": {
+      "unassigned": {
+        "companyId": null,
+        "companyName": null,
+        "totalCalls": 14,
+        "successCalls": 13,
+        "failedCalls": 1,
+        "inputTokens": 9295,
+        "outputTokens": 2488,
+        "totalTokens": 28413,
+        "totalCost": 0,
+        "totalLatencyMs": 143208
+      }
+    },
+    "bySourceApp": {
+      "admin-system": {
+        "sourceApp": "admin-system",
+        "totalCalls": 8,
+        "successCalls": 8,
+        "failedCalls": 0,
+        "inputTokens": 5615,
+        "outputTokens": 2294,
+        "totalTokens": 24021,
+        "totalCost": 0,
+        "totalLatencyMs": 101679
+      },
+      "smartclaim-ai-agent": {
+        "sourceApp": "smartclaim-ai-agent",
+        "totalCalls": 6,
+        "successCalls": 5,
+        "failedCalls": 1,
+        "inputTokens": 3680,
+        "outputTokens": 194,
+        "totalTokens": 4392,
+        "totalCost": 0,
+        "totalLatencyMs": 41529
+      }
+    }
+  },
+  {
+    "date": "2026-04-04",
+    "totals": {
+      "totalCalls": 67,
+      "successCalls": 67,
+      "failedCalls": 0,
+      "inputTokens": 36122,
+      "outputTokens": 34495,
+      "totalTokens": 193928,
+      "totalCost": 0.026116000000000004,
+      "totalLatencyMs": 997734
+    },
+    "byProvider": {
+      "gemini-vision": {
+        "provider": "gemini-vision",
+        "totalCalls": 33,
+        "successCalls": 33,
+        "failedCalls": 0,
+        "inputTokens": 17373,
+        "outputTokens": 14589,
+        "totalTokens": 70882,
+        "totalCost": 0.011360000000000002,
+        "totalLatencyMs": 454659
+      },
+      "gemini": {
+        "provider": "gemini",
+        "totalCalls": 21,
+        "successCalls": 21,
+        "failedCalls": 0,
+        "inputTokens": 18496,
+        "outputTokens": 19823,
+        "totalTokens": 121467,
+        "totalCost": 0.014667999999999999,
+        "totalLatencyMs": 534611
+      },
+      "preset": {
+        "provider": "preset",
+        "totalCalls": 12,
+        "successCalls": 12,
+        "failedCalls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0,
+        "totalCost": 0,
+        "totalLatencyMs": 0
+      },
+      "gemini-text": {
+        "provider": "gemini-text",
+        "totalCalls": 1,
+        "successCalls": 1,
+        "failedCalls": 0,
+        "inputTokens": 253,
+        "outputTokens": 83,
+        "totalTokens": 1579,
+        "totalCost": 0.000088,
+        "totalLatencyMs": 8464
+      }
+    },
+    "byModel": {
+      "gemini-2.5-flash": {
+        "model": "gemini-2.5-flash",
+        "provider": "gemini-vision",
+        "totalCalls": 55,
+        "successCalls": 55,
+        "failedCalls": 0,
+        "inputTokens": 36122,
+        "outputTokens": 34495,
+        "totalTokens": 193928,
+        "totalCost": 0.026116000000000004,
+        "totalLatencyMs": 997734
+      },
+      "preferred-material": {
+        "model": "preferred-material",
+        "provider": "preset",
+        "totalCalls": 12,
+        "successCalls": 12,
+        "failedCalls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0,
+        "totalCost": 0,
+        "totalLatencyMs": 0
+      }
+    },
+    "byCapability": {
+      "admin.material.general_analysis": {
+        "capabilityId": "admin.material.general_analysis",
+        "totalCalls": 30,
+        "successCalls": 30,
+        "failedCalls": 0,
+        "inputTokens": 9920,
+        "outputTokens": 14359,
+        "totalTokens": 60251,
+        "totalCost": 0.010104,
+        "totalLatencyMs": 437676
+      },
+      "admin.material.classification": {
+        "capabilityId": "admin.material.classification",
+        "totalCalls": 3,
+        "successCalls": 3,
+        "failedCalls": 0,
+        "inputTokens": 7453,
+        "outputTokens": 230,
+        "totalTokens": 10631,
+        "totalCost": 0.001256,
+        "totalLatencyMs": 16983
+      },
+      "unknown": {
+        "capabilityId": "unknown",
+        "totalCalls": 33,
+        "successCalls": 33,
+        "failedCalls": 0,
+        "inputTokens": 18496,
+        "outputTokens": 19823,
+        "totalTokens": 121467,
+        "totalCost": 0.014667999999999999,
+        "totalLatencyMs": 534611
+      },
+      "admin.claim.risk_assessment": {
+        "capabilityId": "admin.claim.risk_assessment",
+        "totalCalls": 1,
+        "successCalls": 1,
+        "failedCalls": 0,
+        "inputTokens": 253,
+        "outputTokens": 83,
+        "totalTokens": 1579,
+        "totalCost": 0.000088,
+        "totalLatencyMs": 8464
+      }
+    },
+    "byGroup": {
+      "主后台": {
+        "group": "主后台",
+        "totalCalls": 34,
+        "successCalls": 34,
+        "failedCalls": 0,
+        "inputTokens": 17626,
+        "outputTokens": 14672,
+        "totalTokens": 72461,
+        "totalCost": 0.011448000000000002,
+        "totalLatencyMs": 463123
+      },
+      "unknown": {
+        "group": "unknown",
+        "totalCalls": 33,
+        "successCalls": 33,
+        "failedCalls": 0,
+        "inputTokens": 18496,
+        "outputTokens": 19823,
+        "totalTokens": 121467,
+        "totalCost": 0.014667999999999999,
+        "totalLatencyMs": 534611
+      }
+    },
+    "byModule": {
+      "fileProcessor.processImageWithAI": {
+        "module": "fileProcessor.processImageWithAI",
+        "totalCalls": 15,
+        "successCalls": 15,
+        "failedCalls": 0,
+        "inputTokens": 4110,
+        "outputTokens": 5600,
+        "totalTokens": 26743,
+        "totalCost": 0.0039770000000000005,
+        "totalLatencyMs": 313733
+      },
+      "fileProcessor.analyzeDocumentContent": {
+        "module": "fileProcessor.analyzeDocumentContent",
+        "totalCalls": 15,
+        "successCalls": 15,
+        "failedCalls": 0,
+        "inputTokens": 5810,
+        "outputTokens": 8759,
+        "totalTokens": 33508,
+        "totalCost": 0.0061270000000000005,
+        "totalLatencyMs": 123943
+      },
+      "claimMaterialPipeline.classifyClaimMaterial": {
+        "module": "claimMaterialPipeline.classifyClaimMaterial",
+        "totalCalls": 15,
+        "successCalls": 15,
+        "failedCalls": 0,
+        "inputTokens": 7453,
+        "outputTokens": 230,
+        "totalTokens": 10631,
+        "totalCost": 0.001256,
+        "totalLatencyMs": 16983
+      },
+      "claimMaterialPipeline.extractClaimMaterial": {
+        "module": "claimMaterialPipeline.extractClaimMaterial",
+        "totalCalls": 15,
+        "successCalls": 15,
+        "failedCalls": 0,
+        "inputTokens": 18496,
+        "outputTokens": 19823,
+        "totalTokens": 121467,
+        "totalCost": 0.014667999999999999,
+        "totalLatencyMs": 463776
+      },
+      "classification": {
+        "module": "classification",
+        "totalCalls": 3,
+        "successCalls": 3,
+        "failedCalls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0,
+        "totalCost": 0,
+        "totalLatencyMs": 70835
+      },
+      "extraction": {
+        "module": "extraction",
+        "totalCalls": 3,
+        "successCalls": 3,
+        "failedCalls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0,
+        "totalCost": 0,
+        "totalLatencyMs": 0
+      },
+      "ai.graph.assessRisk": {
+        "module": "ai.graph.assessRisk",
+        "totalCalls": 1,
+        "successCalls": 1,
+        "failedCalls": 0,
+        "inputTokens": 253,
+        "outputTokens": 83,
+        "totalTokens": 1579,
+        "totalCost": 0.000088,
+        "totalLatencyMs": 8464
+      }
+    },
+    "byCompany": {
+      "unassigned": {
+        "companyId": null,
+        "companyName": null,
+        "totalCalls": 67,
+        "successCalls": 67,
+        "failedCalls": 0,
+        "inputTokens": 36122,
+        "outputTokens": 34495,
+        "totalTokens": 193928,
+        "totalCost": 0.026116000000000004,
+        "totalLatencyMs": 997734
+      }
+    },
+    "bySourceApp": {
+      "admin-system": {
+        "sourceApp": "admin-system",
+        "totalCalls": 61,
+        "successCalls": 61,
+        "failedCalls": 0,
+        "inputTokens": 36122,
+        "outputTokens": 34495,
+        "totalTokens": 193928,
+        "totalCost": 0.026116000000000004,
+        "totalLatencyMs": 926899
+      },
+      "server": {
+        "sourceApp": "server",
+        "totalCalls": 6,
+        "successCalls": 6,
+        "failedCalls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0,
+        "totalCost": 0,
+        "totalLatencyMs": 70835
+      }
+    }
+  }
+]

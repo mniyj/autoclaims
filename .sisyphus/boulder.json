@@ -1,8 +1,9 @@
 {
-  "active_plan": "/Users/pegasus/Documents/trae_projects/保险产品配置页面 -理赔/.sisyphus/plans/fix-voice-tts-playback.md",
-  "plan_name": "fix-voice-tts-playback",
-  "started_at": "2026-03-06T19:22:00+08:00",
-  "session_ids": ["ses_33d2dce93ffe8LhbK0yYdrc5Kn"],
+  "active_plan": "/Users/pegasus/Documents/trae_projects/保险产品配置页面 -理赔/.sisyphus/plans/2026-03-16-icd10-implementation-plan.md",
+  "plan_name": "2026-03-16-icd10-implementation-plan",
+  "started_at": "2026-03-17T06:40:00+08:00",
+  "completed_at": "2026-03-17T21:00:00+08:00",
+  "session_ids": ["ses_30a6d95d6ffe40scqxIQCxckgn"],
   "worktree_path": "/Users/pegasus/Documents/trae_projects/保险产品配置页面 -理赔",
-  "status": "in_progress"
+  "status": "completed"
 }

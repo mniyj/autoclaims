@@ -92,7 +92,7 @@ export const REGULATORY_OPTIONS = [
       { code: "17200", name: " 商业险" },
     ],
   },
- ] as any;
+] as any;
 
 export const MOCK_RESPONSIBILITIES: ResponsibilityItem[] = [
   {
@@ -7191,7 +7191,8 @@ export const FIELD_DATA_TYPE_LABELS: Record<string, string> = {
 
 export const FIELD_SOURCE_TYPE_LABELS: Record<string, string> = {
   material: "材料提取",
-  derived: "派生事实",
+  ocr: "材料提取",
+  derived: "派生计算",
   system: "系统配置",
   manual: "人工录入",
 };

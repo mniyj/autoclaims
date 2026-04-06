@@ -236,7 +236,7 @@ export function buildDecisionTrace({
             value: aggregation.compulsoryInsuranceOffset?.applicable === false ? "不适用" : "待确认",
           },
           {
-            label: "责任来源",
+            label: "事故责任来源",
             value: aggregation.liabilityApportionment?.source || aggregation.liabilitySuggestion?.status || "-",
           },
           {
@@ -308,7 +308,7 @@ export function buildDecisionTrace({
       stage: "liability_assessment",
       title: "责任评估",
       status: aggregation.liabilityApportionment ? "completed" : "manual_review",
-      summary: aggregation.liabilitySuggestion?.conclusion || "责任比例待人工确认",
+      summary: aggregation.liabilitySuggestion?.conclusion || "事故责任比例待人工确认",
       sourceDocIds: uniqueValues([
         aggregation.liabilityApportionment?.sourceDocId,
         ...(aggregation.liabilityEvidence || []).map((item) => item.sourceDocId),
@@ -316,13 +316,13 @@ export function buildDecisionTrace({
       ]),
       facts: normalizeFacts([
         {
-          label: "责任比例",
+          label: "事故责任比例",
           value: aggregation.liabilityApportionment
             ? `${aggregation.liabilityApportionment.thirdPartyLiabilityPct}%`
             : "待确认",
         },
         {
-          label: "责任来源",
+          label: "事故责任来源",
           value: aggregation.liabilityApportionment?.source || aggregation.liabilitySuggestion?.status || "-",
         },
         {
