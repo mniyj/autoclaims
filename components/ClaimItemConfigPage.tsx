@@ -669,6 +669,10 @@ const ClaimItemConfigPage: React.FC = () => {
   const [isMetaModalOpen, setIsMetaModalOpen] = useState(false);
   const [editingMeta, setEditingMeta] =
     useState<Partial<MaterialTypeCatalogItem> | null>(null);
+  const [metaBlockNotice, setMetaBlockNotice] = useState<{
+    typeName: string;
+    refCount: number;
+  } | null>(null);
 
   // Sample preview state
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
@@ -1477,10 +1481,14 @@ const ClaimItemConfigPage: React.FC = () => {
   };
 
   const handleMetaDelete = async (typeCode: string) => {
-    const referenced = materials.some((m) => m.type_code === typeCode);
-    if (referenced) {
-      alert("该元数据已被理赔材料引用，无法删除。请先解除关联后再删除。");
-      return;
+    const refCount = materials.filter((m) => m.type_code === typeCode).length;
+    if (refCount > 0) {
+      const typeName =
+        materialTypeCatalog.find((t) => t.type_code === typeCode)?.type_name ??
+        typeCode;
+      setMetaBlockNotice({ typeName, refCount });
+      const timer = setTimeout(() => setMetaBlockNotice(null), 4000);
+      return () => clearTimeout(timer);
     }
     if (!confirm("确认删除该材料元数据？")) return;
     const updated = materialTypeCatalog.filter((t) => t.type_code !== typeCode);
@@ -2229,6 +2237,47 @@ const ClaimItemConfigPage: React.FC = () => {
               </div>
             </div>
           </div>
+          {metaBlockNotice && (
+            <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 shadow-sm">
+              <svg
+                className="mt-0.5 h-5 w-5 shrink-0 text-amber-500"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <div className="flex-1">
+                <p className="font-medium">
+                  「{metaBlockNotice.typeName}」已被{" "}
+                  <span className="font-semibold">
+                    {metaBlockNotice.refCount} 条
+                  </span>
+                  理赔材料引用，无法直接删除
+                </p>
+                <p className="mt-0.5 text-amber-700">
+                  请先在「理赔材料管理」tab 中解除引用该元数据的材料，再来删除。
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMetaBlockNotice(null)}
+                className="shrink-0 rounded p-0.5 text-amber-500 hover:bg-amber-100 hover:text-amber-700 transition-colors"
+                aria-label="关闭"
+              >
+                <svg
+                  className="h-4 w-4"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+                </svg>
+              </button>
+            </div>
+          )}
           <div className="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">

@@ -636,7 +636,7 @@ function deriveLiabilityApportionment(aggregation, summaries = []) {
     thirdPartyLiabilityPct: report.suggestedLiabilityPct,
     source: "public_adjuster_report",
     sourceDocId: report.docId,
-    basis: "公估报告载明“本案最终建议总损失扣除交强险死亡伤残项限额后再按照同等责任协商”",
+    basis: `公估报告载明"本案最终建议总损失扣除交强险死亡伤残项限额后再按照同等责任协商"`,
     confidence: 0.82,
   };
 }
@@ -808,16 +808,16 @@ async function main() {
   const isLiabilityOrDeathCase = deathConfirmed || liabilityEvidence.length > 0;
   aggregation.manualReviewItems = [
     isLiabilityOrDeathCase && !(aggregation.liabilityResult || aggregation.liabilityApportionment)
-      ? “缺少公安/安监正式责任划分文书，责任比例仍需人工确认”
+      ? "缺少公安/安监正式责任划分文书，责任比例仍需人工确认"
       : null,
     isLiabilityOrDeathCase && aggregation.liabilityApportionment
-      ? “责任比例当前采用公估报告”同等责任”口径 50%，如后续取得正式责任文书需及时覆盖”
+      ? `责任比例当前采用公估报告"同等责任"口径 50%，如后续取得正式责任文书需及时覆盖`
       : null,
     paymentEvidence.length > 0
-      ? “已有赔偿协商和垫付款记录，正式定损前需核对已支付金额、赔付路径与抵扣口径”
+      ? "已有赔偿协商和垫付款记录，正式定损前需核对已支付金额、赔付路径与抵扣口径"
       : null,
     deathConfirmed
-      ? “死亡赔偿金已按统一城镇标准试算，如法院地或统计年度不同需调整地区标准参数”
+      ? "死亡赔偿金已按统一城镇标准试算，如法院地或统计年度不同需调整地区标准参数"
       : null,
   ].filter(Boolean);
   aggregation.factConfirmations = previousAggregation.factConfirmations || {};
