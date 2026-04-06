@@ -3,7 +3,21 @@ const apiFetch = async <T>(
   endpoint: string,
   options?: RequestInit,
 ): Promise<T> => {
-  const response = await fetch(`/api/${endpoint}`, options);
+  const headers = new Headers(options?.headers);
+  if (!headers.has("x-user-id")) {
+    try {
+      const user = localStorage.getItem("user");
+      if (user) {
+        const parsed = JSON.parse(user);
+        headers.set("x-user-id", parsed.id || parsed.username || "anonymous");
+      } else {
+        headers.set("x-user-id", "anonymous");
+      }
+    } catch {
+      headers.set("x-user-id", "anonymous");
+    }
+  }
+  const response = await fetch(`/api/${endpoint}`, { ...options, headers });
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.error || `API Error: ${response.statusText}`);
@@ -66,6 +80,7 @@ export const api = {
   claimsMaterials: buildResource("claims-materials"),
   claimItems: buildResource("claim-items"),
   factCatalog: buildResource("fact-catalog"),
+  materialTypeCatalog: buildResource("material-type-catalog"),
   materialValidationRules: buildResource("material-validation-rules"),
   claimCases: buildResource("claim-cases"),
   claimDocuments: {
@@ -74,6 +89,32 @@ export const api = {
         `/api/claim-documents?claimCaseId=${encodeURIComponent(claimCaseId)}`,
       );
       if (!response.ok) throw new Error("Failed to get claim documents");
+      return response.json();
+    },
+    saveFieldCorrection: async (correction: Record<string, unknown>) => {
+      const response = await fetch("/api/claim-documents/field-corrections", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ correction }),
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to save field correction");
+      }
+      return response.json();
+    },
+  },
+  claimMaterials: {
+    saveFieldCorrection: async (correction: Record<string, unknown>) => {
+      const response = await fetch("/api/claim-materials/field-corrections", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ correction }),
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to save field correction");
+      }
       return response.json();
     },
   },
@@ -107,8 +148,152 @@ export const api = {
   invoiceAudits: buildResource("invoice-audits"),
   userOperationLogs: buildResource("user-operation-logs"),
   ai: {
-    getInventory: async () => apiFetch<{ capabilities: any[]; config: any }>("ai/inventory"),
+    getInventory: async () =>
+      apiFetch<{ capabilities: any[]; config: any }>("ai/inventory"),
     getConfig: async () => apiFetch<any>("ai/config"),
+    getDashboard: async (params: Record<string, string | undefined> = {}) => {
+      const search = new URLSearchParams();
+      Object.entries(params).forEach(
+        ([key, value]) => value && search.set(key, value),
+      );
+      return apiFetch<any>(`ai/dashboard?${search.toString()}`);
+    },
+    getStatsOverview: async () => apiFetch<any>("ai/stats/overview"),
+    getStorageStatus: async () => apiFetch<any>("ai/storage-status"),
+    getProviders: async () => apiFetch<any[]>("ai/providers"),
+    getModels: async () => apiFetch<any[]>("ai/models"),
+    updateModels: async (payload: any) =>
+      apiFetch<any>("ai/models", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }),
+    getCapabilities: async () => apiFetch<any[]>("ai/capabilities"),
+    getProviderHealth: async () => apiFetch<any[]>("ai/provider-health"),
+    checkProviderHealth: async (providerId?: string) =>
+      apiFetch<any>("ai/provider-health/check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ providerId }),
+      }),
+    getBudgets: async () => apiFetch<any>("ai/budgets"),
+    updateBudgets: async (payload: any) =>
+      apiFetch<any>("ai/budgets", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }),
+    getPricingRules: async () => apiFetch<any>("ai/model-pricing"),
+    updatePricingRules: async (payload: any) =>
+      apiFetch<any>("ai/model-pricing", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }),
+    getCostAnalytics: async (
+      params: Record<string, string | undefined> = {},
+    ) => {
+      const search = new URLSearchParams();
+      Object.entries(params).forEach(
+        ([key, value]) => value && search.set(key, value),
+      );
+      return apiFetch<any>(`ai/cost-analytics?${search.toString()}`);
+    },
+    getBusinessStats: async (
+      params: Record<string, string | undefined> = {},
+    ) => {
+      const search = new URLSearchParams();
+      Object.entries(params).forEach(
+        ([key, value]) => value && search.set(key, value),
+      );
+      return apiFetch<any>(`ai/business-stats?${search.toString()}`);
+    },
+    rebuildStats: async () =>
+      apiFetch<any>("ai/stats/rebuild", {
+        method: "POST",
+      }),
+    runConsistencyCheck: async () =>
+      apiFetch<any>("ai/stats/consistency-check", {
+        method: "POST",
+      }),
+    getConsistencyChecks: async (limit = 10) =>
+      apiFetch<any>(
+        `ai/stats/consistency-check?limit=${encodeURIComponent(String(limit))}`,
+      ),
+    getModelComparison: async (
+      params: Record<string, string | undefined> = {},
+    ) => {
+      const search = new URLSearchParams();
+      Object.entries(params).forEach(
+        ([key, value]) => value && search.set(key, value),
+      );
+      return apiFetch<any>(`ai/model-comparison?${search.toString()}`);
+    },
+    getAlerts: async () => apiFetch<any>("ai/alerts"),
+    saveAlertRules: async (payload: any) =>
+      apiFetch<any>("ai/alerts/rules", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }),
+    updateIncidentStatus: async (incidentId: string, status: string) =>
+      apiFetch<any>("ai/alerts/incidents", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ incidentId, status }),
+      }),
+    repairBrokenAlertTraceRefs: async () =>
+      apiFetch<any>("ai/alerts/repair-broken-traces", {
+        method: "POST",
+      }),
+    getLogViews: async () => apiFetch<any[]>("ai/log-views"),
+    saveLogView: async (payload: any) =>
+      apiFetch<any>("ai/log-views", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }),
+    deleteLogView: async (id: string) =>
+      apiFetch<any>(`ai/log-views?id=${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      }),
+    getBindingHistory: async (capabilityId?: string) =>
+      apiFetch<any>(
+        `ai/capability-bindings/history${capabilityId ? `?capabilityId=${encodeURIComponent(capabilityId)}` : ""}`,
+      ),
+    publishBinding: async (payload: any) =>
+      apiFetch<any>("ai/capability-bindings/publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }),
+    rollbackBinding: async (payload: any) =>
+      apiFetch<any>("ai/capability-bindings/rollback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }),
+    getPromptHistory: async (templateId?: string) =>
+      apiFetch<any>(
+        `ai/prompts/history${templateId ? `?templateId=${encodeURIComponent(templateId)}` : ""}`,
+      ),
+    publishPrompt: async (payload: any) =>
+      apiFetch<any>("ai/prompts/publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }),
+    getTraces: async (params: Record<string, string | undefined> = {}) => {
+      const search = new URLSearchParams();
+      Object.entries(params).forEach(
+        ([key, value]) => value && search.set(key, value),
+      );
+      return apiFetch<any>(`ai/traces?${search.toString()}`);
+    },
+    getTraceById: async (traceId: string) =>
+      apiFetch<any>(`ai/traces/${encodeURIComponent(traceId)}`),
+    getInvocationById: async (id: string) =>
+      apiFetch<any>(`ai/invocations/${encodeURIComponent(id)}`),
     updateConfig: async (config: any) =>
       apiFetch<any>("ai/config", {
         method: "PUT",
@@ -117,16 +302,21 @@ export const api = {
       }),
   },
   aiInteractionLogs: {
-    query: async (params: Record<string, string | number | boolean | undefined>) => {
+    query: async (
+      params: Record<string, string | number | boolean | undefined>,
+    ) => {
       const search = new URLSearchParams();
       Object.entries(params).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
           search.set(key, String(value));
         }
       });
-      return apiFetch<{ logs: any[]; total: number; limit: number; offset: number }>(
-        `ai/interaction-logs?${search.toString()}`,
-      );
+      return apiFetch<{
+        logs: any[];
+        total: number;
+        limit: number;
+        offset: number;
+      }>(`ai/interaction-logs?${search.toString()}`);
     },
     getById: async (logId: string) =>
       apiFetch<{ logs: any[]; total: number; limit: number; offset: number }>(
@@ -275,5 +465,66 @@ export const api = {
       if (!response.ok) throw new Error("Failed to save formula");
       return response.json();
     },
+  },
+
+  // 人工介入 API
+  interventions: {
+    /** 查询介入列表（工作台用，默认只返回未解决的） */
+    list: (filters?: {
+      claimCaseId?: string;
+      interventionType?: string;
+      priority?: string;
+      stageKey?: string;
+      resolved?: boolean | "all";
+    }) => {
+      const params = new URLSearchParams();
+      if (filters?.claimCaseId) params.set("claimCaseId", filters.claimCaseId);
+      if (filters?.interventionType)
+        params.set("interventionType", filters.interventionType);
+      if (filters?.priority) params.set("priority", filters.priority);
+      if (filters?.stageKey) params.set("stageKey", filters.stageKey);
+      if (filters?.resolved !== undefined)
+        params.set("resolved", String(filters.resolved));
+      const qs = params.toString();
+      return apiFetch<any[]>(`claim-interventions${qs ? `?${qs}` : ""}`);
+    },
+    /** 获取单个介入实例 */
+    getById: (id: string) =>
+      apiFetch<any>(`claim-interventions/${encodeURIComponent(id)}`),
+    /** 触发状态转移 */
+    transition: (
+      id: string,
+      event: string,
+      payload?: Record<string, unknown>,
+    ) =>
+      apiFetch<{ success: true; data: any }>(
+        `claim-interventions/${encodeURIComponent(id)}/transition`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ event, payload }),
+        },
+      ),
+    /** 手动解决介入 */
+    resolve: (
+      id: string,
+      resolution: string,
+      payload?: Record<string, unknown>,
+    ) =>
+      apiFetch<{ success: true; data: any }>(
+        `claim-interventions/${encodeURIComponent(id)}/resolve`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ resolution, payload }),
+        },
+      ),
+    /** 手动创建介入实例 */
+    create: (data: Record<string, unknown>) =>
+      apiFetch<{ success: true; data: any }>("claim-interventions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      }),
   },
 };

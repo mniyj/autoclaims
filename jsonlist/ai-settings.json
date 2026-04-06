@@ -1,0 +1,2144 @@
+{
+  "version": 1,
+  "providers": [
+    {
+      "id": "gemini-vision",
+      "name": "Gemini Vision",
+      "type": "vision",
+      "runtime": "gemini",
+      "status": "active",
+      "defaultModel": "gemini-2.5-flash",
+      "availableModels": [
+        "gemini-2.5-flash"
+      ],
+      "supportsCustomModel": true,
+      "envKeys": [
+        "GEMINI_API_KEY",
+        "API_KEY"
+      ],
+      "healthCheckMode": "runtime",
+      "billingMode": "token",
+      "defaultTimeout": 90000,
+      "retryStrategy": {
+        "maxRetries": 2,
+        "backoffMs": 1500
+      },
+      "description": "Gemini 多模态能力，适用于图像 OCR、音频转写和视觉理解。"
+    },
+    {
+      "id": "gemini-text",
+      "name": "Gemini Text",
+      "type": "text",
+      "runtime": "gemini",
+      "status": "active",
+      "defaultModel": "gemini-2.5-flash",
+      "availableModels": [
+        "gemini-2.5-flash"
+      ],
+      "supportsCustomModel": true,
+      "envKeys": [
+        "GEMINI_API_KEY",
+        "API_KEY"
+      ],
+      "healthCheckMode": "runtime",
+      "billingMode": "token",
+      "defaultTimeout": 90000,
+      "retryStrategy": {
+        "maxRetries": 2,
+        "backoffMs": 1500
+      },
+      "description": "Gemini 文本生成与 JSON 结构化能力。"
+    },
+    {
+      "id": "glm-ocr",
+      "name": "GLM OCR",
+      "type": "ocr",
+      "runtime": "glm-ocr",
+      "status": "active",
+      "defaultModel": "glm-ocr",
+      "availableModels": [
+        "glm-ocr"
+      ],
+      "supportsCustomModel": false,
+      "envKeys": [
+        "GLM_OCR_API_KEY",
+        "ZHIPU_API_KEY"
+      ],
+      "healthCheckMode": "runtime",
+      "billingMode": "page",
+      "defaultTimeout": 90000,
+      "retryStrategy": {
+        "maxRetries": 1,
+        "backoffMs": 1000
+      },
+      "description": "GLM 版面/OCR 接口，适合票据与文档识别。"
+    },
+    {
+      "id": "glm-text",
+      "name": "GLM Text",
+      "type": "text",
+      "runtime": "glm-text",
+      "status": "active",
+      "defaultModel": "glm-4.7-flash",
+      "availableModels": [
+        "glm-4-flash",
+        "glm-4.7-flash"
+      ],
+      "supportsCustomModel": true,
+      "envKeys": [
+        "GLM_OCR_API_KEY",
+        "ZHIPU_API_KEY"
+      ],
+      "healthCheckMode": "runtime",
+      "billingMode": "token",
+      "defaultTimeout": 90000,
+      "retryStrategy": {
+        "maxRetries": 1,
+        "backoffMs": 1000
+      },
+      "description": "GLM 文本生成与 JSON 结构化能力。"
+    },
+    {
+      "id": "openai-text",
+      "name": "OpenAI Text",
+      "type": "text",
+      "runtime": "openai-text",
+      "status": "active",
+      "defaultModel": "gpt-4o",
+      "availableModels": [
+        "gpt-4o"
+      ],
+      "supportsCustomModel": true,
+      "envKeys": [
+        "OPENAI_API_KEY"
+      ],
+      "healthCheckMode": "runtime",
+      "billingMode": "token",
+      "defaultTimeout": 90000,
+      "retryStrategy": {
+        "maxRetries": 1,
+        "backoffMs": 1000
+      },
+      "description": "OpenAI 兼容文本生成能力。"
+    },
+    {
+      "id": "claude-text",
+      "name": "Claude Text",
+      "type": "text",
+      "runtime": "claude-text",
+      "status": "active",
+      "defaultModel": "claude-3-sonnet-20250219",
+      "availableModels": [
+        "claude-3-sonnet-20250219"
+      ],
+      "supportsCustomModel": true,
+      "envKeys": [
+        "ANTHROPIC_API_KEY",
+        "CLAUDE_API_KEY"
+      ],
+      "healthCheckMode": "runtime",
+      "billingMode": "token",
+      "defaultTimeout": 90000,
+      "retryStrategy": {
+        "maxRetries": 1,
+        "backoffMs": 1000
+      },
+      "description": "Anthropic Claude 服务端文本能力。"
+    },
+    {
+      "id": "qwen-text",
+      "name": "Qwen Text",
+      "type": "text",
+      "runtime": "qwen-text",
+      "status": "active",
+      "defaultModel": "qwen-plus",
+      "availableModels": [
+        "qwen-plus"
+      ],
+      "supportsCustomModel": true,
+      "envKeys": [
+        "QWEN_API_KEY",
+        "DASHSCOPE_API_KEY"
+      ],
+      "healthCheckMode": "runtime",
+      "billingMode": "token",
+      "defaultTimeout": 90000,
+      "retryStrategy": {
+        "maxRetries": 1,
+        "backoffMs": 1000
+      },
+      "description": "通义千问 OpenAI 兼容文本能力。"
+    },
+    {
+      "id": "deepseek-text",
+      "name": "DeepSeek Text",
+      "type": "text",
+      "runtime": "deepseek-text",
+      "status": "active",
+      "defaultModel": "deepseek-chat",
+      "availableModels": [
+        "deepseek-chat"
+      ],
+      "supportsCustomModel": true,
+      "envKeys": [
+        "DEEPSEEK_API_KEY"
+      ],
+      "healthCheckMode": "runtime",
+      "billingMode": "token",
+      "defaultTimeout": 90000,
+      "retryStrategy": {
+        "maxRetries": 1,
+        "backoffMs": 1000
+      },
+      "description": "DeepSeek OpenAI 兼容文本能力。"
+    },
+    {
+      "id": "paddle-ocr",
+      "name": "PaddleOCR",
+      "type": "ocr",
+      "runtime": "paddle-ocr",
+      "status": "active",
+      "defaultModel": "rapidocr",
+      "availableModels": [
+        "rapidocr"
+      ],
+      "supportsCustomModel": false,
+      "envKeys": [],
+      "healthCheckMode": "runtime",
+      "billingMode": "page",
+      "defaultTimeout": 30000,
+      "retryStrategy": {
+        "maxRetries": 0,
+        "backoffMs": 0
+      },
+      "description": "本地 PaddleOCR/RapidOCR 服务，适合离线 OCR。"
+    }
+  ],
+  "capabilities": [
+    {
+      "id": "admin.invoice_ocr.raw_engine",
+      "name": "发票 OCR 原始识别",
+      "group": "主后台",
+      "description": "票据/材料图像的第一阶段 OCR 识别引擎。",
+      "binding": {
+        "provider": "gemini-vision",
+        "model": "gemini-2.5-flash",
+        "generationConfig": {}
+      },
+      "supportedProviders": [
+        "gemini-vision",
+        "glm-ocr",
+        "paddle-ocr"
+      ],
+      "promptSourceType": "runtime_only",
+      "promptTemplateId": null,
+      "editable": true,
+      "codeLocations": [
+        "services/invoiceOcrService.ts",
+        "server/apiHandler.js"
+      ],
+      "currentProvider": "gemini-vision",
+      "currentModel": "gemini-2.5-flash",
+      "generationConfig": {},
+      "providerAvailable": true,
+      "providerMissingEnvKeys": [
+        "API_KEY"
+      ],
+      "supportMatrix": [
+        {
+          "providerId": "gemini-vision",
+          "providerName": "Gemini Vision",
+          "available": true,
+          "missingEnvKeys": [
+            "API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "gemini-2.5-flash"
+        },
+        {
+          "providerId": "glm-ocr",
+          "providerName": "GLM OCR",
+          "available": true,
+          "missingEnvKeys": [
+            "ZHIPU_API_KEY"
+          ],
+          "supportsCustomModel": false,
+          "defaultModel": "glm-ocr"
+        },
+        {
+          "providerId": "paddle-ocr",
+          "providerName": "PaddleOCR",
+          "available": true,
+          "missingEnvKeys": [],
+          "supportsCustomModel": false,
+          "defaultModel": "rapidocr"
+        }
+      ],
+      "promptSource": {
+        "type": "runtime_only",
+        "promptTemplateId": null,
+        "secondaryPromptTemplateId": null,
+        "editable": false
+      }
+    },
+    {
+      "id": "admin.invoice_ocr.structuring",
+      "name": "发票 OCR 结构化解析",
+      "group": "主后台",
+      "description": "对 OCR 文本进行 JSON 结构化提取。",
+      "binding": {
+        "provider": "gemini-text",
+        "model": "gemini-2.5-flash",
+        "generationConfig": {}
+      },
+      "supportedProviders": [
+        "gemini-text",
+        "glm-text",
+        "openai-text",
+        "claude-text",
+        "qwen-text",
+        "deepseek-text"
+      ],
+      "promptSourceType": "template",
+      "promptTemplateId": "invoice_structuring",
+      "editable": true,
+      "codeLocations": [
+        "services/invoiceOcrService.ts",
+        "server/apiHandler.js"
+      ],
+      "currentProvider": "gemini-text",
+      "currentModel": "gemini-2.5-flash",
+      "generationConfig": {},
+      "providerAvailable": true,
+      "providerMissingEnvKeys": [
+        "API_KEY"
+      ],
+      "supportMatrix": [
+        {
+          "providerId": "gemini-text",
+          "providerName": "Gemini Text",
+          "available": true,
+          "missingEnvKeys": [
+            "API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "gemini-2.5-flash"
+        },
+        {
+          "providerId": "glm-text",
+          "providerName": "GLM Text",
+          "available": true,
+          "missingEnvKeys": [
+            "ZHIPU_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "glm-4.7-flash"
+        },
+        {
+          "providerId": "openai-text",
+          "providerName": "OpenAI Text",
+          "available": false,
+          "missingEnvKeys": [
+            "OPENAI_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "gpt-4o"
+        },
+        {
+          "providerId": "claude-text",
+          "providerName": "Claude Text",
+          "available": false,
+          "missingEnvKeys": [
+            "ANTHROPIC_API_KEY",
+            "CLAUDE_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "claude-3-sonnet-20250219"
+        },
+        {
+          "providerId": "qwen-text",
+          "providerName": "Qwen Text",
+          "available": false,
+          "missingEnvKeys": [
+            "QWEN_API_KEY",
+            "DASHSCOPE_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "qwen-plus"
+        },
+        {
+          "providerId": "deepseek-text",
+          "providerName": "DeepSeek Text",
+          "available": false,
+          "missingEnvKeys": [
+            "DEEPSEEK_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "deepseek-chat"
+        }
+      ],
+      "promptSource": {
+        "type": "template",
+        "promptTemplateId": "invoice_structuring",
+        "secondaryPromptTemplateId": null,
+        "editable": true
+      }
+    },
+    {
+      "id": "admin.material.classification",
+      "name": "材料分类",
+      "group": "主后台",
+      "description": "理赔材料自动分类与材料目录匹配。",
+      "binding": {
+        "provider": "gemini-vision",
+        "model": "gemini-2.5-flash",
+        "generationConfig": {}
+      },
+      "supportedProviders": [
+        "gemini-vision"
+      ],
+      "promptSourceType": "template",
+      "promptTemplateId": "material_classifier",
+      "editable": true,
+      "codeLocations": [
+        "services/material/materialClassifier.ts",
+        "server/taskQueue/worker.js",
+        "server/apiHandler.js"
+      ],
+      "currentProvider": "gemini-vision",
+      "currentModel": "gemini-2.5-flash",
+      "generationConfig": {},
+      "providerAvailable": true,
+      "providerMissingEnvKeys": [
+        "API_KEY"
+      ],
+      "supportMatrix": [
+        {
+          "providerId": "gemini-vision",
+          "providerName": "Gemini Vision",
+          "available": true,
+          "missingEnvKeys": [
+            "API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "gemini-2.5-flash"
+        }
+      ],
+      "promptSource": {
+        "type": "template",
+        "promptTemplateId": "material_classifier",
+        "secondaryPromptTemplateId": null,
+        "editable": true
+      }
+    },
+    {
+      "id": "admin.material.structured_extraction",
+      "name": "结构化材料抽取",
+      "group": "主后台",
+      "description": "基于材料 schema 的 OCR+字段抽取。",
+      "binding": {
+        "provider": "gemini-vision",
+        "model": "gemini-2.5-flash",
+        "generationConfig": {}
+      },
+      "supportedProviders": [
+        "gemini-vision"
+      ],
+      "promptSourceType": "material_config",
+      "promptTemplateId": null,
+      "editable": false,
+      "lockReason": "材料级模板来自 claims-materials 配置。",
+      "codeLocations": [
+        "services/material/strategies/structuredDocStrategy.ts",
+        "services/invoiceOcrService.ts"
+      ],
+      "currentProvider": "gemini-vision",
+      "currentModel": "gemini-2.5-flash",
+      "generationConfig": {},
+      "providerAvailable": true,
+      "providerMissingEnvKeys": [
+        "API_KEY"
+      ],
+      "supportMatrix": [
+        {
+          "providerId": "gemini-vision",
+          "providerName": "Gemini Vision",
+          "available": true,
+          "missingEnvKeys": [
+            "API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "gemini-2.5-flash"
+        }
+      ],
+      "promptSource": {
+        "type": "material_config",
+        "promptTemplateId": null,
+        "secondaryPromptTemplateId": null,
+        "editable": false
+      }
+    },
+    {
+      "id": "admin.material.general_analysis",
+      "name": "通用材料分析",
+      "group": "主后台",
+      "description": "无固定 schema 的通用文档分析与摘要。",
+      "binding": {
+        "provider": "gemini-vision",
+        "model": "gemini-2.5-flash",
+        "generationConfig": {}
+      },
+      "supportedProviders": [
+        "gemini-vision"
+      ],
+      "promptSourceType": "runtime_only",
+      "promptTemplateId": null,
+      "editable": true,
+      "codeLocations": [
+        "services/material/strategies/generalDocStrategy.ts",
+        "server/services/fileProcessor.js",
+        "server/services/summaryExtractors/index.js"
+      ],
+      "currentProvider": "gemini-vision",
+      "currentModel": "gemini-2.5-flash",
+      "generationConfig": {},
+      "providerAvailable": true,
+      "providerMissingEnvKeys": [
+        "API_KEY"
+      ],
+      "supportMatrix": [
+        {
+          "providerId": "gemini-vision",
+          "providerName": "Gemini Vision",
+          "available": true,
+          "missingEnvKeys": [
+            "API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "gemini-2.5-flash"
+        }
+      ],
+      "promptSource": {
+        "type": "runtime_only",
+        "promptTemplateId": null,
+        "secondaryPromptTemplateId": null,
+        "editable": false
+      }
+    },
+    {
+      "id": "admin.catalog.semantic_match",
+      "name": "医保目录语义匹配",
+      "group": "主后台",
+      "description": "费用项目与医保目录之间的 AI 语义匹配。",
+      "binding": {
+        "provider": "gemini-text",
+        "model": "gemini-2.5-flash",
+        "generationConfig": {}
+      },
+      "supportedProviders": [
+        "gemini-text",
+        "glm-text",
+        "openai-text",
+        "claude-text",
+        "qwen-text",
+        "deepseek-text"
+      ],
+      "promptSourceType": "template",
+      "promptTemplateId": "catalog_semantic_match",
+      "editable": true,
+      "codeLocations": [
+        "services/catalogMatchService.ts"
+      ],
+      "currentProvider": "gemini-text",
+      "currentModel": "gemini-2.5-flash",
+      "generationConfig": {},
+      "providerAvailable": true,
+      "providerMissingEnvKeys": [
+        "API_KEY"
+      ],
+      "supportMatrix": [
+        {
+          "providerId": "gemini-text",
+          "providerName": "Gemini Text",
+          "available": true,
+          "missingEnvKeys": [
+            "API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "gemini-2.5-flash"
+        },
+        {
+          "providerId": "glm-text",
+          "providerName": "GLM Text",
+          "available": true,
+          "missingEnvKeys": [
+            "ZHIPU_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "glm-4.7-flash"
+        },
+        {
+          "providerId": "openai-text",
+          "providerName": "OpenAI Text",
+          "available": false,
+          "missingEnvKeys": [
+            "OPENAI_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "gpt-4o"
+        },
+        {
+          "providerId": "claude-text",
+          "providerName": "Claude Text",
+          "available": false,
+          "missingEnvKeys": [
+            "ANTHROPIC_API_KEY",
+            "CLAUDE_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "claude-3-sonnet-20250219"
+        },
+        {
+          "providerId": "qwen-text",
+          "providerName": "Qwen Text",
+          "available": false,
+          "missingEnvKeys": [
+            "QWEN_API_KEY",
+            "DASHSCOPE_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "qwen-plus"
+        },
+        {
+          "providerId": "deepseek-text",
+          "providerName": "DeepSeek Text",
+          "available": false,
+          "missingEnvKeys": [
+            "DEEPSEEK_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "deepseek-chat"
+        }
+      ],
+      "promptSource": {
+        "type": "template",
+        "promptTemplateId": "catalog_semantic_match",
+        "secondaryPromptTemplateId": null,
+        "editable": true
+      }
+    },
+    {
+      "id": "admin.claim.review_agent",
+      "name": "理赔审核 Agent",
+      "group": "主后台",
+      "description": "智能理赔审核 Agent 的工具调用主模型。",
+      "binding": {
+        "provider": "gemini-text",
+        "model": "gemini-2.5-flash",
+        "generationConfig": {}
+      },
+      "supportedProviders": [
+        "gemini-text"
+      ],
+      "promptSourceType": "template",
+      "promptTemplateId": "claim_adjuster_system",
+      "secondaryPromptTemplateId": "claim_adjuster_human",
+      "editable": true,
+      "codeLocations": [
+        "server/ai/agent.js"
+      ],
+      "currentProvider": "gemini-text",
+      "currentModel": "gemini-2.5-flash",
+      "generationConfig": {},
+      "providerAvailable": true,
+      "providerMissingEnvKeys": [
+        "API_KEY"
+      ],
+      "supportMatrix": [
+        {
+          "providerId": "gemini-text",
+          "providerName": "Gemini Text",
+          "available": true,
+          "missingEnvKeys": [
+            "API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "gemini-2.5-flash"
+        }
+      ],
+      "promptSource": {
+        "type": "template",
+        "promptTemplateId": "claim_adjuster_system",
+        "secondaryPromptTemplateId": "claim_adjuster_human",
+        "editable": true
+      }
+    },
+    {
+      "id": "admin.claim.pre_existing_assessment",
+      "name": "既往症自动判断",
+      "group": "主后台",
+      "description": "基于病历既往史和时间逻辑的医疗险既往症自动识别。",
+      "binding": {
+        "provider": "gemini-text",
+        "model": "gemini-2.5-flash",
+        "generationConfig": {}
+      },
+      "supportedProviders": [
+        "gemini-text",
+        "glm-text",
+        "openai-text",
+        "claude-text",
+        "qwen-text",
+        "deepseek-text"
+      ],
+      "promptSourceType": "template",
+      "promptTemplateId": "pre_existing_condition_assessment",
+      "editable": true,
+      "codeLocations": [
+        "server/services/preExistingConditionAssessor.js"
+      ],
+      "currentProvider": "gemini-text",
+      "currentModel": "gemini-2.5-flash",
+      "generationConfig": {},
+      "providerAvailable": true,
+      "providerMissingEnvKeys": [
+        "API_KEY"
+      ],
+      "supportMatrix": [
+        {
+          "providerId": "gemini-text",
+          "providerName": "Gemini Text",
+          "available": true,
+          "missingEnvKeys": [
+            "API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "gemini-2.5-flash"
+        },
+        {
+          "providerId": "glm-text",
+          "providerName": "GLM Text",
+          "available": true,
+          "missingEnvKeys": [
+            "ZHIPU_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "glm-4.7-flash"
+        },
+        {
+          "providerId": "openai-text",
+          "providerName": "OpenAI Text",
+          "available": false,
+          "missingEnvKeys": [
+            "OPENAI_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "gpt-4o"
+        },
+        {
+          "providerId": "claude-text",
+          "providerName": "Claude Text",
+          "available": false,
+          "missingEnvKeys": [
+            "ANTHROPIC_API_KEY",
+            "CLAUDE_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "claude-3-sonnet-20250219"
+        },
+        {
+          "providerId": "qwen-text",
+          "providerName": "Qwen Text",
+          "available": false,
+          "missingEnvKeys": [
+            "QWEN_API_KEY",
+            "DASHSCOPE_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "qwen-plus"
+        },
+        {
+          "providerId": "deepseek-text",
+          "providerName": "DeepSeek Text",
+          "available": false,
+          "missingEnvKeys": [
+            "DEEPSEEK_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "deepseek-chat"
+        }
+      ],
+      "promptSource": {
+        "type": "template",
+        "promptTemplateId": "pre_existing_condition_assessment",
+        "secondaryPromptTemplateId": null,
+        "editable": true
+      }
+    },
+    {
+      "id": "admin.claim.risk_assessment",
+      "name": "理赔风险评估",
+      "group": "主后台",
+      "description": "智能理赔审核流程中的风险评估模型。",
+      "binding": {
+        "provider": "gemini-text",
+        "model": "gemini-2.5-flash",
+        "generationConfig": {}
+      },
+      "supportedProviders": [
+        "gemini-text",
+        "glm-text",
+        "openai-text",
+        "claude-text",
+        "qwen-text",
+        "deepseek-text"
+      ],
+      "promptSourceType": "runtime_only",
+      "promptTemplateId": null,
+      "editable": true,
+      "codeLocations": [
+        "server/ai/graph.js",
+        "server/services/injuryAssessment.js"
+      ],
+      "currentProvider": "gemini-text",
+      "currentModel": "gemini-2.5-flash",
+      "generationConfig": {},
+      "providerAvailable": true,
+      "providerMissingEnvKeys": [
+        "API_KEY"
+      ],
+      "supportMatrix": [
+        {
+          "providerId": "gemini-text",
+          "providerName": "Gemini Text",
+          "available": true,
+          "missingEnvKeys": [
+            "API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "gemini-2.5-flash"
+        },
+        {
+          "providerId": "glm-text",
+          "providerName": "GLM Text",
+          "available": true,
+          "missingEnvKeys": [
+            "ZHIPU_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "glm-4.7-flash"
+        },
+        {
+          "providerId": "openai-text",
+          "providerName": "OpenAI Text",
+          "available": false,
+          "missingEnvKeys": [
+            "OPENAI_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "gpt-4o"
+        },
+        {
+          "providerId": "claude-text",
+          "providerName": "Claude Text",
+          "available": false,
+          "missingEnvKeys": [
+            "ANTHROPIC_API_KEY",
+            "CLAUDE_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "claude-3-sonnet-20250219"
+        },
+        {
+          "providerId": "qwen-text",
+          "providerName": "Qwen Text",
+          "available": false,
+          "missingEnvKeys": [
+            "QWEN_API_KEY",
+            "DASHSCOPE_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "qwen-plus"
+        },
+        {
+          "providerId": "deepseek-text",
+          "providerName": "DeepSeek Text",
+          "available": false,
+          "missingEnvKeys": [
+            "DEEPSEEK_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "deepseek-chat"
+        }
+      ],
+      "promptSource": {
+        "type": "runtime_only",
+        "promptTemplateId": null,
+        "secondaryPromptTemplateId": null,
+        "editable": false
+      }
+    },
+    {
+      "id": "smartclaim.chat",
+      "name": "SmartClaim 对话",
+      "group": "SmartClaim",
+      "description": "SmartClaim 对话主模型（含地图 grounding）。",
+      "binding": {
+        "provider": "gemini-text",
+        "model": "gemini-2.5-flash",
+        "generationConfig": {}
+      },
+      "supportedProviders": [
+        "gemini-text",
+        "openai-text",
+        "claude-text",
+        "qwen-text",
+        "deepseek-text"
+      ],
+      "promptSourceType": "template",
+      "promptTemplateId": "smartclaim_chat_user",
+      "secondaryPromptTemplateId": "smartclaim_system",
+      "editable": false,
+      "lockReason": "当前依赖 Google Maps grounding，仅支持 Gemini。",
+      "codeLocations": [
+        "smartclaim-ai-agent/geminiService.ts"
+      ],
+      "currentProvider": "gemini-text",
+      "currentModel": "gemini-2.5-flash",
+      "generationConfig": {},
+      "providerAvailable": true,
+      "providerMissingEnvKeys": [
+        "API_KEY"
+      ],
+      "supportMatrix": [
+        {
+          "providerId": "gemini-text",
+          "providerName": "Gemini Text",
+          "available": true,
+          "missingEnvKeys": [
+            "API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "gemini-2.5-flash"
+        },
+        {
+          "providerId": "openai-text",
+          "providerName": "OpenAI Text",
+          "available": false,
+          "missingEnvKeys": [
+            "OPENAI_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "gpt-4o"
+        },
+        {
+          "providerId": "claude-text",
+          "providerName": "Claude Text",
+          "available": false,
+          "missingEnvKeys": [
+            "ANTHROPIC_API_KEY",
+            "CLAUDE_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "claude-3-sonnet-20250219"
+        },
+        {
+          "providerId": "qwen-text",
+          "providerName": "Qwen Text",
+          "available": false,
+          "missingEnvKeys": [
+            "QWEN_API_KEY",
+            "DASHSCOPE_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "qwen-plus"
+        },
+        {
+          "providerId": "deepseek-text",
+          "providerName": "DeepSeek Text",
+          "available": false,
+          "missingEnvKeys": [
+            "DEEPSEEK_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "deepseek-chat"
+        }
+      ],
+      "promptSource": {
+        "type": "template",
+        "promptTemplateId": "smartclaim_chat_user",
+        "secondaryPromptTemplateId": "smartclaim_system",
+        "editable": true
+      }
+    },
+    {
+      "id": "smartclaim.intent",
+      "name": "SmartClaim 意图识别",
+      "group": "SmartClaim",
+      "description": "SmartClaim 33 类意图识别模型。",
+      "binding": {
+        "provider": "gemini-text",
+        "model": "gemini-2.5-flash",
+        "generationConfig": {}
+      },
+      "supportedProviders": [
+        "gemini-text",
+        "glm-text",
+        "openai-text",
+        "claude-text",
+        "qwen-text",
+        "deepseek-text"
+      ],
+      "promptSourceType": "template",
+      "promptTemplateId": "smartclaim_intent_recognition",
+      "editable": true,
+      "codeLocations": [
+        "smartclaim-ai-agent/intentService.ts"
+      ],
+      "currentProvider": "gemini-text",
+      "currentModel": "gemini-2.5-flash",
+      "generationConfig": {},
+      "providerAvailable": true,
+      "providerMissingEnvKeys": [
+        "API_KEY"
+      ],
+      "supportMatrix": [
+        {
+          "providerId": "gemini-text",
+          "providerName": "Gemini Text",
+          "available": true,
+          "missingEnvKeys": [
+            "API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "gemini-2.5-flash"
+        },
+        {
+          "providerId": "glm-text",
+          "providerName": "GLM Text",
+          "available": true,
+          "missingEnvKeys": [
+            "ZHIPU_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "glm-4.7-flash"
+        },
+        {
+          "providerId": "openai-text",
+          "providerName": "OpenAI Text",
+          "available": false,
+          "missingEnvKeys": [
+            "OPENAI_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "gpt-4o"
+        },
+        {
+          "providerId": "claude-text",
+          "providerName": "Claude Text",
+          "available": false,
+          "missingEnvKeys": [
+            "ANTHROPIC_API_KEY",
+            "CLAUDE_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "claude-3-sonnet-20250219"
+        },
+        {
+          "providerId": "qwen-text",
+          "providerName": "Qwen Text",
+          "available": false,
+          "missingEnvKeys": [
+            "QWEN_API_KEY",
+            "DASHSCOPE_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "qwen-plus"
+        },
+        {
+          "providerId": "deepseek-text",
+          "providerName": "DeepSeek Text",
+          "available": false,
+          "missingEnvKeys": [
+            "DEEPSEEK_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "deepseek-chat"
+        }
+      ],
+      "promptSource": {
+        "type": "template",
+        "promptTemplateId": "smartclaim_intent_recognition",
+        "secondaryPromptTemplateId": null,
+        "editable": true
+      }
+    },
+    {
+      "id": "smartclaim.document_analysis",
+      "name": "SmartClaim 文档分析",
+      "group": "SmartClaim",
+      "description": "SmartClaim 上传材料的 OCR/分析能力。",
+      "binding": {
+        "provider": "gemini-vision",
+        "model": "gemini-2.5-flash",
+        "generationConfig": {}
+      },
+      "supportedProviders": [
+        "gemini-vision"
+      ],
+      "promptSourceType": "runtime_only",
+      "promptTemplateId": null,
+      "editable": true,
+      "codeLocations": [
+        "smartclaim-ai-agent/geminiService.ts"
+      ],
+      "currentProvider": "gemini-vision",
+      "currentModel": "gemini-2.5-flash",
+      "generationConfig": {},
+      "providerAvailable": true,
+      "providerMissingEnvKeys": [
+        "API_KEY"
+      ],
+      "supportMatrix": [
+        {
+          "providerId": "gemini-vision",
+          "providerName": "Gemini Vision",
+          "available": true,
+          "missingEnvKeys": [
+            "API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "gemini-2.5-flash"
+        }
+      ],
+      "promptSource": {
+        "type": "runtime_only",
+        "promptTemplateId": null,
+        "secondaryPromptTemplateId": null,
+        "editable": false
+      }
+    },
+    {
+      "id": "smartclaim.final_assessment",
+      "name": "SmartClaim 最终理算",
+      "group": "SmartClaim",
+      "description": "SmartClaim 最终赔付评估模型。",
+      "binding": {
+        "provider": "gemini-text",
+        "model": "gemini-2.5-flash",
+        "generationConfig": {}
+      },
+      "supportedProviders": [
+        "gemini-text",
+        "glm-text",
+        "openai-text",
+        "claude-text",
+        "qwen-text",
+        "deepseek-text"
+      ],
+      "promptSourceType": "runtime_only",
+      "promptTemplateId": null,
+      "editable": true,
+      "codeLocations": [
+        "smartclaim-ai-agent/geminiService.ts"
+      ],
+      "currentProvider": "gemini-text",
+      "currentModel": "gemini-2.5-flash",
+      "generationConfig": {},
+      "providerAvailable": true,
+      "providerMissingEnvKeys": [
+        "API_KEY"
+      ],
+      "supportMatrix": [
+        {
+          "providerId": "gemini-text",
+          "providerName": "Gemini Text",
+          "available": true,
+          "missingEnvKeys": [
+            "API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "gemini-2.5-flash"
+        },
+        {
+          "providerId": "glm-text",
+          "providerName": "GLM Text",
+          "available": true,
+          "missingEnvKeys": [
+            "ZHIPU_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "glm-4.7-flash"
+        },
+        {
+          "providerId": "openai-text",
+          "providerName": "OpenAI Text",
+          "available": false,
+          "missingEnvKeys": [
+            "OPENAI_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "gpt-4o"
+        },
+        {
+          "providerId": "claude-text",
+          "providerName": "Claude Text",
+          "available": false,
+          "missingEnvKeys": [
+            "ANTHROPIC_API_KEY",
+            "CLAUDE_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "claude-3-sonnet-20250219"
+        },
+        {
+          "providerId": "qwen-text",
+          "providerName": "Qwen Text",
+          "available": false,
+          "missingEnvKeys": [
+            "QWEN_API_KEY",
+            "DASHSCOPE_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "qwen-plus"
+        },
+        {
+          "providerId": "deepseek-text",
+          "providerName": "DeepSeek Text",
+          "available": false,
+          "missingEnvKeys": [
+            "DEEPSEEK_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "deepseek-chat"
+        }
+      ],
+      "promptSource": {
+        "type": "runtime_only",
+        "promptTemplateId": null,
+        "secondaryPromptTemplateId": null,
+        "editable": false
+      }
+    },
+    {
+      "id": "shared.audio_transcription",
+      "name": "共享音频转写",
+      "group": "共享能力",
+      "description": "音频/视频转写能力。",
+      "binding": {
+        "provider": "gemini-vision",
+        "model": "gemini-2.5-flash",
+        "generationConfig": {}
+      },
+      "supportedProviders": [
+        "gemini-vision"
+      ],
+      "promptSourceType": "runtime_only",
+      "promptTemplateId": null,
+      "editable": false,
+      "lockReason": "当前依赖 Gemini 多模态音频能力。",
+      "codeLocations": [
+        "smartclaim-ai-agent/geminiService.ts",
+        "server/services/videoProcessor.js"
+      ],
+      "currentProvider": "gemini-vision",
+      "currentModel": "gemini-2.5-flash",
+      "generationConfig": {},
+      "providerAvailable": true,
+      "providerMissingEnvKeys": [
+        "API_KEY"
+      ],
+      "supportMatrix": [
+        {
+          "providerId": "gemini-vision",
+          "providerName": "Gemini Vision",
+          "available": true,
+          "missingEnvKeys": [
+            "API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "gemini-2.5-flash"
+        }
+      ],
+      "promptSource": {
+        "type": "runtime_only",
+        "promptTemplateId": null,
+        "secondaryPromptTemplateId": null,
+        "editable": false
+      }
+    },
+    {
+      "id": "voice.intent",
+      "name": "语音意图识别",
+      "group": "语音报案",
+      "description": "语音报案场景下的意图识别模型。",
+      "binding": {
+        "provider": "gemini-text",
+        "model": "gemini-2.5-flash",
+        "generationConfig": {}
+      },
+      "supportedProviders": [
+        "gemini-text",
+        "glm-text",
+        "openai-text",
+        "claude-text",
+        "qwen-text",
+        "deepseek-text"
+      ],
+      "promptSourceType": "template",
+      "promptTemplateId": "voice_intent_recognition",
+      "editable": true,
+      "codeLocations": [
+        "server/voice/intents/IntentRecognizer.ts"
+      ],
+      "currentProvider": "gemini-text",
+      "currentModel": "gemini-2.5-flash",
+      "generationConfig": {},
+      "providerAvailable": true,
+      "providerMissingEnvKeys": [
+        "API_KEY"
+      ],
+      "supportMatrix": [
+        {
+          "providerId": "gemini-text",
+          "providerName": "Gemini Text",
+          "available": true,
+          "missingEnvKeys": [
+            "API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "gemini-2.5-flash"
+        },
+        {
+          "providerId": "glm-text",
+          "providerName": "GLM Text",
+          "available": true,
+          "missingEnvKeys": [
+            "ZHIPU_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "glm-4.7-flash"
+        },
+        {
+          "providerId": "openai-text",
+          "providerName": "OpenAI Text",
+          "available": false,
+          "missingEnvKeys": [
+            "OPENAI_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "gpt-4o"
+        },
+        {
+          "providerId": "claude-text",
+          "providerName": "Claude Text",
+          "available": false,
+          "missingEnvKeys": [
+            "ANTHROPIC_API_KEY",
+            "CLAUDE_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "claude-3-sonnet-20250219"
+        },
+        {
+          "providerId": "qwen-text",
+          "providerName": "Qwen Text",
+          "available": false,
+          "missingEnvKeys": [
+            "QWEN_API_KEY",
+            "DASHSCOPE_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "qwen-plus"
+        },
+        {
+          "providerId": "deepseek-text",
+          "providerName": "DeepSeek Text",
+          "available": false,
+          "missingEnvKeys": [
+            "DEEPSEEK_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "deepseek-chat"
+        }
+      ],
+      "promptSource": {
+        "type": "template",
+        "promptTemplateId": "voice_intent_recognition",
+        "secondaryPromptTemplateId": null,
+        "editable": true
+      }
+    },
+    {
+      "id": "voice.reply_planner",
+      "name": "语音回复规划",
+      "group": "语音报案",
+      "description": "将结构化结果改写为适合 TTS 播报的话术。",
+      "binding": {
+        "provider": "gemini-text",
+        "model": "gemini-2.5-flash",
+        "generationConfig": {}
+      },
+      "supportedProviders": [
+        "gemini-text",
+        "glm-text",
+        "openai-text",
+        "claude-text",
+        "qwen-text",
+        "deepseek-text"
+      ],
+      "promptSourceType": "template",
+      "promptTemplateId": "voice_reply_planner",
+      "editable": true,
+      "codeLocations": [
+        "server/voice/responders/voiceReplyBuilder.ts"
+      ],
+      "currentProvider": "gemini-text",
+      "currentModel": "gemini-2.5-flash",
+      "generationConfig": {},
+      "providerAvailable": true,
+      "providerMissingEnvKeys": [
+        "API_KEY"
+      ],
+      "supportMatrix": [
+        {
+          "providerId": "gemini-text",
+          "providerName": "Gemini Text",
+          "available": true,
+          "missingEnvKeys": [
+            "API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "gemini-2.5-flash"
+        },
+        {
+          "providerId": "glm-text",
+          "providerName": "GLM Text",
+          "available": true,
+          "missingEnvKeys": [
+            "ZHIPU_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "glm-4.7-flash"
+        },
+        {
+          "providerId": "openai-text",
+          "providerName": "OpenAI Text",
+          "available": false,
+          "missingEnvKeys": [
+            "OPENAI_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "gpt-4o"
+        },
+        {
+          "providerId": "claude-text",
+          "providerName": "Claude Text",
+          "available": false,
+          "missingEnvKeys": [
+            "ANTHROPIC_API_KEY",
+            "CLAUDE_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "claude-3-sonnet-20250219"
+        },
+        {
+          "providerId": "qwen-text",
+          "providerName": "Qwen Text",
+          "available": false,
+          "missingEnvKeys": [
+            "QWEN_API_KEY",
+            "DASHSCOPE_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "qwen-plus"
+        },
+        {
+          "providerId": "deepseek-text",
+          "providerName": "DeepSeek Text",
+          "available": false,
+          "missingEnvKeys": [
+            "DEEPSEEK_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "deepseek-chat"
+        }
+      ],
+      "promptSource": {
+        "type": "template",
+        "promptTemplateId": "voice_reply_planner",
+        "secondaryPromptTemplateId": null,
+        "editable": true
+      }
+    },
+    {
+      "id": "voice.chat",
+      "name": "语音对话主模型",
+      "group": "语音报案",
+      "description": "语音管线中的普通对话 fallback 模型。",
+      "binding": {
+        "provider": "gemini-text",
+        "model": "gemini-2.5-flash",
+        "generationConfig": {}
+      },
+      "supportedProviders": [
+        "gemini-text",
+        "glm-text",
+        "openai-text",
+        "claude-text",
+        "qwen-text",
+        "deepseek-text"
+      ],
+      "promptSourceType": "runtime_only",
+      "promptTemplateId": null,
+      "editable": true,
+      "codeLocations": [
+        "server/voice/VoicePipeline.ts"
+      ],
+      "currentProvider": "gemini-text",
+      "currentModel": "gemini-2.5-flash",
+      "generationConfig": {},
+      "providerAvailable": true,
+      "providerMissingEnvKeys": [
+        "API_KEY"
+      ],
+      "supportMatrix": [
+        {
+          "providerId": "gemini-text",
+          "providerName": "Gemini Text",
+          "available": true,
+          "missingEnvKeys": [
+            "API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "gemini-2.5-flash"
+        },
+        {
+          "providerId": "glm-text",
+          "providerName": "GLM Text",
+          "available": true,
+          "missingEnvKeys": [
+            "ZHIPU_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "glm-4.7-flash"
+        },
+        {
+          "providerId": "openai-text",
+          "providerName": "OpenAI Text",
+          "available": false,
+          "missingEnvKeys": [
+            "OPENAI_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "gpt-4o"
+        },
+        {
+          "providerId": "claude-text",
+          "providerName": "Claude Text",
+          "available": false,
+          "missingEnvKeys": [
+            "ANTHROPIC_API_KEY",
+            "CLAUDE_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "claude-3-sonnet-20250219"
+        },
+        {
+          "providerId": "qwen-text",
+          "providerName": "Qwen Text",
+          "available": false,
+          "missingEnvKeys": [
+            "QWEN_API_KEY",
+            "DASHSCOPE_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "qwen-plus"
+        },
+        {
+          "providerId": "deepseek-text",
+          "providerName": "DeepSeek Text",
+          "available": false,
+          "missingEnvKeys": [
+            "DEEPSEEK_API_KEY"
+          ],
+          "supportsCustomModel": true,
+          "defaultModel": "deepseek-chat"
+        }
+      ],
+      "promptSource": {
+        "type": "runtime_only",
+        "promptTemplateId": null,
+        "secondaryPromptTemplateId": null,
+        "editable": false
+      }
+    }
+  ],
+  "promptTemplates": [
+    {
+      "id": "claim_adjuster_system",
+      "name": "理赔审核系统提示词",
+      "description": "智能理赔审核 Agent 的系统角色定义。",
+      "content": "你是一位资深的保险理赔审核员，具有丰富的医疗险和意外险理赔经验。\n\n## 你的职责\n1. 审核理赔案件是否符合保单责任\n2. 计算应赔付金额\n3. 识别潜在风险和欺诈\n4. 给出专业的审核意见\n\n## 审核流程\n1. **责任判断**：首先使用 check_eligibility 工具判断案件是否符合保单责任\n2. **金额计算**：如果责任成立，使用 calculate_claim_amount 工具计算赔付金额\n3. **辅助核查**：根据需要查询医保目录(query_medical_catalog)和医院信息(query_hospital_info)\n4. **综合结论**：基于工具返回结果，给出审核结论和理由\n\n## 输出格式\n请按以下结构输出审核结论：\n\n### 审核结论\n- **决定**: [APPROVE/REJECT/MANUAL_REVIEW]\n- **理赔金额**: ¥xxx（如适用）\n\n### 责任判断\n[说明是否符合保单责任，引用具体条款]\n\n### 金额计算（如适用）\n- 申请金额: ¥xxx\n- 免赔额: ¥xxx\n- 赔付比例: xx%\n- 最终金额: ¥xxx\n\n### 风险提示（如有）\n[列出需要关注的风险点]\n\n### 审核依据\n[列出匹配的规则和条款]\n\n## 注意事项\n- 必须使用工具获取数据，不要凭空假设\n- 对于无法确定的情况，建议转人工复核\n- 拒赔时必须引用具体的条款依据\n- 使用中文输出",
+      "requiredVariables": [],
+      "templateEngine": "plain",
+      "variables": []
+    },
+    {
+      "id": "claim_adjuster_human",
+      "name": "理赔审核输入模板",
+      "description": "智能理赔审核 Agent 的案件输入模板。",
+      "content": "请审核以下理赔案件：\n\n## 案件信息\n- 产品代码: {{productCode}}\n- 案件ID: {{claimCaseId}}\n\n## OCR 提取的材料信息\n{{ocrDataSummary}}\n\n## 费用明细\n{{invoiceItemsSummary}}\n\n请使用工具进行责任判断和金额计算，然后给出审核结论。",
+      "requiredVariables": [
+        "productCode",
+        "claimCaseId",
+        "ocrDataSummary",
+        "invoiceItemsSummary"
+      ],
+      "templateEngine": "jinja2",
+      "variables": [
+        {
+          "name": "productCode",
+          "type": "string",
+          "description": "保险产品代码",
+          "example": "HEALTH-001",
+          "required": true,
+          "source": "policy"
+        },
+        {
+          "name": "claimCaseId",
+          "type": "string",
+          "description": "理赔案件唯一编号",
+          "example": "CLM-2024-00123",
+          "required": true,
+          "source": "claim_case"
+        },
+        {
+          "name": "ocrDataSummary",
+          "type": "string",
+          "description": "OCR 识别后的材料结构化摘要文本",
+          "example": "出院诊断：急性阑尾炎；住院天数：5天；总费用：¥12,800",
+          "required": true,
+          "source": "document"
+        },
+        {
+          "name": "invoiceItemsSummary",
+          "type": "string",
+          "description": "发票费用明细汇总文本",
+          "example": "手术费: ¥5,000 / 药品费: ¥3,200 / 床位费: ¥2,500 / 检查费: ¥2,100",
+          "required": true,
+          "source": "document"
+        }
+      ]
+    },
+    {
+      "id": "smartclaim_system",
+      "name": "SmartClaim 系统提示词",
+      "description": "SmartClaim AI 助手系统角色提示词。",
+      "content": "You are a Senior Insurance Claim AI Adjuster.\nYour goal is to guide the user through the claim process:\n1. REPORTING: Ask for incident time, location, policy number, and description. Identify the incident type (e.g., Medical, Auto, Property).\n2. DOCUMENTING: Based on incident type, list required docs. Provide clear examples.\n3. VALIDATION & OCR: Analyze uploaded materials. Extract key info (OCR) like dates, amounts, and names. Confirm if they match required types.\n4. ASSESSMENT:\n   - First, determine liability based on policy rules.\n   - If not liable, quote the clause.\n   - If liable, calculate payout per item (Limits, Deductibles, Special terms).\n5. PAYMENT: Confirm banking details and initiate transfer.\n\nCurrent Policy Rules (Mock):\n- Auto: Coverage up to $100k, Deductible $500. Not liable if driver was unlicensed.\n- Medical: 90% reimbursement, Max $50k. Requires official receipts.\n- Property: Max $200k. Not liable for natural wear/tear.\n\nWhen asking for a location or discussing geography, use Google Maps to provide accurate and up-to-date place information.\n\nAlways return helpful, empathetic, but professional responses. Use Chinese for user-facing content.",
+      "requiredVariables": [],
+      "templateEngine": "plain",
+      "variables": []
+    },
+    {
+      "id": "smartclaim_chat_user",
+      "name": "SmartClaim 对话模板",
+      "description": "SmartClaim 普通聊天请求模板。",
+      "content": "Current Claim State: {{claimStateJson}}\nHistory: {{historyText}}\n\nTask: Respond to the user's latest message.\nIf you've gathered enough info to change status, indicate it.\nAlways prioritize completing the current step.\nIf the user mentions an accident location or you need to find a place, use the Google Maps tool.",
+      "requiredVariables": [
+        "claimStateJson",
+        "historyText"
+      ],
+      "templateEngine": "jinja2",
+      "variables": [
+        {
+          "name": "claimStateJson",
+          "type": "object",
+          "description": "当前理赔案件的完整状态 JSON 对象",
+          "example": "{\"status\":\"pending\",\"step\":\"upload_docs\",\"claimId\":\"CLM-001\"}",
+          "required": true,
+          "source": "claim_case"
+        },
+        {
+          "name": "historyText",
+          "type": "string",
+          "description": "对话历史记录文本",
+          "example": "用户：我想提交住院材料\n助手：好的，请上传出院小结",
+          "required": true,
+          "source": "system"
+        }
+      ]
+    },
+    {
+      "id": "smartclaim_intent_recognition",
+      "name": "SmartClaim 意图识别模板",
+      "description": "SmartClaim 33 类意图识别模板。",
+      "content": "你是保险理赔客服智能助手，专门负责识别索赔人（用户）的意图。\n\n## 任务要求\n1. 结合当前理赔状态、已上传材料、最近对话和用户最新输入判断用户意图。\n2. 提取案件号、保单号、理赔类型、产品代码、材料类型、金额、原因等实体。\n3. 若置信度低于 0.7，返回 GENERAL_CHAT。 \n4. 输出必须适配 recognize_intent 工具定义。\n\n当前对话上下文：\n- 当前理赔状态: {{claimStatus}}\n- 已关联案件数: {{historicalClaimCount}}\n- 最近案件ID: {{recentClaimId}}\n- 已上传材料数: {{documentCount}}\n\n最近对话：\n{{conversationHistory}}\n\n用户最新输入：\n\"{{userInput}}\"\n\n请识别用户意图并返回结果。",
+      "requiredVariables": [
+        "claimStatus",
+        "historicalClaimCount",
+        "recentClaimId",
+        "documentCount",
+        "conversationHistory",
+        "userInput"
+      ],
+      "templateEngine": "jinja2",
+      "variables": [
+        {
+          "name": "claimStatus",
+          "type": "string",
+          "description": "当前理赔案件状态",
+          "example": "pending_documents",
+          "required": true,
+          "source": "claim_case"
+        },
+        {
+          "name": "historicalClaimCount",
+          "type": "number",
+          "description": "用户历史理赔次数",
+          "example": "2",
+          "required": true,
+          "source": "policy"
+        },
+        {
+          "name": "recentClaimId",
+          "type": "string",
+          "description": "最近一次理赔案件 ID",
+          "example": "CLM-2024-00089",
+          "required": false,
+          "source": "claim_case"
+        },
+        {
+          "name": "documentCount",
+          "type": "number",
+          "description": "已上传材料数量",
+          "example": "3",
+          "required": true,
+          "source": "document"
+        },
+        {
+          "name": "conversationHistory",
+          "type": "string",
+          "description": "最近 N 轮对话历史",
+          "example": "用户：我住院了\n助手：请上传出院小结",
+          "required": true,
+          "source": "system"
+        },
+        {
+          "name": "userInput",
+          "type": "string",
+          "description": "用户当前输入文本",
+          "example": "我想查一下我的理赔进度",
+          "required": true,
+          "source": "system"
+        }
+      ]
+    },
+    {
+      "id": "voice_intent_recognition",
+      "name": "语音意图识别模板",
+      "description": "语音报案场景的意图识别模板。",
+      "content": "你是一个正在通话中的理赔语音管家，不是客服脚本机。\n\n你的任务不是逐句分类，而是结合当前状态、已知事实和最近对话，判断用户此刻最想推进什么。\n\n规则：\n1. 优先理解用户当前目标：继续报案、查询进度、问缺材料、问能赔多少、修改信息、确认提交、切换任务。\n2. 用户一次说多个事实时，要尽量一次提取出来。\n3. 用户在查询途中切到报案，或者在报案途中插入查询，允许切换任务，不要强行留在原流程。\n4. 若用户是在回答上一轮问题，优先把它理解为对缺失字段的补充。\n5. 不要生成用户可见话术，只返回结构化 JSON。\n6. missingCriticalFields 只列最关键、最影响下一步推进的缺口，最多 2 个。\n\n当前状态: {{currentState}}\n当前会话阶段: {{conversationPhase}}\n上一次用户目标: {{lastUserGoal}}\n已选保单: {{selectedPolicy}}\n已选案件: {{selectedClaim}}\n已收集字段: {{collectedFields}}\n仍缺必填字段: {{missingRequiredFields}}\n最近对话:\n{{recentHistory}}\n\n用户原话: \"{{userText}}\"\n\n可选 intent:\n- start_claim\n- cancel\n- confirm\n- reject\n- select_policy\n- select_claim\n- query_progress\n- query_materials\n- query_missing_materials\n- query_coverage\n- query_settlement\n- provide_info\n- modify_info\n- repeat\n- ask_help\n- ask_example\n- greeting\n- small_talk\n- unknown\n\nconversationGoal 只能是:\n- collect\n- answer\n- clarify\n- confirm\n- switch_task\n\nreplyStrategy 只能是:\n- ack_then_ask\n- ack_then_answer\n- confirm_then_submit\n- handoff\n\n返回 JSON，不要 markdown。",
+      "requiredVariables": [
+        "currentState",
+        "conversationPhase",
+        "lastUserGoal",
+        "selectedPolicy",
+        "selectedClaim",
+        "collectedFields",
+        "missingRequiredFields",
+        "recentHistory",
+        "userText"
+      ],
+      "templateEngine": "jinja2",
+      "variables": [
+        {
+          "name": "currentState",
+          "type": "string",
+          "description": "当前语音报案流程状态",
+          "example": "collecting_incident_info",
+          "required": true,
+          "source": "system"
+        },
+        {
+          "name": "conversationPhase",
+          "type": "string",
+          "description": "对话阶段",
+          "example": "incident_description",
+          "required": true,
+          "source": "system"
+        },
+        {
+          "name": "lastUserGoal",
+          "type": "string",
+          "description": "上一轮识别的用户目标",
+          "example": "report_accident",
+          "required": false,
+          "source": "system"
+        },
+        {
+          "name": "selectedPolicy",
+          "type": "string",
+          "description": "用户已选择的保单号",
+          "example": "POL-2023-001234",
+          "required": false,
+          "source": "policy"
+        },
+        {
+          "name": "selectedClaim",
+          "type": "string",
+          "description": "用户已关联的理赔案件号",
+          "example": "CLM-2024-00456",
+          "required": false,
+          "source": "claim_case"
+        },
+        {
+          "name": "collectedFields",
+          "type": "string",
+          "description": "已收集的字段列表",
+          "example": "事故时间: 2024-03-15, 事故地点: 上海市浦东新区",
+          "required": true,
+          "source": "system"
+        },
+        {
+          "name": "missingRequiredFields",
+          "type": "string",
+          "description": "缺失的必填字段列表",
+          "example": "就诊医院, 诊断结果",
+          "required": true,
+          "source": "system"
+        },
+        {
+          "name": "recentHistory",
+          "type": "string",
+          "description": "最近几轮语音对话记录",
+          "example": "用户：昨天发生了交通事故\n助手：请问事故发生在哪里？",
+          "required": true,
+          "source": "system"
+        },
+        {
+          "name": "userText",
+          "type": "string",
+          "description": "语音识别后的用户文本",
+          "example": "我在上海浦东新区发生了交通事故",
+          "required": true,
+          "source": "system"
+        }
+      ]
+    },
+    {
+      "id": "voice_reply_planner",
+      "name": "语音回复规划模板",
+      "description": "语音报案 TTS 回复规划模板。",
+      "content": "你是电话里的理赔语音管家，请把结构化信息改写成适合 TTS 播报的自然中文。\n\n目标：\n1. 先回应用户，再推进下一步。\n2. 只说 1 到 3 句短句。\n3. 口语化，少术语，不要朗读内部字段名。\n4. 如果是查询类，先说结论，再补最关键原因或下一步。\n5. 如果是报案收集类，先复述已记录事实，再只追问一个最关键缺口。\n6. 如果信息已齐全，做一次提交前摘要确认。\n7. 不要说“根据系统”“字段”“payload”之类词。\n\n当前场景: {{scene}}\n当前状态: {{currentState}}\n用户原话: {{userText}}\nconversationGoal: {{conversationGoal}}\nreplyStrategy: {{replyStrategy}}\n摘要: {{summary}}\n已确认事实: {{acknowledgedFacts}}\n仍缺信息: {{missingFields}}\n工具结果摘要: {{actionSummaries}}\n下一步: {{nextStep}}\n\n请直接输出最终播报文案，不要解释。",
+      "requiredVariables": [
+        "scene",
+        "currentState",
+        "userText",
+        "conversationGoal",
+        "replyStrategy",
+        "summary",
+        "acknowledgedFacts",
+        "missingFields",
+        "actionSummaries",
+        "nextStep"
+      ],
+      "templateEngine": "jinja2",
+      "variables": [
+        {
+          "name": "scene",
+          "type": "string",
+          "description": "当前报案场景类型",
+          "example": "accident_report",
+          "required": true,
+          "source": "system"
+        },
+        {
+          "name": "currentState",
+          "type": "string",
+          "description": "当前流程状态",
+          "example": "collecting_hospital_info",
+          "required": true,
+          "source": "system"
+        },
+        {
+          "name": "userText",
+          "type": "string",
+          "description": "用户语音识别文本",
+          "example": "我在北京协和医院住院了",
+          "required": true,
+          "source": "system"
+        },
+        {
+          "name": "conversationGoal",
+          "type": "string",
+          "description": "本轮对话目标",
+          "example": "collect_hospital_name",
+          "required": true,
+          "source": "system"
+        },
+        {
+          "name": "replyStrategy",
+          "type": "string",
+          "description": "回复策略指令",
+          "example": "confirm_and_proceed",
+          "required": true,
+          "source": "system"
+        },
+        {
+          "name": "summary",
+          "type": "string",
+          "description": "当前已收集信息摘要",
+          "example": "事故时间：2024-03-15；事故地点：上海",
+          "required": true,
+          "source": "system"
+        },
+        {
+          "name": "acknowledgedFacts",
+          "type": "string",
+          "description": "已确认事实列表",
+          "example": "就诊医院：北京协和医院",
+          "required": true,
+          "source": "system"
+        },
+        {
+          "name": "missingFields",
+          "type": "string",
+          "description": "待收集字段",
+          "example": "出院时间, 主要诊断",
+          "required": true,
+          "source": "system"
+        },
+        {
+          "name": "actionSummaries",
+          "type": "string",
+          "description": "本轮执行的动作摘要",
+          "example": "已记录就诊医院信息",
+          "required": false,
+          "source": "system"
+        },
+        {
+          "name": "nextStep",
+          "type": "string",
+          "description": "下一步操作指引",
+          "example": "询问出院时间",
+          "required": true,
+          "source": "system"
+        }
+      ]
+    },
+    {
+      "id": "invoice_structuring",
+      "name": "发票结构化模板",
+      "description": "OCR 结果二次结构化提取模板。",
+      "content": "以下是中国医疗发票的 OCR 识别结果。请从中提取结构化信息。\n\n## 重要规则\n1. 只提取 OCR 文本中**明确存在**的信息，严禁补充或编造\n2. 费用明细项目**不要重复**，同一项目只提取一次\n3. 注意区分\"个人自付\"(personalSelfPayment)和\"个人自费\"(personalSelfExpense)\n4. 医院名称优先从票面印刷文字提取\n5. 只返回 JSON，不要使用代码块或多余文字\n\n## OCR 原文\n{{ocrText}}\n\n## 输出 JSON 格式\n{{schemaText}}\n\n## 输出规范\n- 日期格式：YYYY-MM-DD\n- 数字字段：纯数字，不含货币符号或千分位逗号\n- 无法识别的字段：字符串用 \"\"，数字用 0",
+      "requiredVariables": [
+        "ocrText",
+        "schemaText"
+      ],
+      "templateEngine": "jinja2",
+      "variables": [
+        {
+          "name": "ocrText",
+          "type": "string",
+          "description": "发票的 OCR 原始识别文本",
+          "example": "北京协和医院 门诊收费收据\n挂号费 50.00\n检查费 380.00\n药品费 220.00\n合计 650.00",
+          "required": true,
+          "source": "document"
+        },
+        {
+          "name": "schemaText",
+          "type": "string",
+          "description": "期望输出的 JSON 结构描述",
+          "example": "{\"hospitalName\":\"string\",\"totalAmount\":\"number\",\"items\":[{\"name\":\"string\",\"amount\":\"number\"}]}",
+          "required": true,
+          "source": "system"
+        }
+      ]
+    },
+    {
+      "id": "material_classifier",
+      "name": "材料分类模板",
+      "description": "理赔材料自动分类模板。",
+      "content": "你是保险理赔材料分类专家。你必须严格从材料目录中选择一个最匹配项，若无法确定再返回 unknown。\n\n【OCR 文字】\n{{ocrText}}\n\n【文件名参考】\n{{fileName}}\n\n【材料目录（格式: id|名称|说明摘要）】\n{{catalog}}\n\n请仅返回 JSON：{\"materialId\":\"...\",\"materialName\":\"...\",\"confidence\":0到1的小数,\"reason\":\"简短说明\"}。\n要求：\n1) materialId 必须来自目录；\n2) 若不确定，返回 unknown/未识别/0；\n3) 禁止输出 markdown。",
+      "requiredVariables": [
+        "ocrText",
+        "fileName",
+        "catalog"
+      ],
+      "templateEngine": "jinja2",
+      "variables": [
+        {
+          "name": "ocrText",
+          "type": "string",
+          "description": "上传材料的 OCR 识别文本",
+          "example": "出院记录 患者：张三 住院号：123456 出院诊断：急性阑尾炎",
+          "required": true,
+          "source": "document"
+        },
+        {
+          "name": "fileName",
+          "type": "string",
+          "description": "上传文件的文件名",
+          "example": "出院小结_张三_20240315.pdf",
+          "required": true,
+          "source": "document"
+        },
+        {
+          "name": "catalog",
+          "type": "string",
+          "description": "材料目录列表（id|名称|说明）",
+          "example": "discharge_summary|出院小结|患者出院时的诊断和治疗摘要\ninvoice|医疗发票|医院开具的费用发票",
+          "required": true,
+          "source": "system"
+        }
+      ]
+    },
+    {
+      "id": "catalog_semantic_match",
+      "name": "医保目录语义匹配模板",
+      "description": "医保目录语义匹配模板，支持单项和批量匹配。",
+      "content": "你是一位中国医保药品/诊疗项目专家。请从以下医保目录中找出与给定项目最匹配的条目。\n\n注意事项：\n1. 药品可能使用商品名、通用名或别名，需要识别它们之间的对应关系\n2. 如\"泰诺林\"=\"对乙酰氨基酚\"，\"芬必得\"=\"布洛芬缓释胶囊\"\n3. 注意规格表述差异：如\"500mg\"=\"0.5g\"\n4. 注意简称缩写：如\"MRI\"=\"核磁共振检查\"\n5. 考虑剂型差异：同通用名不同剂型也算匹配（如胶囊vs片剂）\n\n医保目录：\n{{catalogList}}\n\n待匹配项目：\n{{itemList}}\n\n请返回 JSON{{resultShape}}\n\n规则：\n- 置信度低于 {{aiConfidenceThreshold}} 时 matchedCode 必须为 null\n- 必须为每个待匹配项目返回一条结果",
+      "requiredVariables": [
+        "catalogList",
+        "itemList",
+        "resultShape",
+        "aiConfidenceThreshold"
+      ],
+      "templateEngine": "jinja2",
+      "variables": [
+        {
+          "name": "catalogList",
+          "type": "string",
+          "description": "医保目录条目列表文本",
+          "example": "J01CA04|阿莫西林|口服抗菌药\nM01AE01|布洛芬|非甾体抗炎药",
+          "required": true,
+          "source": "system"
+        },
+        {
+          "name": "itemList",
+          "type": "string",
+          "description": "待匹配的药品/诊疗项目列表",
+          "example": "泰诺林\nMRI检查\n芬必得",
+          "required": true,
+          "source": "document"
+        },
+        {
+          "name": "resultShape",
+          "type": "string",
+          "description": "期望的 JSON 返回结构模板",
+          "example": "[{\"input\":\"...\",\"matchedCode\":\"...\",\"matchedName\":\"...\",\"confidence\":0.9}]",
+          "required": true,
+          "source": "system"
+        },
+        {
+          "name": "aiConfidenceThreshold",
+          "type": "number",
+          "description": "置信度阈值，低于此值时 matchedCode 返回 null",
+          "example": "0.7",
+          "required": true,
+          "source": "system"
+        }
+      ]
+    },
+    {
+      "id": "injury_assessment",
+      "name": "伤残等级辅助判断模板",
+      "description": "根据诊断与伤情描述辅助判断伤残等级。",
+      "content": "请根据以下诊断和伤害描述，判断适用的伤残等级（1-10级，1级最高，10级最低）：\n\n诊断：{{diagnosisText}}\n伤害描述：{{injuryDescription}}\n\n参考标准：\n- 1级：颅脑损伤导致植物生存状态、四肢完全缺失等\n- 2-3级：双目失明、双耳失聪、重要器官功能完全丧失\n- 4-5级：单目失明、单耳失聪、肢体功能部分丧失\n- 6-7级：拇指指间关节离断、听力部分丧失\n- 8-10级：手指离断、轻微软组织损伤等\n\n请按以下JSON格式返回（仅返回JSON，不要其他文字）：\n{\n  \"suggestedGrade\": 数字,\n  \"confidence\": 0-1之间的数,\n  \"reasoning\": \"判断理由（简要）\"\n}",
+      "requiredVariables": [
+        "diagnosisText",
+        "injuryDescription"
+      ],
+      "templateEngine": "jinja2",
+      "variables": [
+        {
+          "name": "diagnosisText",
+          "type": "string",
+          "description": "医院出具的诊断文本",
+          "example": "右手拇指末节离断，神经血管损伤",
+          "required": true,
+          "source": "document"
+        },
+        {
+          "name": "injuryDescription",
+          "type": "string",
+          "description": "伤害情况描述",
+          "example": "工厂机器操作事故导致右手拇指末节完全离断",
+          "required": true,
+          "source": "claim_case"
+        }
+      ]
+    },
+    {
+      "id": "pre_existing_condition_assessment",
+      "name": "既往症核查提示词",
+      "description": "基于病历既往史和时间逻辑，判断本次理赔是否涉及投保前既往症。",
+      "content": "你是保险理赔既往症核查专员。请根据以下信息判断本次理赔是否涉及投保前既往症。\n\n## 本次理赔信息\n- 出院诊断：{{currentDiagnosis}}\n- 诊断名称列表：{{diagnosisNames}}\n- 首诊/入院日期：{{firstDiagnosisDate}}\n\n## 保单信息\n- 保单生效日期：{{policyEffectiveDate}}\n- 等待期（天）：{{waitingPeriodDays}}\n\n## 病历中的既往史记录\n{{historyText}}\n\n## 评判标准\n1. 若既往史中记录了与本次诊断相关或同类疾病 → 倾向 YES\n2. 若首诊日期早于保单生效日或在等待期内 → 倾向 YES\n3. 若既往史明确记载\"无\"且时间逻辑无异常 → 倾向 NO\n4. 若既往史为\"不详\"或信息严重不足 → 返回 UNCERTAIN\n\n请仅返回 JSON，不要其他文字：\n{\n  \"result\": \"YES\" | \"NO\" | \"UNCERTAIN\",\n  \"confidence\": 0.0到1.0之间的数字,\n  \"reasoning\": \"简要推理说明\"\n}",
+      "requiredVariables": [
+        "currentDiagnosis",
+        "diagnosisNames",
+        "firstDiagnosisDate",
+        "policyEffectiveDate",
+        "waitingPeriodDays",
+        "historyText"
+      ],
+      "templateEngine": "jinja2",
+      "variables": [
+        {
+          "name": "currentDiagnosis",
+          "type": "string",
+          "description": "本次出院或就诊的主要诊断",
+          "example": "2型糖尿病伴肾病",
+          "required": true,
+          "source": "document"
+        },
+        {
+          "name": "diagnosisNames",
+          "type": "string",
+          "description": "所有诊断名称列表（逗号分隔）",
+          "example": "2型糖尿病, 糖尿病肾病3期, 高血压",
+          "required": true,
+          "source": "document"
+        },
+        {
+          "name": "firstDiagnosisDate",
+          "type": "string",
+          "description": "首次诊断或入院日期（YYYY-MM-DD）",
+          "example": "2024-02-10",
+          "required": true,
+          "source": "document"
+        },
+        {
+          "name": "policyEffectiveDate",
+          "type": "string",
+          "description": "保单生效日期（YYYY-MM-DD）",
+          "example": "2023-06-01",
+          "required": true,
+          "source": "policy"
+        },
+        {
+          "name": "waitingPeriodDays",
+          "type": "number",
+          "description": "保单等待期天数",
+          "example": "90",
+          "required": true,
+          "source": "policy"
+        },
+        {
+          "name": "historyText",
+          "type": "string",
+          "description": "病历中既往史记录文本",
+          "example": "既往史：有高血压病史5年，规律服药；否认糖尿病史",
+          "required": true,
+          "source": "document"
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "updatedAt": "2026-04-01T18:14:05.470Z",
+    "updatedBy": "admin",
+    "version": 2
+  }
+}

@@ -9,8 +9,87 @@
     "claimAmount": 5000,
     "productCode": "ZA-001",
     "productName": "尊享e生2024版",
-    "status": "处理中",
-    "operator": "李四"
+    "policyNumber": "POL-2024-HLT-001",
+    "policyholder": "张三",
+    "insured": "张三",
+    "policyPeriod": "2024年1月1日 - 2024年12月31日",
+    "status": "待补传",
+    "operator": "李四",
+    "ocrData": {
+      "hospital_name": "北京协和医院",
+      "diagnosis": "急性支气管炎",
+      "diagnosis_names": [
+        "急性支气管炎"
+      ],
+      "admission_date": "2024-04-28",
+      "discharge_date": "2024-05-01",
+      "hospital_days": 3
+    },
+    "coverageInfo": {
+      "coverageCode": "HLT_INPATIENT",
+      "coverageName": "住院医疗",
+      "sumInsured": 6000000,
+      "deductible": 10000,
+      "reimbursementRatio": 1
+    },
+    "calculationItems": [
+      {
+        "id": "calc-c1-1",
+        "type": "医疗费用",
+        "item": "住院床位费",
+        "amount": 1200,
+        "claimAmount": 1200,
+        "date": "2024-04-28"
+      },
+      {
+        "id": "calc-c1-2",
+        "type": "医疗费用",
+        "item": "药品费",
+        "amount": 2300,
+        "claimAmount": 2300,
+        "date": "2024-04-29"
+      },
+      {
+        "id": "calc-c1-3",
+        "type": "医疗费用",
+        "item": "检查费",
+        "amount": 1500,
+        "claimAmount": 1500,
+        "date": "2024-04-28"
+      }
+    ],
+    "latestReviewSnapshot": {
+      "updatedAt": "2026-03-25T17:16:45.739Z",
+      "decision": "APPROVE",
+      "amount": 0,
+      "payableAmount": 0,
+      "intakeDecision": "PENDING_MATERIAL",
+      "liabilityDecision": "MANUAL_REVIEW",
+      "assessmentDecision": "PARTIAL_ASSESSED",
+      "settlementDecision": "MANUAL_REVIEW",
+      "missingMaterials": [
+        "医疗发票",
+        "病历资料",
+        "费用清单"
+      ],
+      "coverageResults": [
+        {
+          "coverageCode": "HLT_INPATIENT",
+          "claimedAmount": 5000,
+          "approvedAmount": 0,
+          "deductible": 5000,
+          "reimbursementRatio": 1,
+          "sumInsured": 6000000,
+          "status": "MANUAL_REVIEW",
+          "warnings": []
+        }
+      ]
+    },
+    "assessmentCompletedAt": "2026-03-25T13:27:03.772Z",
+    "assessmentCompletedBy": "system",
+    "assessmentDecision": "PARTIAL_ASSESSED",
+    "approvedAmount": 0,
+    "liabilityDecision": "MANUAL_REVIEW"
   },
   {
     "id": "claim-2",
@@ -22,8 +101,79 @@
     "claimAmount": 1200.5,
     "productCode": "ZA-002",
     "productName": "小米综合意外险",
-    "status": "已报案",
-    "operator": "赵六"
+    "policyNumber": "POL-2024-ACC-005",
+    "policyholder": "王五",
+    "insured": "王五",
+    "policyPeriod": "2024年3月1日 - 2025年2月28日",
+    "status": "待补传",
+    "operator": "赵六",
+    "ocrData": {
+      "hospital_name": "上海第一人民医院",
+      "diagnosis": "右踝关节扭伤",
+      "diagnosis_names": [
+        "右踝关节扭伤"
+      ],
+      "admission_date": "2024-05-09",
+      "discharge_date": "2024-05-09",
+      "hospital_days": 0
+    },
+    "coverageInfo": {
+      "coverageCode": "ACC_MEDICAL",
+      "coverageName": "意外医疗",
+      "sumInsured": 10000,
+      "deductible": 100,
+      "reimbursementRatio": 0.9
+    },
+    "calculationItems": [
+      {
+        "id": "calc-c2-1",
+        "type": "医疗费用",
+        "item": "门诊检查费",
+        "amount": 650,
+        "claimAmount": 650,
+        "date": "2024-05-09"
+      },
+      {
+        "id": "calc-c2-2",
+        "type": "医疗费用",
+        "item": "药品费",
+        "amount": 550.5,
+        "claimAmount": 550.5,
+        "date": "2024-05-09"
+      }
+    ],
+    "latestReviewSnapshot": {
+      "updatedAt": "2026-03-25T17:16:07.729Z",
+      "decision": "MANUAL_REVIEW",
+      "amount": 0,
+      "payableAmount": 0,
+      "intakeDecision": "PENDING_MATERIAL",
+      "liabilityDecision": "MANUAL_REVIEW",
+      "assessmentDecision": "PARTIAL_ASSESSED",
+      "settlementDecision": "MANUAL_REVIEW",
+      "missingMaterials": [
+        "事故证明",
+        "医疗记录",
+        "身份证件"
+      ],
+      "coverageResults": [
+        {
+          "coverageCode": "ACC_MEDICAL",
+          "claimedAmount": 1200.5,
+          "approvedAmount": 0,
+          "deductible": 0,
+          "reimbursementRatio": 0.9,
+          "sumInsured": 50000,
+          "status": "MANUAL_REVIEW",
+          "warnings": []
+        }
+      ]
+    },
+    "assessmentCompletedAt": "2026-03-25T17:16:07.722Z",
+    "assessmentCompletedBy": "system",
+    "assessmentDecision": "PARTIAL_ASSESSED",
+    "approvedAmount": 0,
+    "liabilityDecision": "MANUAL_REVIEW"
   },
   {
     "id": "claim-3",
@@ -49,7 +199,39 @@
     "productCode": "ZA-003",
     "productName": "百万医疗险2024",
     "status": "待补传",
-    "operator": "吴十"
+    "operator": "吴十",
+    "latestReviewSnapshot": {
+      "updatedAt": "2026-03-25T17:16:52.941Z",
+      "decision": "MANUAL_REVIEW",
+      "amount": 0,
+      "payableAmount": 0,
+      "intakeDecision": "PENDING_MATERIAL",
+      "liabilityDecision": "MANUAL_REVIEW",
+      "assessmentDecision": "PARTIAL_ASSESSED",
+      "settlementDecision": "MANUAL_REVIEW",
+      "missingMaterials": [
+        "事故证明",
+        "医疗记录",
+        "身份证件"
+      ],
+      "coverageResults": [
+        {
+          "coverageCode": "ACC_MEDICAL",
+          "claimedAmount": 0,
+          "approvedAmount": 0,
+          "deductible": 0,
+          "reimbursementRatio": 0.9,
+          "sumInsured": 50000,
+          "status": "ZERO_PAY",
+          "warnings": []
+        }
+      ]
+    },
+    "assessmentCompletedAt": "2026-03-25T17:16:42.751Z",
+    "assessmentCompletedBy": "system",
+    "assessmentDecision": "PARTIAL_ASSESSED",
+    "approvedAmount": 0,
+    "liabilityDecision": "MANUAL_REVIEW"
   },
   {
     "id": "claim-detail-1",
@@ -1419,7 +1601,7 @@
     "claimAmount": 148,
     "productCode": "ZA-GOPD-2022A-90",
     "productName": "众安互联网团体门诊急诊医疗保险（0免赔90%赔付版）",
-    "status": "处理中",
+    "status": "已结案-给付",
     "operator": "系统导入",
     "policyholder": "杨秀",
     "insured": "杨秀",
@@ -1446,15 +1628,86 @@
       "claim_item": "门急诊医疗理赔"
     },
     "latestReviewSnapshot": {
-      "updatedAt": "2026-03-15T11:17:22.343Z",
-      "decision": "MANUAL_REVIEW",
+      "updatedAt": "2026-04-04T16:12:52.279Z",
+      "decision": "APPROVE",
       "amount": 133.2,
       "payableAmount": 133.2,
       "intakeDecision": "PASS",
-      "liabilityDecision": "MANUAL_REVIEW",
-      "assessmentDecision": "PARTIAL_ASSESSED",
-      "settlementDecision": "MANUAL_REVIEW",
+      "liabilityDecision": "ACCEPT",
+      "assessmentDecision": "ASSESSED",
+      "settlementDecision": "PAY",
       "missingMaterials": [],
+      "preExistingAssessment": {
+        "processor_id": "pre_existing_condition",
+        "result": "UNCERTAIN",
+        "confidence": 0,
+        "evidence": [],
+        "reasoning": "信息不足，无法自动判断",
+        "historyText": null,
+        "evaluatedAt": "2026-04-04T16:12:52.248Z",
+        "steps": {
+          "history": {
+            "certainty": "UNKNOWN",
+            "text": null,
+            "vote": null,
+            "weight": 0
+          },
+          "timeLogic": {
+            "verdict": "UNKNOWN",
+            "reason": "首诊日期缺失",
+            "firstDiagnosisDate": null,
+            "vote": null,
+            "weight": 0
+          },
+          "ai": {
+            "invoked": false,
+            "skippedReason": "既往史缺失或不详，不触发 AI",
+            "result": null,
+            "confidence": null,
+            "reasoning": "",
+            "voteWeight": 0
+          },
+          "synthesis": {
+            "preAiResult": {
+              "result": "UNCERTAIN",
+              "confidence": 0
+            },
+            "finalResult": {
+              "result": "UNCERTAIN",
+              "confidence": 0
+            },
+            "yesScore": 0,
+            "noScore": 0,
+            "threshold": 0.65
+          }
+        },
+        "source": "AUTO",
+        "input": {
+          "diagnosis": "急性阑尾炎；急性弥漫性腹膜炎",
+          "diagnosisNames": [
+            "急性阑尾炎",
+            "急性弥漫性腹膜炎"
+          ],
+          "pastMedicalHistory": null,
+          "firstDiagnosisDate": null,
+          "policyEffectiveDate": "2026-03-16",
+          "waitingPeriodDays": 0
+        },
+        "uncertainResolution": {
+          "action": "ASSUME_FALSE",
+          "matchedRule": {
+            "when": {
+              "product_line": "HEALTH",
+              "claim_scenario": "medical_expense",
+              "max_claim_amount": 5000
+            },
+            "action": "ASSUME_FALSE"
+          },
+          "productLine": "HEALTH",
+          "claimScenario": "medical_expense",
+          "claimAmount": 148
+        }
+      },
       "coverageResults": [
         {
           "coverageCode": "HLT_OPD_SOCIAL",
@@ -1484,11 +1737,11 @@
     "parsedBy": "system",
     "liabilityCompletedAt": "2026-03-15T06:47:20.991Z",
     "liabilityCompletedBy": "system",
-    "liabilityDecision": "ACCEPT",
+    "liabilityDecision": "MANUAL_REVIEW",
     "assessmentCompletedAt": "2026-03-15T06:47:20.991Z",
     "assessmentCompletedBy": "system",
-    "assessmentDecision": "ASSESSED",
-    "approvedAmount": 0,
+    "assessmentDecision": "PARTIAL_ASSESSED",
+    "approvedAmount": 133.2,
     "ocrData": {
       "insured": "杨秀",
       "accident_date": "2026-05-20",
@@ -1529,6 +1782,649 @@
       {
         "materialId": "mat-13",
         "materialName": "诊断证明书"
+      }
+    ],
+    "activeInterventions": [
+      "iv-1774977982775-gqzlr3",
+      "iv-1775309704679-5zxx3h",
+      "iv-1775309707630-rm8zk2",
+      "iv-1775309707934-axgdnt",
+      "iv-1775309708436-7u1c6a",
+      "iv-1775309709308-79rlab",
+      "iv-1775309709710-sf35tx",
+      "iv-1775309710348-kojqtv",
+      "iv-1775309710896-fkg3wi",
+      "iv-1775309711458-i0tyi8",
+      "iv-1775309712023-zqklpx",
+      "iv-1775309713208-mk9f9f",
+      "iv-1775309713688-8oo91j",
+      "iv-1775309714548-6a0far",
+      "iv-1775309715335-8z47b7",
+      "iv-1775309716136-jmggxl",
+      "iv-1775309716900-r7g68y",
+      "iv-1775309717878-xsuuxf",
+      "iv-1775309718747-2ma8fa",
+      "iv-1775309719775-mtuacn",
+      "iv-1775309720277-js28at",
+      "iv-1775309721278-311vz7",
+      "iv-1775309722029-c1isnc",
+      "iv-1775309722580-5abudy",
+      "iv-1775309723134-ysig9p",
+      "iv-1775309724068-12oz8h",
+      "iv-1775309725098-zkwzzw",
+      "iv-1775309725592-3bu1wc",
+      "iv-1775309726270-p0bkh4",
+      "iv-1775309727123-rgr6gl",
+      "iv-1775309728240-lu0m4o",
+      "iv-1775309728699-58t9xk",
+      "iv-1775309729666-fa3hha",
+      "iv-1775309730306-bn9ut8",
+      "iv-1775309732339-fdcyws",
+      "iv-1775309734371-ljzhke",
+      "iv-1775309736858-h3xg42",
+      "iv-1775309740445-vg5a14",
+      "iv-1775309757055-gp4f1u",
+      "iv-1775309780345-lhm5ch",
+      "iv-1775309875259-6zsuvh",
+      "iv-1775309875593-qkyjk3",
+      "iv-1775309881309-sgjmng",
+      "iv-1775309883669-gfmt0q",
+      "iv-1775309884165-y6jlrc",
+      "iv-1775309885338-6a3naj",
+      "iv-1775309886867-2kr2wj",
+      "iv-1775309892102-56vkvv",
+      "iv-1775309893220-8dy7i9",
+      "iv-1775309895603-1lrbc2",
+      "iv-1775309897658-qjofve",
+      "iv-1775309899251-16gjrs",
+      "iv-1775309899777-29mj47",
+      "iv-1775309900747-8lxsje",
+      "iv-1775309902520-ggk90d",
+      "iv-1775309903657-buwxhn",
+      "iv-1775309904027-kud9yc",
+      "iv-1775309905108-4a4yj8",
+      "iv-1775309905575-jwfolw",
+      "iv-1775309906156-sth7wn",
+      "iv-1775309906958-mn8rae",
+      "iv-1775309907658-kmzd9i",
+      "iv-1775309908269-k97gld",
+      "iv-1775309908452-fzwqtd",
+      "iv-1775309909314-hxcrhl",
+      "iv-1775309909706-5658j0",
+      "iv-1775309910158-5ros6h",
+      "iv-1775309910426-9krm05",
+      "iv-1775309911176-bzrr27",
+      "iv-1775309911406-i7idop",
+      "iv-1775309912695-rz7ltg",
+      "iv-1775309912878-mz9aj8",
+      "iv-1775309913406-ffuyou",
+      "iv-1775309914128-cxwt91",
+      "iv-1775309914688-6fjaog",
+      "iv-1775309915122-3yl0dy",
+      "iv-1775309915654-nh62f8",
+      "iv-1775309915839-6p9jp9",
+      "iv-1775309916429-khsag6",
+      "iv-1775309917576-s2kng4",
+      "iv-1775309918814-ajlufr",
+      "iv-1775309919385-v6ifxu",
+      "iv-1775309919784-svb3ch",
+      "iv-1775309920375-2ews9n",
+      "iv-1775309920855-tnp60v",
+      "iv-1775309921170-ded7d9",
+      "iv-1775309921355-pjw6d3",
+      "iv-1775309922634-xapi92",
+      "iv-1775309923026-mf141y",
+      "iv-1775309923213-b3amm0",
+      "iv-1775309924468-na83a0",
+      "iv-1775309925298-v0vvgc",
+      "iv-1775309926113-mhk3em",
+      "iv-1775309927471-4luimz",
+      "iv-1775309927785-zsht6a",
+      "iv-1775309928303-qe09hy",
+      "iv-1775309929197-tfv9jm",
+      "iv-1775309930474-l7s4w7",
+      "iv-1775309930662-tzt50v",
+      "iv-1775309931155-7xbztv",
+      "iv-1775309931458-bx148f",
+      "iv-1775309932052-1yppd2",
+      "iv-1775309933077-u35dhh",
+      "iv-1775309933567-9wevw0",
+      "iv-1775309935168-wzz3d6",
+      "iv-1775309935646-cers58",
+      "iv-1775309937955-b7py78",
+      "iv-1775309938352-u5uee2",
+      "iv-1775309939018-ppoq7o",
+      "iv-1775309939207-lblybk",
+      "iv-1775309939398-8i503h",
+      "iv-1775309940384-r4uef0",
+      "iv-1775309940869-dra0rc",
+      "iv-1775309941394-ixnpvw",
+      "iv-1775309941660-kr03mq",
+      "iv-1775309941869-f45e6y",
+      "iv-1775309942057-0e18xe",
+      "iv-1775309942340-ay7fj5",
+      "iv-1775309942529-5biwrb",
+      "iv-1775309942717-hso72s",
+      "iv-1775309942994-1ne3ef",
+      "iv-1775309943182-34vcxb",
+      "iv-1775309943455-ahaott",
+      "iv-1775309943643-743k21",
+      "iv-1775309943832-4qb9am",
+      "iv-1775309944119-krgxz6",
+      "iv-1775309944310-tfh3v1",
+      "iv-1775309944504-w77pz1",
+      "iv-1775309944818-gq6lm9",
+      "iv-1775309945009-umy50l",
+      "iv-1775309945211-ekk6as",
+      "iv-1775309945481-j26nvs",
+      "iv-1775309945687-hjg7yn",
+      "iv-1775309945972-2wropy",
+      "iv-1775309946163-76rudm",
+      "iv-1775309946352-0d86vi",
+      "iv-1775309946605-yo1d09",
+      "iv-1775309946795-sx45mg",
+      "iv-1775309947119-vim102",
+      "iv-1775309947315-oz8aj3",
+      "iv-1775309947507-iqkp0q",
+      "iv-1775309947841-aufh7s",
+      "iv-1775309948034-rjdpyg",
+      "iv-1775309948315-r3iurb",
+      "iv-1775309948510-kqfjdb",
+      "iv-1775309948708-z63zsf",
+      "iv-1775309948909-r3gjhu",
+      "iv-1775309949105-nejk6t",
+      "iv-1775309949494-kboe17",
+      "iv-1775309949690-o6o3wy",
+      "iv-1775309949916-0u5nrf",
+      "iv-1775309950111-murrr3",
+      "iv-1775309950309-k8higb",
+      "iv-1775309950611-51lbup",
+      "iv-1775309950805-ocfzr7",
+      "iv-1775309951044-7gy2uw",
+      "iv-1775309951307-y8z1tm",
+      "iv-1775309951552-0gut9m",
+      "iv-1775309951773-ofkg26",
+      "iv-1775309952042-psn0zz",
+      "iv-1775309952243-idu26l",
+      "iv-1775309952490-wz4nsc",
+      "iv-1775309952763-jw7rss",
+      "iv-1775309953057-3pg3s0",
+      "iv-1775309953258-x3xh1b",
+      "iv-1775309953601-v7v5zb",
+      "iv-1775309954055-7jogr0",
+      "iv-1775309954280-kixfe8",
+      "iv-1775309954682-jc0fru",
+      "iv-1775309954945-wqkh4y",
+      "iv-1775309955142-0323zs",
+      "iv-1775309955328-lb7592",
+      "iv-1775309955533-z46sp8",
+      "iv-1775309955720-9mg3ht",
+      "iv-1775309955974-mopfv8",
+      "iv-1775309956166-5cpixf",
+      "iv-1775309956429-yyg6ee",
+      "iv-1775309956616-mwd7p3",
+      "iv-1775309956842-zpuyqp",
+      "iv-1775309957027-09ej0i",
+      "iv-1775309957212-0d662t",
+      "iv-1775309957534-zfx45z",
+      "iv-1775309957718-moldrz",
+      "iv-1775309958058-ombpin",
+      "iv-1775309958242-z1dzfs",
+      "iv-1775309958476-2qrub8",
+      "iv-1775309958667-6bpcm1",
+      "iv-1775309958910-xo3we1",
+      "iv-1775309959128-mcv0y1",
+      "iv-1775309959401-rb9zv9",
+      "iv-1775309959586-nbwn08",
+      "iv-1775309959775-4uir9x",
+      "iv-1775309960028-juprbp",
+      "iv-1775309961863-6pecmz",
+      "iv-1775311527592-qhjmyd",
+      "iv-1775311555023-6fzep8",
+      "iv-1775311709392-790xu8",
+      "iv-1775311901468-o4shqj"
+    ],
+    "interventionHistory": [
+      "iv-1775297748024-2fpdsl"
+    ]
+  },
+  {
+    "id": "claim-eml-huangshan",
+    "reportNumber": "R261123052024800086",
+    "reporter": "汪国亮",
+    "reportTime": "2024-03-12 10:12:00",
+    "accidentTime": "2024-03-12 08:30:00",
+    "accidentReason": "吊装作业中吊物失衡侧翻，致第三者方冬九在现场被砸身亡",
+    "accidentLocation": "安徽省黄山市休宁县商山镇S220路口（链套案甲办门房西侧）",
+    "claimAmount": 1007060,
+    "approvedAmount": 827060,
+    "productCode": "SUN_EML_TPL_2023",
+    "productName": "阳光工程机械设备保险-附加第三者责任",
+    "policyNumber": "12611230520230000499",
+    "policyholder": "黄山永顺起重设备安装有限公司",
+    "insured": "黄山永顺起重设备安装有限公司",
+    "policyPeriod": "2023年11月21日 - 2024年11月20日",
+    "status": "定损审核中",
+    "operator": "系统管理员",
+    "liabilityDecision": "ACCEPT",
+    "liabilityCompletedAt": "2024-03-22T10:00:00.000Z",
+    "liabilityCompletedBy": "system",
+    "assessmentDecision": "ASSESSED",
+    "assessmentCompletedAt": "2024-03-22T10:00:00.000Z",
+    "assessmentCompletedBy": "system",
+    "ocrData": {
+      "accident_date": "2024-03-12",
+      "auto_coverage_type": "THIRD_PARTY",
+      "operator_certificate_valid": true,
+      "death_confirmed": true,
+      "result_type": "DEATH",
+      "cause_type": "ACCIDENT",
+      "victim_name": "方冬九",
+      "victim_age": 49,
+      "victim_birth_date": "1975-03-05",
+      "victim_id": "34102219750305003X",
+      "accident_location": "安徽省黄山市休宁县商山镇S220路口",
+      "liability_ratio": 1,
+      "insured_liability_ratio": 1,
+      "employer": "黄山永顺起重设备安装有限公司",
+      "labor_relation_confirmed": false,
+      "work_injury_conclusion": "方冬九系景泰公司员工，非永顺公司雇员，依法适用第三者责任险，不适用雇主责任险",
+      "victim_is_employee": false,
+      "operator_intoxicated": false,
+      "operator_drug_use": false,
+      "operator_authorized": true,
+      "illegal_activity": false,
+      "during_transit": false,
+      "during_maintenance": false,
+      "severe_weather_during_accident": false,
+      "work_stopped_for_weather": true,
+      "accident_in_excluded_region": false,
+      "intentional_act": false,
+      "evidence_destroyed": false,
+      "non_designated_operator": false,
+      "operator_name": "费谋强",
+      "operator_certificate_no": "T3424011200600115",
+      "equipment_model": "三一SYM5345JQZ(STC250T)汽车起重机",
+      "equipment_plate": "皖J18077",
+      "equipment_inspection_valid": true,
+      "claimant_age": 49,
+      "dependent_count": 0,
+      "dependent_expense": 0,
+      "funeral_expense": 54000,
+      "mental_damage": 50000,
+      "ctpl_death_limit_paid": 180000,
+      "paid_offset": 100000,
+      "death_date": "2024-03-12",
+      "death_cause": "起重机械吊装作业中吊物失衡侧翻，方冬九被砸抢救无效死亡",
+      "police_report_no": "休公(商山)接报案字【2024】4号",
+      "claimant_name": "胡崇妹",
+      "claimant_relationship": "配偶（家属）",
+      "settlement_negotiated": true,
+      "settlement_total": 2200000,
+      "settlement_insured_share": 1000000,
+      "settlement_third_party_share": 1200000,
+      "settlement_note": "永顺赔偿方冬九家属¥100万，景泰赔偿¥120万，共计¥220万（政府调解2024-03-23）"
+    },
+    "coverageInfo": {
+      "coverageCode": "LIABILITY_DEATH",
+      "coverageName": "附加第三者责任保险-人身伤亡",
+      "sumInsured": 1000000,
+      "deductible": 0,
+      "reimbursementRatio": 1
+    },
+    "ruleEvaluation": {
+      "ruleset_id": "RS-SUN-EML-TPL-001",
+      "evaluated_at": "2024-03-22T10:00:00.000Z",
+      "results": [
+        {
+          "rule_id": "EMT-GATE-001",
+          "rule_name": "保障期间校验",
+          "result": "PASS",
+          "note": "事故日2024-03-12在保险期间2023-11-21至2024-11-20内"
+        },
+        {
+          "rule_id": "EMT-EXCL-014",
+          "rule_name": "保费欠缴排除",
+          "result": "PASS",
+          "note": "保费已足额缴纳，合同有效"
+        },
+        {
+          "rule_id": "EMT-TRIG-001",
+          "rule_name": "第三者责任保险责任触发",
+          "result": "PASS",
+          "note": "工程机械在施工场地操作中发生意外，第三者方冬九死亡，符合触发条件"
+        },
+        {
+          "rule_id": "EMT-EXCL-001",
+          "rule_name": "雇员伤亡排除",
+          "result": "PASS",
+          "note": "方冬九系景泰公司员工，非永顺公司雇员，不触发雇员除外条款，适用第三者责任"
+        },
+        {
+          "rule_id": "EMT-EXCL-002",
+          "rule_name": "操作资格证校验",
+          "result": "PASS",
+          "note": "操作员费谋强持有操作资格证（T3424011200600115），资质合格"
+        },
+        {
+          "rule_id": "EMT-EXCL-003",
+          "rule_name": "设备检验证件校验",
+          "result": "PASS",
+          "note": "皖J18077设备检验证件有效"
+        },
+        {
+          "rule_id": "EMT-EXCL-004",
+          "rule_name": "操作人员酒驾/毒驾排除",
+          "result": "PASS",
+          "note": "无酒驾/毒驾证据"
+        },
+        {
+          "rule_id": "EMT-EXCL-005",
+          "rule_name": "未经同意操作排除",
+          "result": "PASS",
+          "note": "操作员受被保险人指派作业，属授权操作"
+        },
+        {
+          "rule_id": "EMT-EXCL-006",
+          "rule_name": "违法活动排除",
+          "result": "PASS",
+          "note": "属合法吊装施工作业，无违法活动"
+        },
+        {
+          "rule_id": "EMT-EXCL-007",
+          "rule_name": "转场过程排除",
+          "result": "PASS",
+          "note": "事故发生于施工作业中，非转场途中"
+        },
+        {
+          "rule_id": "EMT-EXCL-008",
+          "rule_name": "设备检修养护期间排除",
+          "result": "PASS",
+          "note": "事故发生于正常作业中"
+        },
+        {
+          "rule_id": "EMT-EXCL-009",
+          "rule_name": "恶劣天气未停工排除",
+          "result": "PASS",
+          "note": "笔录显示当时有风但未达6级，未触发停工条款"
+        },
+        {
+          "rule_id": "EMT-EXCL-010",
+          "rule_name": "排除区域校验",
+          "result": "PASS",
+          "note": "事故地点安徽省黄山市不在排除区域内"
+        },
+        {
+          "rule_id": "EMT-EXCL-011",
+          "rule_name": "故意行为排除",
+          "result": "PASS",
+          "note": "属操作失误意外事故，无故意行为证据"
+        },
+        {
+          "rule_id": "EMT-EXCL-012",
+          "rule_name": "精神损害赔偿排除",
+          "result": "FLAG",
+          "note": "精神损害抚慰金¥50,000按保单特约第9条不纳入保险赔付，由被保险人自行协商承担"
+        },
+        {
+          "rule_id": "EMT-EXCL-013",
+          "rule_name": "事故后逃逸/毁灭证据",
+          "result": "PASS",
+          "note": "操作员及时报警、报案，无证据毁灭行为"
+        },
+        {
+          "rule_id": "EMT-ADJ-001",
+          "rule_name": "责任比例待确认",
+          "result": "PASS",
+          "note": "被保险人责任比例经政府调解确认为全责（1.0），无需人工介入"
+        },
+        {
+          "rule_id": "EMT-ADJ-002",
+          "rule_name": "非指定操作人员额外免赔",
+          "result": "PASS",
+          "note": "费谋强为被保险人公司操作员，属指定授权操作人员，不触发额外免赔"
+        },
+        {
+          "rule_id": "EMT-ASSESS-001",
+          "rule_name": "死亡赔偿年限（年龄段规则）",
+          "result": "COMPUTED",
+          "note": "受害人方冬九生于1975-03-05，死亡时49岁（≤60岁），死亡赔偿金计算年限=20年"
+        },
+        {
+          "rule_id": "EMT-ASSESS-002",
+          "rule_name": "死亡赔偿金基数（安徽省）",
+          "result": "COMPUTED",
+          "note": "安徽省2023年城镇居民人均可支配收入¥47,653/年 × 20年 = ¥953,060"
+        },
+        {
+          "rule_id": "EMT-ASSESS-003",
+          "rule_name": "丧葬费标准（安徽省）",
+          "result": "COMPUTED",
+          "note": "月均工资¥9,000 × 6个月 = ¥54,000"
+        },
+        {
+          "rule_id": "EMT-ASSESS-004",
+          "rule_name": "精神损害抚慰金保单除外",
+          "result": "EXCLUDED",
+          "note": "精神损害抚慰金¥50,000 → 保单不赔，归零处理"
+        },
+        {
+          "rule_id": "EMT-ASSESS-005",
+          "rule_name": "责任比例折算",
+          "result": "COMPUTED",
+          "note": "被保险人全责（1.0），总损失¥1,007,060 × 1.0 = ¥1,007,060"
+        },
+        {
+          "rule_id": "EMT-ASSESS-006",
+          "rule_name": "交强险垫付扣减",
+          "result": "COMPUTED",
+          "note": "交强险有责死亡限额¥180,000先行赔付，第三者责任险赔付：¥1,007,060 - ¥180,000 = ¥827,060"
+        },
+        {
+          "rule_id": "EMT-SETTLE-001",
+          "rule_name": "每次事故责任限额",
+          "result": "PASS",
+          "note": "¥827,060 < ¥1,000,000限额，无需截断"
+        }
+      ]
+    },
+    "calculationItems": [
+      {
+        "id": "calc-eml-1",
+        "type": "赔偿项",
+        "item": "死亡赔偿金",
+        "amount": 953060,
+        "claimAmount": 953060,
+        "date": "2024-03-12",
+        "note": "安徽省2023年城镇居民人均可支配收入¥47,653/年 × 20年（方冬九生于1975-03-05，死亡时49岁，60岁以下按20年计算）= ¥953,060｜规则：EMT-ASSESS-001 + EMT-ASSESS-002"
+      },
+      {
+        "id": "calc-eml-2",
+        "type": "赔偿项",
+        "item": "丧葬费",
+        "amount": 54000,
+        "claimAmount": 54000,
+        "date": "2024-03-12",
+        "note": "安徽省上年度职工月平均工资¥9,000/月 × 6个月 = ¥54,000｜规则：EMT-ASSESS-003"
+      },
+      {
+        "id": "calc-eml-3",
+        "type": "赔偿项（保单除外项）",
+        "item": "精神损害抚慰金（保单不赔）",
+        "amount": 50000,
+        "claimAmount": 0,
+        "date": "2024-03-12",
+        "note": "协商赔付¥50,000，但保单特约第9条明确不承担精神损害赔偿责任，保险赔付金额归零，由被保险人自行承担｜规则：EMT-ASSESS-004（EMT-EXCL-012 FLAG）"
+      },
+      {
+        "id": "calc-eml-4",
+        "type": "定损小计",
+        "item": "保险赔付基础（扣除保单不赔项后）",
+        "amount": 1007060,
+        "claimAmount": 1007060,
+        "date": "2024-03-12",
+        "note": "死亡赔偿金¥953,060 + 丧葬费¥54,000 = ¥1,007,060（精神损害¥50,000已剔除）"
+      },
+      {
+        "id": "calc-eml-5",
+        "type": "扣减项",
+        "item": "交强险有责死亡限额先行赔付",
+        "amount": -180000,
+        "claimAmount": -180000,
+        "date": "2024-03-12",
+        "note": "交强险（PDZA202344030000954415）有责死亡/伤残赔偿限额¥180,000先行赔付，商业险在超出部分内赔付｜规则：EMT-ASSESS-006"
+      },
+      {
+        "id": "calc-eml-6",
+        "type": "赔付结论",
+        "item": "附加第三者责任险应赔金额",
+        "amount": 827060,
+        "claimAmount": 827060,
+        "date": "2024-03-12",
+        "note": "¥1,007,060 - ¥180,000（交强险）= ¥827,060，在¥1,000,000限额内，全额赔付｜规则：EMT-SETTLE-001"
+      },
+      {
+        "id": "calc-eml-7",
+        "type": "已付抵扣",
+        "item": "被保险人先行垫付赔偿款",
+        "amount": -100000,
+        "claimAmount": -100000,
+        "date": "2024-03-12",
+        "note": "汪国亮（公司法人代表）于2024-03-12通过手机银行向胡崇妹分两笔转账各¥50,000，共计¥100,000，作为垫付赔偿，保险公司应向被保险人返还此部分"
+      }
+    ],
+    "selectedClaimItems": [
+      "item-engineering-third-party-death"
+    ],
+    "fileCategories": [
+      {
+        "name": "保单及报案材料",
+        "files": [
+          {
+            "name": "交强险保单PDZA202344030000954415.pdf",
+            "url": "#"
+          },
+          {
+            "name": "财产险保单12611230520230000499.pdf",
+            "url": "#"
+          },
+          {
+            "name": "意外险保单642001106005920240001711.pdf",
+            "url": "#"
+          },
+          {
+            "name": "报案信息截图.jpg",
+            "url": "#"
+          }
+        ]
+      },
+      {
+        "name": "人伤及死亡证明",
+        "files": [
+          {
+            "name": "户籍注销证明.jpg",
+            "url": "#"
+          },
+          {
+            "name": "死亡医学证明.jpg",
+            "url": "#"
+          },
+          {
+            "name": "急诊病历.jpg",
+            "url": "#"
+          },
+          {
+            "name": "家庭关系证明.jpg",
+            "url": "#"
+          },
+          {
+            "name": "土葬证明.jpg",
+            "url": "#"
+          }
+        ]
+      },
+      {
+        "name": "事故证明材料",
+        "files": [
+          {
+            "name": "报警记录（休公商山接报案字2024-4号）.pdf",
+            "url": "#"
+          },
+          {
+            "name": "交强险笔录_费谋强.jpg",
+            "url": "#"
+          },
+          {
+            "name": "商业险笔录.jpg",
+            "url": "#"
+          },
+          {
+            "name": "目击者笔录.jpg",
+            "url": "#"
+          },
+          {
+            "name": "操作员身份证及操作证.jpg",
+            "url": "#"
+          }
+        ]
+      },
+      {
+        "name": "政府走访及协商记录",
+        "files": [
+          {
+            "name": "应急管理局走访记录.jpg",
+            "url": "#"
+          },
+          {
+            "name": "休宁县商山镇政府走访记录.jpg",
+            "url": "#"
+          },
+          {
+            "name": "协商现场照片.jpg",
+            "url": "#"
+          }
+        ]
+      },
+      {
+        "name": "赔偿凭证",
+        "files": [
+          {
+            "name": "汪国亮转账记录_50000×2.pdf",
+            "url": "#"
+          }
+        ]
+      }
+    ],
+    "risks": [
+      {
+        "type": "POLICY_TIMING",
+        "level": "danger",
+        "title": "意外险保单未在保期",
+        "description": "建信财险意外险保单（642001106005920240001711）生效日为2024-03-15，事故发生于2024-03-12，早于生效日3天，意外险不承保本次事故。意外身故保险金¥100万/人（共6人投保，计¥600万）均不赔付。此为本案最重要风险点。"
+      },
+      {
+        "type": "OPERATOR_NOT_INSURED",
+        "level": "warning",
+        "title": "操作员不在意外险被保险人名单",
+        "description": "意外险被保险人名单为：汪国亮、江锋、崔小冬、程志盛、宋建武、费斌斌（共6人），实际操作员费谋强不在名单中。即使意外险有效，费谋强本人意外身故亦不在保障范围内。"
+      },
+      {
+        "type": "MENTAL_DAMAGE_EXCLUDED",
+        "level": "info",
+        "title": "精神损害赔偿保单不承担",
+        "description": "保单特别约定第9条明确不承担精神损害赔偿责任。协商赔付的精神损害抚慰金¥50,000由被保险人自行承担，不纳入保险赔付范围（已从保险赔付计算中剔除）。"
+      },
+      {
+        "type": "CTPL_COORDINATION",
+        "level": "info",
+        "title": "交强险与商业险赔付顺序",
+        "description": "交强险（PDZA202344030000954415）有责死亡/伤残限额¥180,000先行赔付，阳光财险附加第三者责任险（限额¥100万）赔付超出交强险的余额¥827,060。两险种合计赔付¥1,007,060，与永顺公司协商承担的¥100万赔偿相当。"
+      },
+      {
+        "type": "SETTLEMENT_ABOVE_INSURANCE",
+        "level": "warning",
+        "title": "协商赔偿额超出保险赔付",
+        "description": "政府调解确认永顺赔偿¥100万（保险可覆盖），景泰公司赔偿¥120万（由景泰自行承担）。永顺超出保险赔付的部分（精神损害¥50,000）需被保险人自行承担。建议被保险人确认追偿权安排。"
       }
     ]
   }

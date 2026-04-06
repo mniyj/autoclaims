@@ -4,7 +4,12 @@
  */
 
 import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { readData, writeData } from '../utils/fileStore.js';
+import { clearAIStatsCache } from './aiStatsCache.js';
+import { syncAggregatedLog } from './aiStatsDailyService.js';
 
 const LOG_FILE = 'ai-interaction-logs';
 const MAX_LOG_ENTRIES = 10000;
@@ -29,8 +34,17 @@ const SENSITIVE_KEYWORDS = [
   'claimantname',
 ];
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const projectRoot = path.resolve(__dirname, '../..');
+const dataDir = path.join(projectRoot, 'jsonlist');
+
 function generateLogId() {
   return `ailog-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function generateTraceId() {
+  return `trace-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
 }
 
 function isPlainObject(value) {
@@ -116,12 +130,44 @@ function rotateLogs(logs) {
   return logs.slice(logs.length - MAX_LOG_ENTRIES);
 }
 
-function readLogs() {
-  return readData(LOG_FILE) || [];
+function getCurrentLogResource() {
+  return `ai-logs-${new Date().toISOString().slice(0, 7)}`;
 }
 
-function writeLogs(logs) {
-  return writeData(LOG_FILE, rotateLogs(logs));
+function listShardResources() {
+  if (!fs.existsSync(dataDir)) return [LOG_FILE];
+  const shardResources = fs
+    .readdirSync(dataDir)
+    .filter((name) => /^ai-logs-\d{4}-\d{2}\.json$/.test(name))
+    .map((name) => name.replace(/\.json$/, ''))
+    .sort();
+  return shardResources.length > 0 ? shardResources : [LOG_FILE];
+}
+
+function readLogs() {
+  const resources = new Set([LOG_FILE, ...listShardResources()]);
+  const logs = [];
+  for (const resource of resources) {
+    const entries = readData(resource) || [];
+    if (Array.isArray(entries)) {
+      logs.push(...entries);
+    }
+  }
+  return logs;
+}
+
+function writeLogs(logs, resource = getCurrentLogResource()) {
+  return writeData(resource, rotateLogs(logs));
+}
+
+function writeLogEntry(entry) {
+  const resource = getCurrentLogResource();
+  const logs = readData(resource) || [];
+  logs.push(entry);
+  writeLogs(logs, resource);
+  syncAggregatedLog(null, entry);
+  clearAIStatsCache();
+  return entry;
 }
 
 function nowIso() {
@@ -161,9 +207,18 @@ function normalizeTokenUsage(tokenUsage, response) {
       : null);
 
   return {
+    usageType: 'token',
     inputTokens: typeof inputTokens === 'number' ? inputTokens : null,
     outputTokens: typeof outputTokens === 'number' ? outputTokens : null,
     totalTokens: typeof totalTokens === 'number' ? totalTokens : null,
+    pricingRuleId:
+      rawUsageMetadata?.pricingRuleId ??
+      response?.pricingRuleId ??
+      null,
+    estimatedCost:
+      typeof (rawUsageMetadata?.estimatedCost ?? response?.estimatedCost) === 'number'
+        ? rawUsageMetadata?.estimatedCost ?? response?.estimatedCost
+        : null,
     rawUsageMetadata,
     unavailableReason: rawUsageMetadata ? null : 'provider_did_not_return_usage_metadata',
   };
@@ -258,7 +313,7 @@ function normalizeLegacyLog(logData) {
   return {
     id: generateLogId(),
     timestamp: nowIso(),
-    traceId: logData.traceId || logData.taskId || null,
+    traceId: logData.traceId || logData.taskId || generateTraceId(),
     sessionId: logData.sessionId || logData.taskId || null,
     requestId: logData.requestId || generateLogId(),
     sourceApp: logData.sourceApp || 'server',
@@ -291,6 +346,12 @@ function normalizeLegacyLog(logData) {
     tokenUsage: normalizeTokenUsage(logData.tokenUsage, logData.output?.parsedResult),
     success: !logData.error,
     error: logData.error ? serializeError(logData.error) : null,
+    fallbackInfo: logData.fallbackFrom
+      ? {
+          from: logData.fallbackFrom,
+          reason: logData.fallbackReason || null,
+        }
+      : null,
     containsSensitiveData: true,
     sanitized: {
       request: sanitizeData(logData.input),
@@ -307,7 +368,7 @@ function buildEntry(meta) {
   return {
     id: meta.id || generateLogId(),
     timestamp: meta.timestamp || nowIso(),
-    traceId: meta.traceId || context.traceId || context.claimCaseId || context.taskId || null,
+    traceId: meta.traceId || context.traceId || context.claimCaseId || context.taskId || generateTraceId(),
     sessionId: meta.sessionId || context.sessionId || context.voiceSessionId || context.taskId || null,
     requestId: meta.requestId || generateLogId(),
     sourceApp: meta.sourceApp || 'server',
@@ -333,14 +394,18 @@ function buildEntry(meta) {
       retryCount: meta.retryCount || 0,
     },
     tokenUsage: {
+      usageType: 'token',
       inputTokens: null,
       outputTokens: null,
       totalTokens: null,
+      pricingRuleId: null,
+      estimatedCost: null,
       rawUsageMetadata: null,
       unavailableReason: 'pending',
     },
     success: null,
     error: null,
+    fallbackInfo: meta.fallbackInfo || null,
     containsSensitiveData: meta.containsSensitiveData !== false,
     sanitized: {
       context: sanitizeData(context),
@@ -351,19 +416,24 @@ function buildEntry(meta) {
 }
 
 function updateEntry(logId, updater) {
-  const logs = readLogs();
-  const index = logs.findIndex((item) => item.id === logId);
-  if (index === -1) return null;
-  logs[index] = updater(logs[index]);
-  writeLogs(logs);
-  return logs[index];
+  const resources = listShardResources();
+  for (const resource of resources) {
+    const logs = readData(resource) || [];
+    const index = logs.findIndex((item) => item.id === logId);
+    if (index === -1) continue;
+    const previousEntry = logs[index];
+    logs[index] = updater(logs[index]);
+    writeLogs(logs, resource);
+    syncAggregatedLog(previousEntry, logs[index]);
+    clearAIStatsCache();
+    return logs[index];
+  }
+  return null;
 }
 
 export function startInteraction(meta = {}) {
   const entry = buildEntry(meta);
-  const logs = readLogs();
-  logs.push(entry);
-  writeLogs(logs);
+  writeLogEntry(entry);
   return {
     logId: entry.id,
     startedAtMs: Date.now(),
@@ -378,6 +448,8 @@ export function finishInteraction(handle, result = {}) {
     const rawResponse = safeClone(result.response || null);
     const normalizedError = result.error ? serializeError(result.error) : null;
     const tokenUsage = normalizeTokenUsage(result.tokenUsage, rawResponse);
+    if (result.pricingRuleId) tokenUsage.pricingRuleId = result.pricingRuleId;
+    if (typeof result.estimatedCost === 'number') tokenUsage.estimatedCost = result.estimatedCost;
     return {
       ...entry,
       response: rawResponse
@@ -396,6 +468,7 @@ export function finishInteraction(handle, result = {}) {
       tokenUsage,
       success: normalizedError ? false : result.success !== false,
       error: normalizedError,
+      fallbackInfo: result.fallbackInfo || entry.fallbackInfo || null,
       sanitized: {
         ...entry.sanitized,
         response: sanitizeData(rawResponse),
@@ -406,9 +479,7 @@ export function finishInteraction(handle, result = {}) {
 
 export function logInteraction(logData) {
   const entry = normalizeLegacyLog(logData);
-  const logs = readLogs();
-  logs.push(entry);
-  writeLogs(logs);
+  writeLogEntry(entry);
   return entry;
 }
 
@@ -615,7 +686,11 @@ function buildSearchHaystack(log) {
     log.module,
     log.operation,
     log.model,
+    log.capabilityId,
     log.sourceApp,
+    log.context?.group,
+    log.context?.companyId,
+    log.context?.companyName,
     log.context?.claimCaseId,
     log.context?.taskId,
     log.context?.voiceSessionId,
@@ -667,6 +742,7 @@ function mapForSummary(log) {
     capabilityId: log.capabilityId,
     promptTemplateId: log.promptTemplateId,
     promptSourceType: log.promptSourceType,
+    group: log.context?.group || null,
     success: log.success,
     error: log.error
       ? {
@@ -682,9 +758,12 @@ function mapForSummary(log) {
       retryCount: log.performance?.retryCount ?? null,
     },
     tokenUsage: {
+      usageType: log.tokenUsage?.usageType ?? 'token',
       inputTokens: log.tokenUsage?.inputTokens ?? null,
       outputTokens: log.tokenUsage?.outputTokens ?? null,
       totalTokens: log.tokenUsage?.totalTokens ?? null,
+      pricingRuleId: log.tokenUsage?.pricingRuleId ?? null,
+      estimatedCost: log.tokenUsage?.estimatedCost ?? null,
       unavailableReason: log.tokenUsage?.unavailableReason ?? null,
     },
     context: {
@@ -693,6 +772,10 @@ function mapForSummary(log) {
       fileIndex: log.context?.fileIndex ?? null,
       voiceSessionId: log.context?.voiceSessionId || null,
       capabilityId: log.context?.capabilityId || null,
+      group: log.context?.group || null,
+      companyId: log.context?.companyId || null,
+      companyName: log.context?.companyName || null,
+      businessObjectId: log.context?.businessObjectId || null,
     },
     request: {
       summary: log.request?.summary || null,
@@ -702,6 +785,7 @@ function mapForSummary(log) {
       finishReason: log.response?.finishReason || null,
       toolCalls: log.response?.toolCalls || null,
     },
+    fallbackInfo: log.fallbackInfo || null,
   };
 }
 
@@ -718,6 +802,12 @@ export function queryLogs(options = {}) {
     traceId,
     sourceApp,
     module,
+    provider,
+    model,
+    capabilityId,
+    group,
+    companyId,
+    companyName,
     success,
     startTime,
     endTime,
@@ -741,6 +831,12 @@ export function queryLogs(options = {}) {
     if (traceId && log.traceId !== traceId) return false;
     if (sourceApp && log.sourceApp !== sourceApp) return false;
     if (module && log.module !== module) return false;
+    if (provider && log.provider !== provider) return false;
+    if (model && log.model !== model) return false;
+    if (capabilityId && log.capabilityId !== capabilityId && log.context?.capabilityId !== capabilityId) return false;
+    if (group && log.context?.group !== group) return false;
+    if (companyId && log.context?.companyId !== companyId) return false;
+    if (companyName && log.context?.companyName !== companyName) return false;
     if (success !== undefined && log.success !== success) return false;
     if (!matchesDateRange(log.timestamp, startTime, endTime)) return false;
     if (keyword || claimRef || fileName) {

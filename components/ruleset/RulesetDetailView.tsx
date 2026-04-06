@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
   type ClaimsMaterial,
+  type FactCatalogField,
   type InsuranceRuleset,
   type RulesetRule,
   RuleStatus,
@@ -25,6 +26,7 @@ interface RulesetDetailViewProps {
   ruleset: InsuranceRuleset;
   previousRuleset: InsuranceRuleset | null;
   claimsMaterials: ClaimsMaterial[];
+  factCatalog: FactCatalogField[];
   initialFocusCoverageCode?: string;
   onBack: () => void;
   onUpdateRuleset: (updated: InsuranceRuleset) => void;
@@ -42,7 +44,6 @@ type DetailTab =
   | "liability"
   | "settlement"
   | "publish";
-type ViewMode = "business" | "technical";
 
 const tabs: Array<{ id: DetailTab; label: string }> = [
   { id: "overview", label: "总览" },
@@ -59,6 +60,7 @@ const RulesetDetailView: React.FC<RulesetDetailViewProps> = ({
   ruleset,
   previousRuleset,
   claimsMaterials,
+  factCatalog,
   initialFocusCoverageCode,
   onBack,
   onUpdateRuleset,
@@ -67,7 +69,6 @@ const RulesetDetailView: React.FC<RulesetDetailViewProps> = ({
   onCreateRule,
 }) => {
   const [activeTab, setActiveTab] = useState<DetailTab>("overview");
-  const [viewMode, setViewMode] = useState<ViewMode>("business");
   const [editingRule, setEditingRule] = useState<RulesetRule | null>(null);
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const health = useMemo(() => deriveRulesetHealth(ruleset), [ruleset]);
@@ -201,24 +202,6 @@ const RulesetDetailView: React.FC<RulesetDetailViewProps> = ({
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-1 rounded-xl border border-gray-200 bg-white p-1">
-            {[
-              { id: "business", label: "业务模式" },
-              { id: "technical", label: "技术模式" },
-            ].map((mode) => (
-              <button
-                key={mode.id}
-                onClick={() => setViewMode(mode.id as ViewMode)}
-                className={`rounded-lg px-3 py-2 text-sm font-medium ${
-                  viewMode === mode.id
-                    ? "bg-indigo-600 text-white"
-                    : "text-gray-600 hover:bg-gray-50"
-                }`}
-              >
-                {mode.label}
-              </button>
-            ))}
-          </div>
           <button
             onClick={() => onOpenValidation(ruleset)}
             className="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-100"
@@ -411,6 +394,7 @@ const RulesetDetailView: React.FC<RulesetDetailViewProps> = ({
       {activeTab === "preprocessors" && (
         <PreProcessorConfigTab
           ruleset={ruleset}
+          factCatalog={factCatalog}
           onUpdateRuleset={onUpdateRuleset}
         />
       )}
@@ -436,7 +420,6 @@ const RulesetDetailView: React.FC<RulesetDetailViewProps> = ({
             title="准入"
             description="保障期间、保单状态、等待期等前置条件。只能在组内调整顺序。"
             rules={groupedLiability.gate}
-            mode={viewMode}
             emptyText="暂无准入规则"
             onEdit={setEditingRule}
             onToggleStatus={handleToggleStatus}
@@ -446,7 +429,6 @@ const RulesetDetailView: React.FC<RulesetDetailViewProps> = ({
             title="触发"
             description="责任成立的关键触发条件，至少命中后才进入赔付或定损。"
             rules={groupedLiability.trigger}
-            mode={viewMode}
             emptyText="暂无触发规则"
             onEdit={setEditingRule}
             onToggleStatus={handleToggleStatus}
@@ -456,7 +438,6 @@ const RulesetDetailView: React.FC<RulesetDetailViewProps> = ({
             title="免责"
             description="命中即拒赔或终止责任，不允许拖到触发组。"
             rules={groupedLiability.exclusion}
-            mode={viewMode}
             emptyText="暂无免责规则"
             onEdit={setEditingRule}
             onToggleStatus={handleToggleStatus}
@@ -466,7 +447,6 @@ const RulesetDetailView: React.FC<RulesetDetailViewProps> = ({
             title="调整"
             description="责任成立后对赔付比例或复核策略进行调整。"
             rules={groupedLiability.adjustment}
-            mode={viewMode}
             emptyText="暂无调整规则"
             onEdit={setEditingRule}
             onToggleStatus={handleToggleStatus}
@@ -495,7 +475,6 @@ const RulesetDetailView: React.FC<RulesetDetailViewProps> = ({
             title="给付型规则"
             description="适用于定额或比例给付场景。"
             rules={groupedSettlement.benefit}
-            mode={viewMode}
             emptyText="暂无给付型规则"
             onEdit={setEditingRule}
             onToggleStatus={handleToggleStatus}
@@ -505,7 +484,6 @@ const RulesetDetailView: React.FC<RulesetDetailViewProps> = ({
             title="费用项准入"
             description="控制哪些费用或损失项可以进入账本。"
             rules={groupedSettlement.item_eligibility}
-            mode={viewMode}
             emptyText="暂无费用项准入规则"
             onEdit={setEditingRule}
             onToggleStatus={handleToggleStatus}
@@ -515,7 +493,6 @@ const RulesetDetailView: React.FC<RulesetDetailViewProps> = ({
             title="比例规则"
             description="对已准入的费用项应用赔付比例。"
             rules={groupedSettlement.item_ratio}
-            mode={viewMode}
             emptyText="暂无比例规则"
             onEdit={setEditingRule}
             onToggleStatus={handleToggleStatus}
@@ -525,7 +502,6 @@ const RulesetDetailView: React.FC<RulesetDetailViewProps> = ({
             title="限价规则"
             description="按参考价、物价标准或核损结果调整单项金额。"
             rules={groupedSettlement.item_pricing}
-            mode={viewMode}
             emptyText="暂无限价规则"
             onEdit={setEditingRule}
             onToggleStatus={handleToggleStatus}
@@ -535,7 +511,6 @@ const RulesetDetailView: React.FC<RulesetDetailViewProps> = ({
             title="限额规则"
             description="应用免赔额、子限额或保额上限。"
             rules={groupedSettlement.item_cap}
-            mode={viewMode}
             emptyText="暂无限额规则"
             onEdit={setEditingRule}
             onToggleStatus={handleToggleStatus}
@@ -545,7 +520,6 @@ const RulesetDetailView: React.FC<RulesetDetailViewProps> = ({
             title="复核标记"
             description="保留金额结果，但向审核员标记需要人工确认的项目。"
             rules={groupedSettlement.item_flag}
-            mode={viewMode}
             emptyText="暂无复核标记规则"
             onEdit={setEditingRule}
             onToggleStatus={handleToggleStatus}
@@ -555,7 +529,6 @@ const RulesetDetailView: React.FC<RulesetDetailViewProps> = ({
             title="后处理"
             description="做案件级补充调整、备注或汇总。"
             rules={groupedSettlement.post_process}
-            mode={viewMode}
             emptyText="暂无后处理规则"
             onEdit={setEditingRule}
             onToggleStatus={handleToggleStatus}

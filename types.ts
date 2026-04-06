@@ -715,6 +715,25 @@ export interface ClaimCase {
     assessmentDecision?: string;
     settlementDecision?: string;
     missingMaterials?: string[];
+    preExistingAssessment?: {
+      result: "YES" | "NO" | "UNCERTAIN" | "SKIPPED";
+      confidence?: number | null;
+      reasoning?: string;
+      uncertainResolution?: {
+        action?: "MANUAL_REVIEW" | "ASSUME_FALSE" | null;
+        matchedRule?: {
+          when?: {
+            product_line?: string;
+            claim_scenario?: string;
+            max_claim_amount?: number | null;
+          };
+          action?: "MANUAL_REVIEW" | "ASSUME_FALSE" | null;
+        } | null;
+        productLine?: string | null;
+        claimScenario?: string | null;
+        claimAmount?: number | null;
+      } | null;
+    };
     coverageResults?: Array<{
       coverageCode: string;
       claimedAmount: number;
@@ -866,6 +885,7 @@ export interface ClaimMaterial {
   auditConclusion?: string;
   confidence?: number;
   documentSummary?: AnyDocumentSummary;
+  fieldCorrections?: FieldCorrection[];
 
   // 来源追踪
   source: ClaimMaterialSource;
@@ -1332,6 +1352,35 @@ export type PreProcessorType =
   | "FIELD_CASCADE"
   | "COVERAGE_ALIAS_RESOLVE";
 
+export type PreExistingConditionUncertainAction =
+  | "MANUAL_REVIEW"
+  | "ASSUME_FALSE";
+
+export interface PreExistingConditionUncertainRule {
+  when?: {
+    product_line?: string;
+    claim_scenario?: string;
+    max_claim_amount?: number | null;
+  };
+  action: PreExistingConditionUncertainAction;
+}
+
+export interface PreExistingConditionProcessorConfig {
+  skip_when?: {
+    field?: string;
+    operator?: string;
+    value?: unknown;
+  };
+  output_field?: string;
+  on_yes?: boolean | null;
+  on_no?: boolean | null;
+  on_uncertain?: boolean | null;
+  uncertain_resolution?: {
+    default?: PreExistingConditionUncertainAction;
+    rules?: PreExistingConditionUncertainRule[];
+  };
+}
+
 export interface PreProcessorConfig {
   processor_id: string;
   type: PreProcessorType;
@@ -1486,11 +1535,28 @@ export interface AIPromptSourceInfo {
   editable: boolean;
 }
 
+export interface AIPromptVariable {
+  name: string;
+  type: "string" | "number" | "object" | "array" | "boolean";
+  description: string;
+  example: string;
+  required: boolean;
+  source: "claim_case" | "policy" | "document" | "system";
+}
+
+export interface CapabilityVariableContext {
+  templateId: string;
+  variables: AIPromptVariable[];
+}
+
 export interface AIPromptTemplate {
   id: string;
   name: string;
   description?: string;
   content: string;
+  templateEngine?: "plain" | "jinja2";
+  variables?: AIPromptVariable[];
+  /** @deprecated use variables instead */
   requiredVariables?: string[];
 }
 

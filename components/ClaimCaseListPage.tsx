@@ -127,10 +127,16 @@ function getImportTaskBadge(taskStatus: string | null) {
         label: "已完成",
         className: "bg-green-50 text-green-700 border-green-100",
       };
+    case null:
+    case undefined:
+      return {
+        label: "未导入",
+        className: "bg-gray-50 text-gray-400 border-gray-100",
+      };
     default:
       return {
-        label: "已导入",
-        className: "bg-gray-50 text-gray-600 border-gray-100",
+        label: `未知(${taskStatus})`,
+        className: "bg-yellow-50 text-yellow-700 border-yellow-100",
       };
   }
 }
@@ -143,15 +149,17 @@ const ClaimCaseListPage: React.FC<ClaimCaseListPageProps> = ({
   onViewDetail,
 }) => {
   const [cases, setCases] = useState<ClaimCase[]>([]);
-  const [latestImportMap, setLatestImportMap] = useState<Record<
-    string,
-    {
-      taskId: string | null;
-      taskStatus: string | null;
-      importedAt: string | null;
-      failureHint?: string | null;
-    }
-  >>({});
+  const [latestImportMap, setLatestImportMap] = useState<
+    Record<
+      string,
+      {
+        taskId: string | null;
+        taskStatus: string | null;
+        importedAt: string | null;
+        failureHint?: string | null;
+      }
+    >
+  >({});
   const [recoveringTaskId, setRecoveringTaskId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -166,16 +174,23 @@ const ClaimCaseListPage: React.FC<ClaimCaseListPageProps> = ({
           const importRecords = await importResponse.json();
           const nextMap: Record<
             string,
-            { taskId: string | null; taskStatus: string | null; importedAt: string | null }
+            {
+              taskId: string | null;
+              taskStatus: string | null;
+              importedAt: string | null;
+            }
           > = {};
 
-          for (const record of Array.isArray(importRecords) ? importRecords : []) {
+          for (const record of Array.isArray(importRecords)
+            ? importRecords
+            : []) {
             if (!record?.claimCaseId) continue;
             const importedAt = record.importedAt || null;
             const current = nextMap[record.claimCaseId];
             if (
               !current ||
-              new Date(importedAt || 0).getTime() > new Date(current.importedAt || 0).getTime()
+              new Date(importedAt || 0).getTime() >
+                new Date(current.importedAt || 0).getTime()
             ) {
               nextMap[record.claimCaseId] = {
                 taskId: record.taskId || null,
@@ -345,14 +360,14 @@ const ClaimCaseListPage: React.FC<ClaimCaseListPageProps> = ({
         const matchStatus =
           !activeFilters.status || c.status === activeFilters.status;
 
-        const cReportDate = c.reportTime.split(" ")[0];
+        const cReportDate = (c.reportTime || "").split(" ")[0] || "";
         const matchReportDate =
           (!activeFilters.reportDateStart ||
             cReportDate >= activeFilters.reportDateStart) &&
           (!activeFilters.reportDateEnd ||
             cReportDate <= activeFilters.reportDateEnd);
 
-        const cAccidentDate = c.accidentTime.split(" ")[0];
+        const cAccidentDate = (c.accidentTime || "").split(" ")[0] || "";
         const matchAccidentDate =
           (!activeFilters.accidentDateStart ||
             cAccidentDate >= activeFilters.accidentDateStart) &&
@@ -730,96 +745,137 @@ const ClaimCaseListPage: React.FC<ClaimCaseListPageProps> = ({
               {paginatedCases.length > 0 ? (
                 paginatedCases.map((c) => {
                   const importMeta = latestImportMap[c.id];
-                  const importBadge = getImportTaskBadge(importMeta?.taskStatus || null);
+                  const importBadge = getImportTaskBadge(
+                    importMeta?.taskStatus || null,
+                  );
                   return (
-                  <tr
-                    key={c.id}
-                    className="hover:bg-indigo-50/30 transition-colors group"
-                  >
-                    <td className="px-6 py-5">
-                      <div className="flex items-center">
-                        <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-sm mr-4">
-                          {c.reporter.charAt(0)}
-                        </div>
-                        <div>
-                          <p
-                            className="text-sm font-semibold text-indigo-600 cursor-pointer hover:underline"
-                            onClick={() => onViewDetail(c)}
-                          >
-                            {c.reportNumber}
-                          </p>
-                          <p className="text-xs text-gray-500 mt-0.5">
-                            {c.reporter} · {c.reportTime.split(" ")[0]}
-                          </p>
-                          {importMeta?.taskId && (
-                            <div className="mt-1">
-                              <span
-                                className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] font-medium ${importBadge.className}`}
-                              >
-                                {importBadge.label}
-                              </span>
-                              {importMeta.failureHint &&
-                                ["failed", "partial_success"].includes(importMeta.taskStatus || "") && (
-                                  <p className="text-[10px] text-amber-700 mt-1 max-w-[260px] truncate" title={importMeta.failureHint}>
-                                    {importMeta.failureHint}
-                                  </p>
-                                )}
-                            </div>
-                          )}
-                          {c.id && c.id.startsWith('CLM') && (
-                            <p className="text-xs text-orange-600 mt-0.5 font-medium">
-                              前端编号: {c.id}
+                    <tr
+                      key={c.id}
+                      className="hover:bg-indigo-50/30 transition-colors group"
+                    >
+                      <td className="px-6 py-5">
+                        <div className="flex items-center">
+                          <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-sm mr-4">
+                            {c.reporter.charAt(0)}
+                          </div>
+                          <div>
+                            <p
+                              className="text-sm font-semibold text-indigo-600 cursor-pointer hover:underline"
+                              onClick={() => onViewDetail(c)}
+                            >
+                              {c.reportNumber}
                             </p>
-                          )}
+                            <p className="text-xs text-gray-500 mt-0.5">
+                              {c.reporter} · {c.reportTime.split(" ")[0]}
+                            </p>
+                            {importMeta?.taskId && (
+                              <div className="mt-1">
+                                <span
+                                  className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] font-medium ${importBadge.className}`}
+                                >
+                                  {importBadge.label}
+                                </span>
+                                {importMeta.failureHint &&
+                                  ["failed", "partial_success"].includes(
+                                    importMeta.taskStatus || "",
+                                  ) && (
+                                    <p
+                                      className="text-[10px] text-amber-700 mt-1 max-w-[260px] truncate"
+                                      title={importMeta.failureHint}
+                                    >
+                                      {importMeta.failureHint}
+                                    </p>
+                                  )}
+                              </div>
+                            )}
+                            {c.id && c.id.startsWith("CLM") && (
+                              <p className="text-xs text-orange-600 mt-0.5 font-medium">
+                                前端编号: {c.id}
+                              </p>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <p className="text-sm text-gray-900">
-                        {c.accidentTime.split(" ")[0]}
-                      </p>
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        {c.accidentTime.split(" ")[1] || ""}
-                      </p>
-                    </td>
-                    <td className="px-6 py-5">
-                      <p
-                        className="text-sm text-gray-600 max-w-[200px] truncate"
-                        title={c.accidentReason}
-                      >
-                        {c.accidentReason}
-                      </p>
-                    </td>
-                    <td className="px-6 py-5 text-right">
-                      <p className="text-sm font-bold text-gray-900">
-                        ¥{(c.claimAmount ?? 0).toLocaleString()}
-                      </p>
-                    </td>
-                    <td className="px-6 py-5">
-                      <span className="inline-flex items-center px-2.5 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-medium">
-                        {c.productName}
-                      </span>
-                    </td>
-                    <td className="px-6 py-5 text-center">
-                      <span
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full ${getStatusStyle(c.status)}`}
-                      >
-                        <StatusIcon status={c.status} />
-                        {c.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-5 text-center">
-                      <div className="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {importMeta?.taskId && (
+                      </td>
+                      <td className="px-6 py-5">
+                        <p className="text-sm text-gray-900">
+                          {c.accidentTime.split(" ")[0]}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          {c.accidentTime.split(" ")[1] || ""}
+                        </p>
+                      </td>
+                      <td className="px-6 py-5">
+                        <p
+                          className="text-sm text-gray-600 max-w-[200px] truncate"
+                          title={c.accidentReason}
+                        >
+                          {c.accidentReason}
+                        </p>
+                      </td>
+                      <td className="px-6 py-5 text-right">
+                        <p className="text-sm font-bold text-gray-900">
+                          ¥{(c.claimAmount ?? 0).toLocaleString()}
+                        </p>
+                      </td>
+                      <td className="px-6 py-5">
+                        <span className="inline-flex items-center px-2.5 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-medium">
+                          {c.productName}
+                        </span>
+                      </td>
+                      <td className="px-6 py-5 text-center">
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full ${getStatusStyle(c.status)}`}
+                        >
+                          <StatusIcon status={c.status} />
+                          {c.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-5 text-center">
+                        <div className="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          {importMeta?.taskId && (
+                            <button
+                              onClick={() =>
+                                handleRecoverTask(
+                                  c.id,
+                                  importMeta?.taskId || null,
+                                )
+                              }
+                              disabled={recoveringTaskId === importMeta?.taskId}
+                              className={`p-2 rounded-lg transition ${
+                                recoveringTaskId === importMeta?.taskId
+                                  ? "text-gray-300 bg-gray-50 cursor-not-allowed"
+                                  : "text-gray-400 hover:text-amber-600 hover:bg-amber-50"
+                              }`}
+                              title="恢复导入任务"
+                            >
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                />
+                              </svg>
+                            </button>
+                          )}
+                          {c.status === ClaimStatus.PENDING_INFO && (
+                            <button
+                              onClick={() => onViewDetail(c)}
+                              className="px-2 py-1 text-xs font-medium text-orange-700 bg-orange-50 hover:bg-orange-100 border border-orange-200 rounded-lg transition"
+                              title="补传材料并重新审核"
+                            >
+                              补件
+                            </button>
+                          )}
                           <button
-                            onClick={() => handleRecoverTask(c.id, importMeta?.taskId || null)}
-                            disabled={recoveringTaskId === importMeta?.taskId}
-                            className={`p-2 rounded-lg transition ${
-                              recoveringTaskId === importMeta?.taskId
-                                ? "text-gray-300 bg-gray-50 cursor-not-allowed"
-                                : "text-gray-400 hover:text-amber-600 hover:bg-amber-50"
-                            }`}
-                            title="恢复导入任务"
+                            onClick={() => onViewDetail(c)}
+                            className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
+                            title="查看详情"
                           >
                             <svg
                               className="w-4 h-4"
@@ -831,58 +887,38 @@ const ClaimCaseListPage: React.FC<ClaimCaseListPageProps> = ({
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                                 strokeWidth={2}
-                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                               />
                             </svg>
                           </button>
-                        )}
-                        <button
-                          onClick={() => onViewDetail(c)}
-                          className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
-                          title="查看详情"
-                        >
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
+                          <button
+                            onClick={() => onViewDetail(c)}
+                            className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
+                            title="处理案件"
                           >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                            />
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                            />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={() => onViewDetail(c)}
-                          className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
-                          title="处理案件"
-                        >
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                            />
-                          </svg>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
                   );
                 })
               ) : (

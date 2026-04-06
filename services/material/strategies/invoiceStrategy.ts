@@ -1,6 +1,7 @@
 import type { ProcessingStrategy, StrategyContext, StrategyResult } from './baseStrategy';
 import { uploadToOSS } from '../../services/ossService';
 import { api } from '../../services/api';
+import { normalizeImageForOcr } from '../../imageNormalizationService';
 
 /**
  * 医疗发票处理策略
@@ -114,9 +115,7 @@ export class InvoiceStrategy implements ProcessingStrategy {
     confidence: number;
     documentType: string;
   }> {
-    const response = await fetch(imageUrl);
-    const blob = await response.blob();
-    const base64 = await this.blobToBase64(blob);
+    const { base64Data, mimeType } = await normalizeImageForOcr(imageUrl);
 
     const schema = {
       documentType: "string ('summary_invoice' | 'detail_list' | 'single_invoice')",
@@ -167,8 +166,8 @@ ${JSON.stringify(schema, null, 2)}`;
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         mode: 'gemini',
-        base64Data: base64,
-        mimeType: blob.type || 'image/jpeg',
+        base64Data,
+        mimeType,
         prompt,
         geminiModel: 'gemini-2.5-flash',
       }),
@@ -283,15 +282,4 @@ ${JSON.stringify(schema, null, 2)}`;
     return name?.toLowerCase().replace(/\s+/g, '') || '';
   }
 
-  private blobToBase64(blob: Blob): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64 = reader.result as string;
-        resolve(base64.split(',')[1] || base64);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  }
 }

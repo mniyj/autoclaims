@@ -2,6 +2,7 @@ import type {
   Intent,
   IntentType,
   IntentHandlerResult,
+  NormalizedQuery,
   VoicePolicyInfo,
   VoiceClaimInfo,
 } from './IntentTypes.js';
@@ -116,6 +117,41 @@ export class IntentHandlerRegistry {
         summary: options.responsePrefix,
       },
     };
+  }
+
+  private buildPolicySelectionResult(
+    context: VoiceSessionContext,
+    options: {
+      actionType: string;
+      answerType: string;
+      responsePrefix: string;
+      payload?: Record<string, any>;
+    },
+  ): IntentHandlerResult {
+    context.setPendingClaimQuery({
+      actionType: options.actionType,
+      responsePrefix: options.responsePrefix,
+      payload: options.payload,
+    });
+
+    return {
+      success: true,
+      response: options.responsePrefix,
+      newState: 'LOADING_POLICIES',
+      actions: [{
+        type: 'LOAD_POLICIES',
+        payload: {}
+      }],
+      responseData: {
+        scene: 'query_with_policy_resolution',
+        answerType: options.answerType,
+        summary: options.responsePrefix,
+      },
+    };
+  }
+
+  private getNormalizedQuery(intent: Intent): NormalizedQuery | null {
+    return (intent.entities?.normalizedQuery as NormalizedQuery | undefined) || null;
   }
 
   private buildContextualQueryResult(
@@ -305,6 +341,29 @@ export class IntentHandlerRegistry {
     const selectedPolicy = policies[index - 1];
     context.setSelectedPolicy(selectedPolicy);
     context.setConversationPhase('claim_collection');
+    const pendingQuery = context.getPendingClaimQuery();
+
+    if (pendingQuery) {
+      context.setPendingClaimQuery(null);
+      return {
+        success: true,
+        response: pendingQuery.responsePrefix || `已为您定位到${selectedPolicy.productName}`,
+        newState: 'IDLE',
+        actions: [{
+          type: pendingQuery.actionType,
+          payload: {
+            ...(pendingQuery.payload || {}),
+            productCode: selectedPolicy.productCode,
+            claimType: selectedPolicy.productName,
+          }
+        }],
+        responseData: {
+          scene: 'policy_selected_for_query',
+          answerType: pendingQuery.actionType,
+          summary: pendingQuery.responsePrefix || `已为您定位到${selectedPolicy.productName}`,
+        },
+      };
+    }
 
     return {
       success: true,
@@ -520,6 +579,34 @@ export class IntentHandlerRegistry {
   }
 
   private async handleQueryProgress(_intent: Intent, context: VoiceSessionContext): Promise<IntentHandlerResult> {
+    const normalizedQuery = this.getNormalizedQuery(_intent);
+    if (normalizedQuery?.needsClaimSelection) {
+      return this.buildClaimSelectionResult(context, {
+        actionType: 'ANNOUNCE_CLAIM_PROGRESS',
+        answerType: 'progress',
+        responsePrefix: '我先帮您定位一下要查询的案件。',
+      });
+    }
+
+    if (normalizedQuery?.claimId) {
+      return {
+        success: true,
+        response: `查询案件${normalizedQuery.claimId}`,
+        actions: [{
+          type: 'ANNOUNCE_CLAIM_PROGRESS',
+          payload: {
+            claimId: normalizedQuery.claimId,
+            claimType: normalizedQuery.claimType,
+            productCode: normalizedQuery.productCode,
+          }
+        }],
+        responseData: {
+          scene: 'query_answer',
+          answerType: 'progress',
+        },
+      };
+    }
+
     const selectedClaim = context.getSelectedClaim();
     if (selectedClaim) {
       return {
@@ -547,7 +634,36 @@ export class IntentHandlerRegistry {
     });
   }
 
-  private async handleQueryMaterials(_intent: Intent, context: VoiceSessionContext): Promise<IntentHandlerResult> {
+  private async handleQueryMaterials(intent: Intent, context: VoiceSessionContext): Promise<IntentHandlerResult> {
+    const normalizedQuery = this.getNormalizedQuery(intent);
+    if (normalizedQuery?.needsPolicySelection) {
+      return this.buildPolicySelectionResult(context, {
+        actionType: 'LOAD_CLAIM_MATERIALS',
+        answerType: 'materials',
+        responsePrefix: '我先帮您确认一下是哪个保单或产品。',
+      });
+    }
+
+    if (normalizedQuery?.productCode || normalizedQuery?.claimType) {
+      return {
+        success: true,
+        response: '我来帮您看一下理赔材料。',
+        actions: [{
+          type: 'LOAD_CLAIM_MATERIALS',
+          payload: {
+            productCode: normalizedQuery.productCode,
+            claimType: normalizedQuery.claimType,
+            subFocus: normalizedQuery.subFocus,
+          }
+        }],
+        responseData: {
+          scene: 'query_answer',
+          answerType: 'materials',
+          summary: '我来帮您看一下理赔材料。',
+        },
+      };
+    }
+
     return this.buildContextualQueryResult(context, {
       actionType: 'LOAD_CLAIM_MATERIALS',
       answerType: 'materials',
@@ -555,7 +671,35 @@ export class IntentHandlerRegistry {
     });
   }
 
-  private async handleQueryMissingMaterials(_intent: Intent, context: VoiceSessionContext): Promise<IntentHandlerResult> {
+  private async handleQueryMissingMaterials(intent: Intent, context: VoiceSessionContext): Promise<IntentHandlerResult> {
+    const normalizedQuery = this.getNormalizedQuery(intent);
+    if (normalizedQuery?.needsClaimSelection) {
+      return this.buildClaimSelectionResult(context, {
+        actionType: 'LOAD_MISSING_CLAIM_MATERIALS',
+        answerType: 'missing_materials',
+        responsePrefix: '我先帮您定位一下案件，再看还缺什么。',
+      });
+    }
+
+    if (normalizedQuery?.claimId) {
+      return {
+        success: true,
+        response: '检查缺失材料',
+        actions: [{
+          type: 'LOAD_MISSING_CLAIM_MATERIALS',
+          payload: {
+            claimId: normalizedQuery.claimId,
+            claimType: normalizedQuery.claimType,
+            productCode: normalizedQuery.productCode,
+          }
+        }],
+        responseData: {
+          scene: 'query_answer',
+          answerType: 'missing_materials',
+        },
+      };
+    }
+
     const selectedClaim = context.getSelectedClaim();
     if (!selectedClaim) {
       return this.buildClaimSelectionResult(context, {
@@ -583,7 +727,36 @@ export class IntentHandlerRegistry {
     };
   }
 
-  private async handleQueryCoverage(_intent: Intent, context: VoiceSessionContext): Promise<IntentHandlerResult> {
+  private async handleQueryCoverage(intent: Intent, context: VoiceSessionContext): Promise<IntentHandlerResult> {
+    const normalizedQuery = this.getNormalizedQuery(intent);
+    if (normalizedQuery?.needsPolicySelection) {
+      return this.buildPolicySelectionResult(context, {
+        actionType: 'LOAD_COVERAGE_INFO',
+        answerType: 'coverage',
+        responsePrefix: '我先帮您确认一下是哪个保单或险种。',
+      });
+    }
+
+    if (normalizedQuery?.productCode || normalizedQuery?.claimType) {
+      return {
+        success: true,
+        response: '我来帮您看一下保障范围。',
+        actions: [{
+          type: 'LOAD_COVERAGE_INFO',
+          payload: {
+            productCode: normalizedQuery.productCode,
+            claimType: normalizedQuery.claimType,
+            subFocus: normalizedQuery.subFocus,
+          }
+        }],
+        responseData: {
+          scene: 'query_answer',
+          answerType: 'coverage',
+          summary: '我来帮您看一下保障范围。',
+        },
+      };
+    }
+
     return this.buildContextualQueryResult(context, {
       actionType: 'LOAD_COVERAGE_INFO',
       answerType: 'coverage',
@@ -591,7 +764,49 @@ export class IntentHandlerRegistry {
     });
   }
 
-  private async handleQuerySettlement(_intent: Intent, context: VoiceSessionContext): Promise<IntentHandlerResult> {
+  private async handleQuerySettlement(intent: Intent, context: VoiceSessionContext): Promise<IntentHandlerResult> {
+    const normalizedQuery = this.getNormalizedQuery(intent);
+    if (normalizedQuery?.needsClaimSelection) {
+      return this.buildClaimSelectionResult(context, {
+        actionType: 'LOAD_SETTLEMENT_ESTIMATE',
+        answerType: 'settlement',
+        responsePrefix: '我先帮您定位一下要查询赔付的案件。',
+      });
+    }
+
+    if (normalizedQuery?.needsPolicySelection) {
+      return this.buildPolicySelectionResult(context, {
+        actionType: 'LOAD_SETTLEMENT_ESTIMATE',
+        answerType: 'settlement',
+        responsePrefix: '我先帮您确认一下是哪个保单或产品。',
+      });
+    }
+
+    if (
+      normalizedQuery?.claimId ||
+      normalizedQuery?.productCode ||
+      normalizedQuery?.claimType
+    ) {
+      return {
+        success: true,
+        response: '我来帮您估一下赔付金额。',
+        actions: [{
+          type: 'LOAD_SETTLEMENT_ESTIMATE',
+          payload: {
+            claimId: normalizedQuery.claimId,
+            productCode: normalizedQuery.productCode,
+            claimType: normalizedQuery.claimType,
+            subFocus: normalizedQuery.subFocus,
+          }
+        }],
+        responseData: {
+          scene: 'query_answer',
+          answerType: 'settlement',
+          summary: '我来帮您估一下赔付金额。',
+        },
+      };
+    }
+
     return this.buildContextualQueryResult(context, {
       actionType: 'LOAD_SETTLEMENT_ESTIMATE',
       answerType: 'settlement',

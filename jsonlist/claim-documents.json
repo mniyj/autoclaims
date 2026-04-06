@@ -6380,7 +6380,7 @@
     "id": "import-1773508535433",
     "taskId": "task-1e2217bc-f474-4cd6-abf1-fb693600e505",
     "claimCaseId": "CLM-MED-001",
-    "productCode": "ZA-GOPD-2022A-90",
+    "productCode": "PROD002",
     "importedAt": "2026-03-14T17:15:35.433Z",
     "documents": [
       {
@@ -6390,22 +6390,12 @@
         "mimeType": "image/jpeg",
         "ossKey": "claims/CLM-MED-001/offline-import/12867941-8234-4488-b730-4c7f36a808eb-Weixin_Image_20260315010815_170_66.jpg",
         "classification": {
-          "materialId": "mat-11",
-          "materialName": "门（急）诊病历",
+          "materialId": "mat-12",
+          "materialName": "住院病历/病案",
           "confidence": 0.95
         },
         "status": "completed",
-        "structuredData": {
-          "hospital_name": "上海市东方医院(南院)",
-          "department": "",
-          "visit_date": "2023-03-01",
-          "patient_name": "马华",
-          "chief_complaint": "左膝关节疼痛伴活动受限3天。",
-          "present_illness": "左膝关节疼痛伴活动受限3天。患者缘于3天前无明显诱因出现左膝关节疼痛，伴活动受限，行走时疼痛加重，休息后可缓解，无红肿热痛，无发热，无咳嗽咳痰，无恶心呕吐，无腹痛腹泻，无头晕头痛。今为进一步诊治来我院门诊。",
-          "diagnosis": "左膝关节骨性关节炎",
-          "treatment": "左膝关节疼痛，口服非甾体消炎止痛药",
-          "doctor_name": ""
-        },
+        "structuredData": {},
         "errorMessage": null
       },
       {
@@ -6417,20 +6407,10 @@
         "classification": {
           "materialId": "mat-20",
           "materialName": "医疗费发票",
-          "confidence": 0.95
+          "confidence": 1
         },
         "status": "completed",
-        "structuredData": {
-          "hospital_name": "上海市东方医院",
-          "patient_name": "杨霁",
-          "invoice_number": "0799287390",
-          "invoice_code": "31060125",
-          "invoice_date": "2025-03-01",
-          "total_amount": 18,
-          "self_paid": 18,
-          "insurance_paid": 0,
-          "personal_account": 0
-        },
+        "structuredData": {},
         "errorMessage": null
       },
       {
@@ -6442,53 +6422,7 @@
         "classification": {
           "materialId": "mat-20",
           "materialName": "医疗费发票",
-          "confidence": 0.95
-        },
-        "status": "completed",
-        "structuredData": {
-          "hospital_name": "上海市东方医院",
-          "patient_name": "杨霁",
-          "invoice_number": "0799289513",
-          "invoice_code": "31060125",
-          "invoice_date": "2025-03-01",
-          "total_amount": 130,
-          "self_paid": 130,
-          "insurance_paid": 0,
-          "personal_account": 0
-        },
-        "errorMessage": null
-      },
-      {
-        "documentId": "mat-mmrmdo7j-mat-11",
-        "ossKey": null,
-        "classification": {
-          "materialId": "mat-11",
-          "materialName": "门（急）诊病历",
-          "confidence": 0
-        },
-        "status": "completed",
-        "structuredData": {},
-        "errorMessage": null
-      },
-      {
-        "documentId": "mat-mmrmdo7k-mat-21",
-        "ossKey": null,
-        "classification": {
-          "materialId": "mat-21",
-          "materialName": "费用明细清单",
-          "confidence": 0
-        },
-        "status": "completed",
-        "structuredData": {},
-        "errorMessage": null
-      },
-      {
-        "documentId": "mat-mmrmdo7k-mat-13",
-        "ossKey": null,
-        "classification": {
-          "materialId": "mat-13",
-          "materialName": "诊断证明书",
-          "confidence": 0
+          "confidence": 1
         },
         "status": "completed",
         "structuredData": {},
@@ -6497,66 +6431,244 @@
     ],
     "aggregation": {
       "claimCaseId": "CLM-MED-001",
-      "aggregatedAt": "2026-03-15T11:17:11.025Z",
+      "aggregatedAt": "2026-04-04T10:14:34.226Z",
       "injuryProfile": null,
       "liabilityResult": null,
       "expenseAggregation": null,
       "deathProfile": null,
       "caseReports": [],
-      "conflictsDetected": [],
+      "conflictsDetected": [
+        {
+          "type": "date_mismatch",
+          "description": "医疗费发票入院日期与住院病历入院日期一致性 缺少可比对的字段值",
+          "docIds": [
+            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1",
+            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+          ],
+          "severity": "warning",
+          "sourceRuleId": "mv-medical-date-003",
+          "source": "material_validation"
+        },
+        {
+          "type": "date_mismatch",
+          "description": "医疗费发票出院日期与住院病历出院日期一致性 缺少可比对的字段值",
+          "docIds": [
+            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1",
+            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+          ],
+          "severity": "warning",
+          "sourceRuleId": "mv-medical-date-004",
+          "source": "material_validation"
+        },
+        {
+          "type": "validation_conflict",
+          "description": "医疗费发票出院诊断与住院病历出院诊断一致性 缺少可比对的字段值",
+          "docIds": [
+            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1",
+            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+          ],
+          "severity": "warning",
+          "sourceRuleId": "mv-diagnosis-003",
+          "source": "material_validation"
+        },
+        {
+          "type": "validation_conflict",
+          "description": "发票开票日期不能是未来日期 缺少可比对的字段值",
+          "docIds": [
+            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1"
+          ],
+          "severity": "error",
+          "sourceRuleId": "mv-date-future-001",
+          "source": "material_validation"
+        },
+        {
+          "type": "validation_conflict",
+          "description": "入院日期不能是未来日期 缺少可比对的字段值",
+          "docIds": [
+            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+          ],
+          "severity": "error",
+          "sourceRuleId": "mv-date-future-002",
+          "source": "material_validation"
+        },
+        {
+          "type": "validation_conflict",
+          "description": "出院日期不能是未来日期 缺少可比对的字段值",
+          "docIds": [
+            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+          ],
+          "severity": "error",
+          "sourceRuleId": "mv-date-future-003",
+          "source": "material_validation"
+        },
+        {
+          "type": "validation_conflict",
+          "description": "入院日期应早于或等于出院日期 缺少可比对的字段值",
+          "docIds": [
+            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0",
+            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+          ],
+          "severity": "error",
+          "sourceRuleId": "mv-date-order-001",
+          "source": "material_validation"
+        },
+        {
+          "type": "date_mismatch",
+          "description": "发票开票日期应晚于或等于入院日期 缺少可比对的字段值",
+          "docIds": [
+            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1",
+            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+          ],
+          "severity": "warning",
+          "sourceRuleId": "mv-timeline-002",
+          "source": "material_validation"
+        }
+      ],
       "validationFacts": {
-        "claim.invoice_patient_name_consistent": false
+        "claim.invoice_admission_date_consistent": null,
+        "claim.invoice_discharge_date_consistent": null,
+        "claim.invoice_diagnosis_consistent": null,
+        "claim.invoice_date_not_future": null,
+        "claim.admission_date_not_future": null,
+        "claim.discharge_date_not_future": null,
+        "claim.admission_before_discharge": null,
+        "claim.invoice_after_admission": null
       },
       "validationResults": [
         {
-          "type": "identity",
+          "type": "medical_date",
           "passed": false,
           "severity": "warning",
-          "message": "发票患者姓名与病历患者姓名不一致，需人工复核。",
+          "message": "医疗费发票入院日期与住院病历入院日期一致性 缺少可比对的字段值",
           "details": {
-            "ruleId": "mv-identity-001",
-            "reasonCode": "INVOICE_PATIENT_NAME_MISMATCH",
-            "expected": "马华",
-            "actual": "杨霁",
-            "field": "claim.patient_name EQ claim.patient_name",
+            "ruleId": "mv-medical-date-003",
+            "reasonCode": "INVOICE_ADMISSION_DATE_MISMATCH",
+            "field": "admissionDate <> admission_date",
             "relatedDocuments": [
               "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1",
               "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
-            ],
-            "failureAction": "MANUAL_REVIEW"
+            ]
+          }
+        },
+        {
+          "type": "medical_date",
+          "passed": false,
+          "severity": "warning",
+          "message": "医疗费发票出院日期与住院病历出院日期一致性 缺少可比对的字段值",
+          "details": {
+            "ruleId": "mv-medical-date-004",
+            "reasonCode": "INVOICE_DISCHARGE_DATE_MISMATCH",
+            "field": "dischargeDate <> discharge_date",
+            "relatedDocuments": [
+              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1",
+              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+            ]
+          }
+        },
+        {
+          "type": "diagnosis",
+          "passed": false,
+          "severity": "warning",
+          "message": "医疗费发票出院诊断与住院病历出院诊断一致性 缺少可比对的字段值",
+          "details": {
+            "ruleId": "mv-diagnosis-003",
+            "reasonCode": "INVOICE_INPATIENT_DIAGNOSIS_MISMATCH",
+            "field": "dischargeDiagnosis <> discharge_diagnosis",
+            "relatedDocuments": [
+              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1",
+              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+            ]
+          }
+        },
+        {
+          "type": "date_consistency",
+          "passed": false,
+          "severity": "error",
+          "message": "发票开票日期不能是未来日期 缺少可比对的字段值",
+          "details": {
+            "ruleId": "mv-date-future-001",
+            "reasonCode": "INVOICE_DATE_IN_FUTURE",
+            "field": "invoiceDate",
+            "relatedDocuments": [
+              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1"
+            ]
+          }
+        },
+        {
+          "type": "date_consistency",
+          "passed": false,
+          "severity": "error",
+          "message": "入院日期不能是未来日期 缺少可比对的字段值",
+          "details": {
+            "ruleId": "mv-date-future-002",
+            "reasonCode": "ADMISSION_DATE_IN_FUTURE",
+            "field": "admissionDate",
+            "relatedDocuments": [
+              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+            ]
+          }
+        },
+        {
+          "type": "date_consistency",
+          "passed": false,
+          "severity": "error",
+          "message": "出院日期不能是未来日期 缺少可比对的字段值",
+          "details": {
+            "ruleId": "mv-date-future-003",
+            "reasonCode": "DISCHARGE_DATE_IN_FUTURE",
+            "field": "dischargeDate",
+            "relatedDocuments": [
+              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+            ]
+          }
+        },
+        {
+          "type": "date_consistency",
+          "passed": false,
+          "severity": "error",
+          "message": "入院日期应早于或等于出院日期 缺少可比对的字段值",
+          "details": {
+            "ruleId": "mv-date-order-001",
+            "reasonCode": "ADMISSION_AFTER_DISCHARGE",
+            "field": "admissionDate <> dischargeDate",
+            "relatedDocuments": [
+              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0",
+              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+            ]
+          }
+        },
+        {
+          "type": "timeline",
+          "passed": false,
+          "severity": "warning",
+          "message": "发票开票日期应晚于或等于入院日期 缺少可比对的字段值",
+          "details": {
+            "ruleId": "mv-timeline-002",
+            "reasonCode": "INVOICE_BEFORE_ADMISSION",
+            "field": "invoiceDate <> admissionDate",
+            "relatedDocuments": [
+              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1",
+              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+            ]
           }
         }
       ],
       "factModel": {
-        "generatedAt": "2026-03-14T17:51:35.019Z",
+        "generatedAt": "2026-03-31T17:26:22.708Z",
         "injuryProfile": {
-          "injuryDescription": "急性阑尾炎；急性弥漫性腹膜炎",
-          "diagnoses": [
-            {
-              "name": "急性阑尾炎"
-            },
-            {
-              "name": "急性弥漫性腹膜炎"
-            }
-          ],
-          "diagnosisNames": [
-            "急性阑尾炎",
-            "急性弥漫性腹膜炎"
-          ],
+          "injuryDescription": "待补充",
+          "diagnoses": [],
+          "diagnosisNames": [],
           "primaryDiagnosisDate": null,
           "disabilityLevel": null,
           "hospitalizationDays": 0,
-          "treatmentTimeline": [
-            {
-              "date": "2026-05-20",
-              "event": "门诊就诊",
-              "sourceDocId": "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
-            }
-          ]
+          "treatmentTimeline": [],
+          "pastHistory": null,
+          "firstDiagnosisDate": null
         },
         "liabilityResult": null,
         "expenseAggregation": {
-          "medicalTotal": 148,
+          "medicalTotal": 0,
           "nursingDays": 0,
           "lostWorkDays": 0,
           "monthlyIncome": 0,
@@ -6570,20 +6682,296 @@
         },
         "deathProfile": null,
         "caseReports": [],
-        "conflictsDetected": [],
-        "validationFacts": {},
-        "validationResults": [],
+        "conflictsDetected": [
+          {
+            "type": "date_mismatch",
+            "description": "医疗费发票入院日期与住院病历入院日期一致性 缺少可比对的字段值",
+            "docIds": [
+              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1",
+              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+            ],
+            "severity": "warning",
+            "sourceRuleId": "mv-medical-date-003",
+            "source": "material_validation"
+          },
+          {
+            "type": "date_mismatch",
+            "description": "医疗费发票出院日期与住院病历出院日期一致性 缺少可比对的字段值",
+            "docIds": [
+              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1",
+              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+            ],
+            "severity": "warning",
+            "sourceRuleId": "mv-medical-date-004",
+            "source": "material_validation"
+          },
+          {
+            "type": "validation_conflict",
+            "description": "医疗费发票出院诊断与住院病历出院诊断一致性 缺少可比对的字段值",
+            "docIds": [
+              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1",
+              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+            ],
+            "severity": "warning",
+            "sourceRuleId": "mv-diagnosis-003",
+            "source": "material_validation"
+          },
+          {
+            "type": "validation_conflict",
+            "description": "发票开票日期不能是未来日期 缺少可比对的字段值",
+            "docIds": [
+              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1"
+            ],
+            "severity": "error",
+            "sourceRuleId": "mv-date-future-001",
+            "source": "material_validation"
+          },
+          {
+            "type": "validation_conflict",
+            "description": "入院日期不能是未来日期 缺少可比对的字段值",
+            "docIds": [
+              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+            ],
+            "severity": "error",
+            "sourceRuleId": "mv-date-future-002",
+            "source": "material_validation"
+          },
+          {
+            "type": "validation_conflict",
+            "description": "出院日期不能是未来日期 缺少可比对的字段值",
+            "docIds": [
+              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+            ],
+            "severity": "error",
+            "sourceRuleId": "mv-date-future-003",
+            "source": "material_validation"
+          },
+          {
+            "type": "validation_conflict",
+            "description": "入院日期应早于或等于出院日期 缺少可比对的字段值",
+            "docIds": [
+              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0",
+              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+            ],
+            "severity": "error",
+            "sourceRuleId": "mv-date-order-001",
+            "source": "material_validation"
+          },
+          {
+            "type": "date_mismatch",
+            "description": "发票开票日期应晚于或等于入院日期 缺少可比对的字段值",
+            "docIds": [
+              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1",
+              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+            ],
+            "severity": "warning",
+            "sourceRuleId": "mv-timeline-002",
+            "source": "material_validation"
+          }
+        ],
+        "validationFacts": {
+          "claim.invoice_admission_date_consistent": null,
+          "claim.invoice_discharge_date_consistent": null,
+          "claim.invoice_diagnosis_consistent": null,
+          "claim.invoice_date_not_future": null,
+          "claim.admission_date_not_future": null,
+          "claim.discharge_date_not_future": null,
+          "claim.admission_before_discharge": null,
+          "claim.invoice_after_admission": null
+        },
+        "validationResults": [
+          {
+            "type": "medical_date",
+            "passed": false,
+            "severity": "warning",
+            "message": "医疗费发票入院日期与住院病历入院日期一致性 缺少可比对的字段值",
+            "details": {
+              "ruleId": "mv-medical-date-003",
+              "reasonCode": "INVOICE_ADMISSION_DATE_MISMATCH",
+              "field": "admissionDate <> admission_date",
+              "relatedDocuments": [
+                "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1",
+                "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+              ]
+            }
+          },
+          {
+            "type": "medical_date",
+            "passed": false,
+            "severity": "warning",
+            "message": "医疗费发票出院日期与住院病历出院日期一致性 缺少可比对的字段值",
+            "details": {
+              "ruleId": "mv-medical-date-004",
+              "reasonCode": "INVOICE_DISCHARGE_DATE_MISMATCH",
+              "field": "dischargeDate <> discharge_date",
+              "relatedDocuments": [
+                "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1",
+                "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+              ]
+            }
+          },
+          {
+            "type": "diagnosis",
+            "passed": false,
+            "severity": "warning",
+            "message": "医疗费发票出院诊断与住院病历出院诊断一致性 缺少可比对的字段值",
+            "details": {
+              "ruleId": "mv-diagnosis-003",
+              "reasonCode": "INVOICE_INPATIENT_DIAGNOSIS_MISMATCH",
+              "field": "dischargeDiagnosis <> discharge_diagnosis",
+              "relatedDocuments": [
+                "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1",
+                "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+              ]
+            }
+          },
+          {
+            "type": "date_consistency",
+            "passed": false,
+            "severity": "error",
+            "message": "发票开票日期不能是未来日期 缺少可比对的字段值",
+            "details": {
+              "ruleId": "mv-date-future-001",
+              "reasonCode": "INVOICE_DATE_IN_FUTURE",
+              "field": "invoiceDate",
+              "relatedDocuments": [
+                "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1"
+              ]
+            }
+          },
+          {
+            "type": "date_consistency",
+            "passed": false,
+            "severity": "error",
+            "message": "入院日期不能是未来日期 缺少可比对的字段值",
+            "details": {
+              "ruleId": "mv-date-future-002",
+              "reasonCode": "ADMISSION_DATE_IN_FUTURE",
+              "field": "admissionDate",
+              "relatedDocuments": [
+                "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+              ]
+            }
+          },
+          {
+            "type": "date_consistency",
+            "passed": false,
+            "severity": "error",
+            "message": "出院日期不能是未来日期 缺少可比对的字段值",
+            "details": {
+              "ruleId": "mv-date-future-003",
+              "reasonCode": "DISCHARGE_DATE_IN_FUTURE",
+              "field": "dischargeDate",
+              "relatedDocuments": [
+                "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+              ]
+            }
+          },
+          {
+            "type": "date_consistency",
+            "passed": false,
+            "severity": "error",
+            "message": "入院日期应早于或等于出院日期 缺少可比对的字段值",
+            "details": {
+              "ruleId": "mv-date-order-001",
+              "reasonCode": "ADMISSION_AFTER_DISCHARGE",
+              "field": "admissionDate <> dischargeDate",
+              "relatedDocuments": [
+                "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0",
+                "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+              ]
+            }
+          },
+          {
+            "type": "timeline",
+            "passed": false,
+            "severity": "warning",
+            "message": "发票开票日期应晚于或等于入院日期 缺少可比对的字段值",
+            "details": {
+              "ruleId": "mv-timeline-002",
+              "reasonCode": "INVOICE_BEFORE_ADMISSION",
+              "field": "invoiceDate <> admissionDate",
+              "relatedDocuments": [
+                "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1",
+                "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+              ]
+            }
+          }
+        ],
         "canonicalFacts": {},
         "canonicalFactSources": {},
         "handlingProfile": {
-          "profileCode": "generic_claim_review",
-          "profileName": "通用案件审核",
-          "description": "当前案件未命中特定处理画像，按通用案件审核模式处理。",
+          "profileCode": "medical_expense_reimbursement",
+          "profileName": "医疗费用报销案件",
+          "description": "适用于医疗险、意外医疗及门急诊/住院费用报销案件，重点关注保险责任、票据、目录匹配和免赔/比例规则。",
           "factSchema": {
-            "groups": []
+            "groups": [
+              {
+                "code": "policy_facts",
+                "name": "保单事实",
+                "fields": [
+                  "insuranceType",
+                  "productCode",
+                  "policyNumber",
+                  "coverageCode",
+                  "deductible",
+                  "reimbursementRatio"
+                ]
+              },
+              {
+                "code": "medical_facts",
+                "name": "就医事实",
+                "fields": [
+                  "visitDate",
+                  "hospitalName",
+                  "diagnosis",
+                  "hospitalizationDays"
+                ]
+              },
+              {
+                "code": "expense_facts",
+                "name": "费用事实",
+                "fields": [
+                  "medicalExpense",
+                  "catalogMatchedAmount",
+                  "selfPaidAmount",
+                  "invoiceCount"
+                ]
+              }
+            ]
           },
-          "processingStrategy": {},
-          "uiModules": {},
+          "processingStrategy": {
+            "extract_fact": [
+              "mat-20",
+              "mat-21"
+            ],
+            "summarize": [
+              "mat-7"
+            ],
+            "ocr_only": [
+              "mat-1",
+              "mat-2",
+              "mat-6"
+            ],
+            "archive_only": [
+              "video"
+            ]
+          },
+          "uiModules": {
+            "factCards": [
+              "medical_summary",
+              "expense_summary"
+            ],
+            "editableFacts": [
+              "invoice_adjustment"
+            ],
+            "reportSections": [
+              "decision_summary",
+              "expense_items",
+              "decision_trace",
+              "pending_reviews"
+            ]
+          },
           "reviewTasks": [],
           "context": {
             "claimCaseId": "CLM-MED-001",
@@ -6600,15 +6988,14 @@
             "hasRegionalStandards": true,
             "hasClaimantRelationship": false,
             "materialIds": [
-              "mat-11",
-              "mat-20",
-              "mat-21",
-              "mat-13"
+              "mat-12",
+              "mat-20"
             ],
             "recognizedPayment": 0,
             "medicalExpense": 0,
             "claimantsCount": 0,
-            "matchesLiabilityReason": false
+            "matchesLiabilityReason": false,
+            "matchesMedicalClaim": true
           },
           "domainModel": {
             "claimCaseId": "CLM-MED-001",
@@ -6633,6 +7020,7 @@
             "isMedicalScenario": true,
             "isLiabilityScenario": false,
             "isBenefitScenario": false,
+            "isAccidentMedicalScenario": false,
             "isAutoScenario": false
           }
         },
@@ -6673,11 +7061,11 @@
       },
       "liabilitySuggestion": {
         "status": "MANUAL_REVIEW",
-        "conclusion": "缺少责任认定依据，需人工确认",
+        "conclusion": "缺少事故责任比例依据，需人工确认",
         "confidence": 0.3,
         "basis": []
       },
-      "aggregationSummary": "材料校验规则异常 1 项",
+      "aggregationSummary": "检测到 4 个错误、4 个警告；材料校验规则异常 8 项",
       "regionalStandards": {
         "region": "安徽省",
         "year": 2024,
@@ -6709,26 +7097,86 @@
       "compulsoryInsuranceOffset": {
         "applicable": false,
         "deductionTotal": 0,
-        "reason": "当前案件按工程机械设备保险附加第三者责任险处理，不适用交强险扣减"
+        "reason": "医疗费用报销案件，不涉及交强险扣减"
       },
       "identityChainEvidence": [],
       "incidentStatements": [],
       "interviewRecords": [],
       "policeCallRecords": [],
-      "manualReviewItems": [
-        "缺少公安/安监正式责任划分文书，责任比例仍需人工确认",
-        "死亡赔偿金已按统一城镇标准试算，如法院地或统计年度不同需调整地区标准参数"
-      ],
+      "manualReviewItems": [],
       "factConfirmations": {},
       "handlingProfile": {
-        "profileCode": "generic_claim_review",
-        "profileName": "通用案件审核",
-        "description": "当前案件未命中特定处理画像，按通用案件审核模式处理。",
+        "profileCode": "medical_expense_reimbursement",
+        "profileName": "医疗费用报销案件",
+        "description": "适用于医疗险、意外医疗及门急诊/住院费用报销案件，重点关注保险责任、票据、目录匹配和免赔/比例规则。",
         "factSchema": {
-          "groups": []
+          "groups": [
+            {
+              "code": "policy_facts",
+              "name": "保单事实",
+              "fields": [
+                "insuranceType",
+                "productCode",
+                "policyNumber",
+                "coverageCode",
+                "deductible",
+                "reimbursementRatio"
+              ]
+            },
+            {
+              "code": "medical_facts",
+              "name": "就医事实",
+              "fields": [
+                "visitDate",
+                "hospitalName",
+                "diagnosis",
+                "hospitalizationDays"
+              ]
+            },
+            {
+              "code": "expense_facts",
+              "name": "费用事实",
+              "fields": [
+                "medicalExpense",
+                "catalogMatchedAmount",
+                "selfPaidAmount",
+                "invoiceCount"
+              ]
+            }
+          ]
         },
-        "processingStrategy": {},
-        "uiModules": {},
+        "processingStrategy": {
+          "extract_fact": [
+            "mat-20",
+            "mat-21"
+          ],
+          "summarize": [
+            "mat-7"
+          ],
+          "ocr_only": [
+            "mat-1",
+            "mat-2",
+            "mat-6"
+          ],
+          "archive_only": [
+            "video"
+          ]
+        },
+        "uiModules": {
+          "factCards": [
+            "medical_summary",
+            "expense_summary"
+          ],
+          "editableFacts": [
+            "invoice_adjustment"
+          ],
+          "reportSections": [
+            "decision_summary",
+            "expense_items",
+            "decision_trace",
+            "pending_reviews"
+          ]
+        },
         "reviewTasks": [],
         "context": {
           "claimCaseId": "CLM-MED-001",
@@ -6745,15 +7193,14 @@
           "hasRegionalStandards": true,
           "hasClaimantRelationship": false,
           "materialIds": [
-            "mat-11",
-            "mat-20",
-            "mat-21",
-            "mat-13"
+            "mat-12",
+            "mat-20"
           ],
           "recognizedPayment": 0,
           "medicalExpense": 0,
           "claimantsCount": 0,
-          "matchesLiabilityReason": false
+          "matchesLiabilityReason": false,
+          "matchesMedicalClaim": true
         },
         "domainModel": {
           "claimCaseId": "CLM-MED-001",
@@ -6778,12 +7225,13 @@
           "isMedicalScenario": true,
           "isLiabilityScenario": false,
           "isBenefitScenario": false,
+          "isAccidentMedicalScenario": false,
           "isAutoScenario": false
         }
       },
       "decisionTrace": {
         "traceId": "trace-CLM-MED-001",
-        "generatedAt": "2026-03-15T11:17:11.282Z",
+        "generatedAt": "2026-04-04T10:14:34.273Z",
         "domainModel": {
           "claimCaseId": "CLM-MED-001",
           "productLine": "HEALTH",
@@ -6807,6 +7255,7 @@
           "isMedicalScenario": true,
           "isLiabilityScenario": false,
           "isBenefitScenario": false,
+          "isAccidentMedicalScenario": false,
           "isAutoScenario": false
         },
         "claimScenario": "medical_expense",
@@ -6815,23 +7264,20 @@
             "stage": "material_recognition",
             "title": "材料识别",
             "status": "completed",
-            "summary": "共识别 6/6 份材料，形成 0 份结构化摘要",
+            "summary": "共识别 3/3 份材料，形成 0 份结构化摘要",
             "sourceDocIds": [
               "mat-1773508535449-wqg0z3050",
               "mat-1773508535449-8jzm23u4k",
-              "mat-1773508535449-1f7wucee8",
-              "mat-mmrmdo7j-mat-11",
-              "mat-mmrmdo7k-mat-21",
-              "mat-mmrmdo7k-mat-13"
+              "mat-1773508535449-1f7wucee8"
             ],
             "facts": [
               {
                 "label": "材料总数",
-                "value": "6"
+                "value": "3"
               },
               {
                 "label": "已识别材料",
-                "value": "6"
+                "value": "3"
               },
               {
                 "label": "摘要数量",
@@ -6843,7 +7289,7 @@
             "stage": "medical_fact_aggregation",
             "title": "医疗事实归纳",
             "status": "completed",
-            "summary": "材料校验规则异常 1 项",
+            "summary": "检测到 4 个错误、4 个警告；材料校验规则异常 8 项",
             "sourceDocIds": [],
             "facts": [
               {
@@ -6888,31 +7334,56 @@
                 "value": "0"
               }
             ]
+          },
+          {
+            "stage": "manual_review",
+            "title": "人工确认与调整",
+            "status": "completed",
+            "summary": "已记录 1 项人工确认/调整动作",
+            "sourceDocIds": [],
+            "facts": [
+              {
+                "label": "修改结构化字段 - 入院日期 (系统用户)",
+                "value": "已处理 @ 2026/3/26 01:18:48"
+              }
+            ],
+            "manualActions": [
+              {
+                "label": "修改结构化字段 - 入院日期",
+                "timestamp": "2026-03-25T17:18:48.685Z",
+                "detail": "",
+                "actor": "系统用户"
+              }
+            ]
           }
         ]
       }
     },
     "completeness": {
       "isComplete": false,
-      "completenessScore": 0,
+      "completenessScore": 33,
       "requiredMaterials": [
-        "item-ZA-GOPD-outpatient",
-        "item-ZA-GOPD-outpatient"
+        "mat-1",
+        "mat-6",
+        "mat-12",
+        "mat-13",
+        "mat-20",
+        "mat-21"
       ],
       "providedMaterials": [
         "image/jpeg",
-        "mat-11",
-        "mat-20",
-        "mat-21",
-        "mat-13"
+        "mat-12",
+        "mat-20"
       ],
       "missingMaterials": [
-        "item-ZA-GOPD-outpatient",
-        "item-ZA-GOPD-outpatient"
+        "mat-1",
+        "mat-6",
+        "mat-13",
+        "mat-21"
       ],
       "optionalMaterials": [],
       "warnings": [
-        "缺少以下材料: item-ZA-GOPD-outpatient, item-ZA-GOPD-outpatient"
+        "缺少以下材料: mat-1, mat-6, mat-13, mat-21"
       ]
     },
     "reviewResult": {
@@ -6921,6 +7392,2774 @@
       "liabilityDecision": "MANUAL_REVIEW",
       "assessmentDecision": "PARTIAL_ASSESSED",
       "settlementDecision": "MANUAL_REVIEW",
+      "claimType": "HEALTH",
+      "coverageResults": [
+        {
+          "coverageCode": "HLT_OPD_SOCIAL",
+          "claimedAmount": 145,
+          "approvedAmount": 130.5,
+          "deductible": 0,
+          "reimbursementRatio": 0.9,
+          "sumInsured": 10000,
+          "status": "MANUAL_REVIEW",
+          "warnings": [
+            {
+              "rule_id": "SYSTEM",
+              "message": "未找到责任 null 对应的保障配置，需人工复核产品责任映射",
+              "category": "COVERAGE_CONFIG"
+            }
+          ]
+        },
+        {
+          "coverageCode": "HLT_OPD_NON_SOCIAL",
+          "claimedAmount": 3,
+          "approvedAmount": 2.7,
+          "deductible": 0,
+          "reimbursementRatio": 0.9,
+          "sumInsured": 10000,
+          "status": "MANUAL_REVIEW",
+          "warnings": [
+            {
+              "rule_id": "SYSTEM",
+              "message": "未找到责任 null 对应的保障配置，需人工复核产品责任映射",
+              "category": "COVERAGE_CONFIG"
+            }
+          ]
+        }
+      ],
+      "reasonCodes": [
+        "MISSING_LIABILITY_FIELDS",
+        "LIABILITY_RULE_REVIEW",
+        "COVERAGE_CONFIG_MISSING",
+        "INVOICE_ADMISSION_DATE_MISMATCH",
+        "INVOICE_DISCHARGE_DATE_MISMATCH",
+        "INVOICE_INPATIENT_DIAGNOSIS_MISMATCH",
+        "INVOICE_DATE_IN_FUTURE",
+        "ADMISSION_DATE_IN_FUTURE",
+        "DISCHARGE_DATE_IN_FUTURE",
+        "ADMISSION_AFTER_DISCHARGE",
+        "INVOICE_BEFORE_ADMISSION",
+        "WARN_1",
+        "WARN_2",
+        "WARN_3",
+        "WARN_4",
+        "WARN_5",
+        "WARN_6",
+        "WARN_7",
+        "WARN_8",
+        "WARN_9",
+        "WARN_10",
+        "WARN_11"
+      ],
+      "warnings": [
+        "既往症免责 缺少关键字段: claim.pre_existing_condition",
+        "免责事实缺失：既往症免责",
+        "未找到责任 null 对应的保障配置，需人工复核产品责任映射",
+        "医疗费发票入院日期与住院病历入院日期一致性 缺少可比对的字段值",
+        "医疗费发票出院日期与住院病历出院日期一致性 缺少可比对的字段值",
+        "医疗费发票出院诊断与住院病历出院诊断一致性 缺少可比对的字段值",
+        "发票开票日期不能是未来日期 缺少可比对的字段值",
+        "入院日期不能是未来日期 缺少可比对的字段值",
+        "出院日期不能是未来日期 缺少可比对的字段值",
+        "入院日期应早于或等于出院日期 缺少可比对的字段值",
+        "发票开票日期应晚于或等于入院日期 缺少可比对的字段值"
+      ],
+      "manualReviewReasons": [
+        {
+          "code": "MISSING_LIABILITY_FIELDS",
+          "stage": "LIABILITY",
+          "source": "ZAOPD108",
+          "category": "EXCLUSION",
+          "fields": [
+            "claim.pre_existing_condition"
+          ],
+          "message": "既往症免责 缺少关键字段: claim.pre_existing_condition"
+        },
+        {
+          "code": "LIABILITY_RULE_REVIEW",
+          "stage": "LIABILITY",
+          "source": "ZAOPD108M",
+          "category": "ADJUSTMENT",
+          "fields": [],
+          "message": "免责事实缺失：既往症免责"
+        },
+        {
+          "code": "COVERAGE_CONFIG_MISSING",
+          "source": "UNKNOWN_COVERAGE",
+          "category": "COVERAGE_CONFIG",
+          "stage": "SETTLEMENT",
+          "message": "未找到责任 null 对应的保障配置，需人工复核产品责任映射",
+          "metadata": {
+            "coverageCode": null
+          }
+        },
+        {
+          "code": "INVOICE_ADMISSION_DATE_MISMATCH",
+          "stage": "INTAKE",
+          "source": "mv-medical-date-003",
+          "category": "medical_date",
+          "message": "医疗费发票入院日期与住院病历入院日期一致性 缺少可比对的字段值",
+          "metadata": {
+            "field": "admissionDate <> admission_date"
+          }
+        },
+        {
+          "code": "INVOICE_DISCHARGE_DATE_MISMATCH",
+          "stage": "INTAKE",
+          "source": "mv-medical-date-004",
+          "category": "medical_date",
+          "message": "医疗费发票出院日期与住院病历出院日期一致性 缺少可比对的字段值",
+          "metadata": {
+            "field": "dischargeDate <> discharge_date"
+          }
+        },
+        {
+          "code": "INVOICE_INPATIENT_DIAGNOSIS_MISMATCH",
+          "stage": "INTAKE",
+          "source": "mv-diagnosis-003",
+          "category": "diagnosis",
+          "message": "医疗费发票出院诊断与住院病历出院诊断一致性 缺少可比对的字段值",
+          "metadata": {
+            "field": "dischargeDiagnosis <> discharge_diagnosis"
+          }
+        },
+        {
+          "code": "INVOICE_DATE_IN_FUTURE",
+          "stage": "INTAKE",
+          "source": "mv-date-future-001",
+          "category": "date_consistency",
+          "message": "发票开票日期不能是未来日期 缺少可比对的字段值",
+          "metadata": {
+            "field": "invoiceDate"
+          }
+        },
+        {
+          "code": "ADMISSION_DATE_IN_FUTURE",
+          "stage": "INTAKE",
+          "source": "mv-date-future-002",
+          "category": "date_consistency",
+          "message": "入院日期不能是未来日期 缺少可比对的字段值",
+          "metadata": {
+            "field": "admissionDate"
+          }
+        },
+        {
+          "code": "DISCHARGE_DATE_IN_FUTURE",
+          "stage": "INTAKE",
+          "source": "mv-date-future-003",
+          "category": "date_consistency",
+          "message": "出院日期不能是未来日期 缺少可比对的字段值",
+          "metadata": {
+            "field": "dischargeDate"
+          }
+        },
+        {
+          "code": "ADMISSION_AFTER_DISCHARGE",
+          "stage": "INTAKE",
+          "source": "mv-date-order-001",
+          "category": "date_consistency",
+          "message": "入院日期应早于或等于出院日期 缺少可比对的字段值",
+          "metadata": {
+            "field": "admissionDate <> dischargeDate"
+          }
+        },
+        {
+          "code": "INVOICE_BEFORE_ADMISSION",
+          "stage": "INTAKE",
+          "source": "mv-timeline-002",
+          "category": "timeline",
+          "message": "发票开票日期应晚于或等于入院日期 缺少可比对的字段值",
+          "metadata": {
+            "field": "invoiceDate <> admissionDate"
+          }
+        }
+      ],
+      "missingMaterials": [],
+      "materialValidationResults": [
+        {
+          "type": "medical_date",
+          "passed": false,
+          "severity": "warning",
+          "message": "医疗费发票入院日期与住院病历入院日期一致性 缺少可比对的字段值",
+          "details": {
+            "ruleId": "mv-medical-date-003",
+            "reasonCode": "INVOICE_ADMISSION_DATE_MISMATCH",
+            "field": "admissionDate <> admission_date",
+            "relatedDocuments": [
+              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1",
+              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+            ]
+          }
+        },
+        {
+          "type": "medical_date",
+          "passed": false,
+          "severity": "warning",
+          "message": "医疗费发票出院日期与住院病历出院日期一致性 缺少可比对的字段值",
+          "details": {
+            "ruleId": "mv-medical-date-004",
+            "reasonCode": "INVOICE_DISCHARGE_DATE_MISMATCH",
+            "field": "dischargeDate <> discharge_date",
+            "relatedDocuments": [
+              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1",
+              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+            ]
+          }
+        },
+        {
+          "type": "diagnosis",
+          "passed": false,
+          "severity": "warning",
+          "message": "医疗费发票出院诊断与住院病历出院诊断一致性 缺少可比对的字段值",
+          "details": {
+            "ruleId": "mv-diagnosis-003",
+            "reasonCode": "INVOICE_INPATIENT_DIAGNOSIS_MISMATCH",
+            "field": "dischargeDiagnosis <> discharge_diagnosis",
+            "relatedDocuments": [
+              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1",
+              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+            ]
+          }
+        },
+        {
+          "type": "date_consistency",
+          "passed": false,
+          "severity": "error",
+          "message": "发票开票日期不能是未来日期 缺少可比对的字段值",
+          "details": {
+            "ruleId": "mv-date-future-001",
+            "reasonCode": "INVOICE_DATE_IN_FUTURE",
+            "field": "invoiceDate",
+            "relatedDocuments": [
+              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1"
+            ]
+          }
+        },
+        {
+          "type": "date_consistency",
+          "passed": false,
+          "severity": "error",
+          "message": "入院日期不能是未来日期 缺少可比对的字段值",
+          "details": {
+            "ruleId": "mv-date-future-002",
+            "reasonCode": "ADMISSION_DATE_IN_FUTURE",
+            "field": "admissionDate",
+            "relatedDocuments": [
+              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+            ]
+          }
+        },
+        {
+          "type": "date_consistency",
+          "passed": false,
+          "severity": "error",
+          "message": "出院日期不能是未来日期 缺少可比对的字段值",
+          "details": {
+            "ruleId": "mv-date-future-003",
+            "reasonCode": "DISCHARGE_DATE_IN_FUTURE",
+            "field": "dischargeDate",
+            "relatedDocuments": [
+              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+            ]
+          }
+        },
+        {
+          "type": "date_consistency",
+          "passed": false,
+          "severity": "error",
+          "message": "入院日期应早于或等于出院日期 缺少可比对的字段值",
+          "details": {
+            "ruleId": "mv-date-order-001",
+            "reasonCode": "ADMISSION_AFTER_DISCHARGE",
+            "field": "admissionDate <> dischargeDate",
+            "relatedDocuments": [
+              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0",
+              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+            ]
+          }
+        },
+        {
+          "type": "timeline",
+          "passed": false,
+          "severity": "warning",
+          "message": "发票开票日期应晚于或等于入院日期 缺少可比对的字段值",
+          "details": {
+            "ruleId": "mv-timeline-002",
+            "reasonCode": "INVOICE_BEFORE_ADMISSION",
+            "field": "invoiceDate <> admissionDate",
+            "relatedDocuments": [
+              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1",
+              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+            ]
+          }
+        }
+      ],
+      "matchedRuleDetails": [
+        {
+          "ruleId": "ZAOPD001",
+          "ruleName": "保障期间校验",
+          "ruleKind": "GATE",
+          "category": "COVERAGE_PERIOD",
+          "domain": "ELIGIBILITY",
+          "fields": [
+            "claim.accident_date"
+          ],
+          "actionType": "APPROVE_CLAIM",
+          "effect": "理赔通过",
+          "sourceText": "保险期间自2026年3月16日零时起至2027年3月15日24时止。"
+        },
+        {
+          "ruleId": "ZAOPD004",
+          "ruleName": "疾病等待期30天校验",
+          "ruleKind": "GATE",
+          "category": "WAITING_PERIOD",
+          "domain": "ELIGIBILITY",
+          "fields": [
+            "claim.cause_type",
+            "claim.accident_date"
+          ],
+          "actionType": "APPROVE_CLAIM",
+          "effect": "理赔通过",
+          "sourceText": "在等待期后因罹患疾病，在医院接受门诊或急诊治疗。"
+        },
+        {
+          "ruleId": "ZAOPD002",
+          "ruleName": "医保内门急诊责任触发",
+          "ruleKind": "TRIGGER",
+          "category": "COVERAGE_SCOPE",
+          "domain": "ELIGIBILITY",
+          "fields": [
+            "claim.social_medical_amount"
+          ],
+          "actionType": "APPROVE_CLAIM",
+          "effect": "理赔通过",
+          "sourceText": "对于被保险人需个人支付的、符合当地基本医疗保险范围的、必需且合理的医疗费用，保险人在扣除约定的免赔额后，按照约定的给付比例进行赔付。"
+        },
+        {
+          "ruleId": "ZAOPD003",
+          "ruleName": "医保外门急诊责任触发",
+          "ruleKind": "TRIGGER",
+          "category": "COVERAGE_SCOPE",
+          "domain": "ELIGIBILITY",
+          "fields": [
+            "claim.non_social_medical_amount"
+          ],
+          "actionType": "APPROVE_CLAIM",
+          "effect": "理赔通过",
+          "sourceText": "对于被保险人需个人支付的、超出当地基本医疗保险范围的、必需且合理的医疗费用，保险人在扣除约定的免赔额后，按照约定的给付比例进行赔付。"
+        },
+        {
+          "ruleId": "ZAOPD108M",
+          "ruleName": "既往症免责事实缺失转人工",
+          "ruleKind": "ADJUSTMENT",
+          "category": "EXCLUSION",
+          "domain": "ELIGIBILITY",
+          "fields": [
+            "claim.pre_existing_condition"
+          ],
+          "actionType": "ROUTE_CLAIM_MANUAL",
+          "effect": "转人工审核: 免责事实缺失：既往症免责",
+          "sourceText": "被保险人所患既往症，及保险单中特别约定的除外疾病引起的相关费用。"
+        },
+        {
+          "ruleId": "ZAOPD202",
+          "ruleName": "医保内费用识别",
+          "ruleKind": "ITEM_FLAG",
+          "category": "ITEM_CLASSIFICATION",
+          "domain": "ASSESSMENT",
+          "fields": [
+            "claim.social_medical_amount"
+          ],
+          "actionType": "ADD_REMARK",
+          "effect": "添加备注: 识别到医保内费用145元",
+          "sourceText": "医保范围内门急诊费用单独识别。"
+        },
+        {
+          "ruleId": "ZAOPD203",
+          "ruleName": "医保外费用识别",
+          "ruleKind": "ITEM_FLAG",
+          "category": "ITEM_CLASSIFICATION",
+          "domain": "ASSESSMENT",
+          "fields": [
+            "claim.non_social_medical_amount"
+          ],
+          "actionType": "ADD_REMARK",
+          "effect": "添加备注: 识别到医保外费用3元",
+          "sourceText": "医保范围外门急诊费用单独识别。"
+        },
+        {
+          "ruleId": "ZAOPD301",
+          "ruleName": "其他途径补偿扣减",
+          "ruleKind": "POST_PROCESS",
+          "category": "SOCIAL_INSURANCE",
+          "domain": "POST_PROCESS",
+          "fields": [],
+          "actionType": "APPLY_FORMULA",
+          "effect": "公式计算: calculatedAmount = 148",
+          "sourceText": "保险人仅对被保险人实际发生的医疗费用扣除其所获医疗费用补偿后的余额按照本合同的约定进行赔付。"
+        },
+        {
+          "ruleId": "ZAOPD302",
+          "ruleName": "单次免赔额为0",
+          "ruleKind": "POST_PROCESS",
+          "category": "DEDUCTIBLE",
+          "domain": "POST_PROCESS",
+          "fields": [],
+          "actionType": "APPLY_DEDUCTIBLE",
+          "effect": "免赔额应用: 0",
+          "sourceText": "本合同免赔额由投保人与保险人在订立本合同时协商确定，并在本合同中载明。"
+        },
+        {
+          "ruleId": "ZAOPD303",
+          "ruleName": "统一赔付比例90%",
+          "ruleKind": "POST_PROCESS",
+          "category": "PAYOUT_RATIO",
+          "domain": "POST_PROCESS",
+          "fields": [],
+          "actionType": "SET_CLAIM_RATIO",
+          "effect": "设置理赔比例: 90%",
+          "sourceText": "本保单预设给付比例为90%。"
+        },
+        {
+          "ruleId": "ZAOPD108",
+          "ruleName": "既往症免责",
+          "ruleKind": "EXCLUSION",
+          "category": "EXCLUSION",
+          "domain": "ELIGIBILITY",
+          "fields": [
+            "claim.pre_existing_condition"
+          ],
+          "actionType": "REJECT_CLAIM",
+          "effect": "既往症免责 缺少关键字段: claim.pre_existing_condition",
+          "sourceText": "被保险人所患既往症，及保险单中特别约定的除外疾病引起的相关费用。"
+        }
+      ],
+      "policyBinding": {
+        "policyNumber": "PZA202603150001",
+        "insuredMatched": true,
+        "insuredName": "杨秀",
+        "productCode": "ZA-GOPD-2022A-90",
+        "rulesetId": "RS-HEALTH-ZA-GOPD-2022A90-001",
+        "productSource": "CLAIM_CASE"
+      },
+      "payableAmount": 133.2,
+      "currency": "CNY",
+      "eligibility": {
+        "eligible": true,
+        "matchedRules": [
+          "ZAOPD001",
+          "ZAOPD004",
+          "ZAOPD002",
+          "ZAOPD003",
+          "ZAOPD108M"
+        ],
+        "rejectionReasons": [],
+        "warnings": [
+          {
+            "rule_id": "ZAOPD108",
+            "message": "既往症免责 缺少关键字段: claim.pre_existing_condition",
+            "category": "EXCLUSION"
+          },
+          {
+            "rule_id": "ZAOPD108M",
+            "message": "免责事实缺失：既往症免责",
+            "category": "ADJUSTMENT"
+          }
+        ],
+        "needsManualReview": true,
+        "manualReviewReasons": [
+          {
+            "code": "MISSING_LIABILITY_FIELDS",
+            "stage": "LIABILITY",
+            "source": "ZAOPD108",
+            "category": "EXCLUSION",
+            "fields": [
+              "claim.pre_existing_condition"
+            ],
+            "message": "既往症免责 缺少关键字段: claim.pre_existing_condition"
+          },
+          {
+            "code": "LIABILITY_RULE_REVIEW",
+            "stage": "LIABILITY",
+            "source": "ZAOPD108M",
+            "category": "ADJUSTMENT",
+            "fields": [],
+            "message": "免责事实缺失：既往症免责"
+          }
+        ],
+        "fraudFlagged": false,
+        "preExistingAssessment": {
+          "processor_id": "pre_existing_condition",
+          "result": "UNCERTAIN",
+          "confidence": 0,
+          "evidence": [],
+          "reasoning": "信息不足，无法自动判断",
+          "historyText": null,
+          "evaluatedAt": "2026-04-04T10:15:47.978Z",
+          "steps": {
+            "history": {
+              "certainty": "UNKNOWN",
+              "text": null,
+              "vote": null,
+              "weight": 0
+            },
+            "timeLogic": {
+              "verdict": "UNKNOWN",
+              "reason": "首诊日期缺失",
+              "firstDiagnosisDate": null,
+              "vote": null,
+              "weight": 0
+            },
+            "ai": {
+              "invoked": false,
+              "skippedReason": "既往史缺失或不详，不触发 AI",
+              "result": null,
+              "confidence": null,
+              "reasoning": "",
+              "voteWeight": 0
+            },
+            "synthesis": {
+              "preAiResult": {
+                "result": "UNCERTAIN",
+                "confidence": 0
+              },
+              "finalResult": {
+                "result": "UNCERTAIN",
+                "confidence": 0
+              },
+              "yesScore": 0,
+              "noScore": 0,
+              "threshold": 0.65
+            }
+          },
+          "source": "AUTO",
+          "input": {
+            "diagnosis": "急性阑尾炎；急性弥漫性腹膜炎",
+            "diagnosisNames": [
+              "急性阑尾炎",
+              "急性弥漫性腹膜炎"
+            ],
+            "pastMedicalHistory": null,
+            "firstDiagnosisDate": null,
+            "policyEffectiveDate": "2026-03-16",
+            "waitingPeriodDays": 0
+          }
+        }
+      },
+      "amount": {
+        "totalClaimable": 148,
+        "deductible": 0,
+        "reimbursementRatio": 1,
+        "finalAmount": 133.2,
+        "factAssessment": {
+          "coverageCode": null,
+          "faultRatio": null,
+          "totalApproved": 133.2,
+          "itemBreakdown": [
+            {
+              "item": "医保内门急诊费用",
+              "claimed": 145,
+              "approved": 130.5,
+              "reason": "载入原始申报金额"
+            },
+            {
+              "item": "医保外门急诊费用",
+              "claimed": 3,
+              "approved": 2.7,
+              "reason": "载入原始申报金额"
+            }
+          ],
+          "executionDetails": [
+            {
+              "rule_id": "ZAOPD201",
+              "rule_name": "医疗必需合理性校验",
+              "category": "PRICING_REASONABILITY",
+              "executed": false,
+              "condition_met": false,
+              "action_result": null,
+              "item_results": [],
+              "source": {
+                "source_type": "CLAUSE",
+                "source_ref": "释义七",
+                "clause_code": "ZA-GOPD-2022A-90",
+                "source_text": "仅赔付必需且合理的医疗费用。"
+              }
+            },
+            {
+              "rule_id": "ZAOPD202",
+              "rule_name": "医保内费用识别",
+              "category": "ITEM_CLASSIFICATION",
+              "executed": true,
+              "condition_met": true,
+              "action_result": {
+                "action_type": "ADD_REMARK",
+                "success": true,
+                "message": "添加备注: 识别到医保内费用145元",
+                "data": {
+                  "remark": "识别到医保内费用145元"
+                }
+              },
+              "item_results": [],
+              "source": {
+                "source_type": "CLAUSE",
+                "source_ref": "理赔录入口径",
+                "clause_code": "ZA-GOPD-2022A-90",
+                "source_text": "医保范围内门急诊费用单独识别。"
+              }
+            },
+            {
+              "rule_id": "ZAOPD203",
+              "rule_name": "医保外费用识别",
+              "category": "ITEM_CLASSIFICATION",
+              "executed": true,
+              "condition_met": true,
+              "action_result": {
+                "action_type": "ADD_REMARK",
+                "success": true,
+                "message": "添加备注: 识别到医保外费用3元",
+                "data": {
+                  "remark": "识别到医保外费用3元"
+                }
+              },
+              "item_results": [],
+              "source": {
+                "source_type": "CLAUSE",
+                "source_ref": "理赔录入口径",
+                "clause_code": "ZA-GOPD-2022A-90",
+                "source_text": "医保范围外门急诊费用单独识别。"
+              }
+            }
+          ],
+          "lossLedger": [
+            {
+              "itemKey": "synthetic-social-medical",
+              "itemName": "医保内门急诊费用",
+              "claimedAmount": 145,
+              "payableAmount": 130.5,
+              "status": "PAYABLE",
+              "coverageCode": null,
+              "category": null,
+              "medicalReview": {
+                "status": "COVERED",
+                "catalogCategory": "treatment",
+                "catalogMatch": null,
+                "ratio": 1,
+                "basis": "基于报案汇总金额生成的门急诊费用，暂按可赔费用保留，待后续票据明细补充时再做目录细分",
+                "restriction": ""
+              },
+              "entries": [
+                {
+                  "step": "INIT",
+                  "beforeAmount": 145,
+                  "afterAmount": 145,
+                  "message": "载入原始申报金额"
+                }
+              ],
+              "manualReviewReasons": [],
+              "flags": []
+            },
+            {
+              "itemKey": "synthetic-non-social-medical",
+              "itemName": "医保外门急诊费用",
+              "claimedAmount": 3,
+              "payableAmount": 2.7,
+              "status": "PAYABLE",
+              "coverageCode": null,
+              "category": null,
+              "medicalReview": {
+                "status": "COVERED",
+                "catalogCategory": "treatment",
+                "catalogMatch": null,
+                "ratio": 1,
+                "basis": "基于报案汇总金额生成的门急诊费用，暂按可赔费用保留，待后续票据明细补充时再做目录细分",
+                "restriction": ""
+              },
+              "entries": [
+                {
+                  "step": "INIT",
+                  "beforeAmount": 3,
+                  "afterAmount": 3,
+                  "message": "载入原始申报金额"
+                }
+              ],
+              "manualReviewReasons": [],
+              "flags": []
+            }
+          ],
+          "benefitLedger": [],
+          "medicalReview": null,
+          "policyBinding": {
+            "policyNumber": "PZA202603150001",
+            "insuredMatched": true,
+            "insuredName": "杨秀",
+            "productCode": "ZA-GOPD-2022A-90",
+            "rulesetId": "RS-HEALTH-ZA-GOPD-2022A90-001",
+            "productSource": "CLAIM_CASE"
+          },
+          "duration": 8
+        },
+        "itemBreakdown": [
+          {
+            "item": "医保内门急诊费用",
+            "claimed": 145,
+            "approved": 130.5,
+            "reason": "载入原始申报金额"
+          },
+          {
+            "item": "医保外门急诊费用",
+            "claimed": 3,
+            "approved": 2.7,
+            "reason": "载入原始申报金额"
+          }
+        ],
+        "settlementMode": "LOSS",
+        "lossLedger": [
+          {
+            "itemKey": "synthetic-social-medical",
+            "itemName": "医保内门急诊费用",
+            "claimedAmount": 145,
+            "payableAmount": 130.5,
+            "status": "PAYABLE",
+            "coverageCode": null,
+            "category": null,
+            "medicalReview": {
+              "status": "COVERED",
+              "catalogCategory": "treatment",
+              "catalogMatch": null,
+              "ratio": 1,
+              "basis": "基于报案汇总金额生成的门急诊费用，暂按可赔费用保留，待后续票据明细补充时再做目录细分",
+              "restriction": ""
+            },
+            "entries": [
+              {
+                "step": "INIT",
+                "beforeAmount": 145,
+                "afterAmount": 145,
+                "message": "载入原始申报金额"
+              }
+            ],
+            "manualReviewReasons": [],
+            "flags": []
+          },
+          {
+            "itemKey": "synthetic-non-social-medical",
+            "itemName": "医保外门急诊费用",
+            "claimedAmount": 3,
+            "payableAmount": 2.7,
+            "status": "PAYABLE",
+            "coverageCode": null,
+            "category": null,
+            "medicalReview": {
+              "status": "COVERED",
+              "catalogCategory": "treatment",
+              "catalogMatch": null,
+              "ratio": 1,
+              "basis": "基于报案汇总金额生成的门急诊费用，暂按可赔费用保留，待后续票据明细补充时再做目录细分",
+              "restriction": ""
+            },
+            "entries": [
+              {
+                "step": "INIT",
+                "beforeAmount": 3,
+                "afterAmount": 3,
+                "message": "载入原始申报金额"
+              }
+            ],
+            "manualReviewReasons": [],
+            "flags": []
+          }
+        ],
+        "benefitLedger": [],
+        "settlementBreakdown": {
+          "lossPayableAmount": 133.2,
+          "benefitPayableAmount": 0,
+          "totalPayableAmount": 133.2
+        },
+        "coverageCode": null,
+        "coverageResult": {
+          "coverageCode": "HLT_OPD_SOCIAL",
+          "claimedAmount": 145,
+          "approvedAmount": 130.5,
+          "deductible": 0,
+          "reimbursementRatio": 0.9,
+          "sumInsured": 10000,
+          "status": "MANUAL_REVIEW",
+          "warnings": [
+            {
+              "rule_id": "SYSTEM",
+              "message": "未找到责任 null 对应的保障配置，需人工复核产品责任映射",
+              "category": "COVERAGE_CONFIG"
+            }
+          ]
+        },
+        "coverageResults": [
+          {
+            "coverageCode": "HLT_OPD_SOCIAL",
+            "claimedAmount": 145,
+            "approvedAmount": 130.5,
+            "deductible": 0,
+            "reimbursementRatio": 0.9,
+            "sumInsured": 10000,
+            "status": "MANUAL_REVIEW",
+            "warnings": [
+              {
+                "rule_id": "SYSTEM",
+                "message": "未找到责任 null 对应的保障配置，需人工复核产品责任映射",
+                "category": "COVERAGE_CONFIG"
+              }
+            ]
+          },
+          {
+            "coverageCode": "HLT_OPD_NON_SOCIAL",
+            "claimedAmount": 3,
+            "approvedAmount": 2.7,
+            "deductible": 0,
+            "reimbursementRatio": 0.9,
+            "sumInsured": 10000,
+            "status": "MANUAL_REVIEW",
+            "warnings": [
+              {
+                "rule_id": "SYSTEM",
+                "message": "未找到责任 null 对应的保障配置，需人工复核产品责任映射",
+                "category": "COVERAGE_CONFIG"
+              }
+            ]
+          }
+        ],
+        "warnings": [
+          {
+            "rule_id": "SYSTEM",
+            "message": "未找到责任 null 对应的保障配置，需人工复核产品责任映射",
+            "category": "COVERAGE_CONFIG"
+          }
+        ],
+        "needsManualReview": true,
+        "manualReviewReasons": [
+          {
+            "code": "MISSING_LIABILITY_FIELDS",
+            "stage": "LIABILITY",
+            "source": "ZAOPD108",
+            "category": "EXCLUSION",
+            "fields": [
+              "claim.pre_existing_condition"
+            ],
+            "message": "既往症免责 缺少关键字段: claim.pre_existing_condition"
+          },
+          {
+            "code": "LIABILITY_RULE_REVIEW",
+            "stage": "LIABILITY",
+            "source": "ZAOPD108M",
+            "category": "ADJUSTMENT",
+            "fields": [],
+            "message": "免责事实缺失：既往症免责"
+          },
+          {
+            "code": "COVERAGE_CONFIG_MISSING",
+            "source": "UNKNOWN_COVERAGE",
+            "category": "COVERAGE_CONFIG",
+            "stage": "SETTLEMENT",
+            "message": "未找到责任 null 对应的保障配置，需人工复核产品责任映射",
+            "metadata": {
+              "coverageCode": null
+            }
+          }
+        ],
+        "medicalReview": null,
+        "policyBinding": {
+          "policyNumber": "PZA202603150001",
+          "insuredMatched": true,
+          "insuredName": "杨秀",
+          "productCode": "ZA-GOPD-2022A-90",
+          "rulesetId": "RS-HEALTH-ZA-GOPD-2022A90-001",
+          "productSource": "CLAIM_CASE"
+        }
+      },
+      "completeness": {
+        "claimType": "HEALTH",
+        "requiredMaterials": [
+          {
+            "id": "mat-20",
+            "name": "医疗费发票",
+            "required": true
+          },
+          {
+            "id": "mat-21",
+            "name": "费用明细清单",
+            "required": true
+          },
+          {
+            "id": "mat-11",
+            "name": "门（急）诊病历",
+            "required": true
+          },
+          {
+            "id": "mat-13",
+            "name": "诊断证明书",
+            "required": true
+          }
+        ],
+        "missingMaterials": [],
+        "uploadedCount": 4,
+        "totalRequired": 4
+      },
+      "ruleTrace": [
+        "ZAOPD001",
+        "ZAOPD004",
+        "ZAOPD002",
+        "ZAOPD003",
+        "ZAOPD108M",
+        "ZAOPD202",
+        "ZAOPD203",
+        "ZAOPD301",
+        "ZAOPD302",
+        "ZAOPD303"
+      ],
+      "context": {
+        "claim_id": "CLM-MED-001",
+        "product_code": "ZA-GOPD-2022A-90",
+        "product_name": "众安互联网团体门诊急诊医疗保险（0免赔90%赔付版）",
+        "ruleset_id": "RS-HEALTH-ZA-GOPD-2022A90-001",
+        "product_line": "HEALTH",
+        "facts": {
+          "common": {
+            "claimId": "CLM-MED-001",
+            "productCode": "ZA-GOPD-2022A-90",
+            "productLine": "A"
+          },
+          "policy": {
+            "productCode": "ZA-GOPD-2022A-90",
+            "productName": "众安互联网团体门诊急诊医疗保险（0免赔90%赔付版）",
+            "effectiveDate": "2026-03-16",
+            "expiryDate": "2027-03-15",
+            "isWithinCoveragePeriod": true,
+            "coverages": [
+              {
+                "coverage_code": "HLT_INPATIENT",
+                "coverage_name": "门急诊医疗总责任（系统聚合）",
+                "sum_insured": {
+                  "amount": 20000,
+                  "currency": "CNY",
+                  "per_unit": "POLICY_YEAR"
+                },
+                "deductible": 0,
+                "reimbursement_rules": {
+                  "base_ratio": 0.9,
+                  "remark": "用于兼容当前健康险理算责任查找，详细责任仍以医保内/医保外两项为准"
+                }
+              },
+              {
+                "coverage_code": "HLT_OPD_SOCIAL",
+                "coverage_name": "基本医疗保险范围内门急诊医疗费用保险金",
+                "sum_insured": {
+                  "amount": 10000,
+                  "currency": "CNY",
+                  "per_unit": "POLICY_YEAR"
+                },
+                "deductible": 0,
+                "reimbursement_rules": {
+                  "base_ratio": 0.9
+                }
+              },
+              {
+                "coverage_code": "HLT_OPD_NON_SOCIAL",
+                "coverage_name": "基本医疗保险范围外门急诊医疗费用保险金",
+                "sum_insured": {
+                  "amount": 10000,
+                  "currency": "CNY",
+                  "per_unit": "POLICY_YEAR"
+                },
+                "deductible": 0,
+                "reimbursement_rules": {
+                  "base_ratio": 0.9
+                }
+              }
+            ]
+          },
+          "claim": {
+            "accidentDate": "2026-05-20",
+            "reportDate": "2026-03-15",
+            "resultDate": "2026-03-15",
+            "daysFromAccidentToResult": -66,
+            "causeType": "DISEASE",
+            "resultType": "MEDICAL_TREATMENT",
+            "hospitalName": "上海市东方医院",
+            "disabilityGrade": null,
+            "hospitalDays": 0,
+            "diagnosis": "急性阑尾炎；急性弥漫性腹膜炎",
+            "diagnosisNames": [
+              "急性阑尾炎",
+              "急性弥漫性腹膜炎"
+            ],
+            "expenseItems": [
+              {
+                "id": "synthetic-social-medical",
+                "itemName": "医保内门急诊费用",
+                "amount": 145,
+                "totalPrice": 145,
+                "socialInsuranceScope": "IN",
+                "source": "intake-summary"
+              },
+              {
+                "id": "synthetic-non-social-medical",
+                "itemName": "医保外门急诊费用",
+                "amount": 3,
+                "totalPrice": 3,
+                "socialInsuranceScope": "OUT",
+                "source": "intake-summary"
+              }
+            ]
+          },
+          "validation": {
+            "claim.invoice_admission_date_consistent": null,
+            "claim.invoice_discharge_date_consistent": null,
+            "claim.invoice_diagnosis_consistent": null,
+            "claim.invoice_date_not_future": null,
+            "claim.admission_date_not_future": null,
+            "claim.discharge_date_not_future": null,
+            "claim.admission_before_discharge": null,
+            "claim.invoice_after_admission": null
+          }
+        }
+      },
+      "preExistingAssessment": {
+        "processor_id": "pre_existing_condition",
+        "result": "UNCERTAIN",
+        "confidence": 0,
+        "evidence": [],
+        "reasoning": "信息不足，无法自动判断",
+        "historyText": null,
+        "evaluatedAt": "2026-04-04T10:15:47.978Z",
+        "steps": {
+          "history": {
+            "certainty": "UNKNOWN",
+            "text": null,
+            "vote": null,
+            "weight": 0
+          },
+          "timeLogic": {
+            "verdict": "UNKNOWN",
+            "reason": "首诊日期缺失",
+            "firstDiagnosisDate": null,
+            "vote": null,
+            "weight": 0
+          },
+          "ai": {
+            "invoked": false,
+            "skippedReason": "既往史缺失或不详，不触发 AI",
+            "result": null,
+            "confidence": null,
+            "reasoning": "",
+            "voteWeight": 0
+          },
+          "synthesis": {
+            "preAiResult": {
+              "result": "UNCERTAIN",
+              "confidence": 0
+            },
+            "finalResult": {
+              "result": "UNCERTAIN",
+              "confidence": 0
+            },
+            "yesScore": 0,
+            "noScore": 0,
+            "threshold": 0.65
+          }
+        },
+        "source": "AUTO",
+        "input": {
+          "diagnosis": "急性阑尾炎；急性弥漫性腹膜炎",
+          "diagnosisNames": [
+            "急性阑尾炎",
+            "急性弥漫性腹膜炎"
+          ],
+          "pastMedicalHistory": null,
+          "firstDiagnosisDate": null,
+          "policyEffectiveDate": "2026-03-16",
+          "waitingPeriodDays": 0
+        }
+      },
+      "auditTrail": [
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD001",
+          "matched": true
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD004",
+          "matched": true
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD004X",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD006",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD101",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD102",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD103",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD104",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD105",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD106",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD107",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD108",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD109",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD110",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD111",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD112",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD113",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD114",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD115",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD116",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD117",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD118",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD119",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD120",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD121",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD122",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD123",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD124",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD125",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD126",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD127",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD128",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD129",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD130",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD131",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD132",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD133",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD134",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD135",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD002",
+          "matched": true
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD003",
+          "matched": true
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD005",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD007",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD101M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD102M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD103M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD104M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD105M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD106M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD107M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD108M",
+          "matched": true
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD109M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD110M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD111M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD112M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD113M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD114M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD115M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD116M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD117M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD118M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD119M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD120M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD121M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD122M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD123M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD124M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD125M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD126M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD127M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD128M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD129M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD130M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD131M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD132M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD133M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD134M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD135M",
+          "matched": false
+        },
+        {
+          "stage": "LIABILITY",
+          "ruleId": "ZAOPD136",
+          "matched": false
+        },
+        {
+          "stage": "SETTLEMENT",
+          "ruleId": "ZAOPD201",
+          "matched": false
+        },
+        {
+          "stage": "SETTLEMENT",
+          "ruleId": "ZAOPD202",
+          "matched": true
+        },
+        {
+          "stage": "SETTLEMENT",
+          "ruleId": "ZAOPD203",
+          "matched": true
+        },
+        {
+          "stage": "SETTLEMENT",
+          "ruleId": "ZAOPD301",
+          "matched": true
+        },
+        {
+          "stage": "SETTLEMENT",
+          "ruleId": "ZAOPD302",
+          "matched": true
+        },
+        {
+          "stage": "SETTLEMENT",
+          "ruleId": "ZAOPD303",
+          "matched": true
+        },
+        {
+          "stage": "SETTLEMENT",
+          "ruleId": "ZAOPD304",
+          "matched": false
+        },
+        {
+          "stage": "SETTLEMENT",
+          "ruleId": "ZAOPD305",
+          "matched": false
+        },
+        {
+          "stage": "SETTLEMENT",
+          "ruleId": "ZAOPD306",
+          "matched": false
+        },
+        {
+          "stage": "SETTLEMENT",
+          "ruleId": "ZAOPD307",
+          "matched": false
+        }
+      ],
+      "duration": 44
+    },
+    "damageReport": {
+      "reportId": "RPT-1775297748008-be87f8",
+      "claimCaseId": "CLM-MED-001",
+      "generatedAt": "2026-04-04T10:15:48.008Z",
+      "generatedBy": "ai",
+      "items": [
+        {
+          "id": "synthetic-social-medical",
+          "category": "医疗费",
+          "itemName": "医保内门急诊费用",
+          "originalAmount": 145,
+          "approvedAmount": 145,
+          "formula": "核定金额 ¥145.00",
+          "basis": "基于报案汇总金额生成的门急诊费用，暂按可赔费用保留，待后续票据明细补充时再做目录细分；载入原始申报金额"
+        },
+        {
+          "id": "synthetic-non-social-medical",
+          "category": "医疗费",
+          "itemName": "医保外门急诊费用",
+          "originalAmount": 3,
+          "approvedAmount": 3,
+          "formula": "核定金额 ¥3.00",
+          "basis": "基于报案汇总金额生成的门急诊费用，暂按可赔费用保留，待后续票据明细补充时再做目录细分；载入原始申报金额"
+        }
+      ],
+      "subTotal": 148,
+      "liabilityAdjustment": 1,
+      "adjustedAmount": 148,
+      "deductionTotal": 0,
+      "finalAmount": 133.2,
+      "calculationFormula": "损失合计（责任比例待人工确认，未折减）",
+      "regionalStandards": "安徽省 2024年，城镇居民人均可支配收入 ¥47,446/年",
+      "status": "draft",
+      "domainModel": {
+        "claimCaseId": "CLM-MED-001",
+        "productLine": "HEALTH",
+        "claimScenario": "medical_expense",
+        "reviewProfileCode": "medical_expense_reimbursement",
+        "coverageFamily": [
+          "expense",
+          "medical"
+        ],
+        "requiresLiabilityAssessment": false,
+        "requiresExpenseAssessment": true,
+        "requiresBenefitAssessment": false,
+        "requiresDeductionAssessment": false,
+        "requiredModules": [
+          "material_overview",
+          "fact_cards",
+          "decision_trace",
+          "validation",
+          "expense_report"
+        ],
+        "isMedicalScenario": true,
+        "isLiabilityScenario": false,
+        "isBenefitScenario": false,
+        "isAccidentMedicalScenario": false,
+        "isAutoScenario": false
+      },
+      "reportKind": "medical_expense_report",
+      "reportTitle": "医疗费用审核报告",
+      "amountLabels": [
+        "核定费用",
+        "抵扣金额",
+        "报告结论金额"
+      ],
+      "detailSectionTitle": "费用明细",
+      "injuryProfile": null,
+      "liabilityResult": null,
+      "deathProfile": null,
+      "deductionSummary": {
+        "confirmedPaidAmount": 0,
+        "reportedAdvanceAmount": 0,
+        "deductionRecommendedAmount": 0,
+        "deductionTotal": 0,
+        "uniqueTransferCount": 0,
+        "note": "未识别可直接抵扣的已付款项"
+      },
+      "manualReviewItems": [
+        "缺少公安/安监正式责任划分文书，责任比例仍需人工确认",
+        "死亡赔偿金已按统一城镇标准试算，如法院地或统计年度不同需调整地区标准参数"
+      ],
+      "standardsSnapshot": {
+        "region": "安徽省",
+        "year": 2024,
+        "urbanPerCapitaIncome": 47446,
+        "funeralMonthlySalary": 8499.92,
+        "sourceDocument": "2024年《安徽省道路交通事故赔偿标准》",
+        "source": "configured_standard"
+      },
+      "settlementSnapshot": {
+        "deductible": 0,
+        "reimbursementRatio": 1,
+        "payableAmount": 133.2,
+        "settlementDecision": "MANUAL_REVIEW",
+        "medicalReview": null,
+        "policyBinding": {
+          "policyNumber": "PZA202603150001",
+          "insuredMatched": true,
+          "insuredName": "杨秀",
+          "productCode": "ZA-GOPD-2022A-90",
+          "rulesetId": "RS-HEALTH-ZA-GOPD-2022A90-001",
+          "productSource": "CLAIM_CASE"
+        },
+        "coverageBreakdown": [
+          {
+            "coverageCode": "HLT_OPD_SOCIAL",
+            "claimedAmount": 145,
+            "approvedAmount": 130.5,
+            "deductible": 0,
+            "reimbursementRatio": 0.9,
+            "sumInsured": 10000,
+            "status": "MANUAL_REVIEW",
+            "warnings": [
+              {
+                "rule_id": "SYSTEM",
+                "message": "未找到责任 null 对应的保障配置，需人工复核产品责任映射",
+                "category": "COVERAGE_CONFIG"
+              }
+            ]
+          },
+          {
+            "coverageCode": "HLT_OPD_NON_SOCIAL",
+            "claimedAmount": 3,
+            "approvedAmount": 2.7,
+            "deductible": 0,
+            "reimbursementRatio": 0.9,
+            "sumInsured": 10000,
+            "status": "MANUAL_REVIEW",
+            "warnings": [
+              {
+                "rule_id": "SYSTEM",
+                "message": "未找到责任 null 对应的保障配置，需人工复核产品责任映射",
+                "category": "COVERAGE_CONFIG"
+              }
+            ]
+          }
+        ]
+      },
+      "decisionTrace": {
+        "traceId": "trace-CLM-MED-001",
+        "generatedAt": "2026-04-04T10:14:34.273Z",
+        "stages": [
+          {
+            "stage": "material_recognition",
+            "title": "材料识别",
+            "status": "completed",
+            "summary": "共识别 3/3 份材料，形成 0 份结构化摘要",
+            "sourceDocIds": [
+              "mat-1773508535449-wqg0z3050",
+              "mat-1773508535449-8jzm23u4k",
+              "mat-1773508535449-1f7wucee8"
+            ],
+            "facts": [
+              {
+                "label": "材料总数",
+                "value": "3"
+              },
+              {
+                "label": "已识别材料",
+                "value": "3"
+              },
+              {
+                "label": "摘要数量",
+                "value": "0"
+              }
+            ]
+          },
+          {
+            "stage": "medical_fact_aggregation",
+            "title": "医疗事实归纳",
+            "status": "completed",
+            "summary": "检测到 4 个错误、4 个警告；材料校验规则异常 8 项",
+            "sourceDocIds": [],
+            "facts": [
+              {
+                "label": "诊断",
+                "value": "-"
+              },
+              {
+                "label": "医疗费用",
+                "value": "0"
+              },
+              {
+                "label": "住院天数",
+                "value": "0"
+              },
+              {
+                "label": "发票张数",
+                "value": "0"
+              }
+            ]
+          },
+          {
+            "stage": "expense_assessment",
+            "title": "费用核定",
+            "status": "completed",
+            "summary": "尚未识别可核定的医疗费用",
+            "sourceDocIds": [],
+            "facts": [
+              {
+                "label": "医疗费用合计",
+                "value": "0"
+              },
+              {
+                "label": "交通费",
+                "value": "0"
+              },
+              {
+                "label": "护理天数",
+                "value": "0"
+              },
+              {
+                "label": "误工天数",
+                "value": "0"
+              }
+            ]
+          },
+          {
+            "stage": "manual_review",
+            "title": "人工确认与调整",
+            "status": "completed",
+            "summary": "已记录 1 项人工确认/调整动作",
+            "sourceDocIds": [],
+            "facts": [
+              {
+                "label": "修改结构化字段 - 入院日期 (系统用户)",
+                "value": "已处理 @ 2026/3/26 01:18:48"
+              }
+            ],
+            "manualActions": [
+              {
+                "label": "修改结构化字段 - 入院日期",
+                "timestamp": "2026-03-25T17:18:48.685Z",
+                "detail": "",
+                "actor": "系统用户"
+              }
+            ]
+          },
+          {
+            "stage": "damage_calculation",
+            "title": "审核结论",
+            "status": "completed",
+            "summary": "核定费用 148.00，抵扣 0.00，结论金额 133.20",
+            "sourceDocIds": [],
+            "facts": [
+              {
+                "label": "核定费用",
+                "value": "¥148.00"
+              },
+              {
+                "label": "抵扣金额",
+                "value": "¥0.00"
+              },
+              {
+                "label": "报告结论金额",
+                "value": "¥133.20"
+              }
+            ]
+          }
+        ]
+      },
+      "conflicts": [
+        {
+          "type": "date_mismatch",
+          "description": "医疗费发票入院日期与住院病历入院日期一致性 缺少可比对的字段值",
+          "docIds": [
+            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1",
+            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+          ],
+          "severity": "warning",
+          "sourceRuleId": "mv-medical-date-003",
+          "source": "material_validation"
+        },
+        {
+          "type": "date_mismatch",
+          "description": "医疗费发票出院日期与住院病历出院日期一致性 缺少可比对的字段值",
+          "docIds": [
+            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1",
+            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+          ],
+          "severity": "warning",
+          "sourceRuleId": "mv-medical-date-004",
+          "source": "material_validation"
+        },
+        {
+          "type": "validation_conflict",
+          "description": "医疗费发票出院诊断与住院病历出院诊断一致性 缺少可比对的字段值",
+          "docIds": [
+            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1",
+            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+          ],
+          "severity": "warning",
+          "sourceRuleId": "mv-diagnosis-003",
+          "source": "material_validation"
+        },
+        {
+          "type": "validation_conflict",
+          "description": "发票开票日期不能是未来日期 缺少可比对的字段值",
+          "docIds": [
+            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1"
+          ],
+          "severity": "error",
+          "sourceRuleId": "mv-date-future-001",
+          "source": "material_validation"
+        },
+        {
+          "type": "validation_conflict",
+          "description": "入院日期不能是未来日期 缺少可比对的字段值",
+          "docIds": [
+            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+          ],
+          "severity": "error",
+          "sourceRuleId": "mv-date-future-002",
+          "source": "material_validation"
+        },
+        {
+          "type": "validation_conflict",
+          "description": "出院日期不能是未来日期 缺少可比对的字段值",
+          "docIds": [
+            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+          ],
+          "severity": "error",
+          "sourceRuleId": "mv-date-future-003",
+          "source": "material_validation"
+        },
+        {
+          "type": "validation_conflict",
+          "description": "入院日期应早于或等于出院日期 缺少可比对的字段值",
+          "docIds": [
+            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0",
+            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+          ],
+          "severity": "error",
+          "sourceRuleId": "mv-date-order-001",
+          "source": "material_validation"
+        },
+        {
+          "type": "date_mismatch",
+          "description": "发票开票日期应晚于或等于入院日期 缺少可比对的字段值",
+          "docIds": [
+            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1",
+            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+          ],
+          "severity": "warning",
+          "sourceRuleId": "mv-timeline-002",
+          "source": "material_validation"
+        }
+      ]
+    },
+    "updatedAt": "2026-04-04T10:15:48.020Z",
+    "validationFacts": {
+      "claim.invoice_admission_date_consistent": null,
+      "claim.invoice_discharge_date_consistent": null,
+      "claim.invoice_diagnosis_consistent": null,
+      "claim.invoice_date_not_future": null,
+      "claim.admission_date_not_future": null,
+      "claim.discharge_date_not_future": null,
+      "claim.admission_before_discharge": null,
+      "claim.invoice_after_admission": null
+    },
+    "materialValidationResults": [
+      {
+        "type": "medical_date",
+        "passed": false,
+        "severity": "warning",
+        "message": "医疗费发票入院日期与住院病历入院日期一致性 缺少可比对的字段值",
+        "details": {
+          "ruleId": "mv-medical-date-003",
+          "reasonCode": "INVOICE_ADMISSION_DATE_MISMATCH",
+          "field": "admissionDate <> admission_date",
+          "relatedDocuments": [
+            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1",
+            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+          ]
+        }
+      },
+      {
+        "type": "medical_date",
+        "passed": false,
+        "severity": "warning",
+        "message": "医疗费发票出院日期与住院病历出院日期一致性 缺少可比对的字段值",
+        "details": {
+          "ruleId": "mv-medical-date-004",
+          "reasonCode": "INVOICE_DISCHARGE_DATE_MISMATCH",
+          "field": "dischargeDate <> discharge_date",
+          "relatedDocuments": [
+            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1",
+            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+          ]
+        }
+      },
+      {
+        "type": "diagnosis",
+        "passed": false,
+        "severity": "warning",
+        "message": "医疗费发票出院诊断与住院病历出院诊断一致性 缺少可比对的字段值",
+        "details": {
+          "ruleId": "mv-diagnosis-003",
+          "reasonCode": "INVOICE_INPATIENT_DIAGNOSIS_MISMATCH",
+          "field": "dischargeDiagnosis <> discharge_diagnosis",
+          "relatedDocuments": [
+            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1",
+            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+          ]
+        }
+      },
+      {
+        "type": "date_consistency",
+        "passed": false,
+        "severity": "error",
+        "message": "发票开票日期不能是未来日期 缺少可比对的字段值",
+        "details": {
+          "ruleId": "mv-date-future-001",
+          "reasonCode": "INVOICE_DATE_IN_FUTURE",
+          "field": "invoiceDate",
+          "relatedDocuments": [
+            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1"
+          ]
+        }
+      },
+      {
+        "type": "date_consistency",
+        "passed": false,
+        "severity": "error",
+        "message": "入院日期不能是未来日期 缺少可比对的字段值",
+        "details": {
+          "ruleId": "mv-date-future-002",
+          "reasonCode": "ADMISSION_DATE_IN_FUTURE",
+          "field": "admissionDate",
+          "relatedDocuments": [
+            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+          ]
+        }
+      },
+      {
+        "type": "date_consistency",
+        "passed": false,
+        "severity": "error",
+        "message": "出院日期不能是未来日期 缺少可比对的字段值",
+        "details": {
+          "ruleId": "mv-date-future-003",
+          "reasonCode": "DISCHARGE_DATE_IN_FUTURE",
+          "field": "dischargeDate",
+          "relatedDocuments": [
+            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+          ]
+        }
+      },
+      {
+        "type": "date_consistency",
+        "passed": false,
+        "severity": "error",
+        "message": "入院日期应早于或等于出院日期 缺少可比对的字段值",
+        "details": {
+          "ruleId": "mv-date-order-001",
+          "reasonCode": "ADMISSION_AFTER_DISCHARGE",
+          "field": "admissionDate <> dischargeDate",
+          "relatedDocuments": [
+            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0",
+            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+          ]
+        }
+      },
+      {
+        "type": "timeline",
+        "passed": false,
+        "severity": "warning",
+        "message": "发票开票日期应晚于或等于入院日期 缺少可比对的字段值",
+        "details": {
+          "ruleId": "mv-timeline-002",
+          "reasonCode": "INVOICE_BEFORE_ADMISSION",
+          "field": "invoiceDate <> admissionDate",
+          "relatedDocuments": [
+            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1",
+            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+          ]
+        }
+      }
+    ],
+    "repairedAt": "2026-04-04T10:14:34.273Z"
+  },
+  {
+    "id": "import-1775309704622",
+    "taskId": "task-646b441a-4d0a-4d63-b333-626290ab260c",
+    "claimCaseId": "CLM-MED-001",
+    "productCode": "ZA-GOPD-2022A-90",
+    "importedAt": "2026-04-04T13:35:04.622Z",
+    "documents": [
+      {
+        "documentId": "task-646b441a-4d0a-4d63-b333-626290ab260c-0",
+        "fileName": "Weixin Image_20260315010815_170_66.jpg",
+        "fileType": "image/jpeg",
+        "mimeType": "image/jpeg",
+        "ossKey": "claims/CLM-MED-001/offline-import/12867941-8234-4488-b730-4c7f36a808eb-Weixin_Image_20260315010815_170_66.jpg",
+        "classification": {
+          "materialId": "mat-11",
+          "materialName": "门（急）诊病历",
+          "confidence": 0.95
+        },
+        "status": "completed",
+        "structuredData": {
+          "hospital_name": "上海市东方医院 环龙分",
+          "department": "骨科",
+          "visit_date": "2005-03-01",
+          "patient_name": "",
+          "chief_complaint": "右上腹痛半年，胃镜检查提示胃溃疡（？）。",
+          "present_illness": "患者近一月来出现腹胀、烧心，伴反酸嗳气。食欲",
+          "diagnosis": "1. 胃炎及胃气肿。",
+          "treatment": "",
+          "doctor_name": ""
+        },
+        "errorMessage": null
+      },
+      {
+        "documentId": "task-646b441a-4d0a-4d63-b333-626290ab260c-2",
+        "fileName": "Weixin Image_20260315010816_171_66.jpg",
+        "fileType": "image/jpeg",
+        "mimeType": "image/jpeg",
+        "ossKey": "claims/CLM-MED-001/offline-import/0d892a99-1163-44e7-93de-cdd892e9f98d-Weixin_Image_20260315010816_171_66.jpg",
+        "classification": {
+          "materialId": "mat-20",
+          "materialName": "医疗费发票",
+          "confidence": 0.9
+        },
+        "status": "completed",
+        "structuredData": {
+          "hospital_name": "上海市东方医院",
+          "patient_name": "杨霁",
+          "invoice_number": "0799287390",
+          "invoice_code": "31060125",
+          "invoice_date": "2025-03-01",
+          "total_amount": 18,
+          "self_paid": 18,
+          "insurance_paid": 0,
+          "personal_account": 0
+        },
+        "documentSummary": {
+          "summaryType": "expense_invoice",
+          "docId": "task-646b441a-4d0a-4d63-b333-626290ab260c-2",
+          "hospitalName": "上海市东方医院",
+          "patientName": "杨霁",
+          "invoiceNumber": "0799287390",
+          "invoiceDate": "2025-03-01",
+          "totalAmount": 18,
+          "selfPaid": 18,
+          "breakdown": [
+            {
+              "category": "门诊费",
+              "amount": 18
+            }
+          ]
+        },
+        "errorMessage": null
+      },
+      {
+        "documentId": "task-646b441a-4d0a-4d63-b333-626290ab260c-1",
+        "fileName": "Weixin Image_20260315010817_172_66.jpg",
+        "fileType": "image/jpeg",
+        "mimeType": "image/jpeg",
+        "ossKey": "claims/CLM-MED-001/offline-import/41aaf008-18f0-4352-a20f-1934deeac291-Weixin_Image_20260315010817_172_66.jpg",
+        "classification": {
+          "materialId": "mat-20",
+          "materialName": "医疗费发票",
+          "confidence": 0.95
+        },
+        "status": "completed",
+        "structuredData": {
+          "hospital_name": "上海市东方医院",
+          "patient_name": "杨霁",
+          "invoice_number": "0799289513",
+          "invoice_code": "31060125",
+          "invoice_date": "2025-03-01",
+          "total_amount": 130,
+          "self_paid": 130,
+          "insurance_paid": 0,
+          "personal_account": 0
+        },
+        "documentSummary": {
+          "summaryType": "expense_invoice",
+          "docId": "task-646b441a-4d0a-4d63-b333-626290ab260c-1",
+          "hospitalName": "上海市东方医院",
+          "patientName": "杨霁",
+          "invoiceNumber": "0799289513",
+          "invoiceDate": "2025-03-01",
+          "totalAmount": 130,
+          "selfPaid": 130,
+          "breakdown": [
+            {
+              "category": "检查费",
+              "amount": 80
+            },
+            {
+              "category": "药品费",
+              "amount": 50
+            }
+          ]
+        },
+        "errorMessage": null
+      }
+    ],
+    "aggregation": {
+      "claimCaseId": "CLM-MED-001",
+      "aggregatedAt": "2026-04-04T15:41:33.630Z",
+      "injuryProfile": {
+        "injuryDescription": "急性阑尾炎；急性弥漫性腹膜炎",
+        "hospitalizationDays": 0,
+        "visitType": "门诊",
+        "diagnosis": "急性阑尾炎；急性弥漫性腹膜炎",
+        "sourceDocIds": [
+          "task-646b441a-4d0a-4d63-b333-626290ab260c-0"
+        ]
+      },
+      "liabilityResult": null,
+      "expenseAggregation": {
+        "medicalTotal": 148,
+        "transportationTotal": 0,
+        "nursingDays": 0,
+        "lostWorkDays": 0,
+        "sourceDocIds": [
+          "task-646b441a-4d0a-4d63-b333-626290ab260c-2",
+          "task-646b441a-4d0a-4d63-b333-626290ab260c-1"
+        ]
+      },
+      "deathProfile": null,
+      "caseReports": [],
+      "conflictsDetected": [],
+      "validationFacts": {
+        "claim.invoice_date_not_future": true
+      },
+      "validationResults": [
+        {
+          "type": "date_consistency",
+          "passed": true,
+          "severity": "info",
+          "message": "发票开票日期不能是未来日期 通过",
+          "details": {
+            "ruleId": "mv-date-future-001",
+            "reasonCode": "INVOICE_DATE_IN_FUTURE",
+            "expected": null,
+            "actual": "2025-03-01",
+            "field": "invoiceDate",
+            "relatedDocuments": [
+              "task-646b441a-4d0a-4d63-b333-626290ab260c-2"
+            ],
+            "failureAction": "MANUAL_REVIEW"
+          }
+        }
+      ],
+      "factModel": {
+        "generatedAt": "2026-04-04T14:05:27.511Z",
+        "injuryProfile": {
+          "injuryDescription": "待补充",
+          "diagnoses": [],
+          "diagnosisNames": [],
+          "primaryDiagnosisDate": null,
+          "disabilityLevel": null,
+          "hospitalizationDays": 0,
+          "treatmentTimeline": [],
+          "pastHistory": null,
+          "firstDiagnosisDate": null
+        },
+        "liabilityResult": null,
+        "expenseAggregation": {
+          "medicalTotal": 148,
+          "nursingDays": 0,
+          "lostWorkDays": 0,
+          "monthlyIncome": 0,
+          "transportationTotal": 0,
+          "assessmentFees": 0,
+          "sourceDocIds": [
+            "task-646b441a-4d0a-4d63-b333-626290ab260c-1",
+            "task-646b441a-4d0a-4d63-b333-626290ab260c-2"
+          ]
+        },
+        "deathProfile": null,
+        "caseReports": [],
+        "conflictsDetected": [
+          {
+            "type": "identity_mismatch",
+            "description": "发票患者姓名与病历患者姓名一致性 缺少可比对的字段值",
+            "docIds": [
+              "task-646b441a-4d0a-4d63-b333-626290ab260c-1",
+              "task-646b441a-4d0a-4d63-b333-626290ab260c-0"
+            ],
+            "severity": "warning",
+            "sourceRuleId": "mv-identity-001",
+            "source": "material_validation"
+          }
+        ],
+        "validationFacts": {
+          "claim.invoice_patient_name_consistent": null,
+          "claim.invoice_date_not_future": true
+        },
+        "validationResults": [
+          {
+            "type": "identity",
+            "passed": false,
+            "severity": "warning",
+            "message": "发票患者姓名与病历患者姓名一致性 缺少可比对的字段值",
+            "details": {
+              "ruleId": "mv-identity-001",
+              "reasonCode": "INVOICE_PATIENT_NAME_MISMATCH",
+              "field": "name <> patient_name",
+              "relatedDocuments": [
+                "task-646b441a-4d0a-4d63-b333-626290ab260c-1",
+                "task-646b441a-4d0a-4d63-b333-626290ab260c-0"
+              ]
+            }
+          },
+          {
+            "type": "date_consistency",
+            "passed": true,
+            "severity": "info",
+            "message": "发票开票日期不能是未来日期 通过",
+            "details": {
+              "ruleId": "mv-date-future-001",
+              "reasonCode": "INVOICE_DATE_IN_FUTURE",
+              "expected": null,
+              "actual": "2025-03-01",
+              "field": "invoiceDate",
+              "relatedDocuments": [
+                "task-646b441a-4d0a-4d63-b333-626290ab260c-1"
+              ],
+              "failureAction": "MANUAL_REVIEW"
+            }
+          }
+        ],
+        "canonicalFacts": {
+          "claim.hospital_name": "上海市东方医院 环龙分",
+          "claim.accident_date": "2005-03-01",
+          "claim.diagnosis": "1. 胃炎及胃气肿。"
+        },
+        "canonicalFactSources": {
+          "claim.hospital_name": {
+            "documentId": "task-646b441a-4d0a-4d63-b333-626290ab260c-0",
+            "materialId": "mat-11",
+            "path": "hospital_name"
+          },
+          "claim.accident_date": {
+            "documentId": "task-646b441a-4d0a-4d63-b333-626290ab260c-0",
+            "materialId": "mat-11",
+            "path": "visit_date"
+          },
+          "claim.diagnosis": {
+            "documentId": "task-646b441a-4d0a-4d63-b333-626290ab260c-0",
+            "materialId": "mat-11",
+            "path": "diagnosis"
+          }
+        },
+        "handlingProfile": {
+          "profileCode": "medical_expense_reimbursement",
+          "profileName": "医疗费用报销案件",
+          "description": "适用于医疗险、意外医疗及门急诊/住院费用报销案件，重点关注保险责任、票据、目录匹配和免赔/比例规则。",
+          "factSchema": {
+            "groups": [
+              {
+                "code": "policy_facts",
+                "name": "保单事实",
+                "fields": [
+                  "insuranceType",
+                  "productCode",
+                  "policyNumber",
+                  "coverageCode",
+                  "deductible",
+                  "reimbursementRatio"
+                ]
+              },
+              {
+                "code": "medical_facts",
+                "name": "就医事实",
+                "fields": [
+                  "visitDate",
+                  "hospitalName",
+                  "diagnosis",
+                  "hospitalizationDays"
+                ]
+              },
+              {
+                "code": "expense_facts",
+                "name": "费用事实",
+                "fields": [
+                  "medicalExpense",
+                  "catalogMatchedAmount",
+                  "selfPaidAmount",
+                  "invoiceCount"
+                ]
+              }
+            ]
+          },
+          "processingStrategy": {
+            "extract_fact": [
+              "mat-20",
+              "mat-21"
+            ],
+            "summarize": [
+              "mat-7"
+            ],
+            "ocr_only": [
+              "mat-1",
+              "mat-2",
+              "mat-6"
+            ],
+            "archive_only": [
+              "video"
+            ]
+          },
+          "uiModules": {
+            "factCards": [
+              "medical_summary",
+              "expense_summary"
+            ],
+            "editableFacts": [
+              "invoice_adjustment"
+            ],
+            "reportSections": [
+              "decision_summary",
+              "expense_items",
+              "decision_trace",
+              "pending_reviews"
+            ]
+          },
+          "reviewTasks": [],
+          "context": {
+            "claimCaseId": "CLM-MED-001",
+            "productCode": "ZA-GOPD-2022A-90",
+            "insuranceType": "众安互联网团体门诊急诊医疗保险（0免赔90%赔付版）",
+            "accidentReason": "疾病门诊",
+            "deathConfirmed": false,
+            "hasLiabilityEvidence": false,
+            "hasLiabilityRatio": false,
+            "hasNoLiabilityEvidence": true,
+            "hasIdentityChainEvidence": false,
+            "hasRecognizedPayment": false,
+            "hasMedicalExpense": false,
+            "hasRegionalStandards": true,
+            "hasClaimantRelationship": false,
+            "materialIds": [
+              "mat-11",
+              "mat-20"
+            ],
+            "recognizedPayment": 0,
+            "medicalExpense": 0,
+            "claimantsCount": 0,
+            "matchesLiabilityReason": false,
+            "matchesMedicalClaim": true
+          },
+          "domainModel": {
+            "claimCaseId": "CLM-MED-001",
+            "productLine": "HEALTH",
+            "claimScenario": "medical_expense",
+            "reviewProfileCode": "medical_expense_reimbursement",
+            "coverageFamily": [
+              "expense",
+              "medical"
+            ],
+            "requiresLiabilityAssessment": false,
+            "requiresExpenseAssessment": true,
+            "requiresBenefitAssessment": false,
+            "requiresDeductionAssessment": false,
+            "requiredModules": [
+              "material_overview",
+              "fact_cards",
+              "decision_trace",
+              "validation",
+              "expense_report"
+            ],
+            "isMedicalScenario": true,
+            "isLiabilityScenario": false,
+            "isBenefitScenario": false,
+            "isAccidentMedicalScenario": false,
+            "isAutoScenario": false
+          }
+        },
+        "regionalStandards": {
+          "region": "安徽省",
+          "year": 2024,
+          "urbanPerCapitaIncome": 47446,
+          "funeralMonthlySalary": 8499.92,
+          "sourceDocument": "2024年《安徽省道路交通事故赔偿标准》",
+          "source": "configured_standard"
+        },
+        "liabilityApportionment": null,
+        "liabilityEvidence": [],
+        "identityChainEvidence": [],
+        "incidentStatements": [],
+        "interviewRecords": [],
+        "policeCallRecords": [],
+        "paymentEvidence": [],
+        "paymentEvidenceNormalized": [],
+        "paymentSummary": {
+          "confirmedPaidAmount": 0,
+          "reportedAdvanceAmount": 0,
+          "deductionRecommendedAmount": 0,
+          "deductionTotal": 0,
+          "uniqueTransferCount": 0,
+          "note": "未识别可直接抵扣的已付款项"
+        },
+        "compulsoryInsuranceOffset": {
+          "applicable": false,
+          "deductionTotal": 0,
+          "reason": "医疗费用报销案件，不涉及交强险扣减"
+        },
+        "manualReviewItems": [],
+        "legacyAliases": {}
+      },
+      "liabilitySuggestion": {
+        "status": "PASS",
+        "conclusion": "医疗费用报销案件，无需确认责任比例",
+        "confidence": 1,
+        "basis": []
+      },
+      "aggregationSummary": "门急诊医疗费用报销案件，已归集发票 2 张，合计 ¥148.00",
+      "regionalStandards": {
+        "region": "安徽省",
+        "year": 2024,
+        "urbanPerCapitaIncome": 47446,
+        "funeralMonthlySalary": 8499.92,
+        "sourceDocument": "2024年《安徽省道路交通事故赔偿标准》",
+        "source": "configured_standard"
+      },
+      "liabilityApportionment": null,
+      "liabilityEvidence": [],
+      "paymentEvidence": [],
+      "paymentEvidenceNormalized": [],
+      "paymentSummary": {
+        "confirmedPaidAmount": 0,
+        "reportedAdvanceAmount": 0,
+        "deductionRecommendedAmount": 0,
+        "deductionTotal": 0,
+        "uniqueTransferCount": 0,
+        "note": "未识别可直接抵扣的已付款项"
+      },
+      "deductionSummary": {
+        "confirmedPaidAmount": 0,
+        "reportedAdvanceAmount": 0,
+        "deductionRecommendedAmount": 0,
+        "deductionTotal": 0,
+        "uniqueTransferCount": 0,
+        "note": "未识别可直接抵扣的已付款项"
+      },
+      "compulsoryInsuranceOffset": {
+        "applicable": false,
+        "deductionTotal": 0,
+        "reason": "医疗费用报销案件，不涉及交强险扣减"
+      },
+      "identityChainEvidence": [],
+      "incidentStatements": [],
+      "interviewRecords": [],
+      "policeCallRecords": [],
+      "manualReviewItems": [],
+      "factConfirmations": {},
+      "handlingProfile": {
+        "profileCode": "medical_expense_reimbursement",
+        "profileName": "医疗费用报销案件",
+        "description": "适用于医疗险、意外医疗及门急诊/住院费用报销案件，重点关注保险责任、票据、目录匹配和免赔/比例规则。",
+        "factSchema": {
+          "groups": [
+            {
+              "code": "policy_facts",
+              "name": "保单事实",
+              "fields": [
+                "insuranceType",
+                "productCode",
+                "policyNumber",
+                "coverageCode",
+                "deductible",
+                "reimbursementRatio"
+              ]
+            },
+            {
+              "code": "medical_facts",
+              "name": "就医事实",
+              "fields": [
+                "visitDate",
+                "hospitalName",
+                "diagnosis",
+                "hospitalizationDays"
+              ]
+            },
+            {
+              "code": "expense_facts",
+              "name": "费用事实",
+              "fields": [
+                "medicalExpense",
+                "catalogMatchedAmount",
+                "selfPaidAmount",
+                "invoiceCount"
+              ]
+            }
+          ]
+        },
+        "processingStrategy": {
+          "extract_fact": [
+            "mat-20",
+            "mat-21"
+          ],
+          "summarize": [
+            "mat-7"
+          ],
+          "ocr_only": [
+            "mat-1",
+            "mat-2",
+            "mat-6"
+          ],
+          "archive_only": [
+            "video"
+          ]
+        },
+        "uiModules": {
+          "factCards": [
+            "medical_summary",
+            "expense_summary"
+          ],
+          "editableFacts": [
+            "invoice_adjustment"
+          ],
+          "reportSections": [
+            "decision_summary",
+            "expense_items",
+            "decision_trace",
+            "pending_reviews"
+          ]
+        },
+        "reviewTasks": [],
+        "context": {
+          "claimCaseId": "CLM-MED-001",
+          "productCode": "ZA-GOPD-2022A-90",
+          "insuranceType": "众安互联网团体门诊急诊医疗保险（0免赔90%赔付版）",
+          "accidentReason": "疾病门诊",
+          "deathConfirmed": false,
+          "hasLiabilityEvidence": false,
+          "hasLiabilityRatio": false,
+          "hasNoLiabilityEvidence": true,
+          "hasIdentityChainEvidence": false,
+          "hasRecognizedPayment": false,
+          "hasMedicalExpense": false,
+          "hasRegionalStandards": true,
+          "hasClaimantRelationship": false,
+          "materialIds": [
+            "mat-11",
+            "mat-20"
+          ],
+          "recognizedPayment": 0,
+          "medicalExpense": 0,
+          "claimantsCount": 0,
+          "matchesLiabilityReason": false,
+          "matchesMedicalClaim": true
+        },
+        "domainModel": {
+          "claimCaseId": "CLM-MED-001",
+          "productLine": "HEALTH",
+          "claimScenario": "medical_expense",
+          "reviewProfileCode": "medical_expense_reimbursement",
+          "coverageFamily": [
+            "expense",
+            "medical"
+          ],
+          "requiresLiabilityAssessment": false,
+          "requiresExpenseAssessment": true,
+          "requiresBenefitAssessment": false,
+          "requiresDeductionAssessment": false,
+          "requiredModules": [
+            "material_overview",
+            "fact_cards",
+            "decision_trace",
+            "validation",
+            "expense_report"
+          ],
+          "isMedicalScenario": true,
+          "isLiabilityScenario": false,
+          "isBenefitScenario": false,
+          "isAccidentMedicalScenario": false,
+          "isAutoScenario": false
+        }
+      },
+      "decisionTrace": {
+        "traceId": "trace-CLM-MED-001",
+        "generatedAt": "2026-04-04T15:41:33.695Z",
+        "domainModel": {
+          "claimCaseId": "CLM-MED-001",
+          "productLine": "HEALTH",
+          "claimScenario": "medical_expense",
+          "reviewProfileCode": "medical_expense_reimbursement",
+          "coverageFamily": [
+            "expense",
+            "medical"
+          ],
+          "requiresLiabilityAssessment": false,
+          "requiresExpenseAssessment": true,
+          "requiresBenefitAssessment": false,
+          "requiresDeductionAssessment": false,
+          "requiredModules": [
+            "material_overview",
+            "fact_cards",
+            "decision_trace",
+            "validation",
+            "expense_report"
+          ],
+          "isMedicalScenario": true,
+          "isLiabilityScenario": false,
+          "isBenefitScenario": false,
+          "isAccidentMedicalScenario": false,
+          "isAutoScenario": false
+        },
+        "claimScenario": "medical_expense",
+        "stages": [
+          {
+            "stage": "material_recognition",
+            "title": "材料识别",
+            "status": "completed",
+            "summary": "共识别 3/3 份材料，形成 0 份结构化摘要",
+            "sourceDocIds": [
+              "mat-1773508535449-wqg0z3050",
+              "mat-1773508535449-8jzm23u4k",
+              "mat-1773508535449-1f7wucee8"
+            ],
+            "facts": [
+              {
+                "label": "材料总数",
+                "value": "3"
+              },
+              {
+                "label": "已识别材料",
+                "value": "3"
+              },
+              {
+                "label": "摘要数量",
+                "value": "0"
+              }
+            ]
+          },
+          {
+            "stage": "medical_fact_aggregation",
+            "title": "医疗事实归纳",
+            "status": "completed",
+            "summary": "聚合完成，请手动核实详情",
+            "sourceDocIds": [],
+            "facts": [
+              {
+                "label": "诊断",
+                "value": "-"
+              },
+              {
+                "label": "医疗费用",
+                "value": "0"
+              },
+              {
+                "label": "住院天数",
+                "value": "0"
+              },
+              {
+                "label": "发票张数",
+                "value": "0"
+              }
+            ]
+          },
+          {
+            "stage": "expense_assessment",
+            "title": "费用核定",
+            "status": "completed",
+            "summary": "尚未识别可核定的医疗费用",
+            "sourceDocIds": [],
+            "facts": [
+              {
+                "label": "医疗费用合计",
+                "value": "0"
+              },
+              {
+                "label": "交通费",
+                "value": "0"
+              },
+              {
+                "label": "护理天数",
+                "value": "0"
+              },
+              {
+                "label": "误工天数",
+                "value": "0"
+              }
+            ]
+          },
+          {
+            "stage": "manual_review",
+            "title": "人工确认与调整",
+            "status": "completed",
+            "summary": "已记录 1 项人工确认/调整动作",
+            "sourceDocIds": [],
+            "facts": [
+              {
+                "label": "修改结构化字段 - 入院日期 (系统用户)",
+                "value": "已处理 @ 2026/3/26 01:18:48"
+              }
+            ],
+            "manualActions": [
+              {
+                "label": "修改结构化字段 - 入院日期",
+                "timestamp": "2026-03-25T17:18:48.685Z",
+                "detail": "",
+                "actor": "系统用户"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "completeness": {
+      "isComplete": true,
+      "completenessScore": 100,
+      "requiredMaterials": [
+        "医疗费发票",
+        "门（急）诊病历"
+      ],
+      "requiredMaterialIds": [
+        "mat-20",
+        "mat-11"
+      ],
+      "providedMaterials": [
+        "image/jpeg",
+        "mat-11",
+        "mat-20"
+      ],
+      "missingMaterials": [],
+      "missingMaterialIds": [],
+      "optionalMaterials": [],
+      "warnings": []
+    },
+    "reviewResult": {
+      "decision": "APPROVE",
+      "intakeDecision": "PASS",
+      "liabilityDecision": "ACCEPT",
+      "assessmentDecision": "ASSESSED",
+      "settlementDecision": "PAY",
       "claimType": "HEALTH",
       "coverageResults": [
         {
@@ -6944,42 +10183,24 @@
           "warnings": []
         }
       ],
-      "reasonCodes": [
-        "INVOICE_PATIENT_NAME_MISMATCH",
-        "WARN_1"
-      ],
-      "warnings": [
-        "发票患者姓名与病历患者姓名不一致，需人工复核。"
-      ],
-      "manualReviewReasons": [
-        {
-          "code": "INVOICE_PATIENT_NAME_MISMATCH",
-          "stage": "INTAKE",
-          "source": "mv-identity-001",
-          "category": "identity",
-          "message": "发票患者姓名与病历患者姓名不一致，需人工复核。",
-          "metadata": {
-            "field": "claim.patient_name EQ claim.patient_name",
-            "failureAction": "MANUAL_REVIEW"
-          }
-        }
-      ],
+      "reasonCodes": [],
+      "warnings": [],
+      "manualReviewReasons": [],
       "missingMaterials": [],
       "materialValidationResults": [
         {
-          "type": "identity",
-          "passed": false,
-          "severity": "warning",
-          "message": "发票患者姓名与病历患者姓名不一致，需人工复核。",
+          "type": "date_consistency",
+          "passed": true,
+          "severity": "info",
+          "message": "发票开票日期不能是未来日期 通过",
           "details": {
-            "ruleId": "mv-identity-001",
-            "reasonCode": "INVOICE_PATIENT_NAME_MISMATCH",
-            "expected": "马华",
-            "actual": "杨霁",
-            "field": "claim.patient_name EQ claim.patient_name",
+            "ruleId": "mv-date-future-001",
+            "reasonCode": "INVOICE_DATE_IN_FUTURE",
+            "expected": null,
+            "actual": "2025-03-01",
+            "field": "invoiceDate",
             "relatedDocuments": [
-              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1",
-              "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+              "task-646b441a-4d0a-4d63-b333-626290ab260c-2"
             ],
             "failureAction": "MANUAL_REVIEW"
           }
@@ -7121,7 +10342,78 @@
         "warnings": [],
         "needsManualReview": false,
         "manualReviewReasons": [],
-        "fraudFlagged": false
+        "fraudFlagged": false,
+        "preExistingAssessment": {
+          "processor_id": "pre_existing_condition",
+          "result": "UNCERTAIN",
+          "confidence": 0,
+          "evidence": [],
+          "reasoning": "信息不足，无法自动判断",
+          "historyText": null,
+          "evaluatedAt": "2026-04-04T16:12:52.248Z",
+          "steps": {
+            "history": {
+              "certainty": "UNKNOWN",
+              "text": null,
+              "vote": null,
+              "weight": 0
+            },
+            "timeLogic": {
+              "verdict": "UNKNOWN",
+              "reason": "首诊日期缺失",
+              "firstDiagnosisDate": null,
+              "vote": null,
+              "weight": 0
+            },
+            "ai": {
+              "invoked": false,
+              "skippedReason": "既往史缺失或不详，不触发 AI",
+              "result": null,
+              "confidence": null,
+              "reasoning": "",
+              "voteWeight": 0
+            },
+            "synthesis": {
+              "preAiResult": {
+                "result": "UNCERTAIN",
+                "confidence": 0
+              },
+              "finalResult": {
+                "result": "UNCERTAIN",
+                "confidence": 0
+              },
+              "yesScore": 0,
+              "noScore": 0,
+              "threshold": 0.65
+            }
+          },
+          "source": "AUTO",
+          "input": {
+            "diagnosis": "急性阑尾炎；急性弥漫性腹膜炎",
+            "diagnosisNames": [
+              "急性阑尾炎",
+              "急性弥漫性腹膜炎"
+            ],
+            "pastMedicalHistory": null,
+            "firstDiagnosisDate": null,
+            "policyEffectiveDate": "2026-03-16",
+            "waitingPeriodDays": 0
+          },
+          "uncertainResolution": {
+            "action": "ASSUME_FALSE",
+            "matchedRule": {
+              "when": {
+                "product_line": "HEALTH",
+                "claim_scenario": "medical_expense",
+                "max_claim_amount": 5000
+              },
+              "action": "ASSUME_FALSE"
+            },
+            "productLine": "HEALTH",
+            "claimScenario": "medical_expense",
+            "claimAmount": 148
+          }
+        }
       },
       "amount": {
         "totalClaimable": 148,
@@ -7324,7 +10616,7 @@
             "rulesetId": "RS-HEALTH-ZA-GOPD-2022A90-001",
             "productSource": "CLAIM_CASE"
           },
-          "duration": 27
+          "duration": 8
         },
         "itemBreakdown": [
           {
@@ -7509,24 +10801,14 @@
             "required": true
           },
           {
-            "id": "mat-21",
-            "name": "费用明细清单",
-            "required": true
-          },
-          {
             "id": "mat-11",
             "name": "门（急）诊病历",
-            "required": true
-          },
-          {
-            "id": "mat-13",
-            "name": "诊断证明书",
             "required": true
           }
         ],
         "missingMaterials": [],
-        "uploadedCount": 4,
-        "totalRequired": 4
+        "uploadedCount": 2,
+        "totalRequired": 2
       },
       "ruleTrace": [
         "ZAOPD001",
@@ -7635,8 +10917,79 @@
             ]
           },
           "validation": {
-            "claim.invoice_patient_name_consistent": false
+            "claim.invoice_date_not_future": true
           }
+        }
+      },
+      "preExistingAssessment": {
+        "processor_id": "pre_existing_condition",
+        "result": "UNCERTAIN",
+        "confidence": 0,
+        "evidence": [],
+        "reasoning": "信息不足，无法自动判断",
+        "historyText": null,
+        "evaluatedAt": "2026-04-04T16:12:52.248Z",
+        "steps": {
+          "history": {
+            "certainty": "UNKNOWN",
+            "text": null,
+            "vote": null,
+            "weight": 0
+          },
+          "timeLogic": {
+            "verdict": "UNKNOWN",
+            "reason": "首诊日期缺失",
+            "firstDiagnosisDate": null,
+            "vote": null,
+            "weight": 0
+          },
+          "ai": {
+            "invoked": false,
+            "skippedReason": "既往史缺失或不详，不触发 AI",
+            "result": null,
+            "confidence": null,
+            "reasoning": "",
+            "voteWeight": 0
+          },
+          "synthesis": {
+            "preAiResult": {
+              "result": "UNCERTAIN",
+              "confidence": 0
+            },
+            "finalResult": {
+              "result": "UNCERTAIN",
+              "confidence": 0
+            },
+            "yesScore": 0,
+            "noScore": 0,
+            "threshold": 0.65
+          }
+        },
+        "source": "AUTO",
+        "input": {
+          "diagnosis": "急性阑尾炎；急性弥漫性腹膜炎",
+          "diagnosisNames": [
+            "急性阑尾炎",
+            "急性弥漫性腹膜炎"
+          ],
+          "pastMedicalHistory": null,
+          "firstDiagnosisDate": null,
+          "policyEffectiveDate": "2026-03-16",
+          "waitingPeriodDays": 0
+        },
+        "uncertainResolution": {
+          "action": "ASSUME_FALSE",
+          "matchedRule": {
+            "when": {
+              "product_line": "HEALTH",
+              "claim_scenario": "medical_expense",
+              "max_claim_amount": 5000
+            },
+            "action": "ASSUME_FALSE"
+          },
+          "productLine": "HEALTH",
+          "claimScenario": "medical_expense",
+          "claimAmount": 148
         }
       },
       "auditTrail": [
@@ -8086,12 +11439,12 @@
           "matched": false
         }
       ],
-      "duration": 103
+      "duration": 36
     },
     "damageReport": {
-      "reportId": "RPT-1773573442304-002925",
+      "reportId": "RPT-1775319172275-969cbb",
       "claimCaseId": "CLM-MED-001",
-      "generatedAt": "2026-03-15T11:17:22.305Z",
+      "generatedAt": "2026-04-04T16:12:52.275Z",
       "generatedBy": "ai",
       "items": [
         {
@@ -8144,6 +11497,7 @@
         "isMedicalScenario": true,
         "isLiabilityScenario": false,
         "isBenefitScenario": false,
+        "isAccidentMedicalScenario": false,
         "isAutoScenario": false
       },
       "reportKind": "medical_expense_report",
@@ -8181,7 +11535,7 @@
         "deductible": 0,
         "reimbursementRatio": 0.9,
         "payableAmount": 133.2,
-        "settlementDecision": "MANUAL_REVIEW",
+        "settlementDecision": "PAY",
         "medicalReview": {
           "hospitalReview": {
             "requirement": {
@@ -8251,29 +11605,26 @@
       },
       "decisionTrace": {
         "traceId": "trace-CLM-MED-001",
-        "generatedAt": "2026-03-15T11:17:11.282Z",
+        "generatedAt": "2026-04-04T15:41:33.695Z",
         "stages": [
           {
             "stage": "material_recognition",
             "title": "材料识别",
             "status": "completed",
-            "summary": "共识别 6/6 份材料，形成 0 份结构化摘要",
+            "summary": "共识别 3/3 份材料，形成 0 份结构化摘要",
             "sourceDocIds": [
               "mat-1773508535449-wqg0z3050",
               "mat-1773508535449-8jzm23u4k",
-              "mat-1773508535449-1f7wucee8",
-              "mat-mmrmdo7j-mat-11",
-              "mat-mmrmdo7k-mat-21",
-              "mat-mmrmdo7k-mat-13"
+              "mat-1773508535449-1f7wucee8"
             ],
             "facts": [
               {
                 "label": "材料总数",
-                "value": "6"
+                "value": "3"
               },
               {
                 "label": "已识别材料",
-                "value": "6"
+                "value": "3"
               },
               {
                 "label": "摘要数量",
@@ -8285,7 +11636,7 @@
             "stage": "medical_fact_aggregation",
             "title": "医疗事实归纳",
             "status": "completed",
-            "summary": "材料校验规则异常 1 项",
+            "summary": "聚合完成，请手动核实详情",
             "sourceDocIds": [],
             "facts": [
               {
@@ -8332,6 +11683,27 @@
             ]
           },
           {
+            "stage": "manual_review",
+            "title": "人工确认与调整",
+            "status": "completed",
+            "summary": "已记录 1 项人工确认/调整动作",
+            "sourceDocIds": [],
+            "facts": [
+              {
+                "label": "修改结构化字段 - 入院日期 (系统用户)",
+                "value": "已处理 @ 2026/3/26 01:18:48"
+              }
+            ],
+            "manualActions": [
+              {
+                "label": "修改结构化字段 - 入院日期",
+                "timestamp": "2026-03-25T17:18:48.685Z",
+                "detail": "",
+                "actor": "系统用户"
+              }
+            ]
+          },
+          {
             "stage": "damage_calculation",
             "title": "审核结论",
             "status": "completed",
@@ -8356,30 +11728,29 @@
       },
       "conflicts": []
     },
-    "updatedAt": "2026-03-15T11:17:22.336Z",
+    "updatedAt": "2026-04-04T16:12:52.276Z",
     "validationFacts": {
-      "claim.invoice_patient_name_consistent": false
+      "claim.invoice_date_not_future": true
     },
     "materialValidationResults": [
       {
-        "type": "identity",
-        "passed": false,
-        "severity": "warning",
-        "message": "发票患者姓名与病历患者姓名不一致，需人工复核。",
+        "type": "date_consistency",
+        "passed": true,
+        "severity": "info",
+        "message": "发票开票日期不能是未来日期 通过",
         "details": {
-          "ruleId": "mv-identity-001",
-          "reasonCode": "INVOICE_PATIENT_NAME_MISMATCH",
-          "expected": "马华",
-          "actual": "杨霁",
-          "field": "claim.patient_name EQ claim.patient_name",
+          "ruleId": "mv-date-future-001",
+          "reasonCode": "INVOICE_DATE_IN_FUTURE",
+          "expected": null,
+          "actual": "2025-03-01",
+          "field": "invoiceDate",
           "relatedDocuments": [
-            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1",
-            "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0"
+            "task-646b441a-4d0a-4d63-b333-626290ab260c-2"
           ],
           "failureAction": "MANUAL_REVIEW"
         }
       }
     ],
-    "repairedAt": "2026-03-15T11:17:11.283Z"
+    "repairedAt": "2026-04-04T15:41:33.695Z"
   }
 ]

@@ -8,6 +8,7 @@ interface OfflineMaterialImportDialogProps {
   productCode: string;
   suggestedMaterials?: string[];
   onImportComplete?: (result: { documents: ProcessedFile[]; completeness: CompletenessResult }) => void;
+  onImportSubmitted?: (result: { taskId: string; totalFiles: number }) => void;
 }
 
 interface UploadingFile {
@@ -40,6 +41,7 @@ const OfflineMaterialImportDialog: React.FC<OfflineMaterialImportDialogProps> = 
   productCode,
   suggestedMaterials = [],
   onImportComplete,
+  onImportSubmitted,
 }) => {
   // State definitions - MUST be at the top
   const [files, setFiles] = useState<UploadingFile[]>([]);
@@ -375,11 +377,14 @@ const OfflineMaterialImportDialog: React.FC<OfflineMaterialImportDialogProps> = 
 
       if (result.success && result.taskId) {
         console.log('[OfflineImport] Import successful, taskId:', result.taskId);
-        setTaskId(result.taskId);
         setTaskStatus('pending');
         setError(null);
-        // 导入成功后立即重置 importing 状态，因为后台会异步处理
         setImporting(false);
+        onImportSubmitted?.({
+          taskId: result.taskId,
+          totalFiles: result.totalFiles || filesData.length,
+        });
+        handleClose();
       } else {
         throw new Error(result.error || '导入失败：未返回任务ID');
       }

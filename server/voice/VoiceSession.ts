@@ -3,6 +3,7 @@ import { VoicePipeline } from "./VoicePipeline.js";
 import type { VoiceMessage } from "../../types/voice.js";
 import { IntentRecognizer } from "./intents/IntentRecognizer.js";
 import { IntentHandlerRegistry } from "./intents/IntentHandlerRegistry.js";
+import { normalizeQueryIntent } from "./intents/QueryNormalizer.js";
 import { VoiceSessionContext } from "./state/VoiceSessionContext.js";
 import { executeTool } from "./tools/index.js";
 import { resolveClaimSelection } from "../../shared/claimRouting.js";
@@ -187,8 +188,12 @@ export class VoiceSession {
 
     try {
       // 1. 识别意图
-      const intent = await this.intentRecognizer.recognize(text, this.context);
+      const recognizedIntent = await this.intentRecognizer.recognize(text, this.context);
+      const intent = normalizeQueryIntent(recognizedIntent, this.context);
       console.log(`[VoiceSession] Intent: ${intent.type}, confidence: ${intent.confidence}`);
+      if (intent.entities?.normalizedQuery) {
+        console.log("[VoiceSession] normalizedQuery:", intent.entities.normalizedQuery);
+      }
       this.context.setLastUserGoal(intent.conversationGoal || intent.type);
 
       // 2. 如果是取消意图，终止当前操作

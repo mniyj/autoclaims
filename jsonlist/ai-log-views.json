@@ -1,0 +1,24 @@
+[
+  {
+    "id": "ai-log-view-1774557197377",
+    "userId": "anonymous",
+    "name": "1",
+    "filters": {
+      "keyword": "sk-1e2217bc-f474-4cd6-abf1-fb693600e505",
+      "provider": "",
+      "model": "",
+      "capabilityId": "",
+      "group": "",
+      "companyName": "",
+      "module": "",
+      "sourceApp": "",
+      "success": "",
+      "startTime": "",
+      "endTime": ""
+    },
+    "createdAt": "2026-03-26T20:33:17.377Z",
+    "updatedAt": "2026-03-26T20:33:17.377Z",
+    "lastUsedAt": null,
+    "isDefault": false
+  }
+]

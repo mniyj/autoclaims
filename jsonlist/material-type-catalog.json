@@ -1,0 +1,872 @@
+[
+  {
+    "type_code": "MT-ID-FRONT_ID",
+    "type_name": "身份证正面",
+    "category": "identity",
+    "description": "被保险人或受益人的身份证正面照片，包含姓名、性别、民族、出生日期、住址、身份证号等信息。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 1,
+    "recommended_facts": [
+      "insured.name",
+      "insured.gender",
+      "insured.birth_date",
+      "insured.id_number"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-1"
+  },
+  {
+    "type_code": "MT-ID-BACK_ID",
+    "type_name": "身份证反面",
+    "category": "identity",
+    "description": "被保险人或受益人的身份证反面照片，包含签发机关和有效期限。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-2"
+  },
+  {
+    "type_code": "MT-ID-DRIVER_LIC",
+    "type_name": "驾驶证（含副页）",
+    "category": "identity",
+    "description": "机动车驾驶人的驾驶证正页及副页，用于交通事故理赔时核实驾驶资质。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "insured.name",
+      "insured.driver_license_number"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-3"
+  },
+  {
+    "type_code": "MT-ID-VEHICLE_LIC",
+    "type_name": "行驶证（含副页）",
+    "category": "identity",
+    "description": "机动车行驶证正页及副页，用于核实车辆信息和年检状态。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-4"
+  },
+  {
+    "type_code": "MT-ID-POWER_OF_ATTY",
+    "type_name": "委托授权书",
+    "category": "identity",
+    "description": "被保险人或受益人委托他人代为办理理赔的授权委托书。",
+    "default_processing_strategy": "general_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-5"
+  },
+  {
+    "type_code": "MT-ID-BANK_CARD",
+    "type_name": "银行卡（正反面）",
+    "category": "identity",
+    "description": "用于接收理赔款项的银行卡正反面照片。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-6"
+  },
+  {
+    "type_code": "MT-ID-HOUSEHOLD_REG_CERT",
+    "type_name": "户籍所在地证明",
+    "category": "identity",
+    "description": "户籍所在地派出所或社区出具的户籍证明，用于确认城镇/农村户籍性质以适用不同赔偿标准。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "insured.name",
+      "insured.id_number"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-7"
+  },
+  {
+    "type_code": "MT-ACC-TRAFFIC_LIABILITY",
+    "type_name": "交通事故责任认定书",
+    "category": "accident",
+    "description": "交警部门出具的交通事故责任认定文书，明确各方事故责任比例。",
+    "default_processing_strategy": "general_doc",
+    "default_confidence_threshold": 1,
+    "recommended_facts": [
+      "claim.accident_date"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-8"
+  },
+  {
+    "type_code": "MT-ACC-WORK_INJURY_DECISION",
+    "type_name": "认定工伤决定书",
+    "category": "accident",
+    "description": "人力资源和社会保障局出具的工伤认定决定书，确认工伤事实。",
+    "default_processing_strategy": "general_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "insured.name",
+      "claim.accident_date"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-9"
+  },
+  {
+    "type_code": "MT-ACC-WORK_INJURY_APP",
+    "type_name": "工伤认定申请表",
+    "category": "accident",
+    "description": "申请人向人社部门提交的工伤认定申请表格。",
+    "default_processing_strategy": "general_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "insured.name",
+      "claim.accident_date"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-10"
+  },
+  {
+    "type_code": "MT-MED-OUTPATIENT_REC",
+    "type_name": "门（急）诊病历",
+    "category": "medical",
+    "description": "医院门诊或急诊的就诊病历记录，包含主诉、诊断和治疗方案。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "claim.hospital_name",
+      "claim.accident_date",
+      "insured.name",
+      "claim.diagnosis"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-11"
+  },
+  {
+    "type_code": "MT-MED-INPATIENT_REC",
+    "type_name": "住院病历/病案",
+    "category": "medical",
+    "description": "完整的住院病历资料，包含入院记录、病程记录、出院小结等。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "claim.hospital_name",
+      "insured.name",
+      "claim.admission_date",
+      "claim.discharge_date",
+      "expense_item.hospitalization_days",
+      "claim.diagnosis"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-12"
+  },
+  {
+    "type_code": "MT-MED-DIAGNOSIS_CERT",
+    "type_name": "诊断证明书",
+    "category": "medical",
+    "description": "医院出具的正式诊断证明文件，是理赔审核的核心医疗材料。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "claim.hospital_name",
+      "insured.name",
+      "claim.diagnosis"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-13"
+  },
+  {
+    "type_code": "MT-MED-TRANSFER_CERT",
+    "type_name": "转院证明",
+    "category": "medical",
+    "description": "原医院出具的同意转院治疗的证明文件。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "insured.name",
+      "claim.hospital_name"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-14"
+  },
+  {
+    "type_code": "MT-MED-SICK_LEAVE",
+    "type_name": "医嘱休息证明（病假单）",
+    "category": "medical",
+    "description": "医生出具的建议患者休息的证明文件，用于计算误工天数。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "claim.hospital_name",
+      "insured.name",
+      "claim.diagnosis"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-15"
+  },
+  {
+    "type_code": "MT-MED-NURSING_ORDER",
+    "type_name": "医嘱护理证明",
+    "category": "medical",
+    "description": "医院出具的患者需要护理的医嘱证明，用于计算护理费。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "claim.hospital_name",
+      "insured.name"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-16"
+  },
+  {
+    "type_code": "MT-MED-NUTRITION_ORDER",
+    "type_name": "营养费医嘱",
+    "category": "medical",
+    "description": "医生出具的患者需要加强营养的医嘱证明，用于计算营养费。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "claim.hospital_name",
+      "insured.name"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-17"
+  },
+  {
+    "type_code": "MT-MED-STAY_DAYS_CERT",
+    "type_name": "住院天数证明",
+    "category": "medical",
+    "description": "医院出具的住院天数证明文件，用于核实住院期间的各项费用计算基础。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "claim.hospital_name",
+      "insured.name",
+      "claim.admission_date",
+      "claim.discharge_date",
+      "expense_item.hospitalization_days"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-18"
+  },
+  {
+    "type_code": "MT-MED-EXT_PRESCRIPTION",
+    "type_name": "外购药处方笺",
+    "category": "medical",
+    "description": "医生开具的需要到院外药房购买药品的处方笺。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "claim.hospital_name",
+      "insured.name"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-19"
+  },
+  {
+    "type_code": "MT-MED-INVOICE",
+    "type_name": "医疗费发票",
+    "category": "medical",
+    "description": "医院出具的医疗费用发票（门诊或住院发票），是理赔金额核定的主要依据。",
+    "default_processing_strategy": "invoice",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "claim.expense_items",
+      "claim.claimed_total_amount"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-20"
+  },
+  {
+    "type_code": "MT-MED-EXPENSE_DETAIL",
+    "type_name": "费用明细清单",
+    "category": "medical",
+    "description": "医院出具的住院/门诊费用逐项明细清单。",
+    "default_processing_strategy": "invoice",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "claim.hospital_name",
+      "insured.name",
+      "claim.claimed_total_amount"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-21"
+  },
+  {
+    "type_code": "MT-MED-DRUG_INVOICE",
+    "type_name": "购药发票",
+    "category": "medical",
+    "description": "在院外药房购买药品的购药发票。",
+    "default_processing_strategy": "invoice",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "claim.claimed_total_amount"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-22"
+  },
+  {
+    "type_code": "MT-MED-AID_DEVICE_INVOICE",
+    "type_name": "辅助器具发票",
+    "category": "medical",
+    "description": "购买残疾辅助器具（如轮椅、拐杖、假肢等）的发票。",
+    "default_processing_strategy": "invoice",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "claim.claimed_total_amount"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-23"
+  },
+  {
+    "type_code": "MT-MED-NURSING_INVOICE",
+    "type_name": "护理费发票",
+    "category": "medical",
+    "description": "聘请护工或护理机构的护理费用发票。",
+    "default_processing_strategy": "invoice",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "claim.claimed_total_amount"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-24"
+  },
+  {
+    "type_code": "MT-MED-TRANSPORT_TICKET",
+    "type_name": "交通费票据",
+    "category": "medical",
+    "description": "因就医产生的交通费用票据（出租车票、公交票、火车票等）。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "expense_item.amount"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-25"
+  },
+  {
+    "type_code": "MT-MED-LODGING_INVOICE",
+    "type_name": "住宿费发票",
+    "category": "medical",
+    "description": "因异地就医产生的住宿费用发票。",
+    "default_processing_strategy": "invoice",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "claim.claimed_total_amount"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-26"
+  },
+  {
+    "type_code": "MT-MED-APPRAISAL_INVOICE",
+    "type_name": "鉴定费发票",
+    "category": "medical",
+    "description": "进行伤残鉴定、劳动能力鉴定等产生的鉴定费发票。",
+    "default_processing_strategy": "invoice",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "claim.medical_appraisal_fee"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-27"
+  },
+  {
+    "type_code": "MT-MED-FUNERAL_INVOICE",
+    "type_name": "丧葬费票据",
+    "category": "medical",
+    "description": "死亡案件中产生的丧葬服务费用票据。",
+    "default_processing_strategy": "invoice",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "claim.claimed_total_amount"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-28"
+  },
+  {
+    "type_code": "MT-INC-LOST_WORK_CERT",
+    "type_name": "误工证明",
+    "category": "income",
+    "description": "用人单位出具的因伤误工及收入减少情况的证明。",
+    "default_processing_strategy": "general_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "insured.name"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-29"
+  },
+  {
+    "type_code": "MT-INC-INCOME_CERT",
+    "type_name": "收入证明/工资证明",
+    "category": "income",
+    "description": "用人单位出具的工资收入证明，用于计算误工费赔偿基数。",
+    "default_processing_strategy": "general_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "insured.name"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-30"
+  },
+  {
+    "type_code": "MT-INC-LABOR_CONTRACT",
+    "type_name": "劳动合同",
+    "category": "income",
+    "description": "劳动者与用人单位签订的劳动合同，证明劳动关系。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "insured.name"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-31"
+  },
+  {
+    "type_code": "MT-INC-SALARY_STATEMENT",
+    "type_name": "工资银行流水",
+    "category": "income",
+    "description": "银行打印的工资入账记录流水，用于佐证实际收入水平。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "insured.name"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-32"
+  },
+  {
+    "type_code": "MT-INC-TAX_CERT",
+    "type_name": "纳税证明",
+    "category": "income",
+    "description": "税务机关出具的个人所得税纳税证明或完税凭证。",
+    "default_processing_strategy": "general_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "insured.name",
+      "insured.id_number"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-33"
+  },
+  {
+    "type_code": "MT-INC-CAREGIVER_INCOME",
+    "type_name": "护理人员收入证明",
+    "category": "income",
+    "description": "护理人员（非专业护工）所在单位出具的收入证明，用于计算护理费中的误工损失。",
+    "default_processing_strategy": "general_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-34"
+  },
+  {
+    "type_code": "MT-MED-DISABILITY_REPORT",
+    "type_name": "伤残鉴定意见书",
+    "category": "medical",
+    "description": "司法鉴定机构出具的人体伤残等级鉴定意见书。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "insured.name",
+      "claim.disability_grade"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-35"
+  },
+  {
+    "type_code": "MT-MED-LABOR_CAPACITY",
+    "type_name": "劳动能力鉴定结论",
+    "category": "medical",
+    "description": "劳动能力鉴定委员会出具的劳动能力鉴定结论通知书，用于工伤案件。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "insured.name",
+      "claim.disability_grade"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-36"
+  },
+  {
+    "type_code": "MT-MED-AID_DEVICE_CERT",
+    "type_name": "残疾辅助器具证明",
+    "category": "medical",
+    "description": "辅助器具配制机构出具的残疾人需要配置辅助器具的证明。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "insured.name",
+      "claim.claimed_total_amount"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-37"
+  },
+  {
+    "type_code": "MT-MED-NURSING_DEPENDENCY",
+    "type_name": "护理依赖鉴定",
+    "category": "medical",
+    "description": "对需要长期护理的伤残人员进行的护理依赖程度鉴定。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "insured.name"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-38"
+  },
+  {
+    "type_code": "MT-OTH-RESIDENCE_CERT",
+    "type_name": "居住证明/暂住证",
+    "category": "other",
+    "description": "证明被害人在城镇地区连续居住满一年以上的居住证明或暂住证，用于适用城镇标准计算赔偿。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "insured.name",
+      "insured.id_number"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-39"
+  },
+  {
+    "type_code": "MT-OTH-DEPENDENT_ID",
+    "type_name": "被扶养人身份证明",
+    "category": "other",
+    "description": "被扶养人的身份证、户口本或出生证明等身份证明文件。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-40"
+  },
+  {
+    "type_code": "MT-OTH-SUPPORT_RELATION",
+    "type_name": "扶养关系证明",
+    "category": "other",
+    "description": "村委会、居委会或民政部门出具的扶养关系证明。",
+    "default_processing_strategy": "general_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-41"
+  },
+  {
+    "type_code": "MT-OTH-DEPENDENT_NO_INCOME",
+    "type_name": "被扶养人无收入证明",
+    "category": "other",
+    "description": "证明被扶养人确无劳动能力和收入来源的证明文件。",
+    "default_processing_strategy": "general_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-42"
+  },
+  {
+    "type_code": "MT-OTH-DEATH_CERT",
+    "type_name": "死亡证明",
+    "category": "other",
+    "description": "医院或公安机关出具的死亡医学证明书或死亡证明。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "insured.name",
+      "insured.id_number",
+      "claim.accident_date",
+      "claim.diagnosis"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-43"
+  },
+  {
+    "type_code": "MT-OTH-DEREGISTRATION",
+    "type_name": "户籍注销证明",
+    "category": "other",
+    "description": "公安派出所出具的死者户籍已注销的证明文件。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "insured.name",
+      "insured.id_number"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-44"
+  },
+  {
+    "type_code": "MT-OTH-KINSHIP_CERT",
+    "type_name": "亲属关系证明",
+    "category": "other",
+    "description": "公安、民政或社区出具的死者与理赔申请人之间亲属关系的证明。",
+    "default_processing_strategy": "general_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "insured.name"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-45"
+  },
+  {
+    "type_code": "MT-OTH-MEDIATION_JUDGMENT",
+    "type_name": "调解协议书/判决书",
+    "category": "other",
+    "description": "交通事故调解协议、人民法院民事判决书或调解书，明确赔偿金额和各项分项。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "claim.claimed_total_amount"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-46"
+  },
+  {
+    "type_code": "MT-OTH-LEGAL_FEE_INVOICE",
+    "type_name": "律师费发票及合同",
+    "category": "other",
+    "description": "聘请律师代理理赔案件的律师服务合同和律师费发票。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "claim.legal_fees"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-47"
+  },
+  {
+    "type_code": "MT-NOT-REPORT_INFO",
+    "type_name": "报案信息",
+    "category": "claim_notice",
+    "description": "记录报案号、保单号、出险时间地点、联系人等报案基础信息的页面截图或通知。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "insured.name"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-48"
+  },
+  {
+    "type_code": "MT-NOT-INCIDENT_NOTICE",
+    "type_name": "出险通知书",
+    "category": "claim_notice",
+    "description": "向保险公司报送的出险通知书，包含保单信息、出险时间地点及事故经过。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "insured.name"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-49"
+  },
+  {
+    "type_code": "MT-POL-POLICY_DOC",
+    "type_name": "保险单/保单",
+    "category": "policy",
+    "description": "保险单或保单截图，用于核验险种、保单号、保险期间和承保标的。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "insured.name"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-50"
+  },
+  {
+    "type_code": "MT-SUR-INITIAL_REPORT",
+    "type_name": "初期报告",
+    "category": "survey_report",
+    "description": "事故初期调查或公估初期报告，用于记录事故经过、责任初判和预估损失。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "claim.claimed_total_amount"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-51"
+  },
+  {
+    "type_code": "MT-SUR-SURVEY_REPORT",
+    "type_name": "公估报告",
+    "category": "survey_report",
+    "description": "终期公估报告或正式调查报告，用于记录责任认定、赔偿建议和协商金额。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "claim.claimed_total_amount"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-52"
+  },
+  {
+    "type_code": "MT-SCN-SCENE_PHOTO",
+    "type_name": "事故现场照片",
+    "category": "accident_scene",
+    "description": "记录出险现场、受损设备、吊物或周边环境的现场照片。",
+    "default_processing_strategy": "general_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-53"
+  },
+  {
+    "type_code": "MT-SCN-NAMEPLATE_PHOTO",
+    "type_name": "设备铭牌/车架号照片",
+    "category": "accident_scene",
+    "description": "用于核验工程机械设备铭牌、车架号、型号等标的信息的照片。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-54"
+  },
+  {
+    "type_code": "MT-QUA-OPERATOR_CERT",
+    "type_name": "操作证",
+    "category": "qualification",
+    "description": "特种设备或工程机械操作人员的资格证件。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "insured.name"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-55"
+  },
+  {
+    "type_code": "MT-QUA-OPERATOR_QUERY",
+    "type_name": "操作证查询结果",
+    "category": "qualification",
+    "description": "操作资格证在线查询结果截图或打印件。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "insured.name"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-56"
+  },
+  {
+    "type_code": "MT-POL-ALARM_RECORD",
+    "type_name": "报警记录",
+    "category": "police_record",
+    "description": "110/119/120 等报警、接警或出警相关记录。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-57"
+  },
+  {
+    "type_code": "MT-POL-INCIDENT_TRANSCRIPT",
+    "type_name": "事故笔录",
+    "category": "police_record",
+    "description": "事故询问笔录、谈话记录或调查笔录。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-58"
+  },
+  {
+    "type_code": "MT-FAM-HOUSEHOLD_BOOK",
+    "type_name": "户口本",
+    "category": "family_relation",
+    "description": "户口簿或常住人口登记页，用于核验家庭成员和户籍关系。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "insured.name"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-59"
+  },
+  {
+    "type_code": "MT-FAM-FAMILY_CERT",
+    "type_name": "家庭关系证明",
+    "category": "family_relation",
+    "description": "由公安、社区、村委或民政等单位出具的亲属关系或家庭关系证明。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "insured.name"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-60"
+  },
+  {
+    "type_code": "MT-SET-COMPENSATION_AGREE",
+    "type_name": "赔偿协议书",
+    "category": "settlement",
+    "description": "双方就赔偿金额、赔偿对象和支付安排达成的一致协议。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "insured.name",
+      "claim.claimed_total_amount"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-61"
+  },
+  {
+    "type_code": "MT-SET-PAYMENT_RECEIPT",
+    "type_name": "赔款收条",
+    "category": "settlement",
+    "description": "收款人确认收到赔偿款的收条、收据或确认函。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "insured.name",
+      "claim.other_reimbursement_received"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-62"
+  },
+  {
+    "type_code": "MT-SET-FORGIVENESS_LETTER",
+    "type_name": "谅解书",
+    "category": "settlement",
+    "description": "事故相关方出具的谅解书或和解确认材料。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-63"
+  },
+  {
+    "type_code": "MT-ID_CH-DISPATCH_CHAT",
+    "type_name": "派工记录/聊天记录",
+    "category": "identity_chain_evidence",
+    "description": "微信聊天、派工通知、作业安排或对接沟通记录，用于识别派工关系和作业安排。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-64"
+  },
+  {
+    "type_code": "MT-SET-PAYMENT_VOUCHER",
+    "type_name": "赔偿支付凭证",
+    "category": "settlement",
+    "description": "银行转账记录、电子回单或付款凭证，用于核验已垫付或已支付赔偿款事实。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [
+      "insured.name",
+      "claim.other_reimbursement_received"
+    ],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-65"
+  },
+  {
+    "type_code": "MT-INC_ST-INCIDENT_STATEMENT",
+    "type_name": "事故证明/情况说明",
+    "category": "incident_statement",
+    "description": "政府、村镇、单位或相关机构出具的事故经过、调查走访或情况说明材料。",
+    "default_processing_strategy": "structured_doc",
+    "default_confidence_threshold": 0.9,
+    "recommended_facts": [],
+    "status": "ACTIVE",
+    "_source_material_id": "mat-66"
+  }
+]

@@ -1,0 +1,408 @@
+{
+  "timestamp": "2026-03-28T16:34:47.972Z",
+  "summary": {
+    "total_materials": 66,
+    "materials_with_type_code": 66,
+    "total_fields": 426,
+    "bound_fields": 94,
+    "display_only_fields": 332
+  },
+  "details": [
+    {
+      "material_id": "mat-1",
+      "type_code": "MT-ID-FRONT_ID",
+      "bound": 4,
+      "display_only": 2
+    },
+    {
+      "material_id": "mat-2",
+      "type_code": "MT-ID-BACK_ID",
+      "bound": 0,
+      "display_only": 3
+    },
+    {
+      "material_id": "mat-3",
+      "type_code": "MT-ID-DRIVER_LIC",
+      "bound": 2,
+      "display_only": 4
+    },
+    {
+      "material_id": "mat-4",
+      "type_code": "MT-ID-VEHICLE_LIC",
+      "bound": 0,
+      "display_only": 7
+    },
+    {
+      "material_id": "mat-5",
+      "type_code": "MT-ID-POWER_OF_ATTY",
+      "bound": 0,
+      "display_only": 8
+    },
+    {
+      "material_id": "mat-6",
+      "type_code": "MT-ID-BANK_CARD",
+      "bound": 0,
+      "display_only": 3
+    },
+    {
+      "material_id": "mat-7",
+      "type_code": "MT-ID-HOUSEHOLD_REG_CERT",
+      "bound": 2,
+      "display_only": 4
+    },
+    {
+      "material_id": "mat-8",
+      "type_code": "MT-ACC-TRAFFIC_LIABILITY",
+      "bound": 1,
+      "display_only": 9
+    },
+    {
+      "material_id": "mat-9",
+      "type_code": "MT-ACC-WORK_INJURY_DECISION",
+      "bound": 2,
+      "display_only": 6
+    },
+    {
+      "material_id": "mat-10",
+      "type_code": "MT-ACC-WORK_INJURY_APP",
+      "bound": 2,
+      "display_only": 4
+    },
+    {
+      "material_id": "mat-11",
+      "type_code": "MT-MED-OUTPATIENT_REC",
+      "bound": 4,
+      "display_only": 5
+    },
+    {
+      "material_id": "mat-12",
+      "type_code": "MT-MED-INPATIENT_REC",
+      "bound": 6,
+      "display_only": 3
+    },
+    {
+      "material_id": "mat-13",
+      "type_code": "MT-MED-DIAGNOSIS_CERT",
+      "bound": 3,
+      "display_only": 5
+    },
+    {
+      "material_id": "mat-14",
+      "type_code": "MT-MED-TRANSFER_CERT",
+      "bound": 2,
+      "display_only": 3
+    },
+    {
+      "material_id": "mat-15",
+      "type_code": "MT-MED-SICK_LEAVE",
+      "bound": 3,
+      "display_only": 4
+    },
+    {
+      "material_id": "mat-16",
+      "type_code": "MT-MED-NURSING_ORDER",
+      "bound": 2,
+      "display_only": 5
+    },
+    {
+      "material_id": "mat-17",
+      "type_code": "MT-MED-NUTRITION_ORDER",
+      "bound": 2,
+      "display_only": 4
+    },
+    {
+      "material_id": "mat-18",
+      "type_code": "MT-MED-STAY_DAYS_CERT",
+      "bound": 5,
+      "display_only": 1
+    },
+    {
+      "material_id": "mat-19",
+      "type_code": "MT-MED-EXT_PRESCRIPTION",
+      "bound": 2,
+      "display_only": 5
+    },
+    {
+      "material_id": "mat-20",
+      "type_code": "MT-MED-INVOICE",
+      "bound": 3,
+      "display_only": 15
+    },
+    {
+      "material_id": "mat-21",
+      "type_code": "MT-MED-EXPENSE_DETAIL",
+      "bound": 3,
+      "display_only": 6
+    },
+    {
+      "material_id": "mat-22",
+      "type_code": "MT-MED-DRUG_INVOICE",
+      "bound": 1,
+      "display_only": 8
+    },
+    {
+      "material_id": "mat-23",
+      "type_code": "MT-MED-AID_DEVICE_INVOICE",
+      "bound": 1,
+      "display_only": 7
+    },
+    {
+      "material_id": "mat-24",
+      "type_code": "MT-MED-NURSING_INVOICE",
+      "bound": 1,
+      "display_only": 7
+    },
+    {
+      "material_id": "mat-25",
+      "type_code": "MT-MED-TRANSPORT_TICKET",
+      "bound": 1,
+      "display_only": 5
+    },
+    {
+      "material_id": "mat-26",
+      "type_code": "MT-MED-LODGING_INVOICE",
+      "bound": 1,
+      "display_only": 6
+    },
+    {
+      "material_id": "mat-27",
+      "type_code": "MT-MED-APPRAISAL_INVOICE",
+      "bound": 1,
+      "display_only": 4
+    },
+    {
+      "material_id": "mat-28",
+      "type_code": "MT-MED-FUNERAL_INVOICE",
+      "bound": 1,
+      "display_only": 6
+    },
+    {
+      "material_id": "mat-29",
+      "type_code": "MT-INC-LOST_WORK_CERT",
+      "bound": 1,
+      "display_only": 7
+    },
+    {
+      "material_id": "mat-30",
+      "type_code": "MT-INC-INCOME_CERT",
+      "bound": 1,
+      "display_only": 6
+    },
+    {
+      "material_id": "mat-31",
+      "type_code": "MT-INC-LABOR_CONTRACT",
+      "bound": 1,
+      "display_only": 6
+    },
+    {
+      "material_id": "mat-32",
+      "type_code": "MT-INC-SALARY_STATEMENT",
+      "bound": 1,
+      "display_only": 8
+    },
+    {
+      "material_id": "mat-33",
+      "type_code": "MT-INC-TAX_CERT",
+      "bound": 2,
+      "display_only": 5
+    },
+    {
+      "material_id": "mat-34",
+      "type_code": "MT-INC-CAREGIVER_INCOME",
+      "bound": 0,
+      "display_only": 6
+    },
+    {
+      "material_id": "mat-35",
+      "type_code": "MT-MED-DISABILITY_REPORT",
+      "bound": 2,
+      "display_only": 6
+    },
+    {
+      "material_id": "mat-36",
+      "type_code": "MT-MED-LABOR_CAPACITY",
+      "bound": 2,
+      "display_only": 5
+    },
+    {
+      "material_id": "mat-37",
+      "type_code": "MT-MED-AID_DEVICE_CERT",
+      "bound": 2,
+      "display_only": 5
+    },
+    {
+      "material_id": "mat-38",
+      "type_code": "MT-MED-NURSING_DEPENDENCY",
+      "bound": 1,
+      "display_only": 5
+    },
+    {
+      "material_id": "mat-39",
+      "type_code": "MT-OTH-RESIDENCE_CERT",
+      "bound": 2,
+      "display_only": 5
+    },
+    {
+      "material_id": "mat-40",
+      "type_code": "MT-OTH-DEPENDENT_ID",
+      "bound": 0,
+      "display_only": 6
+    },
+    {
+      "material_id": "mat-41",
+      "type_code": "MT-OTH-SUPPORT_RELATION",
+      "bound": 0,
+      "display_only": 6
+    },
+    {
+      "material_id": "mat-42",
+      "type_code": "MT-OTH-DEPENDENT_NO_INCOME",
+      "bound": 0,
+      "display_only": 6
+    },
+    {
+      "material_id": "mat-43",
+      "type_code": "MT-OTH-DEATH_CERT",
+      "bound": 4,
+      "display_only": 2
+    },
+    {
+      "material_id": "mat-44",
+      "type_code": "MT-OTH-DEREGISTRATION",
+      "bound": 2,
+      "display_only": 2
+    },
+    {
+      "material_id": "mat-45",
+      "type_code": "MT-OTH-KINSHIP_CERT",
+      "bound": 1,
+      "display_only": 4
+    },
+    {
+      "material_id": "mat-46",
+      "type_code": "MT-OTH-MEDIATION_JUDGMENT",
+      "bound": 1,
+      "display_only": 10
+    },
+    {
+      "material_id": "mat-47",
+      "type_code": "MT-OTH-LEGAL_FEE_INVOICE",
+      "bound": 1,
+      "display_only": 6
+    },
+    {
+      "material_id": "mat-48",
+      "type_code": "MT-NOT-REPORT_INFO",
+      "bound": 1,
+      "display_only": 6
+    },
+    {
+      "material_id": "mat-49",
+      "type_code": "MT-NOT-INCIDENT_NOTICE",
+      "bound": 1,
+      "display_only": 5
+    },
+    {
+      "material_id": "mat-50",
+      "type_code": "MT-POL-POLICY_DOC",
+      "bound": 1,
+      "display_only": 4
+    },
+    {
+      "material_id": "mat-51",
+      "type_code": "MT-SUR-INITIAL_REPORT",
+      "bound": 1,
+      "display_only": 6
+    },
+    {
+      "material_id": "mat-52",
+      "type_code": "MT-SUR-SURVEY_REPORT",
+      "bound": 1,
+      "display_only": 5
+    },
+    {
+      "material_id": "mat-53",
+      "type_code": "MT-SCN-SCENE_PHOTO",
+      "bound": 0,
+      "display_only": 4
+    },
+    {
+      "material_id": "mat-54",
+      "type_code": "MT-SCN-NAMEPLATE_PHOTO",
+      "bound": 0,
+      "display_only": 4
+    },
+    {
+      "material_id": "mat-55",
+      "type_code": "MT-QUA-OPERATOR_CERT",
+      "bound": 1,
+      "display_only": 4
+    },
+    {
+      "material_id": "mat-56",
+      "type_code": "MT-QUA-OPERATOR_QUERY",
+      "bound": 1,
+      "display_only": 4
+    },
+    {
+      "material_id": "mat-57",
+      "type_code": "MT-POL-ALARM_RECORD",
+      "bound": 0,
+      "display_only": 4
+    },
+    {
+      "material_id": "mat-58",
+      "type_code": "MT-POL-INCIDENT_TRANSCRIPT",
+      "bound": 0,
+      "display_only": 4
+    },
+    {
+      "material_id": "mat-59",
+      "type_code": "MT-FAM-HOUSEHOLD_BOOK",
+      "bound": 1,
+      "display_only": 3
+    },
+    {
+      "material_id": "mat-60",
+      "type_code": "MT-FAM-FAMILY_CERT",
+      "bound": 1,
+      "display_only": 4
+    },
+    {
+      "material_id": "mat-61",
+      "type_code": "MT-SET-COMPENSATION_AGREE",
+      "bound": 2,
+      "display_only": 2
+    },
+    {
+      "material_id": "mat-62",
+      "type_code": "MT-SET-PAYMENT_RECEIPT",
+      "bound": 2,
+      "display_only": 2
+    },
+    {
+      "material_id": "mat-63",
+      "type_code": "MT-SET-FORGIVENESS_LETTER",
+      "bound": 0,
+      "display_only": 4
+    },
+    {
+      "material_id": "mat-64",
+      "type_code": "MT-ID_CH-DISPATCH_CHAT",
+      "bound": 0,
+      "display_only": 4
+    },
+    {
+      "material_id": "mat-65",
+      "type_code": "MT-SET-PAYMENT_VOUCHER",
+      "bound": 2,
+      "display_only": 4
+    },
+    {
+      "material_id": "mat-66",
+      "type_code": "MT-INC_ST-INCIDENT_STATEMENT",
+      "bound": 0,
+      "display_only": 4
+    }
+  ]
+}

@@ -1,8 +1,16 @@
+import { listByClaimCase } from "./interventionStateMachine.js";
+
 const STAGE_LABELS = {
   intake: "受理",
   parse: "解析/OCR",
   liability: "定责",
   assessment: "定损",
+};
+
+const INTERVENTION_TYPE_LABELS = {
+  PARSE_LOW_CONFIDENCE: "材料识别置信度不足",
+  VALIDATION_GATE: "材料校验规则不通过",
+  RULE_MANUAL_ROUTE: "规则引擎转人工",
 };
 
 function toTime(value) {
@@ -12,11 +20,15 @@ function toTime(value) {
 }
 
 function sortByTimeAsc(items = []) {
-  return [...items].sort((a, b) => (toTime(a.timestamp) || 0) - (toTime(b.timestamp) || 0));
+  return [...items].sort(
+    (a, b) => (toTime(a.timestamp) || 0) - (toTime(b.timestamp) || 0),
+  );
 }
 
 function sortByTimeDesc(items = []) {
-  return [...items].sort((a, b) => (toTime(b.timestamp) || 0) - (toTime(a.timestamp) || 0));
+  return [...items].sort(
+    (a, b) => (toTime(b.timestamp) || 0) - (toTime(a.timestamp) || 0),
+  );
 }
 
 function latestBy(items = [], predicate) {
@@ -24,12 +36,16 @@ function latestBy(items = [], predicate) {
 }
 
 function earliestDate(values = []) {
-  const valid = values.filter(Boolean).sort((a, b) => (toTime(a) || 0) - (toTime(b) || 0));
+  const valid = values
+    .filter(Boolean)
+    .sort((a, b) => (toTime(a) || 0) - (toTime(b) || 0));
   return valid[0];
 }
 
 function latestDate(values = []) {
-  const valid = values.filter(Boolean).sort((a, b) => (toTime(b) || 0) - (toTime(a) || 0));
+  const valid = values
+    .filter(Boolean)
+    .sort((a, b) => (toTime(b) || 0) - (toTime(a) || 0));
   return valid[0];
 }
 
@@ -81,15 +97,19 @@ function buildStageTimeline({
   const completenessLogs = sortByTimeDesc(
     logs.filter(
       (log) =>
-        log.operationType === "UPLOAD_FILE" &&
-        log.outputData?.completeness,
+        log.operationType === "UPLOAD_FILE" && log.outputData?.completeness,
     ),
   );
   const latestCompletenessLog = completenessLogs[0] || null;
-  const latestCompleteness = latestCompletenessLog?.outputData?.completeness || null;
+  const latestCompleteness =
+    latestCompletenessLog?.outputData?.completeness || null;
 
-  const processedMaterials = claimMaterials.filter((material) => material.processedAt);
-  const failedMaterials = claimMaterials.filter((material) => material.status === "failed");
+  const processedMaterials = claimMaterials.filter(
+    (material) => material.processedAt,
+  );
+  const failedMaterials = claimMaterials.filter(
+    (material) => material.status === "failed",
+  );
   const successfulMaterials = claimMaterials.filter(
     (material) => material.status === "completed",
   );
@@ -147,11 +167,14 @@ function buildStageTimeline({
   }
 
   if (claimCase?.acceptedAt) {
-    intakeStage.status = claimCase.acceptedBy === "manual" ? "manual_completed" : "completed";
+    intakeStage.status =
+      claimCase.acceptedBy === "manual" ? "manual_completed" : "completed";
     intakeStage.completedAt = claimCase.acceptedAt;
     intakeStage.completedBy = claimCase.acceptedBy || "system";
     intakeStage.summary =
-      claimCase.acceptedBy === "manual" ? "人工已完成受理" : "材料齐全，已完成受理";
+      claimCase.acceptedBy === "manual"
+        ? "人工已完成受理"
+        : "材料齐全，已完成受理";
   }
 
   const parseStage = {
@@ -171,7 +194,8 @@ function buildStageTimeline({
       ["pending", "processing", "archived"].includes(latestImportTask.status)
     ) {
       const completedCount = latestImportTask.progress?.completed || 0;
-      const totalCount = latestImportTask.progress?.total || claimMaterials.length || 0;
+      const totalCount =
+        latestImportTask.progress?.total || claimMaterials.length || 0;
       parseStage.status = "processing";
       parseStage.summary =
         totalCount > 0
@@ -181,7 +205,8 @@ function buildStageTimeline({
       latestImportTask &&
       ["failed", "partial_success"].includes(latestImportTask.status)
     ) {
-      const failedCount = latestImportTask.progress?.failed || failedMaterials.length || 0;
+      const failedCount =
+        latestImportTask.progress?.failed || failedMaterials.length || 0;
       parseStage.status = "failed";
       parseStage.completedAt = latestImportTask.completedAt || undefined;
       parseStage.completedBy = "system";
@@ -195,7 +220,8 @@ function buildStageTimeline({
       parseStage.summary = "暂无待解析材料";
     } else if (
       completedReviewTasks.length > 0 &&
-      successfulMaterials.length + failedMaterials.length >= claimMaterials.length
+      successfulMaterials.length + failedMaterials.length >=
+        claimMaterials.length
     ) {
       parseStage.status = "manual_completed";
       parseStage.completedAt = completedReviewTasks[0].completedAt;
@@ -204,7 +230,9 @@ function buildStageTimeline({
     } else if (failedMaterials.length > 0) {
       parseStage.status = "failed";
       parseStage.completedAt = latestDate(
-        failedMaterials.map((material) => material.processedAt || material.uploadedAt),
+        failedMaterials.map(
+          (material) => material.processedAt || material.uploadedAt,
+        ),
       );
       parseStage.completedBy = "system";
       parseStage.summary = `${failedMaterials.length} 份材料解析失败`;
@@ -214,7 +242,9 @@ function buildStageTimeline({
         .join("、");
     } else if (processedMaterials.length === claimMaterials.length) {
       parseStage.status = "completed";
-      parseStage.completedAt = latestDate(processedMaterials.map((material) => material.processedAt));
+      parseStage.completedAt = latestDate(
+        processedMaterials.map((material) => material.processedAt),
+      );
       parseStage.completedBy = "system";
       parseStage.summary = `已完成 ${processedMaterials.length} 份材料解析`;
     } else if (processedMaterials.length > 0) {
@@ -229,7 +259,8 @@ function buildStageTimeline({
   }
 
   if (claimCase?.parsedAt) {
-    parseStage.status = claimCase.parsedBy === "manual" ? "manual_completed" : "completed";
+    parseStage.status =
+      claimCase.parsedBy === "manual" ? "manual_completed" : "completed";
     parseStage.completedAt = claimCase.parsedAt;
     parseStage.completedBy = claimCase.parsedBy || "system";
     parseStage.summary =
@@ -279,7 +310,9 @@ function buildStageTimeline({
 
   if (claimCase?.liabilityCompletedAt) {
     liabilityStage.status =
-      claimCase.liabilityCompletedBy === "manual" ? "manual_completed" : "completed";
+      claimCase.liabilityCompletedBy === "manual"
+        ? "manual_completed"
+        : "completed";
     liabilityStage.completedAt = claimCase.liabilityCompletedAt;
     liabilityStage.completedBy = claimCase.liabilityCompletedBy || "system";
     liabilityStage.summary =
@@ -308,7 +341,11 @@ function buildStageTimeline({
       assessmentStage.completedBy = "manual";
       assessmentStage.summary = "人工已完成定损";
     } else if (reviewSnapshot.assessmentDecision) {
-      if (["ASSESSED", "PARTIAL_ASSESSED"].includes(reviewSnapshot.assessmentDecision)) {
+      if (
+        ["ASSESSED", "PARTIAL_ASSESSED"].includes(
+          reviewSnapshot.assessmentDecision,
+        )
+      ) {
         assessmentStage.status =
           reviewSnapshot.assessmentDecision === "PARTIAL_ASSESSED"
             ? "processing"
@@ -318,7 +355,9 @@ function buildStageTimeline({
             ? latestReviewLog?.timestamp
             : undefined;
         assessmentStage.completedBy =
-          reviewSnapshot.assessmentDecision === "ASSESSED" ? "system" : undefined;
+          reviewSnapshot.assessmentDecision === "ASSESSED"
+            ? "system"
+            : undefined;
         assessmentStage.summary =
           reviewSnapshot.assessmentDecision === "ASSESSED"
             ? "系统已完成定损"
@@ -352,7 +391,9 @@ function buildStageTimeline({
 
   if (claimCase?.assessmentCompletedAt) {
     assessmentStage.status =
-      claimCase.assessmentCompletedBy === "manual" ? "manual_completed" : "completed";
+      claimCase.assessmentCompletedBy === "manual"
+        ? "manual_completed"
+        : "completed";
     assessmentStage.completedAt = claimCase.assessmentCompletedAt;
     assessmentStage.completedBy = claimCase.assessmentCompletedBy || "system";
     assessmentStage.summary =
@@ -448,7 +489,10 @@ function buildEvents({
         }),
       );
 
-      if (material.extractedData && Object.keys(material.extractedData).length > 0) {
+      if (
+        material.extractedData &&
+        Object.keys(material.extractedData).length > 0
+      ) {
         events.push(
           createEvent({
             id: `extract-completed-${material.id}`,
@@ -647,12 +691,7 @@ export function buildClaimProcessTimeline({
   latestImportTask = null,
 }) {
   const orderedLogs = sortByTimeAsc(logs);
-  const {
-    stages,
-    latestReviewLog,
-    reviewSnapshot,
-    latestCompletenessLog,
-  } =
+  const { stages, latestReviewLog, reviewSnapshot, latestCompletenessLog } =
     buildStageTimeline({
       claimCase,
       claimMaterials,
@@ -660,6 +699,26 @@ export function buildClaimProcessTimeline({
       reviewTasks,
       latestImportTask,
     });
+
+  // 叠加人工介入状态到阶段上
+  const interventions = claimCase?.id ? listByClaimCase(claimCase.id) : [];
+  const activeInterventions = interventions.filter((iv) => !iv.resolvedAt);
+  for (const stage of stages) {
+    const stageIntervention = activeInterventions.find(
+      (iv) => iv.stageKey === stage.key,
+    );
+    if (stageIntervention) {
+      stage.status = "awaiting_human";
+      stage.activeInterventionId = stageIntervention.id;
+      stage.interventionType = stageIntervention.interventionType;
+      stage.interventionSubState = stageIntervention.currentState;
+      stage.blockingReason =
+        stageIntervention.reason?.summary ||
+        INTERVENTION_TYPE_LABELS[stageIntervention.interventionType] ||
+        "等待人工处理";
+      stage.summary = `等待人工处理：${stage.blockingReason}`;
+    }
+  }
 
   const events = buildEvents({
     claimCase,
@@ -670,6 +729,50 @@ export function buildClaimProcessTimeline({
     latestCompletenessLog,
     reviewTasks,
   });
+
+  // 添加介入相关事件到时间线
+  for (const iv of interventions) {
+    events.push(
+      createEvent({
+        id: `intervention-created-${iv.id}`,
+        type: "INTERVENTION_CREATED",
+        timestamp: iv.createdAt,
+        actorType: "system",
+        claimId: iv.claimCaseId,
+        success: true,
+        summary: `触发人工介入：${iv.reason?.summary || INTERVENTION_TYPE_LABELS[iv.interventionType]}`,
+        details: {
+          interventionId: iv.id,
+          interventionType: iv.interventionType,
+          stageKey: iv.stageKey,
+          reason: iv.reason,
+        },
+      }),
+    );
+    if (iv.resolvedAt) {
+      events.push(
+        createEvent({
+          id: `intervention-resolved-${iv.id}`,
+          type: "INTERVENTION_RESOLVED",
+          timestamp: iv.resolvedAt,
+          actorType: "adjuster",
+          claimId: iv.claimCaseId,
+          success: true,
+          summary: `人工介入已解决：${iv.resolution === "PROCEED" ? "继续处理" : iv.resolution === "ROLLBACK" ? "打回上游" : "接受原值"}`,
+          details: {
+            interventionId: iv.id,
+            resolution: iv.resolution,
+            adjusterDecision: iv.adjusterDecision,
+          },
+        }),
+      );
+    }
+  }
+
+  // 重新按时间排序
+  events.sort(
+    (a, b) => (toTime(b.timestamp) || 0) - (toTime(a.timestamp) || 0),
+  );
 
   return {
     stages,

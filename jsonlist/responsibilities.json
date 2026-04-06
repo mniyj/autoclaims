@@ -140,6 +140,41 @@
     "description": "工程机械设备在施工场地作业过程中致第三者死亡，依法应由被保险人承担的经济赔偿责任"
   },
   {
+    "id": "resp-20",
+    "code": "ENGINEERING_TPL_INJURY",
+    "name": "工程机械第三者人身伤害赔偿责任",
+    "category": "工程机械保险",
+    "description": "工程机械设备在施工场地作业过程中致第三者人身伤害（未致死亡），依法应由被保险人承担的医疗费、误工费、护理费、残疾赔偿金等经济赔偿责任"
+  },
+  {
+    "id": "resp-21",
+    "code": "ENGINEERING_TPL_PROPERTY",
+    "name": "工程机械第三者财产损失赔偿责任",
+    "category": "工程机械保险",
+    "description": "工程机械设备在施工场地作业过程中造成第三者财产（含建筑物、车辆、设施等）损毁，依法应由被保险人承担的经济赔偿责任"
+  },
+  {
+    "id": "resp-22",
+    "code": "ENGINEERING_EMPLOYER_DEATH",
+    "name": "工程机械雇主责任-雇员死亡",
+    "category": "工程机械保险",
+    "description": "被保险人雇用的操作员、辅助工人等雇员在从事工程机械操作相关作业期间因意外事故死亡，依法应由被保险人（雇主）承担的赔偿责任"
+  },
+  {
+    "id": "resp-23",
+    "code": "ENGINEERING_EMPLOYER_INJURY",
+    "name": "工程机械雇主责任-雇员伤残",
+    "category": "工程机械保险",
+    "description": "被保险人雇用的操作员、辅助工人等雇员在从事工程机械操作相关作业期间因意外事故致残，依法应由被保险人（雇主）承担的医疗费及残疾赔偿责任"
+  },
+  {
+    "id": "resp-24",
+    "code": "ENGINEERING_SELF_DAMAGE",
+    "name": "工程机械设备自身损失",
+    "category": "工程机械保险",
+    "description": "承保工程机械设备（挖掘机、起重机、推土机等）因碰撞、倾覆、火灾、爆炸、自然灾害等保险事故造成的设备自身损失"
+  },
+  {
     "id": "resp-ZA-GOPD-social",
     "code": "ZA_GRP_OPD_SOCIAL",
     "name": "基本医疗保险范围内门急诊医疗费用保险金",

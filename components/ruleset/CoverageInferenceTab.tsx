@@ -24,28 +24,57 @@ function createEmptyRule(): CoverageInferenceRule {
     condition: {
       logic: ConditionLogic.AND,
       expressions: [
-        { field: "", operator: ConditionOperator.EQ, value: "" } as LeafCondition,
+        {
+          field: "",
+          operator: ConditionOperator.EQ,
+          value: "",
+        } as LeafCondition,
       ],
     },
   };
 }
 
-function summarizeCondition(condition: RuleConditions): string {
+function normalizeCondition(
+  condition: RuleConditions | Record<string, unknown>,
+): RuleConditions {
+  if (condition && "logic" in condition && "expressions" in condition) {
+    return condition as RuleConditions;
+  }
+  const raw = condition as Record<string, unknown>;
+  if (Array.isArray(raw.all)) {
+    return {
+      logic: ConditionLogic.AND,
+      expressions: raw.all as LeafCondition[],
+    };
+  }
+  if (Array.isArray(raw.any)) {
+    return {
+      logic: ConditionLogic.OR,
+      expressions: raw.any as LeafCondition[],
+    };
+  }
+  return { logic: ConditionLogic.ALWAYS_TRUE, expressions: [] };
+}
+
+function summarizeCondition(
+  condition: RuleConditions | Record<string, unknown>,
+): string {
+  const normalized = normalizeCondition(condition);
   if (
-    condition.logic === ConditionLogic.ALWAYS_TRUE ||
-    condition.expressions.length === 0
+    normalized.logic === ConditionLogic.ALWAYS_TRUE ||
+    normalized.expressions.length === 0
   ) {
     return "始终为真";
   }
-  if (condition.expressions.length === 1) {
-    const expr = condition.expressions[0];
+  if (normalized.expressions.length === 1) {
+    const expr = normalized.expressions[0];
     if ("field" in expr) {
       const leaf = expr as LeafCondition;
       return `${leaf.field || "?"} ${leaf.operator} ${leaf.value ?? ""}`;
     }
   }
-  const logic = condition.logic;
-  return `${logic} (${condition.expressions.length} 个条件)`;
+  const logic = normalized.logic;
+  return `${logic} (${normalized.expressions.length} 个条件)`;
 }
 
 const CoverageInferenceTab: React.FC<CoverageInferenceTabProps> = ({
@@ -279,7 +308,7 @@ const CoverageInferenceTab: React.FC<CoverageInferenceTabProps> = ({
                           匹配条件
                         </label>
                         <ConditionTreeBuilder
-                          conditions={rule.condition}
+                          conditions={normalizeCondition(rule.condition)}
                           onChange={(conditions) =>
                             handleUpdateRule(index, {
                               ...rule,

@@ -1,31 +1,991 @@
 [
   {
     "id": "mv-identity-001",
-    "name": "发票患者姓名与病历患者姓名一致性校验",
-    "description": "用于校验发票上的患者姓名与门急诊病历中的患者姓名是否一致。",
-    "enabled": true,
+    "name": "发票患者姓名与病历患者姓名一致性",
+    "description": "校验医疗费发票上的患者姓名与门急诊病历中的患者姓名是否一致。",
+    "enabled": false,
     "category": "identity",
     "left": {
       "material_id": "mat-20",
       "material_name": "医疗费发票",
-      "fact_id": "claim.patient_name",
-      "field_key": "claim.patient_name",
+      "fact_id": "insured.name",
+      "field_key": "name",
       "field_label": "发票患者姓名"
     },
     "operator": "EQ",
     "right": {
       "material_id": "mat-11",
       "material_name": "门（急）诊病历",
-      "fact_id": "claim.patient_name",
-      "field_key": "claim.patient_name",
+      "fact_id": "insured.name",
+      "field_key": "patient_name",
       "field_label": "病历患者姓名"
     },
     "failure_action": "MANUAL_REVIEW",
     "severity": "warning",
     "reason_code": "INVOICE_PATIENT_NAME_MISMATCH",
-    "message_template": "发票患者姓名与病历患者姓名不一致，需人工复核。",
+    "message_template": "发票患者姓名与门诊病历患者姓名不一致，需人工复核。",
     "output_fact_id": "claim.invoice_patient_name_consistent",
     "created_at": "2026-03-09T00:00:00.000Z",
-    "updated_at": "2026-03-09T00:00:00.000Z"
+    "updated_at": "2026-04-04T15:23:49.846Z"
+  },
+  {
+    "id": "mv-identity-002",
+    "name": "身份证姓名与住院病历患者姓名一致性",
+    "description": "校验身份证正面的姓名与住院病历/病案中的患者姓名是否一致，防止冒名就医。",
+    "enabled": true,
+    "category": "identity",
+    "left": {
+      "material_id": "mat-1",
+      "material_name": "身份证正面",
+      "fact_id": "insured.name",
+      "field_key": "name",
+      "field_label": "身份证姓名"
+    },
+    "operator": "EQ",
+    "right": {
+      "material_id": "mat-12",
+      "material_name": "住院病历/病案",
+      "fact_id": "insured.name",
+      "field_key": "patient_name",
+      "field_label": "住院病历患者姓名"
+    },
+    "failure_action": "MANUAL_REVIEW",
+    "severity": "warning",
+    "reason_code": "ID_INPATIENT_NAME_MISMATCH",
+    "message_template": "身份证姓名与住院病历患者姓名不一致，疑似冒名就医，需人工复核。",
+    "output_fact_id": "claim.id_inpatient_name_consistent",
+    "created_at": "2026-03-25T00:00:00.000Z",
+    "updated_at": "2026-03-25T00:00:00.000Z"
+  },
+  {
+    "id": "mv-identity-003",
+    "name": "身份证姓名与伤残鉴定主体姓名一致性",
+    "description": "校验身份证正面的姓名与伤残鉴定意见书中的鉴定主体姓名是否一致。",
+    "enabled": true,
+    "category": "identity",
+    "left": {
+      "material_id": "mat-1",
+      "material_name": "身份证正面",
+      "fact_id": "insured.name",
+      "field_key": "name",
+      "field_label": "身份证姓名"
+    },
+    "operator": "EQ",
+    "right": {
+      "material_id": "mat-35",
+      "material_name": "伤残鉴定意见书",
+      "fact_id": "insured.name",
+      "field_key": "subject_name",
+      "field_label": "鉴定主体姓名"
+    },
+    "failure_action": "MANUAL_REVIEW",
+    "severity": "warning",
+    "reason_code": "ID_DISABILITY_NAME_MISMATCH",
+    "message_template": "身份证姓名与伤残鉴定主体姓名不一致，需人工复核。",
+    "output_fact_id": "claim.id_disability_name_consistent",
+    "created_at": "2026-03-25T00:00:00.000Z",
+    "updated_at": "2026-03-25T00:00:00.000Z"
+  },
+  {
+    "id": "mv-identity-004",
+    "name": "身份证号与户籍证明身份证号一致性",
+    "description": "校验身份证正面的证件号与户籍所在地证明中的身份证号是否一致。",
+    "enabled": true,
+    "category": "identity",
+    "left": {
+      "material_id": "mat-1",
+      "material_name": "身份证正面",
+      "fact_id": "insured.id_number",
+      "field_key": "id_number",
+      "field_label": "身份证号"
+    },
+    "operator": "EQ",
+    "right": {
+      "material_id": "mat-7",
+      "material_name": "户籍所在地证明",
+      "fact_id": "insured.id_number",
+      "field_key": "id_number",
+      "field_label": "户籍证明身份证号"
+    },
+    "failure_action": "MANUAL_REVIEW",
+    "severity": "warning",
+    "reason_code": "ID_NUMBER_HOUSEHOLD_MISMATCH",
+    "message_template": "身份证号与户籍证明身份证号不一致，需人工复核。",
+    "output_fact_id": "claim.id_number_household_consistent",
+    "created_at": "2026-03-25T00:00:00.000Z",
+    "updated_at": "2026-03-25T00:00:00.000Z"
+  },
+  {
+    "id": "mv-identity-005",
+    "name": "驾驶证姓名与身份证姓名一致性",
+    "description": "校验驾驶证上的姓名与身份证正面姓名是否一致，用于交通事故案件身份核验。",
+    "enabled": true,
+    "category": "identity",
+    "left": {
+      "material_id": "mat-3",
+      "material_name": "驾驶证（含副页）",
+      "fact_id": "insured.name",
+      "field_key": "name",
+      "field_label": "驾驶证姓名"
+    },
+    "operator": "EQ",
+    "right": {
+      "material_id": "mat-1",
+      "material_name": "身份证正面",
+      "fact_id": "insured.name",
+      "field_key": "name",
+      "field_label": "身份证姓名"
+    },
+    "failure_action": "MANUAL_REVIEW",
+    "severity": "warning",
+    "reason_code": "DRIVER_ID_NAME_MISMATCH",
+    "message_template": "驾驶证姓名与身份证姓名不一致，需人工复核。",
+    "output_fact_id": "claim.driver_id_name_consistent",
+    "created_at": "2026-03-25T00:00:00.000Z",
+    "updated_at": "2026-03-25T00:00:00.000Z"
+  },
+  {
+    "id": "mv-identity-006",
+    "name": "死亡证明姓名与身份证姓名一致性",
+    "description": "校验死亡证明中的死亡者姓名与身份证正面姓名是否一致，用于身故理赔身份核验。",
+    "enabled": true,
+    "category": "identity",
+    "left": {
+      "material_id": "mat-43",
+      "material_name": "死亡证明",
+      "fact_id": "insured.name",
+      "field_key": "deceased_name",
+      "field_label": "死亡者姓名"
+    },
+    "operator": "EQ",
+    "right": {
+      "material_id": "mat-1",
+      "material_name": "身份证正面",
+      "fact_id": "insured.name",
+      "field_key": "name",
+      "field_label": "身份证姓名"
+    },
+    "failure_action": "MANUAL_REVIEW",
+    "severity": "error",
+    "reason_code": "DEATH_ID_NAME_MISMATCH",
+    "message_template": "死亡证明中的姓名与身份证姓名不一致，需人工核实是否为同一人。",
+    "output_fact_id": "claim.death_id_name_consistent",
+    "created_at": "2026-03-25T00:00:00.000Z",
+    "updated_at": "2026-03-25T00:00:00.000Z"
+  },
+  {
+    "id": "mv-identity-007",
+    "name": "死亡证明身份证号与身份证号一致性",
+    "description": "校验死亡证明中的身份证号与身份证正面证件号是否一致。",
+    "enabled": true,
+    "category": "identity",
+    "left": {
+      "material_id": "mat-43",
+      "material_name": "死亡证明",
+      "fact_id": "insured.id_number",
+      "field_key": "id_number",
+      "field_label": "死亡证明身份证号"
+    },
+    "operator": "EQ",
+    "right": {
+      "material_id": "mat-1",
+      "material_name": "身份证正面",
+      "fact_id": "insured.id_number",
+      "field_key": "id_number",
+      "field_label": "身份证号"
+    },
+    "failure_action": "MANUAL_REVIEW",
+    "severity": "error",
+    "reason_code": "DEATH_ID_NUMBER_MISMATCH",
+    "message_template": "死亡证明身份证号与身份证号不一致，需人工核实。",
+    "output_fact_id": "claim.death_id_number_consistent",
+    "created_at": "2026-03-25T00:00:00.000Z",
+    "updated_at": "2026-03-25T00:00:00.000Z"
+  },
+  {
+    "id": "mv-medical-date-001",
+    "name": "住院天数证明入院日期与住院病历入院日期一致性",
+    "description": "校验住院天数证明与住院病历/病案中的入院日期是否一致，防止日期篡改。",
+    "enabled": true,
+    "category": "medical_date",
+    "left": {
+      "material_id": "mat-18",
+      "material_name": "住院天数证明",
+      "fact_id": "claim.admission_date",
+      "field_key": "admission_date",
+      "field_label": "住院天数证明入院日期"
+    },
+    "operator": "EQ",
+    "right": {
+      "material_id": "mat-12",
+      "material_name": "住院病历/病案",
+      "fact_id": "claim.admission_date",
+      "field_key": "admission_date",
+      "field_label": "住院病历入院日期"
+    },
+    "failure_action": "MANUAL_REVIEW",
+    "severity": "warning",
+    "reason_code": "ADMISSION_DATE_MISMATCH",
+    "message_template": "住院天数证明与住院病历的入院日期不一致，需人工复核。",
+    "output_fact_id": "claim.admission_date_consistent",
+    "created_at": "2026-03-25T00:00:00.000Z",
+    "updated_at": "2026-03-25T00:00:00.000Z"
+  },
+  {
+    "id": "mv-medical-date-002",
+    "name": "住院天数证明出院日期与住院病历出院日期一致性",
+    "description": "校验住院天数证明与住院病历/病案中的出院日期是否一致，防止日期篡改。",
+    "enabled": true,
+    "category": "medical_date",
+    "left": {
+      "material_id": "mat-18",
+      "material_name": "住院天数证明",
+      "fact_id": "claim.discharge_date",
+      "field_key": "discharge_date",
+      "field_label": "住院天数证明出院日期"
+    },
+    "operator": "EQ",
+    "right": {
+      "material_id": "mat-12",
+      "material_name": "住院病历/病案",
+      "fact_id": "claim.discharge_date",
+      "field_key": "discharge_date",
+      "field_label": "住院病历出院日期"
+    },
+    "failure_action": "MANUAL_REVIEW",
+    "severity": "warning",
+    "reason_code": "DISCHARGE_DATE_MISMATCH",
+    "message_template": "住院天数证明与住院病历的出院日期不一致，需人工复核。",
+    "output_fact_id": "claim.discharge_date_consistent",
+    "created_at": "2026-03-25T00:00:00.000Z",
+    "updated_at": "2026-03-25T00:00:00.000Z"
+  },
+  {
+    "id": "mv-medical-date-003",
+    "name": "医疗费发票入院日期与住院病历入院日期一致性",
+    "description": "校验医疗费发票上的入院日期与住院病历中的入院日期是否一致，识别发票日期异常。",
+    "enabled": true,
+    "category": "medical_date",
+    "left": {
+      "material_id": "mat-20",
+      "material_name": "医疗费发票",
+      "fact_id": "claim.admission_date",
+      "field_key": "admissionDate",
+      "field_label": "发票入院日期"
+    },
+    "operator": "EQ",
+    "right": {
+      "material_id": "mat-12",
+      "material_name": "住院病历/病案",
+      "fact_id": "claim.admission_date",
+      "field_key": "admission_date",
+      "field_label": "病历入院日期"
+    },
+    "failure_action": "MANUAL_REVIEW",
+    "severity": "warning",
+    "reason_code": "INVOICE_ADMISSION_DATE_MISMATCH",
+    "message_template": "医疗费发票与住院病历的入院日期不一致，疑似发票日期有误，需人工复核。",
+    "output_fact_id": "claim.invoice_admission_date_consistent",
+    "created_at": "2026-03-25T00:00:00.000Z",
+    "updated_at": "2026-03-25T00:00:00.000Z"
+  },
+  {
+    "id": "mv-medical-date-004",
+    "name": "医疗费发票出院日期与住院病历出院日期一致性",
+    "description": "校验医疗费发票上的出院日期与住院病历中的出院日期是否一致。",
+    "enabled": true,
+    "category": "medical_date",
+    "left": {
+      "material_id": "mat-20",
+      "material_name": "医疗费发票",
+      "fact_id": "claim.discharge_date",
+      "field_key": "dischargeDate",
+      "field_label": "发票出院日期"
+    },
+    "operator": "EQ",
+    "right": {
+      "material_id": "mat-12",
+      "material_name": "住院病历/病案",
+      "fact_id": "claim.discharge_date",
+      "field_key": "discharge_date",
+      "field_label": "病历出院日期"
+    },
+    "failure_action": "MANUAL_REVIEW",
+    "severity": "warning",
+    "reason_code": "INVOICE_DISCHARGE_DATE_MISMATCH",
+    "message_template": "医疗费发票与住院病历的出院日期不一致，需人工复核。",
+    "output_fact_id": "claim.invoice_discharge_date_consistent",
+    "created_at": "2026-03-25T00:00:00.000Z",
+    "updated_at": "2026-03-25T00:00:00.000Z"
+  },
+  {
+    "id": "mv-amount-001",
+    "name": "医疗费发票总金额与费用明细清单总金额一致性",
+    "description": "校验医疗费发票合计金额与费用明细清单合计金额是否一致，识别费用虚报风险。",
+    "enabled": true,
+    "category": "amount",
+    "left": {
+      "material_id": "mat-20",
+      "material_name": "医疗费发票",
+      "fact_id": "claim.claimed_total_amount",
+      "field_key": "totalAmount",
+      "field_label": "发票总金额"
+    },
+    "operator": "EQ",
+    "right": {
+      "material_id": "mat-21",
+      "material_name": "费用明细清单",
+      "fact_id": "claim.claimed_total_amount",
+      "field_key": "total_amount",
+      "field_label": "明细清单总金额"
+    },
+    "failure_action": "MANUAL_REVIEW",
+    "severity": "warning",
+    "reason_code": "INVOICE_DETAIL_AMOUNT_MISMATCH",
+    "message_template": "医疗费发票总金额与费用明细清单总金额不一致，疑似费用虚报，需人工复核。",
+    "output_fact_id": "claim.invoice_amount_consistent",
+    "created_at": "2026-03-25T00:00:00.000Z",
+    "updated_at": "2026-03-25T00:00:00.000Z"
+  },
+  {
+    "id": "mv-amount-002",
+    "name": "赔偿协议书金额与赔款收条金额一致性",
+    "description": "校验赔偿协议书中约定的赔付金额与赔款收条中实际收款金额是否一致。",
+    "enabled": true,
+    "category": "amount",
+    "left": {
+      "material_id": "mat-61",
+      "material_name": "赔偿协议书",
+      "fact_id": "claim.claimed_total_amount",
+      "field_key": "settlement_amount",
+      "field_label": "协议赔付金额"
+    },
+    "operator": "EQ",
+    "right": {
+      "material_id": "mat-62",
+      "material_name": "赔款收条",
+      "fact_id": "claim.other_reimbursement_received",
+      "field_key": "received_amount",
+      "field_label": "收条收款金额"
+    },
+    "failure_action": "MANUAL_REVIEW",
+    "severity": "warning",
+    "reason_code": "AGREEMENT_RECEIPT_AMOUNT_MISMATCH",
+    "message_template": "赔偿协议书金额与赔款收条金额不一致，需人工复核实际赔付情况。",
+    "output_fact_id": "claim.settlement_receipt_amount_consistent",
+    "created_at": "2026-03-25T00:00:00.000Z",
+    "updated_at": "2026-03-25T00:00:00.000Z"
+  },
+  {
+    "id": "mv-amount-003",
+    "name": "赔偿协议书金额与赔偿支付凭证金额一致性",
+    "description": "校验赔偿协议书约定金额与赔偿支付凭证中实际划转金额是否一致，核实资金是否足额到账。",
+    "enabled": true,
+    "category": "amount",
+    "left": {
+      "material_id": "mat-61",
+      "material_name": "赔偿协议书",
+      "fact_id": "claim.claimed_total_amount",
+      "field_key": "settlement_amount",
+      "field_label": "协议赔付金额"
+    },
+    "operator": "EQ",
+    "right": {
+      "material_id": "mat-65",
+      "material_name": "赔偿支付凭证",
+      "fact_id": "claim.other_reimbursement_received",
+      "field_key": "paid_amount",
+      "field_label": "支付凭证金额"
+    },
+    "failure_action": "MANUAL_REVIEW",
+    "severity": "warning",
+    "reason_code": "AGREEMENT_PAYMENT_AMOUNT_MISMATCH",
+    "message_template": "赔偿协议书金额与支付凭证金额不一致，需核实是否存在分批支付或漏付情况。",
+    "output_fact_id": "claim.settlement_payment_amount_consistent",
+    "created_at": "2026-03-25T00:00:00.000Z",
+    "updated_at": "2026-03-25T00:00:00.000Z"
+  },
+  {
+    "id": "mv-diagnosis-001",
+    "name": "住院病历出院诊断与诊断证明书诊断一致性",
+    "description": "校验住院病历中的出院诊断与诊断证明书中的诊断是否一致，识别诊断不符风险。",
+    "enabled": true,
+    "category": "diagnosis",
+    "left": {
+      "material_id": "mat-12",
+      "material_name": "住院病历/病案",
+      "fact_id": "claim.diagnosis",
+      "field_key": "discharge_diagnosis",
+      "field_label": "住院病历出院诊断"
+    },
+    "operator": "CONTAINS",
+    "right": {
+      "material_id": "mat-13",
+      "material_name": "诊断证明书",
+      "fact_id": "claim.diagnosis",
+      "field_key": "diagnosis",
+      "field_label": "诊断证明书诊断"
+    },
+    "failure_action": "MANUAL_REVIEW",
+    "severity": "warning",
+    "reason_code": "INPATIENT_DIAGNOSIS_CERT_MISMATCH",
+    "message_template": "住院病历出院诊断与诊断证明书诊断不一致，请核实主诊断是否相符。",
+    "output_fact_id": "claim.diagnosis_consistent",
+    "created_at": "2026-03-25T00:00:00.000Z",
+    "updated_at": "2026-03-25T00:00:00.000Z"
+  },
+  {
+    "id": "mv-diagnosis-002",
+    "name": "病假单诊断与诊断证明书诊断一致性",
+    "description": "校验病假单（医嘱休息证明）中的诊断与诊断证明书诊断是否一致，防止轻症伪报重症。",
+    "enabled": true,
+    "category": "diagnosis",
+    "left": {
+      "material_id": "mat-15",
+      "material_name": "医嘱休息证明（病假单）",
+      "fact_id": "claim.diagnosis",
+      "field_key": "diagnosis",
+      "field_label": "病假单诊断"
+    },
+    "operator": "CONTAINS",
+    "right": {
+      "material_id": "mat-13",
+      "material_name": "诊断证明书",
+      "fact_id": "claim.diagnosis",
+      "field_key": "diagnosis",
+      "field_label": "诊断证明书诊断"
+    },
+    "failure_action": "MANUAL_REVIEW",
+    "severity": "warning",
+    "reason_code": "SICK_LEAVE_DIAGNOSIS_CERT_MISMATCH",
+    "message_template": "病假单诊断与诊断证明书诊断不一致，需人工复核诊断是否相符。",
+    "output_fact_id": "claim.sick_leave_diagnosis_consistent",
+    "created_at": "2026-03-25T00:00:00.000Z",
+    "updated_at": "2026-03-25T00:00:00.000Z"
+  },
+  {
+    "id": "mv-diagnosis-003",
+    "name": "医疗费发票出院诊断与住院病历出院诊断一致性",
+    "description": "校验医疗费发票上标注的出院诊断与住院病历出院诊断是否一致。",
+    "enabled": true,
+    "category": "diagnosis",
+    "left": {
+      "material_id": "mat-20",
+      "material_name": "医疗费发票",
+      "fact_id": "claim.diagnosis",
+      "field_key": "dischargeDiagnosis",
+      "field_label": "发票出院诊断"
+    },
+    "operator": "CONTAINS",
+    "right": {
+      "material_id": "mat-12",
+      "material_name": "住院病历/病案",
+      "fact_id": "claim.diagnosis",
+      "field_key": "discharge_diagnosis",
+      "field_label": "住院病历出院诊断"
+    },
+    "failure_action": "MANUAL_REVIEW",
+    "severity": "warning",
+    "reason_code": "INVOICE_INPATIENT_DIAGNOSIS_MISMATCH",
+    "message_template": "医疗费发票与住院病历的出院诊断不一致，需人工复核。",
+    "output_fact_id": "claim.invoice_diagnosis_consistent",
+    "created_at": "2026-03-25T00:00:00.000Z",
+    "updated_at": "2026-03-25T00:00:00.000Z"
+  },
+  {
+    "id": "mv-accident-001",
+    "name": "责任认定书事故日期与报案出险时间一致性",
+    "description": "校验交通事故责任认定书中的事故日期与报案信息中的出险时间是否一致，识别事故日期造假风险。",
+    "enabled": true,
+    "category": "accident",
+    "left": {
+      "material_id": "mat-8",
+      "material_name": "交通事故责任认定书",
+      "fact_id": "claim.accident_date",
+      "field_key": "accident_date",
+      "field_label": "责任认定书事故日期"
+    },
+    "operator": "EQ",
+    "right": {
+      "material_id": "mat-48",
+      "material_name": "报案信息",
+      "fact_id": "claim.accident_date",
+      "field_key": "loss_time",
+      "field_label": "报案出险时间"
+    },
+    "failure_action": "MANUAL_REVIEW",
+    "severity": "warning",
+    "reason_code": "ACCIDENT_DATE_NOTICE_MISMATCH",
+    "message_template": "责任认定书事故日期与报案出险时间不一致，请核实事故日期是否准确。",
+    "output_fact_id": "claim.accident_date_notice_consistent",
+    "created_at": "2026-03-25T00:00:00.000Z",
+    "updated_at": "2026-03-25T00:00:00.000Z"
+  },
+  {
+    "id": "mv-accident-002",
+    "name": "工伤认定书受伤日期与报案出险时间一致性",
+    "description": "校验工伤认定决定书中的受伤日期与报案信息中的出险时间是否一致。",
+    "enabled": true,
+    "category": "accident",
+    "left": {
+      "material_id": "mat-9",
+      "material_name": "认定工伤决定书",
+      "fact_id": "claim.accident_date",
+      "field_key": "injury_date",
+      "field_label": "工伤认定书受伤日期"
+    },
+    "operator": "EQ",
+    "right": {
+      "material_id": "mat-48",
+      "material_name": "报案信息",
+      "fact_id": "claim.accident_date",
+      "field_key": "loss_time",
+      "field_label": "报案出险时间"
+    },
+    "failure_action": "MANUAL_REVIEW",
+    "severity": "warning",
+    "reason_code": "WORK_INJURY_DATE_NOTICE_MISMATCH",
+    "message_template": "工伤认定书受伤日期与报案出险时间不一致，需人工复核。",
+    "output_fact_id": "claim.work_injury_date_consistent",
+    "created_at": "2026-03-25T00:00:00.000Z",
+    "updated_at": "2026-03-25T00:00:00.000Z"
+  },
+  {
+    "id": "mv-accident-003",
+    "name": "门诊病历就诊日期与报案出险时间一致性",
+    "description": "校验门急诊病历的就诊日期与报案出险时间是否在合理范围内（就诊日应不早于出险日）。",
+    "enabled": true,
+    "category": "accident",
+    "left": {
+      "material_id": "mat-11",
+      "material_name": "门（急）诊病历",
+      "fact_id": "claim.accident_date",
+      "field_key": "visit_date",
+      "field_label": "门诊就诊日期"
+    },
+    "operator": "GTE",
+    "right": {
+      "material_id": "mat-48",
+      "material_name": "报案信息",
+      "fact_id": "claim.accident_date",
+      "field_key": "loss_time",
+      "field_label": "报案出险时间"
+    },
+    "failure_action": "MANUAL_REVIEW",
+    "severity": "warning",
+    "reason_code": "VISIT_BEFORE_ACCIDENT_DATE",
+    "message_template": "门诊就诊日期早于报案出险时间，可能存在既往病症被混入本次理赔，需人工复核。",
+    "output_fact_id": "claim.visit_after_accident_consistent",
+    "created_at": "2026-03-25T00:00:00.000Z",
+    "updated_at": "2026-03-25T00:00:00.000Z"
+  },
+  {
+    "id": "mv-disability-001",
+    "name": "伤残鉴定意见书伤残等级与劳动能力鉴定结论一致性",
+    "description": "校验伤残鉴定意见书中的伤残等级与劳动能力鉴定结论中的伤残等级是否一致，防止等级虚报。",
+    "enabled": true,
+    "category": "disability",
+    "left": {
+      "material_id": "mat-35",
+      "material_name": "伤残鉴定意见书",
+      "fact_id": "claim.disability_grade",
+      "field_key": "disability_grade",
+      "field_label": "伤残鉴定等级"
+    },
+    "operator": "EQ",
+    "right": {
+      "material_id": "mat-36",
+      "material_name": "劳动能力鉴定结论",
+      "fact_id": "claim.disability_grade",
+      "field_key": "disability_level",
+      "field_label": "劳动能力鉴定等级"
+    },
+    "failure_action": "MANUAL_REVIEW",
+    "severity": "warning",
+    "reason_code": "DISABILITY_GRADE_MISMATCH",
+    "message_template": "伤残鉴定意见书与劳动能力鉴定结论中的伤残等级不一致，需人工复核以哪份为准。",
+    "output_fact_id": "claim.disability_grade_consistent",
+    "created_at": "2026-03-25T00:00:00.000Z",
+    "updated_at": "2026-03-25T00:00:00.000Z"
+  },
+  {
+    "id": "mv-hospital-001",
+    "name": "住院天数证明就诊医院与住院病历就诊医院一致性",
+    "description": "校验住院天数证明与住院病历中的医院名称是否一致，防止材料伪造。",
+    "enabled": true,
+    "category": "hospital",
+    "left": {
+      "material_id": "mat-18",
+      "material_name": "住院天数证明",
+      "fact_id": "claim.hospital_name",
+      "field_key": "hospital_name",
+      "field_label": "住院天数证明医院"
+    },
+    "operator": "EQ",
+    "right": {
+      "material_id": "mat-12",
+      "material_name": "住院病历/病案",
+      "fact_id": "claim.hospital_name",
+      "field_key": "hospital_name",
+      "field_label": "住院病历医院"
+    },
+    "failure_action": "MANUAL_REVIEW",
+    "severity": "warning",
+    "reason_code": "HOSPITAL_NAME_MISMATCH",
+    "message_template": "住院天数证明与住院病历的医院名称不一致，需人工复核材料是否对应同一次住院。",
+    "output_fact_id": "claim.hospital_name_consistent",
+    "created_at": "2026-03-25T00:00:00.000Z",
+    "updated_at": "2026-03-25T00:00:00.000Z"
+  },
+  {
+    "id": "mv-hospital-002",
+    "name": "诊断证明书就诊医院与住院病历就诊医院一致性",
+    "description": "校验诊断证明书与住院病历中的医院名称是否一致，防止不同医院材料混用。",
+    "enabled": true,
+    "category": "hospital",
+    "left": {
+      "material_id": "mat-13",
+      "material_name": "诊断证明书",
+      "fact_id": "claim.hospital_name",
+      "field_key": "hospital_name",
+      "field_label": "诊断证明书医院"
+    },
+    "operator": "EQ",
+    "right": {
+      "material_id": "mat-12",
+      "material_name": "住院病历/病案",
+      "fact_id": "claim.hospital_name",
+      "field_key": "hospital_name",
+      "field_label": "住院病历医院"
+    },
+    "failure_action": "MANUAL_REVIEW",
+    "severity": "warning",
+    "reason_code": "DIAGNOSIS_CERT_HOSPITAL_MISMATCH",
+    "message_template": "诊断证明书与住院病历的医院名称不一致，疑似材料不属同一次就医，需人工复核。",
+    "output_fact_id": "claim.diagnosis_cert_hospital_consistent",
+    "created_at": "2026-03-25T00:00:00.000Z",
+    "updated_at": "2026-03-25T00:00:00.000Z"
+  },
+  {
+    "id": "mv-amount-pct-001",
+    "name": "发票总额与费用明细清单总额百分比差异",
+    "description": "校验医疗费发票总金额与费用明细清单各项合计的百分比差异是否在容差范围内。原硬编码于 multiFileAnalyzer.validateAmountConsistency。",
+    "enabled": true,
+    "category": "amount_consistency",
+    "left": {
+      "material_id": "mat-20",
+      "material_name": "医疗费发票",
+      "fact_id": "claim.invoice_total_amount",
+      "field_key": "totalAmount",
+      "field_label": "发票总金额"
+    },
+    "operator": "PERCENT_DIFF_LTE",
+    "right": {
+      "material_id": "mat-21",
+      "material_name": "费用明细清单",
+      "fact_id": "claim.expense_list_total",
+      "field_key": "totalAmount",
+      "field_label": "费用清单总额"
+    },
+    "params": {
+      "threshold": 5
+    },
+    "failure_action": "MANUAL_REVIEW",
+    "severity": "error",
+    "reason_code": "INVOICE_EXPENSE_AMOUNT_PERCENT_DIFF",
+    "message_template": "发票总金额与费用明细清单总额的百分比差异超过 5%，需人工核实。",
+    "output_fact_id": "claim.invoice_expense_amount_percent_consistent",
+    "created_at": "2026-03-28T00:00:00.000Z",
+    "updated_at": "2026-03-28T00:00:00.000Z"
+  },
+  {
+    "id": "mv-date-future-001",
+    "name": "发票开票日期不能是未来日期",
+    "description": "校验发票开票日期不能超过当前系统时间。原硬编码于 multiFileAnalyzer.validateDateConsistency。",
+    "enabled": true,
+    "category": "date_consistency",
+    "left": {
+      "material_id": "mat-20",
+      "material_name": "医疗费发票",
+      "fact_id": "claim.invoice_date",
+      "field_key": "invoiceDate",
+      "field_label": "发票开票日期"
+    },
+    "operator": "DATE_BEFORE_NOW",
+    "right": {
+      "material_id": "$SYSTEM",
+      "material_name": "系统当前时间",
+      "fact_id": "$NOW",
+      "field_key": "$NOW",
+      "field_label": "当前日期"
+    },
+    "failure_action": "MANUAL_REVIEW",
+    "severity": "error",
+    "reason_code": "INVOICE_DATE_IN_FUTURE",
+    "message_template": "发票开票日期为未来日期，疑似异常，需人工核实。",
+    "output_fact_id": "claim.invoice_date_not_future",
+    "created_at": "2026-03-28T00:00:00.000Z",
+    "updated_at": "2026-03-28T00:00:00.000Z"
+  },
+  {
+    "id": "mv-date-future-002",
+    "name": "入院日期不能是未来日期",
+    "description": "校验住院病历中的入院日期不能超过当前系统时间。原硬编码于 multiFileAnalyzer.validateDateConsistency。",
+    "enabled": true,
+    "category": "date_consistency",
+    "left": {
+      "material_id": "mat-12",
+      "material_name": "住院病历/病案",
+      "fact_id": "claim.admission_date",
+      "field_key": "admissionDate",
+      "field_label": "入院日期"
+    },
+    "operator": "DATE_BEFORE_NOW",
+    "right": {
+      "material_id": "$SYSTEM",
+      "material_name": "系统当前时间",
+      "fact_id": "$NOW",
+      "field_key": "$NOW",
+      "field_label": "当前日期"
+    },
+    "failure_action": "MANUAL_REVIEW",
+    "severity": "error",
+    "reason_code": "ADMISSION_DATE_IN_FUTURE",
+    "message_template": "入院日期为未来日期，疑似异常，需人工核实。",
+    "output_fact_id": "claim.admission_date_not_future",
+    "created_at": "2026-03-28T00:00:00.000Z",
+    "updated_at": "2026-03-28T00:00:00.000Z"
+  },
+  {
+    "id": "mv-date-future-003",
+    "name": "出院日期不能是未来日期",
+    "description": "校验住院病历中的出院日期不能超过当前系统时间。原硬编码于 multiFileAnalyzer.validateDateConsistency。",
+    "enabled": true,
+    "category": "date_consistency",
+    "left": {
+      "material_id": "mat-12",
+      "material_name": "住院病历/病案",
+      "fact_id": "claim.discharge_date",
+      "field_key": "dischargeDate",
+      "field_label": "出院日期"
+    },
+    "operator": "DATE_BEFORE_NOW",
+    "right": {
+      "material_id": "$SYSTEM",
+      "material_name": "系统当前时间",
+      "fact_id": "$NOW",
+      "field_key": "$NOW",
+      "field_label": "当前日期"
+    },
+    "failure_action": "MANUAL_REVIEW",
+    "severity": "error",
+    "reason_code": "DISCHARGE_DATE_IN_FUTURE",
+    "message_template": "出院日期为未来日期，疑似异常，需人工核实。",
+    "output_fact_id": "claim.discharge_date_not_future",
+    "created_at": "2026-03-28T00:00:00.000Z",
+    "updated_at": "2026-03-28T00:00:00.000Z"
+  },
+  {
+    "id": "mv-date-order-001",
+    "name": "入院日期应早于或等于出院日期",
+    "description": "校验住院病历中入院日期不晚于出院日期。原硬编码于 multiFileAnalyzer.validateDateConsistency。",
+    "enabled": true,
+    "category": "date_consistency",
+    "left": {
+      "material_id": "mat-12",
+      "material_name": "住院病历/病案",
+      "fact_id": "claim.admission_date",
+      "field_key": "admissionDate",
+      "field_label": "入院日期"
+    },
+    "operator": "LTE",
+    "right": {
+      "material_id": "mat-12",
+      "material_name": "住院病历/病案",
+      "fact_id": "claim.discharge_date",
+      "field_key": "dischargeDate",
+      "field_label": "出院日期"
+    },
+    "failure_action": "MANUAL_REVIEW",
+    "severity": "error",
+    "reason_code": "ADMISSION_AFTER_DISCHARGE",
+    "message_template": "入院日期晚于出院日期，日期逻辑异常，需人工核实。",
+    "output_fact_id": "claim.admission_before_discharge",
+    "created_at": "2026-03-28T00:00:00.000Z",
+    "updated_at": "2026-03-28T00:00:00.000Z"
+  },
+  {
+    "id": "mv-timeline-001",
+    "name": "入院日期应晚于或等于事故日期",
+    "description": "校验住院日期不早于事故发生日期，验证时间线合理性。原硬编码于 multiFileAnalyzer.validateTimeline。",
+    "enabled": true,
+    "category": "timeline",
+    "left": {
+      "material_id": "mat-12",
+      "material_name": "住院病历/病案",
+      "fact_id": "claim.admission_date",
+      "field_key": "admissionDate",
+      "field_label": "入院日期"
+    },
+    "operator": "GTE",
+    "right": {
+      "material_id": "mat-8",
+      "material_name": "交通事故责任认定书",
+      "fact_id": "claim.accident_date",
+      "field_key": "accidentDate",
+      "field_label": "事故日期"
+    },
+    "failure_action": "MANUAL_REVIEW",
+    "severity": "error",
+    "reason_code": "ADMISSION_BEFORE_ACCIDENT",
+    "message_template": "入院日期早于事故日期，时间线异常，请核实。",
+    "output_fact_id": "claim.admission_after_accident",
+    "created_at": "2026-03-28T00:00:00.000Z",
+    "updated_at": "2026-03-28T00:00:00.000Z"
+  },
+  {
+    "id": "mv-timeline-002",
+    "name": "发票开票日期应晚于或等于入院日期",
+    "description": "校验发票开票日期不早于入院日期，验证时间线合理性。原硬编码于 multiFileAnalyzer.validateTimeline。",
+    "enabled": true,
+    "category": "timeline",
+    "left": {
+      "material_id": "mat-20",
+      "material_name": "医疗费发票",
+      "fact_id": "claim.invoice_date",
+      "field_key": "invoiceDate",
+      "field_label": "发票开票日期"
+    },
+    "operator": "GTE",
+    "right": {
+      "material_id": "mat-12",
+      "material_name": "住院病历/病案",
+      "fact_id": "claim.admission_date",
+      "field_key": "admissionDate",
+      "field_label": "入院日期"
+    },
+    "failure_action": "WARNING",
+    "severity": "warning",
+    "reason_code": "INVOICE_BEFORE_ADMISSION",
+    "message_template": "发票开票日期早于入院日期，时间线异常，请核实。",
+    "output_fact_id": "claim.invoice_after_admission",
+    "created_at": "2026-03-28T00:00:00.000Z",
+    "updated_at": "2026-03-28T00:00:00.000Z"
+  },
+  {
+    "id": "mv-timeline-003",
+    "name": "费用明细清单开票日期应晚于或等于入院日期",
+    "description": "校验费用明细清单上的日期不早于入院日期，验证时间线合理性。",
+    "enabled": true,
+    "category": "timeline",
+    "left": {
+      "material_id": "mat-21",
+      "material_name": "费用明细清单",
+      "fact_id": "claim.invoice_date",
+      "field_key": "invoiceDate",
+      "field_label": "清单日期"
+    },
+    "operator": "GTE",
+    "right": {
+      "material_id": "mat-12",
+      "material_name": "住院病历/病案",
+      "fact_id": "claim.admission_date",
+      "field_key": "admissionDate",
+      "field_label": "入院日期"
+    },
+    "failure_action": "WARNING",
+    "severity": "warning",
+    "reason_code": "EXPENSE_LIST_BEFORE_ADMISSION",
+    "message_template": "费用明细清单日期早于入院日期，时间线异常，请核实。",
+    "output_fact_id": "claim.expense_list_after_admission",
+    "created_at": "2026-03-28T00:00:00.000Z",
+    "updated_at": "2026-03-28T00:00:00.000Z"
+  },
+  {
+    "id": "mv-timeline-004",
+    "name": "购药发票开票日期应晚于或等于入院日期",
+    "description": "校验购药发票日期不早于入院日期，验证时间线合理性。",
+    "enabled": true,
+    "category": "timeline",
+    "left": {
+      "material_id": "mat-22",
+      "material_name": "购药发票",
+      "fact_id": "claim.invoice_date",
+      "field_key": "invoiceDate",
+      "field_label": "购药发票日期"
+    },
+    "operator": "GTE",
+    "right": {
+      "material_id": "mat-12",
+      "material_name": "住院病历/病案",
+      "fact_id": "claim.admission_date",
+      "field_key": "admissionDate",
+      "field_label": "入院日期"
+    },
+    "failure_action": "WARNING",
+    "severity": "warning",
+    "reason_code": "DRUG_INVOICE_BEFORE_ADMISSION",
+    "message_template": "购药发票日期早于入院日期，时间线异常，请核实。",
+    "output_fact_id": "claim.drug_invoice_after_admission",
+    "created_at": "2026-03-28T00:00:00.000Z",
+    "updated_at": "2026-03-28T00:00:00.000Z"
+  },
+  {
+    "id": "mv-timeline-005",
+    "name": "辅助器具发票开票日期应晚于或等于入院日期",
+    "description": "校验辅助器具发票日期不早于入院日期，验证时间线合理性。",
+    "enabled": true,
+    "category": "timeline",
+    "left": {
+      "material_id": "mat-23",
+      "material_name": "辅助器具发票",
+      "fact_id": "claim.invoice_date",
+      "field_key": "invoiceDate",
+      "field_label": "辅助器具发票日期"
+    },
+    "operator": "GTE",
+    "right": {
+      "material_id": "mat-12",
+      "material_name": "住院病历/病案",
+      "fact_id": "claim.admission_date",
+      "field_key": "admissionDate",
+      "field_label": "入院日期"
+    },
+    "failure_action": "WARNING",
+    "severity": "warning",
+    "reason_code": "AID_INVOICE_BEFORE_ADMISSION",
+    "message_template": "辅助器具发票日期早于入院日期，时间线异常，请核实。",
+    "output_fact_id": "claim.aid_invoice_after_admission",
+    "created_at": "2026-03-28T00:00:00.000Z",
+    "updated_at": "2026-03-28T00:00:00.000Z"
+  },
+  {
+    "id": "mv-timeline-006",
+    "name": "护理费发票开票日期应晚于或等于入院日期",
+    "description": "校验护理费发票日期不早于入院日期，验证时间线合理性。",
+    "enabled": true,
+    "category": "timeline",
+    "left": {
+      "material_id": "mat-24",
+      "material_name": "护理费发票",
+      "fact_id": "claim.invoice_date",
+      "field_key": "invoiceDate",
+      "field_label": "护理费发票日期"
+    },
+    "operator": "GTE",
+    "right": {
+      "material_id": "mat-12",
+      "material_name": "住院病历/病案",
+      "fact_id": "claim.admission_date",
+      "field_key": "admissionDate",
+      "field_label": "入院日期"
+    },
+    "failure_action": "WARNING",
+    "severity": "warning",
+    "reason_code": "NURSING_INVOICE_BEFORE_ADMISSION",
+    "message_template": "护理费发票日期早于入院日期，时间线异常，请核实。",
+    "output_fact_id": "claim.nursing_invoice_after_admission",
+    "created_at": "2026-03-28T00:00:00.000Z",
+    "updated_at": "2026-03-28T00:00:00.000Z"
   }
 ]

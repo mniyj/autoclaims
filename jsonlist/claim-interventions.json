@@ -1,0 +1,44 @@
+[
+  {
+    "id": "iv-1775297748024-2fpdsl",
+    "claimCaseId": "CLM-MED-001",
+    "stageKey": "liability",
+    "interventionType": "RULE_MANUAL_ROUTE",
+    "currentState": "RESOLVED_PROCEED",
+    "reason": {
+      "code": "RULE_ROUTE_MANUAL",
+      "summary": "既往症免责 缺少关键字段: claim.pre_existing_condition；免责事实缺失：既往症免责",
+      "detail": "定责阶段规则转人工：既往症免责 缺少关键字段: claim.pre_existing_condition；免责事实缺失：既往症免责",
+      "sourceRuleId": "ZAOPD108",
+      "routeReason": "既往症免责 缺少关键字段: claim.pre_existing_condition；免责事实缺失：既往症免责"
+    },
+    "priority": "HIGH",
+    "createdAt": "2026-04-04T10:15:48.024Z",
+    "updatedAt": "2026-04-04T16:12:52.234Z",
+    "triggeringRuleId": "ZAOPD108",
+    "transitions": [
+      {
+        "id": "it-1775297748025-iayqfo",
+        "interventionId": "iv-1775297748024-2fpdsl",
+        "fromState": "IDLE",
+        "toState": "MANUAL_REVIEW_TRIGGERED",
+        "event": "RULE_ROUTE_MANUAL",
+        "timestamp": "2026-04-04T10:15:48.025Z",
+        "actorType": "system"
+      },
+      {
+        "id": "it-1775319172234-7taz4p",
+        "interventionId": "iv-1775297748024-2fpdsl",
+        "fromState": "MANUAL_REVIEW_TRIGGERED",
+        "toState": "RESOLVED_PROCEED",
+        "event": "MANUAL_RESOLVE",
+        "timestamp": "2026-04-04T16:12:52.234Z",
+        "actorType": "adjuster",
+        "reason": "Manual resolution: PROCEED"
+      }
+    ],
+    "previousState": "MANUAL_REVIEW_TRIGGERED",
+    "resolvedAt": "2026-04-04T16:12:52.234Z",
+    "resolution": "PROCEED"
+  }
+]

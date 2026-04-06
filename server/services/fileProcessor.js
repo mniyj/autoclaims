@@ -6,6 +6,7 @@
 import { parseDocument } from './documentParser.js';
 import { processVideo, extractKeyFrames } from './videoProcessor.js';
 import { invokeAICapability } from './aiRuntime.js';
+import { normalizeImageBufferForOcr } from './imageNormalization.js';
 
 const GLM_OCR_URL = 'https://open.bigmodel.cn/api/paas/v4/layout_parsing';
 const PADDLE_OCR_URL = process.env.PADDLE_OCR_URL || 'http://localhost:8866/predict/ocr_system';
@@ -143,6 +144,28 @@ export function inferDocumentType(fileName, context = {}) {
  * @returns {Promise<object>}
  */
 export async function processImageWithAI(base64Data, mimeType, prompt, options = {}) {
+  let effectiveBase64Data = base64Data;
+  let effectiveMimeType = mimeType;
+
+  if (options.fileBuffer) {
+    try {
+      const normalizedImage = await normalizeImageBufferForOcr(
+        options.fileBuffer,
+        mimeType,
+        options.fileName || 'image.jpg',
+      );
+      if (normalizedImage.wasAutoRotated) {
+        effectiveBase64Data = normalizedImage.buffer.toString('base64');
+        effectiveMimeType = normalizedImage.mimeType || mimeType;
+      }
+    } catch (normalizationError) {
+      console.warn(
+        '[fileProcessor] image auto-rotation failed:',
+        normalizationError?.message || normalizationError,
+      );
+    }
+  }
+
   const fallbackOrder = Array.isArray(options.ocrFallbackProviders)
     ? options.ocrFallbackProviders
     : String(process.env.IMAGE_OCR_FALLBACKS || 'glm-ocr,paddle-ocr')
@@ -156,7 +179,7 @@ export async function processImageWithAI(base64Data, mimeType, prompt, options =
       request: {
         contents: {
           parts: [
-            { inlineData: { mimeType, data: base64Data } },
+            { inlineData: { mimeType: effectiveMimeType, data: effectiveBase64Data } },
             { text: prompt || '请识别并提取图片中的所有文字信息，以纯文本格式返回。' }
           ]
         },
@@ -171,7 +194,7 @@ export async function processImageWithAI(base64Data, mimeType, prompt, options =
         operation: 'process_image_with_ai',
         context: {
           ...(options.logContext || {}),
-          mimeType,
+          mimeType: effectiveMimeType,
           promptType: options.promptType || 'default',
         },
       },
@@ -202,7 +225,7 @@ export async function processImageWithAI(base64Data, mimeType, prompt, options =
     for (const providerId of fallbackOrder) {
       try {
         if (providerId === 'glm-ocr') {
-          const text = await processImageWithGlmOcr(base64Data, mimeType);
+          const text = await processImageWithGlmOcr(effectiveBase64Data, effectiveMimeType);
           return {
             success: true,
             text,
@@ -214,7 +237,7 @@ export async function processImageWithAI(base64Data, mimeType, prompt, options =
         }
 
         if (providerId === 'paddle-ocr') {
-          const text = await processImageWithPaddleOcr(base64Data, mimeType);
+          const text = await processImageWithPaddleOcr(effectiveBase64Data, effectiveMimeType);
           return {
             success: true,
             text,
@@ -346,6 +369,8 @@ export async function processFile(params) {
             options.prompt,
             {
               ...options,
+              fileBuffer: buffer || (options.base64Data ? Buffer.from(options.base64Data, 'base64') : null),
+              fileName,
               logContext: baseLogContext,
             }
           );

@@ -1,9 +1,22 @@
 import { executeFullReview } from "../rules/engine.js";
 import { readData, writeData } from "../utils/fileStore.js";
 import { generateDamageReport } from "./reportGenerator.js";
+import {
+  buildCalculationContext,
+  inferFormulaTypes,
+} from "./calculationContextBuilder.js";
+import { executeCalculation } from "./calculationEngine.js";
+import { createIntervention } from "./interventionStateMachine.js";
 
 function uniqueStrings(values = []) {
-  return [...new Set(values.filter(Boolean).map((value) => String(value).trim()).filter(Boolean))];
+  return [
+    ...new Set(
+      values
+        .filter(Boolean)
+        .map((value) => String(value).trim())
+        .filter(Boolean),
+    ),
+  ];
 }
 
 function normalizeDateInput(value) {
@@ -59,7 +72,11 @@ function extractReviewFactsFromDocuments(record = {}) {
       });
     }
 
-    const diagnosisValues = [summary.diagnosis, summary.primaryDiagnosis, summary.dischargeDiagnosis];
+    const diagnosisValues = [
+      summary.diagnosis,
+      summary.primaryDiagnosis,
+      summary.dischargeDiagnosis,
+    ];
     diagnosisValues.forEach((value) => {
       if (Array.isArray(value)) {
         value.forEach((entry) => diagnosisNames.push(entry?.name || entry));
@@ -70,7 +87,10 @@ function extractReviewFactsFromDocuments(record = {}) {
 
     admissionDate = admissionDate || normalizeDateInput(summary.admissionDate);
     dischargeDate = dischargeDate || normalizeDateInput(summary.dischargeDate);
-    if (hospitalDays == null && Number.isFinite(Number(summary.hospitalizationDays))) {
+    if (
+      hospitalDays == null &&
+      Number.isFinite(Number(summary.hospitalizationDays))
+    ) {
       hospitalDays = Number(summary.hospitalizationDays);
     }
   });
@@ -139,6 +159,7 @@ function buildLatestReviewSnapshot(reviewResult, timestamp) {
     missingMaterials: Array.isArray(reviewResult.missingMaterials)
       ? reviewResult.missingMaterials
       : [],
+    preExistingAssessment: reviewResult.preExistingAssessment || null,
     coverageResults,
   };
 }
@@ -163,10 +184,8 @@ function deriveClaimStatus(reviewResult, currentStatus) {
     return "已结案-拒赔";
   }
 
-  if (
-    reviewResult.decision === "APPROVE" &&
-    reviewResult.settlementDecision === "PAY"
-  ) {
+  // APPROVE 时即使 settlementDecision 缺失也推进（与前端 deriveClaimStatus 对齐）
+  if (reviewResult.decision === "APPROVE") {
     return "已结案-给付";
   }
 
@@ -193,7 +212,9 @@ function getAutoCompletedBy(status, fallback = "system") {
 function shouldWriteAutoStage(stageDecision) {
   return (
     typeof stageDecision === "string" &&
-    !["PENDING_MATERIAL", "MANUAL_REVIEW", "UNABLE_TO_ASSESS"].includes(stageDecision)
+    !["PENDING_MATERIAL", "MANUAL_REVIEW", "UNABLE_TO_ASSESS"].includes(
+      stageDecision,
+    )
   );
 }
 
@@ -223,10 +244,7 @@ function syncClaimStageFields(claimCaseId, reviewResult, options = {}) {
     patch.acceptedBy = claimCase.acceptedBy || "system";
   }
 
-  if (
-    options.parseCompleted &&
-    (!claimCase.parsedAt || !claimCase.parsedBy)
-  ) {
+  if (options.parseCompleted && (!claimCase.parsedAt || !claimCase.parsedBy)) {
     patch.parsedAt = claimCase.parsedAt || nowIso;
     patch.parsedBy = claimCase.parsedBy || "system";
   }
@@ -251,7 +269,8 @@ function syncClaimStageFields(claimCaseId, reviewResult, options = {}) {
     (!claimCase.assessmentCompletedAt ||
       !claimCase.assessmentCompletedBy ||
       !claimCase.assessmentDecision ||
-      (claimCase.approvedAmount == null && getNormalizedReviewAmount(reviewResult) != null))
+      (claimCase.approvedAmount == null &&
+        getNormalizedReviewAmount(reviewResult) != null))
   ) {
     patch.assessmentCompletedAt = claimCase.assessmentCompletedAt || nowIso;
     patch.assessmentCompletedBy =
@@ -260,7 +279,10 @@ function syncClaimStageFields(claimCaseId, reviewResult, options = {}) {
     if (!claimCase.assessmentDecision) {
       patch.assessmentDecision = reviewResult.assessmentDecision;
     }
-    if (claimCase.approvedAmount == null && getNormalizedReviewAmount(reviewResult) != null) {
+    if (
+      claimCase.approvedAmount == null &&
+      getNormalizedReviewAmount(reviewResult) != null
+    ) {
       patch.approvedAmount = getNormalizedReviewAmount(reviewResult);
     }
   }
@@ -270,14 +292,85 @@ function syncClaimStageFields(claimCaseId, reviewResult, options = {}) {
     ...patch,
   };
   writeData("claim-cases", claimCases);
+
+  // 当定责/定损决策为人工审核时，创建介入点3实例
+  tryCreateRuleManualIntervention(claimCaseId, reviewResult);
+
   return claimCases[claimIndex];
 }
 
+/**
+ * 检测规则引擎转人工的决策，并创建介入实例
+ */
+function tryCreateRuleManualIntervention(claimCaseId, reviewResult) {
+  if (!reviewResult) return;
+
+  // 定责阶段转人工
+  if (reviewResult.liabilityDecision === "MANUAL_REVIEW") {
+    const reasons = (reviewResult.manualReviewReasons || []).filter(
+      (r) => r.stage === "LIABILITY",
+    );
+    const reasonSummary =
+      reasons.map((r) => r.message).join("；") || "定责需人工复核";
+    try {
+      createIntervention({
+        claimCaseId,
+        stageKey: "liability",
+        interventionType: "RULE_MANUAL_ROUTE",
+        reason: {
+          code: "RULE_ROUTE_MANUAL",
+          summary: reasonSummary.slice(0, 100),
+          detail: `定责阶段规则转人工：${reasonSummary}`,
+          sourceRuleId: reasons[0]?.source,
+          sourceRuleName: reasons[0]?.ruleName,
+          routeReason: reasonSummary,
+        },
+        priority: "HIGH",
+        triggeringRuleId: reasons[0]?.source,
+      });
+    } catch (err) {
+      console.warn("[intervention] 创建定责介入失败:", err.message);
+    }
+  }
+
+  // 定损阶段转人工
+  if (reviewResult.assessmentDecision === "UNABLE_TO_ASSESS") {
+    const reasons = (reviewResult.manualReviewReasons || []).filter(
+      (r) => r.stage === "ASSESSMENT",
+    );
+    const reasonSummary =
+      reasons.map((r) => r.message).join("；") || "定损需人工复核";
+    try {
+      createIntervention({
+        claimCaseId,
+        stageKey: "assessment",
+        interventionType: "RULE_MANUAL_ROUTE",
+        reason: {
+          code: "RULE_ROUTE_MANUAL",
+          summary: reasonSummary.slice(0, 100),
+          detail: `定损阶段规则转人工：${reasonSummary}`,
+          sourceRuleId: reasons[0]?.source,
+          sourceRuleName: reasons[0]?.ruleName,
+          routeReason: reasonSummary,
+        },
+        priority: "HIGH",
+        triggeringRuleId: reasons[0]?.source,
+      });
+    } catch (err) {
+      console.warn("[intervention] 创建定损介入失败:", err.message);
+    }
+  }
+}
+
 export function getLatestClaimDocumentRecord(claimCaseId, allClaimDocs = null) {
-  const claimDocs = Array.isArray(allClaimDocs) ? allClaimDocs : readData("claim-documents") || [];
+  const claimDocs = Array.isArray(allClaimDocs)
+    ? allClaimDocs
+    : readData("claim-documents") || [];
   const indexedRecord = claimDocs
     .map((record, index) => ({ record, index }))
-    .filter(({ record }) => record.claimCaseId === claimCaseId && record.aggregation)
+    .filter(
+      ({ record }) => record.claimCaseId === claimCaseId && record.aggregation,
+    )
     .sort(
       (a, b) =>
         new Date(b.record.importedAt || b.record.updatedAt || 0).getTime() -
@@ -287,7 +380,11 @@ export function getLatestClaimDocumentRecord(claimCaseId, allClaimDocs = null) {
   return indexedRecord || null;
 }
 
-function buildAutoReviewPayload({ claimCaseId, claimCase = null, record = null }) {
+function buildAutoReviewPayload({
+  claimCaseId,
+  claimCase = null,
+  record = null,
+}) {
   const derivedFacts = extractReviewFactsFromDocuments(record);
   const existingOcrData = claimCase?.ocrData || {};
   const mergedOcrData = {
@@ -309,7 +406,8 @@ function buildAutoReviewPayload({ claimCaseId, claimCase = null, record = null }
       existingOcrData.dischargeDate ||
       derivedFacts.dischargeDate,
     diagnosis_names:
-      Array.isArray(existingOcrData.diagnosis_names) && existingOcrData.diagnosis_names.length > 0
+      Array.isArray(existingOcrData.diagnosis_names) &&
+      existingOcrData.diagnosis_names.length > 0
         ? existingOcrData.diagnosis_names
         : derivedFacts.diagnosisNames,
     diagnosis:
@@ -318,7 +416,8 @@ function buildAutoReviewPayload({ claimCaseId, claimCase = null, record = null }
       undefined,
   };
   const mergedInvoiceItems =
-    Array.isArray(claimCase?.calculationItems) && claimCase.calculationItems.length > 0
+    Array.isArray(claimCase?.calculationItems) &&
+    claimCase.calculationItems.length > 0
       ? claimCase.calculationItems
       : derivedFacts.invoiceItems;
 
@@ -359,15 +458,39 @@ export async function syncClaimReviewArtifacts({
     ...recordPatch,
   };
 
-  if (!nextRecord.aggregation) {
-    return null;
-  }
-
   const allClaimCases = readData("claim-cases") || [];
   const resolvedClaimCase =
-    claimCase ||
-    allClaimCases.find((item) => item.id === claimCaseId) ||
-    {};
+    claimCase || allClaimCases.find((item) => item.id === claimCaseId) || {};
+
+  // 没有 aggregation 时仍可执行基于 claim case 的规则审核并同步阶段字段
+  if (!nextRecord.aggregation) {
+    const reviewPayload = buildAutoReviewPayload({
+      claimCaseId,
+      claimCase: resolvedClaimCase,
+      record: nextRecord,
+    });
+    const reviewResult = await executeFullReview(reviewPayload);
+    const syncedCase = syncClaimStageFields(
+      claimCaseId,
+      reviewResult,
+      stageOptions,
+    );
+    // 将 reviewResult 写入文档记录，确保后续读取不会拿到旧数据
+    const updatedRecord = {
+      ...nextRecord,
+      reviewResult,
+      updatedAt: new Date().toISOString(),
+    };
+    allClaimDocs[target.index] = updatedRecord;
+    writeData("claim-documents", allClaimDocs);
+    return {
+      recordIndex: target.index,
+      record: updatedRecord,
+      reviewResult,
+      report: null,
+      claimCase: syncedCase || resolvedClaimCase,
+    };
+  }
 
   const reviewResult = await executeFullReview(
     buildAutoReviewPayload({
@@ -376,6 +499,47 @@ export async function syncClaimReviewArtifacts({
       record: nextRecord,
     }),
   );
+
+  // 尝试使用 factSchema → calculationEngine 补充理算结果
+  // 当 reviewResult 缺少 calculation 或 finalAmount 时，自动执行公式理算
+  if (nextRecord.aggregation?.handlingProfile?.domainModel) {
+    try {
+      const domainModel = nextRecord.aggregation.handlingProfile.domainModel;
+      const facts = nextRecord.aggregation.extractedFacts || {};
+      const coverage = resolvedClaimCase?.coverageInfo || {};
+      const context = buildCalculationContext({
+        facts,
+        coverage,
+        aggregation: nextRecord.aggregation,
+        domainModel,
+      });
+      const formulaTypes = inferFormulaTypes({
+        claimScenario: domainModel.claimScenario,
+        coverageCode: facts.coverageCode || coverage.coverageCode,
+      });
+      if (formulaTypes.length > 0 && !reviewResult.calculation?.finalAmount) {
+        const calcResults = [];
+        for (const formulaType of formulaTypes) {
+          try {
+            calcResults.push(executeCalculation(formulaType, context));
+          } catch (calcError) {
+            console.warn(`公式 ${formulaType} 执行失败:`, calcError.message);
+          }
+        }
+        if (calcResults.length > 0) {
+          reviewResult.formulaCalculations = calcResults;
+          // 取第一个成功公式的 finalAmount 作为补充
+          const primaryCalc = calcResults.find((r) => r.finalAmount > 0);
+          if (primaryCalc && !reviewResult.amount) {
+            reviewResult.amount = primaryCalc.finalAmount;
+          }
+        }
+      }
+    } catch (contextError) {
+      console.warn("公式理算上下文构建失败:", contextError.message);
+    }
+  }
+
   const report = generateDamageReport({
     claimCaseId,
     aggregationResult: nextRecord.aggregation,
@@ -405,7 +569,11 @@ export async function syncClaimReviewArtifacts({
   reports.push(storedReport);
   writeData("damage-reports", reports);
 
-  const syncedClaimCase = syncClaimStageFields(claimCaseId, reviewResult, stageOptions);
+  const syncedClaimCase = syncClaimStageFields(
+    claimCaseId,
+    reviewResult,
+    stageOptions,
+  );
 
   return {
     recordIndex: target.index,

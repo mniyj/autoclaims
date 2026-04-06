@@ -5,6 +5,7 @@ import { resolveClaimTypeAndProductCode } from '../../../shared/claimRouting.js'
 const GetClaimMaterialsSchema = z.object({
   productCode: z.string().optional(),
   claimType: z.string().optional(),
+  subFocus: z.string().optional(),
 });
 
 const DEFAULT_MATERIALS: Record<string, Array<{ id: string; name: string; required: boolean }>> = {
@@ -92,11 +93,18 @@ export const getClaimMaterialsTool = {
         materials = DEFAULT_MATERIALS[claimType] || DEFAULT_MATERIALS['意外险'];
       }
 
+      const filteredMaterials = params.subFocus === 'outpatient'
+        ? materials.filter((item) => /门诊|发票|病历|清单/.test(item.name))
+        : params.subFocus === 'inpatient'
+          ? materials.filter((item) => /住院|发票|病历|清单/.test(item.name)) || materials
+          : materials;
+
       return {
         success: true,
         data: {
           claimType,
-          materials,
+          subFocus: params.subFocus,
+          materials: filteredMaterials.length > 0 ? filteredMaterials : materials,
         },
         message: `已获取${claimType}材料清单`,
       };

@@ -73,11 +73,19 @@ function resolveVariables(variables, context, lookupTables = {}) {
         resolved[name] = table[key];
       } else {
         resolved[name] = 0;
+        console.warn(
+          `[calculationEngine] 变量 "${name}" 查找表 "${def.lookup_table}" 不存在或键 "${key}" 未匹配，默认值 0`,
+        );
       }
     } else if (typeof def.source === "string" && def.source.startsWith("{")) {
       // 上下文变量，如 '{claim.approved_expenses}'
       const path = def.source.slice(1, -1);
       resolved[name] = getFieldValue(path, context);
+      if (resolved[name] === undefined) {
+        console.warn(
+          `[calculationEngine] 变量 "${name}" 的上下文路径 "${path}" 值为 undefined，公式可能产出 NaN`,
+        );
+      }
     } else {
       // 静态值或直接值
       resolved[name] = def.value !== undefined ? def.value : def.source;
@@ -118,40 +126,52 @@ const BUILT_IN_FUNCTIONS = {
   if: (cond, trueVal, falseVal) => (cond ? trueVal : falseVal),
 };
 
+// 表达式安全校验：仅允许数字、运算符、变量名、函数名、括号、逗号、空格
+const SAFE_EXPR_PATTERN = /^[\w\s+\-*/().,%<>=!?:]+$/;
+// 禁止的危险标识符
+const DANGEROUS_PATTERN =
+  /(__proto__|constructor|prototype|eval|Function|import|require|process|global|window|globalThis|Proxy|Reflect)/i;
+// 已验证表达式缓存
+const validatedExprCache = new Set();
+
 /**
- * 安全执行表达式
+ * 安全执行表达式（不使用 eval）
+ * 使用 Function 构造器 + 白名单校验替代 eval，确保：
+ * 1. 表达式只包含合法字符
+ * 2. 不包含危险标识符
+ * 3. 在严格模式独立作用域中执行
+ *
  * @param {string} expr - 表达式字符串
  * @param {object} scope - 变量作用域
  * @returns {number|string} 计算结果
  */
 function safeEval(expr, scope) {
   try {
-    // 创建安全的执行环境
+    // 1. 校验表达式安全性（利用缓存避免重复校验）
+    if (!validatedExprCache.has(expr)) {
+      if (!SAFE_EXPR_PATTERN.test(expr)) {
+        throw new Error(`表达式包含不允许的字符: ${expr}`);
+      }
+      if (DANGEROUS_PATTERN.test(expr)) {
+        throw new Error(`表达式包含禁止的标识符: ${expr}`);
+      }
+      validatedExprCache.add(expr);
+    }
+
+    // 2. 收集所有参数名和值（变量 + 内置函数）
+    const scopeNames = Object.keys(scope);
+    const scopeValues = Object.values(scope);
     const funcNames = Object.keys(BUILT_IN_FUNCTIONS);
     const funcValues = Object.values(BUILT_IN_FUNCTIONS);
 
-    // 将变量注入表达式
-    let resolvedExpr = expr;
+    const paramNames = [...scopeNames, ...funcNames];
+    const paramValues = [...scopeValues, ...funcValues];
 
-    // 替换变量名为实际值（简单替换，不支持复杂表达式）
-    for (const [name, value] of Object.entries(scope)) {
-      const regex = new RegExp(`\\b${name}\\b`, "g");
-      if (typeof value === "number") {
-        resolvedExpr = resolvedExpr.replace(regex, String(value));
-      } else if (typeof value === "string") {
-        resolvedExpr = resolvedExpr.replace(regex, `"${value}"`);
-      }
-    }
-
-    // 替换函数调用
-    for (let i = 0; i < funcNames.length; i++) {
-      const name = funcNames[i];
-      const regex = new RegExp(`\\b${name}\\(`, "g");
-      resolvedExpr = resolvedExpr.replace(regex, `BUILT_IN_FUNCTIONS[${i}](`);
-    }
-
-    // 执行计算
-    const result = eval(resolvedExpr);
+    // 3. 使用 Function 构造器在独立严格模式作用域中执行
+    // Function 构造器比 eval 更安全：无法访问局部变量，仅能访问显式传入的参数和全局对象
+    // "use strict" 进一步限制：禁止 with、禁止隐式全局变量
+    const fn = new Function(...paramNames, `"use strict"; return (${expr});`);
+    const result = fn(...paramValues);
     return result;
   } catch (error) {
     console.error(`表达式执行错误: ${expr}`, error);

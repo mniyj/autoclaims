@@ -53,6 +53,33 @@ export interface Intent {
   missingCriticalFields?: string[];
 }
 
+export type QueryFocus =
+  | 'progress'
+  | 'materials'
+  | 'missing_materials'
+  | 'coverage'
+  | 'settlement';
+
+export type QueryScope =
+  | 'selected_claim'
+  | 'selected_policy'
+  | 'single_claim'
+  | 'single_policy'
+  | 'ambiguous'
+  | 'global';
+
+export interface NormalizedQuery {
+  focus: QueryFocus;
+  scope: QueryScope;
+  claimId?: string;
+  productCode?: string;
+  claimType?: string;
+  needsClaimSelection?: boolean;
+  needsPolicySelection?: boolean;
+  subFocus?: string;
+  rewriteReason?: string;
+}
+
 /**
  * 意图识别结果
  */

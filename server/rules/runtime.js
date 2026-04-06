@@ -1,10 +1,10 @@
-import { evaluateConditions } from './conditionEvaluator.js';
-import { executeAction, executeItemLoopAction } from './actionExecutor.js';
+import { evaluateConditions } from "./conditionEvaluator.js";
+import { executeAction, executeItemLoopAction } from "./actionExecutor.js";
 
 export const ExecutionDomain = {
-  ELIGIBILITY: 'ELIGIBILITY',
-  ASSESSMENT: 'ASSESSMENT',
-  POST_PROCESS: 'POST_PROCESS'
+  ELIGIBILITY: "ELIGIBILITY",
+  ASSESSMENT: "ASSESSMENT",
+  POST_PROCESS: "POST_PROCESS",
 };
 
 export function sortRulesByPriority(rules) {
@@ -16,9 +16,8 @@ export function sortRulesByPriority(rules) {
 }
 
 export function filterRulesByDomain(rules, domain) {
-  return rules.filter(rule =>
-    rule.execution?.domain === domain &&
-    rule.status === 'EFFECTIVE'
+  return rules.filter(
+    (rule) => rule.execution?.domain === domain && rule.status === "EFFECTIVE",
   );
 }
 
@@ -31,15 +30,17 @@ export function executeSingleRule(rule, context, state) {
     condition_met: false,
     action_result: null,
     item_results: [],
-    source: rule.source
+    source: rule.source,
   };
 
-  const isLoopRule = rule.execution?.loop_over !== null;
+  const isLoopRule = rule.execution?.loop_over != null;
 
   if (isLoopRule) {
     result.item_results = executeItemLoopAction(rule, context, state);
     result.executed = true;
-    result.condition_met = result.item_results.some(item => item.conditionMet);
+    result.condition_met = result.item_results.some(
+      (item) => item.conditionMet,
+    );
     return result;
   }
 

@@ -30,7 +30,9 @@ function getNestedValue(source, path) {
       continue;
     }
     current = current
-      .map((item) => (item && typeof item === "object" ? item[segment] : undefined))
+      .map((item) =>
+        item && typeof item === "object" ? item[segment] : undefined,
+      )
       .filter((item) => item !== undefined && item !== null);
   }
 
@@ -49,24 +51,37 @@ function collectFactBindingsFromSchemaFields(fields = [], prefix = "") {
         factId: field.fact_id,
         path,
       });
+    } else if (field?.binding_status !== "display_only") {
+      console.debug(
+        `[caseAggregator] schemaField "${path}" 无 fact_id 绑定，数据不会进入 canonicalFacts`,
+      );
     }
     if (field?.data_type === "OBJECT") {
-      bindings.push(...collectFactBindingsFromSchemaFields(field.children || [], path));
+      bindings.push(
+        ...collectFactBindingsFromSchemaFields(field.children || [], path),
+      );
     }
     if (field?.data_type === "ARRAY") {
-      bindings.push(...collectFactBindingsFromSchemaFields(field.item_fields || [], `${path}[]`));
+      bindings.push(
+        ...collectFactBindingsFromSchemaFields(
+          field.item_fields || [],
+          `${path}[]`,
+        ),
+      );
     }
   }
   return bindings;
 }
 
 function hydrateSchemaFields(materialConfig = {}) {
-  return ((materialConfig?.schemaFields || [])).map((field) => ({ ...field }));
+  return (materialConfig?.schemaFields || []).map((field) => ({ ...field }));
 }
 
 function normalizeFactValue(value) {
   if (Array.isArray(value)) {
-    const compact = value.filter((item) => item !== undefined && item !== null && item !== "");
+    const compact = value.filter(
+      (item) => item !== undefined && item !== null && item !== "",
+    );
     if (compact.length === 0) return undefined;
     return compact.length === 1 ? compact[0] : compact;
   }
@@ -79,19 +94,22 @@ function extractCanonicalFactsFromDocuments(documents = []) {
   const canonicalFactSources = {};
 
   for (const document of documents || []) {
-    const materialId = document?.classification?.materialId || document?.materialId;
+    const materialId =
+      document?.classification?.materialId || document?.materialId;
     if (!materialId) continue;
-    const materialConfig = materialConfigs.find((item) => item.id === materialId);
+    const materialConfig = materialConfigs.find(
+      (item) => item.id === materialId,
+    );
     if (!materialConfig) continue;
 
-    const bindings = collectFactBindingsFromSchemaFields(hydrateSchemaFields(materialConfig));
+    const bindings = collectFactBindingsFromSchemaFields(
+      hydrateSchemaFields(materialConfig),
+    );
 
     for (const binding of bindings) {
-      const sources = [
-        document?.structuredData,
-        document?.ocrData,
-        document?.documentSummary,
-      ].filter(Boolean);
+      const sources = [document?.structuredData, document?.ocrData].filter(
+        Boolean,
+      );
       for (const source of sources) {
         const value = normalizeFactValue(getNestedValue(source, binding.path));
         if (value === undefined) continue;
@@ -122,16 +140,33 @@ function extractCanonicalFactsFromDocuments(documents = []) {
  */
 function aggregateInjuryProfile(summaries) {
   const inpatientRecords = summaries.filter(
-    (s) => s?.summaryType === "inpatient_record"
+    (s) => s?.summaryType === "inpatient_record",
   );
   const disabilitySummaries = summaries.filter(
-    (s) => s?.summaryType === "disability_assessment"
+    (s) => s?.summaryType === "disability_assessment",
   );
   const diagnosisProofs = summaries.filter(
-    (s) => s?.summaryType === "diagnosis_proof"
+    (s) => s?.summaryType === "diagnosis_proof",
   );
 
-  if (inpatientRecords.length === 0 && diagnosisProofs.length === 0) return null;
+  if (inpatientRecords.length === 0 && diagnosisProofs.length === 0)
+    return null;
+
+  // 既往史：优先取有实质内容的条目（非"无"/"不详"），否则取第一条
+  const pastHistoryEntries = inpatientRecords
+    .map((s) => s.pastHistory)
+    .filter(Boolean);
+  const meaningfulHistory = pastHistoryEntries.find(
+    (h) => h !== "无" && h !== "不详",
+  );
+  const pastHistory = meaningfulHistory || pastHistoryEntries[0] || null;
+
+  // 首次诊断日期：取 inpatientRecords 中最早的 firstDiagnosisDate
+  const firstDiagnosisDates = inpatientRecords
+    .map((s) => s.firstDiagnosisDate)
+    .filter(Boolean)
+    .sort((a, b) => String(a).localeCompare(String(b)));
+  const firstDiagnosisDate = firstDiagnosisDates[0] || null;
 
   // 合并所有诊断
   const allDiagnoses = [
@@ -139,7 +174,9 @@ function aggregateInjuryProfile(summaries) {
     ...diagnosisProofs.flatMap((s) => s.diagnoses || []),
   ];
   // 去重（按诊断名称）
-  const uniqueDiagnoses = [...new Map(allDiagnoses.map((d) => [d.name, d])).values()];
+  const uniqueDiagnoses = [
+    ...new Map(allDiagnoses.map((d) => [d.name, d])).values(),
+  ];
   const diagnosisNames = uniqueDiagnoses
     .map((item) => item?.name)
     .filter(Boolean);
@@ -152,27 +189,39 @@ function aggregateInjuryProfile(summaries) {
   // 总住院天数（多次住院累加）
   const hospitalizationDays = inpatientRecords.reduce(
     (sum, s) => sum + (s.hospitalizationDays || 0),
-    0
+    0,
   );
 
   // 伤残等级（取首个有效值）
   const disabilityLevel = disabilitySummaries.find(
-    (s) => s.disabilityLevel
+    (s) => s.disabilityLevel,
   )?.disabilityLevel;
 
   // 构建治疗时间线
   const timeline = [];
   for (const record of inpatientRecords) {
     if (record.admissionDate) {
-      timeline.push({ date: record.admissionDate, event: `入院（${record.ward || ""}）`, sourceDocId: record.docId });
+      timeline.push({
+        date: record.admissionDate,
+        event: `入院（${record.ward || ""}）`,
+        sourceDocId: record.docId,
+      });
     }
     for (const surgery of record.surgeries || []) {
       if (surgery.date) {
-        timeline.push({ date: surgery.date, event: `手术：${surgery.name}`, sourceDocId: record.docId });
+        timeline.push({
+          date: surgery.date,
+          event: `手术：${surgery.name}`,
+          sourceDocId: record.docId,
+        });
       }
     }
     if (record.dischargeDate) {
-      timeline.push({ date: record.dischargeDate, event: "出院", sourceDocId: record.docId });
+      timeline.push({
+        date: record.dischargeDate,
+        event: "出院",
+        sourceDocId: record.docId,
+      });
     }
   }
   for (const assessment of disabilitySummaries) {
@@ -187,13 +236,16 @@ function aggregateInjuryProfile(summaries) {
   timeline.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
 
   return {
-    injuryDescription: uniqueDiagnoses.map((d) => d.name).join("；") || "待补充",
+    injuryDescription:
+      uniqueDiagnoses.map((d) => d.name).join("；") || "待补充",
     diagnoses: uniqueDiagnoses,
     diagnosisNames,
     primaryDiagnosisDate,
     disabilityLevel: disabilityLevel || null,
     hospitalizationDays,
     treatmentTimeline: timeline,
+    pastHistory,
+    firstDiagnosisDate,
   };
 }
 
@@ -206,13 +258,13 @@ function aggregateInjuryProfile(summaries) {
  */
 function aggregateExpenses(summaries) {
   const invoiceSummaries = summaries.filter(
-    (s) => s?.summaryType === "expense_invoice"
+    (s) => s?.summaryType === "expense_invoice",
   );
   const incomeLostSummaries = summaries.filter(
-    (s) => s?.summaryType === "income_lost"
+    (s) => s?.summaryType === "income_lost",
   );
   const inpatientRecords = summaries.filter(
-    (s) => s?.summaryType === "inpatient_record"
+    (s) => s?.summaryType === "inpatient_record",
   );
 
   const sourceDocIds = [
@@ -226,20 +278,22 @@ function aggregateExpenses(summaries) {
   // 医疗费总额：所有发票金额求和
   const medicalTotal = invoiceSummaries.reduce(
     (sum, s) => sum + (s.totalAmount || 0),
-    0
+    0,
   );
 
   // 住院天数
   const hospitalizationDays = inpatientRecords.reduce(
     (sum, s) => sum + (s.hospitalizationDays || 0),
-    0
+    0,
   );
 
   // 护理天数（无专用字段，按住院天数估算）
   const nursingDays = hospitalizationDays;
 
   // 误工天数（取第一份有效的误工证明）
-  const incomeLost = incomeLostSummaries.find((s) => s.lostWorkDays || s.monthlyIncome);
+  const incomeLost = incomeLostSummaries.find(
+    (s) => s.lostWorkDays || s.monthlyIncome,
+  );
   const lostWorkDays = incomeLost?.lostWorkDays || 0;
   const monthlyIncome = incomeLost?.monthlyIncome || 0;
 
@@ -266,19 +320,21 @@ function aggregateExpenses(summaries) {
  */
 function extractLiabilityResult(summaries) {
   const accidentSummary = summaries.find(
-    (s) => s?.summaryType === "accident_liability" && s.parties?.length > 0
+    (s) => s?.summaryType === "accident_liability" && s.parties?.length > 0,
   );
   if (!accidentSummary) return null;
 
   // 找伤者/被保险人（通常角色包含"行人"、"乘客"、"非机动车"）
   const claimantRoles = ["行人", "乘客", "非机动车", "被保险人", "受害人"];
   const claimant = accidentSummary.parties.find((p) =>
-    claimantRoles.some((r) => p.role?.includes(r))
+    claimantRoles.some((r) => p.role?.includes(r)),
   );
 
   if (!claimant) {
     // 无法自动识别，取责任比例最小的一方作为被保险人
-    const sorted = [...accidentSummary.parties].sort((a, b) => a.liabilityPct - b.liabilityPct);
+    const sorted = [...accidentSummary.parties].sort(
+      (a, b) => a.liabilityPct - b.liabilityPct,
+    );
     const assumed = sorted[0];
     return {
       claimantLiabilityPct: assumed?.liabilityPct || 0,
@@ -296,41 +352,53 @@ function extractLiabilityResult(summaries) {
   };
 }
 
+function normalizeConflictType(validationType) {
+  switch (validationType) {
+    case "timeline":
+    case "medical_date":
+      return "date_mismatch";
+    case "identity":
+      return "identity_mismatch";
+    case "amount":
+      return "amount_mismatch";
+    default:
+      return "validation_conflict";
+  }
+}
+
+function conflictsFromValidationResults(validationResults = []) {
+  return (validationResults || [])
+    .filter((item) => item && item.passed === false)
+    .map((item) => ({
+      type: normalizeConflictType(item.type),
+      description: item.message || "材料校验未通过，请人工核实",
+      docIds: Array.isArray(item?.details?.relatedDocuments)
+        ? item.details.relatedDocuments.filter(Boolean)
+        : [],
+      severity: item.severity || "warning",
+      sourceRuleId: item?.details?.ruleId || null,
+      source: "material_validation",
+    }));
+}
+
 /**
- * 跨文档矛盾检测
- * 检查：日期一致性、身份一致性、金额一致性
+ * 案件级冲突检测。
+ *
+ * 规则型的日期/身份/金额异常尽量由“材料校验规则中心”输出，
+ * 这里主要消费 validationResults 并补充聚合层特有的提示。
  *
  * @param {Array} summaries
+ * @param {Array} validationResults
  * @returns {Array} ConflictItem[]
  */
-function detectConflicts(summaries) {
-  const conflicts = [];
+function detectConflicts(summaries, validationResults = []) {
+  const conflicts = conflictsFromValidationResults(validationResults);
+  const invoices = summaries.filter(
+    (s) => s?.summaryType === "expense_invoice",
+  );
 
-  // 1. 出院日期 vs 门诊开票日期冲突
-  const inpatientRecords = summaries.filter((s) => s?.summaryType === "inpatient_record");
-  const invoices = summaries.filter((s) => s?.summaryType === "expense_invoice");
-
-  for (const record of inpatientRecords) {
-    if (!record.dischargeDate) continue;
-    const dischargeTs = new Date(record.dischargeDate).getTime();
-
-    for (const invoice of invoices) {
-      if (!invoice.invoiceDate) continue;
-      const invoiceTs = new Date(invoice.invoiceDate).getTime();
-      // 发票日期早于入院日期（异常）
-      if (invoice.invoiceDate < (record.admissionDate || "9999")) {
-        conflicts.push({
-          type: "date_mismatch",
-          description: `发票开具日期（${invoice.invoiceDate}）早于入院日期（${record.admissionDate}）`,
-          docIds: [record.docId, invoice.docId],
-          severity: "warning",
-        });
-      }
-    }
-  }
-
-  // 2. 多份发票金额 vs 费用清单总额是否合理
-  // 若有多张发票，检查是否存在同一张单据重复上传（金额相同、日期相同）
+  // 聚合层特有：疑似重复上传发票。该类提示依赖同类摘要之间的近似匹配，
+  // 暂不下沉到材料校验规则中心。
   for (let i = 0; i < invoices.length; i++) {
     for (let j = i + 1; j < invoices.length; j++) {
       const a = invoices[i];
@@ -347,22 +415,7 @@ function detectConflicts(summaries) {
           description: `两份发票金额（¥${a.totalAmount}）、日期（${a.invoiceDate}）和机构（${a.institution}）完全一致，可能是重复上传`,
           docIds: [a.docId, b.docId],
           severity: "warning",
-        });
-      }
-    }
-  }
-
-  // 3. 入院日期与认定书事故日期的逻辑关系
-  const accidentSummary = summaries.find((s) => s?.summaryType === "accident_liability");
-  if (accidentSummary?.accidentDate) {
-    for (const record of inpatientRecords) {
-      if (!record.admissionDate) continue;
-      if (record.admissionDate < accidentSummary.accidentDate) {
-        conflicts.push({
-          type: "date_mismatch",
-          description: `入院日期（${record.admissionDate}）早于事故发生日期（${accidentSummary.accidentDate}），请核实`,
-          docIds: [record.docId, accidentSummary.docId],
-          severity: "error",
+          source: "aggregation_duplicate_detection",
         });
       }
     }
@@ -372,11 +425,21 @@ function detectConflicts(summaries) {
 }
 
 function aggregateDeathProfile(summaries) {
-  const deathSummaries = summaries.filter((s) => s?.summaryType === "death_record");
-  const funeralSummaries = summaries.filter((s) => s?.summaryType === "funeral_expense");
-  const householdProof = summaries.find((s) => s?.summaryType === "household_proof");
-  const relationshipSummaries = summaries.filter((s) => s?.summaryType === "claimant_relationship");
-  const dependentSummaries = summaries.filter((s) => s?.summaryType === "dependent_support");
+  const deathSummaries = summaries.filter(
+    (s) => s?.summaryType === "death_record",
+  );
+  const funeralSummaries = summaries.filter(
+    (s) => s?.summaryType === "funeral_expense",
+  );
+  const householdProof = summaries.find(
+    (s) => s?.summaryType === "household_proof",
+  );
+  const relationshipSummaries = summaries.filter(
+    (s) => s?.summaryType === "claimant_relationship",
+  );
+  const dependentSummaries = summaries.filter(
+    (s) => s?.summaryType === "dependent_support",
+  );
 
   if (
     deathSummaries.length === 0 &&
@@ -388,28 +451,40 @@ function aggregateDeathProfile(summaries) {
     return null;
   }
 
-  const primaryDeath = deathSummaries.find((s) => s.deathDate || s.deathCause) || deathSummaries[0] || null;
-  const funeralExpenseTotal = funeralSummaries.reduce((sum, item) => sum + (item.totalAmount || 0), 0);
-  const claimants = relationshipSummaries.map((item) => ({
-    name: item.claimantName,
-    relationship: item.relationship,
-    sourceDocId: item.docId,
-  })).filter((item) => item.name || item.relationship);
-  const dependents = dependentSummaries.map((item) => ({
-    supporterName: item.supporterName,
-    dependentName: item.dependentName,
-    relationship: item.relationship,
-    otherSupportersCount: item.otherSupportersCount || 0,
-    sourceDocId: item.docId,
-  })).filter((item) => item.dependentName || item.relationship);
+  const primaryDeath =
+    deathSummaries.find((s) => s.deathDate || s.deathCause) ||
+    deathSummaries[0] ||
+    null;
+  const funeralExpenseTotal = funeralSummaries.reduce(
+    (sum, item) => sum + (item.totalAmount || 0),
+    0,
+  );
+  const claimants = relationshipSummaries
+    .map((item) => ({
+      name: item.claimantName,
+      relationship: item.relationship,
+      sourceDocId: item.docId,
+    }))
+    .filter((item) => item.name || item.relationship);
+  const dependents = dependentSummaries
+    .map((item) => ({
+      supporterName: item.supporterName,
+      dependentName: item.dependentName,
+      relationship: item.relationship,
+      otherSupportersCount: item.otherSupportersCount || 0,
+      sourceDocId: item.docId,
+    }))
+    .filter((item) => item.dependentName || item.relationship);
 
   return {
     deathConfirmed: deathSummaries.length > 0,
-    deceasedName: primaryDeath?.deceasedName || householdProof?.residentName || null,
+    deceasedName:
+      primaryDeath?.deceasedName || householdProof?.residentName || null,
     deathDate: primaryDeath?.deathDate || null,
     deathCause: primaryDeath?.deathCause || null,
     deathLocation: primaryDeath?.deathLocation || null,
-    cancellationDate: deathSummaries.find((s) => s.cancellationDate)?.cancellationDate || null,
+    cancellationDate:
+      deathSummaries.find((s) => s.cancellationDate)?.cancellationDate || null,
     householdType: householdProof?.householdType || null,
     householdAddress: householdProof?.householdAddress || null,
     funeralExpenseTotal: parseFloat(funeralExpenseTotal.toFixed(2)),
@@ -436,16 +511,31 @@ function aggregateCaseReports(summaries) {
       incidentSummary: item.incidentSummary || null,
       deathConfirmed: item.deathConfirmed === true,
       deathDate: item.deathDate || null,
-      identityChainSummary: item.identityChainSummary || item.employmentRelationship || null,
+      identityChainSummary:
+        item.identityChainSummary || item.employmentRelationship || null,
       liabilityOpinion: item.liabilityOpinion || null,
-      compensationPaid: typeof item.compensationPaid === "number" ? item.compensationPaid : null,
+      compensationPaid:
+        typeof item.compensationPaid === "number"
+          ? item.compensationPaid
+          : null,
       claimants: Array.isArray(item.claimants) ? item.claimants : [],
       sourceDocId: item.docId,
     }));
 }
 
-function buildFactModel({ injuryProfile, liabilityResult, expenseAggregation, deathProfile, caseReports, conflictsDetected, validationFacts = {}, validationResults = [], documents = [] }) {
-  const { canonicalFacts, canonicalFactSources } = extractCanonicalFactsFromDocuments(documents);
+function buildFactModel({
+  injuryProfile,
+  liabilityResult,
+  expenseAggregation,
+  deathProfile,
+  caseReports,
+  conflictsDetected,
+  validationFacts = {},
+  validationResults = [],
+  documents = [],
+}) {
+  const { canonicalFacts, canonicalFactSources } =
+    extractCanonicalFactsFromDocuments(documents);
   return {
     generatedAt: new Date().toISOString(),
     injuryProfile,
@@ -461,20 +551,30 @@ function buildFactModel({ injuryProfile, liabilityResult, expenseAggregation, de
   };
 }
 
+/**
+ * 生成事故责任比例建议。
+ *
+ * 注意：
+ * - 这里的 liabilitySuggestion 指“事故责任比例/损失折算比例建议”
+ * - 不表示保单层面的保险责任是否成立
+ * - 保单责任成立判断仍由规则引擎中的 eligibility / liabilityDecision 负责
+ */
 function buildLiabilitySuggestion(liabilityResult, conflictsDetected = []) {
   if (!liabilityResult) {
     return {
       status: "MANUAL_REVIEW",
-      conclusion: "缺少责任认定依据，需人工确认",
+      conclusion: "缺少事故责任比例依据，需人工确认",
       confidence: 0.3,
       basis: [],
     };
   }
 
-  const hasHardConflict = conflictsDetected.some((item) => item.severity === "error");
+  const hasHardConflict = conflictsDetected.some(
+    (item) => item.severity === "error",
+  );
   return {
     status: hasHardConflict ? "MANUAL_REVIEW" : "REFERENCE_READY",
-    conclusion: `建议按第三方责任 ${liabilityResult.thirdPartyLiabilityPct}% 作为定损折算比例`,
+    conclusion: `建议按第三方事故责任 ${liabilityResult.thirdPartyLiabilityPct}% 作为定损折算比例`,
     confidence: hasHardConflict ? 0.55 : 0.85,
     basis: [
       {
@@ -494,13 +594,19 @@ function buildLiabilitySuggestion(liabilityResult, conflictsDetected = []) {
  * @param {string} params.claimCaseId
  * @returns {object} 聚合结果 { injuryProfile, liabilityResult, expenseAggregation, conflictsDetected }
  */
-export function aggregateCase({ summaries, claimCaseId, validationFacts = {}, validationResults = [], documents = [] }) {
+export function aggregateCase({
+  summaries,
+  claimCaseId,
+  validationFacts = {},
+  validationResults = [],
+  documents = [],
+}) {
   const validSummaries = (summaries || []).filter(Boolean);
 
   const injuryProfile = aggregateInjuryProfile(validSummaries);
   const liabilityResult = extractLiabilityResult(validSummaries);
   const expenseAggregation = aggregateExpenses(validSummaries);
-  const conflictsDetected = detectConflicts(validSummaries);
+  const conflictsDetected = detectConflicts(validSummaries, validationResults);
   const deathProfile = aggregateDeathProfile(validSummaries);
   const caseReports = aggregateCaseReports(validSummaries);
   const factModel = buildFactModel({
@@ -514,7 +620,10 @@ export function aggregateCase({ summaries, claimCaseId, validationFacts = {}, va
     validationResults,
     documents,
   });
-  const liabilitySuggestion = buildLiabilitySuggestion(liabilityResult, conflictsDetected);
+  const liabilitySuggestion = buildLiabilitySuggestion(
+    liabilityResult,
+    conflictsDetected,
+  );
 
   return {
     claimCaseId,
@@ -542,22 +651,40 @@ export function aggregateCase({ summaries, claimCaseId, validationFacts = {}, va
   };
 }
 
-function buildAggregationSummary({ injuryProfile, liabilityResult, expenseAggregation, deathProfile, caseReports, conflictsDetected, validationResults = [] }) {
+function buildAggregationSummary({
+  injuryProfile,
+  liabilityResult,
+  expenseAggregation,
+  deathProfile,
+  caseReports,
+  conflictsDetected,
+  validationResults = [],
+}) {
   const parts = [];
   if (injuryProfile) {
-    parts.push(`伤情：${injuryProfile.injuryDescription}，住院 ${injuryProfile.hospitalizationDays} 天${injuryProfile.disabilityLevel ? `，${injuryProfile.disabilityLevel}` : ""}`);
+    parts.push(
+      `伤情：${injuryProfile.injuryDescription}，住院 ${injuryProfile.hospitalizationDays} 天${injuryProfile.disabilityLevel ? `，${injuryProfile.disabilityLevel}` : ""}`,
+    );
   }
   if (deathProfile?.deathConfirmed) {
-    parts.push(`死亡事实：${deathProfile.deceasedName || "死者"}${deathProfile.deathDate ? `于 ${deathProfile.deathDate}` : ""}死亡`);
+    parts.push(
+      `死亡事实：${deathProfile.deceasedName || "死者"}${deathProfile.deathDate ? `于 ${deathProfile.deathDate}` : ""}死亡`,
+    );
   }
   if (liabilityResult) {
-    parts.push(`责任：伤者 ${liabilityResult.claimantLiabilityPct}%，第三方 ${liabilityResult.thirdPartyLiabilityPct}%`);
+    parts.push(
+      `责任：伤者 ${liabilityResult.claimantLiabilityPct}%，第三方 ${liabilityResult.thirdPartyLiabilityPct}%`,
+    );
   }
   if (expenseAggregation && expenseAggregation.medicalTotal > 0) {
-    parts.push(`医疗费：¥${expenseAggregation.medicalTotal.toLocaleString("zh-CN")}`);
+    parts.push(
+      `医疗费：¥${expenseAggregation.medicalTotal.toLocaleString("zh-CN")}`,
+    );
   }
   if (deathProfile?.funeralExpenseTotal > 0) {
-    parts.push(`丧葬票据：¥${deathProfile.funeralExpenseTotal.toLocaleString("zh-CN")}`);
+    parts.push(
+      `丧葬票据：¥${deathProfile.funeralExpenseTotal.toLocaleString("zh-CN")}`,
+    );
   }
   if (caseReports?.length > 0) {
     const reportNames = caseReports
@@ -570,8 +697,12 @@ function buildAggregationSummary({ injuryProfile, liabilityResult, expenseAggreg
     parts.push(`报告参考：已提取 ${reportNames}`);
   }
   if (conflictsDetected.length > 0) {
-    const errors = conflictsDetected.filter((c) => c.severity === "error").length;
-    const warnings = conflictsDetected.filter((c) => c.severity === "warning").length;
+    const errors = conflictsDetected.filter(
+      (c) => c.severity === "error",
+    ).length;
+    const warnings = conflictsDetected.filter(
+      (c) => c.severity === "warning",
+    ).length;
     parts.push(`检测到 ${errors} 个错误、${warnings} 个警告`);
   }
   if (validationResults.length > 0) {

@@ -1,6 +1,7 @@
-import { readData, writeData } from '../utils/fileStore.js';
+import { readData, writeData } from "../utils/fileStore.js";
+import { clearAIStatsCache } from "./aiStatsCache.js";
 
-const AI_SETTINGS_RESOURCE = 'ai-settings';
+const AI_SETTINGS_RESOURCE = "ai-settings";
 
 const nowIso = () => new Date().toISOString();
 
@@ -132,62 +133,156 @@ replyStrategy: {{replyStrategy}}
 
 const DEFAULT_PROVIDERS = [
   {
-    id: 'gemini-vision',
-    name: 'Gemini Vision',
-    type: 'vision',
-    runtime: 'gemini',
-    defaultModel: 'gemini-2.5-flash',
+    id: "gemini-vision",
+    name: "Gemini Vision",
+    type: "vision",
+    runtime: "gemini",
+    status: "active",
+    defaultModel: "gemini-2.5-flash",
+    availableModels: ["gemini-2.5-flash"],
     supportsCustomModel: true,
-    envKeys: ['GEMINI_API_KEY', 'API_KEY'],
-    description: 'Gemini 多模态能力，适用于图像 OCR、音频转写和视觉理解。',
+    envKeys: ["GEMINI_API_KEY", "API_KEY"],
+    healthCheckMode: "runtime",
+    billingMode: "token",
+    defaultTimeout: 90000,
+    retryStrategy: { maxRetries: 2, backoffMs: 1500 },
+    description: "Gemini 多模态能力，适用于图像 OCR、音频转写和视觉理解。",
   },
   {
-    id: 'gemini-text',
-    name: 'Gemini Text',
-    type: 'text',
-    runtime: 'gemini',
-    defaultModel: 'gemini-2.5-flash',
+    id: "gemini-text",
+    name: "Gemini Text",
+    type: "text",
+    runtime: "gemini",
+    status: "active",
+    defaultModel: "gemini-2.5-flash",
+    availableModels: ["gemini-2.5-flash"],
     supportsCustomModel: true,
-    envKeys: ['GEMINI_API_KEY', 'API_KEY'],
-    description: 'Gemini 文本生成与 JSON 结构化能力。',
+    envKeys: ["GEMINI_API_KEY", "API_KEY"],
+    healthCheckMode: "runtime",
+    billingMode: "token",
+    defaultTimeout: 90000,
+    retryStrategy: { maxRetries: 2, backoffMs: 1500 },
+    description: "Gemini 文本生成与 JSON 结构化能力。",
   },
   {
-    id: 'glm-ocr',
-    name: 'GLM OCR',
-    type: 'ocr',
-    runtime: 'glm-ocr',
-    defaultModel: 'glm-ocr',
+    id: "glm-ocr",
+    name: "GLM OCR",
+    type: "ocr",
+    runtime: "glm-ocr",
+    status: "active",
+    defaultModel: "glm-ocr",
+    availableModels: ["glm-ocr"],
     supportsCustomModel: false,
-    envKeys: ['GLM_OCR_API_KEY', 'ZHIPU_API_KEY'],
-    description: 'GLM 版面/OCR 接口，适合票据与文档识别。',
+    envKeys: ["GLM_OCR_API_KEY", "ZHIPU_API_KEY"],
+    healthCheckMode: "runtime",
+    billingMode: "page",
+    defaultTimeout: 90000,
+    retryStrategy: { maxRetries: 1, backoffMs: 1000 },
+    description: "GLM 版面/OCR 接口，适合票据与文档识别。",
   },
   {
-    id: 'glm-text',
-    name: 'GLM Text',
-    type: 'text',
-    runtime: 'glm-text',
-    defaultModel: 'glm-4.7-flash',
+    id: "glm-text",
+    name: "GLM Text",
+    type: "text",
+    runtime: "glm-text",
+    status: "active",
+    defaultModel: "glm-4.7-flash",
+    availableModels: ["glm-4-flash", "glm-4.7-flash"],
     supportsCustomModel: true,
-    envKeys: ['GLM_OCR_API_KEY', 'ZHIPU_API_KEY'],
-    description: 'GLM 文本生成与 JSON 结构化能力。',
+    envKeys: ["GLM_OCR_API_KEY", "ZHIPU_API_KEY"],
+    healthCheckMode: "runtime",
+    billingMode: "token",
+    defaultTimeout: 90000,
+    retryStrategy: { maxRetries: 1, backoffMs: 1000 },
+    description: "GLM 文本生成与 JSON 结构化能力。",
   },
   {
-    id: 'paddle-ocr',
-    name: 'PaddleOCR',
-    type: 'ocr',
-    runtime: 'paddle-ocr',
-    defaultModel: 'rapidocr',
+    id: "openai-text",
+    name: "OpenAI Text",
+    type: "text",
+    runtime: "openai-text",
+    status: "active",
+    defaultModel: "gpt-4o",
+    availableModels: ["gpt-4o"],
+    supportsCustomModel: true,
+    envKeys: ["OPENAI_API_KEY"],
+    healthCheckMode: "runtime",
+    billingMode: "token",
+    defaultTimeout: 90000,
+    retryStrategy: { maxRetries: 1, backoffMs: 1000 },
+    description: "OpenAI 兼容文本生成能力。",
+  },
+  {
+    id: "claude-text",
+    name: "Claude Text",
+    type: "text",
+    runtime: "claude-text",
+    status: "active",
+    defaultModel: "claude-3-sonnet-20250219",
+    availableModels: ["claude-3-sonnet-20250219"],
+    supportsCustomModel: true,
+    envKeys: ["ANTHROPIC_API_KEY", "CLAUDE_API_KEY"],
+    healthCheckMode: "runtime",
+    billingMode: "token",
+    defaultTimeout: 90000,
+    retryStrategy: { maxRetries: 1, backoffMs: 1000 },
+    description: "Anthropic Claude 服务端文本能力。",
+  },
+  {
+    id: "qwen-text",
+    name: "Qwen Text",
+    type: "text",
+    runtime: "qwen-text",
+    status: "active",
+    defaultModel: "qwen-plus",
+    availableModels: ["qwen-plus"],
+    supportsCustomModel: true,
+    envKeys: ["QWEN_API_KEY", "DASHSCOPE_API_KEY"],
+    healthCheckMode: "runtime",
+    billingMode: "token",
+    defaultTimeout: 90000,
+    retryStrategy: { maxRetries: 1, backoffMs: 1000 },
+    description: "通义千问 OpenAI 兼容文本能力。",
+  },
+  {
+    id: "deepseek-text",
+    name: "DeepSeek Text",
+    type: "text",
+    runtime: "deepseek-text",
+    status: "active",
+    defaultModel: "deepseek-chat",
+    availableModels: ["deepseek-chat"],
+    supportsCustomModel: true,
+    envKeys: ["DEEPSEEK_API_KEY"],
+    healthCheckMode: "runtime",
+    billingMode: "token",
+    defaultTimeout: 90000,
+    retryStrategy: { maxRetries: 1, backoffMs: 1000 },
+    description: "DeepSeek OpenAI 兼容文本能力。",
+  },
+  {
+    id: "paddle-ocr",
+    name: "PaddleOCR",
+    type: "ocr",
+    runtime: "paddle-ocr",
+    status: "active",
+    defaultModel: "rapidocr",
+    availableModels: ["rapidocr"],
     supportsCustomModel: false,
     envKeys: [],
-    description: '本地 PaddleOCR/RapidOCR 服务，适合离线 OCR。',
+    healthCheckMode: "runtime",
+    billingMode: "page",
+    defaultTimeout: 30000,
+    retryStrategy: { maxRetries: 0, backoffMs: 0 },
+    description: "本地 PaddleOCR/RapidOCR 服务，适合离线 OCR。",
   },
 ];
 
 const DEFAULT_PROMPT_TEMPLATES = [
   {
-    id: 'claim_adjuster_system',
-    name: '理赔审核系统提示词',
-    description: '智能理赔审核 Agent 的系统角色定义。',
+    id: "claim_adjuster_system",
+    name: "理赔审核系统提示词",
+    description: "智能理赔审核 Agent 的系统角色定义。",
     content: `你是一位资深的保险理赔审核员，具有丰富的医疗险和意外险理赔经验。
 
 ## 你的职责
@@ -230,11 +325,13 @@ const DEFAULT_PROMPT_TEMPLATES = [
 - 拒赔时必须引用具体的条款依据
 - 使用中文输出`,
     requiredVariables: [],
+    templateEngine: "plain",
+    variables: [],
   },
   {
-    id: 'claim_adjuster_human',
-    name: '理赔审核输入模板',
-    description: '智能理赔审核 Agent 的案件输入模板。',
+    id: "claim_adjuster_human",
+    name: "理赔审核输入模板",
+    description: "智能理赔审核 Agent 的案件输入模板。",
     content: `请审核以下理赔案件：
 
 ## 案件信息
@@ -248,19 +345,62 @@ const DEFAULT_PROMPT_TEMPLATES = [
 {{invoiceItemsSummary}}
 
 请使用工具进行责任判断和金额计算，然后给出审核结论。`,
-    requiredVariables: ['productCode', 'claimCaseId', 'ocrDataSummary', 'invoiceItemsSummary'],
+    requiredVariables: [
+      "productCode",
+      "claimCaseId",
+      "ocrDataSummary",
+      "invoiceItemsSummary",
+    ],
+    templateEngine: "jinja2",
+    variables: [
+      {
+        name: "productCode",
+        type: "string",
+        description: "保险产品代码",
+        example: "HEALTH-001",
+        required: true,
+        source: "policy",
+      },
+      {
+        name: "claimCaseId",
+        type: "string",
+        description: "理赔案件唯一编号",
+        example: "CLM-2024-00123",
+        required: true,
+        source: "claim_case",
+      },
+      {
+        name: "ocrDataSummary",
+        type: "string",
+        description: "OCR 识别后的材料结构化摘要文本",
+        example: "出院诊断：急性阑尾炎；住院天数：5天；总费用：¥12,800",
+        required: true,
+        source: "document",
+      },
+      {
+        name: "invoiceItemsSummary",
+        type: "string",
+        description: "发票费用明细汇总文本",
+        example:
+          "手术费: ¥5,000 / 药品费: ¥3,200 / 床位费: ¥2,500 / 检查费: ¥2,100",
+        required: true,
+        source: "document",
+      },
+    ],
   },
   {
-    id: 'smartclaim_system',
-    name: 'SmartClaim 系统提示词',
-    description: 'SmartClaim AI 助手系统角色提示词。',
+    id: "smartclaim_system",
+    name: "SmartClaim 系统提示词",
+    description: "SmartClaim AI 助手系统角色提示词。",
     content: SMARTCLAIM_SYSTEM_TEMPLATE,
     requiredVariables: [],
+    templateEngine: "plain",
+    variables: [],
   },
   {
-    id: 'smartclaim_chat_user',
-    name: 'SmartClaim 对话模板',
-    description: 'SmartClaim 普通聊天请求模板。',
+    id: "smartclaim_chat_user",
+    name: "SmartClaim 对话模板",
+    description: "SmartClaim 普通聊天请求模板。",
     content: `Current Claim State: {{claimStateJson}}
 History: {{historyText}}
 
@@ -268,33 +408,290 @@ Task: Respond to the user's latest message.
 If you've gathered enough info to change status, indicate it.
 Always prioritize completing the current step.
 If the user mentions an accident location or you need to find a place, use the Google Maps tool.`,
-    requiredVariables: ['claimStateJson', 'historyText'],
+    requiredVariables: ["claimStateJson", "historyText"],
+    templateEngine: "jinja2",
+    variables: [
+      {
+        name: "claimStateJson",
+        type: "object",
+        description: "当前理赔案件的完整状态 JSON 对象",
+        example:
+          '{"status":"pending","step":"upload_docs","claimId":"CLM-001"}',
+        required: true,
+        source: "claim_case",
+      },
+      {
+        name: "historyText",
+        type: "string",
+        description: "对话历史记录文本",
+        example: "用户：我想提交住院材料\n助手：好的，请上传出院小结",
+        required: true,
+        source: "system",
+      },
+    ],
   },
   {
-    id: 'smartclaim_intent_recognition',
-    name: 'SmartClaim 意图识别模板',
-    description: 'SmartClaim 33 类意图识别模板。',
+    id: "smartclaim_intent_recognition",
+    name: "SmartClaim 意图识别模板",
+    description: "SmartClaim 33 类意图识别模板。",
     content: SMARTCLAIM_INTENT_TEMPLATE,
-    requiredVariables: ['claimStatus', 'historicalClaimCount', 'recentClaimId', 'documentCount', 'conversationHistory', 'userInput'],
+    requiredVariables: [
+      "claimStatus",
+      "historicalClaimCount",
+      "recentClaimId",
+      "documentCount",
+      "conversationHistory",
+      "userInput",
+    ],
+    templateEngine: "jinja2",
+    variables: [
+      {
+        name: "claimStatus",
+        type: "string",
+        description: "当前理赔案件状态",
+        example: "pending_documents",
+        required: true,
+        source: "claim_case",
+      },
+      {
+        name: "historicalClaimCount",
+        type: "number",
+        description: "用户历史理赔次数",
+        example: "2",
+        required: true,
+        source: "policy",
+      },
+      {
+        name: "recentClaimId",
+        type: "string",
+        description: "最近一次理赔案件 ID",
+        example: "CLM-2024-00089",
+        required: false,
+        source: "claim_case",
+      },
+      {
+        name: "documentCount",
+        type: "number",
+        description: "已上传材料数量",
+        example: "3",
+        required: true,
+        source: "document",
+      },
+      {
+        name: "conversationHistory",
+        type: "string",
+        description: "最近 N 轮对话历史",
+        example: "用户：我住院了\n助手：请上传出院小结",
+        required: true,
+        source: "system",
+      },
+      {
+        name: "userInput",
+        type: "string",
+        description: "用户当前输入文本",
+        example: "我想查一下我的理赔进度",
+        required: true,
+        source: "system",
+      },
+    ],
   },
   {
-    id: 'voice_intent_recognition',
-    name: '语音意图识别模板',
-    description: '语音报案场景的意图识别模板。',
+    id: "voice_intent_recognition",
+    name: "语音意图识别模板",
+    description: "语音报案场景的意图识别模板。",
     content: VOICE_INTENT_TEMPLATE,
-    requiredVariables: ['currentState', 'conversationPhase', 'lastUserGoal', 'selectedPolicy', 'selectedClaim', 'collectedFields', 'missingRequiredFields', 'recentHistory', 'userText'],
+    requiredVariables: [
+      "currentState",
+      "conversationPhase",
+      "lastUserGoal",
+      "selectedPolicy",
+      "selectedClaim",
+      "collectedFields",
+      "missingRequiredFields",
+      "recentHistory",
+      "userText",
+    ],
+    templateEngine: "jinja2",
+    variables: [
+      {
+        name: "currentState",
+        type: "string",
+        description: "当前语音报案流程状态",
+        example: "collecting_incident_info",
+        required: true,
+        source: "system",
+      },
+      {
+        name: "conversationPhase",
+        type: "string",
+        description: "对话阶段",
+        example: "incident_description",
+        required: true,
+        source: "system",
+      },
+      {
+        name: "lastUserGoal",
+        type: "string",
+        description: "上一轮识别的用户目标",
+        example: "report_accident",
+        required: false,
+        source: "system",
+      },
+      {
+        name: "selectedPolicy",
+        type: "string",
+        description: "用户已选择的保单号",
+        example: "POL-2023-001234",
+        required: false,
+        source: "policy",
+      },
+      {
+        name: "selectedClaim",
+        type: "string",
+        description: "用户已关联的理赔案件号",
+        example: "CLM-2024-00456",
+        required: false,
+        source: "claim_case",
+      },
+      {
+        name: "collectedFields",
+        type: "string",
+        description: "已收集的字段列表",
+        example: "事故时间: 2024-03-15, 事故地点: 上海市浦东新区",
+        required: true,
+        source: "system",
+      },
+      {
+        name: "missingRequiredFields",
+        type: "string",
+        description: "缺失的必填字段列表",
+        example: "就诊医院, 诊断结果",
+        required: true,
+        source: "system",
+      },
+      {
+        name: "recentHistory",
+        type: "string",
+        description: "最近几轮语音对话记录",
+        example: "用户：昨天发生了交通事故\n助手：请问事故发生在哪里？",
+        required: true,
+        source: "system",
+      },
+      {
+        name: "userText",
+        type: "string",
+        description: "语音识别后的用户文本",
+        example: "我在上海浦东新区发生了交通事故",
+        required: true,
+        source: "system",
+      },
+    ],
   },
   {
-    id: 'voice_reply_planner',
-    name: '语音回复规划模板',
-    description: '语音报案 TTS 回复规划模板。',
+    id: "voice_reply_planner",
+    name: "语音回复规划模板",
+    description: "语音报案 TTS 回复规划模板。",
     content: VOICE_REPLY_TEMPLATE,
-    requiredVariables: ['scene', 'currentState', 'userText', 'conversationGoal', 'replyStrategy', 'summary', 'acknowledgedFacts', 'missingFields', 'actionSummaries', 'nextStep'],
+    requiredVariables: [
+      "scene",
+      "currentState",
+      "userText",
+      "conversationGoal",
+      "replyStrategy",
+      "summary",
+      "acknowledgedFacts",
+      "missingFields",
+      "actionSummaries",
+      "nextStep",
+    ],
+    templateEngine: "jinja2",
+    variables: [
+      {
+        name: "scene",
+        type: "string",
+        description: "当前报案场景类型",
+        example: "accident_report",
+        required: true,
+        source: "system",
+      },
+      {
+        name: "currentState",
+        type: "string",
+        description: "当前流程状态",
+        example: "collecting_hospital_info",
+        required: true,
+        source: "system",
+      },
+      {
+        name: "userText",
+        type: "string",
+        description: "用户语音识别文本",
+        example: "我在北京协和医院住院了",
+        required: true,
+        source: "system",
+      },
+      {
+        name: "conversationGoal",
+        type: "string",
+        description: "本轮对话目标",
+        example: "collect_hospital_name",
+        required: true,
+        source: "system",
+      },
+      {
+        name: "replyStrategy",
+        type: "string",
+        description: "回复策略指令",
+        example: "confirm_and_proceed",
+        required: true,
+        source: "system",
+      },
+      {
+        name: "summary",
+        type: "string",
+        description: "当前已收集信息摘要",
+        example: "事故时间：2024-03-15；事故地点：上海",
+        required: true,
+        source: "system",
+      },
+      {
+        name: "acknowledgedFacts",
+        type: "string",
+        description: "已确认事实列表",
+        example: "就诊医院：北京协和医院",
+        required: true,
+        source: "system",
+      },
+      {
+        name: "missingFields",
+        type: "string",
+        description: "待收集字段",
+        example: "出院时间, 主要诊断",
+        required: true,
+        source: "system",
+      },
+      {
+        name: "actionSummaries",
+        type: "string",
+        description: "本轮执行的动作摘要",
+        example: "已记录就诊医院信息",
+        required: false,
+        source: "system",
+      },
+      {
+        name: "nextStep",
+        type: "string",
+        description: "下一步操作指引",
+        example: "询问出院时间",
+        required: true,
+        source: "system",
+      },
+    ],
   },
   {
-    id: 'invoice_structuring',
-    name: '发票结构化模板',
-    description: 'OCR 结果二次结构化提取模板。',
+    id: "invoice_structuring",
+    name: "发票结构化模板",
+    description: "OCR 结果二次结构化提取模板。",
     content: `以下是中国医疗发票的 OCR 识别结果。请从中提取结构化信息。
 
 ## 重要规则
@@ -314,12 +711,33 @@ If the user mentions an accident location or you need to find a place, use the G
 - 日期格式：YYYY-MM-DD
 - 数字字段：纯数字，不含货币符号或千分位逗号
 - 无法识别的字段：字符串用 ""，数字用 0`,
-    requiredVariables: ['ocrText', 'schemaText'],
+    requiredVariables: ["ocrText", "schemaText"],
+    templateEngine: "jinja2",
+    variables: [
+      {
+        name: "ocrText",
+        type: "string",
+        description: "发票的 OCR 原始识别文本",
+        example:
+          "北京协和医院 门诊收费收据\n挂号费 50.00\n检查费 380.00\n药品费 220.00\n合计 650.00",
+        required: true,
+        source: "document",
+      },
+      {
+        name: "schemaText",
+        type: "string",
+        description: "期望输出的 JSON 结构描述",
+        example:
+          '{"hospitalName":"string","totalAmount":"number","items":[{"name":"string","amount":"number"}]}',
+        required: true,
+        source: "system",
+      },
+    ],
   },
   {
-    id: 'material_classifier',
-    name: '材料分类模板',
-    description: '理赔材料自动分类模板。',
+    id: "material_classifier",
+    name: "材料分类模板",
+    description: "理赔材料自动分类模板。",
     content: `你是保险理赔材料分类专家。你必须严格从材料目录中选择一个最匹配项，若无法确定再返回 unknown。
 
 【OCR 文字】
@@ -336,12 +754,40 @@ If the user mentions an accident location or you need to find a place, use the G
 1) materialId 必须来自目录；
 2) 若不确定，返回 unknown/未识别/0；
 3) 禁止输出 markdown。`,
-    requiredVariables: ['ocrText', 'fileName', 'catalog'],
+    requiredVariables: ["ocrText", "fileName", "catalog"],
+    templateEngine: "jinja2",
+    variables: [
+      {
+        name: "ocrText",
+        type: "string",
+        description: "上传材料的 OCR 识别文本",
+        example: "出院记录 患者：张三 住院号：123456 出院诊断：急性阑尾炎",
+        required: true,
+        source: "document",
+      },
+      {
+        name: "fileName",
+        type: "string",
+        description: "上传文件的文件名",
+        example: "出院小结_张三_20240315.pdf",
+        required: true,
+        source: "document",
+      },
+      {
+        name: "catalog",
+        type: "string",
+        description: "材料目录列表（id|名称|说明）",
+        example:
+          "discharge_summary|出院小结|患者出院时的诊断和治疗摘要\ninvoice|医疗发票|医院开具的费用发票",
+        required: true,
+        source: "system",
+      },
+    ],
   },
   {
-    id: 'catalog_semantic_match',
-    name: '医保目录语义匹配模板',
-    description: '医保目录语义匹配模板，支持单项和批量匹配。',
+    id: "catalog_semantic_match",
+    name: "医保目录语义匹配模板",
+    description: "医保目录语义匹配模板，支持单项和批量匹配。",
     content: `你是一位中国医保药品/诊疗项目专家。请从以下医保目录中找出与给定项目最匹配的条目。
 
 注意事项：
@@ -362,12 +808,53 @@ If the user mentions an accident location or you need to find a place, use the G
 规则：
 - 置信度低于 {{aiConfidenceThreshold}} 时 matchedCode 必须为 null
 - 必须为每个待匹配项目返回一条结果`,
-    requiredVariables: ['catalogList', 'itemList', 'resultShape', 'aiConfidenceThreshold'],
+    requiredVariables: [
+      "catalogList",
+      "itemList",
+      "resultShape",
+      "aiConfidenceThreshold",
+    ],
+    templateEngine: "jinja2",
+    variables: [
+      {
+        name: "catalogList",
+        type: "string",
+        description: "医保目录条目列表文本",
+        example: "J01CA04|阿莫西林|口服抗菌药\nM01AE01|布洛芬|非甾体抗炎药",
+        required: true,
+        source: "system",
+      },
+      {
+        name: "itemList",
+        type: "string",
+        description: "待匹配的药品/诊疗项目列表",
+        example: "泰诺林\nMRI检查\n芬必得",
+        required: true,
+        source: "document",
+      },
+      {
+        name: "resultShape",
+        type: "string",
+        description: "期望的 JSON 返回结构模板",
+        example:
+          '[{"input":"...","matchedCode":"...","matchedName":"...","confidence":0.9}]',
+        required: true,
+        source: "system",
+      },
+      {
+        name: "aiConfidenceThreshold",
+        type: "number",
+        description: "置信度阈值，低于此值时 matchedCode 返回 null",
+        example: "0.7",
+        required: true,
+        source: "system",
+      },
+    ],
   },
   {
-    id: 'injury_assessment',
-    name: '伤残等级辅助判断模板',
-    description: '根据诊断与伤情描述辅助判断伤残等级。',
+    id: "injury_assessment",
+    name: "伤残等级辅助判断模板",
+    description: "根据诊断与伤情描述辅助判断伤残等级。",
     content: `请根据以下诊断和伤害描述，判断适用的伤残等级（1-10级，1级最高，10级最低）：
 
 诊断：{{diagnosisText}}
@@ -386,207 +873,414 @@ If the user mentions an accident location or you need to find a place, use the G
   "confidence": 0-1之间的数,
   "reasoning": "判断理由（简要）"
 }`,
-    requiredVariables: ['diagnosisText', 'injuryDescription'],
+    requiredVariables: ["diagnosisText", "injuryDescription"],
+    templateEngine: "jinja2",
+    variables: [
+      {
+        name: "diagnosisText",
+        type: "string",
+        description: "医院出具的诊断文本",
+        example: "右手拇指末节离断，神经血管损伤",
+        required: true,
+        source: "document",
+      },
+      {
+        name: "injuryDescription",
+        type: "string",
+        description: "伤害情况描述",
+        example: "工厂机器操作事故导致右手拇指末节完全离断",
+        required: true,
+        source: "claim_case",
+      },
+    ],
+  },
+  {
+    id: "pre_existing_condition_assessment",
+    name: "既往症核查提示词",
+    description: "基于病历既往史和时间逻辑，判断本次理赔是否涉及投保前既往症。",
+    content: `你是保险理赔既往症核查专员。请根据以下信息判断本次理赔是否涉及投保前既往症。
+
+## 本次理赔信息
+- 出院诊断：{{currentDiagnosis}}
+- 诊断名称列表：{{diagnosisNames}}
+- 首诊/入院日期：{{firstDiagnosisDate}}
+
+## 保单信息
+- 保单生效日期：{{policyEffectiveDate}}
+- 等待期（天）：{{waitingPeriodDays}}
+
+## 病历中的既往史记录
+{{historyText}}
+
+## 评判标准
+1. 若既往史中记录了与本次诊断相关或同类疾病 → 倾向 YES
+2. 若首诊日期早于保单生效日或在等待期内 → 倾向 YES
+3. 若既往史明确记载"无"且时间逻辑无异常 → 倾向 NO
+4. 若既往史为"不详"或信息严重不足 → 返回 UNCERTAIN
+
+请仅返回 JSON，不要其他文字：
+{
+  "result": "YES" | "NO" | "UNCERTAIN",
+  "confidence": 0.0到1.0之间的数字,
+  "reasoning": "简要推理说明"
+}`,
+    requiredVariables: [
+      "currentDiagnosis",
+      "diagnosisNames",
+      "firstDiagnosisDate",
+      "policyEffectiveDate",
+      "waitingPeriodDays",
+      "historyText",
+    ],
+    templateEngine: "jinja2",
+    variables: [
+      {
+        name: "currentDiagnosis",
+        type: "string",
+        description: "本次出院或就诊的主要诊断",
+        example: "2型糖尿病伴肾病",
+        required: true,
+        source: "document",
+      },
+      {
+        name: "diagnosisNames",
+        type: "string",
+        description: "所有诊断名称列表（逗号分隔）",
+        example: "2型糖尿病, 糖尿病肾病3期, 高血压",
+        required: true,
+        source: "document",
+      },
+      {
+        name: "firstDiagnosisDate",
+        type: "string",
+        description: "首次诊断或入院日期（YYYY-MM-DD）",
+        example: "2024-02-10",
+        required: true,
+        source: "document",
+      },
+      {
+        name: "policyEffectiveDate",
+        type: "string",
+        description: "保单生效日期（YYYY-MM-DD）",
+        example: "2023-06-01",
+        required: true,
+        source: "policy",
+      },
+      {
+        name: "waitingPeriodDays",
+        type: "number",
+        description: "保单等待期天数",
+        example: "90",
+        required: true,
+        source: "policy",
+      },
+      {
+        name: "historyText",
+        type: "string",
+        description: "病历中既往史记录文本",
+        example: "既往史：有高血压病史5年，规律服药；否认糖尿病史",
+        required: true,
+        source: "document",
+      },
+    ],
   },
 ];
 
 const DEFAULT_CAPABILITIES = [
   {
-    id: 'admin.invoice_ocr.raw_engine',
-    name: '发票 OCR 原始识别',
-    group: '主后台',
-    description: '票据/材料图像的第一阶段 OCR 识别引擎。',
-    binding: { provider: 'gemini-vision', model: 'gemini-2.5-flash' },
-    supportedProviders: ['gemini-vision', 'glm-ocr', 'paddle-ocr'],
-    promptSourceType: 'runtime_only',
+    id: "admin.invoice_ocr.raw_engine",
+    name: "发票 OCR 原始识别",
+    group: "主后台",
+    description: "票据/材料图像的第一阶段 OCR 识别引擎。",
+    binding: { provider: "gemini-vision", model: "gemini-2.5-flash" },
+    supportedProviders: ["gemini-vision", "glm-ocr", "paddle-ocr"],
+    promptSourceType: "runtime_only",
     promptTemplateId: null,
     editable: true,
-    codeLocations: ['services/invoiceOcrService.ts', 'server/apiHandler.js'],
+    codeLocations: ["services/invoiceOcrService.ts", "server/apiHandler.js"],
   },
   {
-    id: 'admin.invoice_ocr.structuring',
-    name: '发票 OCR 结构化解析',
-    group: '主后台',
-    description: '对 OCR 文本进行 JSON 结构化提取。',
-    binding: { provider: 'gemini-text', model: 'gemini-2.5-flash' },
-    supportedProviders: ['gemini-text', 'glm-text'],
-    promptSourceType: 'template',
-    promptTemplateId: 'invoice_structuring',
+    id: "admin.invoice_ocr.structuring",
+    name: "发票 OCR 结构化解析",
+    group: "主后台",
+    description: "对 OCR 文本进行 JSON 结构化提取。",
+    binding: { provider: "gemini-text", model: "gemini-2.5-flash" },
+    supportedProviders: [
+      "gemini-text",
+      "glm-text",
+      "openai-text",
+      "claude-text",
+      "qwen-text",
+      "deepseek-text",
+    ],
+    promptSourceType: "template",
+    promptTemplateId: "invoice_structuring",
     editable: true,
-    codeLocations: ['services/invoiceOcrService.ts', 'server/apiHandler.js'],
+    codeLocations: ["services/invoiceOcrService.ts", "server/apiHandler.js"],
   },
   {
-    id: 'admin.material.classification',
-    name: '材料分类',
-    group: '主后台',
-    description: '理赔材料自动分类与材料目录匹配。',
-    binding: { provider: 'gemini-vision', model: 'gemini-2.5-flash' },
-    supportedProviders: ['gemini-vision'],
-    promptSourceType: 'template',
-    promptTemplateId: 'material_classifier',
+    id: "admin.material.classification",
+    name: "材料分类",
+    group: "主后台",
+    description: "理赔材料自动分类与材料目录匹配。",
+    binding: { provider: "gemini-vision", model: "gemini-2.5-flash" },
+    supportedProviders: ["gemini-vision"],
+    promptSourceType: "template",
+    promptTemplateId: "material_classifier",
     editable: true,
-    codeLocations: ['services/material/materialClassifier.ts', 'server/taskQueue/worker.js', 'server/apiHandler.js'],
+    codeLocations: [
+      "services/material/materialClassifier.ts",
+      "server/taskQueue/worker.js",
+      "server/apiHandler.js",
+    ],
   },
   {
-    id: 'admin.material.structured_extraction',
-    name: '结构化材料抽取',
-    group: '主后台',
-    description: '基于材料 schema 的 OCR+字段抽取。',
-    binding: { provider: 'gemini-vision', model: 'gemini-2.5-flash' },
-    supportedProviders: ['gemini-vision'],
-    promptSourceType: 'material_config',
-    promptTemplateId: null,
-    editable: false,
-    lockReason: '材料级模板来自 claims-materials 配置。',
-    codeLocations: ['services/material/strategies/structuredDocStrategy.ts', 'services/invoiceOcrService.ts'],
-  },
-  {
-    id: 'admin.material.general_analysis',
-    name: '通用材料分析',
-    group: '主后台',
-    description: '无固定 schema 的通用文档分析与摘要。',
-    binding: { provider: 'gemini-vision', model: 'gemini-2.5-flash' },
-    supportedProviders: ['gemini-vision'],
-    promptSourceType: 'runtime_only',
-    promptTemplateId: null,
-    editable: true,
-    codeLocations: ['services/material/strategies/generalDocStrategy.ts', 'server/services/fileProcessor.js', 'server/services/summaryExtractors/index.js'],
-  },
-  {
-    id: 'admin.catalog.semantic_match',
-    name: '医保目录语义匹配',
-    group: '主后台',
-    description: '费用项目与医保目录之间的 AI 语义匹配。',
-    binding: { provider: 'gemini-text', model: 'gemini-2.5-flash' },
-    supportedProviders: ['gemini-text', 'glm-text'],
-    promptSourceType: 'template',
-    promptTemplateId: 'catalog_semantic_match',
-    editable: true,
-    codeLocations: ['services/catalogMatchService.ts'],
-  },
-  {
-    id: 'admin.claim.review_agent',
-    name: '理赔审核 Agent',
-    group: '主后台',
-    description: '智能理赔审核 Agent 的工具调用主模型。',
-    binding: { provider: 'gemini-text', model: 'gemini-2.5-flash' },
-    supportedProviders: ['gemini-text'],
-    promptSourceType: 'template',
-    promptTemplateId: 'claim_adjuster_system',
-    secondaryPromptTemplateId: 'claim_adjuster_human',
-    editable: true,
-    codeLocations: ['server/ai/agent.js'],
-  },
-  {
-    id: 'admin.claim.risk_assessment',
-    name: '理赔风险评估',
-    group: '主后台',
-    description: '智能理赔审核流程中的风险评估模型。',
-    binding: { provider: 'gemini-text', model: 'gemini-2.5-flash' },
-    supportedProviders: ['gemini-text', 'glm-text'],
-    promptSourceType: 'runtime_only',
-    promptTemplateId: null,
-    editable: true,
-    codeLocations: ['server/ai/graph.js', 'server/services/injuryAssessment.js'],
-  },
-  {
-    id: 'smartclaim.chat',
-    name: 'SmartClaim 对话',
-    group: 'SmartClaim',
-    description: 'SmartClaim 对话主模型（含地图 grounding）。',
-    binding: { provider: 'gemini-text', model: 'gemini-2.5-flash' },
-    supportedProviders: ['gemini-text'],
-    promptSourceType: 'template',
-    promptTemplateId: 'smartclaim_chat_user',
-    secondaryPromptTemplateId: 'smartclaim_system',
-    editable: false,
-    lockReason: '当前依赖 Google Maps grounding，仅支持 Gemini。',
-    codeLocations: ['smartclaim-ai-agent/geminiService.ts'],
-  },
-  {
-    id: 'smartclaim.intent',
-    name: 'SmartClaim 意图识别',
-    group: 'SmartClaim',
-    description: 'SmartClaim 33 类意图识别模型。',
-    binding: { provider: 'gemini-text', model: 'gemini-2.5-flash' },
-    supportedProviders: ['gemini-text'],
-    promptSourceType: 'template',
-    promptTemplateId: 'smartclaim_intent_recognition',
-    editable: true,
-    codeLocations: ['smartclaim-ai-agent/intentService.ts'],
-  },
-  {
-    id: 'smartclaim.document_analysis',
-    name: 'SmartClaim 文档分析',
-    group: 'SmartClaim',
-    description: 'SmartClaim 上传材料的 OCR/分析能力。',
-    binding: { provider: 'gemini-vision', model: 'gemini-2.5-flash' },
-    supportedProviders: ['gemini-vision'],
-    promptSourceType: 'runtime_only',
-    promptTemplateId: null,
-    editable: true,
-    codeLocations: ['smartclaim-ai-agent/geminiService.ts'],
-  },
-  {
-    id: 'smartclaim.final_assessment',
-    name: 'SmartClaim 最终理算',
-    group: 'SmartClaim',
-    description: 'SmartClaim 最终赔付评估模型。',
-    binding: { provider: 'gemini-text', model: 'gemini-2.5-flash' },
-    supportedProviders: ['gemini-text', 'glm-text'],
-    promptSourceType: 'runtime_only',
-    promptTemplateId: null,
-    editable: true,
-    codeLocations: ['smartclaim-ai-agent/geminiService.ts'],
-  },
-  {
-    id: 'shared.audio_transcription',
-    name: '共享音频转写',
-    group: '共享能力',
-    description: '音频/视频转写能力。',
-    binding: { provider: 'gemini-vision', model: 'gemini-2.5-flash' },
-    supportedProviders: ['gemini-vision'],
-    promptSourceType: 'runtime_only',
+    id: "admin.material.structured_extraction",
+    name: "结构化材料抽取",
+    group: "主后台",
+    description: "基于材料 schema 的 OCR+字段抽取。",
+    binding: { provider: "gemini-vision", model: "gemini-2.5-flash" },
+    supportedProviders: ["gemini-vision"],
+    promptSourceType: "material_config",
     promptTemplateId: null,
     editable: false,
-    lockReason: '当前依赖 Gemini 多模态音频能力。',
-    codeLocations: ['smartclaim-ai-agent/geminiService.ts', 'server/services/videoProcessor.js'],
+    lockReason: "材料级模板来自 claims-materials 配置。",
+    codeLocations: [
+      "services/material/strategies/structuredDocStrategy.ts",
+      "services/invoiceOcrService.ts",
+    ],
   },
   {
-    id: 'voice.intent',
-    name: '语音意图识别',
-    group: '语音报案',
-    description: '语音报案场景下的意图识别模型。',
-    binding: { provider: 'gemini-text', model: 'gemini-2.5-flash' },
-    supportedProviders: ['gemini-text', 'glm-text'],
-    promptSourceType: 'template',
-    promptTemplateId: 'voice_intent_recognition',
-    editable: true,
-    codeLocations: ['server/voice/intents/IntentRecognizer.ts'],
-  },
-  {
-    id: 'voice.reply_planner',
-    name: '语音回复规划',
-    group: '语音报案',
-    description: '将结构化结果改写为适合 TTS 播报的话术。',
-    binding: { provider: 'gemini-text', model: 'gemini-2.5-flash' },
-    supportedProviders: ['gemini-text', 'glm-text'],
-    promptSourceType: 'template',
-    promptTemplateId: 'voice_reply_planner',
-    editable: true,
-    codeLocations: ['server/voice/responders/voiceReplyBuilder.ts'],
-  },
-  {
-    id: 'voice.chat',
-    name: '语音对话主模型',
-    group: '语音报案',
-    description: '语音管线中的普通对话 fallback 模型。',
-    binding: { provider: 'gemini-text', model: 'gemini-2.5-flash' },
-    supportedProviders: ['gemini-text', 'glm-text'],
-    promptSourceType: 'runtime_only',
+    id: "admin.material.general_analysis",
+    name: "通用材料分析",
+    group: "主后台",
+    description: "无固定 schema 的通用文档分析与摘要。",
+    binding: { provider: "gemini-vision", model: "gemini-2.5-flash" },
+    supportedProviders: ["gemini-vision"],
+    promptSourceType: "runtime_only",
     promptTemplateId: null,
     editable: true,
-    codeLocations: ['server/voice/VoicePipeline.ts'],
+    codeLocations: [
+      "services/material/strategies/generalDocStrategy.ts",
+      "server/services/fileProcessor.js",
+      "server/services/summaryExtractors/index.js",
+    ],
+  },
+  {
+    id: "admin.catalog.semantic_match",
+    name: "医保目录语义匹配",
+    group: "主后台",
+    description: "费用项目与医保目录之间的 AI 语义匹配。",
+    binding: { provider: "gemini-text", model: "gemini-2.5-flash" },
+    supportedProviders: [
+      "gemini-text",
+      "glm-text",
+      "openai-text",
+      "claude-text",
+      "qwen-text",
+      "deepseek-text",
+    ],
+    promptSourceType: "template",
+    promptTemplateId: "catalog_semantic_match",
+    editable: true,
+    codeLocations: ["services/catalogMatchService.ts"],
+  },
+  {
+    id: "admin.claim.review_agent",
+    name: "理赔审核 Agent",
+    group: "主后台",
+    description: "智能理赔审核 Agent 的工具调用主模型。",
+    binding: { provider: "gemini-text", model: "gemini-2.5-flash" },
+    supportedProviders: ["gemini-text"],
+    promptSourceType: "template",
+    promptTemplateId: "claim_adjuster_system",
+    secondaryPromptTemplateId: "claim_adjuster_human",
+    editable: true,
+    codeLocations: ["server/ai/agent.js"],
+  },
+  {
+    id: "admin.claim.pre_existing_assessment",
+    name: "既往症自动判断",
+    group: "主后台",
+    description: "基于病历既往史和时间逻辑的医疗险既往症自动识别。",
+    binding: { provider: "gemini-text", model: "gemini-2.5-flash" },
+    supportedProviders: [
+      "gemini-text",
+      "glm-text",
+      "openai-text",
+      "claude-text",
+      "qwen-text",
+      "deepseek-text",
+    ],
+    promptSourceType: "template",
+    promptTemplateId: "pre_existing_condition_assessment",
+    editable: true,
+    codeLocations: ["server/services/preExistingConditionAssessor.js"],
+  },
+  {
+    id: "admin.claim.risk_assessment",
+    name: "理赔风险评估",
+    group: "主后台",
+    description: "智能理赔审核流程中的风险评估模型。",
+    binding: { provider: "gemini-text", model: "gemini-2.5-flash" },
+    supportedProviders: [
+      "gemini-text",
+      "glm-text",
+      "openai-text",
+      "claude-text",
+      "qwen-text",
+      "deepseek-text",
+    ],
+    promptSourceType: "runtime_only",
+    promptTemplateId: null,
+    editable: true,
+    codeLocations: [
+      "server/ai/graph.js",
+      "server/services/injuryAssessment.js",
+    ],
+  },
+  {
+    id: "smartclaim.chat",
+    name: "SmartClaim 对话",
+    group: "SmartClaim",
+    description: "SmartClaim 对话主模型（含地图 grounding）。",
+    binding: { provider: "gemini-text", model: "gemini-2.5-flash" },
+    supportedProviders: [
+      "gemini-text",
+      "openai-text",
+      "claude-text",
+      "qwen-text",
+      "deepseek-text",
+    ],
+    promptSourceType: "template",
+    promptTemplateId: "smartclaim_chat_user",
+    secondaryPromptTemplateId: "smartclaim_system",
+    editable: false,
+    lockReason: "当前依赖 Google Maps grounding，仅支持 Gemini。",
+    codeLocations: ["smartclaim-ai-agent/geminiService.ts"],
+  },
+  {
+    id: "smartclaim.intent",
+    name: "SmartClaim 意图识别",
+    group: "SmartClaim",
+    description: "SmartClaim 33 类意图识别模型。",
+    binding: { provider: "gemini-text", model: "gemini-2.5-flash" },
+    supportedProviders: [
+      "gemini-text",
+      "glm-text",
+      "openai-text",
+      "claude-text",
+      "qwen-text",
+      "deepseek-text",
+    ],
+    promptSourceType: "template",
+    promptTemplateId: "smartclaim_intent_recognition",
+    editable: true,
+    codeLocations: ["smartclaim-ai-agent/intentService.ts"],
+  },
+  {
+    id: "smartclaim.document_analysis",
+    name: "SmartClaim 文档分析",
+    group: "SmartClaim",
+    description: "SmartClaim 上传材料的 OCR/分析能力。",
+    binding: { provider: "gemini-vision", model: "gemini-2.5-flash" },
+    supportedProviders: ["gemini-vision"],
+    promptSourceType: "runtime_only",
+    promptTemplateId: null,
+    editable: true,
+    codeLocations: ["smartclaim-ai-agent/geminiService.ts"],
+  },
+  {
+    id: "smartclaim.final_assessment",
+    name: "SmartClaim 最终理算",
+    group: "SmartClaim",
+    description: "SmartClaim 最终赔付评估模型。",
+    binding: { provider: "gemini-text", model: "gemini-2.5-flash" },
+    supportedProviders: [
+      "gemini-text",
+      "glm-text",
+      "openai-text",
+      "claude-text",
+      "qwen-text",
+      "deepseek-text",
+    ],
+    promptSourceType: "runtime_only",
+    promptTemplateId: null,
+    editable: true,
+    codeLocations: ["smartclaim-ai-agent/geminiService.ts"],
+  },
+  {
+    id: "shared.audio_transcription",
+    name: "共享音频转写",
+    group: "共享能力",
+    description: "音频/视频转写能力。",
+    binding: { provider: "gemini-vision", model: "gemini-2.5-flash" },
+    supportedProviders: ["gemini-vision"],
+    promptSourceType: "runtime_only",
+    promptTemplateId: null,
+    editable: false,
+    lockReason: "当前依赖 Gemini 多模态音频能力。",
+    codeLocations: [
+      "smartclaim-ai-agent/geminiService.ts",
+      "server/services/videoProcessor.js",
+    ],
+  },
+  {
+    id: "voice.intent",
+    name: "语音意图识别",
+    group: "语音报案",
+    description: "语音报案场景下的意图识别模型。",
+    binding: { provider: "gemini-text", model: "gemini-2.5-flash" },
+    supportedProviders: [
+      "gemini-text",
+      "glm-text",
+      "openai-text",
+      "claude-text",
+      "qwen-text",
+      "deepseek-text",
+    ],
+    promptSourceType: "template",
+    promptTemplateId: "voice_intent_recognition",
+    editable: true,
+    codeLocations: ["server/voice/intents/IntentRecognizer.ts"],
+  },
+  {
+    id: "voice.reply_planner",
+    name: "语音回复规划",
+    group: "语音报案",
+    description: "将结构化结果改写为适合 TTS 播报的话术。",
+    binding: { provider: "gemini-text", model: "gemini-2.5-flash" },
+    supportedProviders: [
+      "gemini-text",
+      "glm-text",
+      "openai-text",
+      "claude-text",
+      "qwen-text",
+      "deepseek-text",
+    ],
+    promptSourceType: "template",
+    promptTemplateId: "voice_reply_planner",
+    editable: true,
+    codeLocations: ["server/voice/responders/voiceReplyBuilder.ts"],
+  },
+  {
+    id: "voice.chat",
+    name: "语音对话主模型",
+    group: "语音报案",
+    description: "语音管线中的普通对话 fallback 模型。",
+    binding: { provider: "gemini-text", model: "gemini-2.5-flash" },
+    supportedProviders: [
+      "gemini-text",
+      "glm-text",
+      "openai-text",
+      "claude-text",
+      "qwen-text",
+      "deepseek-text",
+    ],
+    promptSourceType: "runtime_only",
+    promptTemplateId: null,
+    editable: true,
+    codeLocations: ["server/voice/VoicePipeline.ts"],
   },
 ];
 
@@ -599,17 +1293,19 @@ function indexById(items) {
 }
 
 function normalizeText(value) {
-  return value === undefined || value === null ? '' : String(value);
+  return value === undefined || value === null ? "" : String(value);
 }
 
 function getProviderAvailability(provider) {
-  if (provider.id === 'paddle-ocr') {
+  if (provider.id === "paddle-ocr") {
     return {
       available: true,
       missingEnvKeys: [],
     };
   }
-  const missingEnvKeys = (provider.envKeys || []).filter((key) => !process.env[key]);
+  const missingEnvKeys = (provider.envKeys || []).filter(
+    (key) => !process.env[key],
+  );
   return {
     available: missingEnvKeys.length < (provider.envKeys || []).length,
     missingEnvKeys,
@@ -624,7 +1320,7 @@ function getDefaultSettings() {
     promptTemplates: clone(DEFAULT_PROMPT_TEMPLATES),
     metadata: {
       updatedAt: nowIso(),
-      updatedBy: 'system',
+      updatedBy: "system",
       version: 1,
     },
   };
@@ -632,7 +1328,7 @@ function getDefaultSettings() {
 
 function readStoredSettings() {
   const saved = readData(AI_SETTINGS_RESOURCE);
-  if (!saved || Array.isArray(saved) || typeof saved !== 'object') {
+  if (!saved || Array.isArray(saved) || typeof saved !== "object") {
     return null;
   }
   return saved;
@@ -644,19 +1340,29 @@ function mergeSettings(defaults, saved) {
   const capabilityMap = indexById(defaults.capabilities);
   const templateMap = indexById(defaults.promptTemplates);
 
-  const providers = defaults.providers.map((provider) => ({
+  const mergedDefaultProviders = defaults.providers.map((provider) => ({
     ...provider,
     ...(saved.providers || []).find((item) => item.id === provider.id),
   }));
+  const extraSavedProviders = (saved.providers || []).filter(
+    (provider) => !providerMap.has(provider.id),
+  );
+  const providers = [...mergedDefaultProviders, ...extraSavedProviders];
 
   const capabilities = defaults.capabilities.map((capability) => {
-    const savedCapability = (saved.capabilities || []).find((item) => item.id === capability.id);
+    const savedCapability = (saved.capabilities || []).find(
+      (item) => item.id === capability.id,
+    );
     return {
       ...capability,
       ...(savedCapability || {}),
       binding: {
         ...capability.binding,
         ...(savedCapability?.binding || {}),
+        generationConfig: {
+          ...(capability.binding?.generationConfig || {}),
+          ...(savedCapability?.binding?.generationConfig || {}),
+        },
       },
     };
   });
@@ -669,9 +1375,13 @@ function mergeSettings(defaults, saved) {
   return {
     ...defaults,
     ...saved,
-    providers: providers.filter((provider) => providerMap.has(provider.id)),
-    capabilities: capabilities.filter((capability) => capabilityMap.has(capability.id)),
-    promptTemplates: promptTemplates.filter((template) => templateMap.has(template.id)),
+    providers,
+    capabilities: capabilities.filter((capability) =>
+      capabilityMap.has(capability.id),
+    ),
+    promptTemplates: promptTemplates.filter((template) =>
+      templateMap.has(template.id),
+    ),
     metadata: {
       ...defaults.metadata,
       ...(saved.metadata || {}),
@@ -704,7 +1414,11 @@ export function getProviderCatalog() {
 }
 
 export function getPromptTemplate(templateId) {
-  return getAISettingsSnapshot().promptTemplates.find((item) => item.id === templateId) || null;
+  return (
+    getAISettingsSnapshot().promptTemplates.find(
+      (item) => item.id === templateId,
+    ) || null
+  );
 }
 
 export function renderPromptTemplate(templateId, variables = {}) {
@@ -713,23 +1427,32 @@ export function renderPromptTemplate(templateId, variables = {}) {
     throw new Error(`Prompt template not found: ${templateId}`);
   }
 
-  return template.content.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_match, key) =>
-    normalizeText(variables[key]),
+  return template.content.replace(
+    /\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g,
+    (_match, key) => normalizeText(variables[key]),
   );
 }
 
 export function getCapabilityDefinition(capabilityId) {
-  return getAISettingsSnapshot().capabilities.find((item) => item.id === capabilityId) || null;
+  return (
+    getAISettingsSnapshot().capabilities.find(
+      (item) => item.id === capabilityId,
+    ) || null
+  );
 }
 
 export function resolveAICapability(capabilityId) {
   const snapshot = getAISettingsSnapshot();
-  const capability = snapshot.capabilities.find((item) => item.id === capabilityId);
+  const capability = snapshot.capabilities.find(
+    (item) => item.id === capabilityId,
+  );
   if (!capability) {
     throw new Error(`AI capability not found: ${capabilityId}`);
   }
 
-  const provider = snapshot.providers.find((item) => item.id === capability.binding.provider);
+  const provider = snapshot.providers.find(
+    (item) => item.id === capability.binding.provider,
+  );
   if (!provider) {
     throw new Error(`AI provider not found: ${capability.binding.provider}`);
   }
@@ -738,8 +1461,12 @@ export function resolveAICapability(capabilityId) {
     capability,
     provider,
     binding: capability.binding,
-    promptTemplate: capability.promptTemplateId ? getPromptTemplate(capability.promptTemplateId) : null,
-    secondaryPromptTemplate: capability.secondaryPromptTemplateId ? getPromptTemplate(capability.secondaryPromptTemplateId) : null,
+    promptTemplate: capability.promptTemplateId
+      ? getPromptTemplate(capability.promptTemplateId)
+      : null,
+    secondaryPromptTemplate: capability.secondaryPromptTemplateId
+      ? getPromptTemplate(capability.secondaryPromptTemplateId)
+      : null,
   };
 }
 
@@ -757,7 +1484,9 @@ function validatePromptTemplates(promptTemplates) {
     for (const variable of baseTemplate.requiredVariables || []) {
       const regex = new RegExp(`\\{\\{\\s*${variable}\\s*\\}\\}`);
       if (!regex.test(content)) {
-        throw new Error(`Prompt template '${template.id}' missing required variable '{{${variable}}}'`);
+        throw new Error(
+          `Prompt template '${template.id}' missing required variable '{{${variable}}}'`,
+        );
       }
     }
 
@@ -783,17 +1512,26 @@ function validateCapabilities(capabilities, providers) {
     const nextBinding = {
       ...baseCapability.binding,
       ...(capability.binding || {}),
+      generationConfig: {
+        ...(baseCapability.binding?.generationConfig || {}),
+        ...(capability.binding?.generationConfig || {}),
+      },
     };
 
-    if (baseCapability.editable === false && (
-      nextBinding.provider !== baseCapability.binding.provider ||
-      nextBinding.model !== baseCapability.binding.model
-    )) {
-      throw new Error(`Capability '${capability.id}' is locked and cannot be changed`);
+    if (
+      baseCapability.editable === false &&
+      (nextBinding.provider !== baseCapability.binding.provider ||
+        nextBinding.model !== baseCapability.binding.model)
+    ) {
+      throw new Error(
+        `Capability '${capability.id}' is locked and cannot be changed`,
+      );
     }
 
     if (!baseCapability.supportedProviders.includes(nextBinding.provider)) {
-      throw new Error(`Capability '${capability.id}' does not support provider '${nextBinding.provider}'`);
+      throw new Error(
+        `Capability '${capability.id}' does not support provider '${nextBinding.provider}'`,
+      );
     }
 
     const provider = providerMap.get(nextBinding.provider);
@@ -801,7 +1539,9 @@ function validateCapabilities(capabilities, providers) {
       throw new Error(`Unknown provider '${nextBinding.provider}'`);
     }
     if (!provider.available) {
-      throw new Error(`Provider '${nextBinding.provider}' is unavailable. Missing env: ${(provider.missingEnvKeys || []).join(', ')}`);
+      throw new Error(
+        `Provider '${nextBinding.provider}' is unavailable. Missing env: ${(provider.missingEnvKeys || []).join(", ")}`,
+      );
     }
 
     if (!normalizeText(nextBinding.model)) {
@@ -816,7 +1556,7 @@ function validateCapabilities(capabilities, providers) {
   });
 }
 
-export function updateAISettings(payload = {}, updatedBy = 'unknown') {
+export function updateAISettings(payload = {}, updatedBy = "unknown") {
   const current = getAISettingsSnapshot();
   const defaults = getDefaultSettings();
 
@@ -827,11 +1567,22 @@ export function updateAISettings(payload = {}, updatedBy = 'unknown') {
     })),
   );
 
-  const providerCatalog = current.providers.map((provider) => {
-    const baseProvider = defaults.providers.find((item) => item.id === provider.id) || provider;
+  const nextProviders = (payload.providers || current.providers).map(
+    (provider) => ({
+      ...provider,
+      availableModels: Array.from(
+        new Set((provider.availableModels || []).filter(Boolean)),
+      ),
+    }),
+  );
+
+  const providerCatalog = nextProviders.map((provider) => {
+    const baseProvider =
+      defaults.providers.find((item) => item.id === provider.id) || provider;
     const availability = getProviderAvailability(baseProvider);
     return {
       ...baseProvider,
+      ...provider,
       available: availability.available,
       missingEnvKeys: availability.missingEnvKeys,
     };
@@ -844,7 +1595,9 @@ export function updateAISettings(payload = {}, updatedBy = 'unknown') {
 
   const snapshot = {
     version: current.version || 1,
-    providers: providerCatalog.map(({ available, missingEnvKeys, ...provider }) => provider),
+    providers: providerCatalog.map(
+      ({ available, missingEnvKeys, ...provider }) => provider,
+    ),
     capabilities: nextCapabilities,
     promptTemplates: nextPromptTemplates,
     metadata: {
@@ -856,6 +1609,7 @@ export function updateAISettings(payload = {}, updatedBy = 'unknown') {
   };
 
   writeData(AI_SETTINGS_RESOURCE, snapshot);
+  clearAIStatsCache();
   return getAISettingsSnapshot();
 }
 
@@ -867,8 +1621,11 @@ export function getAIInventory() {
     ...capability,
     currentProvider: capability.binding.provider,
     currentModel: capability.binding.model,
-    providerAvailable: providerMap.get(capability.binding.provider)?.available || false,
-    providerMissingEnvKeys: providerMap.get(capability.binding.provider)?.missingEnvKeys || [],
+    generationConfig: capability.binding.generationConfig || {},
+    providerAvailable:
+      providerMap.get(capability.binding.provider)?.available || false,
+    providerMissingEnvKeys:
+      providerMap.get(capability.binding.provider)?.missingEnvKeys || [],
     supportMatrix: capability.supportedProviders.map((providerId) => {
       const provider = providerMap.get(providerId);
       return {
@@ -884,8 +1641,7 @@ export function getAIInventory() {
       type: capability.promptSourceType,
       promptTemplateId: capability.promptTemplateId || null,
       secondaryPromptTemplateId: capability.secondaryPromptTemplateId || null,
-      editable: capability.promptSourceType === 'template',
+      editable: capability.promptSourceType === "template",
     },
   }));
 }
-

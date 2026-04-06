@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense, lazy } from "react";
 import ProductListPage from "./components/ProductListPage";
 import ProductConfigPage from "./components/ProductConfigPage";
 import ClauseManagementPage from "./components/ClauseManagementPage";
@@ -34,8 +34,6 @@ import InvoiceAuditPage from "./components/InvoiceAuditPage";
 import MedicalCatalogManagementPage from "./components/MedicalCatalogManagementPage";
 import HospitalManagementPage from "./components/HospitalManagementPage";
 import UserOperationLogsPage from "./components/UserOperationLogsPage";
-import AIInteractionLogsPage from "./components/AIInteractionLogsPage";
-import AIConfigCenterPage from "./components/AIConfigCenterPage";
 import SystemLogsPage from "./SystemLogsPage";
 import IntakeFieldPresetsManager from "./components/IntakeFieldPresetsManager";
 import MessageCenter from "./components/MessageCenter";
@@ -78,6 +76,24 @@ import {
   MAPPING_DATA,
 } from "./constants";
 import { api } from "./services/api";
+
+const AIInteractionLogsPage = lazy(
+  () => import("./components/AIInteractionLogsPage"),
+);
+const AIConfigCenterPage = lazy(
+  () => import("./components/AIConfigCenterPage"),
+);
+const AIDashboardPage = lazy(() => import("./components/AIDashboardPage"));
+const AIModelManagementPage = lazy(
+  () => import("./components/AIModelManagementPage"),
+);
+const AICostAnalyticsPage = lazy(
+  () => import("./components/AICostAnalyticsPage"),
+);
+const AIModelComparisonPage = lazy(
+  () => import("./components/AIModelComparisonPage"),
+);
+const AIAlertPage = lazy(() => import("./components/AIAlertPage"));
 
 // 注册 AI 提供商
 aiService.registerProvider(new GeminiProvider());
@@ -245,6 +261,11 @@ type AppView =
   | "ai_interaction_logs"
   | "system_logs"
   | "ai_config_center"
+  | "ai_dashboard"
+  | "ai_model_management"
+  | "ai_cost_analytics"
+  | "ai_model_comparison"
+  | "ai_alerts"
   | "ai_test"
   | "quote_list"
   | "quote_detail"
@@ -294,7 +315,7 @@ const navItems: NavItemData[] = [
       { name: "理赔员工作台", id: "claim_workbench" },
       { name: "语音报案", id: "voice_claim" },
       { name: "理赔项目及材料配置", id: "claim_item_config" },
-      { name: "事实元数据中心", id: "fact_catalog_management" },
+      { name: "元数据中心", id: "fact_catalog_management" },
       { name: "材料校验规则", id: "material_validation_rules" },
       { name: "报案信息配置", id: "claim_intake_config" },
       { name: "报案字段预设管理", id: "intake_field_presets" },
@@ -307,16 +328,27 @@ const navItems: NavItemData[] = [
     ],
   },
   {
+    name: "AI 管理",
+    icon: <SettingsIcon />,
+    children: [
+      { name: "总览驾驶舱", id: "ai_dashboard" },
+      { name: "模型与供应商管理", id: "ai_model_management" },
+      { name: "能力与模板中心", id: "ai_config_center" },
+      { name: "调用审计中心", id: "ai_interaction_logs" },
+      { name: "成本与业务分析", id: "ai_cost_analytics" },
+      { name: "模型运行对比", id: "ai_model_comparison" },
+      { name: "AI 告警中心", id: "ai_alerts" },
+    ],
+  },
+  {
     name: "系统管理",
     icon: <SettingsIcon />,
     children: [
       { name: "用户清单", id: "user_list" },
       { name: "数据看板", id: "data_dashboard" },
       { name: "用户操作日志", id: "user_operation_logs" },
-      { name: "AI 交互日志", id: "ai_interaction_logs" },
       { name: "系统日志", id: "system_logs" },
       { name: "账号设置", id: "system_settings" },
-      { name: "AI 配置中心", id: "ai_config_center" },
       { name: "AI 测试", id: "ai_test" },
     ],
   },
@@ -368,15 +400,22 @@ const activeParentViews: Record<string, AppView[]> = {
     "hospital_management",
     "ruleset_management",
   ],
+  "AI 管理": [
+    "ai_dashboard",
+    "ai_model_management",
+    "ai_config_center",
+    "ai_interaction_logs",
+    "ai_cost_analytics",
+    "ai_model_comparison",
+    "ai_alerts",
+  ],
   系统管理: [
     "system_settings",
     "user_list",
     "data_dashboard",
     "user_operation_logs",
-    "ai_interaction_logs",
     "system_logs",
     "ai_test",
-    "ai_config_center",
     "formula_management",
   ],
 };
@@ -739,9 +778,15 @@ const App: React.FC = () => {
       }
     };
 
-    window.addEventListener("app:navigate", handleExternalNavigate as EventListener);
+    window.addEventListener(
+      "app:navigate",
+      handleExternalNavigate as EventListener,
+    );
     return () => {
-      window.removeEventListener("app:navigate", handleExternalNavigate as EventListener);
+      window.removeEventListener(
+        "app:navigate",
+        handleExternalNavigate as EventListener,
+      );
     };
   }, []);
 
@@ -754,6 +799,16 @@ const App: React.FC = () => {
     setSelectedQuote(null);
     setView("quote_create");
   };
+
+  const renderAILazyPage = (node: React.ReactNode) => (
+    <Suspense
+      fallback={
+        <div className="p-6 text-sm text-slate-500">AI 管理页面加载中...</div>
+      }
+    >
+      {node}
+    </Suspense>
+  );
 
   const handleSaveQuote = async (quote: QuoteRequest) => {
     const operator = currentUser?.username || "系统管理员";
@@ -1050,16 +1105,26 @@ const App: React.FC = () => {
         return <UserListPage />;
       case "data_dashboard":
         return <DataDashboardPage />;
+      case "ai_dashboard":
+        return renderAILazyPage(<AIDashboardPage />);
+      case "ai_model_management":
+        return renderAILazyPage(<AIModelManagementPage />);
+      case "ai_cost_analytics":
+        return renderAILazyPage(<AICostAnalyticsPage />);
+      case "ai_model_comparison":
+        return renderAILazyPage(<AIModelComparisonPage />);
+      case "ai_alerts":
+        return renderAILazyPage(<AIAlertPage />);
       case "system_settings":
         return <SystemSettingsPage currentUser={currentUser || undefined} />;
       case "ai_config_center":
-        return (
-          <AIConfigCenterPage currentUsername={currentUser?.username} />
+        return renderAILazyPage(
+          <AIConfigCenterPage currentUsername={currentUser?.username} />,
         );
       case "user_operation_logs":
         return <UserOperationLogsPage />;
       case "ai_interaction_logs":
-        return <AIInteractionLogsPage />;
+        return renderAILazyPage(<AIInteractionLogsPage />);
       case "system_logs":
         return <SystemLogsPage />;
       case "quote_list":

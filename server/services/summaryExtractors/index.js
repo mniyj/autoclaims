@@ -17,23 +17,23 @@ import { invokeAICapability } from "../aiRuntime.js";
 
 // 材料 ID 到摘要类型的映射
 const MATERIAL_TO_SUMMARY_TYPE = {
-  "case_initial_report": "case_report",
-  "case_public_adjuster_report": "case_report",
+  case_initial_report: "case_report",
+  case_public_adjuster_report: "case_report",
   "mat-7": "household_proof",
   "mat-8": "accident_liability",
   "mat-12": "inpatient_record",
-  "mat-11": "diagnosis_proof",  // 门诊病历也用 diagnosis_proof
+  "mat-11": "diagnosis_proof", // 门诊病历也用 diagnosis_proof
   "mat-13": "diagnosis_proof",
-  "mat-14": "diagnosis_proof",  // 转院证明
+  "mat-14": "diagnosis_proof", // 转院证明
   "mat-28": "funeral_expense",
   "mat-20": "expense_invoice",
   "mat-21": "expense_invoice",
-  "mat-22": "expense_invoice",  // 购药发票
-  "mat-23": "expense_invoice",  // 辅助器具发票
-  "mat-24": "expense_invoice",  // 护理费发票
+  "mat-22": "expense_invoice", // 购药发票
+  "mat-23": "expense_invoice", // 辅助器具发票
+  "mat-24": "expense_invoice", // 护理费发票
   "mat-35": "disability_assessment",
   "mat-36": "disability_assessment",
-  "mat-38": "disability_assessment",  // 护理依赖鉴定
+  "mat-38": "disability_assessment", // 护理依赖鉴定
   "mat-29": "income_lost",
   "mat-30": "income_lost",
   "mat-41": "dependent_support",
@@ -150,7 +150,14 @@ const EXTRACTION_PROMPTS = {
 6. 出院情况（dischargeCondition，如"好转"、"治愈"）
 7. 主治医生（attendingDoctor）
 8. 科室（ward）
-9. 对每个关键字段提供 sourceAnchors
+9. 既往史（pastHistory）：病历中"既往史"段落的语义规范化结果，只能三选一：
+   - 填 "无" 的情形：原文含"既往体健"、"无特殊既往史"、"无慢性病史"、
+     "否认高血压冠心病等病史"、"平素体健"、"无"、"否认既往病史"等否定/无病史表述
+   - 填 "不详" 的情形：原文含"既往史不详"、"既往史欠详"、"家属代述不清"、
+     "病史不明"，或病历中完全未提及既往史段落
+   - 其他情形：填写原文段落（保留关键疾病名称和时间描述），如 "高血压病史5年，长期服用降压药"
+10. 首次诊断日期（firstDiagnosisDate，格式 YYYY-MM-DD）：若病历中有记载则提取，否则为 null
+11. 对每个关键字段提供 sourceAnchors
 
 请以 JSON 格式返回：
 {
@@ -162,9 +169,12 @@ const EXTRACTION_PROMPTS = {
   "dischargeCondition": "好转",
   "attendingDoctor": "李明",
   "ward": "骨科",
+  "pastHistory": "高血压病史5年，长期服用降压药",
+  "firstDiagnosisDate": null,
   "sourceAnchors": {
     "admissionDate": {"pageIndex": 0, "rawText": "2024年3月15日入院", "highlightLevel": "text_search"},
-    "hospitalizationDays": {"pageIndex": 0, "rawText": "共住院18天", "highlightLevel": "text_search"}
+    "hospitalizationDays": {"pageIndex": 0, "rawText": "共住院18天", "highlightLevel": "text_search"},
+    "pastHistory": {"pageIndex": 0, "rawText": "既往史：高血压病史5年", "highlightLevel": "text_search"}
   },
   "confidence": 0.88
 }`,
@@ -382,7 +392,17 @@ const EXTRACTION_PROMPTS = {
  * @param {string} [params.mimeType] - 图片 MIME 类型
  * @returns {object} 类型化摘要
  */
-async function extractSummaryWithGemini({ docId, summaryType, extractedText, base64Data, mimeType }) {
+/**
+ * @deprecated 已被 summaryBuilder.js 的 buildSummaryFromExtraction 替代。
+ * 材料管线的 extractedData 直接构造 summary，无需独立 AI 调用。
+ */
+async function extractSummaryWithGemini({
+  docId,
+  summaryType,
+  extractedText,
+  base64Data,
+  mimeType,
+}) {
   const prompt = EXTRACTION_PROMPTS[summaryType];
   if (!prompt) {
     throw new Error(`No prompt defined for summaryType: ${summaryType}`);
@@ -433,7 +453,10 @@ async function extractSummaryWithGemini({ docId, summaryType, extractedText, bas
       },
     });
 
-    const text = response.candidates?.[0]?.content?.parts?.[0]?.text || response.text || "{}";
+    const text =
+      response.candidates?.[0]?.content?.parts?.[0]?.text ||
+      response.text ||
+      "{}";
     const parsed = JSON.parse(text);
 
     return {
@@ -445,7 +468,10 @@ async function extractSummaryWithGemini({ docId, summaryType, extractedText, bas
       sourceAnchors: parsed.sourceAnchors || {},
     };
   } catch (error) {
-    console.error(`[summaryExtractor] Extraction failed for ${summaryType}:`, error.message);
+    console.error(
+      `[summaryExtractor] Extraction failed for ${summaryType}:`,
+      error.message,
+    );
     return null;
   }
 }
@@ -461,11 +487,24 @@ async function extractSummaryWithGemini({ docId, summaryType, extractedText, bas
  * @param {string} [params.mimeType]
  * @returns {object|null} 摘要对象，或 null（若该材料类型无摘要提取器）
  */
-export async function extractDocumentSummary({ docId, materialId, extractedText, base64Data, mimeType }) {
+/** @deprecated 使用 summaryBuilder.buildSummaryFromExtraction 替代 */
+export async function extractDocumentSummary({
+  docId,
+  materialId,
+  extractedText,
+  base64Data,
+  mimeType,
+}) {
   const summaryType = MATERIAL_TO_SUMMARY_TYPE[materialId];
   if (!summaryType) return null;
 
-  return extractSummaryWithGemini({ docId, summaryType, extractedText, base64Data, mimeType });
+  return extractSummaryWithGemini({
+    docId,
+    summaryType,
+    extractedText,
+    base64Data,
+    mimeType,
+  });
 }
 
 /**
@@ -476,6 +515,7 @@ export async function extractDocumentSummary({ docId, materialId, extractedText,
  * @param {boolean} [options.skipImages] - 是否跳过图片类（图片 base64 需调用方自行传入）
  * @returns {Array} 摘要列表（含 null 项，代表无对应提取器）
  */
+/** @deprecated 使用 summaryBuilder.buildSummariesFromDocuments 替代 */
 export async function extractDocumentSummaries(documents, options = {}) {
   const results = await Promise.allSettled(
     documents.map((doc) =>
@@ -485,13 +525,16 @@ export async function extractDocumentSummaries(documents, options = {}) {
         extractedText: doc.extractedText,
         base64Data: options.skipImages ? undefined : doc.base64Data,
         mimeType: doc.fileType || doc.mimeType,
-      })
-    )
+      }),
+    ),
   );
 
   return results.map((r, i) => {
     if (r.status === "fulfilled") return r.value;
-    console.error(`[summaryExtractors] Failed for doc ${documents[i].documentId}:`, r.reason?.message);
+    console.error(
+      `[summaryExtractors] Failed for doc ${documents[i].documentId}:`,
+      r.reason?.message,
+    );
     return null;
   });
 }

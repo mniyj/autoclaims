@@ -1,5 +1,6 @@
 import type { MaterialCategory } from '../../types';
 import { ProcessingStrategy, StrategyContext, StrategyResult } from './baseStrategy';
+import { normalizeImageToDataUrl } from '../../imageNormalizationService';
 
 export class ImageOnlyStrategy implements ProcessingStrategy {
   public readonly name = 'image_only';
@@ -43,7 +44,7 @@ export class ImageOnlyStrategy implements ProcessingStrategy {
   }
 
   private async performOcr(fileSource: File | Blob | string): Promise<string> {
-    const dataUrl = await this.toDataURL(fileSource);
+    const dataUrl = await normalizeImageToDataUrl(fileSource);
 
     // 1) Try lightweight client: tesseract.js (dynamic import)
     try {
@@ -97,45 +98,6 @@ export class ImageOnlyStrategy implements ProcessingStrategy {
 
     // 4) Final fallback: empty string (fast path when OCR unavailable)
     return '';
-  }
-
-  /**
-   * Convert input image to data URL (base64).
-   */
-  private async toDataURL(fileSource: File | Blob | string): Promise<string> {
-    // If already a data URL, return as is
-    if (typeof fileSource === 'string' && fileSource.startsWith('data:')) {
-      return fileSource;
-    }
-
-    // If string URL, fetch and convert to data URL
-    if (typeof fileSource === 'string') {
-      const resp = await fetch(fileSource);
-      if (!resp.ok) {
-        throw new Error(`Failed to fetch image: ${resp.status}`);
-      }
-      const contentType = resp.headers.get('content-type') || 'image/jpeg';
-      const arrBuffer = await resp.arrayBuffer();
-      const bytes = new Uint8Array(arrBuffer);
-      const base64 =
-        typeof Buffer !== 'undefined'
-          ? Buffer.from(bytes).toString('base64')
-          : (globalThis as any).btoa(String.fromCharCode(...bytes));
-      return `data:${contentType};base64,${base64}`;
-    }
-
-    // If File/Blob, read as DataURL using FileReader
-    const blob = fileSource as Blob;
-    return await new Promise<string>((resolve, reject) => {
-      try {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = () => reject(reader.error);
-        reader.readAsDataURL(blob);
-      } catch (e) {
-        reject(e as any);
-      }
-    });
   }
 }
 

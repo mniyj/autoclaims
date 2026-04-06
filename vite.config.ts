@@ -58,6 +58,13 @@ export default defineConfig(({ mode }) => {
             console.error('[Vite Dev] Failed to start scheduler:', err);
           });
 
+          import('./server/services/aiConsistencyMonitor.js').then(({ startAIConsistencyMonitor }) => {
+            startAIConsistencyMonitor();
+            console.log('[Vite Dev] AI consistency monitor started');
+          }).catch(err => {
+            console.error('[Vite Dev] Failed to start AI consistency monitor:', err);
+          });
+
           // 注意：在 configureServer 中注册的中间件会在 Vite 内部中间件之前执行
           // 知识库 API 路由
           server.middlewares.use((req, res, next) => {

@@ -6,7 +6,6 @@ interface RuleGroupSectionProps {
   title: string;
   description: string;
   rules: RulesetRule[];
-  mode: "business" | "technical";
   emptyText: string;
   onEdit: (rule: RulesetRule) => void;
   onToggleStatus: (ruleId: string) => void;
@@ -17,7 +16,6 @@ const RuleGroupSection: React.FC<RuleGroupSectionProps> = ({
   title,
   description,
   rules,
-  mode,
   emptyText,
   onEdit,
   onToggleStatus,
@@ -44,7 +42,6 @@ const RuleGroupSection: React.FC<RuleGroupSectionProps> = ({
           <RuleCard
             key={rule.rule_id}
             rule={rule}
-            mode={mode}
             onEdit={onEdit}
             onToggleStatus={onToggleStatus}
             onFocusField={onFocusField}

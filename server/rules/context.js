@@ -835,6 +835,9 @@ export function buildContext({
       ruleset_id: ruleset?.ruleset_id,
       product_line: ruleset?.product_line,
       rules: ruleset?.rules || [],
+      coverage_inference: ruleset?.coverage_inference || null,
+      policy_info: ruleset?.policy_info || null,
+      field_dictionary: ruleset?.field_dictionary || null,
     },
 
     facts,

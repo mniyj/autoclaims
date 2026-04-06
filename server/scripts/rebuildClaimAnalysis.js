@@ -552,7 +552,9 @@ function buildLiabilitySuggestionFromEvidence(aggregation, liabilityEvidence = [
 
     return {
       status: "REFERENCE_READY",
-      conclusion: `公估报告建议按第三方责任 ${aggregation.liabilityApportionment.thirdPartyLiabilityPct}% 作为现阶段折算比例`,
+      // 这里延续 caseAggregator 的语义：仅表示事故责任比例建议，
+      // 不表示保单层面的保险责任成立判断。
+      conclusion: `公估报告建议按第三方事故责任 ${aggregation.liabilityApportionment.thirdPartyLiabilityPct}% 作为现阶段折算比例`,
       confidence: aggregation.liabilityApportionment.confidence || 0.75,
       basis: [
         {
@@ -579,7 +581,7 @@ function buildLiabilitySuggestionFromEvidence(aggregation, liabilityEvidence = [
 
   return {
     status: "MANUAL_REVIEW",
-    conclusion: "现有材料倾向认定涉事吊车驾驶员未试吊直接起吊导致货物侧翻伤人，永顺侧存在明显作业过失；但缺少正式责任比例文书，暂不能自动折算比例",
+    conclusion: "现有材料倾向认定涉事吊车驾驶员未试吊直接起吊导致货物侧翻伤人，永顺侧存在明显作业过失；但缺少正式事故责任比例文书，暂不能自动折算比例",
     confidence: 0.68,
     basis,
   };
@@ -802,17 +804,21 @@ async function main() {
   aggregation.incidentStatements = summaries.filter((item) => item?.summaryType === "incident_statement");
   aggregation.interviewRecords = summaries.filter((item) => item?.summaryType === "incident_interview");
   aggregation.policeCallRecords = summaries.filter((item) => item?.summaryType === "police_call_record");
+  const deathConfirmed = Boolean(aggregation.deathProfile?.deathConfirmed);
+  const isLiabilityOrDeathCase = deathConfirmed || liabilityEvidence.length > 0;
   aggregation.manualReviewItems = [
-    !(aggregation.liabilityResult || aggregation.liabilityApportionment)
-      ? "缺少公安/安监正式责任划分文书，责任比例仍需人工确认"
+    isLiabilityOrDeathCase && !(aggregation.liabilityResult || aggregation.liabilityApportionment)
+      ? “缺少公安/安监正式责任划分文书，责任比例仍需人工确认”
       : null,
-    aggregation.liabilityApportionment
-      ? "责任比例当前采用公估报告“同等责任”口径 50%，如后续取得正式责任文书需及时覆盖"
+    isLiabilityOrDeathCase && aggregation.liabilityApportionment
+      ? “责任比例当前采用公估报告”同等责任”口径 50%，如后续取得正式责任文书需及时覆盖”
       : null,
     paymentEvidence.length > 0
-      ? "已有赔偿协商和垫付款记录，正式定损前需核对已支付金额、赔付路径与抵扣口径"
+      ? “已有赔偿协商和垫付款记录，正式定损前需核对已支付金额、赔付路径与抵扣口径”
       : null,
-    "死亡赔偿金已按统一城镇标准试算，如法院地或统计年度不同需调整地区标准参数",
+    deathConfirmed
+      ? “死亡赔偿金已按统一城镇标准试算，如法院地或统计年度不同需调整地区标准参数”
+      : null,
   ].filter(Boolean);
   aggregation.factConfirmations = previousAggregation.factConfirmations || {};
   aggregation.handlingProfile = summarizeHandlingProfile({

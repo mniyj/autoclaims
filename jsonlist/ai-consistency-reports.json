@@ -1,0 +1,722 @@
+[
+  {
+    "id": "consistency-1775439765807",
+    "checkedAt": "2026-04-06T01:42:44.918Z",
+    "trigger": "schedule",
+    "success": true,
+    "summary": {
+      "passed": 7,
+      "warned": 0,
+      "failed": 0
+    },
+    "logs": {
+      "finalizedCount": 122,
+      "latestTimestamp": "2026-04-04T16:00:25.857Z"
+    },
+    "snapshot": {
+      "freshnessStatus": "fresh",
+      "freshnessLagMs": 0,
+      "lastUpdatedAt": "2026-04-04T16:00:34.657Z",
+      "lastRebuiltAt": "2026-03-26T19:54:50.107Z",
+      "dateRange": {
+        "start": "2026-03-14",
+        "end": "2026-04-04"
+      },
+      "totals": {
+        "days": 4,
+        "totalCalls": 122,
+        "successCalls": 121,
+        "failedCalls": 1,
+        "totalCost": 0.026116,
+        "dateRange": {
+          "start": "2026-03-14",
+          "end": "2026-04-04"
+        }
+      }
+    },
+    "alerts": {
+      "rulesCount": 0,
+      "incidentsCount": 0,
+      "openIncidents": 0,
+      "brokenIncidentRefs": []
+    },
+    "checks": [
+      {
+        "name": "snapshot_exists",
+        "status": "pass",
+        "detail": "存在 4 个日分片"
+      },
+      {
+        "name": "summary_totals_match",
+        "status": "pass",
+        "detail": "快照 totals=122/121/1/0.026116，重算 totals=122/121/1/0.026116"
+      },
+      {
+        "name": "per_day_totals_match",
+        "status": "pass",
+        "detail": "所有日期汇总一致"
+      },
+      {
+        "name": "snapshot_covers_latest_log_day",
+        "status": "pass",
+        "detail": "快照结束日=2026-04-04，最新日志日=2026-04-04"
+      },
+      {
+        "name": "meta_timestamps_present",
+        "status": "pass",
+        "detail": "lastRebuiltAt=2026-03-26T19:54:50.107Z，lastUpdatedAt=2026-04-04T16:00:34.657Z"
+      },
+      {
+        "name": "snapshot_freshness",
+        "status": "pass",
+        "detail": "freshness=fresh，lagMs=0"
+      },
+      {
+        "name": "incident_trace_refs_valid",
+        "status": "pass",
+        "detail": "告警事件引用 trace 正常"
+      }
+    ],
+    "recommendations": []
+  },
+  {
+    "id": "consistency-1775352171001",
+    "checkedAt": "2026-04-05T01:22:50.524Z",
+    "trigger": "schedule",
+    "success": true,
+    "summary": {
+      "passed": 7,
+      "warned": 0,
+      "failed": 0
+    },
+    "logs": {
+      "finalizedCount": 122,
+      "latestTimestamp": "2026-04-04T16:00:25.857Z"
+    },
+    "snapshot": {
+      "freshnessStatus": "fresh",
+      "freshnessLagMs": 0,
+      "lastUpdatedAt": "2026-04-04T16:00:34.657Z",
+      "lastRebuiltAt": "2026-03-26T19:54:50.107Z",
+      "dateRange": {
+        "start": "2026-03-14",
+        "end": "2026-04-04"
+      },
+      "totals": {
+        "days": 4,
+        "totalCalls": 122,
+        "successCalls": 121,
+        "failedCalls": 1,
+        "totalCost": 0.026116,
+        "dateRange": {
+          "start": "2026-03-14",
+          "end": "2026-04-04"
+        }
+      }
+    },
+    "alerts": {
+      "rulesCount": 0,
+      "incidentsCount": 0,
+      "openIncidents": 0,
+      "brokenIncidentRefs": []
+    },
+    "checks": [
+      {
+        "name": "snapshot_exists",
+        "status": "pass",
+        "detail": "存在 4 个日分片"
+      },
+      {
+        "name": "summary_totals_match",
+        "status": "pass",
+        "detail": "快照 totals=122/121/1/0.026116，重算 totals=122/121/1/0.026116"
+      },
+      {
+        "name": "per_day_totals_match",
+        "status": "pass",
+        "detail": "所有日期汇总一致"
+      },
+      {
+        "name": "snapshot_covers_latest_log_day",
+        "status": "pass",
+        "detail": "快照结束日=2026-04-04，最新日志日=2026-04-04"
+      },
+      {
+        "name": "meta_timestamps_present",
+        "status": "pass",
+        "detail": "lastRebuiltAt=2026-03-26T19:54:50.107Z，lastUpdatedAt=2026-04-04T16:00:34.657Z"
+      },
+      {
+        "name": "snapshot_freshness",
+        "status": "pass",
+        "detail": "freshness=fresh，lagMs=0"
+      },
+      {
+        "name": "incident_trace_refs_valid",
+        "status": "pass",
+        "detail": "告警事件引用 trace 正常"
+      }
+    ],
+    "recommendations": []
+  },
+  {
+    "id": "consistency-1775265706622",
+    "checkedAt": "2026-04-04T01:21:46.458Z",
+    "trigger": "schedule",
+    "success": true,
+    "summary": {
+      "passed": 7,
+      "warned": 0,
+      "failed": 0
+    },
+    "logs": {
+      "finalizedCount": 55,
+      "latestTimestamp": "2026-03-25T17:16:42.427Z"
+    },
+    "snapshot": {
+      "freshnessStatus": "fresh",
+      "freshnessLagMs": 0,
+      "lastUpdatedAt": "2026-03-26T19:54:50.107Z",
+      "lastRebuiltAt": "2026-03-26T19:54:50.107Z",
+      "dateRange": {
+        "start": "2026-03-14",
+        "end": "2026-03-25"
+      },
+      "totals": {
+        "days": 3,
+        "totalCalls": 55,
+        "successCalls": 54,
+        "failedCalls": 1,
+        "totalCost": 0,
+        "dateRange": {
+          "start": "2026-03-14",
+          "end": "2026-03-25"
+        }
+      }
+    },
+    "alerts": {
+      "rulesCount": 0,
+      "incidentsCount": 0,
+      "openIncidents": 0,
+      "brokenIncidentRefs": []
+    },
+    "checks": [
+      {
+        "name": "snapshot_exists",
+        "status": "pass",
+        "detail": "存在 3 个日分片"
+      },
+      {
+        "name": "summary_totals_match",
+        "status": "pass",
+        "detail": "快照 totals=55/54/1/0，重算 totals=55/54/1/0"
+      },
+      {
+        "name": "per_day_totals_match",
+        "status": "pass",
+        "detail": "所有日期汇总一致"
+      },
+      {
+        "name": "snapshot_covers_latest_log_day",
+        "status": "pass",
+        "detail": "快照结束日=2026-03-25，最新日志日=2026-03-25"
+      },
+      {
+        "name": "meta_timestamps_present",
+        "status": "pass",
+        "detail": "lastRebuiltAt=2026-03-26T19:54:50.107Z，lastUpdatedAt=2026-03-26T19:54:50.107Z"
+      },
+      {
+        "name": "snapshot_freshness",
+        "status": "pass",
+        "detail": "freshness=fresh，lagMs=0"
+      },
+      {
+        "name": "incident_trace_refs_valid",
+        "status": "pass",
+        "detail": "告警事件引用 trace 正常"
+      }
+    ],
+    "recommendations": []
+  },
+  {
+    "id": "consistency-1775178005811",
+    "checkedAt": "2026-04-03T01:00:05.642Z",
+    "trigger": "schedule",
+    "success": true,
+    "summary": {
+      "passed": 7,
+      "warned": 0,
+      "failed": 0
+    },
+    "logs": {
+      "finalizedCount": 55,
+      "latestTimestamp": "2026-03-25T17:16:42.427Z"
+    },
+    "snapshot": {
+      "freshnessStatus": "fresh",
+      "freshnessLagMs": 0,
+      "lastUpdatedAt": "2026-03-26T19:54:50.107Z",
+      "lastRebuiltAt": "2026-03-26T19:54:50.107Z",
+      "dateRange": {
+        "start": "2026-03-14",
+        "end": "2026-03-25"
+      },
+      "totals": {
+        "days": 3,
+        "totalCalls": 55,
+        "successCalls": 54,
+        "failedCalls": 1,
+        "totalCost": 0,
+        "dateRange": {
+          "start": "2026-03-14",
+          "end": "2026-03-25"
+        }
+      }
+    },
+    "alerts": {
+      "rulesCount": 0,
+      "incidentsCount": 0,
+      "openIncidents": 0,
+      "brokenIncidentRefs": []
+    },
+    "checks": [
+      {
+        "name": "snapshot_exists",
+        "status": "pass",
+        "detail": "存在 3 个日分片"
+      },
+      {
+        "name": "summary_totals_match",
+        "status": "pass",
+        "detail": "快照 totals=55/54/1/0，重算 totals=55/54/1/0"
+      },
+      {
+        "name": "per_day_totals_match",
+        "status": "pass",
+        "detail": "所有日期汇总一致"
+      },
+      {
+        "name": "snapshot_covers_latest_log_day",
+        "status": "pass",
+        "detail": "快照结束日=2026-03-25，最新日志日=2026-03-25"
+      },
+      {
+        "name": "meta_timestamps_present",
+        "status": "pass",
+        "detail": "lastRebuiltAt=2026-03-26T19:54:50.107Z，lastUpdatedAt=2026-03-26T19:54:50.107Z"
+      },
+      {
+        "name": "snapshot_freshness",
+        "status": "pass",
+        "detail": "freshness=fresh，lagMs=0"
+      },
+      {
+        "name": "incident_trace_refs_valid",
+        "status": "pass",
+        "detail": "告警事件引用 trace 正常"
+      }
+    ],
+    "recommendations": []
+  },
+  {
+    "id": "consistency-1775092003295",
+    "checkedAt": "2026-04-02T01:06:43.125Z",
+    "trigger": "schedule",
+    "success": true,
+    "summary": {
+      "passed": 7,
+      "warned": 0,
+      "failed": 0
+    },
+    "logs": {
+      "finalizedCount": 55,
+      "latestTimestamp": "2026-03-25T17:16:42.427Z"
+    },
+    "snapshot": {
+      "freshnessStatus": "fresh",
+      "freshnessLagMs": 0,
+      "lastUpdatedAt": "2026-03-26T19:54:50.107Z",
+      "lastRebuiltAt": "2026-03-26T19:54:50.107Z",
+      "dateRange": {
+        "start": "2026-03-14",
+        "end": "2026-03-25"
+      },
+      "totals": {
+        "days": 3,
+        "totalCalls": 55,
+        "successCalls": 54,
+        "failedCalls": 1,
+        "totalCost": 0,
+        "dateRange": {
+          "start": "2026-03-14",
+          "end": "2026-03-25"
+        }
+      }
+    },
+    "alerts": {
+      "rulesCount": 0,
+      "incidentsCount": 0,
+      "openIncidents": 0,
+      "brokenIncidentRefs": []
+    },
+    "checks": [
+      {
+        "name": "snapshot_exists",
+        "status": "pass",
+        "detail": "存在 3 个日分片"
+      },
+      {
+        "name": "summary_totals_match",
+        "status": "pass",
+        "detail": "快照 totals=55/54/1/0，重算 totals=55/54/1/0"
+      },
+      {
+        "name": "per_day_totals_match",
+        "status": "pass",
+        "detail": "所有日期汇总一致"
+      },
+      {
+        "name": "snapshot_covers_latest_log_day",
+        "status": "pass",
+        "detail": "快照结束日=2026-03-25，最新日志日=2026-03-25"
+      },
+      {
+        "name": "meta_timestamps_present",
+        "status": "pass",
+        "detail": "lastRebuiltAt=2026-03-26T19:54:50.107Z，lastUpdatedAt=2026-03-26T19:54:50.107Z"
+      },
+      {
+        "name": "snapshot_freshness",
+        "status": "pass",
+        "detail": "freshness=fresh，lagMs=0"
+      },
+      {
+        "name": "incident_trace_refs_valid",
+        "status": "pass",
+        "detail": "告警事件引用 trace 正常"
+      }
+    ],
+    "recommendations": []
+  },
+  {
+    "id": "consistency-1775005712504",
+    "checkedAt": "2026-04-01T01:08:32.327Z",
+    "trigger": "schedule",
+    "success": true,
+    "summary": {
+      "passed": 7,
+      "warned": 0,
+      "failed": 0
+    },
+    "logs": {
+      "finalizedCount": 55,
+      "latestTimestamp": "2026-03-25T17:16:42.427Z"
+    },
+    "snapshot": {
+      "freshnessStatus": "fresh",
+      "freshnessLagMs": 0,
+      "lastUpdatedAt": "2026-03-26T19:54:50.107Z",
+      "lastRebuiltAt": "2026-03-26T19:54:50.107Z",
+      "dateRange": {
+        "start": "2026-03-14",
+        "end": "2026-03-25"
+      },
+      "totals": {
+        "days": 3,
+        "totalCalls": 55,
+        "successCalls": 54,
+        "failedCalls": 1,
+        "totalCost": 0,
+        "dateRange": {
+          "start": "2026-03-14",
+          "end": "2026-03-25"
+        }
+      }
+    },
+    "alerts": {
+      "rulesCount": 0,
+      "incidentsCount": 0,
+      "openIncidents": 0,
+      "brokenIncidentRefs": []
+    },
+    "checks": [
+      {
+        "name": "snapshot_exists",
+        "status": "pass",
+        "detail": "存在 3 个日分片"
+      },
+      {
+        "name": "summary_totals_match",
+        "status": "pass",
+        "detail": "快照 totals=55/54/1/0，重算 totals=55/54/1/0"
+      },
+      {
+        "name": "per_day_totals_match",
+        "status": "pass",
+        "detail": "所有日期汇总一致"
+      },
+      {
+        "name": "snapshot_covers_latest_log_day",
+        "status": "pass",
+        "detail": "快照结束日=2026-03-25，最新日志日=2026-03-25"
+      },
+      {
+        "name": "meta_timestamps_present",
+        "status": "pass",
+        "detail": "lastRebuiltAt=2026-03-26T19:54:50.107Z，lastUpdatedAt=2026-03-26T19:54:50.107Z"
+      },
+      {
+        "name": "snapshot_freshness",
+        "status": "pass",
+        "detail": "freshness=fresh，lagMs=0"
+      },
+      {
+        "name": "incident_trace_refs_valid",
+        "status": "pass",
+        "detail": "告警事件引用 trace 正常"
+      }
+    ],
+    "recommendations": []
+  },
+  {
+    "id": "consistency-1774848214452",
+    "checkedAt": "2026-03-30T05:23:34.365Z",
+    "trigger": "schedule",
+    "success": true,
+    "summary": {
+      "passed": 7,
+      "warned": 0,
+      "failed": 0
+    },
+    "logs": {
+      "finalizedCount": 55,
+      "latestTimestamp": "2026-03-25T17:16:42.427Z"
+    },
+    "snapshot": {
+      "freshnessStatus": "fresh",
+      "freshnessLagMs": 0,
+      "lastUpdatedAt": "2026-03-26T19:54:50.107Z",
+      "lastRebuiltAt": "2026-03-26T19:54:50.107Z",
+      "dateRange": {
+        "start": "2026-03-14",
+        "end": "2026-03-25"
+      },
+      "totals": {
+        "days": 3,
+        "totalCalls": 55,
+        "successCalls": 54,
+        "failedCalls": 1,
+        "totalCost": 0,
+        "dateRange": {
+          "start": "2026-03-14",
+          "end": "2026-03-25"
+        }
+      }
+    },
+    "alerts": {
+      "rulesCount": 0,
+      "incidentsCount": 0,
+      "openIncidents": 0,
+      "brokenIncidentRefs": []
+    },
+    "checks": [
+      {
+        "name": "snapshot_exists",
+        "status": "pass",
+        "detail": "存在 3 个日分片"
+      },
+      {
+        "name": "summary_totals_match",
+        "status": "pass",
+        "detail": "快照 totals=55/54/1/0，重算 totals=55/54/1/0"
+      },
+      {
+        "name": "per_day_totals_match",
+        "status": "pass",
+        "detail": "所有日期汇总一致"
+      },
+      {
+        "name": "snapshot_covers_latest_log_day",
+        "status": "pass",
+        "detail": "快照结束日=2026-03-25，最新日志日=2026-03-25"
+      },
+      {
+        "name": "meta_timestamps_present",
+        "status": "pass",
+        "detail": "lastRebuiltAt=2026-03-26T19:54:50.107Z，lastUpdatedAt=2026-03-26T19:54:50.107Z"
+      },
+      {
+        "name": "snapshot_freshness",
+        "status": "pass",
+        "detail": "freshness=fresh，lagMs=0"
+      },
+      {
+        "name": "incident_trace_refs_valid",
+        "status": "pass",
+        "detail": "告警事件引用 trace 正常"
+      }
+    ],
+    "recommendations": []
+  },
+  {
+    "id": "consistency-1774695892562",
+    "checkedAt": "2026-03-28T11:04:52.485Z",
+    "trigger": "schedule",
+    "success": true,
+    "summary": {
+      "passed": 7,
+      "warned": 0,
+      "failed": 0
+    },
+    "logs": {
+      "finalizedCount": 55,
+      "latestTimestamp": "2026-03-25T17:16:42.427Z"
+    },
+    "snapshot": {
+      "freshnessStatus": "fresh",
+      "freshnessLagMs": 0,
+      "lastUpdatedAt": "2026-03-26T19:54:50.107Z",
+      "lastRebuiltAt": "2026-03-26T19:54:50.107Z",
+      "dateRange": {
+        "start": "2026-03-14",
+        "end": "2026-03-25"
+      },
+      "totals": {
+        "days": 3,
+        "totalCalls": 55,
+        "successCalls": 54,
+        "failedCalls": 1,
+        "totalCost": 0,
+        "dateRange": {
+          "start": "2026-03-14",
+          "end": "2026-03-25"
+        }
+      }
+    },
+    "alerts": {
+      "rulesCount": 0,
+      "incidentsCount": 0,
+      "openIncidents": 0,
+      "brokenIncidentRefs": []
+    },
+    "checks": [
+      {
+        "name": "snapshot_exists",
+        "status": "pass",
+        "detail": "存在 3 个日分片"
+      },
+      {
+        "name": "summary_totals_match",
+        "status": "pass",
+        "detail": "快照 totals=55/54/1/0，重算 totals=55/54/1/0"
+      },
+      {
+        "name": "per_day_totals_match",
+        "status": "pass",
+        "detail": "所有日期汇总一致"
+      },
+      {
+        "name": "snapshot_covers_latest_log_day",
+        "status": "pass",
+        "detail": "快照结束日=2026-03-25，最新日志日=2026-03-25"
+      },
+      {
+        "name": "meta_timestamps_present",
+        "status": "pass",
+        "detail": "lastRebuiltAt=2026-03-26T19:54:50.107Z，lastUpdatedAt=2026-03-26T19:54:50.107Z"
+      },
+      {
+        "name": "snapshot_freshness",
+        "status": "pass",
+        "detail": "freshness=fresh，lagMs=0"
+      },
+      {
+        "name": "incident_trace_refs_valid",
+        "status": "pass",
+        "detail": "告警事件引用 trace 正常"
+      }
+    ],
+    "recommendations": []
+  },
+  {
+    "id": "consistency-1774573205523",
+    "checkedAt": "2026-03-27T01:00:05.395Z",
+    "trigger": "schedule",
+    "success": true,
+    "summary": {
+      "passed": 7,
+      "warned": 0,
+      "failed": 0
+    },
+    "logs": {
+      "finalizedCount": 55,
+      "latestTimestamp": "2026-03-25T17:16:42.427Z"
+    },
+    "snapshot": {
+      "freshnessStatus": "fresh",
+      "freshnessLagMs": 0,
+      "lastUpdatedAt": "2026-03-26T19:54:50.107Z",
+      "lastRebuiltAt": "2026-03-26T19:54:50.107Z",
+      "dateRange": {
+        "start": "2026-03-14",
+        "end": "2026-03-25"
+      },
+      "totals": {
+        "days": 3,
+        "totalCalls": 55,
+        "successCalls": 54,
+        "failedCalls": 1,
+        "totalCost": 0,
+        "dateRange": {
+          "start": "2026-03-14",
+          "end": "2026-03-25"
+        }
+      }
+    },
+    "alerts": {
+      "rulesCount": 0,
+      "incidentsCount": 0,
+      "openIncidents": 0,
+      "brokenIncidentRefs": []
+    },
+    "checks": [
+      {
+        "name": "snapshot_exists",
+        "status": "pass",
+        "detail": "存在 3 个日分片"
+      },
+      {
+        "name": "summary_totals_match",
+        "status": "pass",
+        "detail": "快照 totals=55/54/1/0，重算 totals=55/54/1/0"
+      },
+      {
+        "name": "per_day_totals_match",
+        "status": "pass",
+        "detail": "所有日期汇总一致"
+      },
+      {
+        "name": "snapshot_covers_latest_log_day",
+        "status": "pass",
+        "detail": "快照结束日=2026-03-25，最新日志日=2026-03-25"
+      },
+      {
+        "name": "meta_timestamps_present",
+        "status": "pass",
+        "detail": "lastRebuiltAt=2026-03-26T19:54:50.107Z，lastUpdatedAt=2026-03-26T19:54:50.107Z"
+      },
+      {
+        "name": "snapshot_freshness",
+        "status": "pass",
+        "detail": "freshness=fresh，lagMs=0"
+      },
+      {
+        "name": "incident_trace_refs_valid",
+        "status": "pass",
+        "detail": "告警事件引用 trace 正常"
+      }
+    ],
+    "recommendations": []
+  }
+]

@@ -1,19 +1,5 @@
 import { MedicalInvoiceData, AIInteractionLog } from '../types';
-
-// 将 Blob 转换为 Base64
-const blobToBase64 = (blob: Blob): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64 = reader.result as string;
-      // 移除 data:image/xxx;base64, 前缀
-      const base64Data = base64.split(',')[1] || base64;
-      resolve(base64Data);
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-};
+import { normalizeImageForOcr } from './imageNormalizationService';
 
 /**
  * 识别医疗发票
@@ -26,27 +12,7 @@ export const recognizeMedicalInvoice = async (
 ): Promise<{ data: MedicalInvoiceData; log: AIInteractionLog }> => {
   const geminiModel = 'gemini-2.5-flash';
 
-  let base64Data: string;
-  let mimeType = 'image/jpeg';
-
-  // 处理不同的输入类型
-  if (typeof imageSource === 'string') {
-    // 如果是 URL（OSS URL 或其他）
-    if (imageSource.startsWith('http://') || imageSource.startsWith('https://')) {
-      // 从 URL 下载图片
-      const response = await fetch(imageSource);
-      const blob = await response.blob();
-      base64Data = await blobToBase64(blob);
-      mimeType = blob.type || 'image/jpeg';
-    } else {
-      // 假设是 base64 字符串
-      base64Data = imageSource.replace(/^data:image\/\w+;base64,/, '');
-    }
-  } else {
-    // Blob 对象
-    base64Data = await blobToBase64(imageSource);
-    mimeType = imageSource.type || 'image/jpeg';
-  }
+  const { base64Data, mimeType } = await normalizeImageForOcr(imageSource);
 
   // 定义医疗发票的 JSON Schema
   const invoiceSchema = {
@@ -270,23 +236,7 @@ export const recognizeClaimMaterial = async (
 ): Promise<{ extractedData: Record<string, any>; auditConclusion: string; log: AIInteractionLog }> => {
   const geminiModel = 'gemini-2.5-flash';
 
-  let base64Data: string;
-  let mimeType = 'image/jpeg';
-
-  // 处理不同的输入类型（复用现有逻辑）
-  if (typeof imageSource === 'string') {
-    if (imageSource.startsWith('http://') || imageSource.startsWith('https://')) {
-      const response = await fetch(imageSource);
-      const blob = await response.blob();
-      base64Data = await blobToBase64(blob);
-      mimeType = blob.type || 'image/jpeg';
-    } else {
-      base64Data = imageSource.replace(/^data:image\/\w+;base64,/, '');
-    }
-  } else {
-    base64Data = await blobToBase64(imageSource);
-    mimeType = imageSource.type || 'image/jpeg';
-  }
+  const { base64Data, mimeType } = await normalizeImageForOcr(imageSource);
 
   // 构造提示词：融合材料的 aiAuditPrompt 和 jsonSchema
   const prompt = `你是一个专业的保险理赔材料审核系统。请对上传的「${materialName}」进行 OCR 识别和审核。
@@ -379,22 +329,7 @@ export const quickRecognizeInvoiceType = async (
 ): Promise<{ category: string; needsDeepAnalysis: boolean }> => {
   const model = 'gemini-2.5-flash';
 
-  let base64Data: string;
-  let mimeType = 'image/jpeg';
-
-  if (typeof imageSource === 'string') {
-    if (imageSource.startsWith('http://') || imageSource.startsWith('https://')) {
-      const response = await fetch(imageSource);
-      const blob = await response.blob();
-      base64Data = await blobToBase64(blob);
-      mimeType = blob.type || 'image/jpeg';
-    } else {
-      base64Data = imageSource.replace(/^data:image\/\w+;base64,/, '');
-    }
-  } else {
-    base64Data = await blobToBase64(imageSource);
-    mimeType = imageSource.type || 'image/jpeg';
-  }
+  const { base64Data, mimeType } = await normalizeImageForOcr(imageSource);
 
   const prompt = `快速识别这张票据的类型，返回 JSON 格式：
 {

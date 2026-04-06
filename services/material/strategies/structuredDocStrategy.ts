@@ -1,5 +1,6 @@
 import type { ProcessingStrategy, StrategyContext, StrategyResult } from './baseStrategy';
 import { uploadToOSS } from '../../services/ossService';
+import { normalizeImageForOcr } from '../../imageNormalizationService';
 
 /**
  * 结构化文档处理策略
@@ -92,10 +93,7 @@ export class StructuredDocStrategy implements ProcessingStrategy {
   }> {
     const geminiModel = 'gemini-2.5-flash';
 
-    // 下载图片并转为 base64
-    const response = await fetch(imageUrl);
-    const blob = await response.blob();
-    const base64 = await this.blobToBase64(blob);
+    const { base64Data, mimeType } = await normalizeImageForOcr(imageUrl);
 
     const prompt = `你是一个专业的保险理赔材料识别系统。请对「${materialName || '文档'}」进行OCR识别和字段提取。
 
@@ -126,8 +124,8 @@ ${aiAuditPrompt || '提取所有可见字段，确保信息准确'}
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         mode: 'gemini',
-        base64Data: base64,
-        mimeType: blob.type || 'image/jpeg',
+        base64Data,
+        mimeType,
         prompt,
         geminiModel,
       }),
@@ -155,17 +153,5 @@ ${aiAuditPrompt || '提取所有可见字段，确保信息准确'}
         confidence: 0.5,
       };
     }
-  }
-
-  private blobToBase64(blob: Blob): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64 = reader.result as string;
-        resolve(base64.split(',')[1] || base64);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
   }
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { type ClaimCase } from '../types';
+import { api } from '../services/api';
 
 interface Message {
   id: string;
@@ -13,6 +14,8 @@ interface Message {
     action?: string;
     failureCategory?: string;
     failureHint?: string;
+    incidentId?: string;
+    traceIds?: string[];
   };
   isRead: boolean;
   createdAt: string;
@@ -32,11 +35,29 @@ export function MessageCenter({ onOpenClaim }: MessageCenterProps) {
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [recoveringTaskId, setRecoveringTaskId] = useState<string | null>(null);
+  const [aiIncidents, setAiIncidents] = useState<any[]>([]);
+  const [incidentUpdatingId, setIncidentUpdatingId] = useState<string | null>(null);
   const pageSize = 20;
+  const navigateToAIAudit = (traceIds: string[] = []) => {
+    sessionStorage.setItem(
+      'ai-log-preset',
+      JSON.stringify({
+        traceIds,
+        traceId: traceIds[0] || '',
+      }),
+    );
+    window.dispatchEvent(new CustomEvent('app:navigate', { detail: { view: 'ai_interaction_logs' } }));
+    setSelectedMessage(null);
+  };
+  const navigateToAIAlerts = () => {
+    window.dispatchEvent(new CustomEvent('app:navigate', { detail: { view: 'ai_alerts' } }));
+    setSelectedMessage(null);
+  };
 
   useEffect(() => {
     fetchMessages();
     fetchUnreadCount();
+    fetchAIIncidents();
   }, [page, filter]);
 
   const fetchMessages = async () => {
@@ -69,6 +90,27 @@ export function MessageCenter({ onOpenClaim }: MessageCenterProps) {
         setUnreadCount(data.data.count);
       }
     } catch {}
+  };
+
+  const fetchAIIncidents = async () => {
+    try {
+      const result = await api.ai.getAlerts();
+      setAiIncidents((result?.incidents || []).filter((item: any) => item.status !== 'resolved'));
+    } catch {
+      setAiIncidents([]);
+    }
+  };
+
+  const handleIncidentStatus = async (incidentId: string, status: string) => {
+    setIncidentUpdatingId(incidentId);
+    try {
+      await api.ai.updateIncidentStatus(incidentId, status);
+      await fetchAIIncidents();
+    } catch (error) {
+      console.error("Failed to update AI incident status:", error);
+    } finally {
+      setIncidentUpdatingId(null);
+    }
   };
 
   const markAsRead = async (messageId: string) => {
@@ -189,6 +231,60 @@ export function MessageCenter({ onOpenClaim }: MessageCenterProps) {
   return (
     <div className="max-w-6xl mx-auto p-6">
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        {aiIncidents.length > 0 && (
+          <div className="mx-6 mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h2 className="text-base font-semibold text-amber-900">AI 告警摘要</h2>
+                <p className="mt-1 text-sm text-amber-700">当前有 {aiIncidents.length} 条未处理 AI 告警</p>
+              </div>
+              <button
+                type="button"
+                onClick={navigateToAIAlerts}
+                className="rounded-full border border-amber-300 px-3 py-1 text-xs text-amber-700 transition hover:bg-white"
+              >
+                打开告警中心
+              </button>
+            </div>
+            <div className="mt-4 space-y-2">
+              {aiIncidents.slice(0, 5).map((incident) => (
+                <div key={incident.id} className="rounded-xl border border-amber-100 bg-white px-3 py-2 text-sm text-slate-700">
+                  <div className="font-medium text-slate-900">{incident.summary}</div>
+                  <div className="mt-1 text-xs text-slate-500">
+                    {incident.severity} · {incident.triggeredAt}
+                  </div>
+                  <div className="mt-3 flex gap-2">
+                    {incident.affectedTraceIds?.length ? (
+                      <button
+                        type="button"
+                        onClick={() => navigateToAIAudit(incident.affectedTraceIds)}
+                        className="rounded-full border border-brand-blue-200 px-3 py-1 text-xs text-brand-blue-700 transition hover:bg-brand-blue-50"
+                      >
+                        查看 Trace
+                      </button>
+                    ) : null}
+                    <button
+                      type="button"
+                      disabled={incidentUpdatingId === incident.id}
+                      onClick={() => void handleIncidentStatus(incident.id, 'acknowledged')}
+                      className="rounded-full border border-slate-300 px-3 py-1 text-xs text-slate-700 transition hover:bg-slate-100 disabled:opacity-60"
+                    >
+                      确认
+                    </button>
+                    <button
+                      type="button"
+                      disabled={incidentUpdatingId === incident.id}
+                      onClick={() => void handleIncidentStatus(incident.id, 'resolved')}
+                      className="rounded-full border border-emerald-300 px-3 py-1 text-xs text-emerald-700 transition hover:bg-emerald-50 disabled:opacity-60"
+                    >
+                      关闭
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <div>
@@ -381,6 +477,20 @@ export function MessageCenter({ onOpenClaim }: MessageCenterProps) {
                 </button>
               </div>
             )}
+
+            {selectedMessage.data?.traceIds?.length ? (
+              <div className="mt-4 rounded-lg bg-sky-50 p-4">
+                <p className="text-sm text-sky-700">
+                  关联 AI Trace: {selectedMessage.data.traceIds.length} 条
+                </p>
+                <button
+                  onClick={() => navigateToAIAudit(selectedMessage.data?.traceIds || [])}
+                  className="mt-2 inline-block text-sm font-medium text-sky-700 hover:text-sky-900"
+                >
+                  打开审计中心并查看 Trace →
+                </button>
+              </div>
+            ) : null}
             
             <p className="text-sm text-gray-400 mt-6">
               {formatTime(selectedMessage.createdAt)}

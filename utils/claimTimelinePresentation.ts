@@ -27,7 +27,13 @@ export interface ClaimTimelineStageView {
   displayTime: string;
 }
 
-const EVENT_GROUP_ORDER = ["intake", "parse", "liability", "assessment", "other"] as const;
+const EVENT_GROUP_ORDER = [
+  "intake",
+  "parse",
+  "liability",
+  "assessment",
+  "other",
+] as const;
 
 function formatDateTime(timestamp?: string) {
   if (!timestamp) return "待处理";
@@ -67,6 +73,12 @@ function getStageTone(status: ClaimStageStatus) {
         dotClass: "bg-blue-500 border-blue-500",
         lineClass: "bg-blue-500",
       };
+    case "awaiting_human":
+      return {
+        toneClass: "border-purple-200 bg-purple-50 text-purple-700",
+        dotClass: "bg-purple-500 border-purple-500",
+        lineClass: "bg-purple-500",
+      };
     default:
       return {
         toneClass: "border-gray-200 bg-gray-50 text-gray-600",
@@ -76,17 +88,24 @@ function getStageTone(status: ClaimStageStatus) {
   }
 }
 
-function toStageView(stage: Omit<ClaimTimelineStageView, "toneClass" | "dotClass" | "lineClass" | "methodLabel" | "displayTime">) {
+function toStageView(
+  stage: Omit<
+    ClaimTimelineStageView,
+    "toneClass" | "dotClass" | "lineClass" | "methodLabel" | "displayTime"
+  >,
+) {
   const tone = getStageTone(stage.status);
   return {
     ...stage,
     ...tone,
     methodLabel:
-      stage.completedBy === "manual"
-        ? "人工处理"
-        : stage.completedBy === "system"
-          ? "系统自动"
-          : "待处理",
+      stage.status === "awaiting_human"
+        ? "等待人工处理"
+        : stage.completedBy === "manual"
+          ? "人工处理"
+          : stage.completedBy === "system"
+            ? "系统自动"
+            : "待处理",
     displayTime: formatDateTime(stage.completedAt || stage.startedAt),
   };
 }
@@ -128,12 +147,16 @@ export function getStageViews(
   const parseView = toStageView({
     key: "parse",
     label: "解析 / OCR",
-    status: intake && !isFinished(intake.status)
-      ? "pending"
-      : parse?.status || "pending",
-    completedAt: intake && !isFinished(intake.status) ? undefined : parse?.completedAt,
-    startedAt: intake && !isFinished(intake.status) ? undefined : parse?.startedAt,
-    completedBy: intake && !isFinished(intake.status) ? undefined : parse?.completedBy,
+    status:
+      intake && !isFinished(intake.status)
+        ? "pending"
+        : parse?.status || "pending",
+    completedAt:
+      intake && !isFinished(intake.status) ? undefined : parse?.completedAt,
+    startedAt:
+      intake && !isFinished(intake.status) ? undefined : parse?.startedAt,
+    completedBy:
+      intake && !isFinished(intake.status) ? undefined : parse?.completedBy,
     summary:
       intake && !isFinished(intake.status)
         ? "受理完成后进入解析"
@@ -152,21 +175,20 @@ export function getStageViews(
     completedAt: liabilityBlocked ? undefined : liability?.completedAt,
     startedAt: liabilityBlocked ? undefined : liability?.startedAt,
     completedBy: liabilityBlocked ? undefined : liability?.completedBy,
-    summary:
-      liabilityBlocked
-        ? "解析完成后进入责任判定"
-        : liabilityDecision === "ACCEPT"
-          ? "责任已确认"
-          : liabilityDecision === "REJECT"
-            ? "责任不成立"
-            : liability?.summary || "待完成责任判定",
-    blockingReason:
-      liabilityBlocked
-        ? parseView.blockingReason || "待解析完成"
-        : liability?.blockingReason,
+    summary: liabilityBlocked
+      ? "解析完成后进入责任判定"
+      : liabilityDecision === "ACCEPT"
+        ? "责任已确认"
+        : liabilityDecision === "REJECT"
+          ? "责任不成立"
+          : liability?.summary || "待完成责任判定",
+    blockingReason: liabilityBlocked
+      ? parseView.blockingReason || "待解析完成"
+      : liability?.blockingReason,
   });
 
-  const factBlocked = !isFinished(liabilityView.status) || liabilityDecision === "REJECT";
+  const factBlocked =
+    !isFinished(liabilityView.status) || liabilityDecision === "REJECT";
   const factStatus = factBlocked
     ? "pending"
     : assessment?.status === "manual_completed"
@@ -185,24 +207,22 @@ export function getStageViews(
     completedAt: factBlocked ? undefined : assessment?.completedAt,
     startedAt: factBlocked ? undefined : assessment?.startedAt,
     completedBy: factBlocked ? undefined : assessment?.completedBy,
-    summary:
-      factBlocked
-        ? liabilityDecision === "REJECT"
-          ? "责任未通过，不进入事实核定"
-          : "责任判定完成后进入事实核定"
-        : assessmentDecision === "PARTIAL_ASSESSED"
-          ? "事实已部分核定"
-          : assessmentDecision === "ASSESSED"
-            ? "事实已核定"
-            : assessmentDecision === "UNABLE_TO_ASSESS"
-              ? "事实无法核定"
-              : assessment?.summary || "待完成事实核定",
-    blockingReason:
-      factBlocked
-        ? liabilityDecision === "REJECT"
-          ? "责任不成立"
-          : liabilityView.blockingReason || "待责任判定完成"
-        : assessment?.blockingReason,
+    summary: factBlocked
+      ? liabilityDecision === "REJECT"
+        ? "责任未通过，不进入事实核定"
+        : "责任判定完成后进入事实核定"
+      : assessmentDecision === "PARTIAL_ASSESSED"
+        ? "事实已部分核定"
+        : assessmentDecision === "ASSESSED"
+          ? "事实已核定"
+          : assessmentDecision === "UNABLE_TO_ASSESS"
+            ? "事实无法核定"
+            : assessment?.summary || "待完成事实核定",
+    blockingReason: factBlocked
+      ? liabilityDecision === "REJECT"
+        ? "责任不成立"
+        : liabilityView.blockingReason || "待责任判定完成"
+      : assessment?.blockingReason,
   });
 
   const settlementBlocked = !isFinished(factView.status);
@@ -220,20 +240,20 @@ export function getStageViews(
     completedAt: settlementBlocked ? undefined : assessment?.completedAt,
     startedAt: settlementBlocked ? undefined : assessment?.startedAt,
     completedBy: settlementBlocked ? undefined : assessment?.completedBy,
-    summary:
-      settlementBlocked
-        ? factView.status === "failed"
-          ? "事实核定失败，暂不进入赔付计算"
-          : "事实核定完成后进入赔付计算"
-        : settlementDecision === "PAY"
-          ? "已生成赔付结果"
-          : settlementDecision === "PARTIAL_PAY"
-            ? "已生成部分赔付结果"
-            : settlementDecision === "ZERO_PAY"
-              ? "试算结果为不赔付"
-              : "待完成赔付计算",
-    blockingReason:
-      settlementBlocked ? factView.blockingReason || "待事实核定完成" : undefined,
+    summary: settlementBlocked
+      ? factView.status === "failed"
+        ? "事实核定失败，暂不进入赔付计算"
+        : "事实核定完成后进入赔付计算"
+      : settlementDecision === "PAY"
+        ? "已生成赔付结果"
+        : settlementDecision === "PARTIAL_PAY"
+          ? "已生成部分赔付结果"
+          : settlementDecision === "ZERO_PAY"
+            ? "试算结果为不赔付"
+            : "待完成赔付计算",
+    blockingReason: settlementBlocked
+      ? factView.blockingReason || "待事实核定完成"
+      : undefined,
   });
 
   const finalBlocked = !isFinished(settlementView.status);
@@ -251,16 +271,16 @@ export function getStageViews(
     completedAt: finalBlocked ? undefined : settlementView.completedAt,
     startedAt: finalBlocked ? undefined : settlementView.startedAt,
     completedBy: finalBlocked ? undefined : settlementView.completedBy,
-    summary:
-      finalBlocked
-        ? "赔付计算完成后生成案件结论"
-        : finalDecision === "APPROVE"
-          ? "案件建议通过"
-          : finalDecision === "REJECT"
-            ? "案件建议拒赔"
-            : "待人工复核形成案件结论",
-    blockingReason:
-      finalBlocked ? settlementView.blockingReason || "待赔付计算完成" : undefined,
+    summary: finalBlocked
+      ? "赔付计算完成后生成案件结论"
+      : finalDecision === "APPROVE"
+        ? "案件建议通过"
+        : finalDecision === "REJECT"
+          ? "案件建议拒赔"
+          : "待人工复核形成案件结论",
+    blockingReason: finalBlocked
+      ? settlementView.blockingReason || "待赔付计算完成"
+      : undefined,
   });
 
   return [
@@ -291,6 +311,21 @@ function getEventGroupKey(event: ClaimTimelineEvent) {
     case "ASSESSMENT_AUTO_COMPLETED":
     case "ASSESSMENT_MANUAL_COMPLETED":
       return "assessment";
+    case "INTERVENTION_CREATED":
+    case "INTERVENTION_STATE_CHANGED":
+    case "INTERVENTION_RESOLVED":
+    case "ADJUSTER_OVERRIDE_APPLIED":
+    case "REUPLOAD_REQUESTED":
+    case "REUPLOAD_RECEIVED":
+    case "RE_EXTRACTION_TRIGGERED":
+    case "MANUAL_DECISION_MADE":
+    case "ROLLBACK_INITIATED": {
+      const stageKey = (event.details as Record<string, unknown>)?.stageKey;
+      if (stageKey === "liability") return "liability";
+      if (stageKey === "assessment") return "assessment";
+      if (stageKey === "parse") return "parse";
+      return "other";
+    }
     default:
       return "other";
   }
@@ -311,9 +346,13 @@ function getEventGroupLabel(groupKey: string) {
   }
 }
 
-export function groupTimelineEvents(processTimeline: ClaimProcessTimeline | null) {
+export function groupTimelineEvents(
+  processTimeline: ClaimProcessTimeline | null,
+) {
   if (!processTimeline) return [];
-  const events = Array.isArray(processTimeline.events) ? processTimeline.events : [];
+  const events = Array.isArray(processTimeline.events)
+    ? processTimeline.events
+    : [];
   const groups = EVENT_GROUP_ORDER.map((groupKey) => {
     const groupedEvents = events.filter(
       (event) => getEventGroupKey(event) === groupKey,

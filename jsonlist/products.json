@@ -767,36 +767,22 @@
       "claimMaterials": {
         "extraMaterialIds": [
           "mat-20",
-          "mat-21",
-          "mat-11",
-          "mat-13",
-          "mat-6"
+          "mat-11"
         ],
         "materialOverrides": {
           "mat-20": {
             "selected": true,
             "required": true
           },
-          "mat-21": {
-            "selected": true,
-            "required": true
-          },
           "mat-11": {
             "selected": true,
             "required": true
-          },
-          "mat-13": {
-            "selected": true,
-            "required": true
-          },
-          "mat-6": {
-            "selected": true,
-            "required": false
           }
         }
-      }
+      },
+      "accidentCauses": []
     },
-    "intakeConfigUpdatedAt": "2026-03-15T10:00:00+08:00",
-    "intakeConfigOperator": "codex"
+    "intakeConfigUpdatedAt": "2026-04-04T15:40:21.096Z",
+    "intakeConfigOperator": "admin"
   }
 ]

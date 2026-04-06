@@ -73,6 +73,192 @@ function parseJsonObject(text) {
   }
 }
 
+function normalizeFieldKey(value) {
+  return String(value || '').trim();
+}
+
+function buildJsonSchemaFromFields(fields = []) {
+  const properties = {};
+  const required = [];
+
+  for (const field of fields || []) {
+    const key = normalizeFieldKey(field?.field_key);
+    if (!key) continue;
+    if (field?.required) {
+      required.push(key);
+    }
+
+    const typeMap = {
+      STRING: 'string',
+      NUMBER: 'number',
+      BOOLEAN: 'boolean',
+      DATE: 'string',
+    };
+
+    if (field?.data_type === 'OBJECT') {
+      properties[key] = JSON.parse(buildJsonSchemaFromFields(field.children || []));
+      continue;
+    }
+
+    if (field?.data_type === 'ARRAY') {
+      properties[key] = {
+        type: 'array',
+        description: field?.description || field?.field_label || key,
+        items: JSON.parse(buildJsonSchemaFromFields(field.item_fields || [])),
+      };
+      continue;
+    }
+
+    properties[key] = {
+      type: typeMap[field?.data_type] || 'string',
+      description: field?.description || field?.field_label || key,
+    };
+
+    if (field?.data_type === 'DATE') {
+      properties[key].format = 'date';
+    }
+  }
+
+  const schema = {
+    type: 'object',
+    properties,
+  };
+  if (required.length > 0) {
+    schema.required = required;
+  }
+  return JSON.stringify(schema, null, 2);
+}
+
+function getDefaultValueByDataType(dataType) {
+  switch (dataType) {
+    case 'NUMBER':
+      return 0;
+    case 'BOOLEAN':
+      return false;
+    case 'ARRAY':
+      return [];
+    case 'OBJECT':
+      return {};
+    case 'DATE':
+    case 'STRING':
+    default:
+      return '';
+  }
+}
+
+function normalizeNumberValue(value) {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : 0;
+  }
+  const raw = String(value || '').replace(/[,\s]/g, '');
+  if (!raw) return 0;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function normalizeScalarByType(value, dataType) {
+  if (value === undefined || value === null || value === '') {
+    return getDefaultValueByDataType(dataType);
+  }
+  if (dataType === 'NUMBER') {
+    return normalizeNumberValue(value);
+  }
+  if (dataType === 'BOOLEAN') {
+    if (typeof value === 'boolean') return value;
+    return ['true', '1', 'yes', 'y'].includes(String(value).trim().toLowerCase());
+  }
+  return value;
+}
+
+function coerceDataBySchemaFields(fields = [], source = {}) {
+  const normalized = {};
+
+  for (const field of fields || []) {
+    const key = normalizeFieldKey(field?.field_key);
+    if (!key) continue;
+
+    if (field?.data_type === 'OBJECT') {
+      normalized[key] = coerceDataBySchemaFields(field.children || [], source?.[key] || {});
+      continue;
+    }
+
+    if (field?.data_type === 'ARRAY') {
+      const items = Array.isArray(source?.[key]) ? source[key] : [];
+      normalized[key] = items.map((item) =>
+        coerceDataBySchemaFields(field.item_fields || [], item || {}),
+      );
+      continue;
+    }
+
+    normalized[key] = normalizeScalarByType(source?.[key], field?.data_type);
+  }
+
+  return normalized;
+}
+
+function applyInvoiceExtractionAliases(data = {}) {
+  const next = { ...(data || {}) };
+  const invoiceInfo = { ...(next.invoiceInfo || {}) };
+  const insurancePayment = { ...(next.insurancePayment || {}) };
+
+  invoiceInfo.hospitalName =
+    invoiceInfo.hospitalName ||
+    next.hospital_name ||
+    next.hospitalName ||
+    '';
+  invoiceInfo.invoiceNumber =
+    invoiceInfo.invoiceNumber ||
+    next.invoice_number ||
+    next.invoiceNumber ||
+    '';
+  invoiceInfo.invoiceCode =
+    invoiceInfo.invoiceCode ||
+    next.invoice_code ||
+    next.invoiceCode ||
+    '';
+  invoiceInfo.issueDate =
+    invoiceInfo.issueDate ||
+    next.invoice_date ||
+    next.invoiceDate ||
+    '';
+
+  insurancePayment.governmentFundPayment =
+    insurancePayment.governmentFundPayment ??
+    next.insurance_paid ??
+    next.social_insurance_paid ??
+    next.governmentFundPayment;
+  insurancePayment.personalPayment =
+    insurancePayment.personalPayment ??
+    next.self_paid ??
+    next.personal_payment ??
+    next.personalPayment;
+  insurancePayment.personalSelfPayment =
+    insurancePayment.personalSelfPayment ??
+    next.personal_self_pay ??
+    next.personalSelfPayment;
+  insurancePayment.personalSelfExpense =
+    insurancePayment.personalSelfExpense ??
+    next.personal_self_expense ??
+    next.personalSelfExpense;
+
+  next.invoiceInfo = invoiceInfo;
+  next.insurancePayment = insurancePayment;
+  return next;
+}
+
+function normalizeExtractedData(materialConfig, extractedData = {}) {
+  if (!materialConfig || !Array.isArray(materialConfig.schemaFields)) {
+    return extractedData || {};
+  }
+
+  let source = extractedData || {};
+  if (materialConfig.id === 'mat-20') {
+    source = applyInvoiceExtractionAliases(source);
+  }
+
+  return coerceDataBySchemaFields(materialConfig.schemaFields, source);
+}
+
 function getClaimsMaterialsCatalog() {
   const materials = readData('claims-materials');
   return Array.isArray(materials) ? materials : [];
@@ -313,6 +499,10 @@ export async function extractClaimMaterial({
   }
 
   const jsonSchema =
+    (Array.isArray(materialConfig?.schemaFields) &&
+    materialConfig.schemaFields.length > 0
+      ? buildJsonSchemaFromFields(materialConfig.schemaFields)
+      : null) ||
     materialConfig?.extractionConfig?.jsonSchema ||
     materialConfig?.jsonSchema ||
     '{}';
@@ -348,6 +538,9 @@ ${aiAuditPrompt}
 3. 数字必须严格按图片显示提取
 4. 日期格式统一为 YYYY-MM-DD
 5. 无法识别的字段：字符串用空字符串 ""，数字用 0
+6. 必须严格使用 schema 中的属性名和层级结构，不能改名，不能把嵌套对象拍平
+7. schema 中出现的对象字段必须保留；即使字段识别不到，也要返回空对象中的空值，而不是省略整个对象
+8. 不要把本应属于 invoiceInfo、insurancePayment 等结构化字段的内容合并到 otherInfo 或备注字段
 
 ## 输出格式
 请严格返回以下 JSON 格式（不要包含 markdown 代码块标记）：
@@ -385,8 +578,12 @@ ${aiAuditPrompt}
   });
 
   const parsed = parseJsonObject(response.text || '');
+  const normalizedExtractedData = normalizeExtractedData(
+    materialConfig,
+    parsed.extractedData || {},
+  );
   return {
-    extractedData: parsed.extractedData || {},
+    extractedData: normalizedExtractedData,
     auditConclusion: parsed.auditConclusion || '识别完成',
     confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.8,
     rawText: response.text || '',

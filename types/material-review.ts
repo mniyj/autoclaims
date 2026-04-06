@@ -286,7 +286,11 @@ export function getMaterialStatusInfo(material: MaterialViewItem): {
   label: string;
   color: 'green' | 'yellow' | 'red' | 'gray';
 } {
-  if (material.status !== 'completed') {
+  if (material.status === 'processing') {
+    return { label: '处理中', color: 'yellow' };
+  }
+
+  if (material.status === 'failed') {
     return { label: '处理失败', color: 'red' };
   }
   

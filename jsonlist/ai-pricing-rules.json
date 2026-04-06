@@ -1,0 +1,90 @@
+[
+  {
+    "id": "gemini:gemini-2.5-flash:2026-01-01",
+    "providerId": "gemini-text",
+    "modelId": "gemini-2.5-flash",
+    "billingMode": "token",
+    "currency": "USD",
+    "inputPer1M": 0.15,
+    "outputPer1M": 0.6,
+    "effectiveDate": "2026-01-01"
+  },
+  {
+    "id": "gemini-vision:gemini-2.5-flash:2026-01-01",
+    "providerId": "gemini-vision",
+    "modelId": "gemini-2.5-flash",
+    "billingMode": "token",
+    "currency": "USD",
+    "inputPer1M": 0.15,
+    "outputPer1M": 0.6,
+    "effectiveDate": "2026-01-01"
+  },
+  {
+    "id": "openai-text:gpt-4o:2026-01-01",
+    "providerId": "openai-text",
+    "modelId": "gpt-4o",
+    "billingMode": "token",
+    "currency": "USD",
+    "inputPer1M": 2.5,
+    "outputPer1M": 10,
+    "effectiveDate": "2026-01-01"
+  },
+  {
+    "id": "claude-text:claude-3-sonnet-20250219:2026-01-01",
+    "providerId": "claude-text",
+    "modelId": "claude-3-sonnet-20250219",
+    "billingMode": "token",
+    "currency": "USD",
+    "inputPer1M": 3,
+    "outputPer1M": 15,
+    "effectiveDate": "2026-01-01"
+  },
+  {
+    "id": "qwen-text:qwen-plus:2026-01-01",
+    "providerId": "qwen-text",
+    "modelId": "qwen-plus",
+    "billingMode": "token",
+    "currency": "USD",
+    "inputPer1M": 0.8,
+    "outputPer1M": 2,
+    "effectiveDate": "2026-01-01"
+  },
+  {
+    "id": "deepseek-text:deepseek-chat:2026-01-01",
+    "providerId": "deepseek-text",
+    "modelId": "deepseek-chat",
+    "billingMode": "token",
+    "currency": "USD",
+    "inputPer1M": 0.14,
+    "outputPer1M": 0.28,
+    "effectiveDate": "2026-01-01"
+  },
+  {
+    "id": "glm-text:glm-4-flash:2026-01-01",
+    "providerId": "glm-text",
+    "modelId": "glm-4-flash",
+    "billingMode": "token",
+    "currency": "USD",
+    "inputPer1M": 0.1,
+    "outputPer1M": 0.1,
+    "effectiveDate": "2026-01-01"
+  },
+  {
+    "id": "glm-ocr:glm-ocr:2026-01-01",
+    "providerId": "glm-ocr",
+    "modelId": "glm-ocr",
+    "billingMode": "page",
+    "currency": "USD",
+    "ocrPerPage": 0.01,
+    "effectiveDate": "2026-01-01"
+  },
+  {
+    "id": "paddle-ocr:rapidocr:2026-01-01",
+    "providerId": "paddle-ocr",
+    "modelId": "rapidocr",
+    "billingMode": "page",
+    "currency": "USD",
+    "ocrPerPage": 0,
+    "effectiveDate": "2026-01-01"
+  }
+]

@@ -7,7 +7,7 @@
     "url": "#",
     "category": "医疗费用",
     "materialName": "医疗费用",
-    "source": "direct_upload",
+    "source": "claim_report",
     "status": "completed",
     "uploadedAt": "2024-01-02 09:24"
   },
@@ -19,7 +19,7 @@
     "url": "#",
     "category": "医疗费用",
     "materialName": "医疗费用",
-    "source": "direct_upload",
+    "source": "claim_report",
     "status": "completed",
     "uploadedAt": "2024-01-02 09:24"
   },
@@ -31,7 +31,7 @@
     "url": "#",
     "category": "医疗费用",
     "materialName": "医疗费用",
-    "source": "direct_upload",
+    "source": "claim_report",
     "status": "completed",
     "uploadedAt": "2024-01-02 09:24"
   },
@@ -43,7 +43,7 @@
     "url": "#",
     "category": "误工费",
     "materialName": "误工费",
-    "source": "direct_upload",
+    "source": "claim_report",
     "status": "completed",
     "uploadedAt": "2024-01-02 09:24"
   },
@@ -56,7 +56,7 @@
     "ossKey": "claims/1772607740101.jpg",
     "category": "交通事故责任认定书",
     "materialName": "交通事故责任认定书",
-    "source": "direct_upload",
+    "source": "claim_report",
     "status": "completed",
     "uploadedAt": "3/4/2026, 3:01:25 PM"
   },
@@ -69,7 +69,7 @@
     "ossKey": "claims/1772639128528.jpg",
     "category": "医疗费发票",
     "materialName": "医疗费发票",
-    "source": "direct_upload",
+    "source": "claim_report",
     "status": "completed",
     "uploadedAt": "3/4/2026, 11:42:53 PM",
     "extractedData": {
@@ -241,7 +241,7 @@
     "ossKey": "claims/1772805180553.jpg",
     "category": "医疗费发票",
     "materialName": "医疗费发票",
-    "source": "direct_upload",
+    "source": "claim_report",
     "status": "completed",
     "uploadedAt": "2026-03-06T13:53:06.990Z"
   },
@@ -254,7 +254,7 @@
     "ossKey": "claims/1772805197891.jpg",
     "category": "驾驶证",
     "materialName": "驾驶证",
-    "source": "direct_upload",
+    "source": "claim_report",
     "status": "completed",
     "uploadedAt": "2026-03-06T13:53:20.747Z"
   },
@@ -267,7 +267,7 @@
     "ossKey": "claims/1772805197892.jpg",
     "category": "事故认定书",
     "materialName": "事故认定书",
-    "source": "direct_upload",
+    "source": "claim_report",
     "status": "completed",
     "uploadedAt": "2026-03-06T13:53:20.747Z"
   },
@@ -5875,114 +5875,77 @@
     "materialId": "mat-11",
     "source": "offline_import",
     "status": "completed",
-    "uploadedAt": "2026-03-14T17:15:35.433Z",
-    "taskId": "task-1e2217bc-f474-4cd6-abf1-fb693600e505",
+    "uploadedAt": "2026-04-04T13:35:04.622Z",
+    "taskId": "task-646b441a-4d0a-4d63-b333-626290ab260c",
     "sourceDetail": {
-      "importId": "import-1773508535433",
-      "importedAt": "2026-03-14T17:15:35.433Z",
-      "taskId": "task-1e2217bc-f474-4cd6-abf1-fb693600e505"
+      "importId": "import-1775309704622",
+      "importedAt": "2026-04-04T13:35:04.622Z",
+      "taskId": "task-646b441a-4d0a-4d63-b333-626290ab260c"
     },
     "classificationError": null,
-    "ocrText": "就诊记录\n\n| 日期     | 医院名称     | 就诊记录内容                                                                                             | 医师签章         |\n| :------- | :----------- | :------------------------------------------------------------------------------------------------------- | :--------------- |\n| 05-03-01 | 上海市东方医院 | 左踝关节扭伤，右踝关节肿胀，左踝关节拍片未见骨折，建议休息，口服活血化瘀药。                             | ( illegible signature/seal ) |\n| 03-03    | 瑞金医院     | 左踝关节肿胀，疼痛。拍片：左踝关节平片，未见骨折。                                                       | ( illegible signature/seal ) |",
+    "ocrText": "以下是图片中的所有文字信息：\n\n**表头:**\n日期 | 医院名称 | 就诊记录 | 医师签章\n\n**记录内容:**\n\n**第一条记录:**\n日期: 05-03-01\n医院名称: 上海市东方医院\n就诊记录: 左踝关节扭伤，自觉门诊就诊，予局部冷敷。查体：左踝关节肿胀(+)，压痛(+)。诊断：左踝关节扭伤。\n\n**第二条记录:**\n日期: 07-03\n就诊记录: 复查：左踝关节肿胀减轻，压痛减轻。建议：继续局部冷敷，休息。\n\n**第三条记录:**\n就诊记录: 13日复查，踝关节肿胀消失。\n\n**医师签章:** [手写签名及印章，签名形似“陈”]",
     "structuredData": {
-      "hospital_name": "上海市东方医院(南院)",
-      "department": "",
-      "visit_date": "2023-03-01",
-      "patient_name": "马华",
-      "chief_complaint": "左膝关节疼痛伴活动受限3天。",
-      "present_illness": "左膝关节疼痛伴活动受限3天。患者缘于3天前无明显诱因出现左膝关节疼痛，伴活动受限，行走时疼痛加重，休息后可缓解，无红肿热痛，无发热，无咳嗽咳痰，无恶心呕吐，无腹痛腹泻，无头晕头痛。今为进一步诊治来我院门诊。",
-      "diagnosis": "左膝关节骨性关节炎",
-      "treatment": "左膝关节疼痛，口服非甾体消炎止痛药",
+      "hospital_name": "上海市东方医院 环龙分",
+      "department": "骨科",
+      "visit_date": "2005-03-01",
+      "patient_name": "",
+      "chief_complaint": "右上腹痛半年，胃镜检查提示胃溃疡（？）。",
+      "present_illness": "患者近一月来出现腹胀、烧心，伴反酸嗳气。食欲",
+      "diagnosis": "1. 胃炎及胃气肿。",
+      "treatment": "",
       "doctor_name": ""
     },
     "documentSummary": {
-      "docId": "task-1e2217bc-f474-4cd6-abf1-fb693600e505-0",
-      "summaryType": "inpatient_record",
-      "extractedAt": "2026-03-14T17:51:34.982Z",
-      "admissionDate": "2005-03-01",
-      "diagnoses": [
-        {
-          "name": "急性阑尾炎"
-        },
-        {
-          "name": "急性弥漫性腹膜炎"
-        }
-      ],
-      "surgeries": [
-        {
-          "name": "急诊手术",
-          "date": "2005-03-03"
-        }
-      ],
-      "dischargeCondition": "恢复良好",
-      "ward": "普外科",
-      "sourceAnchors": {
-        "admissionDate": {
-          "pageIndex": 0,
-          "rawText": "日期: 05-03-01",
-          "highlightLevel": "text_search"
-        },
-        "diagnoses": [
-          {
-            "name": {
-              "pageIndex": 0,
-              "rawText": "急性阑尾炎",
-              "highlightLevel": "text_search"
-            }
-          },
-          {
-            "name": {
-              "pageIndex": 0,
-              "rawText": "急性弥漫性腹膜炎",
-              "highlightLevel": "text_search"
-            }
-          }
-        ],
-        "surgeries": [
-          {
-            "name": {
-              "pageIndex": 0,
-              "rawText": "急诊手术",
-              "highlightLevel": "text_search"
-            },
-            "date": {
-              "pageIndex": 0,
-              "rawText": "日期: 05-03-03",
-              "highlightLevel": "text_search"
-            }
-          }
-        ],
-        "dischargeCondition": {
-          "pageIndex": 0,
-          "rawText": "恢复良好",
-          "highlightLevel": "text_search"
-        },
-        "ward": {
-          "pageIndex": 0,
-          "rawText": "普外科",
-          "highlightLevel": "text_search"
-        }
-      },
-      "confidence": 0.75
+      "docId": "task-646b441a-4d0a-4d63-b333-626290ab260c-0",
+      "summaryType": "diagnosis_proof",
+      "extractedAt": "2026-04-04T14:05:27.507Z",
+      "confidence": 0.85,
+      "sourceAnchors": {},
+      "issuingDoctor": "",
+      "institution": "上海市东方医院 环龙分"
     },
     "extractedData": {
-      "hospital_name": "上海市东方医院(南院)",
-      "department": "",
-      "visit_date": "2023-03-01",
-      "patient_name": "马华",
-      "chief_complaint": "左膝关节疼痛伴活动受限3天。",
-      "present_illness": "左膝关节疼痛伴活动受限3天。患者缘于3天前无明显诱因出现左膝关节疼痛，伴活动受限，行走时疼痛加重，休息后可缓解，无红肿热痛，无发热，无咳嗽咳痰，无恶心呕吐，无腹痛腹泻，无头晕头痛。今为进一步诊治来我院门诊。",
-      "diagnosis": "左膝关节骨性关节炎",
-      "treatment": "左膝关节疼痛，口服非甾体消炎止痛药",
+      "hospital_name": "上海市东方医院 (南浦)",
+      "department": "骨科门诊",
+      "visit_date": "2005-08-01",
+      "patient_name": "张某",
+      "chief_complaint": "左膝关节肿痛5天。",
+      "present_illness": "患者5天前无明显诱因出现左膝关节肿痛伴活动受限，无发热、畏寒、咳嗽等症状。",
+      "diagnosis": "左膝关节急性滑膜炎。",
+      "treatment": "对症处理，建议休息，局部热敷。",
       "doctor_name": ""
     },
     "summary": "从门（急）诊病历中提取到以下信息：\n- 医院名称：上海市东方医院(南院)\n- 就诊日期：2023-03-01\n- 患者姓名：马华\n- 主诉：左膝关节疼痛伴活动受限3天。\n- 现病史：左膝关节疼痛伴活动受限3天。患者缘于3天前无明显诱因出现左膝关节疼痛，伴活动受限，行走时疼痛加重，休息后可缓解，无红肿热痛，无发热，无咳嗽咳痰，无恶心呕吐，无腹痛腹泻，无头晕头痛。今为进一步诊治来我院门诊。\n- 诊断：左膝关节骨性关节炎\n- 治疗方案：左膝关节疼痛，口服非甾体消炎止痛药\n\n未识别到就诊科室和医生姓名。\n\n**校验结果：**\n1. **就诊日期与事故发生日期的时间逻辑：** 未提供事故发生日期，无法进行时间逻辑校验。\n2. **诊断结果与事故伤情因果关系：** 未提供事故伤情描述，无法进行因果关系校验。\n3. **治疗方案与诊断匹配性：** 诊断为“左膝关节骨性关节炎”，治疗方案为“左膝关节疼痛，口服非甾体消炎止痛药”。该治疗方案与诊断结果相符。",
-    "auditConclusion": "从门（急）诊病历中提取到以下信息：\n- 医院名称：上海市东方医院(南院)\n- 就诊日期：2023-03-01\n- 患者姓名：马华\n- 主诉：左膝关节疼痛伴活动受限3天。\n- 现病史：左膝关节疼痛伴活动受限3天。患者缘于3天前无明显诱因出现左膝关节疼痛，伴活动受限，行走时疼痛加重，休息后可缓解，无红肿热痛，无发热，无咳嗽咳痰，无恶心呕吐，无腹痛腹泻，无头晕头痛。今为进一步诊治来我院门诊。\n- 诊断：左膝关节骨性关节炎\n- 治疗方案：左膝关节疼痛，口服非甾体消炎止痛药\n\n未识别到就诊科室和医生姓名。\n\n**校验结果：**\n1. **就诊日期与事故发生日期的时间逻辑：** 未提供事故发生日期，无法进行时间逻辑校验。\n2. **诊断结果与事故伤情因果关系：** 未提供事故伤情描述，无法进行因果关系校验。\n3. **治疗方案与诊断匹配性：** 诊断为“左膝关节骨性关节炎”，治疗方案为“左膝关节疼痛，口服非甾体消炎止痛药”。该治疗方案与诊断结果相符。",
+    "auditConclusion": "审核结论：\n已从门（急）诊病历中提取以下信息：\n医院名称：上海市东方医院 (南浦)\n就诊科室：骨科门诊\n就诊日期：2005-08-01\n患者姓名：张某\n主诉：左膝关节肿痛5天。\n现病史：患者5天前无明显诱因出现左膝关节肿痛伴活动受限，无发热、畏寒、咳嗽等症状。\n诊断：左膝关节急性滑膜炎。\n处理/治疗方案：对症处理，建议休息，局部热敷。\n医生姓名：未识别（医生签章模糊不清）。\n\n校验结果：\n1. 就诊日期与事故发生日期的时间逻辑：无法判断。病历中未提供事故发生日期，无法进行时间逻辑校验。\n2. 诊断结果与事故伤情是否存在因果关系：无法判断。病历中未提供事故伤情描述，无法进行因果关系校验。\n3. 治疗方案是否与诊断匹配：匹配。诊断为左膝关节急性滑膜炎，治疗方案为对症处理、休息、局部热敷，与诊断结果相符。",
     "confidence": 0.95,
     "extractedText": "就诊记录\n\n| 日期     | 医院名称     | 就诊记录内容                                                                                             | 医师签章         |\n| :------- | :----------- | :------------------------------------------------------------------------------------------------------- | :--------------- |\n| 05-03-01 | 上海市东方医院 | 左踝关节扭伤，右踝关节肿胀，左踝关节拍片未见骨折，建议休息，口服活血化瘀药。                             | ( illegible signature/seal ) |\n| 03-03    | 瑞金医院     | 左踝关节肿胀，疼痛。拍片：左踝关节平片，未见骨折。                                                       | ( illegible signature/seal ) |",
     "updatedAt": "2026-03-15T11:15:44.746Z",
     "errorMessage": null,
-    "processedAt": "2026-03-15T11:17:11.283Z"
+    "processedAt": "2026-04-04T15:41:33.695Z",
+    "fieldCorrections": [
+      {
+        "correctionId": "fc-backfill-log-20260325171848-sffmge",
+        "documentId": "mat-1773508535449-wqg0z3050",
+        "fieldKey": "admissionDate",
+        "fieldLabel": "入院日期",
+        "originalValue": "2005-03-01",
+        "correctedValue": "2005-03-02",
+        "correctedAt": "2026-03-25T17:18:48.685Z",
+        "correctedBy": "系统用户",
+        "claimCaseId": "CLM-MED-001"
+      },
+      {
+        "correctionId": "fc-backfill-log-20260404155113-c0h1ha",
+        "documentId": "mat-1773508535449-wqg0z3050",
+        "fieldKey": "institution",
+        "fieldLabel": "机构",
+        "originalValue": "上海市东方医院 环龙分",
+        "correctedValue": "上海市东方医院",
+        "correctedAt": "2026-04-04T15:51:13.934Z",
+        "correctedBy": "系统用户",
+        "claimCaseId": "CLM-MED-001"
+      }
+    ]
   },
   {
     "id": "mat-1773508535449-8jzm23u4k",
@@ -5996,15 +5959,15 @@
     "materialId": "mat-20",
     "source": "offline_import",
     "status": "completed",
-    "uploadedAt": "2026-03-14T17:15:35.433Z",
-    "taskId": "task-1e2217bc-f474-4cd6-abf1-fb693600e505",
+    "uploadedAt": "2026-04-04T13:35:04.622Z",
+    "taskId": "task-646b441a-4d0a-4d63-b333-626290ab260c",
     "sourceDetail": {
-      "importId": "import-1773508535433",
-      "importedAt": "2026-03-14T17:15:35.433Z",
-      "taskId": "task-1e2217bc-f474-4cd6-abf1-fb693600e505"
+      "importId": "import-1775309704622",
+      "importedAt": "2026-04-04T13:35:04.622Z",
+      "taskId": "task-646b441a-4d0a-4d63-b333-626290ab260c"
     },
     "classificationError": null,
-    "ocrText": "上海市医疗门诊收费票据 (电子)\n票据监制\n上海市财政局监制\n财政部监制\n\n票据代码: 31060125\n交款人统一社会信用代码: 362430********0052\n交款人: 杨霁\n\n票据号码: 0799287390\n校验码: 442f0a\n开票日期: 2025-03-01\n[QR code]\n\n项目名称 | 数量/单位 | 金额(元) | 备注 | 项目名称 | 数量/单位 | 金额(元) | 备注\n诊察费 | | 18.00 | | | | |\n诊查费(自费) | 1.00 | 3.00 | 0.00 | 诊查费 | 1.00 | 15.00 | 0.00\n\n金额合计(大写) 壹拾捌元整\n(小写)18.00\n\n业务流水号: NYGH2802911761\n医疗机构类型: 综合医院\n医保统筹基金支付: 0.00\n个人自付: 15.00\n分类自负: 0.00\n备注: 财政部全国财政电子票据查验平台: http://pjcy.mof.gov.cn/\n实收金额: 18.00\n\n门诊号: NYGH2802911761\n医保类型: 自费\n其他支付: 0.00\n个人自费: 3.00\n个人自负: 15.00\n挂号科室: 消化内科\n\n医保编号:\n个人账户支付: 0.00\n附加基金支付: 0.00\n医保当年账户余额: 0.00\n医保历年账户余额: 0.00\n卡号: DZ0000000097286\n\n就诊日期: 20250301\n性别: 男\n个人现金支付: 18.00\n\n收款单位(章): 上海市东方医院票据专用章\n复核人: 系统核验\n收款人: ZZ12",
+    "ocrText": "上海市医疗门诊收费票据（电子）\n票据监制\n财政部监制\n\n票据代码: 31060125\n交款人统一社会信用代码: 362430********0052\n交款人: 杨霁\n\n票据号码: 0799287390\n校验码: 442f0a\n开票日期: 2025-03-01\n\n项目名称 数量/单位 金额(元) 备注 项目名称 数量/单位 金额(元) 备注\n诊察费 18.00\n诊查费(自费) 1.00 3.003.00;0.00 诊查费 1.00 15.000.00;0.00\n\n金额合计(大写) 壹拾捌元整 (小写)18.00\n\n其他信息\n业务流水号: NYGH2802911761\n医疗机构类型: 综合医院\n医保统筹基金支付: 0.00\n个人自付: 15.00\n分类自负: 0.00\n备注: 财政部全国财政电子票据查验平台: http://pjcy.mof.gov.cn/\n实收金额: 18.00\n\n门诊号: NYGH2802911761\n医保类型: 自费\n其他支付: 0.00\n个人自费: 3.00\n个人自负: 15.00\n\n医保编号:\n个人账户支付: 0.00\n附加基金支付: 0.00\n医保当年账户余额: 0.00\n挂号科室: 消化内科\n\n就诊日期: 20250301\n性别: 男\n个人现金支付: 18.00\n医保历年账户余额: 0.00\n卡号: DZ0000000097286\n\n收款单位(章): 上海市东方医院票据专用章\n复核人: 系统核验\n收款人: ZZ12",
     "structuredData": {
       "hospital_name": "上海市东方医院",
       "patient_name": "杨霁",
@@ -6017,57 +5980,73 @@
       "personal_account": 0
     },
     "documentSummary": {
-      "docId": "task-1e2217bc-f474-4cd6-abf1-fb693600e505-1",
+      "docId": "task-646b441a-4d0a-4d63-b333-626290ab260c-2",
       "summaryType": "expense_invoice",
-      "extractedAt": "2026-03-14T17:51:26.861Z",
+      "extractedAt": "2026-04-04T14:05:27.507Z",
+      "confidence": 0.98,
+      "sourceAnchors": {},
       "invoiceNumber": "0799287390",
       "invoiceDate": "2025-03-01",
       "totalAmount": 18,
-      "institution": "上海市东方医院",
-      "breakdown": [
-        {
-          "category": "诊疗费",
-          "itemName": "诊查费(自费)",
-          "amount": 3
-        },
-        {
-          "category": "诊疗费",
-          "itemName": "诊查费",
-          "amount": 15
-        }
-      ],
-      "sourceAnchors": {
-        "totalAmount": {
-          "pageIndex": 0,
-          "rawText": "(小写)18.00",
-          "highlightLevel": "text_search"
-        },
-        "invoiceNumber": {
-          "pageIndex": 0,
-          "rawText": "票据号码: 0799287390",
-          "highlightLevel": "text_search"
-        }
-      },
-      "confidence": 0.98
+      "institution": "上海市东方医院"
     },
     "extractedData": {
-      "hospital_name": "上海市东方医院",
-      "patient_name": "杨霁",
-      "invoice_number": "0799287390",
-      "invoice_code": "31060125",
-      "invoice_date": "2025-03-01",
-      "total_amount": 18,
-      "self_paid": 18,
-      "insurance_paid": 0,
-      "personal_account": 0
+      "basicInfo": {
+        "name": "杨霏",
+        "gender": "男",
+        "age": "",
+        "department": "消化内科",
+        "bedCode": "",
+        "hospitalizationNumber": "",
+        "dischargeDiagnosis": "",
+        "admissionDate": "2025-03-01",
+        "dischargeDate": "",
+        "otherInfo": ""
+      },
+      "chargeItems": [
+        {
+          "itemName": "诊察费",
+          "specifications": "",
+          "unitPrice": 0,
+          "quantity": 0,
+          "totalPrice": 18
+        },
+        {
+          "itemName": "诊查费(自费)",
+          "specifications": "",
+          "unitPrice": 3003,
+          "quantity": 1,
+          "totalPrice": 3003
+        },
+        {
+          "itemName": "诊查费",
+          "specifications": "",
+          "unitPrice": 15000,
+          "quantity": 1,
+          "totalPrice": 15000
+        }
+      ],
+      "invoiceInfo": {
+        "hospitalName": "上海市东方医院",
+        "invoiceNumber": "0799287390",
+        "invoiceCode": "31060125",
+        "issueDate": "2025-03-01"
+      },
+      "insurancePayment": {
+        "governmentFundPayment": 0,
+        "personalPayment": 18,
+        "personalSelfPayment": 15,
+        "personalSelfExpense": 3
+      },
+      "totalAmount": 18
     },
     "summary": "已成功从医疗费发票中提取各项信息。提取摘要如下：\n医院名称：上海市东方医院；患者姓名：杨霁；发票号码：0799287390；发票代码：31060125；开票日期：2025-03-01；金额合计：18.00元；个人自付：18.00元；医保统筹支付：0.00元；个人账户支付：0.00元。\n\n校验结果：\n1. 各项金额相加校验：个人自付 (18.00) + 医保统筹支付 (0.00) + 个人账户支付 (0.00) = 18.00元，与金额合计 (18.00) 相符。校验通过。\n2. 发票日期与就诊日期校验：开票日期 (2025-03-01) 与就诊日期 (20250301) 一致。校验通过。\n3. 发票票据类型校验：该票据为“上海市医疗门诊收费票据(电子)”，并盖有“财政部监制”及“上海市东方医院电子票据专用章”，属于正规财政电子票据。校验通过。\n4. 与费用明细清单总金额一致性校验：未提供费用明细清单，无法进行此项校验。",
-    "auditConclusion": "已成功从医疗费发票中提取各项信息。提取摘要如下：\n医院名称：上海市东方医院；患者姓名：杨霁；发票号码：0799287390；发票代码：31060125；开票日期：2025-03-01；金额合计：18.00元；个人自付：18.00元；医保统筹支付：0.00元；个人账户支付：0.00元。\n\n校验结果：\n1. 各项金额相加校验：个人自付 (18.00) + 医保统筹支付 (0.00) + 个人账户支付 (0.00) = 18.00元，与金额合计 (18.00) 相符。校验通过。\n2. 发票日期与就诊日期校验：开票日期 (2025-03-01) 与就诊日期 (20250301) 一致。校验通过。\n3. 发票票据类型校验：该票据为“上海市医疗门诊收费票据(电子)”，并盖有“财政部监制”及“上海市东方医院电子票据专用章”，属于正规财政电子票据。校验通过。\n4. 与费用明细清单总金额一致性校验：未提供费用明细清单，无法进行此项校验。",
-    "confidence": 0.95,
+    "auditConclusion": "提取摘要：该发票为上海市医疗门诊收费电子票据，患者杨霏于2025-03-01在消化内科就诊。开票医院为上海市东方医院，发票号码0799287390，开票日期2025-03-01。总费用合计为18.00元，其中医保统筹基金支付0.00元，个人支付18.00元，个人自付15.00元，个人自费3.00元。收费项目包含诊察费18.00元，诊查费(自费)3003.00元，以及另一项诊查费15000.00元。\n校验结果：\n1. 各项金额相加校验：发票中列出的收费项目总金额为18021.00元（18.00 + 3003.00 + 15000.00），与发票合计金额18.00元以及实收金额18.00元严重不符，存在重大差异。但医保支付构成（个人自付15.00元 + 个人自费3.00元 = 18.00元）与个人支付和总合计金额一致。\n2. 发票日期与就诊期间校验：开票日期2025-03-01与就诊日期2025-03-01一致。\n3. 发票性质校验：该票据为财政部监制的上海市医疗门诊收费电子票据，属于正规财政票据。\n4. 费用明细与总金额一致性校验：费用明细清单中的收费项目总金额与发票合计金额不一致。",
+    "confidence": 0.9,
     "extractedText": "上海市医疗门诊收费票据 (电子)\n票据监制\n上海市财政局监制\n财政部监制\n\n票据代码: 31060125\n交款人统一社会信用代码: 362430********0052\n交款人: 杨霁\n\n票据号码: 0799287390\n校验码: 442f0a\n开票日期: 2025-03-01\n[QR code]\n\n项目名称 | 数量/单位 | 金额(元) | 备注 | 项目名称 | 数量/单位 | 金额(元) | 备注\n诊察费 | | 18.00 | | | | |\n诊查费(自费) | 1.00 | 3.00 | 0.00 | 诊查费 | 1.00 | 15.00 | 0.00\n\n金额合计(大写) 壹拾捌元整\n(小写)18.00\n\n业务流水号: NYGH2802911761\n医疗机构类型: 综合医院\n医保统筹基金支付: 0.00\n个人自付: 15.00\n分类自负: 0.00\n备注: 财政部全国财政电子票据查验平台: http://pjcy.mof.gov.cn/\n实收金额: 18.00\n\n门诊号: NYGH2802911761\n医保类型: 自费\n其他支付: 0.00\n个人自费: 3.00\n个人自负: 15.00\n挂号科室: 消化内科\n\n医保编号:\n个人账户支付: 0.00\n附加基金支付: 0.00\n医保当年账户余额: 0.00\n医保历年账户余额: 0.00\n卡号: DZ0000000097286\n\n就诊日期: 20250301\n性别: 男\n个人现金支付: 18.00\n\n收款单位(章): 上海市东方医院票据专用章\n复核人: 系统核验\n收款人: ZZ12",
     "updatedAt": "2026-03-15T11:16:14.140Z",
     "errorMessage": null,
-    "processedAt": "2026-03-15T11:17:11.283Z"
+    "processedAt": "2026-04-04T15:41:33.695Z"
   },
   {
     "id": "mat-1773508535449-1f7wucee8",
@@ -6081,15 +6060,15 @@
     "materialId": "mat-20",
     "source": "offline_import",
     "status": "completed",
-    "uploadedAt": "2026-03-14T17:15:35.433Z",
-    "taskId": "task-1e2217bc-f474-4cd6-abf1-fb693600e505",
+    "uploadedAt": "2026-04-04T13:35:04.622Z",
+    "taskId": "task-646b441a-4d0a-4d63-b333-626290ab260c",
     "sourceDetail": {
-      "importId": "import-1773508535433",
-      "importedAt": "2026-03-14T17:15:35.433Z",
-      "taskId": "task-1e2217bc-f474-4cd6-abf1-fb693600e505"
+      "importId": "import-1775309704622",
+      "importedAt": "2026-04-04T13:35:04.622Z",
+      "taskId": "task-646b441a-4d0a-4d63-b333-626290ab260c"
     },
     "classificationError": null,
-    "ocrText": "上海市医疗门诊收费票据 (电子)\n票据监制 财政部监制\n\n票据代码: 31060125\n交款人统一社会信用代码: 362430********0052\n交款人: 杨霁\n\n票据号码: 0799289513\n校验码: 42e57a\n开票日期: 2025-03-01\n\n项目名称 | 数量/单位 | 金额(元) | 备注\n---|---|---|---\n化验费 | | 130.00 |\n13碳尿素呼气试验 | 1.00次 | 130.00.00;0.00 |\n\n金额合计(大写) 壹佰叁拾元整\n(小写)130.00\n\n业务流水号: NYSF2802911918\n医疗机构类型: 综合医院\n医保统筹基金支付: 0.00\n个人自付: 130.00\n分类自负: 0.00\n备注: 财政部全国财政电子票据查验平台 http://pjcy.mof.gov.cn/\n\n门诊号: NYSF2802911918\n医保类型: 自费\n其他支付: 0.00\n个人自费: 0.00\n个人自负: 130.00\n\n医保编号:\n个人账户支付: 0.00\n附加基金支付: 0.00\n医保当年账户余额: 0.00\n卡号: DZ0000000097286\n实收金额: 130.00\n\n就诊日期: 20250301\n性别: 男\n个人现金支付: 130.00\n医保历年账户余额: 0.00\n\n收款单位(章): 上海市东方医院票据专用章\n复核人: 系统核验\n收款人: ZZ12",
+    "ocrText": "上海市医疗门诊收费票据 (电子)\n全国财政电子票据监制 财政部监制\n\n票据代码: 31060125\n交款人统一社会信用代码: 362430********0052\n交款人: 杨霁\n\n票据号码: 0799289513\n校验码: 42e57a\n开票日期: 2025-03-01\n\n项目名称 | 数量/单位 | 金额(元) | 备注 | 项目名称 | 数量/单位 | 金额(元) | 备注\n---|---|---|---|---|---|---|---\n化验费 | | 130.00 | | | | |\n13碳尿素呼气试验 | 1.00次 | 130.00 | | | | |\n\n金额合计(大写) 壹佰叁拾元整\n(小写) 130.00\n\n业务流水号: NYSF2802911918\n医疗机构类型: 综合医院\n医保统筹基金支付: 0.00\n个人自付: 130.00\n分类自负: 0.00\n\n门诊号: NYSF2802911918\n医保类型: 自费\n其他支付: 0.00\n个人自费: 0.00\n个人自负: 130.00\n\n医保编号:\n个人账户支付: 0.00\n附加基金支付: 0.00\n医保当年账户余额: 0.00\n\n就诊日期: 20250301\n性别: 男\n个人现金支付: 130.00\n医保历年账户余额: 0.00\n\n备注: 财政部全国财政电子票据查验平台 http://pjcy.mof.gov.cn/\n卡号: DZ0000000097286\n实收金额: 130.00\n\n收款单位(章): 上海市东方医院票据专用章\n复核人: 系统核验\n收款人: ZZ12",
     "structuredData": {
       "hospital_name": "上海市东方医院",
       "patient_name": "杨霁",
@@ -6102,122 +6081,58 @@
       "personal_account": 0
     },
     "documentSummary": {
-      "docId": "task-1e2217bc-f474-4cd6-abf1-fb693600e505-2",
+      "docId": "task-646b441a-4d0a-4d63-b333-626290ab260c-1",
       "summaryType": "expense_invoice",
-      "extractedAt": "2026-03-14T17:51:29.289Z",
+      "extractedAt": "2026-04-04T14:05:27.507Z",
+      "confidence": 0.98,
+      "sourceAnchors": {},
       "invoiceNumber": "0799289513",
       "invoiceDate": "2025-03-01",
       "totalAmount": 130,
-      "institution": "上海市东方医院",
-      "breakdown": [
-        {
-          "category": "检查费",
-          "itemName": "13碳尿素呼气试验",
-          "amount": 130
-        }
-      ],
-      "sourceAnchors": {
-        "totalAmount": {
-          "pageIndex": 0,
-          "rawText": "(小写)130.00",
-          "highlightLevel": "text_search"
-        },
-        "invoiceNumber": {
-          "pageIndex": 0,
-          "rawText": "票据号码: 0799289513",
-          "highlightLevel": "text_search"
-        }
-      },
-      "confidence": 0.98
+      "institution": "上海市东方医院"
     },
     "extractedData": {
-      "hospital_name": "上海市东方医院",
-      "patient_name": "杨霁",
-      "invoice_number": "0799289513",
-      "invoice_code": "31060125",
-      "invoice_date": "2025-03-01",
-      "total_amount": 130,
-      "self_paid": 130,
-      "insurance_paid": 0,
-      "personal_account": 0
+      "basicInfo": {
+        "name": "杨霁",
+        "gender": "男",
+        "age": "",
+        "department": "",
+        "bedCode": "",
+        "hospitalizationNumber": "",
+        "dischargeDiagnosis": "",
+        "admissionDate": "",
+        "dischargeDate": "",
+        "otherInfo": "就诊日期: 2025-03-01, 业务流水号: NYSF2802911918, 门诊号: NYSF2802911918, 医保类型: 自费, 医疗机构类型: 综合医院, 医保编号: , 卡号: DZ0000000097286, 交款人统一社会信用代码: 362430********0052, 校验码: 42e57a, 其他支付: 0.00, 附加基金支付: 0.00, 医保当年账户余额: 0.00, 医保历年账户余额: 0.00, 实收金额: 130.00, 复核人: 系统核验, 收款人: ZZ12, 备注: 财政部全国财政电子票据查询平台: http://pjcy.mof.gov.cn/"
+      },
+      "chargeItems": [
+        {
+          "itemName": "13碳尿素呼气试验",
+          "specifications": "",
+          "unitPrice": 130,
+          "quantity": 1,
+          "totalPrice": 130
+        }
+      ],
+      "invoiceInfo": {
+        "hospitalName": "上海市东方医院",
+        "invoiceNumber": "0799289513",
+        "invoiceCode": "31060125",
+        "issueDate": "2025-03-01"
+      },
+      "insurancePayment": {
+        "governmentFundPayment": 0,
+        "personalPayment": 130,
+        "personalSelfPayment": 130,
+        "personalSelfExpense": 0
+      },
+      "totalAmount": 130
     },
     "summary": "已成功提取发票信息。提取摘要：医院名称：上海市东方医院，患者姓名：杨霁，发票号码：0799289513，发票代码：31060125，开票日期：2025-03-01，金额合计：130.00元，个人自付：130.00元，医保统筹支付：0.00元，个人账户支付：0.00元。审核校验结果：1) 各项支付金额（个人自付130.00元 + 医保统筹支付0.00元 + 个人账户支付0.00元 = 130.00元）与金额合计（130.00元）一致；2) 开票日期（2025-03-01）与就诊日期（2025-03-01）一致，符合要求；3) 该票据为正规财政电子票据，带有财政部监制章；4) 费用明细清单未提供，无法核对总金额一致性。",
-    "auditConclusion": "已成功提取发票信息。提取摘要：医院名称：上海市东方医院，患者姓名：杨霁，发票号码：0799289513，发票代码：31060125，开票日期：2025-03-01，金额合计：130.00元，个人自付：130.00元，医保统筹支付：0.00元，个人账户支付：0.00元。审核校验结果：1) 各项支付金额（个人自付130.00元 + 医保统筹支付0.00元 + 个人账户支付0.00元 = 130.00元）与金额合计（130.00元）一致；2) 开票日期（2025-03-01）与就诊日期（2025-03-01）一致，符合要求；3) 该票据为正规财政电子票据，带有财政部监制章；4) 费用明细清单未提供，无法核对总金额一致性。",
+    "auditConclusion": "已成功提取医疗费发票结构化信息。提取摘要：患者姓名杨霁，性别男。发票开具医院为上海市东方医院，发票号码0799289513，发票代码31060125，开票日期2025-03-01。就诊日期与开票日期一致。收费项目包括13碳尿素呼气试验，总费用合计130.00元。医保统筹基金支付0.00元，个人支付130.00元（其中个人自付130.00元，个人自费0.00元）。\n\n校验结果：\n1. 各项金额相加等于合计金额：130.00 (chargeItems total) == 130.00 (totalAmount)。医保统筹基金支付(0.00) + 个人自付(130.00) + 个人自费(0.00) = 130.00，与总费用合计一致。\n2. 发票日期(2025-03-01)与就诊日期(2025-03-01)一致，且均为当日门诊票据，符合逻辑。\n3. 发票为上海市财政电子票据，盖有“财政票据监制”和“上海市财政电子票据专用章”，是正规财政票据。\n4. 未提供费用明细清单，无法进行费用明细总金额一致性校验，但发票内部金额自洽。",
     "confidence": 0.95,
     "extractedText": "上海市医疗门诊收费票据 (电子)\n票据监制 财政部监制\n\n票据代码: 31060125\n交款人统一社会信用代码: 362430********0052\n交款人: 杨霁\n\n票据号码: 0799289513\n校验码: 42e57a\n开票日期: 2025-03-01\n\n项目名称 | 数量/单位 | 金额(元) | 备注\n---|---|---|---\n化验费 | | 130.00 |\n13碳尿素呼气试验 | 1.00次 | 130.00.00;0.00 |\n\n金额合计(大写) 壹佰叁拾元整\n(小写)130.00\n\n业务流水号: NYSF2802911918\n医疗机构类型: 综合医院\n医保统筹基金支付: 0.00\n个人自付: 130.00\n分类自负: 0.00\n备注: 财政部全国财政电子票据查验平台 http://pjcy.mof.gov.cn/\n\n门诊号: NYSF2802911918\n医保类型: 自费\n其他支付: 0.00\n个人自费: 0.00\n个人自负: 130.00\n\n医保编号:\n个人账户支付: 0.00\n附加基金支付: 0.00\n医保当年账户余额: 0.00\n卡号: DZ0000000097286\n实收金额: 130.00\n\n就诊日期: 20250301\n性别: 男\n个人现金支付: 130.00\n医保历年账户余额: 0.00\n\n收款单位(章): 上海市东方医院票据专用章\n复核人: 系统核验\n收款人: ZZ12",
     "updatedAt": "2026-03-15T11:17:00.579Z",
     "errorMessage": null,
-    "processedAt": "2026-03-15T11:17:11.283Z"
-  },
-  {
-    "id": "mat-mmrmdo7j-mat-11",
-    "claimCaseId": "CLM-MED-001",
-    "materialId": "mat-11",
-    "materialName": "门（急）诊病历",
-    "status": "completed",
-    "source": "manual_backfill",
-    "createdAt": "2026-03-15T10:36:37.711Z",
-    "updatedAt": "2026-03-15T10:36:37.712Z",
-    "extractedData": {
-      "hospitalName": "上海市东方医院",
-      "diagnosis": [
-        "急性阑尾炎",
-        "急性弥漫性腹膜炎"
-      ],
-      "visitDate": "2026-05-20"
-    },
-    "summary": "上海市东方医院门诊病历，诊断为急性阑尾炎、急性弥漫性腹膜炎",
-    "metadata": {},
-    "documentSummary": null,
-    "processedAt": "2026-03-15T11:17:11.283Z"
-  },
-  {
-    "id": "mat-mmrmdo7k-mat-21",
-    "claimCaseId": "CLM-MED-001",
-    "materialId": "mat-21",
-    "materialName": "费用明细清单",
-    "status": "completed",
-    "source": "manual_backfill",
-    "createdAt": "2026-03-15T10:36:37.712Z",
-    "updatedAt": "2026-03-15T10:36:37.712Z",
-    "extractedData": {
-      "breakdown": [
-        {
-          "itemName": "诊查费",
-          "amount": 15
-        },
-        {
-          "itemName": "诊查费(自费)",
-          "amount": 3
-        },
-        {
-          "itemName": "13碳尿素呼气试验",
-          "amount": 130
-        }
-      ]
-    },
-    "summary": "门诊费用明细：诊查费15元、诊查费(自费)3元、13碳尿素呼气试验130元",
-    "metadata": {},
-    "documentSummary": null,
-    "processedAt": "2026-03-15T11:17:11.283Z"
-  },
-  {
-    "id": "mat-mmrmdo7k-mat-13",
-    "claimCaseId": "CLM-MED-001",
-    "materialId": "mat-13",
-    "materialName": "诊断证明书",
-    "status": "completed",
-    "source": "manual_backfill",
-    "createdAt": "2026-03-15T10:36:37.712Z",
-    "updatedAt": "2026-03-15T10:36:37.712Z",
-    "extractedData": {
-      "diagnosis": "急性阑尾炎；急性弥漫性腹膜炎",
-      "hospitalName": "上海市东方医院",
-      "issueDate": "2026-05-20"
-    },
-    "summary": "诊断证明：急性阑尾炎、急性弥漫性腹膜炎",
-    "metadata": {},
-    "documentSummary": null,
-    "processedAt": "2026-03-15T11:17:11.283Z"
+    "processedAt": "2026-04-04T15:41:33.695Z"
   }
 ]
