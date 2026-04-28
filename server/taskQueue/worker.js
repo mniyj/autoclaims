@@ -3,36 +3,38 @@
  * 处理单个文件的 OCR、分类，支持重试机制
  */
 
-import fs from 'fs';
-import { processFile } from '../services/fileProcessor.js';
-import { updateFileStatus } from './queue.js';
-import { writeAuditLog } from '../middleware/index.js';
-import { readData } from '../utils/fileStore.js';
-import OSS from 'ali-oss';
-import { ensureFreshSignedUrl } from '../middleware/urlRefresher.js';
-import { logInteraction } from '../services/aiInteractionLogger.js';
-import { invokeAICapability } from '../services/aiRuntime.js';
-import { renderPromptTemplate } from '../services/aiConfigService.js';
-import { classifyMaterialByRules } from '../services/materialClassificationService.js';
-import { processClaimMaterial } from '../services/claimMaterialPipeline.js';
+import fs from "fs";
+import { processFile } from "../services/fileProcessor.js";
+import { updateFileStatus } from "./queue.js";
+import { writeAuditLog } from "../middleware/index.js";
+import { readData } from "../utils/fileStore.js";
+import OSS from "ali-oss";
+import { ensureFreshSignedUrl } from "../middleware/urlRefresher.js";
+import { logInteraction } from "../services/aiInteractionLogger.js";
+import { invokeAICapability } from "../services/aiRuntime.js";
+import { renderPromptTemplate } from "../services/aiConfigService.js";
+import { classifyMaterialByRules } from "../services/materialClassificationService.js";
+import { processClaimMaterial } from "../services/claimMaterialPipeline.js";
 
 const RETRYABLE_ERRORS = [
-  'ECONNRESET',
-  'ETIMEDOUT',
-  'ECONNREFUSED',
-  'ENOTFOUND',
-  'API_RATE_LIMIT',
-  'TIMEOUT',
-  'socket hang up',
-  'network error',
-  'fetch failed',
-  'OSS_URL_EXPIRED',
-  'EAI_AGAIN',
+  "ECONNRESET",
+  "ETIMEDOUT",
+  "ECONNREFUSED",
+  "ENOTFOUND",
+  "API_RATE_LIMIT",
+  "TIMEOUT",
+  "socket hang up",
+  "network error",
+  "fetch failed",
+  "OSS_URL_EXPIRED",
+  "EAI_AGAIN",
 ];
 
 const MAX_RETRIES = 3;
 const BATCH_CONCURRENCY = 3;
-const DEFAULT_FILE_PROCESS_TIMEOUT_MS = Number(process.env.FILE_PROCESS_TIMEOUT_MS || 180000);
+const DEFAULT_FILE_PROCESS_TIMEOUT_MS = Number(
+  process.env.FILE_PROCESS_TIMEOUT_MS || 180000,
+);
 
 function getRetryDelay(retryCount) {
   return Math.pow(2, retryCount) * 1000;
@@ -41,14 +43,14 @@ function getRetryDelay(retryCount) {
 function isRetryableError(error) {
   if (!error) return false;
   const errorMessage = error.message || String(error);
-  return RETRYABLE_ERRORS.some(code => 
-    errorMessage.includes(code) || 
-    (error.code && error.code === code)
+  return RETRYABLE_ERRORS.some(
+    (code) =>
+      errorMessage.includes(code) || (error.code && error.code === code),
   );
 }
 
 function normalizeErrorMessage(error) {
-  const raw = error?.message || String(error || '未知错误');
+  const raw = error?.message || String(error || "未知错误");
   try {
     const parsed = JSON.parse(raw);
     return parsed?.error?.message || raw;
@@ -58,54 +60,51 @@ function normalizeErrorMessage(error) {
 }
 
 async function classifyMaterial(result, fileName) {
-  if (result.parseStatus !== 'completed') {
+  if (result.parseStatus !== "completed") {
     return {
-      materialId: 'unknown',
-      materialName: '未识别',
+      materialId: "unknown",
+      materialName: "未识别",
       confidence: 0,
-      matchStrategy: 'fallback',
-      errorMessage: '文件解析未完成，无法分类',
+      matchStrategy: "fallback",
+      errorMessage: "文件解析未完成，无法分类",
     };
   }
 
-  const materials = readData('claims-materials');
+  const materials = readData("claims-materials");
   if (!Array.isArray(materials) || materials.length === 0) {
     return {
-      materialId: 'unknown',
-      materialName: '未识别',
+      materialId: "unknown",
+      materialName: "未识别",
       confidence: 0,
-      matchStrategy: 'fallback',
-      errorMessage: '材料目录为空，无法执行分类',
+      matchStrategy: "fallback",
+      errorMessage: "材料目录为空，无法执行分类",
     };
   }
 
-  const ocrText = result.extractedText || '';
-  const ruleResult = classifyMaterialByRules(materials, fileName, ocrText);
+  const ocrText = result.extractedText || "";
+  const ruleResult = classifyMaterialByRules(materials, ocrText);
   if (ruleResult) {
     return ruleResult;
   }
 
   try {
-    const catalog = materials
-      .map((m) => `${m.id}|${m.name}|${m.description?.slice(0, 80) || ''}`)
-      .join('\n');
+    const catalog = materials.map((m) => `${m.id}|${m.name}`).join("\n");
 
-    const prompt = renderPromptTemplate('material_classifier', {
+    const prompt = renderPromptTemplate("material_classifier", {
       ocrText: ocrText.slice(0, 1800),
-      fileName,
       catalog,
     });
 
     const { response } = await invokeAICapability({
-      capabilityId: 'admin.material.classification',
+      capabilityId: "admin.material.classification",
       request: {
         contents: { parts: [{ text: prompt }] },
         config: { temperature: 0.1 },
       },
       meta: {
-        sourceApp: 'admin-system',
-        module: 'taskQueue.worker.classifyMaterial',
-        operation: 'classify_material',
+        sourceApp: "admin-system",
+        module: "taskQueue.worker.classifyMaterial",
+        operation: "classify_material",
         context: {
           fileName,
           materialCount: materials.length,
@@ -113,41 +112,42 @@ async function classifyMaterial(result, fileName) {
       },
     });
 
-    const raw = response.text || '{}';
+    const raw = response.text || "{}";
     let parsed = {};
     try {
-      parsed = JSON.parse(raw.replace(/```json|```/g, '').trim());
+      parsed = JSON.parse(raw.replace(/```json|```/g, "").trim());
     } catch {}
 
-    const parsedId = parsed.materialId || 'unknown';
+    const parsedId = parsed.materialId || "unknown";
     const matched = materials.find((m) => m.id === parsedId);
-    const confidence = typeof parsed.confidence === 'number' ? parsed.confidence : 0;
+    const confidence =
+      typeof parsed.confidence === "number" ? parsed.confidence : 0;
     const classification = matched
       ? {
           materialId: matched.id,
-          materialName: matched.name || parsed.materialName || '未识别',
+          materialName: matched.name || parsed.materialName || "未识别",
           confidence: Math.max(0, Math.min(1, confidence)),
-          source: 'ai',
-          matchStrategy: 'ai',
+          source: "ai",
+          matchStrategy: "ai",
         }
       : {
-          materialId: 'unknown',
-          materialName: '未识别',
+          materialId: "unknown",
+          materialName: "未识别",
           confidence: 0,
-          source: 'ai',
-          matchStrategy: 'fallback',
-          errorMessage: 'AI 未匹配到有效材料目录项',
+          source: "ai",
+          matchStrategy: "fallback",
+          errorMessage: "AI 未匹配到有效材料目录项",
         };
 
     return classification;
   } catch (error) {
-    console.error('[Worker] classifyMaterial error:', error);
+    console.error("[Worker] classifyMaterial error:", error);
     return {
-      materialId: 'unknown',
-      materialName: '分类失败',
+      materialId: "unknown",
+      materialName: "分类失败",
       confidence: 0,
-      source: 'ai',
-      matchStrategy: 'fallback',
+      source: "ai",
+      matchStrategy: "fallback",
       errorMessage: normalizeErrorMessage(error),
     };
   }
@@ -157,20 +157,20 @@ async function processWithTimeout(processFn, timeoutMs = 60000) {
   return Promise.race([
     processFn(),
     new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('TIMEOUT')), timeoutMs);
+      setTimeout(() => reject(new Error("TIMEOUT")), timeoutMs);
     }),
   ]);
 }
 
 async function downloadFileFromOSS(ossKey, retryCount = 0) {
   try {
-    const region = process.env.ALIYUN_OSS_REGION || 'oss-cn-beijing';
+    const region = process.env.ALIYUN_OSS_REGION || "oss-cn-beijing";
     const bucket = process.env.ALIYUN_OSS_BUCKET;
     const accessKeyId = process.env.ALIYUN_OSS_ACCESS_KEY_ID;
     const accessKeySecret = process.env.ALIYUN_OSS_ACCESS_KEY_SECRET;
 
     if (!bucket || !accessKeyId || !accessKeySecret) {
-      throw new Error('OSS credentials not configured');
+      throw new Error("OSS credentials not configured");
     }
 
     const client = new OSS({
@@ -182,14 +182,18 @@ async function downloadFileFromOSS(ossKey, retryCount = 0) {
 
     const signedUrl = client.signatureUrl(ossKey, { expires: 3600 });
     const response = await fetch(signedUrl);
-    
+
     if (!response.ok) {
       if (response.status === 403 && retryCount < MAX_RETRIES) {
-        console.log(`[Worker] URL expired for ${ossKey}, retrying with fresh URL...`);
+        console.log(
+          `[Worker] URL expired for ${ossKey}, retrying with fresh URL...`,
+        );
         const freshUrl = await ensureFreshSignedUrl(signedUrl, ossKey);
         const retryResponse = await fetch(freshUrl);
         if (!retryResponse.ok) {
-          throw new Error(`Failed to download file after URL refresh: ${retryResponse.status}`);
+          throw new Error(
+            `Failed to download file after URL refresh: ${retryResponse.status}`,
+          );
         }
         return Buffer.from(await retryResponse.arrayBuffer());
       }
@@ -212,23 +216,31 @@ async function readLocalFile(localPath) {
   }
 }
 
-export async function processFileWithRetry(taskId, file, fileIndex, retryCount = 0, taskOptions = {}) {
+export async function processFileWithRetry(
+  taskId,
+  file,
+  fileIndex,
+  retryCount = 0,
+  taskOptions = {},
+) {
   const startTime = Date.now();
   const logContext = {
     taskId,
     claimCaseId: taskOptions.claimCaseId || null,
-    traceId: taskOptions.traceId || (taskOptions.claimCaseId ? `trace-${taskOptions.claimCaseId}` : null),
+    traceId:
+      taskOptions.traceId ||
+      (taskOptions.claimCaseId ? `trace-${taskOptions.claimCaseId}` : null),
     fileIndex,
     fileName: file.fileName,
   };
-  
+
   await updateFileStatus(taskId, fileIndex, {
-    status: 'processing',
+    status: "processing",
     startedAt: new Date().toISOString(),
   });
 
   writeAuditLog({
-    type: 'FILE_PROCESS_START',
+    type: "FILE_PROCESS_START",
     taskId,
     fileIndex,
     fileName: file.fileName,
@@ -237,11 +249,13 @@ export async function processFileWithRetry(taskId, file, fileIndex, retryCount =
   });
 
   try {
-    console.log(`[Worker] Starting to process file ${file.fileName} for task ${taskId}`);
-    
+    console.log(
+      `[Worker] Starting to process file ${file.fileName} for task ${taskId}`,
+    );
+
     let fileBuffer;
     let processOptions;
-    
+
     if (file.ossKey) {
       console.log(`[Worker] Downloading file from OSS: ${file.ossKey}`);
       fileBuffer = await downloadFileFromOSS(file.ossKey, retryCount);
@@ -264,7 +278,7 @@ export async function processFileWithRetry(taskId, file, fileIndex, retryCount =
         logContext,
       };
     } else if (file.base64Data) {
-      fileBuffer = Buffer.from(file.base64Data, 'base64');
+      fileBuffer = Buffer.from(file.base64Data, "base64");
       processOptions = {
         base64Data: file.base64Data,
         extractText: true,
@@ -273,9 +287,11 @@ export async function processFileWithRetry(taskId, file, fileIndex, retryCount =
         logContext,
       };
     } else {
-      throw new Error('No file source provided (ossKey, localPath or base64Data)');
+      throw new Error(
+        "No file source provided (ossKey, localPath or base64Data)",
+      );
     }
-    
+
     const processResult = await processWithTimeout(async () => {
       console.log(`[Worker] Calling processFile for ${file.fileName}`);
       const result = await processFile({
@@ -284,13 +300,18 @@ export async function processFileWithRetry(taskId, file, fileIndex, retryCount =
         buffer: fileBuffer,
         options: processOptions,
       });
-      console.log(`[Worker] processFile completed for ${file.fileName}, result:`, result.parseStatus);
+      console.log(
+        `[Worker] processFile completed for ${file.fileName}, result:`,
+        result.parseStatus,
+      );
 
-      if (result.parseStatus === 'failed') {
-        throw new Error(result.errorMessage || '文件处理失败');
+      if (result.parseStatus === "failed") {
+        throw new Error(result.errorMessage || "文件处理失败");
       }
 
-      console.log(`[Worker] Running unified material pipeline for ${file.fileName}`);
+      console.log(
+        `[Worker] Running unified material pipeline for ${file.fileName}`,
+      );
       const pipelineResult = await processClaimMaterial({
         fileName: file.fileName,
         mimeType: file.mimeType,
@@ -301,7 +322,10 @@ export async function processFileWithRetry(taskId, file, fileIndex, retryCount =
         context: logContext,
       });
       const classification = pipelineResult.classification;
-      console.log(`[Worker] unified material pipeline completed for ${file.fileName}:`, classification.materialName);
+      console.log(
+        `[Worker] unified material pipeline completed for ${file.fileName}:`,
+        classification.materialName,
+      );
 
       return {
         ...result,
@@ -314,9 +338,11 @@ export async function processFileWithRetry(taskId, file, fileIndex, retryCount =
 
     const duration = Date.now() - startTime;
 
-    console.log(`[Worker] Updating file status to completed for ${file.fileName}`);
+    console.log(
+      `[Worker] Updating file status to completed for ${file.fileName}`,
+    );
     const updatedTask = await updateFileStatus(taskId, fileIndex, {
-      status: 'completed',
+      status: "completed",
       result: {
         extractedText: processResult.extractedText,
         structuredData: processResult.structuredData,
@@ -329,10 +355,12 @@ export async function processFileWithRetry(taskId, file, fileIndex, retryCount =
       errorMessage: null,
       completedAt: new Date().toISOString(),
     });
-    console.log(`[Worker] File status updated, task status: ${updatedTask?.status}`);
+    console.log(
+      `[Worker] File status updated, task status: ${updatedTask?.status}`,
+    );
 
     writeAuditLog({
-      type: 'FILE_PROCESS_SUCCESS',
+      type: "FILE_PROCESS_SUCCESS",
       taskId,
       fileIndex,
       fileName: file.fileName,
@@ -345,16 +373,17 @@ export async function processFileWithRetry(taskId, file, fileIndex, retryCount =
       success: true,
       duration,
     };
-
   } catch (error) {
     const duration = Date.now() - startTime;
     const errorMessage = error.message || String(error);
-    
-    const isUrlExpired = errorMessage.includes('403') || errorMessage.includes('expired');
-    const shouldRetry = (isRetryableError(error) || isUrlExpired) && retryCount < MAX_RETRIES;
+
+    const isUrlExpired =
+      errorMessage.includes("403") || errorMessage.includes("expired");
+    const shouldRetry =
+      (isRetryableError(error) || isUrlExpired) && retryCount < MAX_RETRIES;
 
     writeAuditLog({
-      type: 'FILE_PROCESS_ERROR',
+      type: "FILE_PROCESS_ERROR",
       taskId,
       fileIndex,
       fileName: file.fileName,
@@ -367,9 +396,9 @@ export async function processFileWithRetry(taskId, file, fileIndex, retryCount =
 
     if (shouldRetry) {
       const delay = getRetryDelay(retryCount);
-      
+
       writeAuditLog({
-        type: 'FILE_PROCESS_RETRY',
+        type: "FILE_PROCESS_RETRY",
         taskId,
         fileIndex,
         fileName: file.fileName,
@@ -378,12 +407,18 @@ export async function processFileWithRetry(taskId, file, fileIndex, retryCount =
         timestamp: new Date().toISOString(),
       });
 
-      await new Promise(resolve => setTimeout(resolve, delay));
-      return processFileWithRetry(taskId, file, fileIndex, retryCount + 1, taskOptions);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      return processFileWithRetry(
+        taskId,
+        file,
+        fileIndex,
+        retryCount + 1,
+        taskOptions,
+      );
     }
 
     await updateFileStatus(taskId, fileIndex, {
-      status: 'failed',
+      status: "failed",
       errorMessage,
       retryCount,
       completedAt: new Date().toISOString(),
@@ -400,27 +435,33 @@ export async function processFileWithRetry(taskId, file, fileIndex, retryCount =
 export async function processBatchFiles(taskId, files, options = {}) {
   const { concurrency = BATCH_CONCURRENCY } = options;
   const results = [];
-  
-  console.log(`[Worker] Starting batch processing for ${files.length} files with concurrency ${concurrency}`);
-  
+
+  console.log(
+    `[Worker] Starting batch processing for ${files.length} files with concurrency ${concurrency}`,
+  );
+
   for (let i = 0; i < files.length; i += concurrency) {
     const batch = files.slice(i, i + concurrency);
-    console.log(`[Worker] Processing batch ${Math.floor(i / concurrency) + 1}/${Math.ceil(files.length / concurrency)}`);
-    
+    console.log(
+      `[Worker] Processing batch ${Math.floor(i / concurrency) + 1}/${Math.ceil(files.length / concurrency)}`,
+    );
+
     const batchPromises = batch.map((file, idx) => {
       const fileIndex = i + idx;
       return processFileWithRetry(taskId, file, fileIndex, 0, options);
     });
-    
+
     const batchResults = await Promise.all(batchPromises);
     results.push(...batchResults);
   }
-  
-  const successCount = results.filter(r => r.success).length;
-  const failCount = results.filter(r => !r.success).length;
-  
-  console.log(`[Worker] Batch processing completed: ${successCount} succeeded, ${failCount} failed`);
-  
+
+  const successCount = results.filter((r) => r.success).length;
+  const failCount = results.filter((r) => !r.success).length;
+
+  console.log(
+    `[Worker] Batch processing completed: ${successCount} succeeded, ${failCount} failed`,
+  );
+
   return {
     total: files.length,
     succeeded: successCount,
@@ -429,18 +470,25 @@ export async function processBatchFiles(taskId, files, options = {}) {
   };
 }
 
-export async function processStagedFile(taskId, file, fileIndex, taskOptions = {}) {
+export async function processStagedFile(
+  taskId,
+  file,
+  fileIndex,
+  taskOptions = {},
+) {
   const startTime = Date.now();
   const logContext = {
     taskId,
     claimCaseId: taskOptions.claimCaseId || null,
-    traceId: taskOptions.traceId || (taskOptions.claimCaseId ? `trace-${taskOptions.claimCaseId}` : null),
+    traceId:
+      taskOptions.traceId ||
+      (taskOptions.claimCaseId ? `trace-${taskOptions.claimCaseId}` : null),
     fileIndex,
     fileName: file.fileName,
   };
-  
+
   writeAuditLog({
-    type: 'FILE_PROCESS_START',
+    type: "FILE_PROCESS_START",
     taskId,
     fileIndex,
     fileName: file.fileName,
@@ -448,13 +496,15 @@ export async function processStagedFile(taskId, file, fileIndex, taskOptions = {
   });
 
   try {
-    console.log(`[Worker] Starting staged processing for ${file.fileName}, taskId: ${taskId}, fileIndex: ${fileIndex}`);
-    
+    console.log(
+      `[Worker] Starting staged processing for ${file.fileName}, taskId: ${taskId}, fileIndex: ${fileIndex}`,
+    );
+
     await updateFileStatus(taskId, fileIndex, {
-      status: 'classifying',
+      status: "classifying",
       startedAt: new Date().toISOString(),
     });
-    
+
     let fileBuffer;
     if (file.ossKey) {
       console.log(`[Worker] Downloading file from OSS: ${file.ossKey}`);
@@ -476,11 +526,13 @@ export async function processStagedFile(taskId, file, fileIndex, taskOptions = {
       }
     } else if (file.base64Data) {
       console.log(`[Worker] Using base64 data`);
-      fileBuffer = Buffer.from(file.base64Data, 'base64');
+      fileBuffer = Buffer.from(file.base64Data, "base64");
     } else {
-      throw new Error('No file source provided (no ossKey, localPath or base64Data)');
+      throw new Error(
+        "No file source provided (no ossKey, localPath or base64Data)",
+      );
     }
-    
+
     console.log(`[Worker] Processing file: ${file.fileName}`);
     let processResult;
     try {
@@ -490,17 +542,21 @@ export async function processStagedFile(taskId, file, fileIndex, taskOptions = {
         buffer: fileBuffer,
         options: { extractText: true, videoPath: file.localPath, logContext },
       });
-      console.log(`[Worker] File processed, parseStatus: ${processResult.parseStatus}`);
+      console.log(
+        `[Worker] File processed, parseStatus: ${processResult.parseStatus}`,
+      );
     } catch (processError) {
       console.error(`[Worker] File processing failed:`, processError);
       throw new Error(`文件处理失败: ${processError.message}`);
     }
 
-    if (processResult.parseStatus === 'failed') {
-      throw new Error(processResult.errorMessage || '文件解析失败');
+    if (processResult.parseStatus === "failed") {
+      throw new Error(processResult.errorMessage || "文件解析失败");
     }
 
-    console.log(`[Worker] Starting unified material pipeline for ${file.fileName}`);
+    console.log(
+      `[Worker] Starting unified material pipeline for ${file.fileName}`,
+    );
     const classificationStart = Date.now();
     let pipelineResult;
     try {
@@ -514,36 +570,39 @@ export async function processStagedFile(taskId, file, fileIndex, taskOptions = {
         context: logContext,
       });
       console.log(
-        `[Worker] Unified material pipeline completed: ${pipelineResult.classification.materialName} (${pipelineResult.classification.confidence})`
+        `[Worker] Unified material pipeline completed: ${pipelineResult.classification.materialName} (${pipelineResult.classification.confidence})`,
       );
     } catch (classifyError) {
-      console.error(`[Worker] Unified material pipeline failed:`, classifyError);
+      console.error(
+        `[Worker] Unified material pipeline failed:`,
+        classifyError,
+      );
       pipelineResult = {
         extractedData: processResult.structuredData || {},
-        auditConclusion: '',
+        auditConclusion: "",
         confidence: 0,
         classification: {
-        materialId: 'unknown',
-        materialName: '分类失败',
-        confidence: 0,
-        source: 'ai',
-        matchStrategy: 'fallback',
-        errorMessage: classifyError?.message || String(classifyError),
+          materialId: "unknown",
+          materialName: "分类失败",
+          confidence: 0,
+          source: "ai",
+          matchStrategy: "fallback",
+          errorMessage: classifyError?.message || String(classifyError),
         },
       };
     }
     const classificationEnd = Date.now();
     const classification = pipelineResult.classification;
-    
+
     logInteraction({
       taskId,
       fileIndex,
-      taskType: 'classification',
+      taskType: "classification",
       input: {
-        prompt: '材料分类',
+        prompt: "材料分类",
         fileName: file.fileName,
         fileType: file.mimeType,
-        model: 'gemini-2.5-flash',
+        model: "gemini-2.5-flash",
       },
       output: {
         response: JSON.stringify(classification),
@@ -558,16 +617,16 @@ export async function processStagedFile(taskId, file, fileIndex, taskOptions = {
     });
 
     await updateFileStatus(taskId, fileIndex, {
-      status: 'extracting',
+      status: "extracting",
       stages: {
-        archive: { status: 'completed', completedAt: new Date().toISOString() },
+        archive: { status: "completed", completedAt: new Date().toISOString() },
         classification: {
-          status: classification.errorMessage ? 'failed' : 'completed',
+          status: classification.errorMessage ? "failed" : "completed",
           result: classification,
           errorMessage: classification.errorMessage || null,
           completedAt: new Date().toISOString(),
         },
-        extraction: { status: 'in_progress' },
+        extraction: { status: "in_progress" },
       },
     });
 
@@ -578,15 +637,15 @@ export async function processStagedFile(taskId, file, fileIndex, taskOptions = {
       auditConclusion: pipelineResult.auditConclusion,
     };
     const extractionEnd = Date.now();
-    
+
     logInteraction({
       taskId,
       fileIndex,
-      taskType: 'extraction',
+      taskType: "extraction",
       input: {
         fileName: file.fileName,
         fileType: file.mimeType,
-        model: 'gemini-2.5-flash',
+        model: "gemini-2.5-flash",
       },
       output: {
         response: JSON.stringify(extraction),
@@ -603,7 +662,7 @@ export async function processStagedFile(taskId, file, fileIndex, taskOptions = {
     const duration = Date.now() - startTime;
 
     await updateFileStatus(taskId, fileIndex, {
-      status: 'completed',
+      status: "completed",
       result: {
         extractedText: processResult.extractedText,
         structuredData: pipelineResult.extractedData,
@@ -614,20 +673,24 @@ export async function processStagedFile(taskId, file, fileIndex, taskOptions = {
       },
       classificationError: classification.errorMessage || null,
       stages: {
-        archive: { status: 'completed', completedAt: new Date().toISOString() },
+        archive: { status: "completed", completedAt: new Date().toISOString() },
         classification: {
-          status: classification.errorMessage ? 'failed' : 'completed',
+          status: classification.errorMessage ? "failed" : "completed",
           result: classification,
           errorMessage: classification.errorMessage || null,
           completedAt: new Date().toISOString(),
         },
-        extraction: { status: 'completed', result: extraction, completedAt: new Date().toISOString() },
+        extraction: {
+          status: "completed",
+          result: extraction,
+          completedAt: new Date().toISOString(),
+        },
       },
       completedAt: new Date().toISOString(),
     });
 
     writeAuditLog({
-      type: 'FILE_PROCESS_SUCCESS',
+      type: "FILE_PROCESS_SUCCESS",
       taskId,
       fileIndex,
       fileName: file.fileName,
@@ -637,13 +700,12 @@ export async function processStagedFile(taskId, file, fileIndex, taskOptions = {
     });
 
     return { success: true, duration };
-
   } catch (error) {
     const duration = Date.now() - startTime;
     const errorMessage = error.message || String(error);
 
     writeAuditLog({
-      type: 'FILE_PROCESS_ERROR',
+      type: "FILE_PROCESS_ERROR",
       taskId,
       fileIndex,
       fileName: file.fileName,
@@ -652,7 +714,7 @@ export async function processStagedFile(taskId, file, fileIndex, taskOptions = {
     });
 
     await updateFileStatus(taskId, fileIndex, {
-      status: 'failed',
+      status: "failed",
       errorMessage,
       completedAt: new Date().toISOString(),
     });

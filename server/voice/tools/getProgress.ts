@@ -52,11 +52,16 @@ export const getProgressTool = {
           c.productCode === params.policyNumber
         );
       } else if (context?.userId && !['admin', 'test', 'gclife'].includes(context.userId)) {
-        matched = claims.filter((c: any) =>
+        // Align with text-chat path (claimState.historicalClaims): the demo data
+        // isn't tagged per user, so a strict userId filter yields zero hits and
+        // the voice assistant falsely reports "no cases". Prefer userId matches
+        // when present, but fall back to all claims so the two channels agree.
+        const byUser = claims.filter((c: any) =>
           c.reporter === context.userId ||
           c.insured === context.userId ||
           c.userId === context.userId
         );
+        matched = byUser.length > 0 ? byUser : claims;
       }
       
       if (matched.length === 0) {

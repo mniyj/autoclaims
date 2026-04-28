@@ -799,5 +799,244 @@
     "updatedAt": "2026-03-15T10:00:00+08:00",
     "operator": "codex",
     "notes": "首保3人团单，有社保版，双责任各1万元，0免赔90%赔付。"
+  },
+  {
+    "id": "policy-car-001",
+    "policyNumber": "POL-CAR-20260101-001",
+    "quoteId": "quote-car-001",
+    "quoteNumber": "QT2025122500001",
+    "status": "生效中",
+    "productCode": "CAR-COMP-2024-A",
+    "productName": "全保无忧·综合车险",
+    "companyName": "平安财险",
+    "policyholder": {
+      "name": "张建国",
+      "idType": "身份证",
+      "idNumber": "110105198505156789",
+      "gender": "男",
+      "birthDate": "1985-05-15",
+      "phone": "13812345678",
+      "email": "zhangjguo@example.com",
+      "address": "北京市朝阳区望京街道建国里18号"
+    },
+    "insureds": [
+      {
+        "id": "insured-car-001",
+        "name": "张建国",
+        "idType": "身份证",
+        "idNumber": "110105198505156789",
+        "gender": "男",
+        "birthDate": "1985-05-15",
+        "relationship": "本人",
+        "occupation": "企业职员",
+        "phone": "13812345678"
+      }
+    ],
+    "mainClause": {
+      "clauseCode": "CAR-MAIN-2024-A",
+      "clauseName": "机动车交通事故责任强制险（交强险）",
+      "clauseType": "主险",
+      "sumInsured": 200000,
+      "premium": 950,
+      "paymentFrequency": "年缴",
+      "deductible": "无绝对免赔额",
+      "coverageDetails": [
+        {
+          "id": "pol-main-cov-1",
+          "name": "死亡伤残赔偿限额",
+          "amount": "18万元",
+          "details": "每次事故每人死亡伤残赔偿限额18万元。"
+        },
+        {
+          "id": "pol-main-cov-2",
+          "name": "医疗费用赔偿限额",
+          "amount": "1.8万元",
+          "details": "每次事故每人医疗费用赔偿限额1.8万元。"
+        },
+        {
+          "id": "pol-main-cov-3",
+          "name": "财产损失赔偿限额",
+          "amount": "2000元",
+          "details": "每次事故财产损失赔偿限额2000元。"
+        }
+      ]
+    },
+    "riderClauses": [
+      {
+        "clauseCode": "CAR-MAIN-2024-A-TPL",
+        "clauseName": "第三者责任险",
+        "clauseType": "附加险",
+        "sumInsured": 1000000,
+        "premium": 1680,
+        "paymentFrequency": "年缴",
+        "deductible": "绝对免赔额0元",
+        "coverageDetails": [
+          {
+            "id": "pol-rider-cov-1",
+            "name": "第三者人身伤亡及财产损失",
+            "amount": "100万元",
+            "details": "每次事故第三者人身伤亡及财产损失赔偿限额100万元，不限事故次数。"
+          }
+        ]
+      },
+      {
+        "clauseCode": "CAR-MAIN-2024-A-VD",
+        "clauseName": "车辆损失险",
+        "clauseType": "附加险",
+        "sumInsured": 200000,
+        "premium": 1350,
+        "paymentFrequency": "年缴",
+        "deductible": "按责任比例：全责5%，主责10%，同责15%，次责20%",
+        "coverageDetails": [
+          {
+            "id": "pol-rider-cov-2",
+            "name": "车辆直接损失",
+            "amount": "按实际损失（最高车辆实际价值20万元）",
+            "details": "承保因碰撞、倾覆、自燃、暴风、暴雨、洪水、泥石流等造成的车辆损失。"
+          }
+        ]
+      },
+      {
+        "clauseCode": "CAR-MAIN-2024-A-PA",
+        "clauseName": "车上人员责任险",
+        "clauseType": "附加险",
+        "sumInsured": 600000,
+        "premium": 300,
+        "paymentFrequency": "年缴",
+        "deductible": "绝对免赔额0元",
+        "coverageDetails": [
+          {
+            "id": "pol-rider-cov-3",
+            "name": "车上人员人身伤亡",
+            "amount": "每座10万元，共6座（驾驶员1座+乘客5座）",
+            "details": "含驾驶员座位1个及乘客座位5个，每座赔偿限额10万元，累计最高60万元。"
+          }
+        ]
+      }
+    ],
+    "specialAgreements": [
+      {
+        "id": "car-agreement-001",
+        "title": "被保险车辆信息",
+        "content": "被保险车辆：京A·88888；车型：大众途观L 2023款；车架号（VIN）：LSVNB4184PF123456；发动机号：EA888-7654321；车辆实际价值：200,000元；核定载客人数：6人（含驾驶员）。",
+        "category": "特约事项"
+      },
+      {
+        "id": "car-agreement-002",
+        "title": "免责事项约定",
+        "content": "以下情形不予赔偿：1）驾驶员饮酒、吸毒或服用影响驾驶药物后驾车；2）无合法有效驾驶证驾车；3）驾驶证准驾车型与被驾车辆不符；4）故意行为或违法犯罪行为；5）车辆在被盗抢期间（另购盗抢险除外）；6）核辐射及核污染；7）自然磨损、电气/机械故障。",
+        "category": "限制责任"
+      },
+      {
+        "id": "car-agreement-003",
+        "title": "报案时效约定",
+        "content": "发生保险事故后，被保险人应于事故发生后48小时内向保险公司报案。道路交通事故须向交警部门报案并取得事故认定书（轻微事故可采用全国互联网交通事故快处系统）。",
+        "category": "特约事项"
+      }
+    ],
+    "deductionRules": [
+      {
+        "id": "car-deduction-001",
+        "name": "车辆损失险事故责任免赔",
+        "type": "比例免赔",
+        "value": 5,
+        "unit": "%",
+        "description": "车辆损失险按事故责任比例计算免赔：全责5%，主责10%，同责15%，次责20%，无责不赔。",
+        "applicableScope": "每次事故"
+      },
+      {
+        "id": "car-deduction-002",
+        "name": "交强险无责任赔偿限额",
+        "type": "绝对免赔额",
+        "value": 0,
+        "unit": "元",
+        "description": "交强险在无责情形下按规定限额的10%赔付：死亡伤残1.8万，医疗1800元，财产200元。",
+        "applicableScope": "每次事故"
+      }
+    ],
+    "schedule": {
+      "version": "1.0",
+      "generatedAt": "2026-01-01T08:00:00Z",
+      "items": [
+        {
+          "id": "sch-car-001",
+          "category": "主险",
+          "itemName": "交强险·死亡伤残赔偿限额",
+          "sumInsured": 180000,
+          "deductible": 0,
+          "reimbursementRatio": 100,
+          "remarks": "每次事故每人"
+        },
+        {
+          "id": "sch-car-002",
+          "category": "主险",
+          "itemName": "交强险·医疗费用赔偿限额",
+          "sumInsured": 18000,
+          "deductible": 0,
+          "reimbursementRatio": 100,
+          "remarks": "每次事故每人"
+        },
+        {
+          "id": "sch-car-003",
+          "category": "主险",
+          "itemName": "交强险·财产损失赔偿限额",
+          "sumInsured": 2000,
+          "deductible": 0,
+          "reimbursementRatio": 100,
+          "remarks": "每次事故"
+        },
+        {
+          "id": "sch-car-004",
+          "category": "商业险",
+          "itemName": "第三者责任险",
+          "sumInsured": 1000000,
+          "deductible": 0,
+          "reimbursementRatio": 100,
+          "remarks": "每次事故，不限次数"
+        },
+        {
+          "id": "sch-car-005",
+          "category": "商业险",
+          "itemName": "车辆损失险",
+          "sumInsured": 200000,
+          "deductible": 0,
+          "reimbursementRatio": 95,
+          "remarks": "全责时按95%赔付，主责90%，同责85%，次责80%"
+        },
+        {
+          "id": "sch-car-006",
+          "category": "商业险",
+          "itemName": "车上人员责任险（驾驶员）",
+          "sumInsured": 100000,
+          "deductible": 0,
+          "reimbursementRatio": 100,
+          "remarks": "每座赔偿限额10万元"
+        },
+        {
+          "id": "sch-car-007",
+          "category": "商业险",
+          "itemName": "车上人员责任险（乘客5座）",
+          "sumInsured": 100000,
+          "deductible": 0,
+          "reimbursementRatio": 100,
+          "remarks": "每座赔偿限额10万元，共5座"
+        }
+      ],
+      "totalSumInsured": 1800000,
+      "totalPremium": 4280
+    },
+    "effectiveDate": "2026-01-01",
+    "expiryDate": "2027-01-01",
+    "issueDate": "2026-01-01",
+    "paymentDueDate": "2026-01-01",
+    "totalPremium": 4280,
+    "paymentFrequency": "年缴",
+    "paidPremium": 4280,
+    "claimCount": 0,
+    "totalClaimAmount": 0,
+    "createdAt": "2026-01-01T08:00:00Z",
+    "updatedAt": "2026-01-01T08:00:00Z",
+    "operator": "admin",
+    "notes": "被保险车辆：京A·88888，大众途观L 2023款。标准版：交强险+三者100万+车损险+车上人员责任险（6座×10万）。年保费合计4280元。"
   }
 ]

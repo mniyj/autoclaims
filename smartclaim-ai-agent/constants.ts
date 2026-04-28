@@ -1,5 +1,6 @@
 import {
   ClaimStatus,
+  ClaimRequiredMaterial,
   HistoricalClaim,
   Policy,
   DischargeSummaryData,
@@ -435,7 +436,7 @@ export const MOCK_HISTORICAL_CLAIMS: HistoricalClaim[] = [
     id: "CLM-2024-002",
     date: "2024-02-20",
     type: "医疗理赔",
-    status: ClaimStatus.REVIEWING,
+    status: ClaimStatus.DOCUMENTING,
     insuredName: "张建国",
     incidentReason: "突发急性阑尾炎住院",
     documents: [
@@ -463,6 +464,32 @@ export const MOCK_HISTORICAL_CLAIMS: HistoricalClaim[] = [
         },
       },
     ],
+    requiredMaterials: [
+      {
+        materialId: "mat-13",
+        materialName: "医疗发票",
+        materialDescription: "住院期间所有医疗费用发票原件",
+        required: true,
+        source: "医院",
+        sourceDetails: "出院时向收费处索取",
+      },
+      {
+        materialId: "mat-20",
+        materialName: "费用清单",
+        materialDescription: "住院费用明细清单",
+        required: true,
+        source: "医院",
+        sourceDetails: "出院时向护士站索取",
+      },
+      {
+        materialId: "mat-6",
+        materialName: "银行卡",
+        materialDescription: "被保险人本人银行卡正面照片，用于赔款收款",
+        required: true,
+        source: "本人",
+        sourceDetails: "提供用于赔款收款的银行卡信息",
+      },
+    ] as ClaimRequiredMaterial[],
     timeline: [
       {
         date: "2024-02-20 18:00",
@@ -605,6 +632,32 @@ export const MOCK_HISTORICAL_CLAIMS: HistoricalClaim[] = [
         },
       },
     ],
+    requiredMaterials: [
+      {
+        materialId: "mat-13",
+        materialName: "医疗发票",
+        materialDescription: "住院手术相关医疗费用发票原件",
+        required: true,
+        source: "医院",
+        sourceDetails: "出院时向收费处索取",
+      },
+      {
+        materialId: "mat-1",
+        materialName: "身份证",
+        materialDescription: "被保险人身份证正反面照片",
+        required: true,
+        source: "本人",
+        sourceDetails: "提供被保险人本人有效身份证件",
+      },
+      {
+        materialId: "mat-6",
+        materialName: "银行卡",
+        materialDescription: "被保险人本人银行卡正面照片，用于赔款收款",
+        required: true,
+        source: "本人",
+        sourceDetails: "提供用于赔款收款的银行卡信息",
+      },
+    ] as ClaimRequiredMaterial[],
   },
   // --- End New Claims ---
   {
@@ -623,6 +676,32 @@ export const MOCK_HISTORICAL_CLAIMS: HistoricalClaim[] = [
         category: "事故照片",
       },
     ],
+    requiredMaterials: [
+      {
+        materialId: "mat-13",
+        materialName: "维修发票",
+        materialDescription: "挡风玻璃维修费用发票原件",
+        required: true,
+        source: "维修厂",
+        sourceDetails: "完成维修后向维修厂索取正式发票",
+      },
+      {
+        materialId: "mat-4",
+        materialName: "行驶证",
+        materialDescription: "被保险车辆行驶证正页",
+        required: true,
+        source: "本人",
+        sourceDetails: "提供被保险车辆行驶证",
+      },
+      {
+        materialId: "mat-3",
+        materialName: "驾驶证",
+        materialDescription: "事故发生时驾驶人驾驶证正页",
+        required: true,
+        source: "本人",
+        sourceDetails: "提供事故发生时的驾驶人驾驶证",
+      },
+    ] as ClaimRequiredMaterial[],
     timeline: [
       {
         date: "2024-03-05 11:20",

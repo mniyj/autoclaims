@@ -63,11 +63,22 @@ export class AliyunNLSService {
       const pendingAudioChunks: Buffer[] = [];
 
       return new Promise((resolve, reject) => {
-        // 设置超时
-        const timeout = setTimeout(() => {
+        let settled = false;
+        let transcriptionStartedTimeout: NodeJS.Timeout | null = null;
+
+        const settle = (fn: () => void) => {
+          if (!settled) {
+            settled = true;
+            if (transcriptionStartedTimeout) clearTimeout(transcriptionStartedTimeout);
+            fn();
+          }
+        };
+
+        // Timeout waiting for WebSocket to open
+        const connectTimeout = setTimeout(() => {
           console.error("[AliyunNLS] Connection timeout");
-          reject(new Error("NLS WebSocket connection timeout"));
           ws.close();
+          settle(() => reject(new Error("NLS WebSocket connection timeout")));
         }, 10000);
 
         const streamInterface = {
@@ -99,8 +110,16 @@ export class AliyunNLSService {
         };
 
         ws.on("open", () => {
-          clearTimeout(timeout);
+          clearTimeout(connectTimeout);
           console.log("[AliyunNLS] WebSocket connected");
+
+          // Start a separate timeout waiting for TranscriptionStarted
+          transcriptionStartedTimeout = setTimeout(() => {
+            console.error("[AliyunNLS] TranscriptionStarted timeout");
+            ws.close();
+            settle(() => reject(new Error("NLS TranscriptionStarted timeout")));
+          }, 15000);
+
           const startReq: NLSRequest = {
             header: {
               message_id: generateUUID(),
@@ -131,43 +150,50 @@ export class AliyunNLSService {
         ws.on("message", (data: WebSocket.Data) => {
           try {
             const response = JSON.parse(data.toString());
-            console.log(
-              `[AliyunNLS] Received message: ${response.header?.name}`,
-            );
+            const name = response.header?.name;
 
-            if (response.header.name === "TaskFailed") {
+            if (name === "TaskFailed") {
               console.error(
                 `[AliyunNLS] Task failed:`,
                 JSON.stringify(response, null, 2),
               );
-              onError(
-                new Error(
-                  `NLS task failed: ${response.header?.status_text || "Unknown error"}`,
-                ),
+              const err = new Error(
+                `NLS task failed: ${response.header?.status_text || "Unknown error"}`,
               );
+              onError(err);
+              ws.close();
+              settle(() => reject(err));
+              return;
             }
 
-            if (response.header.name === "TranscriptionStarted") {
+            if (name === "TranscriptionStarted") {
+              console.log(`[AliyunNLS] TranscriptionStarted task=${taskId}`);
               transcriptionStarted = true;
               for (const chunk of pendingAudioChunks.splice(0)) {
                 if (ws.readyState === WebSocket.OPEN) {
                   ws.send(chunk);
                 }
               }
-              resolve(streamInterface);
+              settle(() => resolve(streamInterface));
               return;
             }
 
-            if (
-              response.header.name === "TranscriptionResultChanged" ||
-              response.header.name === "SentenceEnd"
-            ) {
+            if (name === "SentenceEnd") {
               console.log(
-                `[AliyunNLS] Recognition result: ${response.payload?.result}, isFinal: ${response.header.name === "SentenceEnd"}`,
+                `[AliyunNLS] SentenceEnd task=${taskId} text=${JSON.stringify(response.payload?.result || "")}`,
               );
               onResult({
                 text: response.payload?.result || "",
-                isFinal: response.header.name === "SentenceEnd",
+                isFinal: true,
+              });
+              return;
+            }
+
+            if (name === "TranscriptionResultChanged") {
+              // Interim result — no log (fires every ~200ms, very spammy).
+              onResult({
+                text: response.payload?.result || "",
+                isFinal: false,
               });
             }
           } catch (error) {
@@ -177,8 +203,12 @@ export class AliyunNLSService {
 
         ws.on("error", (error) => {
           console.error("[AliyunNLS] WebSocket error:", error);
-          clearTimeout(timeout);
-          reject(error);
+          clearTimeout(connectTimeout);
+          settle(() => reject(error));
+        });
+
+        ws.on("close", () => {
+          settle(() => reject(new Error("NLS WebSocket closed before TranscriptionStarted")));
         });
       });
     } catch (error) {

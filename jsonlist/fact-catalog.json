@@ -104,11 +104,8 @@
       "ELIGIBILITY"
     ],
     "required_evidence": true,
-    "allowed_material_categories": [
-      "accident",
-      "medical"
-    ],
-    "status": "ACTIVE"
+    "status": "ACTIVE",
+    "allowed_material_categories": []
   },
   {
     "fact_id": "claim.result_type",
@@ -252,11 +249,8 @@
       "ASSESSMENT"
     ],
     "required_evidence": true,
-    "allowed_material_categories": [
-      "medical",
-      "settlement"
-    ],
-    "status": "ACTIVE"
+    "status": "ACTIVE",
+    "allowed_material_categories": []
   },
   {
     "fact_id": "claim.claimant_age",
@@ -1708,10 +1702,8 @@
       "ASSESSMENT"
     ],
     "required_evidence": true,
-    "allowed_material_categories": [
-      "settlement"
-    ],
-    "status": "ACTIVE"
+    "status": "ACTIVE",
+    "allowed_material_categories": []
   },
   {
     "fact_id": "claim.rescue_fees",
@@ -2083,10 +2075,9 @@
       "ELIGIBILITY"
     ],
     "required_evidence": true,
-    "allowed_material_categories": [
-      "identity"
-    ],
-    "status": "ACTIVE"
+    "status": "ACTIVE",
+    "allowed_material_ids": [],
+    "source_refs": []
   },
   {
     "fact_id": "insured.id_number",
@@ -2100,10 +2091,8 @@
       "ELIGIBILITY"
     ],
     "required_evidence": true,
-    "allowed_material_categories": [
-      "identity"
-    ],
-    "status": "ACTIVE"
+    "status": "ACTIVE",
+    "allowed_material_categories": []
   },
   {
     "fact_id": "insured.birth_date",
@@ -2249,10 +2238,8 @@
       "ELIGIBILITY"
     ],
     "required_evidence": true,
-    "allowed_material_categories": [
-      "medical"
-    ],
-    "status": "ACTIVE"
+    "status": "ACTIVE",
+    "allowed_material_categories": []
   },
   {
     "fact_id": "claim.icd10_code",

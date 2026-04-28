@@ -97,7 +97,7 @@ export class MaterialConfigService {
 
     // 1. 如果没有 claimItemId，尝试从 claimType 映射
     if (!resolvedItemId && claimType) {
-      resolvedItemId = this.mapClaimTypeToItemId(claimType);
+      resolvedItemId = await this.mapClaimTypeToItemId(claimType);
       resolvedClaimType = claimType;
     }
 
@@ -286,20 +286,28 @@ A: 可回就诊医院补打，或提供其他就诊凭证。
 
   /**
    * 映射险种类型到理赔项目 ID
+   *
+   * 异步实现：在返回候选 ID 前先校验它在 claim-items 配置中真实存在。
+   * CLAIM_TYPE_TO_ITEM_MAP 里写死的很多 ID（如 `item-accident-general`、
+   * `item-medical-general`）只是"桥梁命名约定"，现实 claim-items 数据里
+   * 未必有对应记录。以前直接返回会导致 `getMaterialsByClaimItemId` 打出
+   * "Claim item not found" 警告并返回空，进而拖累下游给不出有效答复。
+   * 这里先校验一次，不存在就直接返回 null，让调用方走 default 兜底。
    */
-  private mapClaimTypeToItemId(claimType: string): string | null {
-    // 直接匹配
-    if (CLAIM_TYPE_TO_ITEM_MAP[claimType]) {
-      return CLAIM_TYPE_TO_ITEM_MAP[claimType];
-    }
+  private async mapClaimTypeToItemId(claimType: string): Promise<string | null> {
+    const candidate =
+      CLAIM_TYPE_TO_ITEM_MAP[claimType] ||
+      CLAIM_TYPE_TO_ITEM_MAP[this.normalizeClaimType(claimType)];
+    if (!candidate) return null;
 
-    // 尝试标准化匹配
-    const normalizedType = this.normalizeClaimType(claimType);
-    if (CLAIM_TYPE_TO_ITEM_MAP[normalizedType]) {
-      return CLAIM_TYPE_TO_ITEM_MAP[normalizedType];
+    try {
+      const items = await this.configSvc.loadClaimItems();
+      const exists = items.some((i: ClaimItemConfig) => i.id === candidate);
+      return exists ? candidate : null;
+    } catch (err) {
+      console.warn('[MaterialConfigService] claim-items load failed:', err);
+      return null;
     }
-
-    return null;
   }
 
   /**

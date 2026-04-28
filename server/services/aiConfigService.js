@@ -738,23 +738,25 @@ If the user mentions an accident location or you need to find a place, use the G
     id: "material_classifier",
     name: "材料分类模板",
     description: "理赔材料自动分类模板。",
-    content: `你是保险理赔材料分类专家。你必须严格从材料目录中选择一个最匹配项，若无法确定再返回 unknown。
+    content: `你是保险理赔材料分类专家。如果请求中附带了图片，请**优先结合图片的视觉内容**（拍摄主体、场景、损伤部位等）判断；仅在有 OCR 文字时再参考文字。你必须严格从材料目录中选择一个最匹配项，若无法确定再返回 unknown。
 
 【OCR 文字】
 {{ocrText}}
 
-【文件名参考】
-{{fileName}}
-
-【材料目录（格式: id|名称|说明摘要）】
+【材料目录（格式: id|名称）】
 {{catalog}}
+
+匹配指引：
+- 车辆外观损伤 / 碰撞事故 / 破碎玻璃 / 现场环境 → 优先匹配"事故现场照片 / 车辆损失 / 定损 / 现场照片"类材料。
+- 语义等价即算匹配（"现场照片"=="事故现场照片"；"病历"=="门诊病历/住院病历"）。
+- 图片水印中的时间、经纬度、地点等元信息不作为分类主题依据。
 
 请仅返回 JSON：{"materialId":"...","materialName":"...","confidence":0到1的小数,"reason":"简短说明"}。
 要求：
 1) materialId 必须来自目录；
-2) 若不确定，返回 unknown/未识别/0；
+2) 若材料目录中确实无语义相关项才返回 unknown/未识别/0；
 3) 禁止输出 markdown。`,
-    requiredVariables: ["ocrText", "fileName", "catalog"],
+    requiredVariables: ["ocrText", "catalog"],
     templateEngine: "jinja2",
     variables: [
       {
@@ -766,19 +768,10 @@ If the user mentions an accident location or you need to find a place, use the G
         source: "document",
       },
       {
-        name: "fileName",
-        type: "string",
-        description: "上传文件的文件名",
-        example: "出院小结_张三_20240315.pdf",
-        required: true,
-        source: "document",
-      },
-      {
         name: "catalog",
         type: "string",
-        description: "材料目录列表（id|名称|说明）",
-        example:
-          "discharge_summary|出院小结|患者出院时的诊断和治疗摘要\ninvoice|医疗发票|医院开具的费用发票",
+        description: "材料目录列表（id|名称）",
+        example: "discharge_summary|出院小结\ninvoice|医疗发票",
         required: true,
         source: "system",
       },

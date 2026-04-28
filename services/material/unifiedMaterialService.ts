@@ -1,8 +1,15 @@
-import type { ClaimsMaterial, ClassificationResult, MaterialAuditConclusion } from '../types';
-import type { StrategyResult, StrategyContext } from './strategies/baseStrategy';
-import { materialClassifier } from './materialClassifier';
-import { materialExtractor } from './materialExtractor';
-import { materialValidator } from './materialValidator';
+import type {
+  ClaimsMaterial,
+  ClassificationResult,
+  MaterialAuditConclusion,
+} from "../../types";
+import type {
+  StrategyResult,
+  StrategyContext,
+} from "./strategies/baseStrategy";
+import { materialClassifier } from "./materialClassifier";
+import { materialExtractor } from "./materialExtractor";
+import { materialValidator } from "./materialValidator";
 
 /**
  * 处理结果
@@ -37,9 +44,13 @@ export class UnifiedMaterialService {
   async classify(
     fileSource: File | Blob | string,
     availableMaterials: ClaimsMaterial[],
-    targetMaterialId?: string
+    targetMaterialId?: string,
   ): Promise<ClassificationResult> {
-    return materialClassifier.classify(fileSource, availableMaterials, targetMaterialId);
+    return materialClassifier.classify(
+      fileSource,
+      availableMaterials,
+      targetMaterialId,
+    );
   }
 
   /**
@@ -52,7 +63,7 @@ export class UnifiedMaterialService {
   async process(
     fileSource: File | Blob | string,
     materialConfig: ClaimsMaterial,
-    context?: Partial<StrategyContext>
+    context?: Partial<StrategyContext>,
   ): Promise<ProcessResult> {
     const startTime = Date.now();
 
@@ -61,7 +72,7 @@ export class UnifiedMaterialService {
       const extraction = await materialExtractor.extract(
         fileSource,
         materialConfig,
-        context
+        context,
       );
 
       if (!extraction.success) {
@@ -71,7 +82,7 @@ export class UnifiedMaterialService {
             materialId: materialConfig.id,
             materialName: materialConfig.name,
             confidence: 0,
-            category: materialConfig.category || 'other',
+            category: materialConfig.category || "other",
             isConfident: false,
           },
           extraction,
@@ -83,7 +94,7 @@ export class UnifiedMaterialService {
       // 步骤2：验证
       const auditConclusion = materialValidator.validate(
         extraction.extractedData || {},
-        materialConfig.extractionConfig
+        materialConfig.extractionConfig,
       );
 
       return {
@@ -92,7 +103,7 @@ export class UnifiedMaterialService {
           materialId: materialConfig.id,
           materialName: materialConfig.name,
           confidence: extraction.confidence || 0,
-          category: materialConfig.category || 'other',
+          category: materialConfig.category || "other",
           isConfident: (extraction.confidence || 0) >= 0.85,
         },
         extraction,
@@ -106,10 +117,10 @@ export class UnifiedMaterialService {
           materialId: materialConfig.id,
           materialName: materialConfig.name,
           confidence: 0,
-          category: materialConfig.category || 'other',
+          category: materialConfig.category || "other",
           isConfident: false,
         },
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
         duration: Date.now() - startTime,
       };
     }
@@ -125,7 +136,7 @@ export class UnifiedMaterialService {
   async batchProcess(
     files: Array<{ file: File | Blob | string; targetMaterialId?: string }>,
     getMaterialConfig: (materialId: string) => ClaimsMaterial | undefined,
-    context?: Partial<StrategyContext>
+    context?: Partial<StrategyContext>,
   ): Promise<ProcessResult[]> {
     const CONCURRENCY = 3; // 最大并发数
     const results: ProcessResult[] = [];
@@ -133,7 +144,7 @@ export class UnifiedMaterialService {
     // 分批处理
     for (let i = 0; i < files.length; i += CONCURRENCY) {
       const batch = files.slice(i, i + CONCURRENCY);
-      
+
       const batchResults = await Promise.all(
         batch.map(async ({ file, targetMaterialId }) => {
           if (targetMaterialId) {
@@ -144,9 +155,9 @@ export class UnifiedMaterialService {
                 success: false,
                 classification: {
                   materialId: targetMaterialId,
-                  materialName: '未知材料',
+                  materialName: "未知材料",
                   confidence: 0,
-                  category: 'other' as any,
+                  category: "other" as any,
                   isConfident: false,
                 },
                 error: `Material config not found for ID: ${targetMaterialId}`,
@@ -159,17 +170,18 @@ export class UnifiedMaterialService {
             return {
               success: false,
               classification: {
-                materialId: '',
-                materialName: '',
+                materialId: "",
+                materialName: "",
                 confidence: 0,
-                category: 'other' as any,
+                category: "other" as any,
                 isConfident: false,
               },
-              error: 'Batch processing requires targetMaterialId. Use classify() first.',
+              error:
+                "Batch processing requires targetMaterialId. Use classify() first.",
               duration: 0,
             };
           }
-        })
+        }),
       );
 
       results.push(...batchResults);

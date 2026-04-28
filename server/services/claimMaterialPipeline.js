@@ -1,33 +1,33 @@
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import OSS from 'ali-oss';
-import { processFile } from './fileProcessor.js';
-import { readData } from '../utils/fileStore.js';
-import { classifyMaterialByRules } from './materialClassificationService.js';
-import { invokeAICapability, generateGeminiContent } from './aiRuntime.js';
-import { renderPromptTemplate } from './aiConfigService.js';
-import { logInteraction } from './aiInteractionLogger.js';
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+import OSS from "ali-oss";
+import { processFile } from "./fileProcessor.js";
+import { readData } from "../utils/fileStore.js";
+import { classifyMaterialByRules } from "./materialClassificationService.js";
+import { invokeAICapability, generateGeminiContent } from "./aiRuntime.js";
+import { renderPromptTemplate } from "./aiConfigService.js";
+import { logInteraction } from "./aiInteractionLogger.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const projectRoot = path.resolve(__dirname, '../..');
+const projectRoot = path.resolve(__dirname, "../..");
 
-function inferMimeType(fileName = '') {
-  const ext = fileName.split('.').pop()?.toLowerCase();
+function inferMimeType(fileName = "") {
+  const ext = fileName.split(".").pop()?.toLowerCase();
   const typeMap = {
-    jpg: 'image/jpeg',
-    jpeg: 'image/jpeg',
-    png: 'image/png',
-    gif: 'image/gif',
-    webp: 'image/webp',
-    pdf: 'application/pdf',
-    doc: 'application/msword',
-    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    xls: 'application/vnd.ms-excel',
-    xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    png: "image/png",
+    gif: "image/gif",
+    webp: "image/webp",
+    pdf: "application/pdf",
+    doc: "application/msword",
+    docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    xls: "application/vnd.ms-excel",
+    xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   };
-  return typeMap[ext] || 'application/octet-stream';
+  return typeMap[ext] || "application/octet-stream";
 }
 
 function getGeminiApiKey() {
@@ -39,13 +39,13 @@ function getGeminiApiKey() {
 }
 
 function createOSSClient() {
-  const region = process.env.ALIYUN_OSS_REGION || 'oss-cn-beijing';
+  const region = process.env.ALIYUN_OSS_REGION || "oss-cn-beijing";
   const bucket = process.env.ALIYUN_OSS_BUCKET;
   const accessKeyId = process.env.ALIYUN_OSS_ACCESS_KEY_ID;
   const accessKeySecret = process.env.ALIYUN_OSS_ACCESS_KEY_SECRET;
 
   if (!bucket || !accessKeyId || !accessKeySecret) {
-    throw new Error('OSS credentials not configured');
+    throw new Error("OSS credentials not configured");
   }
 
   return new OSS({
@@ -57,7 +57,7 @@ function createOSSClient() {
 }
 
 function parseJsonObject(text) {
-  const raw = String(text || '').trim();
+  const raw = String(text || "").trim();
   if (!raw) return {};
 
   try {
@@ -74,7 +74,7 @@ function parseJsonObject(text) {
 }
 
 function normalizeFieldKey(value) {
-  return String(value || '').trim();
+  return String(value || "").trim();
 }
 
 function buildJsonSchemaFromFields(fields = []) {
@@ -89,20 +89,22 @@ function buildJsonSchemaFromFields(fields = []) {
     }
 
     const typeMap = {
-      STRING: 'string',
-      NUMBER: 'number',
-      BOOLEAN: 'boolean',
-      DATE: 'string',
+      STRING: "string",
+      NUMBER: "number",
+      BOOLEAN: "boolean",
+      DATE: "string",
     };
 
-    if (field?.data_type === 'OBJECT') {
-      properties[key] = JSON.parse(buildJsonSchemaFromFields(field.children || []));
+    if (field?.data_type === "OBJECT") {
+      properties[key] = JSON.parse(
+        buildJsonSchemaFromFields(field.children || []),
+      );
       continue;
     }
 
-    if (field?.data_type === 'ARRAY') {
+    if (field?.data_type === "ARRAY") {
       properties[key] = {
-        type: 'array',
+        type: "array",
         description: field?.description || field?.field_label || key,
         items: JSON.parse(buildJsonSchemaFromFields(field.item_fields || [])),
       };
@@ -110,17 +112,17 @@ function buildJsonSchemaFromFields(fields = []) {
     }
 
     properties[key] = {
-      type: typeMap[field?.data_type] || 'string',
+      type: typeMap[field?.data_type] || "string",
       description: field?.description || field?.field_label || key,
     };
 
-    if (field?.data_type === 'DATE') {
-      properties[key].format = 'date';
+    if (field?.data_type === "DATE") {
+      properties[key].format = "date";
     }
   }
 
   const schema = {
-    type: 'object',
+    type: "object",
     properties,
   };
   if (required.length > 0) {
@@ -131,41 +133,43 @@ function buildJsonSchemaFromFields(fields = []) {
 
 function getDefaultValueByDataType(dataType) {
   switch (dataType) {
-    case 'NUMBER':
+    case "NUMBER":
       return 0;
-    case 'BOOLEAN':
+    case "BOOLEAN":
       return false;
-    case 'ARRAY':
+    case "ARRAY":
       return [];
-    case 'OBJECT':
+    case "OBJECT":
       return {};
-    case 'DATE':
-    case 'STRING':
+    case "DATE":
+    case "STRING":
     default:
-      return '';
+      return "";
   }
 }
 
 function normalizeNumberValue(value) {
-  if (typeof value === 'number') {
+  if (typeof value === "number") {
     return Number.isFinite(value) ? value : 0;
   }
-  const raw = String(value || '').replace(/[,\s]/g, '');
+  const raw = String(value || "").replace(/[,\s]/g, "");
   if (!raw) return 0;
   const parsed = Number(raw);
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
 function normalizeScalarByType(value, dataType) {
-  if (value === undefined || value === null || value === '') {
+  if (value === undefined || value === null || value === "") {
     return getDefaultValueByDataType(dataType);
   }
-  if (dataType === 'NUMBER') {
+  if (dataType === "NUMBER") {
     return normalizeNumberValue(value);
   }
-  if (dataType === 'BOOLEAN') {
-    if (typeof value === 'boolean') return value;
-    return ['true', '1', 'yes', 'y'].includes(String(value).trim().toLowerCase());
+  if (dataType === "BOOLEAN") {
+    if (typeof value === "boolean") return value;
+    return ["true", "1", "yes", "y"].includes(
+      String(value).trim().toLowerCase(),
+    );
   }
   return value;
 }
@@ -177,12 +181,15 @@ function coerceDataBySchemaFields(fields = [], source = {}) {
     const key = normalizeFieldKey(field?.field_key);
     if (!key) continue;
 
-    if (field?.data_type === 'OBJECT') {
-      normalized[key] = coerceDataBySchemaFields(field.children || [], source?.[key] || {});
+    if (field?.data_type === "OBJECT") {
+      normalized[key] = coerceDataBySchemaFields(
+        field.children || [],
+        source?.[key] || {},
+      );
       continue;
     }
 
-    if (field?.data_type === 'ARRAY') {
+    if (field?.data_type === "ARRAY") {
       const items = Array.isArray(source?.[key]) ? source[key] : [];
       normalized[key] = items.map((item) =>
         coerceDataBySchemaFields(field.item_fields || [], item || {}),
@@ -202,25 +209,16 @@ function applyInvoiceExtractionAliases(data = {}) {
   const insurancePayment = { ...(next.insurancePayment || {}) };
 
   invoiceInfo.hospitalName =
-    invoiceInfo.hospitalName ||
-    next.hospital_name ||
-    next.hospitalName ||
-    '';
+    invoiceInfo.hospitalName || next.hospital_name || next.hospitalName || "";
   invoiceInfo.invoiceNumber =
     invoiceInfo.invoiceNumber ||
     next.invoice_number ||
     next.invoiceNumber ||
-    '';
+    "";
   invoiceInfo.invoiceCode =
-    invoiceInfo.invoiceCode ||
-    next.invoice_code ||
-    next.invoiceCode ||
-    '';
+    invoiceInfo.invoiceCode || next.invoice_code || next.invoiceCode || "";
   invoiceInfo.issueDate =
-    invoiceInfo.issueDate ||
-    next.invoice_date ||
-    next.invoiceDate ||
-    '';
+    invoiceInfo.issueDate || next.invoice_date || next.invoiceDate || "";
 
   insurancePayment.governmentFundPayment =
     insurancePayment.governmentFundPayment ??
@@ -252,7 +250,7 @@ function normalizeExtractedData(materialConfig, extractedData = {}) {
   }
 
   let source = extractedData || {};
-  if (materialConfig.id === 'mat-20') {
+  if (materialConfig.id === "mat-20") {
     source = applyInvoiceExtractionAliases(source);
   }
 
@@ -260,7 +258,7 @@ function normalizeExtractedData(materialConfig, extractedData = {}) {
 }
 
 function getClaimsMaterialsCatalog() {
-  const materials = readData('claims-materials');
+  const materials = readData("claims-materials");
   return Array.isArray(materials) ? materials : [];
 }
 
@@ -274,7 +272,10 @@ function findMaterialConfig(materialId, materialName) {
   if (materialName) {
     return (
       catalog.find((item) => item.name === materialName) ||
-      catalog.find((item) => materialName.includes(item.name) || item.name.includes(materialName)) ||
+      catalog.find(
+        (item) =>
+          materialName.includes(item.name) || item.name.includes(materialName),
+      ) ||
       null
     );
   }
@@ -293,12 +294,15 @@ function logNonAiClassification({
   logInteraction({
     taskId: context?.taskId || null,
     traceId: context?.traceId || null,
-    sourceApp: 'admin-system',
-    module: 'claimMaterialPipeline.classifyClaimMaterial',
-    runtime: 'server',
-    provider: matchStrategy === 'rules' ? 'rule-engine' : 'preset',
-    model: matchStrategy === 'rules' ? 'material-classification-rules' : 'preferred-material',
-    operation: 'classify_material',
+    sourceApp: "admin-system",
+    module: "claimMaterialPipeline.classifyClaimMaterial",
+    runtime: "server",
+    provider: matchStrategy === "rules" ? "rule-engine" : "preset",
+    model:
+      matchStrategy === "rules"
+        ? "material-classification-rules"
+        : "preferred-material",
+    operation: "classify_material",
     context: {
       ...(context || {}),
       fileName,
@@ -326,83 +330,104 @@ function logNonAiClassification({
 export async function classifyClaimMaterial({
   parseResult,
   fileName,
+  mimeType,
+  buffer,
   preferredMaterialId,
   preferredMaterialName,
   context = {},
 }) {
   const materials = getClaimsMaterialsCatalog();
-  const directConfig = findMaterialConfig(preferredMaterialId, preferredMaterialName);
+  const directConfig = findMaterialConfig(
+    preferredMaterialId,
+    preferredMaterialName,
+  );
   if (directConfig) {
     const classification = {
       materialId: directConfig.id,
       materialName: directConfig.name,
       confidence: 1,
-      source: 'manual',
-      matchStrategy: 'preset',
+      source: "manual",
+      matchStrategy: "preset",
     };
     logNonAiClassification({
       classification,
       context,
       fileName,
       materialCount: materials.length,
-      matchStrategy: 'preset',
+      matchStrategy: "preset",
     });
     return classification;
   }
 
-  if (parseResult?.parseStatus !== 'completed') {
+  if (parseResult?.parseStatus !== "completed") {
     return {
-      materialId: 'unknown',
-      materialName: '未识别',
+      materialId: "unknown",
+      materialName: "未识别",
       confidence: 0,
-      matchStrategy: 'fallback',
-      errorMessage: '文件解析未完成，无法分类',
+      matchStrategy: "fallback",
+      errorMessage: "文件解析未完成，无法分类",
     };
   }
 
   if (materials.length === 0) {
     return {
-      materialId: 'unknown',
-      materialName: '未识别',
+      materialId: "unknown",
+      materialName: "未识别",
       confidence: 0,
-      matchStrategy: 'fallback',
-      errorMessage: '材料目录为空，无法执行分类',
+      matchStrategy: "fallback",
+      errorMessage: "材料目录为空，无法执行分类",
     };
   }
 
-  const ocrText = parseResult.extractedText || '';
-  const ruleResult = classifyMaterialByRules(materials, fileName, ocrText);
+  const ocrText = parseResult.extractedText || "";
+  const ruleResult = classifyMaterialByRules(materials, ocrText);
   if (ruleResult) {
     logNonAiClassification({
       classification: ruleResult,
       context,
       fileName,
       materialCount: materials.length,
-      matchStrategy: 'rules',
+      matchStrategy: "rules",
     });
     return ruleResult;
   }
 
+  const isImage =
+    (mimeType && mimeType.startsWith("image/")) ||
+    /\.(jpe?g|png|webp|heic|heif|bmp|gif)$/i.test(fileName || "");
+  const useVisionFallback = Boolean(isImage && buffer);
+
   try {
     const catalog = materials
-      .map((item) => `${item.id}|${item.name}|${item.description?.slice(0, 80) || ''}`)
-      .join('\n');
-    const prompt = renderPromptTemplate('material_classifier', {
-      ocrText: ocrText.slice(0, 1800),
-      fileName,
+      .map((item) => `${item.id}|${item.name}`)
+      .join("\n");
+    const prompt = renderPromptTemplate("material_classifier", {
+      ocrText: useVisionFallback
+        ? `（已附图片，请**优先依据图片视觉内容**分类。以下 OCR 文字可能只是水印/位置等噪声信息，仅作参考）\n${ocrText.slice(0, 600) || "（无 OCR 文本）"}`
+        : ocrText.slice(0, 1800),
       catalog,
     });
 
+    const parts = [{ text: prompt }];
+    if (useVisionFallback) {
+      parts.unshift({
+        inlineData: {
+          mimeType: mimeType || "image/jpeg",
+          data: buffer.toString("base64"),
+        },
+      });
+    }
+
     const { response } = await invokeAICapability({
-      capabilityId: 'admin.material.classification',
+      capabilityId: "admin.material.classification",
       request: {
-        contents: { parts: [{ text: prompt }] },
+        contents: { parts },
         config: { temperature: 0.1 },
       },
       meta: {
-        sourceApp: 'admin-system',
-        module: 'claimMaterialPipeline.classifyClaimMaterial',
-        operation: 'classify_material',
+        sourceApp: "admin-system",
+        module: "claimMaterialPipeline.classifyClaimMaterial",
+        operation: "classify_material",
         context: {
           ...context,
           fileName,
@@ -411,34 +436,37 @@ export async function classifyClaimMaterial({
       },
     });
 
-    const parsed = parseJsonObject(response.text || '{}');
-    const parsedId = parsed.materialId || 'unknown';
+    const parsed = parseJsonObject(response.text || "{}");
+    const parsedId = parsed.materialId || "unknown";
     const matched = materials.find((item) => item.id === parsedId);
     if (!matched) {
       return {
-        materialId: 'unknown',
-        materialName: '未识别',
+        materialId: "unknown",
+        materialName: "未识别",
         confidence: 0,
-        source: 'ai',
-        matchStrategy: 'fallback',
-        errorMessage: 'AI 未匹配到有效材料目录项',
+        source: "ai",
+        matchStrategy: "fallback",
+        errorMessage: "AI 未匹配到有效材料目录项",
       };
     }
 
     return {
       materialId: matched.id,
-      materialName: matched.name || parsed.materialName || '未识别',
-      confidence: typeof parsed.confidence === 'number' ? Math.max(0, Math.min(1, parsed.confidence)) : 0,
-      source: 'ai',
-      matchStrategy: 'ai',
+      materialName: matched.name || parsed.materialName || "未识别",
+      confidence:
+        typeof parsed.confidence === "number"
+          ? Math.max(0, Math.min(1, parsed.confidence))
+          : 0,
+      source: "ai",
+      matchStrategy: "ai",
     };
   } catch (error) {
     return {
-      materialId: 'unknown',
-      materialName: '分类失败',
+      materialId: "unknown",
+      materialName: "分类失败",
       confidence: 0,
-      source: 'ai',
-      matchStrategy: 'fallback',
+      source: "ai",
+      matchStrategy: "fallback",
       errorMessage: error?.message || String(error),
     };
   }
@@ -454,30 +482,42 @@ export async function loadBufferForClaimMaterial(material) {
     }
     return {
       buffer: Buffer.from(await response.arrayBuffer()),
-      mimeType: response.headers.get('content-type') || material.fileType || inferMimeType(material.fileName),
+      mimeType:
+        response.headers.get("content-type") ||
+        material.fileType ||
+        inferMimeType(material.fileName),
     };
   }
 
-  if (typeof material?.url === 'string' && material.url.startsWith('/uploads/')) {
-    const localFilePath = path.join(projectRoot, material.url.replace(/^\//, ''));
+  if (
+    typeof material?.url === "string" &&
+    material.url.startsWith("/uploads/")
+  ) {
+    const localFilePath = path.join(
+      projectRoot,
+      material.url.replace(/^\//, ""),
+    );
     return {
       buffer: await fs.promises.readFile(localFilePath),
       mimeType: material.fileType || inferMimeType(material.fileName),
     };
   }
 
-  if (typeof material?.url === 'string' && /^https?:\/\//.test(material.url)) {
+  if (typeof material?.url === "string" && /^https?:\/\//.test(material.url)) {
     const response = await fetch(material.url);
     if (!response.ok) {
       throw new Error(`Failed to download file: ${response.status}`);
     }
     return {
       buffer: Buffer.from(await response.arrayBuffer()),
-      mimeType: response.headers.get('content-type') || material.fileType || inferMimeType(material.fileName),
+      mimeType:
+        response.headers.get("content-type") ||
+        material.fileType ||
+        inferMimeType(material.fileName),
     };
   }
 
-  throw new Error('Material file source is not available');
+  throw new Error("Material file source is not available");
 }
 
 export async function extractClaimMaterial({
@@ -489,9 +529,9 @@ export async function extractClaimMaterial({
 }) {
   const fallback = {
     extractedData: {},
-    auditConclusion: '',
+    auditConclusion: "",
     confidence: 0,
-    rawText: '',
+    rawText: "",
   };
 
   if (!materialConfig) {
@@ -505,16 +545,16 @@ export async function extractClaimMaterial({
       : null) ||
     materialConfig?.extractionConfig?.jsonSchema ||
     materialConfig?.jsonSchema ||
-    '{}';
+    "{}";
   const aiAuditPrompt =
     materialConfig?.extractionConfig?.aiAuditPrompt ||
     materialConfig?.aiAuditPrompt ||
-    '请提取图片中的关键信息并进行校验';
+    "请提取图片中的关键信息并进行校验";
   const effectiveMimeType = mimeType || inferMimeType(fileName);
-  const isImage = effectiveMimeType.startsWith('image/');
+  const isImage = effectiveMimeType.startsWith("image/");
   const isPdf =
-    effectiveMimeType === 'application/pdf' ||
-    fileName?.toLowerCase().endsWith('.pdf');
+    effectiveMimeType === "application/pdf" ||
+    fileName?.toLowerCase().endsWith(".pdf");
 
   if (!isImage && !isPdf) {
     return {
@@ -523,7 +563,7 @@ export async function extractClaimMaterial({
     };
   }
 
-  const prompt = `你是一个专业的保险理赔材料审核系统。请对上传的「${materialConfig.name || '理赔材料'}」进行 OCR 识别和审核。
+  const prompt = `你是一个专业的保险理赔材料审核系统。请对上传的「${materialConfig.name || "理赔材料"}」进行 OCR 识别和审核。
 
 ## 提取要求
 请严格根据图片中可见的文字内容提取信息，按以下 JSON Schema 结构提取：
@@ -553,21 +593,26 @@ ${aiAuditPrompt}
   const { response } = await generateGeminiContent({
     apiKey: getGeminiApiKey(),
     request: {
-      model: process.env.GEMINI_VISION_MODEL || 'gemini-2.5-flash',
+      model: process.env.GEMINI_VISION_MODEL || "gemini-2.5-flash",
       contents: [
         {
-          role: 'user',
+          role: "user",
           parts: [
             { text: prompt },
-            { inlineData: { mimeType: effectiveMimeType, data: buffer.toString('base64') } },
+            {
+              inlineData: {
+                mimeType: effectiveMimeType,
+                data: buffer.toString("base64"),
+              },
+            },
           ],
         },
       ],
     },
     meta: {
-      sourceApp: 'admin-system',
-      module: 'claimMaterialPipeline.extractClaimMaterial',
-      operation: 'extract_claim_material',
+      sourceApp: "admin-system",
+      module: "claimMaterialPipeline.extractClaimMaterial",
+      operation: "extract_claim_material",
       context: {
         ...context,
         fileName,
@@ -577,16 +622,16 @@ ${aiAuditPrompt}
     },
   });
 
-  const parsed = parseJsonObject(response.text || '');
+  const parsed = parseJsonObject(response.text || "");
   const normalizedExtractedData = normalizeExtractedData(
     materialConfig,
     parsed.extractedData || {},
   );
   return {
     extractedData: normalizedExtractedData,
-    auditConclusion: parsed.auditConclusion || '识别完成',
-    confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.8,
-    rawText: response.text || '',
+    auditConclusion: parsed.auditConclusion || "识别完成",
+    confidence: typeof parsed.confidence === "number" ? parsed.confidence : 0.8,
+    rawText: response.text || "",
   };
 }
 
@@ -609,19 +654,19 @@ export async function processClaimMaterial({
       options: { extractText: true },
     }));
 
-  if (baseParseResult.parseStatus !== 'completed') {
+  if (baseParseResult.parseStatus !== "completed") {
     return {
       success: false,
       parseResult: baseParseResult,
       classification: {
-        materialId: 'unknown',
-        materialName: '未识别',
+        materialId: "unknown",
+        materialName: "未识别",
         confidence: 0,
-        matchStrategy: 'fallback',
-        errorMessage: baseParseResult.errorMessage || '文件解析失败',
+        matchStrategy: "fallback",
+        errorMessage: baseParseResult.errorMessage || "文件解析失败",
       },
       extractedData: {},
-      auditConclusion: '',
+      auditConclusion: "",
       confidence: 0,
     };
   }
@@ -629,13 +674,20 @@ export async function processClaimMaterial({
   const classification = await classifyClaimMaterial({
     parseResult: baseParseResult,
     fileName,
+    mimeType,
+    buffer,
     preferredMaterialId: preferredMaterialId || materialRecord?.materialId,
-    preferredMaterialName: preferredMaterialName || materialRecord?.materialName || materialRecord?.category,
+    preferredMaterialName:
+      preferredMaterialName ||
+      materialRecord?.materialName ||
+      materialRecord?.category,
     context,
   });
 
   const materialConfig = findMaterialConfig(
-    classification.materialId !== 'unknown' ? classification.materialId : undefined,
+    classification.materialId !== "unknown"
+      ? classification.materialId
+      : undefined,
     classification.materialName,
   );
   const extraction = await extractClaimMaterial({
@@ -660,12 +712,12 @@ export async function processClaimMaterial({
     extractedData:
       Object.keys(extraction.extractedData || {}).length > 0
         ? extraction.extractedData
-        : (baseParseResult.structuredData || {}),
-    auditConclusion: extraction.auditConclusion || '',
+        : baseParseResult.structuredData || {},
+    auditConclusion: extraction.auditConclusion || "",
     confidence:
-      typeof extraction.confidence === 'number'
+      typeof extraction.confidence === "number"
         ? extraction.confidence
-        : (classification.confidence || 0),
-    extractedText: baseParseResult.extractedText || '',
+        : classification.confidence || 0,
+    extractedText: baseParseResult.extractedText || "",
   };
 }

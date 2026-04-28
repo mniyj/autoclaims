@@ -9,7 +9,7 @@ import {
   IntentRecognitionResult,
   IntentEntities,
   ToolResponse,
-  ClaimState
+  ClaimState,
 } from "./types";
 import { executeTool } from "./intentTools";
 import { generateContentViaProxy } from "./services/aiProxyService";
@@ -31,70 +31,93 @@ const INTENT_RECOGNITION_TOOL = {
         type: Type.STRING,
         enum: [
           // 报案类
-          "REPORT_NEW_CLAIM", "RESUME_CLAIM_REPORT", "MODIFY_CLAIM_REPORT", "CANCEL_CLAIM",
+          "REPORT_NEW_CLAIM",
+          "RESUME_CLAIM_REPORT",
+          "MODIFY_CLAIM_REPORT",
+          "CANCEL_CLAIM",
           // 材料类
-          "UPLOAD_DOCUMENT", "SUPPLEMENT_DOCUMENT", "VIEW_UPLOADED_DOCUMENTS", "REPLACE_DOCUMENT",
+          "UPLOAD_DOCUMENT",
+          "SUPPLEMENT_DOCUMENT",
+          "VIEW_UPLOADED_DOCUMENTS",
+          "REPLACE_DOCUMENT",
           // 查询类
-          "QUERY_PROGRESS", "QUERY_MATERIALS_LIST", "QUERY_MISSING_MATERIALS", "QUERY_PREMIUM_IMPACT",
-          "QUERY_SETTLEMENT_AMOUNT", "QUERY_SETTLEMENT_DETAIL", "QUERY_POLICY_INFO",
-          "QUERY_CLAIM_HISTORY", "QUERY_PAYMENT_STATUS",
+          "QUERY_PROGRESS",
+          "QUERY_MATERIALS_LIST",
+          "QUERY_MISSING_MATERIALS",
+          "QUERY_PREMIUM_IMPACT",
+          "QUERY_SETTLEMENT_AMOUNT",
+          "QUERY_SETTLEMENT_DETAIL",
+          "QUERY_POLICY_INFO",
+          "QUERY_CLAIM_HISTORY",
+          "QUERY_PAYMENT_STATUS",
           // 协助类
-          "GUIDE_CLAIM_PROCESS", "GUIDE_DOCUMENT_PHOTO", "QUERY_CLAIM_TIMELINE",
-          "QUERY_COVERAGE", "QUERY_FAQ",
+          "GUIDE_CLAIM_PROCESS",
+          "GUIDE_DOCUMENT_PHOTO",
+          "QUERY_CLAIM_TIMELINE",
+          "QUERY_COVERAGE",
+          "QUERY_FAQ",
           // 沟通类
-          "TRANSFER_TO_AGENT", "FILE_COMPLAINT", "EXPEDITE_CLAIM", "LEAVE_MESSAGE",
+          "TRANSFER_TO_AGENT",
+          "FILE_COMPLAINT",
+          "EXPEDITE_CLAIM",
+          "LEAVE_MESSAGE",
           // 操作类
-          "UPDATE_BANK_INFO", "CONFIRM_SETTLEMENT", "REJECT_SETTLEMENT", "SIGN_AGREEMENT",
+          "UPDATE_BANK_INFO",
+          "CONFIRM_SETTLEMENT",
+          "REJECT_SETTLEMENT",
+          "SIGN_AGREEMENT",
           // 兜底类
-          "GENERAL_CHAT", "UNCLEAR_INTENT", "OUT_OF_SCOPE"
+          "GENERAL_CHAT",
+          "UNCLEAR_INTENT",
+          "OUT_OF_SCOPE",
         ],
-        description: "识别出的用户意图类型"
+        description: "识别出的用户意图类型",
       },
       confidence: {
         type: Type.NUMBER,
-        description: "意图识别的置信度 (0-1)"
+        description: "意图识别的置信度 (0-1)",
       },
       entities: {
         type: Type.OBJECT,
         properties: {
           claimId: {
             type: Type.STRING,
-            description: "案件号/理赔号，如 CLM123456"
+            description: "案件号/理赔号，如 CLM123456",
           },
           policyId: {
             type: Type.STRING,
-            description: "保单号"
+            description: "保单号",
           },
           claimType: {
             type: Type.STRING,
-            description: "理赔类型：医疗/车险/意外险/重疾等"
+            description: "理赔类型：医疗/车险/意外险/重疾等",
           },
           productCode: {
             type: Type.STRING,
-            description: "产品代码"
+            description: "产品代码",
           },
           documentType: {
             type: Type.STRING,
-            description: "材料类型：身份证/发票/病历等"
+            description: "材料类型：身份证/发票/病历等",
           },
           amount: {
             type: Type.NUMBER,
-            description: "金额数值"
+            description: "金额数值",
           },
           reason: {
             type: Type.STRING,
-            description: "用户描述的原因或补充说明"
-          }
+            description: "用户描述的原因或补充说明",
+          },
         },
-        description: "从用户输入中提取的实体参数"
+        description: "从用户输入中提取的实体参数",
       },
       reasoning: {
         type: Type.STRING,
-        description: "意图识别的推理过程简述"
-      }
+        description: "意图识别的推理过程简述",
+      },
     },
-    required: ["intent", "confidence", "entities"]
-  }
+    required: ["intent", "confidence", "entities"],
+  },
 };
 
 /**
@@ -252,6 +275,38 @@ const INTENT_RECOGNITION_PROMPT = `你是保险理赔客服智能助手，专门
 使用 recognize_intent 工具返回识别结果。`;
 
 /**
+ * 为低置信度或模糊意图生成澄清问题与候选选项
+ * 使用轻量规则模板，避免额外 AI 调用
+ */
+export function buildClarificationQuestion(
+  intent: IntentType,
+  entities: IntentEntities,
+  originalText: string,
+): { question: string; options: string[] } {
+  const trimmed = originalText.trim();
+  const shortRef = trimmed.length > 20 ? `${trimmed.slice(0, 20)}…` : trimmed;
+
+  if (intent === IntentType.UNCLEAR_INTENT || !intent) {
+    return {
+      question: `您说的"${shortRef}"我还没完全理解，方便告诉我您想做以下哪件事吗？`,
+      options: [
+        "查询我的理赔进度",
+        "上传/补充材料",
+        "咨询理赔材料清单",
+        "转人工客服",
+      ],
+    };
+  }
+
+  // 针对有意图但实体模糊的情况给出更聚焦的选项
+  const label = getIntentLabel(intent);
+  return {
+    question: `我大致理解您想${label}，不过信息还不太完整，能再补充一下吗？`,
+    options: ["是的，请继续", "换成其他问题", "转人工客服"],
+  };
+}
+
+/**
  * 识别用户意图
  * @param userInput 用户输入文本
  * @param conversationHistory 对话历史
@@ -261,18 +316,21 @@ const INTENT_RECOGNITION_PROMPT = `你是保险理赔客服智能助手，专门
 export async function recognizeIntent(
   userInput: string,
   conversationHistory: { role: string; content: string }[],
-  claimState: ClaimState
+  claimState: ClaimState,
 ): Promise<IntentRecognitionResult> {
   try {
     const { response } = await generateContentViaProxy({
-      capabilityId: 'smartclaim.intent',
-      promptTemplateId: 'smartclaim_intent_recognition',
+      capabilityId: "smartclaim.intent",
+      promptTemplateId: "smartclaim_intent_recognition",
       templateVariables: {
         claimStatus: claimState.status,
         historicalClaimCount: claimState.historicalClaims?.length || 0,
-        recentClaimId: claimState.historicalClaims?.[0]?.id || '无',
+        recentClaimId: claimState.historicalClaims?.[0]?.id || "无",
         documentCount: claimState.documents?.length || 0,
-        conversationHistory: conversationHistory.slice(-5).map(m => `${m.role}: ${m.content}`).join('\n'),
+        conversationHistory: conversationHistory
+          .slice(-5)
+          .map((m) => `${m.role}: ${m.content}`)
+          .join("\n"),
         userInput,
       },
       config: {
@@ -280,11 +338,11 @@ export async function recognizeIntent(
         tools: [{ functionDeclarations: [INTENT_RECOGNITION_TOOL] }],
         toolConfig: {
           functionCallingConfig: {
-            mode: "ANY" as any
-          }
-        }
+            mode: "ANY" as any,
+          },
+        },
       },
-      operation: 'intent_recognition',
+      operation: "intent_recognition",
       context: {
         claimStatus: claimState.status,
         historyCount: conversationHistory.length,
@@ -292,25 +350,43 @@ export async function recognizeIntent(
     });
 
     // 解析工具调用结果
-    const functionCall = response.candidates?.[0]?.content?.parts?.[0]?.functionCall;
-    
+    const functionCall =
+      response.candidates?.[0]?.content?.parts?.[0]?.functionCall;
+
     if (functionCall && functionCall.name === "recognize_intent") {
       const args = functionCall.args as any;
-      
-      // 如果置信度低于阈值，降级为 GENERAL_CHAT
-      let finalIntent = args.intent as IntentType;
-      let finalConfidence = args.confidence as number;
-      
-      if (finalConfidence < CONFIDENCE_THRESHOLD) {
-        finalIntent = IntentType.GENERAL_CHAT;
-        finalConfidence = 1 - finalConfidence; // 反向置信度
+
+      const finalIntent = args.intent as IntentType;
+      const finalConfidence = args.confidence as number;
+      const entities = (args.entities as IntentEntities) || {};
+
+      // 低置信度或模糊意图 → 标记为需澄清，由上层生成澄清问题
+      const needsClarification =
+        finalConfidence < CONFIDENCE_THRESHOLD ||
+        finalIntent === IntentType.UNCLEAR_INTENT;
+
+      if (needsClarification) {
+        const { question, options } = buildClarificationQuestion(
+          finalIntent,
+          entities,
+          userInput,
+        );
+        return {
+          intent: finalIntent,
+          confidence: finalConfidence,
+          entities,
+          originalText: userInput,
+          requiresClarification: true,
+          clarificationQuestion: question,
+          clarificationOptions: options,
+        };
       }
 
       return {
         intent: finalIntent,
         confidence: finalConfidence,
-        entities: args.entities as IntentEntities || {},
-        originalText: userInput
+        entities,
+        originalText: userInput,
       };
     }
 
@@ -319,9 +395,8 @@ export async function recognizeIntent(
       intent: IntentType.GENERAL_CHAT,
       confidence: 0.5,
       entities: {},
-      originalText: userInput
+      originalText: userInput,
     };
-
   } catch (error) {
     console.error("[Intent Recognition Error]", error);
     // 出错时返回 GENERAL_CHAT，确保不阻断对话
@@ -329,7 +404,7 @@ export async function recognizeIntent(
       intent: IntentType.GENERAL_CHAT,
       confidence: 0,
       entities: {},
-      originalText: userInput
+      originalText: userInput,
     };
   }
 }
@@ -342,7 +417,7 @@ export async function recognizeIntent(
  */
 export async function executeIntentTool(
   intentResult: IntentRecognitionResult,
-  claimState: ClaimState
+  claimState: ClaimState,
 ): Promise<ToolResponse> {
   return executeTool(intentResult.intent, intentResult.entities, claimState);
 }
@@ -357,20 +432,24 @@ export async function executeIntentTool(
 export async function processUserIntent(
   userInput: string,
   conversationHistory: { role: string; content: string }[],
-  claimState: ClaimState
+  claimState: ClaimState,
 ): Promise<{
   intent: IntentRecognitionResult;
   toolResponse: ToolResponse;
 }> {
   // 1. 识别意图
-  const intentResult = await recognizeIntent(userInput, conversationHistory, claimState);
-  
+  const intentResult = await recognizeIntent(
+    userInput,
+    conversationHistory,
+    claimState,
+  );
+
   // 2. 执行对应工具
   const toolResponse = await executeIntentTool(intentResult, claimState);
-  
+
   return {
     intent: intentResult,
-    toolResponse
+    toolResponse,
   };
 }
 
@@ -386,52 +465,94 @@ export function quickIntentDetection(userInput: string): IntentType | null {
   // 意图关键词映射（按优先级排序，越具体的越靠前）
   const intentKeywords: [IntentType, string[]][] = [
     // 沟通类（高优先级，用户明确意愿）
-    [IntentType.TRANSFER_TO_AGENT, ['转人工', '人工客服', '找客服', '真人']],
-    [IntentType.FILE_COMPLAINT, ['投诉', '申诉', '不满意', '为什么拒赔']],
-    [IntentType.EXPEDITE_CLAIM, ['催一下', '加急', '太慢了']],
+    [IntentType.TRANSFER_TO_AGENT, ["转人工", "人工客服", "找客服", "真人"]],
+    [IntentType.FILE_COMPLAINT, ["投诉", "申诉", "不满意", "为什么拒赔"]],
+    [IntentType.EXPEDITE_CLAIM, ["催一下", "加急", "太慢了"]],
 
     // 报案类
-    [IntentType.CANCEL_CLAIM, ['撤销报案', '取消报案', '不赔了', '不理赔了']],
-    [IntentType.RESUME_CLAIM_REPORT, ['继续报案', '没填完', '接着填', '恢复报案']],
-    [IntentType.MODIFY_CLAIM_REPORT, ['修改报案', '填错了', '更正报案']],
-    [IntentType.REPORT_NEW_CLAIM, ['我要报案', '我要理赔', '出险', '发生事故', '发生了事故']],
+    [IntentType.CANCEL_CLAIM, ["撤销报案", "取消报案", "不赔了", "不理赔了"]],
+    [
+      IntentType.RESUME_CLAIM_REPORT,
+      ["继续报案", "没填完", "接着填", "恢复报案"],
+    ],
+    [IntentType.MODIFY_CLAIM_REPORT, ["修改报案", "填错了", "更正报案"]],
+    [
+      IntentType.REPORT_NEW_CLAIM,
+      ["我要报案", "我要理赔", "出险", "发生事故", "发生了事故"],
+    ],
 
     // 操作类
-    [IntentType.CONFIRM_SETTLEMENT, ['同意赔付', '确认方案', '接受方案', '确认赔付']],
-    [IntentType.REJECT_SETTLEMENT, ['不接受', '不同意', '金额太少', '有异议']],
-    [IntentType.UPDATE_BANK_INFO, ['银行卡', '收款账户', '修改账号', '换卡']],
-    [IntentType.SIGN_AGREEMENT, ['签字', '签署', '电子签名']],
+    [
+      IntentType.CONFIRM_SETTLEMENT,
+      ["同意赔付", "确认方案", "接受方案", "确认赔付"],
+    ],
+    [IntentType.REJECT_SETTLEMENT, ["不接受", "不同意", "金额太少", "有异议"]],
+    [IntentType.UPDATE_BANK_INFO, ["银行卡", "收款账户", "修改账号", "换卡"]],
+    [IntentType.SIGN_AGREEMENT, ["签字", "签署", "电子签名"]],
 
     // 材料类（具体的先匹配）
-    [IntentType.REPLACE_DOCUMENT, ['重新上传', '换一张', '替换', '拍错了']],
-    [IntentType.SUPPLEMENT_DOCUMENT, ['补充材料', '补交', '补传', '再传一个']],
-    [IntentType.VIEW_UPLOADED_DOCUMENTS, ['已上传', '传过什么', '看材料', '上传记录']],
-    [IntentType.UPLOAD_DOCUMENT, ['上传材料', '拍照上传', '提交材料', '传资料']],
+    [IntentType.REPLACE_DOCUMENT, ["重新上传", "换一张", "替换", "拍错了"]],
+    [IntentType.SUPPLEMENT_DOCUMENT, ["补充材料", "补交", "补传", "再传一个"]],
+    [
+      IntentType.VIEW_UPLOADED_DOCUMENTS,
+      ["已上传", "传过什么", "看材料", "上传记录"],
+    ],
+    [
+      IntentType.UPLOAD_DOCUMENT,
+      ["上传材料", "拍照上传", "提交材料", "传资料"],
+    ],
 
     // 查询类
-    [IntentType.QUERY_MISSING_MATERIALS, ['还缺', '还差', '缺什么', '没交的', '遗漏', '缺少']],
-    [IntentType.QUERY_SETTLEMENT_DETAIL, ['赔付明细', '怎么算的', '计算过程', '扣了什么']],
-    [IntentType.QUERY_SETTLEMENT_AMOUNT, ['赔多少', '赔付金额', '能赔', '预估赔偿']],
-    [IntentType.QUERY_PAYMENT_STATUS, ['到账', '打款', '钱到了', '什么时候到']],
-    [IntentType.QUERY_CLAIM_HISTORY, ['历史理赔', '之前的案件', '赔过几次', '理赔记录']],
-    [IntentType.QUERY_POLICY_INFO, ['保单', '保什么', '保障范围', '保额']],
-    [IntentType.QUERY_PREMIUM_IMPACT, ['保费', '涨价', '上浮', 'ncd', '折扣', '无赔款']],
-    [IntentType.QUERY_MATERIALS_LIST, ['需要什么', '材料清单', '准备什么', '要交什么']],
-    [IntentType.QUERY_PROGRESS, ['进度', '状态', '进展', '到哪', '审核了吗']],
+    [
+      IntentType.QUERY_MISSING_MATERIALS,
+      ["还缺", "还差", "缺什么", "没交的", "遗漏", "缺少"],
+    ],
+    [
+      IntentType.QUERY_SETTLEMENT_DETAIL,
+      ["赔付明细", "怎么算的", "计算过程", "扣了什么"],
+    ],
+    [
+      IntentType.QUERY_SETTLEMENT_AMOUNT,
+      ["赔多少", "赔付金额", "能赔", "预估赔偿"],
+    ],
+    [IntentType.QUERY_PAYMENT_STATUS, ["到账", "打款", "钱到了", "什么时候到"]],
+    [
+      IntentType.QUERY_CLAIM_HISTORY,
+      ["历史理赔", "之前的案件", "赔过几次", "理赔记录"],
+    ],
+    [IntentType.QUERY_POLICY_INFO, ["保单", "保什么", "保障范围", "保额"]],
+    [
+      IntentType.QUERY_PREMIUM_IMPACT,
+      ["保费", "涨价", "上浮", "ncd", "折扣", "无赔款"],
+    ],
+    [
+      IntentType.QUERY_MATERIALS_LIST,
+      ["需要什么", "材料清单", "准备什么", "要交什么"],
+    ],
+    [IntentType.QUERY_PROGRESS, ["进度", "状态", "进展", "到哪", "审核了吗"]],
 
     // 协助类
-    [IntentType.GUIDE_DOCUMENT_PHOTO, ['怎么拍', '拍照要求', '拍摄指南', '示例照片']],
-    [IntentType.GUIDE_CLAIM_PROCESS, ['怎么理赔', '理赔流程', '怎么操作', '第一次理赔']],
-    [IntentType.QUERY_CLAIM_TIMELINE, ['要多久', '几天能赔', '多长时间', '时效']],
-    [IntentType.QUERY_COVERAGE, ['赔不赔', '能不能赔', '免赔额']],
-    [IntentType.QUERY_FAQ, ['常见问题', 'faq', '注意事项', '注意什么']],
+    [
+      IntentType.GUIDE_DOCUMENT_PHOTO,
+      ["怎么拍", "拍照要求", "拍摄指南", "示例照片"],
+    ],
+    [
+      IntentType.GUIDE_CLAIM_PROCESS,
+      ["怎么理赔", "理赔流程", "怎么操作", "第一次理赔"],
+    ],
+    [
+      IntentType.QUERY_CLAIM_TIMELINE,
+      ["要多久", "几天能赔", "多长时间", "时效"],
+    ],
+    [IntentType.QUERY_COVERAGE, ["赔不赔", "能不能赔", "免赔额"]],
+    [IntentType.QUERY_FAQ, ["常见问题", "faq", "注意事项", "注意什么"]],
 
     // 留言（较宽泛，放后面）
-    [IntentType.LEAVE_MESSAGE, ['留言', '备注', '告诉理赔员']],
+    [IntentType.LEAVE_MESSAGE, ["留言", "备注", "告诉理赔员"]],
   ];
 
   for (const [intent, keywords] of intentKeywords) {
-    if (keywords.some(k => text.includes(k))) {
+    if (keywords.some((k) => text.includes(k))) {
       return intent;
     }
   }

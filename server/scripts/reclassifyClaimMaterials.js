@@ -1,11 +1,16 @@
 import { readData, writeData } from "../utils/fileStore.js";
-import { classifyMaterialByRules, getMaterialCatalog } from "../services/materialClassificationService.js";
+import {
+  classifyMaterialByRules,
+  getMaterialCatalog,
+} from "../services/materialClassificationService.js";
 
 const claimCaseId = process.argv[2];
 const reclassifyAll = process.argv.includes("--all");
 
 if (!claimCaseId) {
-  console.error("Usage: node server/scripts/reclassifyClaimMaterials.js <claimCaseId> [--all]");
+  console.error(
+    "Usage: node server/scripts/reclassifyClaimMaterials.js <claimCaseId> [--all]",
+  );
   process.exit(1);
 }
 
@@ -30,8 +35,7 @@ const updated = claimMaterials.map((item) => {
 
   const classification = classifyMaterialByRules(
     catalog,
-    item.fileName || "",
-    item.ocrText || item.extractedText || ""
+    item.ocrText || item.extractedText || "",
   );
 
   if (!classification) {
@@ -76,6 +80,6 @@ console.log(
       mode: reclassifyAll ? "all" : "unknown_only",
     },
     null,
-    2
-  )
+    2,
+  ),
 );

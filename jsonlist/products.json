@@ -784,5 +784,210 @@
     },
     "intakeConfigUpdatedAt": "2026-04-04T15:40:21.096Z",
     "intakeConfigOperator": "admin"
+  },
+  {
+    "productCode": "CAR-COMP-2024-A",
+    "regulatoryName": "机动车综合商业保险（2024版）",
+    "marketingName": "全保无忧·综合车险",
+    "companyName": "平安财险",
+    "version": "1.0",
+    "salesRegions": "全国（不含港澳台）",
+    "effectiveDate": "2024-01-01",
+    "discontinuationDate": "2028-12-31",
+    "status": "生效",
+    "primaryCategory": "车险",
+    "secondaryCategory": "商业险",
+    "primaryCategoryCode": "G",
+    "secondaryCategoryCode": "G02",
+    "racewayId": "G0201",
+    "racewayName": "第三者责任险",
+    "clauseType": "主险",
+    "clausesCode": ["CAR-MAIN-2024-A"],
+    "operator": "张三",
+    "supportsOnlineClaim": true,
+    "isOnline": true,
+    "underwritingAge": "不限（新车0-3年直接承保，3年以上须查验）",
+    "coveragePeriod": "1年",
+    "waitingPeriod": "无等待期，即时生效",
+    "tags": ["车险", "综合保障", "平安推荐"],
+    "tagStyles": {
+      "车险": "gold",
+      "综合保障": "green",
+      "平安推荐": "gray"
+    },
+    "promoTag": "新车必选",
+    "cardMetric1Label": "三者险保额",
+    "cardMetric1Value": "最高300万",
+    "cardMetric2Label": "车损险",
+    "cardMetric2Value": "按实际价值",
+    "cardMetric3Label": "保障期限",
+    "cardMetric3Value": "1年",
+    "productSummary": "全面覆盖交强险、第三者责任险、车辆损失险、车上人员责任险，一单搞定所有驾车风险，支持在线报案。",
+    "productIntroduction": "全保无忧·综合车险是平安财险针对个人车主推出的一站式车险产品，包含法定交强险及四大商业险，保障全面、理赔高效。",
+    "productAdvantages": "1. 三者险保额最高300万，充分保障高价值车的理赔需求；2. 旗舰版含不计免赔，理赔无折扣；3. 7×24小时在线报案，专属查勘员48小时上门；4. 支持官网、APP、微信小程序多渠道报案。",
+    "precautions": "1. 交强险为法定强制险，投保商业险须同时投保交强险；2. 醉酒、无证驾车等违法行为造成的损失不予赔偿；3. 车辆改装须书面告知保险公司，未告知的改装件损失不赔；4. 自然磨损、机械故障不属于车险赔偿范围。",
+    "crowd": "所有持有合法驾驶证的机动车车主，适用于私家车、营业性车辆（须告知）。",
+    "coverageDetails": [
+      {
+        "mandatory": true,
+        "id": "car-prod-cov-1",
+        "name": "交强险",
+        "amount": "法定限额",
+        "details": "死亡伤残18万，医疗费用1.8万，财产损失2000元，法定强制配置。"
+      },
+      {
+        "mandatory": true,
+        "id": "car-prod-cov-2",
+        "name": "第三者责任险",
+        "amount": "50万/100万/300万（可选）",
+        "details": "赔偿因驾驶被保险车辆造成第三者人身伤亡及财产损失，依法应由被保险人承担的赔偿责任。"
+      },
+      {
+        "mandatory": true,
+        "id": "car-prod-cov-3",
+        "name": "车辆损失险",
+        "amount": "按实际车辆价值",
+        "details": "赔偿因碰撞、倾覆、自燃、洪水等原因造成的被保险车辆直接损毁。"
+      },
+      {
+        "mandatory": false,
+        "id": "car-prod-cov-4",
+        "name": "车上人员责任险",
+        "amount": "每座10万/20万（可选）",
+        "details": "赔偿因交通事故造成被保险车辆上乘坐人员的人身伤亡损失。"
+      }
+    ],
+    "intakeConfig": {
+      "fields": [
+        {
+          "field_id": "accident_date",
+          "label": "事故日期",
+          "type": "date",
+          "required": true,
+          "placeholder": "请选择事故发生日期",
+          "validation": {
+            "rule": "lte_today_and_gte_policy_start",
+            "error_msg": "不晚于今天且不早于保单生效日"
+          }
+        },
+        {
+          "field_id": "accident_location",
+          "label": "事故地点",
+          "type": "text",
+          "required": true,
+          "placeholder": "请输入事故发生的详细地点"
+        },
+        {
+          "field_id": "accident_description",
+          "label": "事故经过",
+          "type": "textarea",
+          "required": true,
+          "placeholder": "请描述事故经过，包括：发生时间、经过、对方车辆情况、人员伤亡等",
+          "validation": {
+            "rule": "max_length_500",
+            "error_msg": "事故描述不能超过500字"
+          }
+        },
+        {
+          "field_id": "vehicle_plate",
+          "label": "出险车牌号",
+          "type": "text",
+          "required": true,
+          "placeholder": "请输入出险车辆车牌号（如：京A·88888）"
+        },
+        {
+          "field_id": "damage_type",
+          "label": "损失类型",
+          "type": "multi_select",
+          "required": true,
+          "placeholder": "请选择损失类型（可多选）",
+          "options": [
+            "车辆损失",
+            "第三者财产损失",
+            "人员伤亡",
+            "车上人员伤亡"
+          ]
+        },
+        {
+          "field_id": "accident_reason",
+          "label": "事故原因",
+          "type": "enum",
+          "required": true,
+          "placeholder": "请选择事故原因",
+          "data_source": "accident_cause_db",
+          "options": [
+            "碰撞事故",
+            "单方事故",
+            "自然灾害",
+            "自燃",
+            "盗抢",
+            "其他"
+          ]
+        },
+        {
+          "field_id": "has_police_report",
+          "label": "是否已向交警报案",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "field_id": "claim_item",
+          "label": "申请理赔项目",
+          "type": "multi_select",
+          "required": true,
+          "placeholder": "请选择申请理赔项目",
+          "options": [
+            "交强险理赔",
+            "第三者责任险理赔",
+            "车辆损失险理赔",
+            "车上人员责任险理赔"
+          ]
+        },
+        {
+          "field_id": "claim_amount",
+          "label": "预估损失金额（元）",
+          "type": "number",
+          "required": true,
+          "placeholder": "请输入预估损失金额",
+          "validation": {
+            "rule": "gte_0_and_decimal_2",
+            "error_msg": "金额必须大于等于0，最多保留两位小数"
+          }
+        }
+      ],
+      "voice_input": {
+        "enabled": true,
+        "mode": "realtime_or_record"
+      },
+      "claimMaterials": {
+        "extraMaterialIds": [
+          "mat-1",
+          "mat-3",
+          "mat-4",
+          "mat-8"
+        ],
+        "materialOverrides": {
+          "mat-1": {
+            "selected": true,
+            "required": true
+          },
+          "mat-3": {
+            "selected": true,
+            "required": true
+          },
+          "mat-4": {
+            "selected": true,
+            "required": true
+          },
+          "mat-8": {
+            "selected": true,
+            "required": false
+          }
+        }
+      },
+      "accidentCauses": []
+    },
+    "intakeConfigUpdatedAt": "2026-04-14T10:00:00.000Z",
+    "intakeConfigOperator": "admin"
   }
 ]

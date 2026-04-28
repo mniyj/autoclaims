@@ -1,6 +1,6 @@
 /**
  * 配置服务 - 从主项目 jsonlist 目录加载配置
- * 
+ *
  * 加载的配置文件：
  * - claims-materials.json: 材料定义
  * - claim-items.json: 理赔项目-材料映射
@@ -32,7 +32,7 @@ export interface ClaimItemConfig {
 // 计算公式变量定义
 export interface FormulaVariable {
   source: string;
-  type: 'number' | 'string' | 'boolean';
+  type: "number" | "string" | "boolean";
   label: string;
 }
 
@@ -90,41 +90,50 @@ export interface ProductClaimConfig {
  */
 export class ConfigService {
   private cache = new Map<string, any>();
-  private basePath = '/api/config'; // API 基础路径
+  private basePath = "/api"; // API 基础路径（admin 端 resource 直接挂在 /api/:resource 下）
 
   /**
    * 加载材料配置
    */
   async loadMaterials(): Promise<MaterialConfig[]> {
-    return this.loadCached<MaterialConfig[]>('materials', 'claims-materials');
+    return this.loadCached<MaterialConfig[]>("materials", "claims-materials");
   }
 
   /**
    * 加载理赔项目配置
    */
   async loadClaimItems(): Promise<ClaimItemConfig[]> {
-    return this.loadCached<ClaimItemConfig[]>('claimItems', 'claim-items');
+    return this.loadCached<ClaimItemConfig[]>("claimItems", "claim-items");
   }
 
   /**
    * 加载计算公式配置
    */
   async loadFormulas(): Promise<Record<string, FormulaConfig>> {
-    return this.loadCached<Record<string, FormulaConfig>>('formulas', 'calculation-formulas');
+    return this.loadCached<Record<string, FormulaConfig>>(
+      "formulas",
+      "calculation-formulas",
+    );
   }
 
   /**
    * 加载险种类型配置
    */
   async loadInsuranceTypes(): Promise<InsuranceTypeConfig[]> {
-    return this.loadCached<InsuranceTypeConfig[]>('insuranceTypes', 'insurance-types');
+    return this.loadCached<InsuranceTypeConfig[]>(
+      "insuranceTypes",
+      "insurance-types",
+    );
   }
 
   /**
    * 加载产品理赔配置
    */
   async loadProductClaimConfigs(): Promise<ProductClaimConfig[]> {
-    return this.loadCached<ProductClaimConfig[]>('productClaims', 'product-claim-configs');
+    return this.loadCached<ProductClaimConfig[]>(
+      "productClaims",
+      "product-claim-configs",
+    );
   }
 
   /**
@@ -132,7 +141,7 @@ export class ConfigService {
    */
   async getMaterialById(id: string): Promise<MaterialConfig | null> {
     const materials = await this.loadMaterials();
-    return materials.find(m => m.id === id) || null;
+    return materials.find((m) => m.id === id) || null;
   }
 
   /**
@@ -140,15 +149,17 @@ export class ConfigService {
    */
   async getClaimItemById(id: string): Promise<ClaimItemConfig | null> {
     const items = await this.loadClaimItems();
-    return items.find(i => i.id === id) || null;
+    return items.find((i) => i.id === id) || null;
   }
 
   /**
    * 根据名称获取险种类型配置
    */
-  async getInsuranceTypeByName(name: string): Promise<InsuranceTypeConfig | null> {
+  async getInsuranceTypeByName(
+    name: string,
+  ): Promise<InsuranceTypeConfig | null> {
     const types = await this.loadInsuranceTypes();
-    return types.find(t => t.name === name || t.code === name) || null;
+    return types.find((t) => t.name === name || t.code === name) || null;
   }
 
   /**
@@ -156,7 +167,7 @@ export class ConfigService {
    */
   clearCache(): void {
     this.cache.clear();
-    console.log('[ConfigService] Cache cleared');
+    console.log("[ConfigService] Cache cleared");
   }
 
   /**
@@ -165,14 +176,17 @@ export class ConfigService {
   getCacheStatus(): { size: number; keys: string[] } {
     return {
       size: this.cache.size,
-      keys: Array.from(this.cache.keys())
+      keys: Array.from(this.cache.keys()),
     };
   }
 
   /**
    * 带缓存的加载方法
    */
-  private async loadCached<T>(cacheKey: string, configName: string): Promise<T> {
+  private async loadCached<T>(
+    cacheKey: string,
+    configName: string,
+  ): Promise<T> {
     // 检查缓存
     if (this.cache.has(cacheKey)) {
       console.log(`[ConfigService] Cache hit: ${cacheKey}`);
@@ -180,7 +194,7 @@ export class ConfigService {
     }
 
     console.log(`[ConfigService] Loading: ${configName}`);
-    
+
     try {
       // 尝试从 API 加载
       const data = await this.fetchFromApi<T>(configName);
@@ -188,8 +202,11 @@ export class ConfigService {
       console.log(`[ConfigService] Loaded and cached: ${cacheKey}`);
       return data;
     } catch (error) {
-      console.warn(`[ConfigService] Failed to load from API: ${configName}`, error);
-      
+      console.warn(
+        `[ConfigService] Failed to load from API: ${configName}`,
+        error,
+      );
+
       // 尝试从本地文件加载（开发环境）
       try {
         const data = await this.fetchFromFile<T>(configName);
@@ -197,7 +214,10 @@ export class ConfigService {
         console.log(`[ConfigService] Loaded from file: ${cacheKey}`);
         return data;
       } catch (fileError) {
-        console.error(`[ConfigService] Failed to load config: ${configName}`, fileError);
+        console.error(
+          `[ConfigService] Failed to load config: ${configName}`,
+          fileError,
+        );
         return [] as unknown as T;
       }
     }
@@ -208,11 +228,11 @@ export class ConfigService {
    */
   private async fetchFromApi<T>(configName: string): Promise<T> {
     const response = await fetch(`${this.basePath}/${configName}`);
-    
+
     if (!response.ok) {
       throw new Error(`API error: ${response.status} ${response.statusText}`);
     }
-    
+
     return response.json();
   }
 
@@ -222,7 +242,7 @@ export class ConfigService {
   private async fetchFromFile<T>(configName: string): Promise<T> {
     // 使用动态导入
     const path = `../jsonlist/${configName}.json`;
-    
+
     try {
       // 尝试使用 fetch 读取本地文件
       const response = await fetch(path);
@@ -233,7 +253,7 @@ export class ConfigService {
       // 如果 fetch 失败，返回空数据
       console.warn(`[ConfigService] Could not load from file: ${path}`);
     }
-    
+
     return [] as unknown as T;
   }
 }

@@ -10,7 +10,17 @@ function normalizeText(value) {
 function extractKeywords(...sources) {
   const joined = sources.filter(Boolean).join(" ");
   const raw = joined.match(/[\u4e00-\u9fa5]{2,}|[a-zA-Z0-9]{2,}/g) || [];
-  const stopWords = new Set(["材料", "提供", "照片", "图片", "文件", "用于", "以及", "信息", "相关"]);
+  const stopWords = new Set([
+    "材料",
+    "提供",
+    "照片",
+    "图片",
+    "文件",
+    "用于",
+    "以及",
+    "信息",
+    "相关",
+  ]);
   const uniq = new Set();
   for (const token of raw) {
     const t = token.trim().toLowerCase();
@@ -31,34 +41,6 @@ function buildKeywordRuleResult(material, reason, confidence = 0.95) {
   };
 }
 
-function matchSpecialReport(fileName = "") {
-  if (!fileName) return null;
-
-  if (fileName.includes("公估报告")) {
-    return {
-      materialId: "case_public_adjuster_report",
-      materialName: "公估报告",
-      confidence: 0.99,
-      source: "filename",
-      matchStrategy: "filename",
-      reason: "文件名命中公估报告",
-    };
-  }
-
-  if (fileName.includes("初期报告")) {
-    return {
-      materialId: "case_initial_report",
-      materialName: "初期报告",
-      confidence: 0.99,
-      source: "filename",
-      matchStrategy: "filename",
-      reason: "文件名命中初期报告",
-    };
-  }
-
-  return null;
-}
-
 function resolveMaterial(materials, targetId, fallbackName) {
   return (
     materials.find((item) => item.id === targetId) ||
@@ -67,13 +49,8 @@ function resolveMaterial(materials, targetId, fallbackName) {
   );
 }
 
-function matchExplicitMaterialRule(materials, fileName, ocrText) {
-  const specialReportMatch = matchSpecialReport(fileName);
-  if (specialReportMatch) {
-    return specialReportMatch;
-  }
-
-  const corpus = `${fileName || ""}\n${ocrText || ""}`;
+function matchExplicitMaterialRule(materials, ocrText) {
+  const corpus = ocrText || "";
   const rules = [
     {
       targetId: "mat-50",
@@ -85,13 +62,17 @@ function matchExplicitMaterialRule(materials, fileName, ocrText) {
     {
       targetId: "mat-57",
       fallbackName: "报警记录",
-      patterns: [/报警记录|接警|接处警|出警|报警回执|110报警|报警人|拨打了?110/i],
+      patterns: [
+        /报警记录|接警|接处警|出警|报警回执|110报警|报警人|拨打了?110/i,
+      ],
       reason: "命中报警/接处警关键词",
     },
     {
       targetId: "mat-58",
       fallbackName: "事故笔录",
-      patterns: [/询问笔录|事故笔录|调查笔录|谈话记录|目击者笔录|面签|陈述如下/i],
+      patterns: [
+        /询问笔录|事故笔录|调查笔录|谈话记录|目击者笔录|面签|陈述如下/i,
+      ],
       reason: "命中笔录/面签关键词",
     },
     {
@@ -128,19 +109,25 @@ function matchExplicitMaterialRule(materials, fileName, ocrText) {
     {
       targetId: "mat-64",
       fallbackName: "派工记录/聊天记录",
-      patterns: [/派工记录|派工单|微信聊天|聊天记录|微信记录|作业安排|吊车租赁微信聊天/i],
+      patterns: [
+        /派工记录|派工单|微信聊天|聊天记录|微信记录|作业安排|吊车租赁微信聊天/i,
+      ],
       reason: "命中派工/聊天记录关键词",
     },
     {
       targetId: "mat-65",
       fallbackName: "赔偿支付凭证",
-      patterns: [/支付记录|转账详情|电子回单|付款凭证|转账记录|银行回单|凭证号|垫付.+赔偿款/i],
+      patterns: [
+        /支付记录|转账详情|电子回单|付款凭证|转账记录|银行回单|凭证号|垫付.+赔偿款/i,
+      ],
       reason: "命中转账/支付凭证关键词",
     },
     {
       targetId: "mat-66",
       fallbackName: "事故证明/情况说明",
-      patterns: [/事故证明|情况说明|政府情况说明|走访记录|走访情况|事故经过说明/i],
+      patterns: [
+        /事故证明|情况说明|政府情况说明|走访记录|走访情况|事故经过说明/i,
+      ],
       reason: "命中事故证明/情况说明关键词",
     },
     {
@@ -165,7 +152,9 @@ function matchExplicitMaterialRule(materials, fileName, ocrText) {
     {
       targetId: "mat-56",
       fallbackName: "操作证查询结果",
-      patterns: [/操作证查询结果|操作证查询|查询平台|查询结果|证件状态|证件查询/i],
+      patterns: [
+        /操作证查询结果|操作证查询|查询平台|查询结果|证件状态|证件查询/i,
+      ],
       reason: "命中操作证查询关键词",
     },
     {
@@ -174,12 +163,28 @@ function matchExplicitMaterialRule(materials, fileName, ocrText) {
       patterns: [/判决书|民事调解书|调解协议书|人民法院/i],
       reason: "命中法院/调解文书关键词",
     },
+    {
+      targetId: "case_public_adjuster_report",
+      fallbackName: "公估报告",
+      patterns: [/公估报告|公估师|保险公估|公估公司/i],
+      reason: "命中公估报告关键词",
+    },
+    {
+      targetId: "case_initial_report",
+      fallbackName: "初期报告",
+      patterns: [/初期报告|初次报告|初步报告/i],
+      reason: "命中初期报告关键词",
+    },
   ];
 
   for (const rule of rules) {
     if (!rule.patterns.some((pattern) => pattern.test(corpus))) continue;
     if (rule.exclude?.some((pattern) => pattern.test(corpus))) continue;
-    const material = resolveMaterial(materials, rule.targetId, rule.fallbackName);
+    const material = resolveMaterial(
+      materials,
+      rule.targetId,
+      rule.fallbackName,
+    );
     if (material) {
       return buildKeywordRuleResult(material, rule.reason);
     }
@@ -188,13 +193,13 @@ function matchExplicitMaterialRule(materials, fileName, ocrText) {
   return null;
 }
 
-export function classifyMaterialByRules(materials, fileName, ocrText) {
-  const explicitRuleResult = matchExplicitMaterialRule(materials, fileName, ocrText);
+export function classifyMaterialByRules(materials, ocrText) {
+  const explicitRuleResult = matchExplicitMaterialRule(materials, ocrText);
   if (explicitRuleResult) {
     return explicitRuleResult;
   }
 
-  const corpus = `${fileName || ""} ${ocrText || ""}`;
+  const corpus = ocrText || "";
   const normalizedCorpus = normalizeText(corpus);
   const candidates = [];
 
@@ -205,7 +210,10 @@ export function classifyMaterialByRules(materials, fileName, ocrText) {
     const reasons = [];
 
     const normalizedMaterialName = normalizeText(materialName);
-    if (normalizedMaterialName && normalizedCorpus.includes(normalizedMaterialName)) {
+    if (
+      normalizedMaterialName &&
+      normalizedCorpus.includes(normalizedMaterialName)
+    ) {
       score += 8;
       reasons.push("name_hit");
     }
@@ -220,12 +228,24 @@ export function classifyMaterialByRules(materials, fileName, ocrText) {
       if (reasons.length >= 8) break;
     }
 
-    if (/发票|票据|金额|大写/.test(corpus) && /发票|票据/.test(materialName)) score += 6;
-    if (/身份证|公民身份号码/.test(corpus) && /身份证/.test(materialName)) score += 6;
-    if (/驾驶证|准驾车型/.test(corpus) && /驾驶证/.test(materialName)) score += 6;
-    if (/行驶证|号牌号码/.test(corpus) && /行驶证/.test(materialName)) score += 6;
-    if (/病历|诊断|住院/.test(corpus) && /(病历|诊断|住院|出院)/.test(materialName)) score += 5;
-    if (/责任认定|认定书|事故认定/.test(corpus) && /(责任认定|认定书|事故认定)/.test(materialName)) score += 8;
+    if (/发票|票据|金额|大写/.test(corpus) && /发票|票据/.test(materialName))
+      score += 6;
+    if (/身份证|公民身份号码/.test(corpus) && /身份证/.test(materialName))
+      score += 6;
+    if (/驾驶证|准驾车型/.test(corpus) && /驾驶证/.test(materialName))
+      score += 6;
+    if (/行驶证|号牌号码/.test(corpus) && /行驶证/.test(materialName))
+      score += 6;
+    if (
+      /病历|诊断|住院/.test(corpus) &&
+      /(病历|诊断|住院|出院)/.test(materialName)
+    )
+      score += 5;
+    if (
+      /责任认定|认定书|事故认定/.test(corpus) &&
+      /(责任认定|认定书|事故认定)/.test(materialName)
+    )
+      score += 8;
 
     if (score > 0) {
       candidates.push({

@@ -2427,5 +2427,50 @@
         "description": "政府调解确认永顺赔偿¥100万（保险可覆盖），景泰公司赔偿¥120万（由景泰自行承担）。永顺超出保险赔付的部分（精神损害¥50,000）需被保险人自行承担。建议被保险人确认追偿权安排。"
       }
     ]
+  },
+  {
+    "id": "CLM031803",
+    "reportNumber": "R20260415171031NAG8",
+    "reporter": "1",
+    "reportTime": "4/16/2026, 1:10:31 AM",
+    "accidentTime": "2026-04-16",
+    "accidentReason": "交通事故",
+    "accidentLocation": "shanghai",
+    "productCode": "zhongan2026PAC814",
+    "productName": "无忧保综合意外险(2022升级版)",
+    "policyNumber": "PM157CG240579335929704",
+    "policyholder": "杨三",
+    "insured": "杨霁",
+    "status": "已报案",
+    "operator": "1",
+    "claimAmount": "991",
+    "intakeFormData": {
+      "accident_date": "2026-04-16",
+      "accident_location": "shanghai",
+      "accident_description": "haishai\n\n",
+      "accident_reason": "交通事故",
+      "claim_item": [
+        "门诊费"
+      ],
+      "claim_amount": "991"
+    },
+    "selectedClaimItems": [
+      "门诊费"
+    ],
+    "selectedAccidentCauseId": "交通事故",
+    "requiredMaterials": [],
+    "fileCategories": [
+      {
+        "name": "交通事故责任认定书",
+        "files": [
+          {
+            "name": "WechatIMG29.jpg",
+            "url": "http://drools-purplespark.oss-cn-beijing.aliyuncs.com/claims/1776273081357.jpg?OSSAccessKeyId=LTAI5tFnto3xoZD6Km6GRK76&Expires=1776276684&Signature=V4Qbr3yhYLlHVq28UY6xhFtqjtU%3D",
+            "ossKey": "claims/1776273081357.jpg"
+          }
+        ]
+      }
+    ],
+    "materialUploads": []
   }
 ]
