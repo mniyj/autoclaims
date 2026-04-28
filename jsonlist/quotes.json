@@ -199,5 +199,91 @@
     "updatedAt": "2026-03-15T09:00:00Z",
     "operator": "codex",
     "notes": "基于众安团体门急诊条款与费率表预设，首保3人团单、有社保、0免赔、90%赔付。"
+  },
+  {
+    "id": "quote-car-001",
+    "quoteNumber": "QT2025122500001",
+    "type": "个人询价",
+    "status": "已转保单",
+    "policyholder": {
+      "name": "张建国",
+      "idType": "身份证",
+      "idNumber": "110105198505156789",
+      "gender": "男",
+      "birthDate": "1985-05-15",
+      "phone": "13812345678",
+      "email": "zhangjguo@example.com",
+      "address": "北京市朝阳区望京街道建国里18号"
+    },
+    "insureds": [
+      {
+        "id": "insured-car-001",
+        "name": "张建国",
+        "idType": "身份证",
+        "idNumber": "110105198505156789",
+        "gender": "男",
+        "birthDate": "1985-05-15",
+        "relationship": "本人",
+        "occupation": "企业职员",
+        "phone": "13812345678"
+      }
+    ],
+    "plans": [
+      {
+        "id": "plan-car-std",
+        "planName": "综合车险·标准版",
+        "productCode": "CAR-COMP-2024-A",
+        "productName": "全保无忧·综合车险",
+        "companyName": "平安财险",
+        "premium": 4280,
+        "paymentPeriod": "年缴",
+        "coveragePeriod": "1年",
+        "clauses": [
+          {
+            "clauseCode": "CAR-MAIN-2024-A",
+            "clauseName": "机动车综合商业保险条款（2024版）",
+            "clauseType": "主险",
+            "sumInsured": 1820000,
+            "premium": 4280,
+            "deductible": "按责任比例计算，详见条款",
+            "coverageDetails": [
+              {
+                "id": "q-car-cov-1",
+                "name": "交强险",
+                "amount": "法定限额",
+                "details": "死亡伤残18万，医疗费用1.8万，财产损失2000元。"
+              },
+              {
+                "id": "q-car-cov-2",
+                "name": "第三者责任险",
+                "amount": "100万",
+                "details": "每次事故第三者人身伤亡及财产损失赔偿限额100万元。"
+              },
+              {
+                "id": "q-car-cov-3",
+                "name": "车辆损失险",
+                "amount": "按实际价值（投保时车辆实际价值约20万元）",
+                "details": "全责免赔率5%，主责10%，同责15%，次责20%。"
+              },
+              {
+                "id": "q-car-cov-4",
+                "name": "车上人员责任险",
+                "amount": "每座10万（6座）",
+                "details": "含驾驶员座位及5个乘客座位，每座赔偿限额10万元。"
+              }
+            ]
+          }
+        ],
+        "notes": "被保险车辆：京A·88888，大众途观L 2023款，车辆实际价值约20万元。"
+      }
+    ],
+    "selectedPlanId": "plan-car-std",
+    "effectiveDate": "2026-01-01",
+    "expiryDate": "2027-01-01",
+    "validUntil": "2025-12-31",
+    "createdAt": "2025-12-25T10:00:00Z",
+    "updatedAt": "2025-12-26T09:30:00Z",
+    "operator": "admin",
+    "notes": "被保险车辆：京A·88888，大众途观L 2023款，客户选择标准版，含三者100万+车损+车上人员（6座×10万）。"
   }
 ]

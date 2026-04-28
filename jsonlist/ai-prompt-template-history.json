@@ -19,5 +19,23 @@
     "publishedBy": "admin",
     "reason": "manual update",
     "status": "active"
+  },
+  {
+    "id": "prompt-1777267802360",
+    "templateId": "material_classifier",
+    "version": 1777267802360,
+    "content": "你是保险理赔材料分类专家。你必须严格从材料目录中选择一个最匹配项，若无法确定再返回 unknown。\n\n【OCR 文字】\n{{ocrText}} \n\n【材料目录（格式: id|名称|说明摘要）】\n{{catalog}}\n\n请仅返回 JSON：{\"materialId\":\"...\",\"materialName\":\"...\",\"confidence\":0到1的小数,\"reason\":\"简短说明\"}。\n要求：\n1) materialId 必须来自目录；\n2) 若不确定，返回 unknown/未识别/0；\n3) 禁止输出 markdown。",
+    "variables": [
+      "ocrText",
+      "fileName",
+      "catalog"
+    ],
+    "applicableCapabilities": [
+      "admin.material.classification"
+    ],
+    "publishedAt": "2026-04-27T05:30:02.360Z",
+    "publishedBy": "admin",
+    "reason": "不参考文件名",
+    "status": "active"
   }
 ]

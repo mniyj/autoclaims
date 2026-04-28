@@ -30,6 +30,7 @@ import {
   inferDocumentType,
 } from "./services/fileProcessor.js";
 import { readData, writeData } from "./utils/fileStore.js";
+import { classifyMaterialByRules } from "./services/materialClassificationService.js";
 import {
   analyzeMultiFiles,
   checkDocumentCompleteness,
@@ -460,15 +461,20 @@ function validateClaimsMaterialItem(item, facts, allMaterials) {
       const fieldPath = parentPath
         ? `${parentPath}.${field.field_key}`
         : field.field_key;
-      if (field.binding_status === "bound" && !field.fact_id) {
-        errors.push(
-          `材料 ${item?.name || item?.id} 的业务字段 ${fieldPath} 标记为 bound 但未绑定事实`,
-        );
-      }
-      if (field.binding_status === "display_only" && field.fact_id) {
-        errors.push(
-          `材料 ${item?.name || item?.id} 的展示字段 ${fieldPath} 不应绑定事实`,
-        );
+      // OBJECT/ARRAY 容器字段本身不绑定事实，跳过 binding_status 检查
+      const isContainer =
+        field.data_type === "OBJECT" || field.data_type === "ARRAY";
+      if (!isContainer) {
+        if (field.binding_status === "bound" && !field.fact_id) {
+          errors.push(
+            `材料 ${item?.name || item?.id} 的业务字段 ${fieldPath} 标记为 bound 但未绑定事实`,
+          );
+        }
+        if (field.binding_status === "display_only" && field.fact_id) {
+          errors.push(
+            `材料 ${item?.name || item?.id} 的展示字段 ${fieldPath} 不应绑定事实`,
+          );
+        }
       }
       if (field.children) validateBindingConsistency(field.children, fieldPath);
       if (field.item_fields)
@@ -1351,37 +1357,34 @@ const callGemini = async ({ model, contents, temperature = 0.1 }) => {
  * @param {string} fileName - 文件名
  * @returns {Promise<object>} 分类结果
  */
-async function classifyMaterial(result, fileName) {
+async function classifyMaterial(result) {
   if (result.parseStatus !== "completed") {
-    return {
-      materialId: "unknown",
-      materialName: "未识别",
-      confidence: 0,
-    };
+    return { materialId: "unknown", materialName: "未识别", confidence: 0 };
   }
 
   try {
     const materials = readData("claims-materials");
     if (materials.length === 0) {
-      return {
-        materialId: "unknown",
-        materialName: "未识别",
-        confidence: 0,
-      };
+      return { materialId: "unknown", materialName: "未识别", confidence: 0 };
     }
 
-    // 构建紧凑目录（避免 prompt 过长）
+    const ocrText = result.extractedText || "";
+
+    // 规则优先，命中即返回
+    const ruleResult = classifyMaterialByRules(materials, ocrText);
+    if (ruleResult) return ruleResult;
+
+    // 规则未命中，回退到 AI（仅基于 OCR 文字，不含文件名）
     const catalog = materials
-      .map((m) => `${m.id}|${m.name}|${m.description.slice(0, 60)}`)
+      .map((m) => `${m.id}|${m.name}|${m.description?.slice(0, 60) || ""}`)
       .join("\n");
 
-    const ocrText = result.extractedText || "";
     const prompt = [
       {
         role: "user",
         parts: [
           {
-            text: `你是保险理赔材料分类专家。请根据以下 OCR 文字内容，从材料目录中选出最匹配的材料类型。\n\n【OCR 文字】\n${ocrText.slice(0, 1200)}\n\n【文件名参考】${fileName}\n\n【材料目录（格式: id|名称|说明摘要）】\n${catalog}\n\n请返回 JSON：{"materialId":"...","materialName":"...","confidence":0.0到1.0之间的小数,"reason":"简短说明"}。若无匹配则 materialId 填 "unknown"，materialName 填 "未识别"，confidence 填 0。`,
+            text: `你是保险理赔材料分类专家。请根据以下 OCR 文字内容，从材料目录中选出最匹配的材料类型。\n\n【OCR 文字】\n${ocrText.slice(0, 1200)}\n\n【材料目录（格式: id|名称|说明摘要）】\n${catalog}\n\n请返回 JSON：{"materialId":"...","materialName":"...","confidence":0.0到1.0之间的小数,"reason":"简短说明"}。若无匹配则 materialId 填 "unknown"，materialName 填 "未识别"，confidence 填 0。`,
           },
         ],
       },
@@ -1401,22 +1404,14 @@ async function classifyMaterial(result, fileName) {
       // JSON 解析失败则保持 unknown
     }
 
-    const classification = {
+    return {
       materialId: parsed.materialId || "unknown",
       materialName: parsed.materialName || "未识别",
       confidence: typeof parsed.confidence === "number" ? parsed.confidence : 0,
     };
-    console.log(
-      `[classify] ${fileName} → ${classification.materialName} (${(classification.confidence * 100).toFixed(0)}%)`,
-    );
-    return classification;
   } catch (classifyErr) {
     console.warn("[classify] 分类失败，跳过:", classifyErr.message);
-    return {
-      materialId: "unknown",
-      materialName: "未识别",
-      confidence: 0,
-    };
+    return { materialId: "unknown", materialName: "未识别", confidence: 0 };
   }
 }
 
@@ -1987,10 +1982,7 @@ export const handleApiRequest = async (req, res) => {
               });
 
               // 分类
-              const classification = await classifyMaterialFromAPI(
-                processResult,
-                key,
-              );
+              const classification = await classifyMaterial(processResult);
 
               return {
                 ossKey: key,
@@ -4397,7 +4389,11 @@ ${aiAuditPrompt || "请提取图片中的关键信息并进行校验"}
     return;
   }
 
-  if (resource === "claim-documents" && req.method === "POST" && id === "field-corrections") {
+  if (
+    resource === "claim-documents" &&
+    req.method === "POST" &&
+    id === "field-corrections"
+  ) {
     try {
       const body = await parseBody(req);
       const correction = body?.correction || body;
@@ -4407,7 +4403,11 @@ ${aiAuditPrompt || "请提取图片中的关键信息并进行校验"}
 
       if (!claimCaseId || !documentId || !fieldKey) {
         res.statusCode = 400;
-        res.end(JSON.stringify({ error: "Missing claimCaseId, documentId or fieldKey" }));
+        res.end(
+          JSON.stringify({
+            error: "Missing claimCaseId, documentId or fieldKey",
+          }),
+        );
         return;
       }
 
@@ -4416,7 +4416,10 @@ ${aiAuditPrompt || "请提取图片中的关键信息并进行校验"}
       let updated = false;
 
       const nextDocs = allClaimDocs.map((record) => {
-        if (record.claimCaseId !== claimCaseId || !Array.isArray(record.documents)) {
+        if (
+          record.claimCaseId !== claimCaseId ||
+          !Array.isArray(record.documents)
+        ) {
           return record;
         }
 
@@ -4454,7 +4457,9 @@ ${aiAuditPrompt || "请提取图片中的关键信息并进行校验"}
           };
         });
 
-        return recordChanged ? { ...record, documents: nextRecordDocs } : record;
+        return recordChanged
+          ? { ...record, documents: nextRecordDocs }
+          : record;
       });
 
       if (!updated) {
@@ -4475,7 +4480,11 @@ ${aiAuditPrompt || "请提取图片中的关键信息并进行校验"}
 
   // ==================== 统一材料管理 API ====================
 
-  if (resource === "claim-materials" && req.method === "POST" && id === "field-corrections") {
+  if (
+    resource === "claim-materials" &&
+    req.method === "POST" &&
+    id === "field-corrections"
+  ) {
     try {
       const body = await parseBody(req);
       const correction = body?.correction || body;
@@ -4485,15 +4494,18 @@ ${aiAuditPrompt || "请提取图片中的关键信息并进行校验"}
 
       if (!claimCaseId || !documentId || !fieldKey) {
         res.statusCode = 400;
-        res.end(JSON.stringify({ error: "Missing claimCaseId, documentId or fieldKey" }));
+        res.end(
+          JSON.stringify({
+            error: "Missing claimCaseId, documentId or fieldKey",
+          }),
+        );
         return;
       }
 
       const allMaterials = readData("claim-materials") || [];
       const materialIndex = allMaterials.findIndex(
         (material) =>
-          material.claimCaseId === claimCaseId &&
-          material.id === documentId,
+          material.claimCaseId === claimCaseId && material.id === documentId,
       );
 
       if (materialIndex === -1) {
@@ -5193,7 +5205,7 @@ ${aiAuditPrompt || "请提取图片中的关键信息并进行校验"}
           });
 
           // 使用 AI 进行材料分类
-          const classification = await classifyMaterial(result, file.fileName);
+          const classification = await classifyMaterial(result);
 
           documents.push({
             documentId: `doc-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -7193,10 +7205,7 @@ ${aiAuditPrompt || "请提取图片中的关键信息并进行校验"}
         },
       });
 
-      const classification = await classifyMaterial(
-        processResult,
-        "uploaded-file",
-      );
+      const classification = await classifyMaterial(processResult);
 
       res.setHeader("Content-Type", "application/json");
       res.end(
@@ -7412,82 +7421,3 @@ ${aiAuditPrompt || "请提取图片中的关键信息并进行校验"}
     res.end(JSON.stringify({ error: e.message || "Bad Request" }));
   }
 };
-
-// ============ 批量分类辅助函数 ============
-
-async function classifyMaterialFromAPI(result, fileName) {
-  if (result.parseStatus !== "completed") {
-    return {
-      materialId: "unknown",
-      materialName: "未识别",
-      confidence: 0,
-    };
-  }
-
-  try {
-    const materials = readData("claims-materials");
-    if (materials.length === 0) {
-      return {
-        materialId: "unknown",
-        materialName: "未识别",
-        confidence: 0,
-      };
-    }
-
-    const catalog = materials
-      .map((m) => `${m.id}|${m.name}|${m.description?.slice(0, 60) || ""}`)
-      .join("\n");
-
-    const ocrText = result.extractedText || "";
-    const prompt = `你是保险理赔材料分类专家。请根据以下 OCR 文字内容，从材料目录中选出最匹配的材料类型。
-
-【OCR 文字】
-${ocrText.slice(0, 1200)}
-
-【文件名参考】${fileName}
-
-【材料目录（格式: id|名称|说明摘要）】
-${catalog}
-
-请返回 JSON：{"materialId":"...","materialName":"...","confidence":0.0到1.0之间的小数,"reason":"简短说明"}。若无匹配则 materialId 填 "unknown"，materialName 填 "未识别"，confidence 填 0。`;
-
-    const { response } = await generateGeminiContent({
-      apiKey: process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY,
-      request: {
-        model: "gemini-2.5-flash",
-        contents: { parts: [{ text: prompt }] },
-        config: { temperature: 0.1 },
-      },
-      meta: {
-        sourceApp: "admin-system",
-        module: "apiHandler.classifyMaterial",
-        operation: "classify_material",
-        context: {
-          fileName,
-          materialCount: materials.length,
-        },
-      },
-    });
-
-    const raw = response.text || "{}";
-    let parsed = {};
-    try {
-      parsed = JSON.parse(raw.replace(/```json|```/g, "").trim());
-    } catch {}
-
-    const classification = {
-      materialId: parsed.materialId || "unknown",
-      materialName: parsed.materialName || "未识别",
-      confidence: typeof parsed.confidence === "number" ? parsed.confidence : 0,
-    };
-
-    return classification;
-  } catch (error) {
-    console.error("[API] classifyMaterialFromAPI error:", error);
-    return {
-      materialId: "unknown",
-      materialName: "未识别",
-      confidence: 0,
-    };
-  }
-}

@@ -731,5 +731,283 @@
         "totalLatencyMs": 70835
       }
     }
+  },
+  {
+    "date": "2026-04-14",
+    "totals": {
+      "totalCalls": 9,
+      "successCalls": 9,
+      "failedCalls": 0,
+      "inputTokens": 14456,
+      "outputTokens": 287,
+      "totalTokens": 17305,
+      "totalCost": 0.0023400000000000005,
+      "totalLatencyMs": 59301
+    },
+    "byProvider": {
+      "gemini-text": {
+        "provider": "gemini-text",
+        "totalCalls": 5,
+        "successCalls": 5,
+        "failedCalls": 0,
+        "inputTokens": 13248,
+        "outputTokens": 207,
+        "totalTokens": 14431,
+        "totalCost": 0.002112,
+        "totalLatencyMs": 18538
+      },
+      "gemini-vision": {
+        "provider": "gemini-vision",
+        "totalCalls": 4,
+        "successCalls": 4,
+        "failedCalls": 0,
+        "inputTokens": 1208,
+        "outputTokens": 80,
+        "totalTokens": 2874,
+        "totalCost": 0.000228,
+        "totalLatencyMs": 40763
+      }
+    },
+    "byModel": {
+      "gemini-2.5-flash": {
+        "model": "gemini-2.5-flash",
+        "provider": "gemini-text",
+        "totalCalls": 9,
+        "successCalls": 9,
+        "failedCalls": 0,
+        "inputTokens": 14456,
+        "outputTokens": 287,
+        "totalTokens": 17305,
+        "totalCost": 0.0023400000000000005,
+        "totalLatencyMs": 59301
+      }
+    },
+    "byCapability": {
+      "smartclaim.intent": {
+        "capabilityId": "smartclaim.intent",
+        "totalCalls": 4,
+        "successCalls": 4,
+        "failedCalls": 0,
+        "inputTokens": 3415,
+        "outputTokens": 142,
+        "totalTokens": 3982,
+        "totalCost": 0.000598,
+        "totalLatencyMs": 13756
+      },
+      "smartclaim.document_analysis": {
+        "capabilityId": "smartclaim.document_analysis",
+        "totalCalls": 4,
+        "successCalls": 4,
+        "failedCalls": 0,
+        "inputTokens": 1208,
+        "outputTokens": 80,
+        "totalTokens": 2874,
+        "totalCost": 0.000228,
+        "totalLatencyMs": 40763
+      },
+      "smartclaim.chat": {
+        "capabilityId": "smartclaim.chat",
+        "totalCalls": 1,
+        "successCalls": 1,
+        "failedCalls": 0,
+        "inputTokens": 9833,
+        "outputTokens": 65,
+        "totalTokens": 10449,
+        "totalCost": 0.001514,
+        "totalLatencyMs": 4782
+      }
+    },
+    "byGroup": {
+      "SmartClaim": {
+        "group": "SmartClaim",
+        "totalCalls": 9,
+        "successCalls": 9,
+        "failedCalls": 0,
+        "inputTokens": 14456,
+        "outputTokens": 287,
+        "totalTokens": 17305,
+        "totalCost": 0.0023400000000000005,
+        "totalLatencyMs": 59301
+      }
+    },
+    "byModule": {
+      "smartclaim-ai-agent": {
+        "module": "smartclaim-ai-agent",
+        "totalCalls": 9,
+        "successCalls": 9,
+        "failedCalls": 0,
+        "inputTokens": 14456,
+        "outputTokens": 287,
+        "totalTokens": 17305,
+        "totalCost": 0.0023400000000000005,
+        "totalLatencyMs": 59301
+      }
+    },
+    "byCompany": {
+      "unassigned": {
+        "companyId": null,
+        "companyName": null,
+        "totalCalls": 9,
+        "successCalls": 9,
+        "failedCalls": 0,
+        "inputTokens": 14456,
+        "outputTokens": 287,
+        "totalTokens": 17305,
+        "totalCost": 0.0023400000000000005,
+        "totalLatencyMs": 59301
+      }
+    },
+    "bySourceApp": {
+      "smartclaim-ai-agent": {
+        "sourceApp": "smartclaim-ai-agent",
+        "totalCalls": 9,
+        "successCalls": 9,
+        "failedCalls": 0,
+        "inputTokens": 14456,
+        "outputTokens": 287,
+        "totalTokens": 17305,
+        "totalCost": 0.0023400000000000005,
+        "totalLatencyMs": 59301
+      }
+    }
+  },
+  {
+    "date": "2026-04-15",
+    "totals": {
+      "totalCalls": 11,
+      "successCalls": 11,
+      "failedCalls": 0,
+      "inputTokens": 18642,
+      "outputTokens": 606,
+      "totalTokens": 22055,
+      "totalCost": 0.0031599999999999996,
+      "totalLatencyMs": 55995
+    },
+    "byProvider": {
+      "gemini-text": {
+        "provider": "gemini-text",
+        "totalCalls": 8,
+        "successCalls": 8,
+        "failedCalls": 0,
+        "inputTokens": 15393,
+        "outputTokens": 399,
+        "totalTokens": 17398,
+        "totalCost": 0.002548,
+        "totalLatencyMs": 31211
+      },
+      "gemini-vision": {
+        "provider": "gemini-vision",
+        "totalCalls": 3,
+        "successCalls": 3,
+        "failedCalls": 0,
+        "inputTokens": 3249,
+        "outputTokens": 207,
+        "totalTokens": 4657,
+        "totalCost": 0.0006119999999999999,
+        "totalLatencyMs": 24784
+      }
+    },
+    "byModel": {
+      "gemini-2.5-flash": {
+        "model": "gemini-2.5-flash",
+        "provider": "gemini-text",
+        "totalCalls": 11,
+        "successCalls": 11,
+        "failedCalls": 0,
+        "inputTokens": 18642,
+        "outputTokens": 606,
+        "totalTokens": 22055,
+        "totalCost": 0.0031599999999999996,
+        "totalLatencyMs": 55995
+      }
+    },
+    "byCapability": {
+      "smartclaim.intent": {
+        "capabilityId": "smartclaim.intent",
+        "totalCalls": 7,
+        "successCalls": 7,
+        "failedCalls": 0,
+        "inputTokens": 5599,
+        "outputTokens": 252,
+        "totalTokens": 6788,
+        "totalCost": 0.000991,
+        "totalLatencyMs": 24034
+      },
+      "smartclaim.document_analysis": {
+        "capabilityId": "smartclaim.document_analysis",
+        "totalCalls": 3,
+        "successCalls": 3,
+        "failedCalls": 0,
+        "inputTokens": 3249,
+        "outputTokens": 207,
+        "totalTokens": 4657,
+        "totalCost": 0.0006119999999999999,
+        "totalLatencyMs": 24784
+      },
+      "smartclaim.chat": {
+        "capabilityId": "smartclaim.chat",
+        "totalCalls": 1,
+        "successCalls": 1,
+        "failedCalls": 0,
+        "inputTokens": 9794,
+        "outputTokens": 147,
+        "totalTokens": 10610,
+        "totalCost": 0.001557,
+        "totalLatencyMs": 7177
+      }
+    },
+    "byGroup": {
+      "SmartClaim": {
+        "group": "SmartClaim",
+        "totalCalls": 11,
+        "successCalls": 11,
+        "failedCalls": 0,
+        "inputTokens": 18642,
+        "outputTokens": 606,
+        "totalTokens": 22055,
+        "totalCost": 0.0031599999999999996,
+        "totalLatencyMs": 55995
+      }
+    },
+    "byModule": {
+      "smartclaim-ai-agent": {
+        "module": "smartclaim-ai-agent",
+        "totalCalls": 11,
+        "successCalls": 11,
+        "failedCalls": 0,
+        "inputTokens": 18642,
+        "outputTokens": 606,
+        "totalTokens": 22055,
+        "totalCost": 0.0031599999999999996,
+        "totalLatencyMs": 55995
+      }
+    },
+    "byCompany": {
+      "unassigned": {
+        "companyId": null,
+        "companyName": null,
+        "totalCalls": 11,
+        "successCalls": 11,
+        "failedCalls": 0,
+        "inputTokens": 18642,
+        "outputTokens": 606,
+        "totalTokens": 22055,
+        "totalCost": 0.0031599999999999996,
+        "totalLatencyMs": 55995
+      }
+    },
+    "bySourceApp": {
+      "smartclaim-ai-agent": {
+        "sourceApp": "smartclaim-ai-agent",
+        "totalCalls": 11,
+        "successCalls": 11,
+        "failedCalls": 0,
+        "inputTokens": 18642,
+        "outputTokens": 606,
+        "totalTokens": 22055,
+        "totalCost": 0.0031599999999999996,
+        "totalLatencyMs": 55995
+      }
+    }
   }
 ]

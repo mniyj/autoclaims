@@ -394,5 +394,126 @@
         ]
       }
     ]
+  },
+  "CAR": {
+    "id": "CAR",
+    "name": "车险模板",
+    "description": "适用于机动车险产品的报案字段模板，涵盖事故基本信息、损失类型及理赔项目",
+    "fields": [
+      {
+        "field_id": "accident_date",
+        "label": "事故日期",
+        "type": "date",
+        "required": true,
+        "placeholder": "请选择事故发生日期",
+        "validation": {
+          "rule": "lte_today_and_gte_policy_start",
+          "error_msg": "事故日期必须在保单有效期内且不晚于今天"
+        }
+      },
+      {
+        "field_id": "accident_time",
+        "label": "事故时间",
+        "type": "time",
+        "required": false,
+        "placeholder": "请选择事故发生时间（可选）"
+      },
+      {
+        "field_id": "accident_location",
+        "label": "事故地点",
+        "type": "text",
+        "required": true,
+        "placeholder": "请输入事故发生的详细地点"
+      },
+      {
+        "field_id": "vehicle_plate",
+        "label": "出险车牌号",
+        "type": "text",
+        "required": true,
+        "placeholder": "请输入出险车辆车牌号（如：京A·88888）"
+      },
+      {
+        "field_id": "accident_reason",
+        "label": "事故原因",
+        "type": "enum",
+        "required": true,
+        "placeholder": "请选择事故原因",
+        "options": [
+          "碰撞事故",
+          "单方事故",
+          "自然灾害",
+          "自燃",
+          "盗抢",
+          "其他"
+        ]
+      },
+      {
+        "field_id": "accident_description",
+        "label": "事故经过",
+        "type": "textarea",
+        "required": true,
+        "placeholder": "请描述事故经过，包括：发生时间、经过、对方车辆情况、人员伤亡等",
+        "validation": {
+          "rule": "max_length_500",
+          "error_msg": "事故描述不能超过500字"
+        }
+      },
+      {
+        "field_id": "damage_type",
+        "label": "损失类型",
+        "type": "multi_select",
+        "required": true,
+        "placeholder": "请选择损失类型（可多选）",
+        "options": [
+          "车辆损失",
+          "第三者财产损失",
+          "人员伤亡",
+          "车上人员伤亡"
+        ]
+      },
+      {
+        "field_id": "has_police_report",
+        "label": "是否已向交警报案",
+        "type": "boolean",
+        "required": true,
+        "follow_up": {
+          "condition": "true",
+          "extra_fields": [
+            "police_report_number"
+          ]
+        }
+      },
+      {
+        "field_id": "police_report_number",
+        "label": "交警报案单号",
+        "type": "text",
+        "required": false,
+        "placeholder": "请输入交警出具的报案单号"
+      },
+      {
+        "field_id": "claim_item",
+        "label": "申请理赔项目",
+        "type": "multi_select",
+        "required": true,
+        "placeholder": "请选择申请理赔项目（可多选）",
+        "options": [
+          "交强险理赔",
+          "第三者责任险理赔",
+          "车辆损失险理赔",
+          "车上人员责任险理赔"
+        ]
+      },
+      {
+        "field_id": "claim_amount",
+        "label": "预估损失金额（元）",
+        "type": "number",
+        "required": true,
+        "placeholder": "请输入预估损失金额",
+        "validation": {
+          "rule": "gte_0_and_decimal_2",
+          "error_msg": "金额必须大于等于0，最多保留两位小数"
+        }
+      }
+    ]
   }
 }

@@ -4,8 +4,23 @@ import { fileURLToPath } from "url";
 import http from "http";
 import { readFileSync } from "fs";
 import { handleApiRequest } from "./server/apiHandler.js";
-import { startScheduler, stopScheduler } from "./server/taskQueue/scheduler.js";
-import { startAIConsistencyMonitor, stopAIConsistencyMonitor } from "./server/services/aiConsistencyMonitor.js";
+// 后台服务仅在主实例启动（通过 ENABLE_BACKGROUND_SERVICES=true 或 默认 PORT=3005）
+const enableBackground =
+  process.env.ENABLE_BACKGROUND_SERVICES !== "false" &&
+  (process.env.ENABLE_BACKGROUND_SERVICES === "true" ||
+    !process.env.PORT ||
+    process.env.PORT === "3005");
+
+let startScheduler,
+  stopScheduler,
+  startAIConsistencyMonitor,
+  stopAIConsistencyMonitor;
+if (enableBackground) {
+  ({ startScheduler, stopScheduler } =
+    await import("./server/taskQueue/scheduler.js"));
+  ({ startAIConsistencyMonitor, stopAIConsistencyMonitor } =
+    await import("./server/services/aiConsistencyMonitor.js"));
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -63,7 +78,8 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: "10mb" }));
 
 try {
-  const voiceRoutesModule = await import("./dist-server/server/routes/voice.js");
+  const voiceRoutesModule =
+    await import("./dist-server/server/routes/voice.js");
   voiceRoutesModule.initializeVoiceRoutes(server);
   app.use("/api/voice", voiceRoutesModule.default);
   console.log("[Server] 语音 API 路由已初始化");
@@ -131,20 +147,29 @@ server.listen(PORT, "0.0.0.0", () => {
   console.log(`API routes: /api/* → JSON file storage`);
   console.log(`Voice WebSocket: ws://localhost:${PORT}/voice/ws/:sessionId`);
 
-  startScheduler();
-  startAIConsistencyMonitor();
+  if (enableBackground) {
+    startScheduler();
+    startAIConsistencyMonitor();
+    console.log("[Server] 后台服务已启动 (scheduler + AI monitor)");
+  } else {
+    console.log("[Server] 后台服务已跳过 (仅 API + 静态文件)");
+  }
 });
 
 process.on("SIGTERM", () => {
   console.log("SIGTERM received, shutting down gracefully");
-  stopScheduler();
-  stopAIConsistencyMonitor();
+  if (enableBackground) {
+    stopScheduler();
+    stopAIConsistencyMonitor();
+  }
   process.exit(0);
 });
 
 process.on("SIGINT", () => {
   console.log("SIGINT received, shutting down gracefully");
-  stopScheduler();
-  stopAIConsistencyMonitor();
+  if (enableBackground) {
+    stopScheduler();
+    stopAIConsistencyMonitor();
+  }
   process.exit(0);
 });

@@ -1,192 +1,83 @@
-import type { ClaimsMaterial, ClassificationResult, AiClassification, MaterialCategory } from '../types';
-import { CLASSIFICATION_CONFIDENCE_THRESHOLD } from '../types';
-import { normalizeImageForOcr } from '../imageNormalizationService';
+import type { ClaimsMaterial, ClassificationResult } from "../../types";
+import { normalizeImageForOcr } from "../imageNormalizationService";
+
+const CLASSIFICATION_CONFIDENCE_THRESHOLD = 0.6;
 
 /**
  * 材料分类器
- * 使用AI + 配置匹配进行智能材料类型识别
+ * 将文件发送至服务端统一分类接口，不使用文件名，基于文档内容识别材料类型
  */
 export class MaterialClassifier {
   /**
    * 分类材料
    * @param fileSource - 文件源
-   * @param availableMaterials - 可用的材料类型列表
+   * @param availableMaterials - 可用的材料类型列表（用于填充备选项元数据）
    * @param targetMaterialId - 可选，指定的目标材料类型
    * @returns 分类结果
    */
   async classify(
     fileSource: File | Blob | string,
     availableMaterials: ClaimsMaterial[],
-    targetMaterialId?: string
+    targetMaterialId?: string,
   ): Promise<ClassificationResult> {
     // 如果指定了目标材料，直接返回
     if (targetMaterialId) {
-      const material = availableMaterials.find(m => m.id === targetMaterialId);
+      const material = availableMaterials.find(
+        (m) => m.id === targetMaterialId,
+      );
       if (material) {
         return {
           materialId: material.id,
           materialName: material.name,
           confidence: 1.0,
-          category: material.category || 'other',
+          category: material.category || "other",
           isConfident: true,
         };
       }
     }
 
-    // AI 识别文档类型
-    const aiResult = await this.aiClassifyDocument(fileSource);
-
-    // 匹配材料配置
-    return this.matchToMaterial(aiResult, availableMaterials);
-  }
-
-  /**
-   * AI 快速分类文档
-   */
-  private async aiClassifyDocument(
-    fileSource: File | Blob | string
-  ): Promise<AiClassification> {
+    // 将文件转为 base64，发送至服务端统一分类接口
     const { base64Data, mimeType } = await normalizeImageForOcr(fileSource);
 
-    const prompt = `你是专业的保险理赔材料识别专家。请分析这张图片，判断它是什么类型的理赔材料。
+    const response = await fetch("/api/materials/classify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fileSource: base64Data, mimeType }),
+    });
 
-请识别以下信息并返回JSON格式：
-{
-  "documentCategory": "文档大类（如：身份证明、医疗材料、事故材料、收入材料、其他）",
-  "documentSubType": "具体类型（如：身份证正面、发票、病历、诊断证明等）",
-  "keyFeatures": ["关键特征1", "关键特征2", "关键特征3"],
-  "confidence": 0.95
-}
-
-注意：
-1. confidence 是识别置信度（0-1之间）
-2. 如果图片模糊不清，confidence 应该低于 0.5
-3. keyFeatures 应该是你观察到的关键视觉特征`;
-
-    try {
-      const response = await fetch('/api/invoice-ocr', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          mode: 'gemini',
-          base64Data,
-          mimeType,
-          prompt,
-          geminiModel: 'gemini-2.5-flash',
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('AI classification failed');
-      }
-
-      const result = await response.json();
-      const parsed = JSON.parse(result.text || '{}');
-
-      return {
-        documentCategory: parsed.documentCategory || '未知',
-        documentSubType: parsed.documentSubType || '未知',
-        keyFeatures: parsed.keyFeatures || [],
-        confidence: parsed.confidence || 0.5,
-      };
-    } catch (error) {
-      // AI 失败时返回低置信度结果
-      return {
-        documentCategory: '未知',
-        documentSubType: '未知',
-        keyFeatures: [],
-        confidence: 0.3,
-      };
+    if (!response.ok) {
+      return this.unknownResult();
     }
-  }
 
-  /**
-   * 将AI识别结果匹配到材料配置
-   */
-  private matchToMaterial(
-    aiResult: AiClassification,
-    materials: ClaimsMaterial[]
-  ): ClassificationResult {
-    // 计算每个材料的匹配分数
-    const scoredMaterials = materials.map(material => ({
-      material,
-      score: this.calculateMatchScore(aiResult, material),
-    }));
+    const data = await response.json();
+    if (!data.success || !data.classification) {
+      return this.unknownResult();
+    }
 
-    // 按分数排序
-    scoredMaterials.sort((a, b) => b.score - a.score);
+    const { materialId, materialName, confidence } = data.classification;
 
-    const best = scoredMaterials[0];
-    const isConfident = best.score >= CLASSIFICATION_CONFIDENCE_THRESHOLD;
-
-    // 收集备选（分数接近的）
-    const alternatives = scoredMaterials
-      .slice(1, 4)
-      .filter(s => s.score > best.score - 0.2)
-      .map(s => s.material.id);
+    // 从本地材料列表补充 category 元数据
+    const matched = availableMaterials.find((m) => m.id === materialId);
+    const isConfident =
+      (confidence ?? 0) >= CLASSIFICATION_CONFIDENCE_THRESHOLD;
 
     return {
-      materialId: best.material.id,
-      materialName: best.material.name,
-      confidence: best.score,
-      category: best.material.category || 'other',
+      materialId: materialId || "unknown",
+      materialName: materialName || "未识别",
+      confidence: confidence ?? 0,
+      category: matched?.category || "other",
       isConfident,
-      alternatives: !isConfident && alternatives.length > 0 ? alternatives : undefined,
     };
   }
 
-  /**
-   * 计算匹配分数
-   */
-  private calculateMatchScore(
-    aiResult: AiClassification,
-    material: ClaimsMaterial
-  ): number {
-    let score = 0;
-
-    // 1. 名称相似度（最高 0.5 分）
-    const materialKeywords = material.name.split(/[（）()]/)[0]; // 去掉括号内容
-    const normalizedName = materialKeywords.toLowerCase();
-    
-    if (aiResult.documentSubType.toLowerCase().includes(normalizedName) ||
-        normalizedName.includes(aiResult.documentSubType.toLowerCase())) {
-      score += 0.5;
-    } else if (aiResult.keyFeatures.some(f => 
-      f.toLowerCase().includes(normalizedName) ||
-      normalizedName.includes(f.toLowerCase())
-    )) {
-      score += 0.3;
-    }
-
-    // 2. 分类匹配（最高 0.3 分）
-    const categoryMatch = this.mapCategoryToString(material.category);
-    if (aiResult.documentCategory.includes(categoryMatch) ||
-        categoryMatch.includes(aiResult.documentCategory)) {
-      score += 0.3;
-    }
-
-    // 3. 特征匹配（最高 0.2 分）
-    const materialDesc = material.description?.toLowerCase() || '';
-    const featureMatches = aiResult.keyFeatures.filter(f => 
-      materialDesc.includes(f.toLowerCase())
-    ).length;
-    score += Math.min(featureMatches * 0.1, 0.2);
-
-    return Math.min(score, 1.0);
-  }
-
-  /**
-   * 将 MaterialCategory 映射为字符串
-   */
-  private mapCategoryToString(category?: MaterialCategory): string {
-    const categoryMap: Record<string, string> = {
-      identity: '身份证明',
-      medical: '医疗',
-      accident: '事故',
-      income: '收入',
-      other: '其他',
+  private unknownResult(): ClassificationResult {
+    return {
+      materialId: "unknown",
+      materialName: "未识别",
+      confidence: 0,
+      category: "other",
+      isConfident: false,
     };
-    return category ? categoryMap[category] || category : '其他';
   }
 }
 

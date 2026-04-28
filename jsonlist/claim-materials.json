@@ -6134,5 +6134,21 @@
     "updatedAt": "2026-03-15T11:17:00.579Z",
     "errorMessage": null,
     "processedAt": "2026-04-04T15:41:33.695Z"
+  },
+  {
+    "id": "mat-1776273088360-1v2l5nzgo",
+    "claimCaseId": "CLM031803",
+    "fileName": "WechatIMG29.jpg",
+    "fileType": "image/jpeg",
+    "url": "http://drools-purplespark.oss-cn-beijing.aliyuncs.com/claims/1776273081357.jpg?OSSAccessKeyId=LTAI5tFnto3xoZD6Km6GRK76&Expires=1776276684&Signature=V4Qbr3yhYLlHVq28UY6xhFtqjtU%3D",
+    "ossKey": "claims/1776273081357.jpg",
+    "category": "交通事故责任认定书",
+    "materialId": "mat-8",
+    "materialName": "交通事故责任认定书",
+    "source": "claim_report",
+    "status": "pending",
+    "uploadedAt": "2026-04-15T17:11:28.360Z",
+    "updatedAt": "2026-04-15T17:11:28.360Z",
+    "processedAt": null
   }
 ]

@@ -497,7 +497,12 @@ async function handleQueryProgress(
     data: progressInfo,
     message,
     uiComponent: UIComponentType.CLAIM_PROGRESS,
-    uiData: progressInfo
+    uiData: progressInfo,
+    suggestedFollowups: [
+      "还缺哪些材料",
+      "预估能赔多少",
+      "理赔大约还要多久",
+    ],
   };
 }
 
@@ -577,7 +582,12 @@ ${materials.filter(m => !m.required).map(m => `• ${m.name}`).join('\n')}
     data: listInfo,
     message,
     uiComponent: UIComponentType.MATERIALS_LIST,
-    uiData: listInfo
+    uiData: listInfo,
+    suggestedFollowups: [
+      "还缺哪些材料",
+      "材料怎么拍才合格",
+      "理赔大约能赔多少",
+    ],
   };
 }
 
@@ -645,7 +655,19 @@ ${missingInfo.deadline ? `⏰ **补交截止**：${missingInfo.deadline}` : ''}
     data: missingInfo,
     message,
     uiComponent: missingItems.length > 0 ? UIComponentType.MISSING_MATERIALS : undefined,
-    uiData: missingInfo
+    uiData: missingInfo,
+    suggestedFollowups:
+      missingItems.length > 0
+        ? [
+            `上传${missingItems[0]?.name || "材料"}`,
+            "材料怎么拍才合格",
+            "查询理赔进度",
+          ]
+        : [
+            "查询理赔进度",
+            "预估能赔多少",
+            "理赔大约还要多久",
+          ],
   };
 }
 
@@ -716,6 +738,11 @@ async function handleQuerySettlementAmount(
     message: `${claimType}当前${settlementResult.isEstimate ? "预估" : "计算"}赔付金额约为 ${settlementResult.finalAmount.toLocaleString()} 元。`,
     uiComponent: UIComponentType.SETTLEMENT_ESTIMATE,
     uiData: estimateInfo,
+    suggestedFollowups: [
+      "赔付明细怎么算的",
+      "查询理赔进度",
+      "还缺哪些材料",
+    ],
   };
 }
 
@@ -789,6 +816,11 @@ async function handleQuerySettlementDetail(
     message: `案件 ${targetClaim.id} 的赔付明细已整理，核定赔付金额约为 ${settlementResult.finalAmount.toLocaleString()} 元。`,
     uiComponent: UIComponentType.SETTLEMENT_DETAIL,
     uiData: detailInfo,
+    suggestedFollowups: [
+      "打款到账了吗",
+      "这个金额为什么这样算",
+      "查询理赔进度",
+    ],
   };
 }
 
@@ -850,6 +882,11 @@ async function handleQueryPolicyInfo(
       `被保人 ${policyInfo.insuredName}，保障期限 ${policyInfo.validFrom || "未知"} 至 ${policyInfo.validUntil || "未知"}。`,
     uiComponent: UIComponentType.POLICY_INFO,
     uiData: policyInfo,
+    suggestedFollowups: [
+      "这张保单都保什么",
+      "查看我的理赔历史",
+      "我要报案",
+    ],
   };
 }
 
@@ -881,6 +918,11 @@ function handleQueryClaimHistory(
     message: `您当前共有 ${historyInfo.totalCount} 个理赔案件，我已为您列出历史记录。`,
     uiComponent: UIComponentType.CLAIM_HISTORY,
     uiData: historyInfo,
+    suggestedFollowups: [
+      "查询最新案件进度",
+      "查看我的保单",
+      "我要报案",
+    ],
   };
 }
 
@@ -930,6 +972,10 @@ async function handleQueryPaymentStatus(
       (paymentInfo.amount ? `，金额约 ${paymentInfo.amount.toLocaleString()} 元。` : "。"),
     uiComponent: UIComponentType.PAYMENT_STATUS,
     uiData: paymentInfo,
+    suggestedFollowups:
+      paymentStatus === "success"
+        ? ["查看赔付明细", "查看我的保单", "我要报案"]
+        : ["查看赔付明细", "查询理赔进度", "更新银行卡信息"],
   };
 }
 
@@ -978,6 +1024,11 @@ async function handleQueryCoverage(
         : `暂未查询到 ${claimType} 的完整保障范围结构化数据，建议结合保单条款进一步确认。`,
     uiComponent: UIComponentType.COVERAGE_INFO,
     uiData: coverageInfo,
+    suggestedFollowups: [
+      "理赔需要哪些材料",
+      "预估能赔多少",
+      "我要报案",
+    ],
   };
 }
 
@@ -1025,7 +1076,12 @@ ${impactInfo.suggestions.map(s => `• ${s}`).join('\n')}
     data: impactInfo,
     message,
     uiComponent: UIComponentType.PREMIUM_IMPACT,
-    uiData: impactInfo
+    uiData: impactInfo,
+    suggestedFollowups: [
+      "怎样避免保费上涨",
+      "查看我的保单",
+      "查询理赔历史",
+    ],
   };
 }
 
@@ -1040,7 +1096,15 @@ function handleGeneralChat(
     success: true,
     data: null,
     message: "", // 空消息表示需要走普通 AI 回复流程
-    uiComponent: undefined
+    uiComponent: undefined,
+    // Default starter suggestions when the user is just chatting / not sure
+    // what to ask. The assistant's free-form reply is appended above these.
+    suggestedFollowups: [
+      "查询我的理赔进度",
+      "还缺哪些材料",
+      "我要报案",
+      "查看我的保单",
+    ],
   };
 }
 

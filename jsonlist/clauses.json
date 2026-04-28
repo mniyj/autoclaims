@@ -3117,5 +3117,158 @@
     "rateTableFile": "",
     "productDescriptionFile": "",
     "cashValueTableFile": ""
+  },
+  {
+    "productCode": "CAR-MAIN-2024-A",
+    "regulatoryName": "机动车综合商业保险条款（2024版）",
+    "companyName": "平安财险",
+    "version": "1.0",
+    "salesRegions": "全国（不含港澳台）",
+    "effectiveDate": "2024-01-01",
+    "discontinuationDate": "2028-12-31",
+    "status": "生效",
+    "primaryCategory": "车险",
+    "secondaryCategory": "商业险",
+    "primaryCategoryCode": "G",
+    "secondaryCategoryCode": "G02",
+    "racewayId": "G0201",
+    "racewayName": "第三者责任险",
+    "clauseType": "主险",
+    "operator": "张三",
+    "coverageDetails": [
+      {
+        "mandatory": true,
+        "id": "car-cov-1",
+        "name": "机动车交通事故责任强制险（交强险）",
+        "amount": "死亡伤残18万/医疗费用1.8万/财产损失2000元",
+        "details": "法定强制险，承保被保险机动车发生交通事故造成本车人员、被保险人以外受害人的人身伤亡和财产损失，不设绝对免赔额。"
+      },
+      {
+        "mandatory": false,
+        "id": "car-cov-2",
+        "name": "第三者责任险",
+        "amount": "可选50万/100万/300万",
+        "details": "承保被保险机动车在使用过程中发生意外事故，造成第三者人身伤亡或财产损失，依法应由被保险人承担的赔偿责任。"
+      },
+      {
+        "mandatory": false,
+        "id": "car-cov-3",
+        "name": "车辆损失险",
+        "amount": "按车辆实际价值",
+        "details": "承保被保险机动车因碰撞、倾覆、自燃、暴风、暴雨、洪水、泥石流等原因造成的车辆损失，按责任比例和免赔率计算赔偿。"
+      },
+      {
+        "mandatory": false,
+        "id": "car-cov-4",
+        "name": "车上人员责任险",
+        "amount": "每座10万/20万可选",
+        "details": "承保被保险机动车在使用过程中发生意外事故，造成车上人员人身伤亡，依法应由被保险人承担的赔偿责任。"
+      },
+      {
+        "mandatory": false,
+        "id": "car-cov-5",
+        "name": "玻璃单独破碎险",
+        "amount": "按实际损失",
+        "details": "承保因意外原因造成被保险车辆前挡风玻璃或车窗玻璃的单独破碎损失（仅旗舰版含）。"
+      }
+    ],
+    "coveragePlans": [
+      {
+        "planType": "基础版",
+        "coverageDetails": [
+          {
+            "id": "plan1-1",
+            "name": "交强险",
+            "amount": "法定限额",
+            "details": "死亡伤残18万元，医疗费用1.8万元，财产损失2000元。"
+          },
+          {
+            "id": "plan1-2",
+            "name": "第三者责任险",
+            "amount": "50万",
+            "details": "每次事故第三者人身伤亡及财产损失赔偿限额50万元，绝对免赔额0元。"
+          },
+          {
+            "id": "plan1-3",
+            "name": "车辆损失险",
+            "amount": "按实际价值",
+            "details": "全责免赔率5%，主责10%，同责15%，次责20%，无责不赔。"
+          }
+        ]
+      },
+      {
+        "planType": "标准版",
+        "coverageDetails": [
+          {
+            "id": "plan2-1",
+            "name": "交强险",
+            "amount": "法定限额",
+            "details": "死亡伤残18万元，医疗费用1.8万元，财产损失2000元。"
+          },
+          {
+            "id": "plan2-2",
+            "name": "第三者责任险",
+            "amount": "100万",
+            "details": "每次事故第三者人身伤亡及财产损失赔偿限额100万元，绝对免赔额0元。"
+          },
+          {
+            "id": "plan2-3",
+            "name": "车辆损失险",
+            "amount": "按实际价值",
+            "details": "全责免赔率5%，主责10%，同责15%，次责20%，无责不赔。"
+          },
+          {
+            "id": "plan2-4",
+            "name": "车上人员责任险",
+            "amount": "每座10万",
+            "details": "含驾驶员座位及5个乘客座位，每座赔偿限额10万元。"
+          }
+        ]
+      },
+      {
+        "planType": "旗舰版",
+        "coverageDetails": [
+          {
+            "id": "plan3-1",
+            "name": "交强险",
+            "amount": "法定限额",
+            "details": "死亡伤残18万元，医疗费用1.8万元，财产损失2000元。"
+          },
+          {
+            "id": "plan3-2",
+            "name": "第三者责任险",
+            "amount": "300万",
+            "details": "每次事故第三者人身伤亡及财产损失赔偿限额300万元，绝对免赔额0元。"
+          },
+          {
+            "id": "plan3-3",
+            "name": "车辆损失险（含不计免赔）",
+            "amount": "按实际价值",
+            "details": "附加不计免赔特约险，理赔时不计算事故免赔率，按100%赔付。"
+          },
+          {
+            "id": "plan3-4",
+            "name": "车上人员责任险",
+            "amount": "每座20万",
+            "details": "含驾驶员座位及5个乘客座位，每座赔偿限额20万元。"
+          },
+          {
+            "id": "plan3-5",
+            "name": "玻璃单独破碎险",
+            "amount": "按实际损失",
+            "details": "前挡风玻璃及车窗玻璃单独破碎，按实际维修费用赔付。"
+          }
+        ]
+      }
+    ],
+    "underwritingAge": "不限（新车0-3年直接承保，3年以上须查验）",
+    "coveragePeriod": "1年",
+    "waitingPeriod": "无等待期，即时生效",
+    "supportsOnlineClaim": true,
+    "isOnline": true,
+    "clauseTextFile": "平安财险机动车综合商业保险条款2024版.pdf",
+    "rateTableFile": "平安财险2024机动车商业险费率表.pdf",
+    "productDescriptionFile": "",
+    "cashValueTableFile": ""
   }
 ]

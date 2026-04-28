@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useVoiceController } from "../hooks/useVoiceController";
 import {
   ClaimStatus,
   Message,
@@ -49,8 +50,10 @@ import {
   analyzeDocument,
   quickAnalyze,
   smartChat,
+  type QuickAnalyzeMaterial,
 } from "./geminiService";
-import { getIntentLabel } from "./intentService";
+import { configService } from "./services/configService";
+import { getIntentLabel, recognizeIntent } from "./intentService";
 import {
   cancelActiveClaimOrchestrator,
   continueClaimOrchestratorWithText,
@@ -186,19 +189,6 @@ type VoiceServiceStatus = {
   geminiConfigured?: boolean;
   nlsMode?: "aliyun" | "mock";
   ttsMode?: "aliyun" | "mock";
-};
-
-type VoiceServerMessage = {
-  type: "audio" | "text" | "control" | "event";
-  payload: {
-    source?: "stt" | "llm" | "system";
-    content?: string;
-    isFinal?: boolean;
-    format?: "pcm" | "opus";
-    event?: string;
-    seq?: number;
-    data?: any;
-  };
 };
 
 declare global {
@@ -458,6 +448,8 @@ const MATERIAL_MATCH_ALIASES: Record<string, string[]> = {
   身份证: ["身份证", "身份证件", "证件", "身份证明"],
   银行卡: ["银行卡", "银行账户", "收款账户", "开户行"],
   事故认定: ["事故认定", "事故证明", "责任认定", "交通事故责任认定书"],
+  行驶证: ["行驶证", "机动车行驶证", "车辆行驶证", "行驶证正页", "行驶证副页"],
+  驾驶证: ["驾驶证", "机动车驾驶证", "驾照", "准驾车型"],
   保单: ["保单", "保险合同", "投保单"],
   委托书: ["委托书", "授权书"],
   死亡证明: ["死亡证明", "死亡医学证明"],
@@ -583,7 +575,44 @@ const getAttachmentHeuristicBonus = (
     if (materialText.includes("病历")) score += 35;
   }
 
+  if (
+    normalizeMaterialText(attachment.analysis?.category).includes("行驶证") ||
+    normalizeMaterialText(attachment.name).includes("行驶证")
+  ) {
+    if (materialText.includes("行驶证")) score += 45;
+  }
+
+  if (
+    normalizeMaterialText(attachment.analysis?.category).includes("驾驶证") ||
+    normalizeMaterialText(attachment.name).includes("驾驶证") ||
+    normalizeMaterialText(attachment.analysis?.category).includes("驾照") ||
+    normalizeMaterialText(attachment.name).includes("驾照")
+  ) {
+    if (materialText.includes("驾驶证") || materialText.includes("驾照")) score += 45;
+  }
+
   return score;
+};
+
+// Checks whether a claim still needs materials matching any of the given AI-identified categories
+const claimNeedsMatchingMaterial = (
+  claim: HistoricalClaim,
+  pendingCategories: string[],
+): boolean => {
+  if (!claim.requiredMaterials || claim.requiredMaterials.length === 0) return false;
+
+  return claim.requiredMaterials.some((material) => {
+    const matTokens = new Set(
+      tokenizeMaterialText(`${material.materialName} ${material.materialDescription || ""}`),
+    );
+    const matNorm = normalizeMaterialText(material.materialName);
+
+    return pendingCategories.some((cat) => {
+      const catNorm = normalizeMaterialText(cat);
+      if (matNorm.includes(catNorm) || catNorm.includes(matNorm)) return true;
+      return tokenizeMaterialText(cat).some((token) => matTokens.has(token));
+    });
+  });
 };
 
 const resolveMaterialCategoryName = (
@@ -645,12 +674,39 @@ const resolveMaterialMatch = (
   explicitMaterialName?: string,
 ): { materialId?: string; materialName: string } => {
   if (explicitMaterialName) {
+    // Try strict name match first; if the claim's requiredMaterials list uses
+    // a slightly different label (全/半角括号、空格、别名), fall through to the
+    // AI-provided match so we don't drop an otherwise-correct classification.
     const explicitMaterial = requiredMaterials.find(
       (material) => material.materialName === explicitMaterialName,
     );
+    if (explicitMaterial?.materialId) {
+      return {
+        materialId: explicitMaterial.materialId,
+        materialName: explicitMaterialName,
+      };
+    }
+    if (attachment.analysis?.matchedMaterialId) {
+      return {
+        materialId: attachment.analysis.matchedMaterialId,
+        materialName:
+          attachment.analysis.matchedMaterialName ||
+          explicitMaterialName ||
+          attachment.analysis.category,
+      };
+    }
     return {
-      materialId: explicitMaterial?.materialId,
+      materialId: undefined,
       materialName: explicitMaterialName,
+    };
+  }
+
+  // quickAnalyze 已直接从材料目录匹配，跳过 token 评分
+  if (attachment.analysis?.matchedMaterialId) {
+    return {
+      materialId: attachment.analysis.matchedMaterialId,
+      materialName:
+        attachment.analysis.matchedMaterialName || attachment.analysis.category,
     };
   }
 
@@ -713,11 +769,32 @@ const resolveMaterialMatch = (
     }
   });
 
-  if (bestMatch && bestMatch.score >= 20) {
+  if (bestMatch && bestMatch.score >= 10) {
     return {
       materialId: bestMatch.materialId,
       materialName: bestMatch.materialName,
     };
+  }
+
+  const semanticKeywords = [
+    { keys: ["事故", "现场", "碰撞", "车损", "车辆", "损失", "定损"], target: ["事故现场", "车辆损失", "现场照片", "定损"] },
+    { keys: ["病历", "门诊", "住院"], target: ["病历"] },
+    { keys: ["发票", "费用"], target: ["发票", "费用"] },
+    { keys: ["身份证"], target: ["身份"] },
+    { keys: ["银行卡"], target: ["银行"] },
+  ];
+  for (const group of semanticKeywords) {
+    if (group.keys.some((k) => normalizedCandidate.includes(k))) {
+      const semanticHit = requiredMaterials.find((m) =>
+        group.target.some((t) => m.materialName.includes(t)),
+      );
+      if (semanticHit) {
+        return {
+          materialId: semanticHit.materialId,
+          materialName: semanticHit.materialName,
+        };
+      }
+    }
   }
 
   return { materialName: attachment.analysis?.category || "其他材料" };
@@ -2741,6 +2818,9 @@ export const App: React.FC = () => {
   const [submittedMaterials, setSubmittedMaterials] = useState<
     CalculatedMaterial[]
   >([]);
+
+  // 全局材料目录（报案前上传时使用）
+  const [globalMaterialsCatalog, setGlobalMaterialsCatalog] = useState<QuickAnalyzeMaterial[]>([]);
   const [previewSampleUrl, setPreviewSampleUrl] = useState<string | null>(null);
   const [samplePreviewData, setSamplePreviewData] = useState<{
     isOpen: boolean;
@@ -2761,24 +2841,69 @@ export const App: React.FC = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const policyUploadRef = useRef<HTMLInputElement>(null);
+  // Browser-SpeechRecognition fallback path (only used when the server voice
+  // service is unreachable). Server mode is fully owned by useVoiceController.
   const speechRecognitionRef = useRef<BrowserSpeechRecognition | null>(null);
-  const voiceSocketRef = useRef<WebSocket | null>(null);
-  const voiceSessionIdRef = useRef<string | null>(null);
   const voiceTransportModeRef = useRef<VoiceTransportMode | null>(null);
-  const voiceStreamRef = useRef<MediaStream | null>(null);
-  const voiceAudioContextRef = useRef<AudioContext | null>(null);
-  const voicePlaybackContextRef = useRef<AudioContext | null>(null);
-  const voicePlaybackChainRef = useRef(Promise.resolve());
-  const voicePlaybackPendingChunksRef = useRef(0);
-  const voiceServicesRef = useRef<VoiceServiceStatus | null>(null);
-  const voiceTtsFallbackTimerRef = useRef<number | null>(null);
-  const browserVoiceRelayRef = useRef(false);
-  const voiceSourceNodeRef = useRef<MediaStreamAudioSourceNode | null>(null);
-  const voiceProcessorNodeRef = useRef<ScriptProcessorNode | null>(null);
-  const pauseVoiceInputRef = useRef(false);
   const shouldResumeVoiceRecognitionRef = useRef(false);
   const isVoiceModeRef = useRef(false);
   const voiceNetworkRetryCountRef = useRef(0);
+
+  // -----------------------------------------------------------------------
+  // Phase 1 real-time voice stack: turn-state driven controller.
+  // Owns WebSocket, mic capture, and TTS playback for the server transport
+  // path. Callbacks are fresh closures each render (hook stores them in a
+  // ref internally so the WebSocket handlers always see the latest).
+  // -----------------------------------------------------------------------
+  const voiceController = useVoiceController({
+    userName,
+    onSttText: (text, isFinal) => {
+      if (isFinal && text.trim()) {
+        setVoiceTranscript("");
+        setIsTranscribing(false);
+        appendVoiceUserMessage(text);
+      } else {
+        setVoiceTranscript(text);
+      }
+    },
+    onLlmText: (text) => {
+      if (text && text.trim()) {
+        appendAssistantMessageSilently(text);
+      }
+    },
+    onError: (message) => {
+      appendAssistantMessage(message);
+    },
+    onToolCallStart: (toolName) => {
+      if (toolName) setVoiceStatusText(`正在${toolName}...`);
+    },
+    onToolCallEnd: () => {
+      // Status text re-derived from turnState via the effect below.
+    },
+    onSessionEnded: () => {
+      // A claim was submitted or terminal cleanup — drop out of voice mode.
+      setIsVoiceMode(false);
+      voiceTransportModeRef.current = null;
+    },
+    onServiceMessage: (msg) => {
+      if (msg) appendAssistantMessageSilently(msg, { role: "system" });
+    },
+  });
+
+  // Mirror turnState → UI status line + output channel badge.
+  useEffect(() => {
+    const state = voiceController.turnState;
+    setVoiceStatusText(voiceController.statusText);
+    if (state === "SPEAKING") {
+      setVoiceOutputChannel(
+        voiceController.services?.ttsMode === "aliyun" ? "aliyun" : "browser",
+      );
+    } else if (state === "LISTENING") {
+      setVoiceOutputChannel(
+        voiceController.services?.ttsMode === "aliyun" ? "aliyun" : "connecting",
+      );
+    }
+  }, [voiceController.turnState, voiceController.statusText, voiceController.services]);
 
   const [pendingFiles, setPendingFiles] = useState<Attachment[]>([]);
 
@@ -2815,20 +2940,29 @@ export const App: React.FC = () => {
     isVoiceModeRef.current = isVoiceMode;
   }, [isVoiceMode]);
 
+  // 启动时加载全局材料目录，用于报案前上传时的 AI 分类
   useEffect(() => {
+    configService.loadMaterials().then((materials) => {
+      setGlobalMaterialsCatalog(
+        materials.map((m) => ({
+          materialId: m.id,
+          materialName: m.name,
+          materialDescription: m.description,
+        })),
+      );
+    }).catch(() => {
+      // 加载失败不阻断主流程，quickAnalyze 退回自由文本识别
+    });
+  }, []);
+
+  useEffect(() => {
+    // Unmount cleanup for the browser-fallback voice path. The server-side
+    // transport (WebSocket + AudioWorklet + TTS player) is owned by
+    // useVoiceController and cleans itself up via its own unmount effect.
     return () => {
       shouldResumeVoiceRecognitionRef.current = false;
       voiceNetworkRetryCountRef.current = 0;
       speechRecognitionRef.current?.stop();
-      voiceProcessorNodeRef.current?.disconnect();
-      voiceSourceNodeRef.current?.disconnect();
-      voiceStreamRef.current?.getTracks().forEach((track) => track.stop());
-      voiceAudioContextRef.current?.close().catch(() => null);
-      voicePlaybackContextRef.current?.close().catch(() => null);
-      if (voiceTtsFallbackTimerRef.current) {
-        window.clearTimeout(voiceTtsFallbackTimerRef.current);
-      }
-      voiceSocketRef.current?.close();
       window.speechSynthesis?.cancel();
     };
   }, []);
@@ -3390,20 +3524,16 @@ export const App: React.FC = () => {
     }
   };
 
-  const startBrowserVoiceRecognition = (
-    relayToServer = false,
-  ): BrowserSpeechRecognition | null => {
+  /**
+   * Browser-native SpeechRecognition fallback. Used ONLY when the server-side
+   * voice service (Aliyun NLS via useVoiceController) is unreachable. Its
+   * `finalTranscript` routes through the regular text `handleSend` — we do
+   * not relay back to the server socket.
+   */
+  const startBrowserVoiceRecognition = (): BrowserSpeechRecognition | null => {
     const RecognitionCtor =
       window.SpeechRecognition || window.webkitSpeechRecognition;
-
-    if (!RecognitionCtor) {
-      return null;
-    }
-
-    browserVoiceRelayRef.current = relayToServer;
-    if (relayToServer) {
-      pauseVoiceInputRef.current = true;
-    }
+    if (!RecognitionCtor) return null;
 
     const recognition = new RecognitionCtor();
     recognition.continuous = true;
@@ -3417,14 +3547,9 @@ export const App: React.FC = () => {
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
         const transcript = result[0]?.transcript?.trim() || "";
-        if (!transcript) {
-          continue;
-        }
-        if (result.isFinal) {
-          finalTranscript += transcript;
-        } else {
-          interimTranscript += transcript;
-        }
+        if (!transcript) continue;
+        if (result.isFinal) finalTranscript += transcript;
+        else interimTranscript += transcript;
       }
 
       if (interimTranscript) {
@@ -3440,33 +3565,8 @@ export const App: React.FC = () => {
         setIsTranscribing(true);
         recognition.stop();
 
-        const finalize = relayToServer
-          ? Promise.resolve().then(() => {
-              appendVoiceUserMessage(finalTranscript);
-              if (
-                voiceSocketRef.current &&
-                voiceSocketRef.current.readyState === WebSocket.OPEN
-              ) {
-                voiceSocketRef.current.send(
-                  JSON.stringify({
-                    type: "text",
-                    payload: {
-                      source: "stt",
-                      content: finalTranscript,
-                      isFinal: true,
-                    },
-                  }),
-                );
-              } else {
-                return handleSend(finalTranscript);
-              }
-            })
-          : Promise.resolve(handleSend(finalTranscript));
-
-        finalize
-          .catch((error) => {
-            console.error("[Voice HandleSend Error]", error);
-          })
+        Promise.resolve(handleSend(finalTranscript))
+          .catch((error) => console.error("[Voice HandleSend Error]", error))
           .finally(() => {
             setIsTranscribing(false);
             setVoiceTranscript("");
@@ -3482,33 +3582,19 @@ export const App: React.FC = () => {
       if (event.error === "network") {
         voiceNetworkRetryCountRef.current += 1;
         const shouldRetry = voiceNetworkRetryCountRef.current <= 2;
-        if (shouldRetry) {
-          console.warn(
-            `[Voice Recognition Error] network (retry ${voiceNetworkRetryCountRef.current})`,
-          );
-        } else {
-          console.error("[Voice Recognition Error] network");
-        }
         setVoiceStatusText(
           shouldRetry ? "语音网络波动，正在重试..." : "语音识别网络异常",
         );
         shouldResumeVoiceRecognitionRef.current = shouldRetry;
-
         if (shouldRetry && isVoiceModeRef.current && !window.speechSynthesis?.speaking) {
-          window.setTimeout(() => {
-            restartVoiceRecognition();
-          }, 400 * voiceNetworkRetryCountRef.current);
+          window.setTimeout(
+            () => restartVoiceRecognition(),
+            400 * voiceNetworkRetryCountRef.current,
+          );
           return;
         }
       } else {
         console.error("[Voice Recognition Error]", event.error);
-      }
-
-      if (relayToServer) {
-        setVoiceOutputChannel("degraded");
-        setVoiceStatusText("本地语音识别也不可用");
-        shouldResumeVoiceRecognitionRef.current = false;
-        return;
       }
 
       const handling = getVoiceRecognitionErrorMessage(event.error);
@@ -3519,11 +3605,7 @@ export const App: React.FC = () => {
         setIsVoiceMode(false);
         voiceTransportModeRef.current = null;
       }
-
-      if (handling.assistantMessage) {
-        appendAssistantMessage(handling.assistantMessage);
-      }
-
+      if (handling.assistantMessage) appendAssistantMessage(handling.assistantMessage);
       if (
         handling.shouldRetry &&
         isVoiceModeRef.current &&
@@ -3548,360 +3630,23 @@ export const App: React.FC = () => {
     return recognition;
   };
 
-  const stopServerVoiceTransport = async (notifyServer = true) => {
-    const sessionId = voiceSessionIdRef.current;
-    const socket = voiceSocketRef.current;
 
-    pauseVoiceInputRef.current = true;
-    voiceProcessorNodeRef.current?.disconnect();
-    voiceProcessorNodeRef.current = null;
-    voiceSourceNodeRef.current?.disconnect();
-    voiceSourceNodeRef.current = null;
-    voiceStreamRef.current?.getTracks().forEach((track) => track.stop());
-    voiceStreamRef.current = null;
-
-    if (voiceAudioContextRef.current) {
-      await voiceAudioContextRef.current.close().catch(() => null);
-      voiceAudioContextRef.current = null;
-    }
-
-    if (voicePlaybackContextRef.current) {
-      await voicePlaybackContextRef.current.close().catch(() => null);
-      voicePlaybackContextRef.current = null;
-    }
-    voicePlaybackChainRef.current = Promise.resolve();
-    voicePlaybackPendingChunksRef.current = 0;
-    voiceServicesRef.current = null;
-    if (voiceTtsFallbackTimerRef.current) {
-      window.clearTimeout(voiceTtsFallbackTimerRef.current);
-      voiceTtsFallbackTimerRef.current = null;
-    }
-
-    if (socket && socket.readyState === WebSocket.OPEN) {
-      socket.send(
-        JSON.stringify({
-          type: "control",
-          payload: { action: "stop" },
-        }),
-      );
-    }
-
-    socket?.close();
-    voiceSocketRef.current = null;
-    voiceSessionIdRef.current = null;
-    voiceTransportModeRef.current = null;
-    browserVoiceRelayRef.current = false;
-    setVoiceOutputChannel("connecting");
-
-    if (notifyServer && sessionId) {
-      fetch(`/api/voice/session/${encodeURIComponent(sessionId)}/end`, {
-        method: "POST",
-      }).catch(() => null);
-    }
-  };
-
-  const appendVoiceUserMessage = (content: string) => {
-    const trimmed = content.trim();
-    if (!trimmed) {
-      return;
-    }
-
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: Date.now().toString(),
-        role: "user",
-        content: trimmed,
-        timestamp: Date.now(),
-      },
-    ]);
-  };
-
-  const appendAssistantMessageSilently = (
-    content: string,
-    extra?: Partial<Message>,
-  ) => {
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: Date.now().toString(),
-        role: "assistant",
-        content,
-        timestamp: Date.now(),
-        ...extra,
-      },
-    ]);
-  };
-
-  const playServerVoiceAudio = (base64Audio: string, sampleRate = 16000) => {
-    if (!base64Audio || typeof window === "undefined") {
-      return;
-    }
-
-    window.speechSynthesis?.cancel();
-    if (voiceTtsFallbackTimerRef.current) {
-      window.clearTimeout(voiceTtsFallbackTimerRef.current);
-      voiceTtsFallbackTimerRef.current = null;
-    }
-
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (!AudioCtx) {
-      return;
-    }
-
-    if (!voicePlaybackContextRef.current) {
-      voicePlaybackContextRef.current = new AudioCtx();
-    }
-
-    const playbackContext = voicePlaybackContextRef.current;
-    voicePlaybackPendingChunksRef.current += 1;
-    pauseVoiceInputRef.current = true;
-    setVoiceStatusText("正在播报...");
-
-    voicePlaybackChainRef.current = voicePlaybackChainRef.current
-      .catch(() => null)
-      .then(async () => {
-        setVoiceOutputChannel("aliyun");
-        const audioBytes = decode(base64Audio);
-        const audioBuffer = await decodeAudioData(
-          audioBytes,
-          playbackContext,
-          sampleRate,
-          1,
-        );
-
-        await playbackContext.resume().catch(() => null);
-
-        await new Promise<void>((resolve) => {
-          const source = playbackContext.createBufferSource();
-          source.buffer = audioBuffer;
-          source.connect(playbackContext.destination);
-          source.onended = () => resolve();
-          source.start(0);
-        });
-      })
-      .finally(() => {
-        voicePlaybackPendingChunksRef.current = Math.max(
-          0,
-          voicePlaybackPendingChunksRef.current - 1,
-        );
-
-        if (voicePlaybackPendingChunksRef.current === 0) {
-          pauseVoiceInputRef.current = false;
-          setVoiceStatusText("请直接描述您的事故情况");
-        }
-      });
-  };
-
-  const handleServerVoiceMessage = (message: VoiceServerMessage) => {
-    if (message.type === "audio" && typeof message.payload.data === "string") {
-      playServerVoiceAudio(message.payload.data);
-      return;
-    }
-
-    if (message.type === "text") {
-      if (message.payload.source === "stt") {
-        const transcript = message.payload.content?.trim() || "";
-        if (!transcript) {
-          return;
-        }
-
-        setVoiceTranscript(transcript);
-        setVoiceStatusText(message.payload.isFinal ? "正在处理..." : "正在聆听...");
-
-        if (message.payload.isFinal) {
-          appendVoiceUserMessage(transcript);
-        }
-        return;
-      }
-
-      if (message.payload.source === "llm" && message.payload.content?.trim()) {
-        setVoiceTranscript("");
-        setVoiceStatusText("请直接描述您的事故情况");
-        if (voiceTransportModeRef.current === "server") {
-          appendAssistantMessageSilently(message.payload.content);
-          if (voiceServicesRef.current?.ttsMode !== "aliyun") {
-            setVoiceOutputChannel("browser");
-            speakAssistantReply(message.payload.content);
-          }
-        } else {
-          appendAssistantMessage(message.payload.content);
-        }
-      }
-      return;
-    }
-
-    if (message.type === "event") {
-      if (message.payload.event === "error") {
-        const errorMessage =
-          typeof message.payload.data?.message === "string"
-            ? message.payload.data.message
-            : "语音服务暂不可用，请稍后重试。";
-        if (
-          voiceTransportModeRef.current === "server" &&
-          !browserVoiceRelayRef.current &&
-          startBrowserVoiceRecognition(true)
-        ) {
-          setVoiceOutputChannel("browser");
-          setVoiceStatusText("已切换为本地语音识别");
-        } else {
-          appendAssistantMessage(errorMessage);
-        }
-      }
-    }
-  };
-
-  const startServerVoiceMode = async (): Promise<boolean> => {
-    try {
-      setVoiceStatusText("正在连接语音服务...");
-
-      const sessionResponse = await fetch("/api/voice/session/start", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: userName || "anonymous" }),
-      });
-
-      if (!sessionResponse.ok) {
-        return false;
-      }
-
-      const sessionData = await sessionResponse.json();
-      const wsUrl = sessionData?.wsUrl;
-      const sessionId = sessionData?.sessionId;
-      voiceServicesRef.current =
-        (sessionData?.services as VoiceServiceStatus | undefined) || null;
-      setVoiceOutputChannel(
-        voiceServicesRef.current?.ttsMode === "aliyun" ? "connecting" : "degraded",
-      );
-      const serviceMessage = describeVoiceServicesStatus(
-        sessionData?.services as VoiceServiceStatus | undefined,
-      );
-
-      if (!wsUrl || !sessionId) {
-        return false;
-      }
-
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          channelCount: 1,
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-        },
-      });
-
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (!AudioCtx) {
-        stream.getTracks().forEach((track) => track.stop());
-        return false;
-      }
-
-      const audioContext = new AudioCtx();
-      const sourceNode = audioContext.createMediaStreamSource(stream);
-      const processorNode = audioContext.createScriptProcessor(4096, 1, 1);
-      const socket = new WebSocket(
-        `${wsUrl}${wsUrl.includes("?") ? "&" : "?"}userId=${encodeURIComponent(userName || "anonymous")}`,
-      );
-
-      await new Promise<void>((resolve, reject) => {
-        socket.onopen = () => resolve();
-        socket.onerror = () => reject(new Error("voice_socket_connect_failed"));
-      });
-
-      voiceTransportModeRef.current = "server";
-      voiceSessionIdRef.current = sessionId;
-      voiceSocketRef.current = socket;
-      voiceStreamRef.current = stream;
-      voiceAudioContextRef.current = audioContext;
-      voiceSourceNodeRef.current = sourceNode;
-      voiceProcessorNodeRef.current = processorNode;
-      pauseVoiceInputRef.current = false;
-
-      processorNode.onaudioprocess = (event) => {
-        if (
-          voiceTransportModeRef.current !== "server" ||
-          pauseVoiceInputRef.current ||
-          !voiceSocketRef.current ||
-          voiceSocketRef.current.readyState !== WebSocket.OPEN
-        ) {
-          return;
-        }
-
-        const inputData = event.inputBuffer.getChannelData(0);
-        const downsampled = downsampleAudioBuffer(
-          inputData,
-          audioContext.sampleRate,
-          16000,
-        );
-        const chunk = createBlob(downsampled);
-
-        voiceSocketRef.current.send(
-          JSON.stringify({
-            type: "audio",
-            payload: {
-              format: "pcm",
-              data: chunk.data,
-              seq: Date.now(),
-              isFinal: false,
-            },
-          }),
-        );
-      };
-
-      sourceNode.connect(processorNode);
-      processorNode.connect(audioContext.destination);
-
-      socket.onmessage = (event) => {
-        try {
-          const message = JSON.parse(event.data) as VoiceServerMessage;
-          handleServerVoiceMessage(message);
-        } catch (error) {
-          console.error("[Voice Socket] Failed to parse message:", error);
-        }
-      };
-
-      socket.onclose = () => {
-        if (voiceTransportModeRef.current === "server") {
-          stopServerVoiceTransport(false).catch(() => null);
-        }
-      };
-
-      socket.onerror = (error) => {
-        console.error("[Voice Socket] WebSocket error:", error);
-      };
-
-      setIsVoiceMode(true);
-      setVoiceTranscript("");
-      setVoiceStatusText("正在聆听...");
-      if (serviceMessage) {
-        appendAssistantMessageSilently(serviceMessage, {
-          role: "system",
-        });
-      }
-      return true;
-    } catch (error) {
-      console.warn("[Voice Service] Failed to start server voice mode:", error);
-      await stopServerVoiceTransport(false);
-      return false;
-    }
-  };
-
+  /**
+   * Browser-TTS fallback. Only invoked when the server transport (Aliyun TTS
+   * via useVoiceController) is unavailable and we dropped to the browser
+   * SpeechRecognition path. In server mode the reply text is already being
+   * streamed through useVoiceController's TTSPlayer, so this helper does
+   * nothing there — we early-return.
+   */
   const speakAssistantReply = (content: string) => {
+    if (voiceTransportModeRef.current === "server") return;
     const text = stripMarkdownForSpeech(content);
     if (!text || typeof window === "undefined" || !window.speechSynthesis) {
-      if (voiceTransportModeRef.current === "server") {
-        pauseVoiceInputRef.current = false;
-        setVoiceStatusText("请直接描述您的事故情况");
-      } else {
-        restartVoiceRecognition();
-      }
+      restartVoiceRecognition();
       return;
     }
 
-    shouldResumeVoiceRecognitionRef.current =
-      isVoiceModeRef.current &&
-      (voiceTransportModeRef.current !== "server" || browserVoiceRelayRef.current);
-    pauseVoiceInputRef.current = voiceTransportModeRef.current === "server";
+    shouldResumeVoiceRecognitionRef.current = isVoiceModeRef.current;
     speechRecognitionRef.current?.stop();
     window.speechSynthesis.cancel();
 
@@ -3909,30 +3654,14 @@ export const App: React.FC = () => {
     utterance.lang = "zh-CN";
     utterance.rate = 1;
     utterance.pitch = 1;
-    utterance.onstart = () => {
-      setVoiceStatusText("正在播报...");
-    };
+    utterance.onstart = () => setVoiceStatusText("正在播报...");
     utterance.onend = () => {
       setVoiceStatusText("请直接描述您的事故情况");
-      if (voiceTransportModeRef.current === "server") {
-        pauseVoiceInputRef.current = browserVoiceRelayRef.current;
-        if (browserVoiceRelayRef.current && shouldResumeVoiceRecognitionRef.current) {
-          restartVoiceRecognition();
-        }
-      } else if (shouldResumeVoiceRecognitionRef.current) {
-        restartVoiceRecognition();
-      }
+      if (shouldResumeVoiceRecognitionRef.current) restartVoiceRecognition();
     };
     utterance.onerror = () => {
       setVoiceStatusText("请直接描述您的事故情况");
-      if (voiceTransportModeRef.current === "server") {
-        pauseVoiceInputRef.current = browserVoiceRelayRef.current;
-        if (browserVoiceRelayRef.current && shouldResumeVoiceRecognitionRef.current) {
-          restartVoiceRecognition();
-        }
-      } else if (shouldResumeVoiceRecognitionRef.current) {
-        restartVoiceRecognition();
-      }
+      if (shouldResumeVoiceRecognitionRef.current) restartVoiceRecognition();
     };
     window.speechSynthesis.speak(utterance);
   };
@@ -4122,6 +3851,110 @@ export const App: React.FC = () => {
     }
   };
 
+  const MAX_CLARIFICATION_ROUNDS = 2;
+
+  const resolveClarification = async (userText: string) => {
+    const pending = claimState.pendingClarification;
+    if (!pending) return;
+
+    const lower = userText.trim();
+    if (/转人工|人工客服|算了|取消/.test(lower)) {
+      setClaimState((prev) => ({ ...prev, pendingClarification: undefined }));
+      appendAssistantMessage(
+        "已为您转接人工客服通道，稍后将有理赔专员联系您。",
+      );
+      return;
+    }
+
+    const combinedText = `${pending.originalUserText}（用户补充：${userText}）`;
+    try {
+      const intentResult = await recognizeIntent(
+        combinedText,
+        messages.map((m) => ({ role: m.role, content: m.content })),
+        claimState,
+      );
+
+      if (intentResult.requiresClarification) {
+        if (pending.round >= MAX_CLARIFICATION_ROUNDS) {
+          setClaimState((prev) => ({
+            ...prev,
+            pendingClarification: undefined,
+          }));
+          appendAssistantMessage(
+            "抱歉，我这边还是没有完全理解您的需求。建议您点击下方按钮转接人工客服，会有专员跟进处理。",
+            {
+              clarificationOptions: ["转人工客服"],
+              isClarification: true,
+            },
+          );
+          return;
+        }
+
+        const nextRound = pending.round + 1;
+        setClaimState((prev) => ({
+          ...prev,
+          pendingClarification: {
+            intent: intentResult.intent,
+            entities: intentResult.entities,
+            question:
+              intentResult.clarificationQuestion || pending.question,
+            options: intentResult.clarificationOptions || pending.options,
+            missingEntities: intentResult.missingEntities,
+            round: nextRound,
+            originalUserText: pending.originalUserText,
+          },
+        }));
+        appendAssistantMessage(
+          intentResult.clarificationQuestion || pending.question,
+          {
+            clarificationOptions:
+              intentResult.clarificationOptions || pending.options,
+            isClarification: true,
+            intentResult: {
+              intent: intentResult.intent,
+              confidence: intentResult.confidence,
+            },
+          },
+        );
+        return;
+      }
+
+      const clearedState: ClaimState = {
+        ...claimState,
+        pendingClarification: undefined,
+      };
+      setClaimState(clearedState);
+
+      const toolResponse = await executeTool(
+        intentResult.intent,
+        intentResult.entities,
+        clearedState,
+      );
+      if (toolResponse.data?.claimStatePatch) {
+        setClaimState(toolResponse.data.claimStatePatch as ClaimState);
+      }
+      appendAssistantMessage(toolResponse.message || "好的，已为您处理。", {
+        uiComponent: toolResponse.uiComponent,
+        uiData: toolResponse.uiData,
+        intentResult: {
+          intent: intentResult.intent,
+          confidence: intentResult.confidence,
+        },
+        claimsList:
+          toolResponse.data?.claims && Array.isArray(toolResponse.data.claims)
+            ? toolResponse.data.claims
+            : undefined,
+        clarificationOptions: toolResponse.suggestedFollowups,
+      });
+    } catch (error) {
+      console.error("[Clarification Error]", error);
+      setClaimState((prev) => ({ ...prev, pendingClarification: undefined }));
+      appendAssistantMessage(
+        "处理您的回答时遇到了问题，请稍后再试或转接人工客服。",
+      );
+    }
+  };
+
   const handleSend = async (overrideInput?: string) => {
     const textToSend = overrideInput || input;
     if (!textToSend.trim() || isLoading) return;
@@ -4137,6 +3970,16 @@ export const App: React.FC = () => {
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setIsLoading(true);
+
+    // 优先处理：若存在待澄清上下文，按澄清回复处理
+    if (claimState.pendingClarification) {
+      try {
+        await resolveClarification(textToSend);
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
 
     const orchestratorState = claimState.claimOrchestrator?.state;
     const trimmedText = textToSend.trim();
@@ -4394,6 +4237,13 @@ export const App: React.FC = () => {
             : undefined,
         uiComponent,
         uiData,
+        clarificationOptions:
+          uiComponent === UIComponentType.CLARIFICATION
+            ? (uiData?.options as string[] | undefined)
+            : // 非澄清回答附带"猜你想问"快捷建议
+              (toolResponse?.suggestedFollowups as string[] | undefined),
+        isClarification:
+          uiComponent === UIComponentType.CLARIFICATION ? true : undefined,
       });
     } catch (error) {
       console.error("[Smart Chat Error]", error);
@@ -4494,7 +4344,17 @@ export const App: React.FC = () => {
         }));
         setIsAnalyzing(att.name);
         try {
-          const analysisResult = await quickAnalyze(att.base64!, att.type);
+          const catalogForClassification =
+            submittedMaterials.length > 0
+              ? submittedMaterials
+              : globalMaterialsCatalog.length > 0
+                ? globalMaterialsCatalog
+                : undefined;
+          const analysisResult = await quickAnalyze(
+            att.base64!,
+            att.type,
+            catalogForClassification,
+          );
           aiLogs.push(analysisResult.aiLog);
           const mappedAnalysis = {
             category: analysisResult.category || "未知类型",
@@ -4505,6 +4365,8 @@ export const App: React.FC = () => {
             summary: "快速识别结果",
             missingFields: [],
             ocr: {},
+            matchedMaterialId: analysisResult.matchedMaterialId,
+            matchedMaterialName: analysisResult.matchedMaterialName,
           };
           completedCount++;
           setUploadProgress((prev) => ({
@@ -5050,14 +4912,14 @@ export const App: React.FC = () => {
 
   const toggleVoiceMode = async () => {
     if (isVoiceMode) {
+      // Exit voice mode: stop both server and browser transports.
       shouldResumeVoiceRecognitionRef.current = false;
       voiceNetworkRetryCountRef.current = 0;
       speechRecognitionRef.current?.stop();
       if (voiceTransportModeRef.current === "server") {
-        await stopServerVoiceTransport();
-      } else {
-        voiceTransportModeRef.current = null;
+        await voiceController.stop();
       }
+      voiceTransportModeRef.current = null;
       window.speechSynthesis?.cancel();
       setIsVoiceMode(false);
       setIsTranscribing(false);
@@ -5069,37 +4931,17 @@ export const App: React.FC = () => {
         userName,
         userGender,
       });
-    } else {
-      const voiceStart = Date.now();
-      try {
-        const startedServerVoice = await startServerVoiceMode();
-        if (startedServerVoice) {
-          logUserOperation({
-            operationType: UserOperationType.LIVE_AUDIO_SESSION,
-            operationLabel: "开始语音会话",
-            userName,
-            userGender,
-            duration: Date.now() - voiceStart,
-          });
-          return;
-        }
+      return;
+    }
 
-        const RecognitionCtor =
-          window.SpeechRecognition || window.webkitSpeechRecognition;
-
-        if (!RecognitionCtor) {
-          appendAssistantMessage("当前语音服务不可用，且浏览器不支持本地语音识别，请改用文字输入。");
-          return;
-        }
-
+    const voiceStart = Date.now();
+    try {
+      // Try server-side voice first (Aliyun NLS + TTS with turn-state protocol).
+      const started = await voiceController.start();
+      if (started) {
+        voiceTransportModeRef.current = "server";
         setIsVoiceMode(true);
-        voiceTransportModeRef.current = "browser";
-        setVoiceOutputChannel("browser");
-        voiceNetworkRetryCountRef.current = 0;
         setVoiceTranscript("");
-        setVoiceStatusText("正在聆听...");
-        shouldResumeVoiceRecognitionRef.current = true;
-        startBrowserVoiceRecognition(false);
         logUserOperation({
           operationType: UserOperationType.LIVE_AUDIO_SESSION,
           operationLabel: "开始语音会话",
@@ -5107,19 +4949,47 @@ export const App: React.FC = () => {
           userGender,
           duration: Date.now() - voiceStart,
         });
-      } catch (err) {
-        setIsVoiceMode(false);
-        voiceTransportModeRef.current = null;
-        setVoiceStatusText("请直接描述您的事故情况");
-        logUserOperation({
-          operationType: UserOperationType.LIVE_AUDIO_SESSION,
-          operationLabel: "开始语音会话失败",
-          userName,
-          userGender,
-          success: false,
-          errorMessage: String(err),
-        });
+        return;
       }
+
+      // Fallback: browser SpeechRecognition (no server). Used only if
+      // the backend voice service is unreachable AND the browser has local STT.
+      const RecognitionCtor =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!RecognitionCtor) {
+        appendAssistantMessage(
+          "当前语音服务不可用，且浏览器不支持本地语音识别，请改用文字输入。",
+        );
+        return;
+      }
+
+      setIsVoiceMode(true);
+      voiceTransportModeRef.current = "browser";
+      setVoiceOutputChannel("browser");
+      voiceNetworkRetryCountRef.current = 0;
+      setVoiceTranscript("");
+      setVoiceStatusText("正在聆听...");
+      shouldResumeVoiceRecognitionRef.current = true;
+      startBrowserVoiceRecognition();
+      logUserOperation({
+        operationType: UserOperationType.LIVE_AUDIO_SESSION,
+        operationLabel: "开始语音会话（浏览器降级）",
+        userName,
+        userGender,
+        duration: Date.now() - voiceStart,
+      });
+    } catch (err) {
+      setIsVoiceMode(false);
+      voiceTransportModeRef.current = null;
+      setVoiceStatusText("请直接描述您的事故情况");
+      logUserOperation({
+        operationType: UserOperationType.LIVE_AUDIO_SESSION,
+        operationLabel: "开始语音会话失败",
+        userName,
+        userGender,
+        success: false,
+        errorMessage: String(err),
+      });
     }
   };
 
@@ -5301,18 +5171,39 @@ export const App: React.FC = () => {
   };
 
   const handleIntentChoice = (choice: "new" | "supplement") => {
-    if (choice === "new") handleSend("我要新报案");
-    else
+    if (choice === "new") {
+      handleSend("我要新报案");
+    } else {
+      // Collect AI-identified categories from files the user has already uploaded
+      const pendingCategories = pendingFiles
+        .map((f) => f.analysis?.category)
+        .filter((c): c is string => !!c);
+
+      const allClaims = claimState.historicalClaims || [];
+
+      // When material categories are identified, only show claims that still need those materials
+      const filteredClaims =
+        pendingCategories.length > 0
+          ? allClaims.filter((claim) =>
+              claimNeedsMatchingMaterial(claim, pendingCategories),
+            )
+          : allClaims;
+
+      const hasNoMatch = pendingCategories.length > 0 && filteredClaims.length === 0;
+
       setMessages((prev) => [
         ...prev,
         {
           id: Date.now().toString(),
           role: "assistant",
-          content: "请选择关联的案件：",
+          content: hasNoMatch
+            ? "您目前的赔案列表中，没有需要补充此类材料的赔案"
+            : "请选择关联的案件：",
           timestamp: Date.now(),
-          claimsList: claimState.historicalClaims,
+          claimsList: hasNoMatch ? undefined : filteredClaims,
         },
       ]);
+    }
     logUserOperation({
       operationType: UserOperationType.SUBMIT_FORM,
       operationLabel: "选择报案方式",
@@ -6348,32 +6239,38 @@ export const App: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => handleToggleReaction(msg.id, "like")}
-                      className={`glass-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${messageQuickActions[msg.id]?.reaction === "like" ? "text-emerald-600 bg-emerald-50/80 border-emerald-200" : "text-slate-600"}`}
+                      aria-label="点赞"
+                      title="点赞"
+                      className={`glass-btn w-8 h-8 inline-flex items-center justify-center rounded-lg text-xs transition-all ${messageQuickActions[msg.id]?.reaction === "like" ? "text-emerald-600 bg-emerald-50/80 border-emerald-200" : "text-slate-600"}`}
                     >
-                      <i className="fas fa-thumbs-up mr-1"></i> 点赞
+                      <i className="fas fa-thumbs-up"></i>
                     </button>
                     <button
                       type="button"
                       onClick={() => handleToggleReaction(msg.id, "dislike")}
-                      className={`glass-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${messageQuickActions[msg.id]?.reaction === "dislike" ? "text-rose-600 bg-rose-50/80 border-rose-200" : "text-slate-600"}`}
+                      aria-label="点踩"
+                      title="点踩"
+                      className={`glass-btn w-8 h-8 inline-flex items-center justify-center rounded-lg text-xs transition-all ${messageQuickActions[msg.id]?.reaction === "dislike" ? "text-rose-600 bg-rose-50/80 border-rose-200" : "text-slate-600"}`}
                     >
-                      <i className="fas fa-thumbs-down mr-1"></i> 点踩
+                      <i className="fas fa-thumbs-down"></i>
                     </button>
                     <button
                       type="button"
                       onClick={() => handleCopyMessage(msg)}
-                      className="glass-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600"
+                      aria-label={messageQuickActions[msg.id]?.copied ? "已复制" : "复制"}
+                      title={messageQuickActions[msg.id]?.copied ? "已复制" : "复制"}
+                      className="glass-btn w-8 h-8 inline-flex items-center justify-center rounded-lg text-xs text-slate-600"
                     >
-                      <i className="fas fa-copy mr-1"></i>
-                      {messageQuickActions[msg.id]?.copied ? "已复制" : "复制"}
+                      <i className={`fas ${messageQuickActions[msg.id]?.copied ? "fa-check" : "fa-copy"}`}></i>
                     </button>
                     <button
                       type="button"
                       onClick={() => handleShareMessage(msg)}
-                      className="glass-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600"
+                      aria-label={messageQuickActions[msg.id]?.shared ? "已分享" : "分享"}
+                      title={messageQuickActions[msg.id]?.shared ? "已分享" : "分享"}
+                      className="glass-btn w-8 h-8 inline-flex items-center justify-center rounded-lg text-xs text-slate-600"
                     >
-                      <i className="fas fa-share-nodes mr-1"></i>
-                      {messageQuickActions[msg.id]?.shared ? "已分享" : "分享"}
+                      <i className="fas fa-share-nodes"></i>
                     </button>
                   </div>
                 )}
@@ -6415,6 +6312,32 @@ export const App: React.FC = () => {
                     </button>
                   </div>
                 )}
+
+                {msg.clarificationOptions &&
+                  msg.clarificationOptions.length > 0 && (
+                    <div className="mt-3 space-y-1.5">
+                      <div className="text-[11px] text-slate-400 font-medium">
+                        {msg.isClarification ? "请选择" : "💡 猜你想问"}
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {msg.clarificationOptions.slice(0, 4).map((opt) => (
+                          <button
+                            key={opt}
+                            type="button"
+                            onClick={() => handleSend(opt)}
+                            disabled={isLoading}
+                            className={
+                              msg.isClarification
+                                ? "glass-btn px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:text-blue-600 transition-colors disabled:opacity-50"
+                                : "px-3 py-1.5 rounded-full text-xs text-slate-600 bg-slate-50 border border-slate-200 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600 transition-colors disabled:opacity-50"
+                            }
+                          >
+                            {opt}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                 {msg.calculatedMaterials &&
                   msg.calculatedMaterials.length > 0 && (
@@ -7481,30 +7404,75 @@ export const App: React.FC = () => {
 
       {/* Voice Mode */}
       {isVoiceMode && (
-        <div className="absolute inset-0 bg-white/90 backdrop-blur-xl z-40 flex flex-col items-center justify-center animate-enter">
-          <div className="relative w-40 h-40 flex items-center justify-center">
-            <div className="absolute inset-0 bg-blue-500/20 rounded-full animate-ping"></div>
-            <div className="w-32 h-32 bg-gradient-to-tr from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-white text-4xl shadow-2xl">
-              <i className="fas fa-microphone"></i>
+        <div
+          className="absolute inset-0 z-40 flex flex-col animate-enter overflow-hidden"
+          style={{
+            background:
+              "linear-gradient(180deg, #e0f2fe 0%, #dbeafe 30%, #e0e7ff 65%, #ede9fe 100%)",
+          }}
+        >
+          {/* 柔光光斑 */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-[40%] left-1/2 -translate-x-1/2 w-[420px] h-[420px] rounded-full bg-white/50 blur-3xl"></div>
+            <div className="absolute top-[55%] left-[20%] w-40 h-40 rounded-full bg-sky-200/50 blur-3xl"></div>
+            <div className="absolute top-[30%] right-[15%] w-32 h-32 rounded-full bg-indigo-200/40 blur-3xl"></div>
+          </div>
+
+          {/* 顶部栏 */}
+          <div className="relative flex items-center justify-between px-6 pt-6">
+            <button className="w-9 h-9 flex items-center justify-center text-slate-600/80">
+              <i className="fas fa-ellipsis text-lg"></i>
+            </button>
+            <div className="flex-1" />
+            <button className="w-9 h-9 flex items-center justify-center text-slate-600/80 text-base font-medium">
+              字<i className="fas fa-circle-check ml-0.5 text-[10px] text-slate-500"></i>
+            </button>
+          </div>
+
+          {/* 左上文字 */}
+          <div className="relative px-8 mt-14">
+            {voiceTranscript ? (
+              <p className="text-slate-800 text-xl font-medium leading-relaxed max-w-[80%]">
+                {voiceTranscript}
+              </p>
+            ) : (
+              <p className="text-slate-400 text-xl">请说话</p>
+            )}
+          </div>
+
+          {/* 中间留白 + 提示 */}
+          <div className="relative flex-1 flex flex-col items-center justify-end pb-8">
+            <div className="flex gap-1.5 mb-4">
+              {[0, 150, 300].map((delay, i) => (
+                <span
+                  key={i}
+                  className="w-1.5 h-1.5 rounded-full bg-slate-500/70 animate-pulse"
+                  style={{ animationDelay: `${delay}ms` }}
+                ></span>
+              ))}
             </div>
+            <p className="text-slate-500 text-sm">
+              {isTranscribing
+                ? "正在处理..."
+                : voiceStatusText === "请直接描述您的事故情况"
+                ? "你可以开始说话"
+                : voiceStatusText}
+            </p>
           </div>
-          <div
-            className={`mt-6 rounded-full px-3 py-1 text-xs font-semibold ${getVoiceOutputBadge(voiceOutputChannel).className}`}
-          >
-            {getVoiceOutputBadge(voiceOutputChannel).label}
+
+          {/* 底部按钮行 */}
+          <div className="relative flex items-center justify-center pb-3 px-6">
+            <button
+              onClick={toggleVoiceMode}
+              className="w-14 h-14 rounded-full bg-white/55 backdrop-blur-md shadow-sm border border-white/70 flex items-center justify-center text-rose-500 hover:bg-white/75 transition-all"
+            >
+              <i className="fas fa-xmark text-xl"></i>
+            </button>
           </div>
-          <h3 className="mt-8 text-2xl font-bold text-slate-800">
-            {isTranscribing ? "正在处理..." : voiceStatusText}
-          </h3>
-          <p className="text-slate-500 mt-2">
-            {voiceTranscript || "请直接描述您的事故情况"}
+
+          <p className="relative text-center text-slate-400 text-xs pb-5 pt-3">
+            内容由 AI 生成
           </p>
-          <button
-            onClick={toggleVoiceMode}
-            className="mt-12 w-16 h-16 rounded-full bg-red-100 text-red-500 flex items-center justify-center text-xl hover:bg-red-200 transition-colors"
-          >
-            <i className="fas fa-phone-slash"></i>
-          </button>
         </div>
       )}
 

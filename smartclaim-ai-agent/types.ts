@@ -166,6 +166,10 @@ export interface Message {
   uiComponent?: UIComponentType;
   /** UI组件所需数据 */
   uiData?: any;
+  /** 澄清追问的候选选项 */
+  clarificationOptions?: string[];
+  /** 是否为一条澄清追问消息 */
+  isClarification?: boolean;
 }
 
 export interface MedicalInvoiceData {
@@ -294,6 +298,9 @@ export interface DocumentAnalysis {
   ocr: OCRData;
   medicalData?: MedicalInvoiceData;
   dischargeSummaryData?: DischargeSummaryData;
+  /** quickAnalyze 直接从材料目录匹配到的 materialId，存在时跳过前端 token 评分 */
+  matchedMaterialId?: string;
+  matchedMaterialName?: string;
 }
 
 export interface OCRData {
@@ -379,6 +386,16 @@ export interface ClaimState {
   payment?: PaymentInfo;
   policyTerms?: PolicyTerm[];
   historicalClaims?: HistoricalClaim[];
+  /** 待用户回应的澄清上下文 */
+  pendingClarification?: {
+    intent: IntentType;
+    entities: IntentEntities;
+    question: string;
+    options?: string[];
+    missingEntities?: string[];
+    round: number;
+    originalUserText: string;
+  };
 }
 
 // ============================================================================
@@ -478,6 +495,14 @@ export interface IntentRecognitionResult {
   entities: IntentEntities;
   /** 原始用户输入 */
   originalText: string;
+  /** 是否需要先向用户澄清 */
+  requiresClarification?: boolean;
+  /** 澄清问题文本 */
+  clarificationQuestion?: string;
+  /** 需要用户补充的实体名 */
+  missingEntities?: string[];
+  /** 建议的候选答案 */
+  clarificationOptions?: string[];
 }
 
 /** 意图实体参数 */
@@ -495,7 +520,11 @@ export interface IntentEntities {
   /** 金额 */
   amount?: number;
   /** 银行信息 */
-  bankInfo?: { bankName?: string; accountNumber?: string; accountName?: string };
+  bankInfo?: {
+    bankName?: string;
+    accountNumber?: string;
+    accountName?: string;
+  };
   /** 原因/描述 */
   reason?: string;
   /** 紧急程度 */
@@ -506,7 +535,7 @@ export interface IntentEntities {
 
 /** 下一步动作引导 */
 export interface NextAction {
-  type: 'navigate' | 'form' | 'confirm' | 'upload' | 'none';
+  type: "navigate" | "form" | "confirm" | "upload" | "none";
   target?: string;
   label: string;
   data?: any;
@@ -526,6 +555,12 @@ export interface ToolResponse {
   uiData?: any;
   /** 引导用户的下一步操作 */
   nextAction?: NextAction;
+  /**
+   * 回答后展示在消息气泡下方的"猜你想问"快捷建议。
+   * 用户点击任意一项即作为新消息发送，减少手动输入。
+   * 2-4 条为佳；超过 4 条的部分会被 UI 截断。
+   */
+  suggestedFollowups?: string[];
 }
 
 /** UI组件类型 */
@@ -658,7 +693,12 @@ export interface SettlementEstimateInfo {
 /** 赔付明细信息 */
 export interface SettlementDetailInfo {
   claimId: string;
-  items: { name: string; claimed: number; approved: number; deduction: string }[];
+  items: {
+    name: string;
+    claimed: number;
+    approved: number;
+    deduction: string;
+  }[];
   totalClaimed: number;
   totalApproved: number;
   deductible: number;
@@ -728,7 +768,12 @@ export interface ClaimTimelineInfo {
 /** 保障范围信息 */
 export interface CoverageInfo {
   isInScope: boolean | null;
-  coverageItems: { name: string; covered: boolean; limit?: number; note?: string }[];
+  coverageItems: {
+    name: string;
+    covered: boolean;
+    limit?: number;
+    note?: string;
+  }[];
   exclusions: string[];
   deductible?: number;
   explanation: string;

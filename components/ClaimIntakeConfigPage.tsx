@@ -60,21 +60,21 @@ const ClaimIntakeConfigPage: React.FC<ClaimIntakeConfigPageProps> = ({
   const [responsibilityItems, setResponsibilityItems] = useState<
     ResponsibilityItem[]
   >([]);
-  const [accidentCauseConfigs, setAccidentCauseConfigs] = useState<
-    any[]
-  >([]);
+  const [accidentCauseConfigs, setAccidentCauseConfigs] = useState<any[]>([]);
   const [materialsLoading, setMaterialsLoading] = useState(true);
   // Local edit state for step 2 material overrides
   const [step2Overrides, setStep2Overrides] = useState<MaterialOverrides>({});
-  const [commonPreset, setCommonPreset] = useState<IntakeConfig['fields']>([]);
+  const [commonPreset, setCommonPreset] = useState<IntakeConfig["fields"]>([]);
 
   useEffect(() => {
     const fetchCommonPreset = async () => {
       try {
-        const data = await api.intakeFieldPresets.getById('common') as { fields: IntakeConfig['fields'] };
+        const data = (await api.intakeFieldPresets.getById("common")) as {
+          fields: IntakeConfig["fields"];
+        };
         setCommonPreset(data.fields || []);
       } catch (error) {
-        console.error('Failed to fetch common preset:', error);
+        console.error("Failed to fetch common preset:", error);
         setCommonPreset([]);
       }
     };
@@ -201,22 +201,26 @@ const ClaimIntakeConfigPage: React.FC<ClaimIntakeConfigPageProps> = ({
 
   // --- Computed: accident cause material items from product's accident causes config ---
   const accidentCauseMaterialItems = useMemo(() => {
-    if (!editingConfig.accidentCauses || editingConfig.accidentCauses.length === 0) return [];
-    
+    if (
+      !editingConfig.accidentCauses ||
+      editingConfig.accidentCauses.length === 0
+    )
+      return [];
+
     const allMaterials: Array<{
       materialId: string;
       materialName: string;
       defaultRequired: boolean;
       causeName: string;
     }> = [];
-    
+
     editingConfig.accidentCauses.forEach((cause) => {
       // Skip custom causes as they don't have material configs
       if (cause.isCustom) return;
-      
+
       const causeConfig = accidentCauseConfigs.find((c) => c.id === cause.id);
       if (!causeConfig) return;
-      
+
       causeConfig.materialIds.forEach((matId: string) => {
         // Avoid duplicates
         if (!allMaterials.find((m) => m.materialId === matId)) {
@@ -229,7 +233,7 @@ const ClaimIntakeConfigPage: React.FC<ClaimIntakeConfigPageProps> = ({
         }
       });
     });
-    
+
     return allMaterials;
   }, [editingConfig.accidentCauses, accidentCauseConfigs, materials]);
 
@@ -648,28 +652,39 @@ const ClaimIntakeConfigPage: React.FC<ClaimIntakeConfigPageProps> = ({
             <input
               type="checkbox"
               id="enable-dynamic-calculation"
-              checked={editingConfig.claimMaterials?.enableDynamicCalculation || false}
+              checked={
+                editingConfig.claimMaterials?.enableDynamicCalculation || false
+              }
               onChange={(e) => {
-                setEditingConfig(prev => ({
+                setEditingConfig((prev) => ({
                   ...prev,
                   claimMaterials: {
                     ...prev.claimMaterials,
-                    extraMaterialIds: prev.claimMaterials?.extraMaterialIds || [],
-                    materialOverrides: prev.claimMaterials?.materialOverrides || {},
+                    extraMaterialIds:
+                      prev.claimMaterials?.extraMaterialIds || [],
+                    materialOverrides:
+                      prev.claimMaterials?.materialOverrides || {},
                     enableDynamicCalculation: e.target.checked,
-                    claimItemFieldId: prev.claimMaterials?.claimItemFieldId || 'claim_item',
-                    accidentCauseFieldId: prev.claimMaterials?.accidentCauseFieldId || 'accident_reason'
-                  }
+                    claimItemFieldId:
+                      prev.claimMaterials?.claimItemFieldId || "claim_item",
+                    accidentCauseFieldId:
+                      prev.claimMaterials?.accidentCauseFieldId ||
+                      "accident_reason",
+                  },
                 }));
               }}
               className="mt-0.5 rounded border-blue-300 text-blue-600 focus:ring-blue-500 flex-shrink-0"
             />
             <div className="flex-1">
-              <label htmlFor="enable-dynamic-calculation" className="text-sm font-medium text-gray-700 cursor-pointer">
+              <label
+                htmlFor="enable-dynamic-calculation"
+                className="text-sm font-medium text-gray-700 cursor-pointer"
+              >
                 启用动态材料清单计算
               </label>
               <div className="text-xs text-gray-600 mt-1">
-                根据用户在报案表单中选择的<strong>索赔项目</strong>和<strong>事故原因</strong>，自动计算并展示所需的理赔材料清单。
+                根据用户在报案表单中选择的<strong>索赔项目</strong>和
+                <strong>事故原因</strong>，自动计算并展示所需的理赔材料清单。
                 材料来源包括：险种通用材料、索赔项目关联材料、事故原因关联材料。
               </div>
             </div>
@@ -678,25 +693,35 @@ const ClaimIntakeConfigPage: React.FC<ClaimIntakeConfigPageProps> = ({
           {editingConfig.claimMaterials?.enableDynamicCalculation && (
             <div className="pl-7 space-y-2 border-t border-blue-200 pt-3">
               <div className="text-xs text-gray-600">
-                <strong>字段映射配置：</strong>指定报案表单中哪些字段用于材料计算
+                <strong>字段映射配置：</strong>
+                指定报案表单中哪些字段用于材料计算
               </div>
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
-                  <label className="text-xs text-gray-600">索赔项目字段ID：</label>
+                  <label className="text-xs text-gray-600">
+                    索赔项目字段ID：
+                  </label>
                   <input
                     type="text"
-                    value={editingConfig.claimMaterials?.claimItemFieldId || 'claim_item'}
+                    value={
+                      editingConfig.claimMaterials?.claimItemFieldId ||
+                      "claim_item"
+                    }
                     onChange={(e) => {
-                      setEditingConfig(prev => ({
+                      setEditingConfig((prev) => ({
                         ...prev,
                         claimMaterials: {
                           ...prev.claimMaterials,
-                          extraMaterialIds: prev.claimMaterials?.extraMaterialIds || [],
-                          materialOverrides: prev.claimMaterials?.materialOverrides || {},
+                          extraMaterialIds:
+                            prev.claimMaterials?.extraMaterialIds || [],
+                          materialOverrides:
+                            prev.claimMaterials?.materialOverrides || {},
                           enableDynamicCalculation: true,
                           claimItemFieldId: e.target.value,
-                          accidentCauseFieldId: prev.claimMaterials?.accidentCauseFieldId || 'accident_reason'
-                        }
+                          accidentCauseFieldId:
+                            prev.claimMaterials?.accidentCauseFieldId ||
+                            "accident_reason",
+                        },
                       }));
                     }}
                     placeholder="claim_item"
@@ -704,21 +729,30 @@ const ClaimIntakeConfigPage: React.FC<ClaimIntakeConfigPageProps> = ({
                   />
                 </div>
                 <div className="flex items-center gap-2">
-                  <label className="text-xs text-gray-600">事故原因字段ID：</label>
+                  <label className="text-xs text-gray-600">
+                    事故原因字段ID：
+                  </label>
                   <input
                     type="text"
-                    value={editingConfig.claimMaterials?.accidentCauseFieldId || 'accident_reason'}
+                    value={
+                      editingConfig.claimMaterials?.accidentCauseFieldId ||
+                      "accident_reason"
+                    }
                     onChange={(e) => {
-                      setEditingConfig(prev => ({
+                      setEditingConfig((prev) => ({
                         ...prev,
                         claimMaterials: {
                           ...prev.claimMaterials,
-                          extraMaterialIds: prev.claimMaterials?.extraMaterialIds || [],
-                          materialOverrides: prev.claimMaterials?.materialOverrides || {},
+                          extraMaterialIds:
+                            prev.claimMaterials?.extraMaterialIds || [],
+                          materialOverrides:
+                            prev.claimMaterials?.materialOverrides || {},
                           enableDynamicCalculation: true,
-                          claimItemFieldId: prev.claimMaterials?.claimItemFieldId || 'claim_item',
-                          accidentCauseFieldId: e.target.value
-                        }
+                          claimItemFieldId:
+                            prev.claimMaterials?.claimItemFieldId ||
+                            "claim_item",
+                          accidentCauseFieldId: e.target.value,
+                        },
                       }));
                     }}
                     placeholder="accident_reason"
@@ -815,14 +849,15 @@ const ClaimIntakeConfigPage: React.FC<ClaimIntakeConfigPageProps> = ({
             <div className="text-sm font-medium text-gray-700">
               事故原因材料
             </div>
-            <span className="text-xs text-gray-400">
-              来自事故原因配置
-            </span>
+            <span className="text-xs text-gray-400">来自事故原因配置</span>
           </div>
           {accidentCauseMaterialItems.length > 0 ? (
             <div className="border border-gray-200 rounded-lg px-4 py-2 space-y-0.5">
               {accidentCauseMaterialItems.map((m) => (
-                <div key={m.materialId} className="flex items-center justify-between">
+                <div
+                  key={m.materialId}
+                  className="flex items-center justify-between"
+                >
                   {renderMaterialRow(
                     m.materialId,
                     m.materialName,
@@ -836,15 +871,20 @@ const ClaimIntakeConfigPage: React.FC<ClaimIntakeConfigPageProps> = ({
             </div>
           ) : (
             <div className="text-sm text-gray-400 py-3 px-4 bg-gray-50 rounded-lg">
-              {editingConfig.accidentCauses && editingConfig.accidentCauses.length > 0 ? (
+              {editingConfig.accidentCauses &&
+              editingConfig.accidentCauses.length > 0 ? (
                 <div>
-                  <div className="mb-1">已配置 {editingConfig.accidentCauses.length} 个事故原因：</div>
+                  <div className="mb-1">
+                    已配置 {editingConfig.accidentCauses.length} 个事故原因：
+                  </div>
                   <div className="text-xs space-y-1">
                     {editingConfig.accidentCauses.map((cause, idx) => (
                       <div key={idx} className="flex items-center gap-2">
                         <span className="text-gray-600">• {cause.name}</span>
                         {cause.isCustom && (
-                          <span className="text-[10px] bg-gray-200 text-gray-600 px-1 py-0.5 rounded">自定义</span>
+                          <span className="text-[10px] bg-gray-200 text-gray-600 px-1 py-0.5 rounded">
+                            自定义
+                          </span>
                         )}
                       </div>
                     ))}
@@ -891,7 +931,9 @@ const ClaimIntakeConfigPage: React.FC<ClaimIntakeConfigPageProps> = ({
                         if (!materialSources[m.materialId]) {
                           materialSources[m.materialId] = [];
                         }
-                        if (!materialSources[m.materialId].includes("索赔项目")) {
+                        if (
+                          !materialSources[m.materialId].includes("索赔项目")
+                        ) {
                           materialSources[m.materialId].push("索赔项目");
                         }
                       }
@@ -954,7 +996,8 @@ const ClaimIntakeConfigPage: React.FC<ClaimIntakeConfigPageProps> = ({
                             <span
                               key={source}
                               className={`text-[10px] px-1.5 py-0.5 rounded ${
-                                sourceColors[source] || "bg-gray-100 text-gray-600"
+                                sourceColors[source] ||
+                                "bg-gray-100 text-gray-600"
                               }`}
                             >
                               {source}
@@ -1024,7 +1067,13 @@ const ClaimIntakeConfigPage: React.FC<ClaimIntakeConfigPageProps> = ({
                 return (
                   <tr key={product.productCode} className="hover:bg-gray-50">
                     <td className="px-6 py-4 text-sm text-gray-900 font-medium">
-                      {product.regulatoryName}
+                      <div>{product.regulatoryName}</div>
+                      {product.marketingName &&
+                        product.marketingName !== product.regulatoryName && (
+                          <div className="text-xs text-gray-400 mt-0.5">
+                            {product.marketingName}
+                          </div>
+                        )}
                     </td>
                     <td className="px-6 py-4 text-sm">
                       <ConfigBadge configured={configured} />
@@ -1231,9 +1280,15 @@ const ClaimIntakeConfigPage: React.FC<ClaimIntakeConfigPageProps> = ({
                               />
                             </svg>
                             <div className="absolute right-0 top-6 w-64 p-3 bg-white border border-gray-200 rounded-lg shadow-lg text-xs text-gray-600 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
-                              <p className="font-medium text-gray-800 mb-1">一键加载常用字段</p>
-                              <p>加载通用报案字段预设（事故日期、地点、描述、原因等），适用于所有产品。</p>
-                              <p className="mt-1 text-gray-400">提示：如需按险种加载专业模板，请使用下方编辑器内的「加载预设模板」按钮。</p>
+                              <p className="font-medium text-gray-800 mb-1">
+                                一键加载常用字段
+                              </p>
+                              <p>
+                                加载通用报案字段预设（事故日期、地点、描述、原因等），适用于所有产品。
+                              </p>
+                              <p className="mt-1 text-gray-400">
+                                提示：如需按险种加载专业模板，请使用下方编辑器内的「加载预设模板」按钮。
+                              </p>
                             </div>
                           </div>
                         </div>
