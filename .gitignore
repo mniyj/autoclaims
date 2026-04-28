@@ -35,3 +35,24 @@ uploads/
 *.sln
 *.sw?
 .gstack/
+
+# Claude Code local state
+.claude/
+
+# Codebase analysis cache (large generated files)
+.codebase-*.json
+
+# Runtime log data in jsonlist
+jsonlist/ai-logs-*.json
+jsonlist/user-operation-logs.json
+jsonlist/ai-interaction-logs.json
+jsonlist/processing-tasks.json
+
+# Large asset directories (binary/reference data, not source code)
+generali_products/
+policy_samples/
+
+# Third-party tool directories
+.kiro/
+.sisyphus/
+.trae/
