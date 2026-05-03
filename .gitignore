@@ -21,6 +21,15 @@ uploads/
 *.tar.gz
 *.zip
 
+# Office documents (binary, not source code)
+*.pptx
+*.ppt
+*.xlsx
+*.xls
+*.xlsm
+*.docx
+*.doc
+
 # Excel temporary lock files
 .~*.xlsx
 
@@ -47,6 +56,9 @@ jsonlist/ai-logs-*.json
 jsonlist/user-operation-logs.json
 jsonlist/ai-interaction-logs.json
 jsonlist/processing-tasks.json
+
+# jsonlist backup snapshots (may contain OSS pre-signed URLs with key IDs)
+jsonlist/backup/
 
 # Large asset directories (binary/reference data, not source code)
 generali_products/
