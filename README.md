@@ -1,19 +1,160 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# 保险智能管理平台
 
-# Run and deploy your AI Studio app
+面向保险公司的一体化 AI 后台系统，涵盖**产品配置**、**智能理赔**与**AI 代理**三大核心模块。
 
-This contains everything you need to run your app locally.
+---
 
-View your app in AI Studio: https://ai.studio/apps/drive/13OJAkW3WYzjkOuTMftnZCWJdVLuGy2BE
+## 系统架构
 
-## Run Locally
+```
+项目根目录（后台配置系统）
+│
+├── components/          React 页面组件
+├── pages/               独立页面
+├── services/            业务服务层（含 mock 数据）
+├── server/              Node.js 后端（AI 代理、文件处理、任务队列）
+├── schemas/             JSON Schema（各险种产品结构）
+├── types/               TypeScript 类型定义
+├── hooks/               React 自定义 hooks
+├── utils/               工具函数
+├── jsonlist/            产品 JSON 示例数据
+├── adjuster-workbench/  理赔员独立工作台子应用
+└── smartclaim-ai-agent/ 智能理赔助手子应用
+```
 
-**Prerequisites:**  Node.js
+---
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## 核心模块
+
+### 1. 保险产品配置
+
+- **产品管理**：创建、编辑、上下线保险产品（健康险、意外险、重疾险、定期寿险、终身寿险、年金险）
+- **险种分类**：三级分类体系（主类 / 子类 / 细类），支持监管名与营销名双字段
+- **条款管理**：标准化条款库，支持条款与产品关联
+- **保障责任**：责任项目管理，配置覆盖范围与免责条款
+- **费率表 / 现金价值表**：Excel / PDF 文件上传与管理
+- **产品状态流转**：草稿 → 上架 → 下架
+
+### 2. 智能理赔管理
+
+- **理赔案件**：案件列表、详情查看、状态追踪（立案 → 核查 → 审核 → 结案）
+- **理赔材料配置**：材料类型管理、校验规则、离线材料导入
+- **理赔项目配置**：理赔科目定义与验证规则
+- **发票审核（AI）**：基于 OCR 的发票识别与真伪核查
+- **语音理赔**：语音录入与 NLP 解析
+- **理赔工作台**：理赔员专属操作界面（adjuster-workbench 子应用）
+
+### 3. AI 能力中台
+
+- **AI 模型管理**：多模型配置（Gemini 系列）、健康检测、费用分析
+- **智能保顾配置（SmartAdvisor）**：推荐规则 Ruleset 管理、预处理器配置
+- **策略管理**：决策表驱动的产品推荐策略
+- **AI 运行日志**：交互记录、成本统计、模型对比
+- **AI 配置中心**：全局 AI 参数与运行时配置
+
+### 4. 知识库与数据
+
+- **医疗目录**：疾病 / 手术 / 药品目录管理
+- **医院管理**：定点医院库
+- **行业数据**：费率、发病率等精算参考数据
+- **公式管理**：动态计算公式配置
+- **事实目录（FactCatalog）**：理赔核查事实条目管理
+
+### 5. 报价与保单
+
+- **报价管理**：报价单生成与历史记录
+- **保单管理**：保单查询与详情
+
+### 6. 系统管理
+
+- **用户管理**：多角色用户（admin / 普通用户）
+- **公司管理**：保险公司资料与偿付能力数据
+- **消息中心**：系统通知与告警
+- **操作日志**：用户操作审计
+- **系统设置**：全局参数配置
+
+---
+
+## 子应用
+
+### 智能理赔助手（smartclaim-ai-agent）
+
+面向客户的 AI 理赔引导助手，端口 **8081**。
+
+- 对话式理赔引导（Gemini 驱动）
+- 多轮意图识别与工具调用（claimOrchestrator）
+- 文件 / 图片上传（OSS）
+- 语音输入支持
+- 邀请码登录
+
+### 理赔员工作台（adjuster-workbench）
+
+内部理赔员独立子应用。
+
+---
+
+## 快速开始
+
+### 前置条件
+
+- Node.js ≥ 18
+- GEMINI_API_KEY（AI 功能必需）
+
+### 安装与启动
+
+```bash
+# 后台配置系统（端口 8080）
+npm install
+npm run dev
+
+# 智能理赔助手（端口 8081）
+cd smartclaim-ai-agent
+npm install
+npm run dev
+```
+
+### 环境变量（.env.local）
+
+```env
+GEMINI_API_KEY=your_key_here
+DEV_PORT=8080
+```
+
+### 登录账号
+
+| 账号 | 密码 | 角色 |
+|------|------|------|
+| admin | 234567 | 管理员 |
+| test | 123456 | 普通用户（xintai / 省心配）|
+| gclife | 123456 | 普通用户（gclife / 智能体）|
+
+智能理赔助手使用邀请码 `ant` 登录。
+
+---
+
+## 技术栈
+
+| 层 | 技术 |
+|----|------|
+| 前端 | React 19 + TypeScript + Vite 6 |
+| 样式 | Tailwind CSS |
+| 后端 | Node.js + Express 5 |
+| AI | Google Gemini API（gemini-2.0-flash / gemini-2.5-pro）|
+| 部署 | PM2（双实例：3005 / 3008 端口）|
+
+---
+
+## 生产部署
+
+```bash
+# 构建
+npm run build
+
+# PM2 启动（双实例）
+pm2 start ecosystem.config.cjs
+
+# 一键部署到远端服务器
+./deploy.sh <SERVER_IP> [USER] [SSH_KEY] [PORT]
+# 示例：
+./deploy.sh 121.43.159.216 root ~/.ssh/aliyun.pem 3008
+```
